@@ -20,11 +20,14 @@
 
 #include "device_manager.h"
 #include "dm_device_info.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+
+static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+
 class DeviceInfo final {
 public:
     DeviceInfo() = default;

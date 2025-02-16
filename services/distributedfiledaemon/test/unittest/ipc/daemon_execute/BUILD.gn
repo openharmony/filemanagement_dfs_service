@@ -44,6 +44,7 @@ ohos_unittest("daemon_execute_test") {
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+    "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
   sources = [
@@ -53,7 +54,6 @@ ohos_unittest("daemon_execute_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -76,6 +76,7 @@ ohos_unittest("daemon_execute_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

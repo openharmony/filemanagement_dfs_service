@@ -194,7 +194,8 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
             .dirExistFlag = false,
             .sessionName = sessionName,
         };
-        EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo),
+        HmdfsInfoExt fileInfoExt(fileInfo);
+        EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfoExt),
                   FileManagement::E_SA_LOAD_FAILED);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());

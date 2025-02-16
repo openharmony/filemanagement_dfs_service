@@ -10,8 +10,80 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+idl_gen_interface("idaemon_base") {
+  sources = [ "IDaemon.idl" ]
+  hitrace = "HITRACE_TAG_FILEMANAGEMENT"
+  log_domainid = "0xD001600"
+  log_tag = "filemanagement"
+}
+
+config("idaemon_base_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "include/network/softbus",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${target_gen_dir}",
+  ]
+}
+
+ohos_source_set("idaemon_base_source") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  public_configs = [ ":idaemon_base_config" ]
+  output_values = get_target_outputs(":idaemon_base")
+  sources = filter_include(output_values, [ "*.cpp" ])
+  deps = [ ":idaemon_base" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_connect_callback_stub",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+  ]
+
+  subsystem_name = "filemanagement"
+  part_name = "dfs_service"
+}
+
+ohos_source_set("idaemon_base_head") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  public_configs = [ ":idaemon_base_config" ]
+  deps = [ ":idaemon_base" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_connect_callback_stub",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+  ]
+
+  subsystem_name = "filemanagement"
+  part_name = "dfs_service"
+}
 
 ohos_shared_library("libdistributedfiledaemon") {
   branch_protector_ret = "pac_ret"
@@ -47,9 +119,10 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_eventhandler.cpp",
     "src/ipc/daemon_execute.cpp",
-    "src/ipc/daemon_stub.cpp",
+    "src/ipc/dm_device_info_ext.cpp",
     "src/ipc/file_dfs_listener_proxy.cpp",
     "src/ipc/file_trans_listener_proxy.cpp",
+    "src/ipc/hmdfs_info.cpp",
     "src/ipc/trans_mananger.cpp",
     "src/mountpoint/mount_manager.cpp",
     "src/mountpoint/mount_point.cpp",
@@ -72,6 +145,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
 
   deps = [
+    ":idaemon_base_source",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -152,11 +226,14 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_dfs_listener_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "src/ipc/dm_device_info_ext.cpp",
+    "src/ipc/hmdfs_info.cpp",
   ]
+
+  deps = [ ":idaemon_base_source" ]
 
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
 

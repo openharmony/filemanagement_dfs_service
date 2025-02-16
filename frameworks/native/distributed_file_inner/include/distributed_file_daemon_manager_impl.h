@@ -20,10 +20,12 @@
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
 #include "dm_device_info.h"
+#include "dm_device_info_ext.h"
 #include "ipc/distributed_file_daemon_manager.h"
 #include "ipc/i_file_dfs_listener.h"
 #include "nocopyable.h"
 #include "refbase.h"
+#include "idaemon.h"
 
 namespace OHOS {
 namespace Storage {
@@ -31,6 +33,8 @@ namespace DistributedFile {
 class DistributedFileDaemonManagerImpl final : public DistributedFileDaemonManager, public NoCopyable {
 public:
     static DistributedFileDaemonManagerImpl &GetInstance();
+    static sptr<IDaemon> GetDaemonInterface();
+    static void InvaildInstance();
 
     int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
@@ -61,6 +65,21 @@ public:
     int32_t Cancel() override;
 private:
     DistributedFileDaemonManagerImpl() = default;
+    class DaemonDeathRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        DaemonDeathRecipient(){};
+        ~DaemonDeathRecipient() = default;
+        using RemoteDiedHandler = std::function<void(const wptr<IRemoteObject> &)>;
+        void SetDeathRecipient(RemoteDiedHandler handler);
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
+
+    private:
+        RemoteDiedHandler handler_{ nullptr };
+    };
+    static void OnRemoteSaDied(const wptr<IRemoteObject> &remote);
+    static inline std::mutex proxyMutex_;
+    static inline sptr<IDaemon> daemonProxy_;
+    static inline sptr<DaemonDeathRecipient> deathRecipient_;
 };
 } // namespace DistributedFile
 } // namespace Storage

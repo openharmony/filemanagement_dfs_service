@@ -17,7 +17,7 @@
 #include "dm_device_info.h"
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 
 namespace OHOS {
 namespace Storage {

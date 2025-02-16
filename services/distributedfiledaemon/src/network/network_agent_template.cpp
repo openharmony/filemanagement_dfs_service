@@ -57,7 +57,7 @@ void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
 
 void NetworkAgentTemplate::ConnectOnlineDevices()
 {
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
 
     auto dma = DeviceManagerAgent::GetInstance();

@@ -30,7 +30,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
     deviceId_ = string(nodeInfo.deviceId);
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
+    deviceManager.GetUdidByNetworkId(SERVICE_NAME, cid_, udid_);
 }
 
 DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeInfo)

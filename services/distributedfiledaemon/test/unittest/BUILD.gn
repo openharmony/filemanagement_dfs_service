@@ -49,6 +49,7 @@ ohos_unittest("device_info_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_head",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -93,8 +94,9 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -127,6 +129,7 @@ ohos_unittest("device_manager_agent_sup_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -190,8 +193,9 @@ ohos_unittest("device_manager_agent_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -221,6 +225,7 @@ ohos_unittest("device_manager_agent_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -280,8 +285,9 @@ ohos_unittest("os_account_observer_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -311,6 +317,7 @@ ohos_unittest("os_account_observer_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -368,8 +375,9 @@ ohos_unittest("devsl_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -398,6 +406,7 @@ ohos_unittest("devsl_dispatcher_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -456,8 +465,9 @@ ohos_unittest("kernel_talker_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -486,6 +496,7 @@ ohos_unittest("kernel_talker_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -539,8 +550,9 @@ ohos_unittest("network_agent_template_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -569,6 +581,7 @@ ohos_unittest("network_agent_template_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -626,8 +639,9 @@ ohos_unittest("session_pool_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -655,6 +669,7 @@ ohos_unittest("session_pool_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -715,8 +730,9 @@ ohos_unittest("softbus_agent_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -745,6 +761,7 @@ ohos_unittest("softbus_agent_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -810,8 +827,9 @@ ohos_unittest("softbus_agent_sup_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -841,6 +859,7 @@ ohos_unittest("softbus_agent_sup_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1012,8 +1031,9 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -1042,6 +1062,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]
@@ -1100,8 +1121,9 @@ ohos_unittest("softbus_session_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
@@ -1130,6 +1152,7 @@ ohos_unittest("softbus_session_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gtest_main",
   ]

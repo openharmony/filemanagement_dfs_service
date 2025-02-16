@@ -168,8 +168,7 @@
             "name": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:distributed_file_daemon_kit_inner",
             "header": {
               "header_files": [
-                "distributed_file_daemon_manager.h",
-                "i_daemon.h"
+                "distributed_file_daemon_manager.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"
             }

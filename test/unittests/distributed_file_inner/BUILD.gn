@@ -14,108 +14,6 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_unittest("distributed_file_daemon_proxy_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
-
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
-    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
-    "distributed_file_daemon_proxy_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
-    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
-    "${distributedfile_path}/test/mock",
-    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
-    "include",
-    "${services_path}/distributedfiledaemon/include/",
-    "${services_path}/distributedfiledaemon/include/ipc",
-  ]
-
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
-  use_exceptions = true
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
-ohos_unittest("distributed_file_daemon_proxy_sup_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
-
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
-    "distributed_file_daemon_proxy_sup_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/test/mock",
-    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
-    "include",
-    "${services_path}/distributedfiledaemon/include/",
-    "${services_path}/distributedfiledaemon/include/ipc",
-  ]
-
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
-  use_exceptions = true
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
 ohos_unittest("file_trans_listener_stub_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -279,8 +177,10 @@ ohos_unittest("file_copy_manager_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "copy/file_copy_manager_test.cpp",
   ]
 
@@ -293,7 +193,10 @@ ohos_unittest("file_copy_manager_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "app_file_service:fileuri_native",
@@ -325,8 +228,6 @@ group("distributed_file_inner") {
   deps = [
     ":asset_recv_callback_stub_test",
     ":asset_send_callback_stub_test",
-    ":distributed_file_daemon_proxy_sup_test",
-    ":distributed_file_daemon_proxy_test",
     ":file_copy_manager_test",
     ":file_trans_listener_stub_test",
   ]

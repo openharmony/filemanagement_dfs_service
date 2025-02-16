@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "iremote_broker.h"
 #include "iremote_stub.h"
 
@@ -40,17 +40,17 @@ public:
         return FileManagement::E_OK;
     }
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+    int32_t OpenP2PConnection(const DmDeviceInfoExt &deviceInfo)
     {
         return FileManagement::E_OK;
     }
 
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+    int32_t CloseP2PConnection(const DmDeviceInfoExt &deviceInfo)
     {
         return FileManagement::E_OK;
     }
 
-    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
+    int32_t OpenP2PConnectionEx(const std::string &networkId, const sptr<IFileDfsListener>& remoteReverseObj)
     {
         return FileManagement::E_OK;
     }
@@ -64,7 +64,7 @@ public:
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           HmdfsInfo &fileInfo)
+                           HmdfsInfoExt &fileInfo)
     {
         return FileManagement::E_OK;
     }
@@ -88,7 +88,7 @@ public:
     }
 
     int32_t PushAsset(int32_t userId,
-                      const sptr<AssetObj> &assetObj,
+                      const AssetObj &assetObj,
                       const sptr<IAssetSendCallback> &sendCallback)
     {
         return FileManagement::E_OK;

@@ -17,6 +17,8 @@
 #define FILEMANAGEMENT_DFS_SERVICE_HMDFS_INFO_H
 
 #include <string>
+#include "string_ex.h"
+#include "parcel.h"
 
 namespace OHOS {
 namespace Storage {
@@ -29,7 +31,18 @@ struct HmdfsInfo {
     std::string sessionName;
     std::string dstPhysicalPath;
 };
-}
-}
-}
+
+struct HmdfsInfoExt : public HmdfsInfo, public Parcelable {
+        using HmdfsInfo::HmdfsInfo;
+        HmdfsInfoExt(const HmdfsInfo& hmdfsInfo) : HmdfsInfo(hmdfsInfo) {}
+
+        virtual bool Marshalling(Parcel &parcel) const override;
+
+        static HmdfsInfoExt *Unmarshalling(Parcel &parcel);
+};
+
+HmdfsInfo convertExttoInfo(HmdfsInfoExt &infoExt);
+} //DistributedFile
+} //Storage
+} //OHOS
 #endif // FILEMANAGEMENT_DFS_SERVICE_HMDFS_INFO_H

@@ -16,7 +16,7 @@
 #include "network/devsl_dispatcher.h"
 
 #include "device_manager.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "securec.h"
 #include "utils_log.h"
 
@@ -57,7 +57,7 @@ uint32_t DevslDispatcher::DevslGetRegister(const std::string &cid, std::weak_ptr
 {
     std::string udid;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid, udid);
+    deviceManager.GetUdidByNetworkId(SERVICE_NAME, cid, udid);
 
     std::lock_guard<std::mutex> lock(mutex);
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);

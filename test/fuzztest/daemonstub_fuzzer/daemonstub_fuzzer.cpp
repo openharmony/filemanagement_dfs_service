@@ -50,17 +50,17 @@ class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
     ~DaemonStubImpl() override {}
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t OpenP2PConnection(const DmDeviceInfoExt &deviceInfo) override
     {
         return 0;
     }
 
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t CloseP2PConnection(const DmDeviceInfoExt &deviceInfo) override
     {
         return 0;
     }
 
-    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override
+    int32_t OpenP2PConnectionEx(const std::string &networkId, const sptr<IFileDfsListener> &remoteReverseObj) override
     {
         return 0;
     }
@@ -74,7 +74,7 @@ public:
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           HmdfsInfo &info) override
+                           HmdfsInfoExt &info) override
     {
         return 0;
     }
@@ -98,7 +98,7 @@ public:
     }
 
     int32_t PushAsset(int32_t userId,
-                      const sptr<AssetObj> &assetObj,
+                      const AssetObj &assetObj,
                       const sptr<IAssetSendCallback> &sendCallback) override
     {
         return 0;
@@ -119,7 +119,7 @@ void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                      const uint8_t *data,
                                      size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_OPEN_P2_P_CONNECTION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -134,7 +134,7 @@ void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                       const uint8_t *data,
                                       size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_CLOSE_P2_P_CONNECTION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -149,7 +149,7 @@ void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr
                                        const uint8_t *data,
                                        size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_OPEN_P2_P_CONNECTION_EX);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -164,7 +164,7 @@ void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
                                         const uint8_t *data,
                                         size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_CLOSE_P2_P_CONNECTION_EX);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -177,7 +177,7 @@ void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
 
 void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_PREPARE_SESSION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -190,7 +190,7 @@ void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, con
 
 void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_CANCEL_COPY_TASK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -206,7 +206,7 @@ void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                    size_t size)
 {
     OHOS::UID = DAEMON_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_REQUEST_SEND_FILE);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -222,7 +222,7 @@ void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                      size_t size)
 {
     OHOS::UID = DAEMON_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_GET_REMOTE_COPY_INFO);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -236,7 +236,7 @@ void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
 void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     OHOS::UID = DATA_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_PUSH_ASSET);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -252,7 +252,7 @@ void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
                                         size_t size)
 {
     OHOS::UID = DATA_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -269,7 +269,7 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
 {
     OHOS::UID = DATA_UID;
     uint32_t code =
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
+        static_cast<uint32_t>(IDaemonIpcCode::COMMAND_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);

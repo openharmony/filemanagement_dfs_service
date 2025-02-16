@@ -23,7 +23,7 @@
 #include "dfsu_exception.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_name.h"
 #include "network/softbus/softbus_session.h"
@@ -54,7 +54,7 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
 {
 #ifdef SUPPORT_SAME_ACCOUNT
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         return false;
@@ -75,7 +75,7 @@ int32_t SoftbusAgent::JudgeNetworkTypeIsWifi(const DeviceInfo &info)
 {
     int32_t networkType;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    int errCode = deviceManager.GetNetworkTypeByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), networkType);
+    int errCode = deviceManager.GetNetworkTypeByNetworkId(SERVICE_NAME, info.GetCid(), networkType);
     if (errCode) {
         LOGE("failed to get network type by network id errCode = %{public}d", errCode);
         return FileManagement::ERR_BAD_VALUE;
@@ -102,7 +102,7 @@ void SoftbusAgent::JoinDomain()
     SoftbusSessionDispatcher::RegisterSessionListener(sessionName_, shared_from_this());
     SocketInfo serverInfo = {
         .name = const_cast<char*>(sessionName_.c_str()),
-        .pkgName = const_cast<char*>(IDaemon::SERVICE_NAME.c_str()),
+        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
         .dataType = DATA_TYPE_BYTES,
     };
     int32_t socketId = Socket(serverInfo);
@@ -176,7 +176,7 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         .name = const_cast<char*>((sessionName_.c_str())),
         .peerName = const_cast<char*>(sessionName_.c_str()),
         .peerNetworkId = const_cast<char*>(info.GetCid().c_str()),
-        .pkgName = const_cast<char*>(IDaemon::SERVICE_NAME.c_str()),
+        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
         .dataType = DATA_TYPE_BYTES,
     };
     int32_t socketId = Socket(clientInfo);
