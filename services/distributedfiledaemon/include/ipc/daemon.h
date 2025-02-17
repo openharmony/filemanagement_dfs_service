@@ -38,14 +38,84 @@
 #include "dm_device_info_ext.h"
 
 namespace OHOS {
-    namespace Storage {
-    namespace DistributedFile {
-    using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
-    enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
+namespace Storage {
+namespace DistributedFile {
+using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
+enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
     
-    class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyable {
-        DECLARE_SYSTEM_ABILITY(Daemon);
+class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyable {
+    DECLARE_SYSTEM_ABILITY(Daemon);
     
+public:
+    explicit Daemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {};
+    virtual ~Daemon() = default;
+
+    void OnStart() override;
+    void OnStop() override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    ServiceRunningState QueryServiceState() const
+    {
+        return state_;
+    }
+
+    int32_t OpenP2PConnection(const DmDeviceInfoExt &deviceInfo) override;
+    int32_t CloseP2PConnection(const DmDeviceInfoExt &deviceInfo) override;
+    int32_t OpenP2PConnectionEx(const std::string &networkId, const sptr<IFileDfsListener>& remoteReverseObj) override;
+    int32_t CloseP2PConnectionEx(const std::string &networkId) override;
+    int32_t ConnectionCount(const DmDeviceInfoExt &deviceInfo);
+    int32_t CleanUp(const DmDeviceInfoExt &deviceInfo);
+    int32_t ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
+        const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t PrepareSession(const std::string &srcUri,
+                           const std::string &dstUri,
+                           const std::string &srcDeviceId,
+                           const sptr<IRemoteObject> &listener,
+                           HmdfsInfoExt &info) override;
+    int32_t CancelCopyTask(const std::string &sessionName) override;
+    int32_t RequestSendFile(const std::string &srcUri,
+                            const std::string &dstPath,
+                            const std::string &dstDeviceId,
+                            const std::string &sessionName) override;
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool& isFile, bool& isDir) override;
+
+    int32_t PushAsset(int32_t userId,
+                      const AssetObj &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback) override;
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+
+    static int32_t Copy(const std::string &srcUri,
+                        const std::string &dstPath,
+                        const sptr<IDaemon> &daemon,
+                        const std::string &sessionName);
+    static void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
+
+private:
+    Daemon();
+    ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
+    static sptr<Daemon> instance_;
+    static std::mutex instanceLock_;
+    bool registerToService_ { false };
+    std::shared_ptr<OsAccountObserver> subScriber_;
+    void PublishSA();
+    void RegisterOsAccount();
+    sptr<IDaemon> GetRemoteSA(const std::string &remoteDeviceId);
+    void StoreSessionAndListener(const std::string &physicalPath,
+                                 const std::string &sessionName,
+                                 const sptr<IFileTransListener> &listener);
+    int32_t GetRealPath(const std::string &srcUri,
+                        const std::string &dstUri,
+                        std::string &physicalPath,
+                        HmdfsInfoExt &info,
+                        const sptr<IDaemon> &daemon);
+    int32_t CheckCopyRule(std::string &physicalPath,
+                          const std::string &dstUri,
+                          HapTokenInfo &hapTokenInfo,
+                          const bool &isSrcFile,
+                          HmdfsInfoExt &info);
+
+    class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         explicit Daemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {};
         virtual ~Daemon() = default;
