@@ -187,6 +187,8 @@ public:
                                                      Resolution resolution));
     MOCK_METHOD2(BatchInsert, std::pair<int32_t, int64_t>(const std::string &table, const Rows &rows));
     MOCK_METHOD2(BatchInsert, std::pair<int32_t, int64_t>(const std::string &table, const RefRows &rows));
+    MOCK_METHOD3(BatchInsertWithConflictResolution, std::pair<int32_t, int64_t>(const std::string &table,
+                 const RefRows &rows, Resolution resolution));
     MOCK_METHOD5(Update, std::pair<int, int>(const std::string &table,
                                              const Row &row,
                                              const std::string &where,
