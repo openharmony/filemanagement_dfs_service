@@ -2327,6 +2327,7 @@ int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string de
         return ret;
     }
     rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return ret;
 }
 
