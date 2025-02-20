@@ -32,6 +32,7 @@ static const int32_t STAT_MODE_DIR = 0771;
 static const float LOOKUP_TIMEOUT = 60.0;
 #ifdef HICOLLIE_ENABLE
 static const unsigned int LOOKUP_TIMEOUT_S = 1;
+static const unsigned int GETATTR_TIMEOUT_S = 1;
 #endif
 
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
@@ -109,6 +110,9 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
+#ifdef HICOLLIE_ENABLE
+    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_GetAttr", GETATTR_TIMEOUT_S, nullptr, nullptr, false);
+#endif
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     if (ino == FUSE_ROOT_ID) {
         string path = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
@@ -120,9 +124,15 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
                 CloudFile::FaultType::FILE, errno, "lookup " + GetAnonyString(path) + " error, err: " +
                 std::to_string(errno)});
             fuse_reply_err(req, errno);
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
             return;
         }
         fuse_reply_attr(req, &statBuf, 0);
+#ifdef HICOLLIE_ENABLE
+        XCollieHelper::CancelTimer(xcollieId);
+#endif
         return;
     }
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
@@ -130,9 +140,15 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETATTR,
             CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
+#ifdef HICOLLIE_ENABLE
+        XCollieHelper::CancelTimer(xcollieId);
+#endif
         return;
     }
     fuse_reply_attr(req, &inoPtr->stat, 0);
+#ifdef HICOLLIE_ENABLE
+    XCollieHelper::CancelTimer(xcollieId);
+#endif
 }
 
 void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
