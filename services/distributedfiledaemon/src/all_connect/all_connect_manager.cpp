@@ -21,6 +21,8 @@
 #include <thread>
 
 #include "dfs_error.h"
+#include "network/softbus/softbus_asset_recv_listener.h"
+#include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -82,7 +84,7 @@ int32_t AllConnectManager::UnInitAllConnectManager()
     return FileManagement::ERR_OK;
 }
 
-int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
+int32_t AllConnectManager::PublishServiceState(DfsConnectCode code, const std::string &peerNetworkId,
                                                ServiceCollaborationManagerBussinessStatus state)
 {
     LOGI("PublishServiceState NetworkId: %{public}s, %{public}d begin",
@@ -97,6 +99,9 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
         return FileManagement::ERR_DLOPEN;
     }
 
+    if (!GetPublicState(code, peerNetworkId, state)) {
+        return FileManagement::ERR_OK;
+    }
     int32_t ret = allConnect_.ServiceCollaborationManager_PublishServiceState(peerNetworkId.c_str(),
                                                                               SERVICE_NAME.c_str(),
                                                                               "", state);
@@ -105,6 +110,43 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
         return FileManagement::ERR_PUBLISH_STATE;
     }
     return FileManagement::ERR_OK;
+}
+
+bool AllConnectManager::GetPublicState(DfsConnectCode code, const std::string &peerNetworkId,
+    ServiceCollaborationManagerBussinessStatus state)
+{
+    std::lock_guard<std::mutex> lock(connectStatesMutex_);
+    auto connectStateIter = connectStates_.find(peerNetworkId);
+    if (connectStateIter == connectStates_.end()) {
+        std::map<DfsConnectCode, ServiceCollaborationManagerBussinessStatus> tmp;
+        tmp.insert(std::make_pair(code, state));
+        connectStates_.insert(std::make_pair(peerNetworkId, tmp));
+        return state == SCM_CONNECTED;
+    }
+    auto &connectState = connectStateIter->second;
+    
+    auto it = connectState.find(code);
+    if (it == connectState.end()) {
+        connectState.insert(std::make_pair(code, state));
+        return state == SCM_CONNECTED;
+    }
+    if (state == it->second) {
+        return false;
+    }
+
+    // connect -> idle
+    if (state == SCM_IDLE && it->second == SCM_CONNECTED) {
+        connectState[code] = state;
+        for(auto iter : connectState) {
+            if (iter.second == SCM_CONNECTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+    // idle -> connect
+    connectState[code] = state;
+    return true;
 }
 
 int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkId,
@@ -244,6 +286,8 @@ int32_t AllConnectManager::OnStop(const char *peerNetworkId)
     LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(pNetworkId).c_str());
     std::thread([pNetworkId]() {
         SoftBusHandler::GetInstance().CopyOnStop(pNetworkId);
+        SoftbusAssetRecvListener::DisConnectByAllConnect(pNetworkId);
+        SoftBusAssetSendListener::DisConnectByAllConnect(pNetworkId);
     }).detach();
     return FileManagement::ERR_OK;
 }

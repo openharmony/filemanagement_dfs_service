@@ -39,6 +39,7 @@ public:
 
     static void OnAssetRecvBind(int32_t sessionId, PeerSocketInfo info);
     static void OnRecvShutdown(int32_t sessionId, ShutdownReason reason);
+    static void DisConnectByAllConnect(const std::string &peerNetworkId);
 private:
     static int32_t HandleSingleFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
     static int32_t HandleZipFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
@@ -49,6 +50,7 @@ private:
     static bool RemoveAsset(const std::string &file);
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     static inline std::string path_;
+    static inline std::mutex mtx_;
 };
 } // namespace DistributedFile
 } // namespace Storage

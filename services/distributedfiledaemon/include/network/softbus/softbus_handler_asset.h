@@ -56,6 +56,8 @@ public:
     void AddAssetObj(int32_t socketId, const sptr<AssetObj> &assetObj);
     sptr<AssetObj> GetAssetObj(int32_t socketId);
     void RemoveAssetObj(int32_t socketId);
+    std::vector<int32_t> GetSocketIdFromAssetObj(const std::string &peerNetworkId);
+    std::vector<int32_t> GetSocketIdFromClientInfo(const std::string &peerNetworkId);
 
     int32_t GenerateAssetObjInfo(int32_t socketId,
                                  const std::string &fileName,

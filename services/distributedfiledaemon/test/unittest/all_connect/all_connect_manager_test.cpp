@@ -22,6 +22,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "library_func_mock.h"
+#include "network/softbus/softbus_asset_recv_listener.h"
+#include "network/softbus/softbus_asset_send_listener.h"
 
 namespace OHOS {
 namespace Storage {
@@ -35,6 +37,10 @@ int32_t CollaborationMockSuccess(ServiceCollaborationManager_API *exportapi)
 {
     return 0;
 }
+
+void SoftbusAssetRecvListener::DisConnectByAllConnect(const std::string &peerNetworkId) {}
+
+void SoftBusAssetSendListener::DisConnectByAllConnect(const std::string &peerNetworkId) {}
 namespace Test {
 using namespace testing;
 using namespace testing::ext;
@@ -195,7 +201,7 @@ HWTEST_F(AllConnectManagerTest, PublishServiceState_001, TestSize.Level1)
 
         allConnectManager.dllHandle_ = nullptr;
 
-        int32_t ret = allConnectManager.PublishServiceState(peerNetworkId, state);
+        int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
         EXPECT_EQ(ret, FileManagement::ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -219,7 +225,7 @@ HWTEST_F(AllConnectManagerTest, PublishServiceState_002, TestSize.Level1)
         allConnectManager.dllHandle_ = (void *)0x1;
         allConnectManager.allConnect_.ServiceCollaborationManager_PublishServiceState = nullptr;
 
-        int32_t ret = allConnectManager.PublishServiceState(peerNetworkId, state);
+        int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
         EXPECT_EQ(ret, FileManagement::ERR_DLOPEN);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -249,8 +255,8 @@ HWTEST_F(AllConnectManagerTest, PublishServiceState_003, TestSize.Level1)
             return 1;
         };
 
-        int32_t ret = allConnectManager.PublishServiceState(peerNetworkId, state);
-        EXPECT_EQ(ret, FileManagement::ERR_PUBLISH_STATE);
+        int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -279,7 +285,7 @@ HWTEST_F(AllConnectManagerTest, PublishServiceState_004, TestSize.Level1)
             return 0;
         };
 
-        int32_t ret = allConnectManager.PublishServiceState(peerNetworkId, state);
+        int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
         EXPECT_EQ(ret, FileManagement::ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);

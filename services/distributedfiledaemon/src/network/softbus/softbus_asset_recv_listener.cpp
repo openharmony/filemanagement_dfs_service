@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "accesstoken_kit.h"
+#include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
@@ -77,6 +78,7 @@ const char* SoftbusAssetRecvListener::GetRecvPath()
 
 void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnRecvFileStart, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
     if (fileCnt == 0) {
         LOGE("fileList has no file");
@@ -94,6 +96,7 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
         LOGE("Generate assetObjInfo fail");
         return;
     }
+    SoftBusHandlerAsset::GetInstance().AddAssetObj(socketId, assetObj);
     AssetCallbackManager::GetInstance().NotifyAssetRecvStart(srcNetworkId,
                                                              assetObj->dstNetworkId_,
                                                              assetObj->sessionId_,
@@ -102,6 +105,7 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
 
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnRecvFileFinished, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
     if (fileCnt == 0) {
         LOGE("fileList has no file");
@@ -143,6 +147,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
 void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorCode,
                                                 const char **fileList, int32_t fileCnt)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     LOGE("OnRecvAssetError, sessionId = %{public}d, errorCode = %{public}d", socketId, errorCode);
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
     if (srcNetworkId.empty()) {
@@ -316,9 +321,33 @@ bool SoftbusAssetRecvListener::JudgeSingleFile(const std::string &filePath)
     return true;
 }
 
+void SoftbusAssetRecvListener::DisConnectByAllConnect(const std::string &peerNetworkId)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    auto socketIds = SoftBusHandlerAsset::GetInstance().GetSocketIdFromClientInfo(peerNetworkId);
+    for (auto socketId : socketIds) {
+        auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
+        if (assetObj == nullptr) {
+            LOGE("OnSendAssetError  get assetObj is nullptr");
+            continue;
+        }
+        AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(peerNetworkId, assetObj, FileManagement::ERR_BAD_VALUE);
+        Shutdown(socketId);
+        SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+    }
+}
+
 void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason reason)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+    auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(sessionId);
+    if (assetObj == nullptr) {
+        LOGW("get assetObj is nullptr");
+        return;
+    }
+    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(assetObj->dstNetworkId_, assetObj, FileManagement::ERR_BAD_VALUE);
+    SoftBusHandlerAsset::GetInstance().RemoveClientInfo(sessionId);
 }
 } // namespace DistributedFile
 } // namespace Storage
