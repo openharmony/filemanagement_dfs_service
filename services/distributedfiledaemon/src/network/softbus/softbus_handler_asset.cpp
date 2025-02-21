@@ -195,7 +195,7 @@ void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint3
         if (stat(file, &buf) == -1) {
             return;
         }
-        totalSize += buf.st_size;
+        totalSize += static_cast<uint64_t>(buf.st_size);
     }
 
     TransFlowInfo flowInfo;
