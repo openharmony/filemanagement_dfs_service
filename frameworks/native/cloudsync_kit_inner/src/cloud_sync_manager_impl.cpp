@@ -319,7 +319,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri,  bool needClean)
+int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri, bool needClean)
 {
     LOGI("StopDownloadFile start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
@@ -333,7 +333,7 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri,  bool nee
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
+int32_t CloudSyncManagerImpl::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     LOGI("StopFileCache start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();

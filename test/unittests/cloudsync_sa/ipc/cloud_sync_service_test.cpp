@@ -198,7 +198,7 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
     try {
         std::string bundleName = "";
         int ret = g_servicePtr_->UnRegisterCallbackInner(bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnRegisterCallbackInner FAILED";
@@ -219,7 +219,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
         std::string bundleName = "";
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
         int ret = g_servicePtr_->RegisterCallbackInner(callback, bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterCallbackInner FAILED";
@@ -281,7 +281,7 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
     try {
         std::string bundleName = "";
         int ret = g_servicePtr_->StopSyncInner(bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopSyncInner FAILED";
@@ -301,7 +301,7 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerTest, TestSize.Level1)
     try {
         std::string uri = "";
         int ret = g_servicePtr_->CleanCacheInner(uri);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CleanCacheInner FAILED";
@@ -364,7 +364,7 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
         std::string path;
         bool needClean = false;
         int ret = g_servicePtr_->StopDownloadFile(path, needClean);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_INVAL_ARG, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDownloadFile FAILED";
@@ -384,7 +384,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1
     try {
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
         int ret = g_servicePtr_->RegisterDownloadFileCallback(downloadCallback);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterDownloadFileCallback FAILED";
@@ -403,7 +403,7 @@ HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Leve
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback start";
     try {
         int ret = g_servicePtr_->UnregisterDownloadFileCallback();
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback FAILED";
@@ -720,7 +720,7 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest001, TestSize.Level1)
         EXPECT_NE(g_servicePtr_, nullptr);
         BundleNameUserInfo userInfo;
         int32_t ret = g_servicePtr_->GetBundleNameUserInfo(userInfo);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest001 failed";

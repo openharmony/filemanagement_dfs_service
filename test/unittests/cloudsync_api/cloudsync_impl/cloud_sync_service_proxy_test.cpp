@@ -603,7 +603,6 @@ HWTEST_F(CloudSyncServiceProxyTest, NotifyEventChange002, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyEventChange End";
 }
 
-
 /**
  * @tc.name: StartDownloadFile001
  * @tc.desc: Verify the StartDownloadFile function.
