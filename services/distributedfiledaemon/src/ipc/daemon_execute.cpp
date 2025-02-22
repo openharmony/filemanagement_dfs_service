@@ -173,7 +173,7 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
         LOGE("OpenSession failed, ret is %{public}d", ret);
         return ret;
     }
-    AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::COPY_FILE, dstDeviceId,
                                                          ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     LOGI("RequestSendFile OpenSession success");
 
@@ -310,12 +310,12 @@ int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
             return E_ZIP;
         }
         isSingleFile = false;
-        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, false);
+        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, sendFileName, false);
         return E_OK;
     } else {
         sendFileName = fileList[0];
         isSingleFile = true;
-        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, true);
+        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, sendFileName, true);
         return E_OK;
     }
 }

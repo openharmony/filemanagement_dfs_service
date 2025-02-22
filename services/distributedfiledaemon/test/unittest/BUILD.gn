@@ -894,16 +894,17 @@ ohos_unittest("softbus_file_receive_listener_test") {
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
   ]
 
   sources = [
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_file_receive_listener_test.cpp",
   ]
 
@@ -922,6 +923,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -948,16 +950,17 @@ ohos_unittest("softbus_file_send_listener_test") {
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
   ]
 
   sources = [
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_file_send_listener_test.cpp",
   ]
 
@@ -976,6 +979,7 @@ ohos_unittest("softbus_file_send_listener_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -1239,17 +1243,20 @@ ohos_unittest("softbus_handler_test") {
 
   module_out_path = module_output_path
 
-  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+  ]
 
   sources = [
     "${distributedfile_path}/test/mock/socket_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_handler_test.cpp",
   ]
 
@@ -1330,17 +1337,20 @@ ohos_unittest("softbus_session_listener_test") {
 
   module_out_path = module_output_path
 
-  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+  ]
 
   sources = [
     "${distributedfile_path}/test/mock/socket_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_session_listener_test.cpp",
   ]
 
@@ -1385,6 +1395,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
   ]
 
   sources = [
@@ -1393,6 +1404,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_asset_recv_listener_test.cpp",
   ]
 
@@ -1411,6 +1423,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "os_account:os_account_innerkits",
     "zlib:shared_libz",
@@ -1434,6 +1447,7 @@ ohos_unittest("softbus_asset_send_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
   ]
 
   sources = [
@@ -1442,6 +1456,7 @@ ohos_unittest("softbus_asset_send_listener_test") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "network/softbus/softbus_asset_send_listener_test.cpp",
   ]
 
