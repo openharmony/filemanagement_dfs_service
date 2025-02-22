@@ -43,7 +43,6 @@ DistributedFileDaemonManagerImpl &DistributedFileDaemonManagerImpl::GetInstance(
 
 int32_t DistributedFileDaemonManagerImpl::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("DistributedFileDaemonManagerImpl::OpenP2PConnection, deviceInfo.networkId:%{public}s", deviceInfo.networkId);
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null");
@@ -56,8 +55,6 @@ int32_t DistributedFileDaemonManagerImpl::OpenP2PConnection(const DistributedHar
 
 int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("DistributedFileDaemonManagerImpl::CloseP2PConnection");
-    LOGI("deviceInfo.networkId:%{public}s", deviceInfo.networkId);
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null");
@@ -71,9 +68,6 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHa
 int32_t DistributedFileDaemonManagerImpl::OpenP2PConnectionEx(const std::string &networkId,
                                                               sptr<IFileDfsListener> remoteReverseObj)
 {
-    LOGI("DistributedFileDaemonManagerImpl::OpenP2PConnectionEx");
-    LOGI("networkId:%{public}s, flags:%{public}s",
-         networkId.c_str(), (remoteReverseObj == nullptr) ? "NULL" : "Not NULL");
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null.");
@@ -84,7 +78,6 @@ int32_t DistributedFileDaemonManagerImpl::OpenP2PConnectionEx(const std::string 
 
 int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string &networkId)
 {
-    LOGI("DistributedFileDaemonManagerImpl::CloseP2PConnectionEx, networkId:%{public}s", networkId.c_str());
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null.");
@@ -99,12 +92,6 @@ int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcU
                                                          const sptr<IRemoteObject> &listener,
                                                          HmdfsInfo &info)
 {
-    LOGI("DistributedFileDaemonManagerImpl::PrepareSession");
-    LOGI("srcUri:%{public}s", srcUri.c_str());
-    LOGI("dstUri:%{public}s", dstUri.c_str());
-    LOGI("srcDeviceId:%{public}s", srcDeviceId.c_str());
-    LOGI("listener:%{public}s", (listener == nullptr) ? "NULL" : "Not NULL");
-    LOGI("info.sessionName:%{public}s", info.sessionName.c_str());
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -121,9 +108,6 @@ int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &src
                                                           const std::string &remoteDeviceId,
                                                           const std::string &sessionName)
 {
-    LOGI("DistributedFileDaemonManagerImpl::RequestSendFile");
-    LOGI("srcUri:%{public}s, dstPath:%{public}s, remoteDeviceId:%{public}s, sessionName:%{public}s", srcUri.c_str(),
-         dstPath.c_str(), remoteDeviceId.c_str(), sessionName.c_str());
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -134,9 +118,6 @@ int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &src
 
 int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
 {
-    LOGI("DistributedFileDaemonManagerImpl::GetRemoteCopyInfo");
-    LOGI("srcUri:%{public}s, isFile:%{public}s, isDir:%{public}s",
-        srcUri.c_str(), isFile ? "true" : "false", isDir ? "true" : "false");
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -149,8 +130,6 @@ int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &s
 
 int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &sessionName)
 {
-    LOGI("DistributedFileDaemonManagerImpl::CancelCopyTask");
-    LOGI("sessionName:%{public}s", sessionName.c_str());
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -164,10 +143,10 @@ int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
                                                     const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("DistributedFileDaemonManagerImpl PushAsset enter.");
-    LOGI("userId:%{public}d, assetObj:%{public}s, sendCallback:%{public}s",
-        userId,
-        (assetObj == nullptr) ? "NULL" : "Not NULL",
-        (sendCallback == nullptr) ? "NULL" : "Not NULL");
+    if (assetObj == nullptr) {
+        LOGE("assetObj is null");
+        return OHOS::FileManagement::E_NULLPTR;
+    }
     auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -179,7 +158,6 @@ int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
 int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("DistributedFileDaemonManagerImpl registerAssetCallback enter.");
-    LOGI("recvCallback:%{public}s", (recvCallback == nullptr) ? "NULL" : "Not NULL");
     if (recvCallback == nullptr) {
         LOGE("Register IAssetRecvCallback is null.");
         return OHOS::FileManagement::E_NULLPTR;
@@ -239,7 +217,6 @@ sptr<IDaemon> DistributedFileDaemonManagerImpl::DistributedFileDaemonManagerImpl
     LOGI("daemon manager getinstance start");
     unique_lock<mutex> lock(proxyMutex_);
     if (daemonProxy_ != nullptr) {
-    LOGI("GetDaemonInterface daemonProxy_ != nullptr");
         return daemonProxy_;
     }
 

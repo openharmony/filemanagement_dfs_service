@@ -366,9 +366,6 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-    LOGI("srcUri: %{public}s", Utils::GetAnonyString(srcUri).c_str());
-    LOGI("dstPath: %{public}s", Utils::GetAnonyString(dstPath).c_str());
-    LOGI("sessionName: %{public}s", Utils::GetAnonyString(sessionName).c_str());
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -402,6 +399,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfoExt &info)
 {
+    HmdfsInfo info_ = convertExttoInfo(info);
     LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
     LOGI("dstUri: %{public}s", Utils::GetAnonyString(dstUri).c_str());
     LOGI("srcUri: %{public}s", Utils::GetAnonyString(srcUri).c_str());
@@ -419,7 +417,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info_, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
@@ -431,12 +429,12 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-    info.sessionName = sessionName;
+    info_.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto prepareSessionData =
-        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info, prepareSessionBlock);
+        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info_, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -453,6 +451,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
 
     ret = prepareSessionBlock->GetValue();
     LOGI("PrepareSession end, ret is %{public}d", ret);
+    info = HmdfsInfoExt(info_);
     return ret;
 }
 
@@ -574,9 +573,6 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
     LOGI("GetRemoteCopyInfo begin.");
-    LOGI("srcUri is %{public}s", Utils::GetAnonyString(srcUri).c_str());
-    LOGI("SrcFile is %{public}s", isSrcFile ? "NOT NULL" : "NULL");
-    LOGI("srcIsDir is %{public}s", srcIsDir ? "NOT NULL" : "NULL");
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -720,7 +716,6 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
 int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    LOGI("userId is %{public}d", userId);
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
