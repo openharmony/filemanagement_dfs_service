@@ -137,7 +137,7 @@ bool AllConnectManager::GetPublicState(DfsConnectCode code, const std::string &p
     // connect -> idle
     if (state == SCM_IDLE && it->second == SCM_CONNECTED) {
         connectState[code] = state;
-        for(auto iter : connectState) {
+        for (auto iter : connectState) {
             if (iter.second == SCM_CONNECTED) {
                 return false;
             }

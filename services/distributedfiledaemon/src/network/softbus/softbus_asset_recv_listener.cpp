@@ -331,7 +331,8 @@ void SoftbusAssetRecvListener::DisConnectByAllConnect(const std::string &peerNet
             LOGE("OnSendAssetError  get assetObj is nullptr");
             continue;
         }
-        AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(peerNetworkId, assetObj, FileManagement::ERR_BAD_VALUE);
+        AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(
+            peerNetworkId, assetObj, FileManagement::ERR_BAD_VALUE);
         Shutdown(socketId);
         SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
     }
@@ -346,7 +347,8 @@ void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason 
         LOGW("get assetObj is nullptr");
         return;
     }
-    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(assetObj->dstNetworkId_, assetObj, FileManagement::ERR_BAD_VALUE);
+    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(
+        assetObj->dstNetworkId_, assetObj, FileManagement::ERR_BAD_VALUE);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(sessionId);
 }
 } // namespace DistributedFile

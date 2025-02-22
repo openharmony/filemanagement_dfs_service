@@ -311,19 +311,11 @@ void SoftBusHandlerAsset::RemoveClientInfo(int32_t socketId)
         AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::PUSH_ASSET, peerNetworkId,
             ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
     }
-    {    
-        std::lock_guard<std::mutex> lock(clientInfoMutex_);
-        auto it = clientInfoMap_.find(socketId);
-        if (it != clientInfoMap_.end()) {
-            clientInfoMap_.erase(it->first);
-        }
-    }
-    {
-        std::lock_guard<std::mutex> lock(assetObjMapMutex_);
-        auto it = assetObjMap_.find(socketId);
-        if (it != assetObjMap_.end()) {
-            assetObjMap_.erase(it->first);
-        }
+    RemoveAssetObj(socketId);
+    std::lock_guard<std::mutex> lock(clientInfoMutex_);
+    auto it = clientInfoMap_.find(socketId);
+    if (it != clientInfoMap_.end()) {
+        clientInfoMap_.erase(it->first);
     }
 }
 

@@ -138,12 +138,6 @@ bool NetworkAgentTemplate::FindSocketId(int32_t socketId)
     return sessionPool_.FindSocketId(socketId);
 }
 
-// bool NetworkAgentTemplate::CloseSession(int32_t socketId, const std::string &cid)
-// {
-//     sessionPool_.ReleaseSession(fd);
-//     sessionPool_.SinkOffline(cid);
-// }
-
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(

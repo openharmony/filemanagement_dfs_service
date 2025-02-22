@@ -130,7 +130,7 @@ void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason 
     }
 }
 
-void SoftBusAssetSendListener::AddFileMap(const std::string &taskId,const std::string &filePath, bool isSingleFile)
+void SoftBusAssetSendListener::AddFileMap(const std::string &taskId, const std::string &filePath, bool isSingleFile)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     auto it = taskIsSingleFileMap_.find(taskId);
