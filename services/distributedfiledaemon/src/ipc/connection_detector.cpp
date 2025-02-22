@@ -186,8 +186,9 @@ uint64_t ConnectionDetector::MocklispHash(const string &str)
     auto err = stat(str.c_str(), &statBuf);
     if (err != 0) {
         LOGE("stat failed %{public}s error, err: %{public}d", GetAnonyString(str).c_str(), err);
-        return FileManagement::ERR_BAD_VALUE;
+        return static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE);
     }
+    LOGI("statBuf dev id: %{public}lu", static_cast<unsigned long>(statBuf.st_dev));
     return statBuf.st_dev;
 }
 

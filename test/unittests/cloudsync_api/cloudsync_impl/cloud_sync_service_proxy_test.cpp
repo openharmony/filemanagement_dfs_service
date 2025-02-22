@@ -613,9 +613,24 @@ HWTEST_F(CloudSyncServiceProxyTest, NotifyEventChange002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StartDownloadFile001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartDownloadFile Start";
-    string uri = "";
+    string uri = "file://media";
     int result = proxy_->StartDownloadFile(uri);
     EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "StartDownloadFile End";
+}
+
+/**
+ * @tc.name: StartDownloadFile002
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, StartDownloadFile002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDownloadFile Start";
+    string uri = "";
+    int result = proxy_->StartDownloadFile(uri);
+    EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "StartDownloadFile End";
 }
 
@@ -628,12 +643,30 @@ HWTEST_F(CloudSyncServiceProxyTest, StartDownloadFile001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StartFileCache001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFileCache Start";
-    string uri = "";
+    string uri = "file://media";
     std::vector<std::string> uriVec;
     uriVec.push_back(uri);
     int64_t downloadId = 0;
     int result = proxy_->StartFileCache(uriVec, downloadId);
     EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "StartFileCache End";
+}
+
+/**
+ * @tc.name: StartFileCache002
+ * @tc.desc: Verify the StartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, StartFileCache002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileCache Start";
+    string uri = "";
+    std::vector<std::string> uriVec;
+    uriVec.push_back(uri);
+    int64_t downloadId = 0;
+    int result = proxy_->StartFileCache(uriVec, downloadId);
+    EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "StartFileCache End";
 }
 
@@ -663,11 +696,27 @@ HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile Start";
-    string uri = "";
+    string uri = "file://media";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
 
     int result = proxy_->StopDownloadFile(uri);
     EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "StopDownloadFile End";
+}
+
+/**
+ * @tc.name: StopDownloadFile003
+ * @tc.desc: Verify the StopDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDownloadFile Start";
+    string uri = "";
+
+    int result = proxy_->StopDownloadFile(uri);
+    EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "StopDownloadFile End";
 }
 

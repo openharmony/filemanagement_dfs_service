@@ -1501,9 +1501,9 @@ static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .getxattr           = CloudDisk::FuseOperations::GetXattr,
     .access             = CloudDisk::FuseOperations::Access,
     .create             = CloudDisk::FuseOperations::Create,
+    .ioctl              = CloudDisk::FuseOperations::Ioctl,
     .write_buf          = CloudDisk::FuseOperations::WriteBuf,
     .forget_multi       = CloudDisk::FuseOperations::ForgetMulti,
-    .ioctl              = CloudDisk::FuseOperations::Ioctl,
     .lseek              = CloudDisk::FuseOperations::Lseek,
 };
 

@@ -38,7 +38,7 @@ int32_t AllConnectManager::UnInitAllConnectManager()
     return 0;
 }
 
-int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
+int32_t AllConnectManager::PublishServiceState(DfsConnectCode code, const std::string &peerNetworkId,
                                                ServiceCollaborationManagerBussinessStatus state)
 {
     return 0;
@@ -51,6 +51,12 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
         return -1;
     }
     return IAllConnectManagerMock::iAllConnectManagerMock_->ApplyAdvancedResource(peerNetworkId, resourceRequest);
+}
+
+bool GetPublicState(DfsConnectCode code, const std::string &peerNetworkId,
+    ServiceCollaborationManagerBussinessStatus state)
+{
+    return true;
 }
 
 int32_t AllConnectManager::GetAllConnectSoLoad()

@@ -48,6 +48,7 @@ ohos_shared_library("cloudsync_sa") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
+    "src/cycle_task/tasks/optimize_cache_task.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",
@@ -154,6 +155,7 @@ ohos_static_library("cloudsync_sa_static") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
+    "src/cycle_task/tasks/optimize_cache_task.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",

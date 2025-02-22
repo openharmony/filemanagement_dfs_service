@@ -429,6 +429,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         filePtr->isWriteOpen = (flags & O_RDWR) | (flags & O_WRONLY);
         fuse_reply_open(req, fi);
     } else {
+        path = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
         CloudOpen(req, inoPtr, fi, path);
     }
 }

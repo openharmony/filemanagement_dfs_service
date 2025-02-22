@@ -212,7 +212,7 @@ int32_t Daemon::ConnectionCount(const DmDeviceInfoExt &deviceInfo)
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     auto st_dev = ConnectionDetector::MocklispHash(path);
-    if (st_dev == FileManagement::ERR_BAD_VALUE) {
+    if (st_dev == static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE)) {
         return st_dev;
     }
     ss << st_dev;

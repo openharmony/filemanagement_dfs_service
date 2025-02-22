@@ -14,6 +14,7 @@
  */
 #include "system_load.h"
 
+#include "battery_status.h"
 #include "dfs_error.h"
 #include "parameters.h"
 #include "task_state_manager.h"
@@ -53,11 +54,15 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
             dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         }
         if (systemLoadThumb == "true") {
-            TaskStateManager::GetInstance().StartTask();
-            if (dataSyncManager_->DownloadThumb() == E_OK) {
-                LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
-                system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
+            if (BatteryStatus::IsCharging() && level > SYSTEMLOADLEVEL_WARM) {
+                return;
+            } else if (!BatteryStatus::IsCharging() && level > SYSTEMLOADLEVEL_NORMAL) {
+                return;
             }
+            LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
+            system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
+            TaskStateManager::GetInstance().StartTask();
+            dataSyncManager_->DownloadThumb();
         }
     }
 }

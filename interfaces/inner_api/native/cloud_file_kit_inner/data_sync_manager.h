@@ -65,6 +65,7 @@ public:
     virtual int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
     virtual int32_t CleanRemainFile(const std::string &bundleName, const int32_t userId);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
+    virtual int32_t OptimizeCache(const int32_t userId, const std::string &bundleName);
     virtual int32_t BatchCleanFile(const std::vector<CloudSync::CleanFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId);
     virtual int32_t DownloadThumb();

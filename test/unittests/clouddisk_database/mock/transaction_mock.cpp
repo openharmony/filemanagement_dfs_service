@@ -31,6 +31,8 @@ public:
     MOCK_METHOD0(Close, int32_t());
     MOCK_METHOD2(BatchInsert, std::pair<int32_t, int64_t>(const std::string &table, const Rows &rows));
     MOCK_METHOD2(BatchInsert, std::pair<int32_t, int64_t>(const std::string &table, const RefRows &rows));
+    MOCK_METHOD3(BatchInsertWithConflictResolution, std::pair<int32_t, int64_t>(const std::string &table,
+                 const RefRows &rows, Resolution resolution));
     MOCK_METHOD3(Delete, std::pair<int32_t, int32_t>(const std::string &table, const std::string &whereClause,
                  const Values &args));
     MOCK_METHOD1(Delete, std::pair<int32_t, int32_t>(const AbsRdbPredicates &predicates));

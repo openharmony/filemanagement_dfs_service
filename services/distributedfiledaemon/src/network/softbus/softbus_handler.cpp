@@ -75,7 +75,7 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
         networkIdMap_.insert(std::make_pair(sessionId, info.networkId));
     }
 
-    AllConnectManager::GetInstance().PublishServiceState(info.networkId,
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::COPY_FILE, info.networkId,
         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
 }
 
@@ -256,7 +256,7 @@ void SoftBusHandler::SetSocketOpt(int32_t socketId, const char **src, uint32_t s
         if (stat(file, &buf) == -1) {
             return;
         }
-        totalSize += buf.st_size;
+        totalSize += static_cast<uint64_t>(buf.st_size);
     }
 
     TransFlowInfo flowInfo;
@@ -398,7 +398,7 @@ void SoftBusHandler::RemoveNetworkId(int32_t socketId)
             return;
         }
     }
-    AllConnectManager::GetInstance().PublishServiceState(peerNetworkId,
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId,
         ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
 }
 

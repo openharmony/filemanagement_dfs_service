@@ -16,6 +16,7 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_H
 #define FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_H
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -26,12 +27,18 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+enum class DfsConnectCode {
+    OPEN_P2P = 1,
+    PUSH_ASSET,
+    COPY_FILE,
+};
+
 class AllConnectManager {
 public:
     static AllConnectManager &GetInstance();
     int32_t InitAllConnectManager();
     int32_t UnInitAllConnectManager();
-    int32_t PublishServiceState(const std::string &peerNetworkId,
+    int32_t PublishServiceState(DfsConnectCode code, const std::string &peerNetworkId,
                                 ServiceCollaborationManagerBussinessStatus state);
     int32_t ApplyAdvancedResource(const std::string &peerNetworkId,
                                   ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest);
@@ -43,6 +50,8 @@ private:
     int32_t GetAllConnectSoLoad();
     int32_t RegisterLifecycleCallback();
     int32_t UnRegisterLifecycleCallback();
+    bool GetPublicState(DfsConnectCode code, const std::string &peerNetworkId,
+        ServiceCollaborationManagerBussinessStatus state);
 
     static int32_t OnStop(const char *peerNetworkId);
     static int32_t ApplyResult(int32_t errorcode, int32_t result, const char *reason);
@@ -60,6 +69,9 @@ private:
     std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> remoteHardwareList_;
     std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> localHardwareList_;
     std::shared_ptr<ServiceCollaborationManager_CommunicationRequestInfo> communicationRequest_;
+
+    std::mutex connectStatesMutex_;
+    std::map<std::string, std::map<DfsConnectCode, ServiceCollaborationManagerBussinessStatus>> connectStates_;
 
     static std::shared_ptr<BlockObject<bool>> applyResultBlock_;
     static constexpr uint32_t BLOCK_INTERVAL_ALLCONNECT = 60 * 1000;

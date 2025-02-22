@@ -34,13 +34,14 @@ public:
     static void OnSendAssetError(int32_t socketId, const char **fileList, int32_t fileCnt, int32_t errorCode);
     static void OnSendShutdown(int32_t sessionId, ShutdownReason reason);
 
-    static void AddFileMap(const std::string &taskId, bool isSingleFile);
+    static void AddFileMap(const std::string &taskId, const std::string &filePath, bool isSingleFile);
     static bool GetIsZipFile(const std::string &taskId);
     static void RemoveFileMap(const std::string &taskId);
+    static void DisConnectByAllConnect(const std::string &peerNetworkId);
 
 private:
-    static std::mutex taskIsSingleFileMapMutex_;
-    static std::map<std::string, bool> taskIsSingleFileMap_;
+    static inline std::recursive_mutex mtx_;
+    static std::map<std::string, std::pair<std::string, bool>> taskIsSingleFileMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
 };
 } // namespace DistributedFile

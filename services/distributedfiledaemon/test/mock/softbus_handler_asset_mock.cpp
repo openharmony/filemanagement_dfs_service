@@ -63,6 +63,15 @@ void SoftBusHandlerAsset::OnAssetRecvBind(int32_t socketId, const std::string &s
     return;
 }
 
+std::vector<int32_t> GetSocketIdFromAssetObj(const std::string &peerNetworkId)
+{
+    return {};
+}
+std::vector<int32_t> GetSocketIdFromClientInfo(const std::string &peerNetworkId)
+{
+    return {};
+}
+
 std::string SoftBusHandlerAsset::GetClientInfo(int32_t socketId)
 {
     if (ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ == nullptr) {

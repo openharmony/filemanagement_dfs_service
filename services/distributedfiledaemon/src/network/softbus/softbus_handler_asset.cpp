@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
 #include "device_manager.h"
 #include "dfs_error.h"
@@ -181,6 +182,8 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         Shutdown(socketId);
         return ret;
     }
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::PUSH_ASSET, dstNetworkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     LOGI("OpenSession success.");
     return E_OK;
 }
@@ -195,7 +198,7 @@ void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint3
         if (stat(file, &buf) == -1) {
             return;
         }
-        totalSize += buf.st_size;
+        totalSize += static_cast<uint64_t>(buf.st_size);
     }
 
     TransFlowInfo flowInfo;
@@ -243,19 +246,27 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
 void SoftBusHandlerAsset::closeAssetBind(int32_t socketId)
 {
     LOGI("closeAssetBind Enter.");
-    RemoveAssetObj(socketId);
     Shutdown(socketId);
+    auto assetObj = GetAssetObj(socketId);
+    if (assetObj == nullptr) {
+        return;
+    }
+    RemoveAssetObj(socketId);
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::PUSH_ASSET, assetObj->dstNetworkId_,
+        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
 }
 
 void SoftBusHandlerAsset::OnAssetRecvBind(int32_t socketId, const std::string &srcNetWorkId)
 {
+    std::lock_guard<std::mutex> lock(clientInfoMutex_);
     if (!IsSameAccount(srcNetWorkId)) {
         LOGE("The source and sink device is not same account, not support.");
         Shutdown(socketId);
         return;
     }
-    std::lock_guard<std::mutex> lock(clientInfoMutex_);
     clientInfoMap_.insert(std::make_pair(socketId, srcNetWorkId));
+    AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::PUSH_ASSET, srcNetWorkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
 }
 
 std::string SoftBusHandlerAsset::GetClientInfo(int32_t socketId)
@@ -269,8 +280,38 @@ std::string SoftBusHandlerAsset::GetClientInfo(int32_t socketId)
     return iter->second;
 }
 
+std::vector<int32_t> SoftBusHandlerAsset::GetSocketIdFromClientInfo(const std::string &peerNetworkId)
+{
+    std::vector<int32_t> socketIdVec;
+    std::lock_guard<std::mutex> lock(clientInfoMutex_);
+    for (auto iter = clientInfoMap_.begin(); iter != clientInfoMap_.end(); ++iter) {
+        if (iter->second == peerNetworkId) {
+            socketIdVec.push_back(iter->first);
+        }
+    }
+    return socketIdVec;
+}
+
+std::vector<int32_t> SoftBusHandlerAsset::GetSocketIdFromAssetObj(const std::string &peerNetworkId)
+{
+    std::vector<int32_t> socketIdVec;
+    std::lock_guard<std::mutex> lock(assetObjMapMutex_);
+    for (auto iter = assetObjMap_.begin(); iter != assetObjMap_.end(); ++iter) {
+        if (iter->second->dstNetworkId_ == peerNetworkId) {
+            socketIdVec.push_back(iter->first);
+        }
+    }
+    return socketIdVec;
+}
+
 void SoftBusHandlerAsset::RemoveClientInfo(int32_t socketId)
 {
+    auto peerNetworkId = GetClientInfo(socketId);
+    if (!peerNetworkId.empty()) {
+        AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::PUSH_ASSET, peerNetworkId,
+            ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+    }
+    RemoveAssetObj(socketId);
     std::lock_guard<std::mutex> lock(clientInfoMutex_);
     auto it = clientInfoMap_.find(socketId);
     if (it != clientInfoMap_.end()) {
