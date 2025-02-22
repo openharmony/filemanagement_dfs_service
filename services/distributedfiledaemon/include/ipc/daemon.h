@@ -108,13 +108,13 @@ private:
     int32_t GetRealPath(const std::string &srcUri,
                         const std::string &dstUri,
                         std::string &physicalPath,
-                        HmdfsInfoExt &info,
+                        HmdfsInfo &info,
                         const sptr<IDaemon> &daemon);
     int32_t CheckCopyRule(std::string &physicalPath,
                           const std::string &dstUri,
                           HapTokenInfo &hapTokenInfo,
                           const bool &isSrcFile,
-                          HmdfsInfoExt &info);
+                          HmdfsInfo &info);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

@@ -123,8 +123,6 @@ int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &s
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    isFile = false;
-    isDir = false;
     return distributedFileDaemonProxy->GetRemoteCopyInfo(srcUri, isFile, isDir);
 }
 
@@ -173,7 +171,6 @@ int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAsse
 int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("DistributedFileDaemonManagerImpl unRegisterAssetCallback enter.");
-    LOGI("recvCallback:%{public}s", (recvCallback == nullptr) ? "NULL" : "Not NULL");
     if (recvCallback == nullptr) {
         LOGE("UnRegister IAssetRecvCallback is null.");
         return OHOS::FileManagement::E_NULLPTR;

@@ -401,9 +401,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
 {
     HmdfsInfo info_ = convertExttoInfo(info);
     LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
-    LOGI("dstUri: %{public}s", Utils::GetAnonyString(dstUri).c_str());
-    LOGI("srcUri: %{public}s", Utils::GetAnonyString(srcUri).c_str());
-    LOGI("listener: %{public}s", Utils::GetAnonyString(info.sessionName).c_str());
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
@@ -465,7 +462,7 @@ void Daemon::StoreSessionAndListener(const std::string &physicalPath,
 int32_t Daemon::GetRealPath(const std::string &srcUri,
                             const std::string &dstUri,
                             std::string &physicalPath,
-                            HmdfsInfoExt &info,
+                            HmdfsInfo &info,
                             const sptr<IDaemon> &daemon)
 {
     auto start = std::chrono::high_resolution_clock::now();
@@ -518,7 +515,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
                               const std::string &dstUri,
                               HapTokenInfo &hapTokenInfo,
                               const bool &isSrcFile,
-                              HmdfsInfoExt &info)
+                              HmdfsInfo &info)
 {
     auto checkPath = physicalPath;
     if (isSrcFile && !Utils::IsFolder(physicalPath)) {
