@@ -923,6 +923,21 @@ string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     return location;
 }
 
+string GetTimeRecycled(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    string timeRecycled;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_TIME_RECYCLED, timeRecycled);
+    if (res != 0) {
+        LOGE("local file get time recycled fail");
+        return "null";
+    }
+    return timeRecycled;
+}
+
 string GetExtAttr(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const char *extAttrKey)
 {
     string extAttr;
@@ -969,6 +984,8 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = GetFileStatus(req, inoPtr.get());
     } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
         buf = GetLocation(req, inoPtr);
+    } else if (CloudFileUtils::CheckIsTimeRecycled(name)) {
+        buf = GetTimeRecycled(req, inoPtr);
     } else {
         buf = GetExtAttr(req, inoPtr, name);
     }

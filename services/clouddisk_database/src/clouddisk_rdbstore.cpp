@@ -51,7 +51,8 @@ enum XATTR_CODE {
     CLOUD_RECYCLE,
     IS_FAVORITE,
     FILE_SYNC_STATUS,
-    IS_EXT_ATTR
+    IS_EXT_ATTR,
+    TIME_RECYCLED
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -739,9 +740,9 @@ static string ConvertUriToSrcPath(const string &uriStr)
 int32_t CloudDiskRdbStore::GetSourcePath(const string &attr, const string &parentCloudId, string &sourcePath)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(attr, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        LOGE("handle jsonObject parse failed");
-        return E_RDB;
+    if (jsonObject.is_discarded() || (!jsonObject.is_object())) {
+        LOGD("jsonObject is discarded");
+        jsonObject = nlohmann::json::object();
     }
     if (jsonObject.contains(SRC_PATH_KEY) && jsonObject[SRC_PATH_KEY].is_string()) {
         sourcePath = jsonObject[SRC_PATH_KEY].get<std::string>();
@@ -771,9 +772,9 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
     }
     string filePath = ConvertUriToSrcPath(uri);
     nlohmann::json jsonObject = nlohmann::json::parse(attr, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        LOGE("handle jsonObject parse failed");
-        return E_RDB;
+    if (jsonObject.is_discarded() || (!jsonObject.is_object())) {
+        LOGD("jsonObject is discarded");
+        jsonObject = nlohmann::json::object();
     }
     jsonObject[SRC_PATH_KEY] = filePath;
     string attrStr = jsonObject.dump();
@@ -987,6 +988,8 @@ int32_t CheckXattr(const std::string &key)
         return FILE_SYNC_STATUS;
     } else if (key == CLOUD_EXT_ATTR) {
         return IS_EXT_ATTR;
+    } else if (key == CLOUD_TIME_RECYCLED) {
+        return TIME_RECYCLED;
     } else {
         return ERROR_CODE;
     }
@@ -1059,6 +1062,30 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
         return ret;
     }
     value = to_string(fileStatus);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::TimeRecycledGetXattr(const string &cloudId, const string &key, string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID || key != CLOUD_TIME_RECYCLED) {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::FILE_TIME_RECYCLED });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int64_t timeRecycled = 0;
+    CloudDiskRdbUtils::GetLong(FileColumn::FILE_TIME_RECYCLED, timeRecycled, resultSet);
+    value = to_string(timeRecycled);
     return E_OK;
 }
 
@@ -1143,6 +1170,9 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_EXT_ATTR:
             return GetExtAttrValue(cloudId, extAttrKey, value);
+        case TIME_RECYCLED:
+            return TimeRecycledGetXattr(cloudId, key, value);
+            break;
     }
 
     return E_INVAL_ARG;
