@@ -16,6 +16,7 @@
 #include "cloud_sync_napi.h"
 
 #include <sys/types.h>
+#include <sys/xattr.h>
 
 #include "async_work.h"
 #include "cloud_sync_manager.h"
@@ -650,6 +651,7 @@ bool CloudSyncNapi::Export()
         NVal::DeclareNapiFunction("off", OffCallback),
         NVal::DeclareNapiFunction("start", Start),
         NVal::DeclareNapiFunction("stop", Stop),
+        NVal::DeclareNapiFunction("getFileSyncState", GetFileSyncState),
         NVal::DeclareNapiFunction("optimizeStorage", OptimizeStorage),
     };
     std::string className = GetClassName();
@@ -669,6 +671,51 @@ bool CloudSyncNapi::Export()
     }
 
     return exports_.AddProp(className, classValue);
+}
+
+napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(static_cast<int>(NARG_CNT::ONE))) {
+        HILOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    bool succ = false;
+    std::unique_ptr<char []> path;
+    tie(succ, path, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
+    if (!succ) {
+        HILOGE("Invalid path");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    Uri uri(path.get());
+    std::string sandBoxPath = uri.GetPath();
+    std::string xattrKey = "user.cloud.filestatus";
+    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
+    if (xattrValueSize < 0) {
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
+    if (xattrValue == nullptr) {
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
+    if (xattrValueSize <= 0) {
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    int32_t fileStatus = std::stoi(xattrValue.get());
+    int32_t val;
+    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
+        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
+        val = statusMap[fileStatus];
+    } else {
+        val = FileSyncState::FILESYNCSTATE_COMPLETED;
+    }
+    return NVal::CreateInt32(env, val).val_;
 }
 
 napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
