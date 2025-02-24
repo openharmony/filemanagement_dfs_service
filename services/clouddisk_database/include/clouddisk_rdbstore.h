@@ -59,8 +59,6 @@ public:
     int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
-    int32_t GetRowIdAndPosition(std::shared_ptr<NativeRdb::Transaction> transaction,
-        const std::string &cloudId, int64_t &rowId, int32_t &position);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t HasTHMSetXattr(const std::string &name, const std::string &key,
@@ -70,12 +68,19 @@ public:
         const std::string &parentCloudId);
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t TimeRecycledGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
     int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
     int32_t ExtAttributeSetXattr(const std::string &cloudId, const std::string &value, const std::string &key);
     int32_t GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position);
     int32_t GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t GetRecycleInfo(std::shared_ptr<NativeRdb::Transaction> transaction,
+        const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr);
+    int32_t GetSourcePath(const std::string &attr, const std::string &parentCloudId, std::string &sourcePath);
+    int32_t SourcePathSetValue(const std::string &cloudId, const std::string &attr, NativeRdb::ValuesBucket &setXattr);
+    int32_t HandleRecycleXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
+    int32_t HandleRestoreXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);

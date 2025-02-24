@@ -93,6 +93,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleOptimizeStorage(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DENTRY_FILE_INSERT)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchDentryFileInsert(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -464,6 +466,23 @@ int32_t CloudSyncServiceStub::HandleStopFileCache(MessageParcel &data, MessagePa
     int32_t res = StopFileCache(downloadId, needClean);
     reply.WriteInt32(res);
     LOGI("End HandleStopFileCache");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleDownloadThumb(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleDownloadThumb");
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    int32_t res = DownloadThumb();
+    reply.WriteInt32(res);
+    LOGI("End HandleDownloadThumb");
     return E_OK;
 }
 

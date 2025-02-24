@@ -230,6 +230,11 @@ bool CloudFileUtils::CheckIsHasTHM(const string &key)
     return key == CLOUD_HAS_THM;
 }
 
+bool CloudFileUtils::CheckIsTimeRecycled(const string &key)
+{
+    return key == CLOUD_TIME_RECYCLED;
+}
+
 bool CloudFileUtils::CheckFileStatus(const string &key)
 {
     return key == IS_FILE_STATUS_XATTR;

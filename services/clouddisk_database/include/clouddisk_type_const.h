@@ -67,6 +67,11 @@ enum class NotifyType : uint32_t {
     NOTIFY_NONE,
 };
 
+enum class TrashOptType : int32_t {
+    RESTORE = 0,
+    RECYCLE,
+};
+
 constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
 constexpr int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 constexpr int32_t LOCAL = 1;
