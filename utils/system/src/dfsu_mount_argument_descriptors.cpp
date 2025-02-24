@@ -61,6 +61,7 @@ static uint64_t MocklispHash(const string &str)
         LOGE("stat failed %{public}s error, err: %{public}d", GetAnonyString(str).c_str(), err);
         return static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE);
     }
+    LOGI("statBuf dev id: %{public}lu", static_cast<unsigned long>(statBuf.st_dev));
     return statBuf.st_dev;
 }
 
