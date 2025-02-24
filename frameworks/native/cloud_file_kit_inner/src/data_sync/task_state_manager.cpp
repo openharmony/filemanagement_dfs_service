@@ -113,11 +113,12 @@ void TaskStateManager::DelayUnloadTask()
         LOGE("temperatureSysparam is true, unload task in 10 minutes");
         delayTime = SYSTEM_LOAD_DELAY_TIME;
     }
-    auto task = [self = shared_from_this()]() {
+    LOGI("delay unload task begin");
+    auto task = [this()]() {
         LOGI("do unload task");
         {
-            std::lock_guard<ffrt::mutex> lock(self->unloadTaskMutex_);
-            self->unloadTaskHandle_ = nullptr;
+            std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
+            unloadTaskHandle_ = nullptr;
         }
 
         /* for big data statistics */
