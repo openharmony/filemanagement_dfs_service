@@ -84,6 +84,7 @@ void BatteryStatusListener::Stop()
 void BatteryStatusListener::OnStatusNormal()
 {
     dataSyncManager_->TriggerRecoverySync(triggerType_);
+    dataSyncManager_->TriggerDownloadThumb();
     LOGI("battery status OK");
 }
 

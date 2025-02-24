@@ -78,9 +78,9 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process)
+bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process, int32_t level)
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL_HOT) {
+    if (loadstatus_ > level) {
         if (process == STOPPED_IN_THUMB) {
             LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB true");
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
