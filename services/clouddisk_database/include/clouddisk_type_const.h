@@ -63,6 +63,7 @@ enum class NotifyType : uint32_t {
     NOTIFY_MODIFIED,
     NOTIFY_DELETED,
     NOTIFY_RENAMED,
+    NOTIFY_FILE_CHANGED,
     NOTIFY_NONE,
 };
 

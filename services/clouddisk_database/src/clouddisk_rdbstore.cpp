@@ -29,6 +29,7 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "data_sync_const.h"
 #include "dfs_error.h"
 #include "file_column.h"
 #include "ffrt_inner.h"
@@ -50,7 +51,9 @@ enum XATTR_CODE {
     CLOUD_RECYCLE,
     IS_FAVORITE,
     FILE_SYNC_STATUS,
-    IS_EXT_ATTR
+    IS_EXT_ATTR,
+    TIME_RECYCLED,
+    HAS_THM
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -372,6 +375,8 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo->st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, CloudFileUtils::Timespec2Milliseconds(statInfo->st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, CloudFileUtils::Timespec2Milliseconds(statInfo->st_mtim));
+    fileInfo.PutLong(FileColumn::LCD_FLAG, NO_THM_TO_DOWNLOAD);
+    fileInfo.PutLong(FileColumn::THM_FLAG, NO_THM_TO_DOWNLOAD);
     FillFileType(fileName, fileInfo);
     return E_OK;
 }
@@ -420,7 +425,7 @@ static void HandleCreateValue(ValuesBucket &fileInfo, const std::string &cloudId
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &fileName)
+    const std::string &fileName, bool noNeedUpload)
 {
     int32_t ret = CheckName(fileName);
     if (ret != E_OK) {
@@ -436,6 +441,13 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("create parameter is invalid");
         return E_INVAL_ARG;
     }
+
+    MetaBase metaBase(fileName, cloudId);
+    if (noNeedUpload) {
+        fileInfo.PutInt(FileColumn::NO_NEED_UPLOAD, NO_UPLOAD);
+        metaBase.noUpload = NO_UPLOAD;
+    }
+
     int64_t fileTimeAdded = UTCTimeMilliSeconds();
     fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);
     HandleCreateValue(fileInfo, cloudId, parentCloudId, fileName, bundleName_);
@@ -457,7 +469,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("insert new file record in DB is failed, ret = %{public}d", ret);
         return rdbRet;
     }
-    MetaBase metaBase(fileName, cloudId);
+
     UpdateMetabase(metaBase, fileTimeAdded, &statInfo);
     ret = CreateDentry(metaBase, userId_, bundleName_, fileName, parentCloudId);
     if (ret != E_OK) {
@@ -469,7 +481,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
 }
 
 int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &directoryName)
+    const std::string &directoryName, bool noNeedUpload)
 {
     int32_t ret = CheckName(directoryName);
     if (ret != E_OK) {
@@ -485,6 +497,13 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("make directory parameter is invalid");
         return E_INVAL_ARG;
     }
+
+    MetaBase metaBase(directoryName, cloudId);
+    if (noNeedUpload) {
+        dirInfo.PutInt(FileColumn::NO_NEED_UPLOAD, NO_UPLOAD);
+        metaBase.noUpload = NO_UPLOAD;
+    }
+
     dirInfo.PutString(FileColumn::CLOUD_ID, cloudId);
     dirInfo.PutString(FileColumn::FILE_NAME, directoryName);
     int64_t fileTimeAdded = UTCTimeMilliSeconds();
@@ -511,7 +530,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
         return ret;
     }
-    MetaBase metaBase(directoryName, cloudId);
+
     metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
     metaBase.mtime = static_cast<uint64_t>(fileTimeEdited);
     metaBase.mode = S_IFDIR | STAT_MODE_DIR;
@@ -649,6 +668,54 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     rdbTransaction.Finish();
     return E_OK;
 }
+
+int32_t CloudDiskRdbStore::HasTHMSetXattr(const std::string &name, const std::string &key,
+    const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (!all_of(value.begin(), value.end(), ::isdigit)) {
+        return E_INVAL_ARG;
+    }
+    int32_t val = std::stoi(value);
+    if (val != 0 && val != 1) {
+        LOGE("setxattr unknown value");
+        return E_INVAL_ARG;
+    }
+
+    ValuesBucket setXAttr;
+    if (val == 0) {
+        if (key == CLOUD_HAS_LCD) {
+            setXAttr.PutInt(FileColumn::LCD_FLAG, NO_THM_TO_DOWNLOAD);
+        } else {
+            setXAttr.PutInt(FileColumn::THM_FLAG, NO_THM_TO_DOWNLOAD);
+        }
+    } else {
+        if (key == CLOUD_HAS_LCD) {
+            setXAttr.PutInt(FileColumn::LCD_FLAG, DOWNLOADED_THM);
+        } else {
+            setXAttr.PutInt(FileColumn::THM_FLAG, DOWNLOADED_THM);
+        }
+    }
+    int32_t dirtyType;
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    RETURN_ON_ERR(GetDirtyType(cloudId, dirtyType));
+    if (dirtyType == static_cast<int32_t>(DirtyType::TYPE_SYNCED)) {
+        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    }
+    int32_t changedRows = -1;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
+    if (ret != E_OK) {
+        LOGE("set xAttr thm_flag fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    return E_OK;
+}
+
 
 int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
 {
@@ -840,6 +907,8 @@ int32_t CheckXattr(const std::string &key)
         return FILE_SYNC_STATUS;
     } else if (key == CLOUD_EXT_ATTR) {
         return IS_EXT_ATTR;
+    } else if (key == CLOUD_HAS_LCD || key == CLOUD_HAS_THM) {
+        return HAS_THM;
     } else {
         return ERROR_CODE;
     }
@@ -1070,6 +1139,8 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_EXT_ATTR:
             return ExtAttributeSetXattr(cloudId, value, name);
+        case HAS_THM:
+            return HasTHMSetXattr(name, key, cloudId, value);
     }
 
     return E_INVAL_ARG;
@@ -1631,6 +1702,25 @@ static void VersionRemoveCloudSyncFuncTrigger(RdbStore &store)
     }
 }
 
+static void VersionAddThmFlag(RdbStore &store)
+{
+    const string addThmFlag = FileColumn::ADD_THM_FLAG;
+    int32_t ret = store.ExecuteSql(addThmFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add thm_flag fail, err %{public}d", ret);
+    }
+    const string addLcdFlag = FileColumn::ADD_LCD_FLAG;
+    ret = store.ExecuteSql(addLcdFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add lcd_flag fail, err %{public}d", ret);
+    }
+    const string addUploadFlag = FileColumn::ADD_UPLOAD_FLAG;
+    ret = store.ExecuteSql(addUploadFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add no_need_upload fail, err %{public}d", ret);
+    }
+}
+
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
@@ -1856,6 +1946,10 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
 
     if (oldVersion < VERSION_ADD_ATTRIBUTE) {
         VersionAddAttribute(store);
+    }
+
+    if (oldVersion < VERSION_ADD_THM_FLAG) {
+        VersionAddThmFlag(store);
     }
     return NativeRdb::E_OK;
 }

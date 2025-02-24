@@ -58,6 +58,7 @@ struct NotifyParamDisk {
 struct ParamDiskOthers {
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD);
     bool isDir = false;
+    int fileDirty = CLOUD_DISK_FILE_UNKNOWN;
 };
 
 struct NotifyParamService {

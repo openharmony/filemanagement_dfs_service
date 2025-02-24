@@ -45,6 +45,7 @@ constexpr uint32_t BUCKET_BLOCKS = 2;
 constexpr uint32_t BITS_PER_BYTE = 8;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint32_t FILE_TYPE_OFFSET = 2;
+constexpr uint32_t NO_UPLOAD_OFFSET = 4;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -82,7 +83,7 @@ struct HmdfsDcacheHeader {
 
 void MetaHelper::SetFileType(struct HmdfsDentry *de, uint8_t fileType)
 {
-    de->flags &= 0x3;
+    de->flags &= 0x13;
     de->flags |= (fileType << FILE_TYPE_OFFSET);
 }
 
@@ -92,9 +93,20 @@ void MetaHelper::SetPosition(struct HmdfsDentry *de, uint8_t position)
     de->flags |= position;
 }
 
+void MetaHelper::SetNoUpload(struct HmdfsDentry *de, uint8_t noUpload)
+{
+    de->flags &= 0xEF;
+    de->flags |= (noUpload << NO_UPLOAD_OFFSET);
+}
+
+uint8_t MetaHelper::GetNoUpload(const struct HmdfsDentry *de)
+{
+    return (de->flags & 0x10) >> NO_UPLOAD_OFFSET;
+}
+
 uint8_t MetaHelper::GetFileType(const struct HmdfsDentry *de)
 {
-    return (de->flags & 0xFC) >> FILE_TYPE_OFFSET;
+    return (de->flags & 0xC) >> FILE_TYPE_OFFSET;
 }
 
 uint8_t MetaHelper::GetPosition(const struct HmdfsDentry *de)
@@ -293,6 +305,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de->mode = base.mode;
     MetaHelper::SetPosition(de, base.position);
     MetaHelper::SetFileType(de, base.fileType);
+    MetaHelper::SetNoUpload(de, base.noUpload);
     (void) memset_s(de->recordId, CLOUD_RECORD_ID_LEN, 0, CLOUD_RECORD_ID_LEN);
     ret = memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length());
     if (ret != 0) {
@@ -531,6 +544,7 @@ int32_t CloudDiskMetaFile::DoLookup(MetaBase &base)
     base.mode = de->mode;
     base.position = MetaHelper::GetPosition(de);
     base.fileType = MetaHelper::GetFileType(de);
+    base.noUpload = MetaHelper::GetNoUpload(de);
     base.cloudId = std::string(reinterpret_cast<const char *>(de->recordId), CLOUD_RECORD_ID_LEN);
     return E_OK;
 }
@@ -557,6 +571,7 @@ int32_t CloudDiskMetaFile::DoUpdate(const MetaBase &base)
     de->mode = base.mode;
     MetaHelper::SetPosition(de, base.position);
     MetaHelper::SetFileType(de, base.fileType);
+    MetaHelper::SetNoUpload(de, base.noUpload);
     auto ret = memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length());
     if (ret != 0) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
