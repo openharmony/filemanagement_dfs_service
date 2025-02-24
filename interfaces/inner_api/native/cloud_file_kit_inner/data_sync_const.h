@@ -72,6 +72,12 @@ const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
 const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 
+const int32_t NOT_IN_TRASH = 0;
+const int32_t NOT_IN_PENDING = 0;
+const int32_t NOT_HIDDEN = 0;
+const int32_t NOT_TEMP_FILE = 0;
+const int32_t IS_BURST_COVER = 1;
+
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 

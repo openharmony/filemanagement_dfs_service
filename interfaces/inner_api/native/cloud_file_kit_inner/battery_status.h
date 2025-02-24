@@ -38,8 +38,8 @@ public:
     static void GetInitChargingStatus();
     static void SetChargingStatus(bool status);
     static bool IsCharging();
-private:
     static int32_t GetCapacity();
+private:
     static inline CapacityLevel level_{LEVEL_NORMAL};
     static inline std::atomic_bool isCharging_{false};
 };
