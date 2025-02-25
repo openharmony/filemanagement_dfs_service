@@ -82,7 +82,6 @@ void CloudSyncService::PreInit()
 
 void CloudSyncService::Init()
 {
-    NetworkStatus::InitNetwork(dataSyncManager_);
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
     ScreenStatus::InitScreenStatus();
@@ -171,6 +170,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
         AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+        AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -248,6 +248,8 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         fileTransferManager_->Init();
     } else if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
         SystemLoadStatus::InitSystemload(dataSyncManager_);
+    } else if (systemAbilityId == COMM_NET_CONN_MANAGER_SYS_ABILITY_ID) {
+        NetworkStatus::InitNetwork(dataSyncManager_);
     } else {
         LOGE("unexpected");
     }
