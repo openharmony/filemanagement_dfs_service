@@ -44,6 +44,8 @@ namespace {
     static const std::string IS_FAVORITE_XATTR = "user.cloud.favorite";
     static const std::string IS_FILE_STATUS_XATTR = "user.cloud.filestatus";
     static const std::string CLOUD_EXT_ATTR = "extended_attributes";
+    static const std::string CLOUD_HAS_LCD = "user.cloud.hasLcdThumbnail";
+    static const std::string CLOUD_HAS_THM = "user.cloud.hasThumbnail";
     static const std::string CLOUD_TIME_RECYCLED = "user.cloud.deletetime";
 }
 
@@ -51,6 +53,8 @@ class CloudFileUtils final {
 public:
     static bool CheckIsCloud(const std::string &key);
     static bool CheckIsCloudLocation(const std::string &key);
+    static bool CheckIsHasLCD(const std::string &key);
+    static bool CheckIsHasTHM(const std::string &key);
     static bool CheckIsHmdfsPermission(const std::string &key);
     static bool CheckIsCloudRecycle(const std::string &key);
     static bool CheckIsFavorite(const std::string &key);

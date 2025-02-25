@@ -57,7 +57,8 @@ enum class FaultOperation {
     RELEASE = 700,
     FORGETMULTI = 800,
     IOCTL = 900,
-    UNLINK = 1000
+    UNLINK = 1000,
+    SETATTR = 1100
 };
 
 enum class FaultType {

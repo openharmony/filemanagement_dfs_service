@@ -46,9 +46,9 @@ public:
         const unsigned long long &size);
     int32_t ReadDir(const std::string &cloudId, std::vector<CloudDiskFileInfo> &infos);
     int32_t MkDir(const std::string &cloudId, const std::string &parentCloudId,
-        const std::string &directoryName);
+        const std::string &directoryName, bool noNeedUpload);
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
-        const std::string &fileName);
+        const std::string &fileName, bool noNeedUpload);
     int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
         const CacheNode &node = {}, const std::string &extAttrKey = "");
@@ -60,6 +60,8 @@ public:
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
+        const std::string &cloudId, const std::string &value);
+    int32_t HasTHMSetXattr(const std::string &name, const std::string &key,
         const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
     int32_t LocationGetXattr(const std::string &name, const std::string &key, std::string &value,

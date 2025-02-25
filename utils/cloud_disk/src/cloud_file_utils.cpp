@@ -220,6 +220,16 @@ bool CloudFileUtils::CheckIsFavorite(const string &key)
     return key == IS_FAVORITE_XATTR;
 }
 
+bool CloudFileUtils::CheckIsHasLCD(const string &key)
+{
+    return key == CLOUD_HAS_LCD;
+}
+
+bool CloudFileUtils::CheckIsHasTHM(const string &key)
+{
+    return key == CLOUD_HAS_THM;
+}
+
 bool CloudFileUtils::CheckIsTimeRecycled(const string &key)
 {
     return key == CLOUD_TIME_RECYCLED;

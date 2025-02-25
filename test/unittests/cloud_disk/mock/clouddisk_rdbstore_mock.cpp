@@ -83,13 +83,13 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &fileName)
+    const std::string &fileName, bool noNeedUpload)
 {
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &directoryName)
+    const std::string &directoryName, bool noNeedUpload)
 {
     return E_OK;
 }

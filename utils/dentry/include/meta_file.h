@@ -226,8 +226,10 @@ struct BitOps {
 struct MetaHelper {
     static void SetFileType(struct HmdfsDentry *de, uint8_t fileType);
     static void SetPosition(struct HmdfsDentry *de, uint8_t position);
+    static void SetNoUpload(struct HmdfsDentry *de, uint8_t noUpload);
     static uint8_t GetFileType(const struct HmdfsDentry *de);
     static uint8_t GetPosition(const struct HmdfsDentry *de);
+    static uint8_t GetNoUpload(const struct HmdfsDentry *de);
 };
 } // namespace FileManagement
 } // namespace OHOS

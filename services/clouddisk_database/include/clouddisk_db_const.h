@@ -25,7 +25,7 @@ namespace CloudDisk {
 //rdb
 const std::string CLOUD_DISK_DATABASE_NAME = "clouddisk.db";
 //rdb version
-const int32_t CLOUD_DISK_RDB_VERSION = 13;
+const int32_t CLOUD_DISK_RDB_VERSION = 14;
 enum {
     VERSION_ADD_PARENT_CLOUD_ID_INDEX = 2,
     VERSION_FIX_FILE_TRIGGER = 3,
@@ -39,6 +39,7 @@ enum {
     VERSION_FIX_RETRY_TRIGGER = 11,
     VERSION_REMOVE_CLOUD_SYNC_FUNC_TRIGGER = 12,
     VERSION_ADD_ATTRIBUTE = 13,
+    VERSION_ADD_THM_FLAG = 14,
 };
 // drive kit
 const std::string DK_FILE_NAME = "fileName";
@@ -49,6 +50,8 @@ struct NotifyData {
     std::string uri;
     bool isDir;
     NotifyType type = NotifyType::NOTIFY_NONE;
+    bool isLocalOperation = false;
+    std::string extraUri = "";
 };
 
 struct CacheNode {

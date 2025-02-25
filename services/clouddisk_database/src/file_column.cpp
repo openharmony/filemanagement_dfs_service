@@ -34,6 +34,9 @@ const std::string FileColumn::VERSION = "version";
 const std::string FileColumn::OPERATE_TYPE = "operateType";
 const std::string FileColumn::SYNC_STATUS = "sync_status";
 const std::string FileColumn::POSITION = "position";
+const std::string FileColumn::THM_FLAG = "thm_flag";
+const std::string FileColumn::LCD_FLAG = "lcd_flag";
+const std::string FileColumn::NO_NEED_UPLOAD = "no_need_upload";
 const std::string FileColumn::DIRTY_TYPE = "dirty_type";
 const std::string FileColumn::MIME_TYPE = "mimetype";
 const std::string FileColumn::FILE_TYPE = "file_type";
@@ -73,7 +76,10 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     FILE_STATUS + " INT DEFAULT 4, " +
     CHECK_FLAG + " INT DEFAULT 0, " +
     ROOT_DIRECTORY + " TEXT, " +
-    ATTRIBUTE + " TEXT)";
+    ATTRIBUTE + " TEXT, " +
+    THM_FLAG + " INT DEFAULT 0, " +
+    LCD_FLAG + " INT DEFAULT 0, " +
+    NO_NEED_UPLOAD + " INT DEFAULT 0)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
@@ -93,6 +99,15 @@ const std::string FileColumn::ADD_CHECK_FLAG = "ALTER Table " + FILES_TABLE +
 
 const std::string FileColumn::ADD_ATTRIBUTE = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + ATTRIBUTE + " TEXT";
+
+const std::string FileColumn::ADD_THM_FLAG = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + THM_FLAG + " INT DEFAULT 0";
+
+const std::string FileColumn::ADD_LCD_FLAG = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + LCD_FLAG + " INT DEFAULT 0";
+
+const std::string FileColumn::ADD_UPLOAD_FLAG = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + NO_NEED_UPLOAD + " INT DEFAULT 0";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
@@ -122,7 +137,10 @@ const std::vector<std::string> FileColumn::DISK_CLOUD_SYNC_COLUMNS = {
     VERSION,
     OPERATE_TYPE,
     ROOT_DIRECTORY,
-    ATTRIBUTE
+    ATTRIBUTE,
+    THM_FLAG,
+    LCD_FLAG,
+    ROW_ID
 };
 
 const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {
@@ -134,6 +152,7 @@ const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
     FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE, FILE_NAME, PARENT_CLOUD_ID, ROW_ID,
     IS_DIRECTORY, FILE_TIME_ADDED, FILE_TYPE, ROOT_DIRECTORY, DIRECTLY_RECYCLED,
+    THM_FLAG, LCD_FLAG,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
@@ -143,7 +162,9 @@ const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
     FILE_TIME_EDITED,
     META_TIME_EDITED,
     FILE_TIME_RECYCLED,
-    ROW_ID
+    ROW_ID,
+    THM_FLAG,
+    LCD_FLAG,
 };
 
 const std::vector<std::string> FileColumn::EXT_ATTR_QUERY_COLUMNS = {

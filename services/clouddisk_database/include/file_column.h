@@ -50,10 +50,13 @@ public:
     static const std::string SYNC_STATUS;
     static const std::string POSITION;
     static const std::string DIRTY_TYPE;
+    static const std::string THM_FLAG;
+    static const std::string LCD_FLAG;
     static const std::string MIME_TYPE;
     static const std::string FILE_TYPE;
     static const std::string FILE_CATEGORY;
     static const std::string IS_FAVORITE;
+    static const std::string NO_NEED_UPLOAD;
 
     // table name
     static const std::string FILES_TABLE;
@@ -81,6 +84,12 @@ public:
 
     // set attribute
     static const std::string ADD_ATTRIBUTE;
+
+    static const std::string ADD_THM_FLAG;
+
+    static const std::string ADD_LCD_FLAG;
+
+    static const std::string ADD_UPLOAD_FLAG;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
