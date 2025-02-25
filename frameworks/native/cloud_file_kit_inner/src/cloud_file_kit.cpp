@@ -103,4 +103,6 @@ std::string CloudFileKit::GetPrepareTraceId(const int32_t userId)
 {
     return "";
 }
+
+void CloudFileKit::Release(int32_t userId) {}
 } // namespace OHOS::FileManagement::CloudFile
