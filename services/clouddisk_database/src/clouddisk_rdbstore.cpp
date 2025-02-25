@@ -1054,10 +1054,10 @@ int32_t CheckXattr(const std::string &key)
         return FILE_SYNC_STATUS;
     } else if (key == CLOUD_EXT_ATTR) {
         return IS_EXT_ATTR;
-    } else if (key == CLOUD_HAS_LCD || key == CLOUD_HAS_THM) {
-        return HAS_THM;
     } else if (key == CLOUD_TIME_RECYCLED) {
         return TIME_RECYCLED;
+    } else if (key == CLOUD_HAS_LCD || key == CLOUD_HAS_THM) {
+        return HAS_THM;
     } else {
         return ERROR_CODE;
     }
@@ -1315,6 +1315,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_EXT_ATTR:
             return ExtAttributeSetXattr(cloudId, value, name);
+            break;
         case HAS_THM:
             return HasTHMSetXattr(name, key, cloudId, value);
     }
