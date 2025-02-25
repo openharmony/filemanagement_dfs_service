@@ -1505,7 +1505,7 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
             close(filePtr->fd);
             if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
                 UpdateCloudStore(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
-            } else if (filePtr->isWriteOpen) {
+            } else {
                 UploadLocalFile(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             }
         } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD &&
