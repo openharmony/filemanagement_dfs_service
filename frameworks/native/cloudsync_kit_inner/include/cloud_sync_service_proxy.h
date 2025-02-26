@@ -45,17 +45,14 @@ public:
     int32_t StartDownloadFile(const std::string &uri) override;
     int32_t StartFileCacheWriteParcel(MessageParcel &data,
                                       const std::vector<std::string> &pathVec,
-                                      std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
                                       bool &isCallbackValid,
                                       const sptr<IRemoteObject> &downloadCallback);
     int32_t StartFileCache(const std::vector<std::string> &uriVec,
                            int64_t &downloadId,
-                           std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
                            bool isCallbackValid = false,
                            const sptr<IRemoteObject> &downloadCallback = nullptr) override;
     int32_t StopDownloadFile(const std::string &uri, bool needClean = false) override;
     int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false) override;
-    int32_t DownloadThumb() override;
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
     int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
@@ -68,6 +65,7 @@ public:
                           const std::string &bundleName,
                           const std::string &networkId,
                           AssetInfoObj &assetInfoObj) override;
+    int32_t DownloadThumb() override;
     int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) override;
     int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
     int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;

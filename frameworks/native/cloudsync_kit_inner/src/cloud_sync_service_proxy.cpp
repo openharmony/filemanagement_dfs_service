@@ -674,17 +674,11 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
-                                                         std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
                                                          bool &isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback)
 {
     if (!data.WriteStringVector(pathVec)) {
         LOGE("Failed to send the cloud id");
-        return E_INVAL_ARG;
-    }
-    int32_t intValue = static_cast<int32_t>(fieldkey.to_ulong());
-    if (!data.WriteInt32(intValue)) {
-        LOGE("Failed to send the fieldkey");
         return E_INVAL_ARG;
     }
 
@@ -703,7 +697,7 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
 }
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
-                                              int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                              int64_t &downloadId,
                                               bool isCallbackValid,
                                               const sptr<IRemoteObject> &downloadCallback)
 {
@@ -734,7 +728,7 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
              i, GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
     }
 
-    auto retParcel = StartFileCacheWriteParcel(data, pathVec, fieldkey, isCallbackValid, downloadCallback);
+    auto retParcel = StartFileCacheWriteParcel(data, pathVec, isCallbackValid, downloadCallback);
     if (retParcel != E_OK) {
         LOGE("StartFileCacheWriteParcel failed");
         return retParcel;

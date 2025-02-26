@@ -15,7 +15,6 @@
 #ifndef OHOS_CLOUD_FILE_DATA_SYNC_MANAGER_H
 #define OHOS_CLOUD_FILE_DATA_SYNC_MANAGER_H
 
-#include <bitset>
 #include <memory>
 
 #include "data_sync_const.h"
@@ -49,7 +48,6 @@ public:
     virtual int32_t StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                       const std::vector<std::string> pathVec,
                                       int64_t &downloadId,
-                                      std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
                                       const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                      const std::string path,
@@ -57,7 +55,6 @@ public:
     virtual int32_t StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
                                   const int64_t &downloadId,
                                   bool needClean);
-    virtual int32_t TriggerDownloadThumb();
     virtual int32_t RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
                                                  const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo);
@@ -65,6 +62,7 @@ public:
     virtual int32_t CleanRemainFile(const std::string &bundleName, const int32_t userId);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     virtual int32_t DownloadThumb();
+    virtual int32_t TriggerDownloadThumb();
     virtual int32_t CacheVideo();
     virtual int32_t CleanVideoCache();
     virtual int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
