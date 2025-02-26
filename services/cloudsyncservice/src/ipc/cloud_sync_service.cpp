@@ -605,8 +605,8 @@ int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needCle
 
 int32_t CloudSyncService::DownloadThumb()
 {
-    LOGI("start DownloadThumb");
-    return dataSyncManager_->DownloadThumb();
+    LOGI("start TriggerDownloadThumb");
+    return dataSyncManager_->TriggerDownloadThumb();
 }
 
 int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
