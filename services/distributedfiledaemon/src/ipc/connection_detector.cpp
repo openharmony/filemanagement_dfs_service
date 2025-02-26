@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -181,13 +182,14 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
 
 uint64_t ConnectionDetector::MocklispHash(const string &str)
 {
-    uint64_t res = 0;
-    constexpr int mocklispHashPos = 5;
-    /* Mocklisp hash function. */
-    for (auto ch : str) {
-        res = (res << mocklispHashPos) - res + (uint64_t)ch;
+    struct stat statBuf;
+    auto err = stat(str.c_str(), &statBuf);
+    if (err != 0) {
+        LOGE("stat failed %{public}s error, err: %{public}d", GetAnonyString(str).c_str(), err);
+        return static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE);
     }
-    return res;
+    LOGI("statBuf dev id: %{public}lu", static_cast<unsigned long>(statBuf.st_dev));
+    return statBuf.st_dev;
 }
 
 int32_t ConnectionDetector::RepeatGetConnectionStatus(const std::string &targetDir, const std::string &networkId)
