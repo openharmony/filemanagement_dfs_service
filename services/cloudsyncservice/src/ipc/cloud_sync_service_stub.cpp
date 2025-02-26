@@ -89,12 +89,12 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleResetCursor(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileCache(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_OPTIMIZE_STORAGE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleOptimizeStorage(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DENTRY_FILE_INSERT)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchDentryFileInsert(data, reply); };
-    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB)] =
-        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -223,7 +223,7 @@ int32_t CloudSyncServiceStub::HandleResetCursor(MessageParcel &data, MessageParc
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
- 
+
     string bundleName = data.ReadString();
     int32_t res = ResetCursor(bundleName);
     reply.WriteInt32(res);
