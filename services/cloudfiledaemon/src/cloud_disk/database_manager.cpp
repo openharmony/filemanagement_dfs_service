@@ -37,6 +37,12 @@ shared_ptr<CloudDiskRdbStore> DatabaseManager::GetRdbStore(const string &bundleN
 
     return rdbMap_[key];
 }
+
+void DatabaseManager::ClearRdbStore()
+{
+    std::unique_lock<std::shared_mutex> wLock(mapLock_);
+    rdbMap_.clear();
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

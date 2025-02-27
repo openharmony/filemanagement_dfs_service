@@ -48,6 +48,7 @@
 #include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_type_const.h"
+#include "database_manager.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -1588,7 +1589,7 @@ static bool CheckPathForStartFuse(const string &path)
 }
 
 static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &config,
-                             int32_t devFd, const string &path)
+                             int32_t devFd, const string &path, int32_t userId)
 {
     se->fd = devFd;
     se->bufsize = FUSE_BUFFER_SIZE;
@@ -1608,6 +1609,16 @@ static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &c
     }
 
     fuse_session_destroy(se);
+    // clear fd
+    MetaFileMgr::GetInstance().ClearAll();
+    MetaFileMgr::GetInstance().CloudDiskClearAll();
+    CloudDisk::DatabaseManager::GetInstance().ClearRdbStore();
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance != nullptr) {
+        instance->Release(userId);
+    } else {
+        LOGE("get cloudfile helper instance failed");
+    }
     return ret;
 }
 
@@ -1657,7 +1668,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         config.max_idle_threads = MAX_IDLE_THREADS;
     }
     LOGI("fuse_session_new success, userId: %{public}d", userId);
-    int ret = SetNewSessionInfo(se, config, devFd, path);
+    int ret = SetNewSessionInfo(se, config, devFd, path, userId);
     return ret;
 }
 

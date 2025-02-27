@@ -29,6 +29,7 @@ public:
     static DatabaseManager &GetInstance();
     std::shared_ptr<CloudDiskRdbStore> GetRdbStore(const std::string &bundleName,
                                                    int32_t userId);
+    void ClearRdbStore();
     DatabaseManager(const DatabaseManager&) = delete;
     DatabaseManager& operator=(const DatabaseManager&) = delete;
 private:
