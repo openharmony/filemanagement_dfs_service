@@ -603,7 +603,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needCle
     return dataSyncManager_->StopDownloadFile(bundleNameUserInfo, path, needClean);
 }
 
-int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
+int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);

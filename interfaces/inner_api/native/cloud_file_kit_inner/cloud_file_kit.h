@@ -52,6 +52,7 @@ public:
                                                                             const std::string &bundleName);
     virtual std::shared_ptr<CloudSyncHelper> GetCloudSyncHelper(const int32_t userId, const std::string &bundleName);
     virtual std::string GetPrepareTraceId(const int32_t userId);
+    virtual void Release(int32_t userId);
 
 private:
     static inline CloudFileKit *instance_;

@@ -243,7 +243,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
+int32_t CloudSyncServiceProxy::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     return E_OK;
 }

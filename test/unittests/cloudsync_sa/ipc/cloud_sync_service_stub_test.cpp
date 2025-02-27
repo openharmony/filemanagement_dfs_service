@@ -51,7 +51,7 @@ public:
                                          const sptr<IRemoteObject> &downloadCallback,
                                          int32_t timeout));
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
-    MOCK_METHOD3(StopFileCache, int32_t(const int64_t &downloadId, bool needClean, int32_t timeout));
+    MOCK_METHOD3(StopFileCache, int32_t(int64_t downloadId, bool needClean, int32_t timeout));
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));

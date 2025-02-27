@@ -783,7 +783,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
+int32_t CloudSyncServiceProxy::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     LOGI("StopFileCache Start");
     MessageParcel data;

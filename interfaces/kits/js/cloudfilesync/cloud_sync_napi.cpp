@@ -782,6 +782,10 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
             int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
             if (copyRet != 0) {
                 LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+                free(msg->data_);
+                delete msg;
+                delete work;
+                return;
             }
         }
     }
@@ -790,6 +794,7 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
     int ret = UvQueueWork(loop, work);
     if (ret != 0) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        free(msg->data_);
         delete msg;
         delete work;
     }
@@ -836,6 +841,7 @@ int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
                     break;
                 }
             } while (0);
+            free(msg->data_);
             delete msg;
             delete w;
         });
@@ -919,13 +925,26 @@ napi_value ChangeListenerNapi::SolveOnChange(napi_env env, UvChangeMsg *msg)
     napi_create_object(env, &result);
     SetValueArray(env, "uris", msg->changeInfo_.uris_, result);
     if (msg->data_ != nullptr && msg->changeInfo_.size_ > 0) {
+        uint8_t *parcelData = (uint8_t *)malloc(msg->changeInfo_.size_);
+        if (parcelData == nullptr) {
+            LOGE("new parcelData failed");
+            return nullptr;
+        }
+        int copyRet = memcpy_s(parcelData, msg->changeInfo_.size_, msg->data_, msg->changeInfo_.size_);
+        if (copyRet != 0) {
+            LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+            free(parcelData);
+            return nullptr;
+        }
         shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
-        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(msg->data_), msg->changeInfo_.size_)) {
+        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), msg->changeInfo_.size_)) {
             napi_status status = SetIsDir(env, parcel, result);
             if (status != napi_ok) {
                 LOGE("Set subArray named property error! field: subUris");
                 return nullptr;
             }
+        } else {
+            free(parcelData);
         }
     }
     SetValueInt32(env, "type", (int)msg->changeInfo_.changeType_, result);

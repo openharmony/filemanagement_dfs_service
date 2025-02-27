@@ -113,7 +113,7 @@ public:
     {
         return E_OK;
     }
-    int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false, int32_t timeout = -1)
+    int32_t StopFileCache(int64_t downloadId,  bool needClean = false, int32_t timeout = -1)
     {
         return E_OK;
     }
