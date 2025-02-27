@@ -806,6 +806,37 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     return HandleOpenResult(*error, data, cInode, fi);
 }
 
+static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<CloudInode> cInode,
+    struct fuse_file_info *fi)
+{
+    do {
+        if (!cInode->mBase->hasDownloaded) {
+            break;
+        }
+        string localPath = GetLocalPath(data->userId, cInode->path);
+        char realPath[PATH_MAX + 1]{'\0'};
+        if (realpath(localPath.c_str(), realPath) == nullptr) {
+            LOGE("realpath failed with %{public}d", errno);
+            break;
+        }
+        unsigned int flags = static_cast<unsigned int>(fi->flags);
+        if (flags & O_DIRECT) {
+            flags &= ~O_DIRECT;
+        }
+        auto fd = open(realPath, flags);
+        if (fd < 0) {
+            LOGE("Failed to open local file, errno: %{public}d", errno);
+            break;
+        }
+        auto fdsan = new fdsan_fd(fd);
+        fi->fh = reinterpret_cast<uint64_t>(fdsan);
+    } while (0);
+
+    cInode->sessionRefCount++;
+    LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
+    fuse_reply_open(req, fi);
+}
+
 static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
 {
     uint64_t endTime = UTCTimeMilliSeconds();
@@ -874,9 +905,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
             FaultType::DRIVERKIT, EPERM, "readSession is null or fix size fail"});
     } else {
-        cInode->sessionRefCount++;
-        LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
-        fuse_reply_open(req, fi);
+        HandleReopen(req, data, cInode, fi);
     }
     wSesLock.unlock();
 }
@@ -913,12 +942,12 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
          GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load());
     wSesLock.lock();
     cInode->sessionRefCount--;
+    if (fi->fh != UINT64_MAX) {
+        auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
+        delete fdsan;
+        fi->fh = UINT64_MAX;
+    }
     if (cInode->sessionRefCount == 0) {
-        if (fi->fh != UINT64_MAX) {
-            auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
-            delete fdsan;
-            fi->fh = UINT64_MAX;
-        }
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
         }
