@@ -257,7 +257,7 @@ static void EraseReadArgs(shared_ptr<CloudInode> cInode, vector<shared_ptr<ReadA
 static pid_t GetPidFromTid(pid_t tid)
 {
     pid_t tgid = 0;
-    std::string path = "/proc" + to_string(tid) + "/status";
+    std::string path = "/proc/" + to_string(tid) + "/status";
     std::ifstream procTidStatusFile(path);
     if (!procTidStatusFile.is_open()) {
         LOGI("Failed to open %{public}s", path.c_str());
