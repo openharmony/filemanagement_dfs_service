@@ -846,7 +846,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
     }
     int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(data->userId, inoPtr->bundleName);
     if (ret != 0) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{parentInode->bundleName,
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DENTRY_FILE, ret,
             "create recycle dentry failed"});
         fuse_reply_err(req, ret);
@@ -855,7 +855,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
     ret = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_CLOUD_RECYCLE_XATTR, value,
         inoPtr->fileName, parentCloudId);
     if (ret != 0) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{parentInode->bundleName,
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
             "set cloud recycle xattr fail, ret = " + std::to_string(ret)});
         fuse_reply_err(req, EINVAL);
