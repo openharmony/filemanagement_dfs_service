@@ -125,7 +125,7 @@ HWTEST_F(MountArgumentTest, GetCtrlPathTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetCtrlPathTest Begin";
     try {
-        std::string out = "/sys/fs/hmdfs/2989455826978503469/cmd";
+        std::string out = "/sys/fs/hmdfs/18446744073709551615/cmd";
         std::string ret = mountArgument_->GetCtrlPath();
         EXPECT_STREQ(ret.c_str(), out.c_str());
     } catch (...) {
