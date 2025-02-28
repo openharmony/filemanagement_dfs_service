@@ -384,6 +384,11 @@ int32_t CloudSyncService::UnRegisterCallbackInner(const string &bundleName)
     return E_OK;
 }
 
+int32_t CloudSyncService::UnRegisterFileSyncCallbackInner(const string &bundleName)
+{
+    return UnRegisterCallbackInner(bundleName);
+}
+
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const string &bundleName)
 {
     if (remoteObject == nullptr) {
@@ -405,6 +410,12 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     return E_OK;
 }
 
+int32_t CloudSyncService::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+    const string &bundleName)
+{
+    return RegisterCallbackInner(remoteObject, bundleName);
+}
+
 int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleName)
 {
     string targetBundleName = bundleName;
@@ -417,6 +428,11 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleNam
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStartSync(targetBundleName, callerUserId, forceFlag,
         SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::StartFileSyncInner(bool forceFlag, const string &bundleName)
+{
+    return StartSyncInner(forceFlag, bundleName);
 }
 
 int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
@@ -440,6 +456,11 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName, bool forceFlag
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::StopFileSyncInner(const string &bundleName, bool forceFlag)
+{
+    return StopSyncInner(bundleName, forceFlag);
 }
 
 int32_t CloudSyncService::ResetCursor(const string &bundleName)
@@ -621,7 +642,11 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
     }
     LOGI("start StartFileCache");
     auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
+    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
+    if (ret != E_OK && ret != E_INVAL_ARG) {
+        ret = E_BROKEN_IPC;
+    }
+    return ret;
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
@@ -658,7 +683,11 @@ int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int3
         return ret;
     }
     LOGI("start StopFileCache");
-    return dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
+    ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
+    if (ret != E_OK && ret != E_INVAL_ARG) {
+        ret = E_BROKEN_IPC;
+    }
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadThumb()
@@ -679,6 +708,11 @@ int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject>
     return dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
 }
 
+int32_t CloudSyncService::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    return RegisterDownloadFileCallback(downloadCallback);
+}
+
 int32_t CloudSyncService::UnregisterDownloadFileCallback()
 {
     BundleNameUserInfo bundleNameUserInfo;
@@ -688,6 +722,11 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
     }
     LOGI("start UnregisterDownloadFileCallback");
     return dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
+}
+
+int32_t CloudSyncService::UnregisterFileCacheCallback()
+{
+    return UnregisterDownloadFileCallback();
 }
 
 int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)

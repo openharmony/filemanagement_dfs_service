@@ -30,14 +30,24 @@ CloudSyncServiceStub::CloudSyncServiceStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleUnRegisterCallbackInner(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>
+        (CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_FILE_SYNC_CALLBACK)] = [this](MessageParcel &data,
+        MessageParcel &reply) { return this->HandleUnRegisterFileSyncCallbackInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleRegisterCallbackInner(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>
+        (CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_FILE_SYNC_CALLBACK)] = [this](MessageParcel &data,
+        MessageParcel &reply) { return this->HandleRegisterFileSyncCallbackInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartSyncInner(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_SYNC)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartFileSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleTriggerSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopSyncInner(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_SYNC)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleChangeAppSwitch(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN)] =
@@ -60,9 +70,19 @@ CloudSyncServiceStub::CloudSyncServiceStub()
             return this->HandleRegisterDownloadFileCallback(data, reply);
         };
     opToInterfaceMap_[static_cast<uint32_t>(
+        CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_FILE_CACHE_CALLBACK)] =
+        [this](MessageParcel &data, MessageParcel &reply) {
+            return this->HandleRegisterFileCacheCallback(data, reply);
+        };
+    opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
             return this->HandleUnregisterDownloadFileCallback(data, reply);
+        };
+    opToInterfaceMap_[static_cast<uint32_t>(
+        CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_FILE_CACHE_CALLBACK)] =
+        [this](MessageParcel &data, MessageParcel &reply) {
+            return this->HandleUnregisterFileCacheCallback(data, reply);
         };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleUploadAsset(data, reply); };
@@ -139,6 +159,16 @@ int32_t CloudSyncServiceStub::HandleUnRegisterCallbackInner(MessageParcel &data,
     return E_OK;
 }
 
+int32_t CloudSyncServiceStub::HandleUnRegisterFileSyncCallbackInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleUnRegisterFileSyncCallbackInner");
+    string bundleName = data.ReadString();
+    int32_t res = UnRegisterFileSyncCallbackInner(bundleName);
+    reply.WriteInt32(res);
+    LOGI("End HandleUnRegisterFileSyncCallbackInner");
+    return E_OK;
+}
+
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin RegisterCallbackInner");
@@ -158,6 +188,17 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
     return E_OK;
 }
 
+int32_t CloudSyncServiceStub::HandleRegisterFileSyncCallbackInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleRegisterFileSyncCallbackInner");
+    auto remoteObj = data.ReadRemoteObject();
+    string bundleName = data.ReadString();
+    int32_t res = RegisterFileSyncCallbackInner(remoteObj, bundleName);
+    reply.WriteInt32(res);
+    LOGI("End HandleRegisterFileSyncCallbackInner");
+    return E_OK;
+}
+
 int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StartSyncInner");
@@ -174,6 +215,17 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
     int32_t res = StartSyncInner(forceFlag, bundleName);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleStartFileSyncInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin StartFileSyncInner");
+    auto forceFlag = data.ReadBool();
+    string bundleName = data.ReadString();
+    int32_t res = StartFileSyncInner(forceFlag, bundleName);
+    reply.WriteInt32(res);
+    LOGI("End StartFileSyncInner");
     return E_OK;
 }
 
@@ -213,6 +265,17 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
     int32_t res = StopSyncInner(bundleName, forceFlag);
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleStopFileSyncInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin StopFileSyncInner");
+    string bundleName = data.ReadString();
+    bool forceFlag = data.ReadBool();
+    int32_t res = StopFileSyncInner(bundleName, forceFlag);
+    reply.WriteInt32(res);
+    LOGI("End StopFileSyncInner");
     return E_OK;
 }
 
@@ -287,10 +350,6 @@ int32_t CloudSyncServiceStub::HandleStopOptimizeStorage(MessageParcel &data, Mes
 int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin ChangeAppSwitch");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
@@ -330,10 +389,6 @@ int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &re
 int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin NotifyDataChange");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
@@ -429,10 +484,6 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartFileCache");
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        return E_PERMISSION_SYSTEM;
-    }
     std::vector<std::string> pathVec;
     if (!data.ReadStringVector(&pathVec)) {
         LOGE("Failed to get the cloud id.");
@@ -488,10 +539,6 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
 int32_t CloudSyncServiceStub::HandleStopFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStopFileCache");
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        return E_PERMISSION_SYSTEM;
-    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -526,6 +573,10 @@ int32_t CloudSyncServiceStub::HandleDownloadThumb(MessageParcel &data, MessagePa
 int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleRegisterDownloadFileCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
@@ -539,9 +590,24 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &
     return E_OK;
 }
 
+int32_t CloudSyncServiceStub::HandleRegisterFileCacheCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleRegisterFileCacheCallback");
+    auto downloadCallback = data.ReadRemoteObject();
+
+    int32_t res = RegisterFileCacheCallback(downloadCallback);
+    reply.WriteInt32(res);
+    LOGI("End HandleRegisterFileCacheCallback");
+    return E_OK;
+}
+
 int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleUnregisterDownloadFileCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
@@ -550,6 +616,15 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
     int32_t res = UnregisterDownloadFileCallback();
     reply.WriteInt32(res);
     LOGI("End HandleUnregisterDownloadFileCallback");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleUnregisterFileCacheCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleUnregisterFileCacheCallback");
+    int32_t res = UnregisterFileCacheCallback();
+    reply.WriteInt32(res);
+    LOGI("End HandleUnregisterFileCacheCallback");
     return E_OK;
 }
 
@@ -735,15 +810,6 @@ int32_t CloudSyncServiceStub::HandleDeleteAsset(MessageParcel &data, MessageParc
 int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin GetSyncTime");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        return E_PERMISSION_SYSTEM;
-    }
-
     int64_t syncTime = 0;
     string bundleName = data.ReadString();
     int32_t res = GetSyncTimeInner(syncTime, bundleName);

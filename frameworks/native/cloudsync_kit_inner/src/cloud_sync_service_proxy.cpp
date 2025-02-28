@@ -62,6 +62,40 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundle
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::UnRegisterFileSyncCallbackInner(const std::string &bundleName)
+{
+    LOGI("Start UnRegisterFileSyncCallbackInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_FILE_SYNC_CALLBACK),
+        data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("UnRegisterFileSyncCallbackInner Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
                                                      const std::string &bundleName)
 {
@@ -105,6 +139,50 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+    const std::string &bundleName)
+{
+    LOGI("Start RegisterFileSyncCallbackInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!remoteObject) {
+        LOGI("Empty callback stub");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteRemoteObject(remoteObject)) {
+        LOGE("Failed to send the callback stub");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_FILE_SYNC_CALLBACK),
+        data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("RegisterFileSyncCallbackInner Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
 {
     LOGI("Start Sync");
@@ -141,6 +219,44 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string 
     LOGI("StartSyncInner Success");
     return reply.ReadInt32();
 }
+
+int32_t CloudSyncServiceProxy::StartFileSyncInner(bool forceFlag, const std::string &bundleName)
+{
+    LOGI("Start StartFileSyncInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteBool(forceFlag)) {
+        LOGE("Failed to send the force flag");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC),
+                                      data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("StartFileSyncInner Success");
+    return reply.ReadInt32();
+}
+
 
 int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
 {
@@ -322,6 +438,44 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool
         return E_BROKEN_IPC;
     }
     LOGI("StopSyncInner Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::StopFileSyncInner(const std::string &bundleName, bool forceFlag)
+{
+    LOGI("StopFileSyncInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(forceFlag)) {
+        LOGE("Failed to send the forceFlag");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_SYNC), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("StopFileSyncInner Success");
     return reply.ReadInt32();
 }
 
@@ -934,6 +1088,44 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    LOGI("RegisterFileCacheCallback Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!downloadCallback) {
+        LOGI("Empty callback stub");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteRemoteObject(downloadCallback)) {
+        LOGE("Failed to send the callback stub");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_FILE_CACHE_CALLBACK), data,
+        reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("RegisterFileCacheCallback Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
 {
     LOGI("UnregisterDownloadFileCallback Start");
@@ -959,6 +1151,34 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         return E_BROKEN_IPC;
     }
     LOGI("UnregisterDownloadFileCallback Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::UnregisterFileCacheCallback()
+{
+    LOGI("UnregisterFileCacheCallback Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_FILE_CACHE_CALLBACK), data,
+        reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("UnregisterFileCacheCallback Success");
     return reply.ReadInt32();
 }
 
