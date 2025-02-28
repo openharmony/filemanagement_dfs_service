@@ -53,7 +53,6 @@ using namespace testing::ext;
 using namespace std;
 
 constexpr int32_t E_OK = 0;
-constexpr int32_t E_HASH_VALUE = 3556498;
 constexpr int32_t E_ERR = -1;
 
 class ConnectionDetectorTest : public testing::Test {
