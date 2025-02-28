@@ -28,11 +28,16 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
 
     virtual int32_t UnRegisterCallbackInner(const std::string &bundleName = "") = 0;
+    virtual int32_t UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") = 0;
     virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
                                           const std::string &bundleName = "") = 0;
+    virtual int32_t RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                          const std::string &bundleName = "") = 0;
     virtual int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") = 0;
+    virtual int32_t StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") = 0;
     virtual int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) = 0;
     virtual int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) = 0;
+    virtual int32_t StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) = 0;
     virtual int32_t ResetCursor(const std::string &bundleName = "") = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t OptimizeStorage(const int32_t agingDays) = 0;
@@ -52,7 +57,9 @@ public:
     virtual int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) = 0;
     virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
+    virtual int32_t RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
+    virtual int32_t UnregisterFileCacheCallback() = 0;
     virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) = 0;
     virtual int32_t DownloadFiles(const int32_t userId,

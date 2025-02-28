@@ -240,30 +240,38 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOnCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (callback_ != nullptr) {
         LOGI("callback already exist");
-        return NVal::CreateUndefined(env).val_;
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOnCallback(env, funcArg)) {
+        return nullptr;
     }
 
     string bundleName = GetBundleName(env, funcArg);
@@ -278,24 +286,32 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
     return NVal::CreateUndefined(env).val_;
 }
 
-napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOffCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOffCallback(env, funcArg)) {
         return nullptr;
     }
 
@@ -496,17 +512,6 @@ int32_t CloudSyncNapi::RegisterToObs(napi_env env, const RegisterParams &registe
 
 napi_value CloudSyncNapi::RegisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr) {
         g_listObj = make_unique<ChangeListenerNapi>(env);
     }
@@ -581,17 +586,6 @@ napi_value CloudSyncNapi::UnregisterFromObs(napi_env env, const string &uri)
 
 napi_value CloudSyncNapi::UnregisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr || g_listObj->observers_.empty()) {
         LOGI("no obs to unregister");
         return nullptr;

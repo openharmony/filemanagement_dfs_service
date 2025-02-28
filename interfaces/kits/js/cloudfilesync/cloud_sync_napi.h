@@ -64,14 +64,18 @@ public:
     static napi_value OptimizeStorage(napi_env env, napi_callback_info info);
 
     static std::string GetBundleName(const napi_env &env, const LibN::NFuncArg &funcArg);
+    static bool InitArgsOnCallback(const napi_env &env, LibN::NFuncArg &funcArg);
+    static bool InitArgsOffCallback(const napi_env &env, LibN::NFuncArg &funcArg);
     CloudSyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
     ~CloudSyncNapi() = default;
+
+protected:
+    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
 
 private:
     static bool CheckRef(napi_env env, napi_ref ref, ChangeListenerNapi &listObj, const std::string &uri);
     static int32_t RegisterToObs(napi_env env, const RegisterParams &registerParams);
     static napi_value UnregisterFromObs(napi_env env, const std::string &uri);
-    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
     std::string className_;
     static std::mutex sOnOffMutex_;
 };
