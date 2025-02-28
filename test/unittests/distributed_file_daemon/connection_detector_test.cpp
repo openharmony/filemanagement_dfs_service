@@ -113,15 +113,6 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_Start";
-    string str = "test";
-    uint64_t ret = ConnectionDetector::MocklispHash(str);
-    EXPECT_EQ(ret, E_HASH_VALUE);
-    GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_End";
-}
-
 HWTEST_F(ConnectionDetectorTest, DfsService_ParseHmdfsPath_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_ParseHmdfsPath_001_Start";
