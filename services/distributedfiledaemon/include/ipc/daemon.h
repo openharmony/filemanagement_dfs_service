@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,7 +67,9 @@ public:
     int32_t ConnectionCount(const DmDeviceInfoExt &deviceInfo);
     int32_t CleanUp(const DmDeviceInfoExt &deviceInfo);
     int32_t ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
-        const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+                               const std::string &networkId,
+                               uint32_t callingTokenId,
+                               sptr<IFileDfsListener> remoteReverseObj);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
