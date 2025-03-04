@@ -80,7 +80,7 @@ public:
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
-    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool& isFile, bool& isDir) override;
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
 
     int32_t PushAsset(int32_t userId,
                       const AssetObj &assetObj,
