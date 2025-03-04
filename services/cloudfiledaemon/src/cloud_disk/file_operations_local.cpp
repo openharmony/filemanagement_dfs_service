@@ -20,7 +20,8 @@
 #include "file_operations_cloud.h"
 #include "file_operations_helper.h"
 #include "utils_log.h"
-
+#include "xcollie_helper.h"
+ 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
@@ -28,6 +29,10 @@ using namespace std;
 static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
 static const int32_t STAT_MODE_DIR = 0771;
 static const float LOOKUP_TIMEOUT = 60.0;
+#ifdef HICOLLIE_ENABLE
+static const unsigned int LOOKUP_TIMEOUT_S = 1;
+static const unsigned int GETATTR_TIMEOUT_S = 1;
+#endif
 
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
@@ -88,37 +93,58 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
     int32_t err;
     e.attr_timeout = LOOKUP_TIMEOUT;
     e.entry_timeout = LOOKUP_TIMEOUT;
+#ifdef HICOLLIE_ENABLE
+    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_Lookup", LOOKUP_TIMEOUT_S, nullptr, nullptr, false);
+#endif
     err = DoLocalLookup(req, parent, name, &e);
     if (err) {
         fuse_reply_err(req, err);
     } else {
         fuse_reply_entry(req, &e);
     }
+#ifdef HICOLLIE_ENABLE
+    XCollieHelper::CancelTimer(xcollieId);
+#endif
 }
-
+ 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
+#ifdef HICOLLIE_ENABLE
+    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_GetAttr", GETATTR_TIMEOUT_S, nullptr, nullptr, false);
+#endif
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     if (ino == FUSE_ROOT_ID) {
         string path = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
-
+ 
         struct stat statBuf;
         int err = stat(path.c_str(), &statBuf);
         if (err != 0) {
             LOGE("lookup %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), err);
             fuse_reply_err(req, err);
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
             return;
         }
         fuse_reply_attr(req, &statBuf, 0);
+#ifdef HICOLLIE_ENABLE
+        XCollieHelper::CancelTimer(xcollieId);
+#endif
         return;
     }
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
         fuse_reply_err(req, EINVAL);
         LOGE("inode not found");
+#ifdef HICOLLIE_ENABLE
+        XCollieHelper::CancelTimer(xcollieId);
+#endif
         return;
     }
     fuse_reply_attr(req, &inoPtr->stat, 0);
+#ifdef HICOLLIE_ENABLE
+    XCollieHelper::CancelTimer(xcollieId);
+#endif
 }
 
 void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
