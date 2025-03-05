@@ -34,6 +34,10 @@ using namespace std;
 
 namespace {
     static const uint32_t STAT_MODE_DIR = 0771;
+    static const std::string PATH_INVALID_FLAG1 = "../";
+    static const std::string PATH_INVALID_FLAG2 = "/..";
+    static const uint32_t PATH_INVALID_FLAG_LEN = 3;
+    static const char FILE_SEPARATOR_CHAR = '/';
 }
 
 std::string GetAnonyString(const std::string &value)
@@ -370,6 +374,26 @@ bool IsInt32(const nlohmann::json &jsonObj, const std::string &key)
         LOGE("the key %{public}s in jsonObj is invalid.", key.c_str());
     }
     return res;
+}
+
+bool IsFilePathInvalid(const std::string &filePath)
+{
+    size_t pos = filePath.find(PATH_INVALID_FLAG1);
+    while (pos != string::npos) {
+        if (pos == 0 || filePath[pos - 1] == FILE_SEPARATOR_CHAR) {
+            LOGE("Relative path is not allowed, path contain ../, path = %{private}s",
+                GetAnonyString(filePath).c_str());
+            return true;
+        }
+        pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
+    }
+    pos = filePath.rfind(PATH_INVALID_FLAG2);
+    if ((pos != string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
+        LOGE("Relative path is not allowed, path tail is /.., path = %{private}s",
+            GetAnonyString(filePath).c_str());
+        return true;
+    }
+    return false;
 }
 } // namespace Utils
 } // namespace DistributedFile
