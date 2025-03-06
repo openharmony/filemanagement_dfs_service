@@ -694,17 +694,17 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
     std::string xattrKey = "user.cloud.filestatus";
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
     if (xattrValueSize < 0) {
-        NError(EINVAL).ThrowErr(env);
+        NError(E_UNKNOWN_ERR).ThrowErr(env);
         return nullptr;
     }
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
-        NError(EINVAL).ThrowErr(env);
+        NError(ENOMEM).ThrowErr(env);
         return nullptr;
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
-        NError(EINVAL).ThrowErr(env);
+        NError(E_UNKNOWN_ERR).ThrowErr(env);
         return nullptr;
     }
     int32_t fileStatus = std::stoi(xattrValue.get());
