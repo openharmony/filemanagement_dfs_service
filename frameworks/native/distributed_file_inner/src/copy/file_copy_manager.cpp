@@ -30,11 +30,12 @@
 #include "copy/file_size_utils.h"
 #include "datashare_helper.h"
 #include "dfs_error.h"
-#include "distributed_file_daemon_proxy.h"
+#include "daemon_proxy.h"
 #include "file_uri.h"
 #include "iremote_stub.h"
 #include "sandbox_helper.h"
 #include "utils_log.h"
+#include "distributed_file_daemon_manager_impl.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
@@ -128,13 +129,14 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     infos->transListener = transListener;
 
     auto networkId = transListener->GetNetworkIdFromUri(infos->srcUri);
-    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    HmdfsInfoExt info(transListener->hmdfsInfo_);
     auto ret = distributedFileDaemonProxy->PrepareSession(infos->srcUri, infos->destUri,
-        networkId, transListener, transListener->hmdfsInfo_);
+        networkId, transListener, info);
     if (ret != E_OK) {
         LOGE("PrepareSession failed, ret = %{public}d.", ret);
         return ret;

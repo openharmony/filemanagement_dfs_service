@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -42,7 +42,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
@@ -78,6 +77,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock",

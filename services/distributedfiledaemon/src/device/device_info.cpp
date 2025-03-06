@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
     deviceId_ = string(nodeInfo.deviceId);
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
+    deviceManager.GetUdidByNetworkId(SERVICE_NAME, cid_, udid_);
 }
 
 DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeInfo)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "iremote_broker.h"
 #include "iremote_stub.h"
 
@@ -32,8 +32,8 @@ public:
     virtual ~DaemonServiceMock() {}
 
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
-    MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
-    MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD1(OpenP2PConnection, int32_t(const DmDeviceInfo &deviceInfo));
+    MOCK_METHOD1(CloseP2PConnection, int32_t(const DmDeviceInfo &deviceInfo));
     MOCK_METHOD2(OpenP2PConnectionEx, int32_t(const std::string &networkId,
         sptr<IFileDfsListener> remoteReverseObj));
     MOCK_METHOD1(CloseP2PConnectionEx, int32_t(const std::string &networkId));

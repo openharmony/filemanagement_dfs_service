@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+sequenceable AssetObj..OHOS.Storage.DistributedFile.AssetObj;
+sequenceable OHOS.IRemoteObject;
+sequenceable DmDeviceInfoExt..OHOS.Storage.DistributedFile.DmDeviceInfoExt;
+sequenceable HmdfsInfo..OHOS.Storage.DistributedFile.HmdfsInfoExt;
+interface OHOS.Storage.DistributedFile.IFileDfsListener;
+interface OHOS.Storage.DistributedFile.IAssetRecvCallback;
+interface OHOS.Storage.DistributedFile.IAssetSendCallback;
+
+interface OHOS.Storage.DistributedFile.IDaemon{
+   [ipccode 999] void OpenP2PConnection([in]DmDeviceInfoExt deviceInfo);
+   [ipccode 1] void CloseP2PConnection([in]DmDeviceInfoExt deviceInfo);
+   [ipccode 6] void OpenP2PConnectionEx([in] String networkId, [in] IFileDfsListener remoteReverseObj);
+   [ipccode 7] void CloseP2PConnectionEx([in] String networkId);
+   [ipccode 2] void PrepareSession([in] String srcUri,
+                       [in] String dstUri,
+                       [in] String srcDeviceId,
+                       [in] IRemoteObject listener,
+                       [inout] HmdfsInfoExt info);
+   [ipccode 5] void CancelCopyTask([in] String sessionName);
+   [ipccode 3] void RequestSendFile([in] String srcUri,
+                      [in] String dstPath,
+                      [in] String dstDeviceId,
+                      [in] String sessionName);
+   [ipccode 4] void GetRemoteCopyInfo([in] String srcUri, [out] boolean isFile, [out] boolean isDir);
+   [ipccode 10] void PushAsset([in] int userId,
+             [in] AssetObj assetObj,
+             [in] IAssetSendCallback sendCallback);
+   [ipccode 8] void RegisterAssetCallback([in] IAssetRecvCallback recvCallback);
+   [ipccode 9] void UnRegisterAssetCallback([in] IAssetRecvCallback recvCallback);
+}

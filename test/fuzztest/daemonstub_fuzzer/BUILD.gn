@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -30,12 +30,13 @@ ohos_fuzztest("DaemonStubFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
-    "${distributedfile_path}/services/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer/daemonstub_fuzzer.cpp",
   ]
   defines = [ "DFS_LOG_TAG = \"dfs_service\"" ]
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
   ]
 

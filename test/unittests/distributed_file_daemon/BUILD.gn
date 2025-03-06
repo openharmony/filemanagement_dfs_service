@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -35,7 +35,6 @@ ohos_unittest("distributed_file_daemon_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
@@ -68,198 +67,7 @@ ohos_unittest("distributed_file_daemon_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:sandbox_helper_native",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
-    "eventhandler:libeventhandler",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "libfuse:libfuse",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-    "zlib:shared_libz",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
-  use_exceptions = true
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
-ohos_unittest("distributed_file_daemon_stub_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = "filemanagement/dfs_service"
-
-  sources = [
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "daemon_stub_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
-    "${services_path}/distributedfiledaemon/include",
-    "${services_path}/distributedfiledaemon/include/ipc",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:sandbox_helper_native",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
-    "eventhandler:libeventhandler",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "libfuse:libfuse",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-    "zlib:shared_libz",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
-  use_exceptions = true
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
-ohos_unittest("distributed_file_daemon_stub_sup_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = "filemanagement/dfs_service"
-
-  sources = [
-    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "daemon_stub_sup_test.cpp",
-  ]
-
-  include_dirs = [
-    "include",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
-    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
-    "${distributedfile_path}/test/mock",
-    "${services_path}/distributedfiledaemon/include",
-    "${services_path}/distributedfiledaemon/include/ipc",
-    "${services_path}/distributedfiledaemon/test/mock/include",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -327,6 +135,7 @@ ohos_unittest("daemon_manager_impl_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:idaemon_base_head",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -380,54 +189,6 @@ ohos_unittest("daemon_manager_test") {
   ]
 
   external_deps = [
-    "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
-  use_exceptions = true
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
-ohos_unittest("daemon_service_proxy_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = "filemanagement/dfs_service"
-
-  sources = [
-    "${distributedfile_path}/utils/log/src/utils_log.cpp",
-    "daemon_service_proxy_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
-    "${services_path}/distributedfiledaemon/include",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
@@ -650,9 +411,6 @@ group("distributed_daemon_test") {
     ":connection_detector_test",
     ":daemon_manager_impl_test",
     ":daemon_manager_test",
-    ":daemon_service_proxy_test",
-    ":distributed_file_daemon_stub_sup_test",
-    ":distributed_file_daemon_stub_test",
     ":distributed_file_daemon_test",
     ":file_dfs_listener_proxy_test",
     ":file_trans_listener_proxy_test",

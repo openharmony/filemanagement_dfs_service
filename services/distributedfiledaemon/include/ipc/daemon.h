@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,23 +28,24 @@
 #include "dm_device_info.h"
 #include "file_trans_listener_proxy.h"
 #include "hmdfs_info.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "iremote_stub.h"
 #include "multiuser/os_account_observer.h"
 #include "nocopyable.h"
 #include "refbase.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
+#include "dm_device_info_ext.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
-
+    
 class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Daemon);
-
+    
 public:
     explicit Daemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {};
     virtual ~Daemon() = default;
@@ -58,19 +59,22 @@ public:
         return state_;
     }
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
+    int32_t OpenP2PConnection(const DmDeviceInfoExt &deviceInfo) override;
+    int32_t CloseP2PConnection(const DmDeviceInfoExt &deviceInfo) override;
+    int32_t OpenP2PConnectionEx(const std::string &networkId,
+                                const sptr<IFileDfsListener> &remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
-    int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
-    int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo);
-    int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
-        const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t ConnectionCount(const DmDeviceInfoExt &deviceInfo);
+    int32_t CleanUp(const DmDeviceInfoExt &deviceInfo);
+    int32_t ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
+                               const std::string &networkId,
+                               uint32_t callingTokenId,
+                               sptr<IFileDfsListener> remoteReverseObj);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           HmdfsInfo &info) override;
+                           HmdfsInfoExt &info) override;
     int32_t CancelCopyTask(const std::string &sessionName) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
@@ -79,7 +83,7 @@ public:
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
 
     int32_t PushAsset(int32_t userId,
-                      const sptr<AssetObj> &assetObj,
+                      const AssetObj &assetObj,
                       const sptr<IAssetSendCallback> &sendCallback) override;
     int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;

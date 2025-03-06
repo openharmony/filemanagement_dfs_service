@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,11 +20,14 @@
 
 #include "device_manager.h"
 #include "dm_device_info.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+
+static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+
 class DeviceInfo final {
 public:
     DeviceInfo() = default;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include "network/devsl_dispatcher.h"
 
 #include "device_manager.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "securec.h"
 #include "utils_log.h"
 
@@ -57,7 +57,7 @@ uint32_t DevslDispatcher::DevslGetRegister(const std::string &cid, std::weak_ptr
 {
     std::string udid;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid, udid);
+    deviceManager.GetUdidByNetworkId(SERVICE_NAME, cid, udid);
 
     std::lock_guard<std::mutex> lock(mutex);
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);

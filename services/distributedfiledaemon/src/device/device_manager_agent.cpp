@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
-#include "ipc/i_daemon.h"
+#include "idaemon.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
@@ -180,7 +180,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
 int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
 {
     int32_t networkType = 0;
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, cid, networkType);
     if (errCode) {
@@ -640,7 +640,7 @@ std::string DeviceManagerAgent::GetDeviceIdByNetworkId(const std::string &networ
         return "";
     }
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("the size of trust device list is invalid, size=%zu", deviceList.size());
         return "";
@@ -739,7 +739,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
 void DeviceManagerAgent::InitDeviceInfos()
 {
     string extra = "";
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     vector<DistributedHardware::DmDeviceInfo> deviceInfoList;
 
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -762,7 +762,7 @@ void DeviceManagerAgent::InitDeviceInfos()
 int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         return FileManagement::ERR_BAD_VALUE;
@@ -804,7 +804,7 @@ void DeviceManagerAgent::InitLocalNodeInfo()
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
-    int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
+    int errCode = deviceManager.GetLocalDeviceInfo(SERVICE_NAME, localDeviceInfo);
     if (errCode != 0) {
         ThrowException(errCode, "Failed to get info of local devices");
     }
@@ -824,7 +824,7 @@ DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 vector<DeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
 {
     string extra = "";
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     vector<DistributedHardware::DmDeviceInfo> deviceList;
 
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -843,7 +843,7 @@ vector<DeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
 void DeviceManagerAgent::RegisterToExternalDm()
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     int errCode = deviceManager.InitDeviceManager(pkgName, shared_from_this());
     if (errCode != 0) {
         ThrowException(errCode, "Failed to InitDeviceManager");
@@ -859,7 +859,7 @@ void DeviceManagerAgent::RegisterToExternalDm()
 void DeviceManagerAgent::UnregisterFromExternalDm()
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    string pkgName = IDaemon::SERVICE_NAME;
+    string pkgName = SERVICE_NAME;
     int errCode = deviceManager.UnRegisterDevStateCallback(pkgName);
     if (errCode != 0) {
         ThrowException(errCode, "Failed to UnRegisterDevStateCallback");
