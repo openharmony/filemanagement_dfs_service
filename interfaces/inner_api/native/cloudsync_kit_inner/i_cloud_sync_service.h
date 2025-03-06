@@ -44,11 +44,11 @@ public:
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::vector<std::string> &pathVec,
                                    int64_t &downloadId,
-                                   std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
                                    bool isCallbackValid = false,
                                    const sptr<IRemoteObject> &downloadCallback = nullptr) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
     virtual int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false) = 0;
+    virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
     virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
@@ -62,7 +62,6 @@ public:
                                   const std::string &bundleName,
                                   const std::string &networkId,
                                   AssetInfoObj &assetInfoObj) = 0;
-    virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
     virtual int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") = 0;

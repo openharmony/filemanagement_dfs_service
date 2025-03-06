@@ -288,7 +288,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
         }
     }
 
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey, isCallbackValid, dlCallback);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, isCallbackValid, dlCallback);
     LOGI("StartFileCache batch ret %{public}d", ret);
     return ret;
 }

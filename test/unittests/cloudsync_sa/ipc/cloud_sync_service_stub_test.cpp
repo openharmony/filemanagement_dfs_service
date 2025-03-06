@@ -45,8 +45,7 @@ public:
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
     MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &path));
-    MOCK_METHOD5(StartFileCache, int32_t(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                                         std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+    MOCK_METHOD4(StartFileCache, int32_t(const std::vector<std::string> &pathVec, int64_t &downloadId,
                                          bool isCallbackValid,
                                          const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
