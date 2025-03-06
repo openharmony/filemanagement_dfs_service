@@ -118,6 +118,7 @@ ohos_unittest("task_state_manager_test") {
     "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "libfuse:libfuse",
     "samgr:samgr_proxy",
   ]
