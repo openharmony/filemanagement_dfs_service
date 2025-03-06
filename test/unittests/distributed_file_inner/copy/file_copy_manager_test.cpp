@@ -119,4 +119,51 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
 }
 
+/**
+* @tc.name: FileCopyManager_Copy_0004
+* @tc.desc: The execution of the cancel succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0004 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/11.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/dest11.txt";
+    string srcpath = "/storage/media/100/local/files/Docs/11.txt";
+    int fd = open(srcpath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0004!" << errno;
+    close(fd);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(remove(srcpath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0004 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Copy_0005
+* @tc.desc: The execution of the execlocal failed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0004 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/11.txt";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dest11.txt";
+    string srcpath = "/storage/media/100/local/files/Docs/11.txt";
+    int fd = open(srcpath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0005!" << errno;
+    close(fd);
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUri = srcuri;
+    infos->destUri = desturi;
+    infos->srcPath = srcpath;
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, E_NOENT);
+    ASSERT_EQ(remove(srcpath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 End";
+}
+
 }
