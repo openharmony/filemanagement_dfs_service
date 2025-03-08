@@ -75,4 +75,22 @@ HWTEST_F(TransListenerTest, TransListener_0001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "TransListener_0001 End";
 }
+
+/**
+* @tc.name: TransListener_0002
+* @tc.desc: The execution of the CopyTosandbox success.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(TransListenerTest, TransListener_0002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TransListener_0002 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/aa/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    int32_t ret = ptr->Cancel();
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "TransListener_0002 End";
+}
+
 }
