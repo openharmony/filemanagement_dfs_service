@@ -78,7 +78,7 @@ HWTEST_F(TransListenerTest, TransListener_0001, TestSize.Level1)
 
 /**
 * @tc.name: TransListener_0002
-* @tc.desc: The execution of the CopyTosandbox success.
+* @tc.desc: The execution of the Cancel success.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
@@ -91,6 +91,58 @@ HWTEST_F(TransListenerTest, TransListener_0002, TestSize.Level1)
     int32_t ret = ptr->Cancel();
     EXPECT_EQ(ret, E_SA_LOAD_FAILED);
     GTEST_LOG_(INFO) << "TransListener_0002 End";
+}
+
+/**
+* @tc.name: TransListener_0003
+* @tc.desc: The execution of the OnFileReceive success.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(TransListenerTest, TransListener_0003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TransListener_0003 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/aa/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    int32_t ret = ptr->OnFileReceive(process, fileSize);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "TransListener_0003 End";
+}
+
+/**
+* @tc.name: TransListener_0004
+* @tc.desc: The execution of the OnFinished success.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(TransListenerTest, TransListener_0004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TransListener_0004 Start";
+    string sessionName = "test";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    int32_t ret = ptr->OnFinished(sessionName);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "TransListener_0004 End";
+}
+
+/**
+* @tc.name: TransListener_0005
+* @tc.desc: The execution of the OnFailed success.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(TransListenerTest, TransListener_0005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TransListener_0005 Start";
+    string sessionName = "test";
+    int32_t errorCode = 0;
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    int32_t ret = ptr->OnFailed(sessionName, errorCode);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "TransListener_0005 End";
 }
 
 }
