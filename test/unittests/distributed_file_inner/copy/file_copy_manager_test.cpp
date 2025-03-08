@@ -148,7 +148,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level1)
  */
 HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0004 Start";
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 Start";
     string srcuri = "file://docs/storage/media/100/local/files/Docs/11.txt";
     string desturi = "file://docs/storage/media/100/local/files/Docs/dest11.txt";
     string srcpath = "/storage/media/100/local/files/Docs/11.txt";
@@ -166,4 +166,38 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 End";
 }
 
+/**
+* @tc.name: FileCopyManager_Copy_0006
+* @tc.desc: The execution of the execlocal failed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level1)
+{
+    //无对应子文件夹，errno返回2
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/aa/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    string srcpath = "/storage/media/100/local/files/Docs/aa/";
+    string destpath = "/storage/media/100/local/files/Docs/aa1/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(srcpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUri = srcuri;
+    infos->destUri = desturi;
+    infos->srcPath = srcpath;
+    infos->destPath = destpath;
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, 2);
+    ASSERT_EQ(remove(srcpath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
+}
 }
