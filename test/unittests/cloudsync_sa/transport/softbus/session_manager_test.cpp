@@ -272,6 +272,48 @@ HWTEST_F(SessionManagerTest, OnUserUnlockedTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnUserUnlockedTest001 end";
 }
+
+HWTEST_F(SessionManagerTest, OnUserUnlockedTest002, TestSize.Level1)
+{
+    auto sessionManager = make_shared<SessionManager>();
+    sessionManager->SetFileRecvListenerFlag_ = false;
+    sessionManager->OnUserUnlocked();
+    EXPECT_FALSE(sessionManager->SetFileRecvListenerFlag_);
+}
+
+HWTEST_F(SessionManagerTest, SendFileTest002, TestSize.Level1)
+{
+    auto sessionManager = make_shared<SessionManager>();
+    string peerNetworkId = "test peerNetworkId";
+    EXPECT_CALL(*softbusSessionMock_, Start()).WillOnce(Return(1));
+
+    int32_t ret = sessionManager->SendFile(peerNetworkId, {"data/test"}, {"data/test"});
+    EXPECT_EQ(ret, E_CREATE_SESSION);
+}
+
+HWTEST_F(SessionManagerTest, OnSessionClosedTest, TestSize.Level1)
+{
+    auto sessionManager = make_shared<SessionManager>();
+
+    auto type = SoftbusSession::TYPE_BYTES;
+    string peerNetworkId = "test peerNetworkId";
+    sessionManager->ReleaseSession(type, peerNetworkId);
+
+    int32_t socket = 1;
+    sessionManager->dataHandler_ = make_shared<FileTransferManager>(nullptr);
+    sessionManager->OnSessionClosed(socket);
+    EXPECT_NE(sessionManager->dataHandler_, nullptr);
+}
+
+HWTEST_F(SessionManagerTest, GetSendSessionTest, TestSize.Level1)
+{
+    auto type = SoftbusSession::TYPE_BYTES;
+    string peerNetworkId = "test peerNetworkId";
+    auto sessionManager = make_shared<SessionManager>();
+    
+    auto res = sessionManager->GetSendSession(type, peerNetworkId);
+    EXPECT_EQ(res, nullptr);
+}
 } // namespace Test
 } // namespace CloudSync
 } // namespace OHOS
