@@ -355,8 +355,8 @@ group("distributed_file_inner") {
     ":asset_recv_callback_stub_test",
     ":asset_send_callback_stub_test",
     ":file_copy_manager_test",
+    ":file_size_utils_test",
     ":file_trans_listener_stub_test",
     ":trans_listener_test",
-    ":file_size_utils_test",
   ]
 }
