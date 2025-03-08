@@ -200,4 +200,37 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level1)
     ASSERT_EQ(remove(srcpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
 }
+
+/**
+* @tc.name: FileCopyManager_Copy_0007
+* @tc.desc: The execution of the execlocal failed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level1)
+{
+    //无destpath赋值，stat检查返回2
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/aa/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
+    string srcpath = "/storage/media/100/local/files/Docs/aa/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(srcpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUri = srcuri;
+    infos->destUri = desturi;
+    infos->srcPath = srcpath;
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, 2);
+    ASSERT_EQ(remove(srcpath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 End";
+}
 }
