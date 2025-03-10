@@ -19,4 +19,4 @@ persist.kernel.cloudsync.temperature_abnormal_thumb = false
 persist.kernel.medialibrarydata.stopflag = 0
 persist.kernel.move.finish = false
 persist.kernel.cloudsync.screen_off_enable_download = true
-persist.kernel.cloudsync.drivekit_version = 5.6.0.300
+persist.kernel.clouddisk_version = 1.0
