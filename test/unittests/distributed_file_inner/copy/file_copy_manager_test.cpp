@@ -161,7 +161,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
     infos->destUri = desturi;
     infos->srcPath = srcpath;
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, 2);
     ASSERT_EQ(remove(srcpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 End";
 }

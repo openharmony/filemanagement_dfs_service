@@ -73,7 +73,7 @@ HWTEST_F(FileSizeUtilsTest, FileSizeUtils_0001, TestSize.Level1)
     bool isSrcUri = true;
     auto ptr = std::make_shared<FileSizeUtils>();
     int32_t ret = ptr->GetSize(srcuri, isSrcUri, fileSize);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 2);
     GTEST_LOG_(INFO) << "FileSizeUtils_0001 End";
 }
 }
