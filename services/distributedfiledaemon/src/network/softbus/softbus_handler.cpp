@@ -209,7 +209,6 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
-        RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
         return ret;
     }
     {
@@ -220,7 +219,6 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
         networkIdMap_.insert(std::make_pair(socketId, peerDevId));
     }
-    RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
     return E_OK;
 }
@@ -304,10 +302,8 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
     auto ret = ::SendFile(socketId, src, dst, static_cast<uint32_t>(fileList.size()));
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", socketId);
-        RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
         return ret;
     }
-    RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     return E_OK;
 }
 
