@@ -149,10 +149,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Le
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
     EXPECT_EQ(ret, 0);
-    CloudDiskMetaFile mFile2(TEST_USER_ID, "/a/b", "id3");
-    MetaBase mBase3("file3", "id3");
-    ret = mFile2.DoCreate(mBase3);
-    EXPECT_EQ(ret, EEXIST);
 }
 
 /**

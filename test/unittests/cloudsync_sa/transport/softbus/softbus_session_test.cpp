@@ -30,6 +30,11 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+constexpr int32_t HEAD_SIZE = 3;
+constexpr int32_t END_SIZE = 3;
+constexpr const char *REPLACE_CHAIN = "***";
+constexpr const char *DEFAULT_ANONYMOUS = "******";
+
 class SoftbusSessionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -188,6 +193,80 @@ HWTEST_F(SoftbusSessionTest, WaitSessionOpenedTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "WaitSessionOpenedTest001 failed";
     }
     GTEST_LOG_(INFO) << "WaitSessionOpenedTest001 end";
+}
+
+HWTEST_F(SoftbusSessionTest, StartTest002, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+    softbusSession->sessionId_ = 0;
+    auto res = softbusSession->Start();
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(SoftbusSessionTest, StartTest003, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    auto res = softbusSession->Start();
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(SoftbusSessionTest, WaitSessionOpenedTest002, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+    int sessionId = 0;
+    auto res = softbusSession->WaitSessionOpened(sessionId);
+    EXPECT_EQ(res, E_WAIT_SESSION_OPENED);
+}
+
+HWTEST_F(SoftbusSessionTest, WaitSessionOpenedTest003, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+    int sessionId = 0;
+    SoftbusAdapter::GetInstance().AcceptSesion(sessionId, "", "");
+    auto res = softbusSession->WaitSessionOpened(sessionId);
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(SoftbusSessionTest, ToBeAnonymousTest002, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+
+    std::string name = "";
+    auto res = softbusSession->ToBeAnonymous(name);
+    EXPECT_EQ(res, DEFAULT_ANONYMOUS);
+}
+
+HWTEST_F(SoftbusSessionTest, ToBeAnonymousTest003, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+
+    std::string name = "test";
+    auto res = softbusSession->ToBeAnonymous(name);
+    EXPECT_EQ(res, (name.substr(0, HEAD_SIZE) + REPLACE_CHAIN));
+}
+
+HWTEST_F(SoftbusSessionTest, ToBeAnonymousTest004, TestSize.Level1)
+{
+    string peerNetworkId = "test peerNetworkId";
+    auto type = SoftbusSession::TYPE_BYTES;
+    auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
+
+    std::string name = "test name";
+    auto res = softbusSession->ToBeAnonymous(name);
+    EXPECT_EQ(res, (name.substr(0, HEAD_SIZE) + REPLACE_CHAIN + name.substr(name.length() - END_SIZE, END_SIZE)));
 }
 } // namespace Test
 } // namespace CloudSync
