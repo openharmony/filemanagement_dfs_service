@@ -37,6 +37,19 @@ using namespace testing;
 
 std::shared_ptr<CloudFile::DataSyncManager> g_dataSyncManagerPtr_;
 
+class SubCycleTask : public CycleTask {
+public:
+    SubCycleTask(std::string taskName,
+                 std::set<std::string> bundleNames,
+                 int32_t intervalTime,
+                 std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    :CycleTask(taskName, bundleNames, intervalTime, dataSyncManager)
+    {}
+    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override {
+        return 0;
+    }
+};
+
 class CloudSyncServiceCycleTaskTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -342,6 +355,224 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest009, TestSize.Level1
         GTEST_LOG_(INFO) << "RunTaskForBundleTest009 FAILED";
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest009 end";
+}
+
+/*
+  * @tc.name: CycleTaskRunnerTest
+  * @tc.desc: Verify the CycleTaskRunner function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, CycleTaskRunnerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CycleTaskRunnerTest001 start";
+    try {
+        shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+        CycleTaskRunner cycleTaskRunner(dataSyncManager);
+        auto res = cycleTaskRunner.dataSyncManager_;
+        EXPECT_EQ(res, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CycleTaskRunnerTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CycleTaskRunnerTest001 end";
+}
+
+ /*
+  * @tc.name: SetLastRunTimeTest001
+  * @tc.desc: Verify the SetLastRunTime function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetLastRunTimeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetLastRunTimeTest001 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames;
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+        
+        std::time_t time = std::time(nullptr);
+        sycTask->SetLastRunTime(time);
+        EXPECT_EQ(sycTask->cloudPrefImpl_, nullptr);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetLastRunTimeTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetLastRunTimeTest001 end";
+}
+
+ /*
+  * @tc.name: SetLastRunTimeTest002
+  * @tc.desc: Verify the SetLastRunTime function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetLastRunTimeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetLastRunTimeTest002 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames;
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+        
+        sycTask->cloudPrefImpl_ = std::make_unique<CloudPrefImpl>("");
+        std::time_t time = std::time(nullptr);
+        sycTask->SetLastRunTime(time);
+        EXPECT_NE(sycTask->cloudPrefImpl_, nullptr);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetLastRunTimeTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetLastRunTimeTest002 end";
+}
+
+ /*
+  * @tc.name: GetLastRunTimeTest001
+  * @tc.desc: Verify the GetLastRunTime function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, GetLastRunTimeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLastRunTimeTest001 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames;
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+        
+        std::time_t time = std::time(nullptr);
+        sycTask->GetLastRunTime(time);
+        EXPECT_EQ(sycTask->cloudPrefImpl_, nullptr);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLastRunTimeTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetLastRunTimeTest001 end";
+}
+
+ /*
+  * @tc.name: GetLastRunTimeTest002
+  * @tc.desc: Verify the GetLastRunTime function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, GetLastRunTimeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLastRunTimeTest002 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames;
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+        
+        sycTask->cloudPrefImpl_ = std::make_unique<CloudPrefImpl>("");
+        std::time_t time = std::time(nullptr);
+        sycTask->GetLastRunTime(time);
+        EXPECT_NE(sycTask->cloudPrefImpl_, nullptr);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLastRunTimeTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetLastRunTimeTest002 end";
+}
+
+ /*
+  * @tc.name: IsEligibleToRunTest001
+  * @tc.desc: Verify the IsEligibleToRun function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, IsEligibleToRunTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsEligibleToRunTest001 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames;
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+
+        std::time_t currentTime = std::time(nullptr);
+        std::string bundleName;
+        bool res = sycTask->IsEligibleToRun(currentTime, bundleName);
+        EXPECT_EQ(res, true);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsEligibleToRunTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsEligibleToRunTest001 end";
+}
+
+ /*
+  * @tc.name: IsEligibleToRunTest002
+  * @tc.desc: Verify the IsEligibleToRun function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, IsEligibleToRunTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsEligibleToRunTest002 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames = {"test"};
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+
+        std::time_t currentTime = std::time(nullptr);
+        std::string bundleName = "";
+        bool res = sycTask->IsEligibleToRun(currentTime, bundleName);
+        EXPECT_EQ(res, false);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsEligibleToRunTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsEligibleToRunTest002 end";
+}
+
+ /*
+  * @tc.name: RunTaskTest001
+  * @tc.desc: Verify the RunTask function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskTest001 start";
+    try {
+        std::string taskName;
+        std::set<std::string> bundleNames = {"test"};
+        int32_t intervalTime = 0;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = nullptr;
+        CycleTask *sycTask = new SubCycleTask(taskName, bundleNames, intervalTime, dataSyncManager);
+
+        int32_t userId = 0;
+        sycTask->RunTask(userId);
+        EXPECT_EQ(sycTask->runnableBundleNames_, nullptr);
+        delete sycTask;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskTest001 end";
 }
 }
 }
