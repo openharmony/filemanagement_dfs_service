@@ -2290,6 +2290,8 @@ int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string de
     getCopyValues(srcCloudId, destCloudId, destParentCloudId, resultSet, fileInfo);
     std::string fileName;
     CloudDiskRdbUtils::GetString(FileColumn::FILE_NAME, fileName, resultSet);
+    std::string oldName = fileName;
+    RETURN_ON_ERR(CheckIsConflict(oldName, destParentCloudId, fileName));
     fileInfo.PutString(FileColumn::FILE_NAME, fileName);
     int64_t fileSize;
     CloudDiskRdbUtils::GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);

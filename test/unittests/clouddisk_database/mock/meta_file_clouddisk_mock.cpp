@@ -562,5 +562,11 @@ int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::str
     }
     return E_OK;
 }
+
+int32_t MetaFileMgr::GetNewName(std::shared_ptr<CloudDiskMetaFile> metaFile, const std::string &oldName,
+    std::string &newName)
+{
+    return E_OK;
+}
 } // namespace FileManagement
 } // namespace OHOS

@@ -114,6 +114,214 @@ void CloudSyncServiceStubTest::TearDown(void)
 }
 
 /**
+ * @tc.name: HandleOptimizeStorageTest001
+ * @tc.desc: Verify the HandleOptimizeStorage function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleOptimizeStorageTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int32_t res = service.HandleOptimizeStorage(data, reply);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleOptimizeStorage ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage End";
+}
+
+/**
+ * @tc.name: HandleOptimizeStorageTest002
+ * @tc.desc: Verify the HandleOptimizeStorage function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleOptimizeStorageTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
+        int32_t res = service.HandleOptimizeStorage(data, reply);
+        EXPECT_EQ(res, E_PERMISSION_SYSTEM);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleOptimizeStorage ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage End";
+}
+
+/**
+ * @tc.name: HandleOptimizeStorageTest003
+ * @tc.desc: Verify the HandleOptimizeStorage function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleOptimizeStorageTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        int32_t res = service.HandleOptimizeStorage(data, reply);
+        EXPECT_EQ(res, E_OK);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleOptimizeStorage ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOptimizeStorage End";
+}
+
+/**
+ * @tc.name: HandleEnableCloudTest003
+ * @tc.desc: Verify the HandleEnableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleEnableCloudTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleEnableCloud Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        int32_t res = service.HandleEnableCloud(data, reply);
+        EXPECT_EQ(res, E_INVAL_ARG);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleEnableCloud ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleEnableCloud End";
+}
+
+/**
+ * @tc.name: HandleStartFileCacheTest003
+ * @tc.desc: Verify the HandleStartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartFileCache Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+        data.writable_ = true;
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(false));
+        int32_t res = service.HandleStartFileCache(data, reply);
+        EXPECT_EQ(res, E_OK);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleStartFileCache ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleStartFileCache End";
+}
+
+/**
+ * @tc.name: HandleDownloadThumbTest001
+ * @tc.desc: Verify the HandleDownloadThumb function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleDownloadThumbTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadThumb Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
+        int32_t res = service.HandleDownloadThumb(data, reply);
+        EXPECT_EQ(res, E_PERMISSION_SYSTEM);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleDownloadThumb ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadThumb End";
+}
+
+/**
+ * @tc.name: HandleDownloadThumbTest002
+ * @tc.desc: Verify the HandleDownloadThumb function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleDownloadThumbTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadThumb Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int32_t res = service.HandleDownloadThumb(data, reply);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleDownloadThumb ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadThumb End";
+}
+
+/**
+ * @tc.name: HandleDownloadThumbTest003
+ * @tc.desc: Verify the HandleDownloadThumb function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleDownloadThumbTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadThumb Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        int32_t res = service.HandleDownloadThumb(data, reply);
+        EXPECT_EQ(res, E_OK);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleDownloadThumb ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadThumb End";
+}
+
+/**
  * @tc.name: HandleUnRegisterCallbackInnerTest
  * @tc.desc: Verify the HandleUnRegisterCallbackInner function.
  * @tc.type: FUNC

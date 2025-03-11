@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -180,6 +180,10 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
     }
     if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {
         LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
+        return "";
+    }
+    if (Utils::IsFilePathInvalid(physicalPath)) {
+        LOGE("Check physicalPath err, physicalPath is forbidden");
         return "";
     }
     char realPath[PATH_MAX] = { 0x00 };

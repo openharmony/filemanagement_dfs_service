@@ -157,6 +157,7 @@ ohos_unittest("cloud_sync_service_transport_softbus_test") {
 
   defines = [
     "private=public",
+    "protected=public",
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_TEST\"",
   ]

@@ -19,6 +19,7 @@
 #include "cloud_sync_common.h"
 #include "dfs_error.h"
 #include "softbus_adapter.h"
+#include "session_manager.h"
 #include "softbus_session.h"
 #include "socket_mock.h"
 #include "utils_log.h"
@@ -110,6 +111,32 @@ HWTEST_F(SoftbusAdapterTest, CreateSessionServerTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "CreateSessionServerTest002 failed";
     }
     GTEST_LOG_(INFO) << "CreateSessionServerTest002 end";
+}
+
+/**
+ * @tc.name: CreateSessionServerTest003
+ * @tc.desc: Verify the CreateSessionServer function
+ * @tc.type: FUNC
+ * @tc.require: IB3T80
+ */
+HWTEST_F(SoftbusAdapterTest, CreateSessionServerTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateSessionServerTest003 start";
+    try {
+        SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+        char packageName[] = "com.example.test";
+        char sessionName[] = "testSession";
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+        EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(1));
+        int32_t result = adapter.CreateSessionServer(packageName, sessionName);
+        EXPECT_EQ(result, 1);
+        adapter.RemoveSessionServer(packageName, sessionName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateSessionServerTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "CreateSessionServerTest003 end";
 }
 
 /**
@@ -337,6 +364,123 @@ HWTEST_F(SoftbusAdapterTest, RegisterSessionTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "RegisterSessionTest001 failed";
     }
     GTEST_LOG_(INFO) << "RegisterSessionTest001 end";
+}
+
+HWTEST_F(SoftbusAdapterTest, RemoveSessionServerTest001, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    char packageName[] = "";
+    char sessionName[] = "";
+
+    int32_t res = adapter.RemoveSessionServer(packageName, sessionName);
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(SoftbusAdapterTest, OnBindTest001, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    int socket = 1;
+    char sessionName[] = "";
+    char peerNetworkId[] = "test peerNetworkId";
+    PeerSocketInfo info;
+    info.name = sessionName;
+    info.networkId = peerNetworkId;
+
+    adapter.OnBind(socket, info);
+    EXPECT_EQ(info.name, sessionName);
+
+    auto ptr = std::make_shared<SessionManager>();
+    (adapter.listeners_)["socket"] = ptr;
+    char socket2[] = "socket";
+    info.name = socket2;
+    adapter.OnBind(socket, info);
+    EXPECT_NE(adapter.listeners_.count("socket"), 0);
+}
+
+HWTEST_F(SoftbusAdapterTest, OnShutdownTest, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    int32_t socket = 0;
+    ShutdownReason reason = ShutdownReason::SHUTDOWN_REASON_UNKNOWN;
+    adapter.OnShutdown(socket, reason);
+
+    (adapter.sessionNameMap_)[0] = "test";
+    auto ptr = std::make_shared<SessionManager>();
+    (adapter.listeners_)["test"] = ptr;
+    adapter.OnShutdown(socket, reason);
+    EXPECT_NE(adapter.listeners_.count("test"), 0);
+}
+
+HWTEST_F(SoftbusAdapterTest, OnBytesTest, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    int socket = 0;
+    unsigned int dataLen = 1;
+    adapter.OnBytes(socket, nullptr, dataLen);
+
+    (adapter.sessionNameMap_)[0] = "test";
+    adapter.OnBytes(socket, nullptr, dataLen);
+
+    (adapter.networkIdMap_)[0] = "test";
+    auto ptr = std::make_shared<SessionManager>();
+    (adapter.listeners_)["test"] = ptr;
+    adapter.OnBytes(socket, nullptr, dataLen);
+
+    EXPECT_NE(adapter.listeners_.count("test"), 0);
+}
+
+HWTEST_F(SoftbusAdapterTest, OnReceiveFileFinishedTest, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    int sessionId = -1;
+    char *files = nullptr;
+    int fileCnt = 1;
+    adapter.OnReceiveFileFinished(sessionId, files, fileCnt);
+
+    (adapter.sessionNameMap_)[-1] = "test1";
+    adapter.OnReceiveFileFinished(sessionId, files, fileCnt);
+    
+    (adapter.networkIdMap_)[-1] = "test2";
+    auto ptr = std::make_shared<SessionManager>();
+    (adapter.listeners_)["test1"] = ptr;
+    adapter.OnReceiveFileFinished(sessionId, files, fileCnt);
+
+    EXPECT_NE(adapter.listeners_.count("test1"), 0);
+}
+
+HWTEST_F(SoftbusAdapterTest, OpenSessionTest, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    TransDataType dataType = TransDataType::DATA_TYPE_MESSAGE;
+    char sessionName[] = "";
+    char peerDeviceId[] = "";
+    char groupId[] = "";
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(1));
+
+    auto res = adapter.OpenSession(sessionName, peerDeviceId, groupId, dataType);
+    EXPECT_EQ(res, 1);
+}
+
+HWTEST_F(SoftbusAdapterTest, GetPeerNetworkIdTest, TestSize.Level1)
+{
+    SoftbusAdapter& adapter = SoftbusAdapter::GetInstance();
+
+    TransDataType dataType = TransDataType::DATA_TYPE_MESSAGE;
+    char sessionName[] = "";
+    char peerDeviceId[] = "";
+    char groupId[] = "";
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(1));
+
+    auto res = adapter.OpenSession(sessionName, peerDeviceId, groupId, dataType);
+    EXPECT_EQ(res, 1);
 }
 } // namespace Test
 } // namespace CloudSync

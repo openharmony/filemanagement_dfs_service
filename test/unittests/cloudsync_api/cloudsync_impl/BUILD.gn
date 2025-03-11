@@ -84,6 +84,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/test/mock/ipc/cloud_sync_service_proxy_mock.cpp",
     "cloud_sync_manager_impl_test.cpp",
   ]
@@ -95,6 +96,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/system/include",
   ]
 
   deps = [
@@ -108,9 +110,14 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
 
   use_exceptions = true
 }
