@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,8 @@ private:
 
     std::mutex serializer_;
     std::unordered_map<int, std::vector<std::shared_ptr<MountPoint>>> mountPoints_;
-    int curUsrId { -1 };
+    int curUsrId_ { -1 };
+    std::atomic_int32_t needAddUserId_ { -1 };
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -172,6 +172,7 @@ void KernelTalker::PollRun()
     char resolvedPath[PATH_MAX] = {'\0'};
     char *realPath = realpath(ctrlPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
+        LOGE("realpath fail: %{public}s", ctrlPath.c_str());
         return;
     }
     cmdFd = open(realPath, O_RDWR);

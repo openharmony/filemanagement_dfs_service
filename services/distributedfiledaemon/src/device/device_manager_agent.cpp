@@ -115,12 +115,11 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
     LOGI("join group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
 
-void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
+void DeviceManagerAgent::QuitGroup(shared_ptr<MountPoint> smp)
 {
     LOGI("quit group begin");
     OfflineAllDevice();
 
-    auto smp = mp.lock();
     if (!smp) {
         stringstream ss("Failed to quit group: Received empty mountpoint");
         LOGE("%{public}s", ss.str().c_str());

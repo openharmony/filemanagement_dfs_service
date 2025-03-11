@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,15 +36,15 @@ OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &s
 {
     LOGI("init first to create network of default user");
     lock_guard<mutex> lock(serializer_);
-    curUsrId = GetCurrentUserId();
-    if (curUsrId == INVALID_USER_ID) {
+    curUsrId_ = GetCurrentUserId();
+    if (curUsrId_ == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
         return;
     }
-    AddMPInfo(curUsrId, SAME_ACCOUNT);
+    AddMPInfo(curUsrId_, SAME_ACCOUNT);
     auto dm = DeviceManagerAgent::GetInstance();
     dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent>>(&DeviceManagerAgent::InitDeviceInfos));
-    LOGI("init first to create network of user %{public}d, done", curUsrId);
+    LOGI("init first to create network of user %{public}d, done", curUsrId_);
 }
 
 OsAccountObserver::~OsAccountObserver()
@@ -54,6 +54,12 @@ OsAccountObserver::~OsAccountObserver()
 void OsAccountObserver::AddMPInfo(const int id, const std::string &relativePath)
 {
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(id, relativePath));
+    char resolvedPath[PATH_MAX] = {'\0'};
+    if (smp == nullptr || realpath(smp->GetMountArgument().GetCtrlPath().c_str(), resolvedPath) == nullptr) {
+        LOGI("user id: %{public}d cannot join group", id);
+        needAddUserId_.store(id);
+        return;
+    }
     auto dm = DeviceManagerAgent::GetInstance();
     dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::JoinGroup, smp));
     mountPoints_[id].emplace_back(smp);
@@ -68,17 +74,28 @@ void OsAccountObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
         int32_t id = eventData.GetCode();
         LOGI("user id changed to %{public}d", id);
         lock_guard<mutex> lock(serializer_);
-        if (curUsrId != -1 && curUsrId != id) {
-            // first stop curUsrId network
-            RemoveMPInfo(curUsrId);
-        } else if (curUsrId != -1 && curUsrId == id) {
+        if (curUsrId_ != -1 && curUsrId_ != id) {
+            // first stop curUsrId_ network
+            RemoveMPInfo(curUsrId_);
+        } else if (curUsrId_ != -1 && curUsrId_ == id) {
             return;
         }
 
         // then start new network
-        curUsrId = id;
+        curUsrId_ = id;
         AddMPInfo(id, SAME_ACCOUNT);
-        LOGI("user id %{public}d, add network done", curUsrId);
+        LOGI("user id %{public}d, add network done", curUsrId_);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
+        int32_t id = eventData.GetCode();
+        LOGI("user id: %{public}d unlocked", id);
+        lock_guard<mutex> lock(serializer_);
+        if (needAddUserId_.load() == id) {
+            LOGI("user id: %{public}d now begin to join group", id);
+            AddMPInfo(id, SAME_ACCOUNT);
+        }
+        needAddUserId_.store(-1);
+    } else {
+        LOGE("no expect action");
     }
 }
 
@@ -86,13 +103,13 @@ void OsAccountObserver::RemoveMPInfo(const int id)
 {
     auto iter = mountPoints_.find(id);
     if (iter == mountPoints_.end()) {
-        LOGE("user id %{public}d not find in map", curUsrId);
+        LOGE("user id %{public}d not find in map", curUsrId_);
         return;
     }
 
     auto dm = DeviceManagerAgent::GetInstance();
     for (auto smp : iter->second) {
-        dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
+        dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, shared_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
     }
     mountPoints_.erase(iter);
 
