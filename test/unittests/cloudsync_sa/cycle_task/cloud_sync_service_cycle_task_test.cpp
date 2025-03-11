@@ -43,9 +43,10 @@ public:
                  std::set<std::string> bundleNames,
                  int32_t intervalTime,
                  std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    :CycleTask(taskName, bundleNames, intervalTime, dataSyncManager)
+        :CycleTask(taskName, bundleNames, intervalTime, dataSyncManager)
     {}
-    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override {
+    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override
+    {
         return 0;
     }
 };
