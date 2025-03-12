@@ -49,6 +49,7 @@ ohos_fuzztest("CloudDiskNotifyFuzzTest") {
   external_deps = [
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "libfuse:libfuse",
     "relational_store:native_rdb",
