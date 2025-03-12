@@ -887,6 +887,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     cInode->sessionRefCount--;
     if (fi->fh != UINT64_MAX) {
         close(fi->fh);
+        fi->fh = UINT64_MAX;
     }
     if (cInode->sessionRefCount == 0) {
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
