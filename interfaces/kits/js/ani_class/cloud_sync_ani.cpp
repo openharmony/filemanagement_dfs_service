@@ -56,7 +56,7 @@ static ani_status AniString2String(ani_env *env, ani_string str, std::string &re
 void CloudSyncAni::GallerySyncConstructor(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("Lcloud_sync_ani/cloudSync;", &ns);
+    ani_status ret = env->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return;

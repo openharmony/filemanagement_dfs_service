@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-loadLibrary("cloud_sync_ani");
-
 export default namespace cloudSync {
 
     export class BusinessError<T = void> {
@@ -49,16 +47,19 @@ export default namespace cloudSync {
             syncState: SyncState,
             errorType: ErrorType
         ) {
-            this.syncState = syncState;
-            this.errorType = errorType;
+            this.state = syncState;
+            this.error = errorType;
         }
-        syncState: SyncState;
-        errorType: ErrorType;
+        public state: SyncState;
+        public error: ErrorType;
     }
 
     export type GallerySyncCallback = (pg: SyncProgress) => void;
 
     export class GallerySync {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
         private nativePtr: long = 0;
         native constructor();
 
@@ -169,7 +170,7 @@ export default namespace cloudSync {
         }
 
         taskId: number;
-        state: State;
+        public state: State;
         processed: number;
         size: number;
         uri: string;
@@ -184,6 +185,9 @@ export default namespace cloudSync {
     export type DownloadcCallback = (pg: DownloadProgress) => void;
 
     export class Download {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
         private nativePtr: long = 0;
         native constructor();
 
