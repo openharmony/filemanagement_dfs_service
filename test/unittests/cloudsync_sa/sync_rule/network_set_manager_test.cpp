@@ -269,6 +269,4 @@ HWTEST_F(NetworkSetManagerTest, OnChangeTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnChange End";
 }
-
-
 }
