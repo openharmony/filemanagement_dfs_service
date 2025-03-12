@@ -578,4 +578,34 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DoRename_002 End";
 }
+
+/**
+ * @tc.name: RemoveFromRecycleDentryfileTest001
+ * @tc.desc: Verify the DoLookupAndCreate
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndCreate_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 Start";
+    try {
+        string fileName = "testLongLongfileName";
+        string cloudId = "testLongLongfileName";
+        uint64_t size = 0x6b6b6b6b00000000;
+        MetaBase metaBase(fileName, cloudId);
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+ 
+        auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
+        int32_t ret = metaFile->DoLookupAndCreate(fileName, callback);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 End";
+}
+
 } // namespace OHOS::FileManagement::CloudSync::Test

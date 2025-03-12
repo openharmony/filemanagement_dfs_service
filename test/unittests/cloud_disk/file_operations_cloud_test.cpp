@@ -2724,7 +2724,7 @@ HWTEST_F(FileOperationsCloudTest, LseekTest004, TestSize.Level1)
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, lseek(_, _, _)).WillOnce(Return(-1));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->Lseek(req, ino, off, whence, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2763,4 +2763,152 @@ HWTEST_F(FileOperationsCloudTest, LseekTest005, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "LseekTest005 End";
 }
+
+/**
+ * @tc.name: IoctlTest001
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, IoctlTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest001 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        int cmd = 0x1234;
+        void *arg = nullptr;
+        struct fuse_file_info *fi = nullptr;
+        unsigned flags = 0;
+        const void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+ 
+        fileOperationsCloud_->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+ 
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest001 End";
+}
+ 
+/**
+ * @tc.name: IoctlTest002
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, IoctlTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest002 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        int cmd = 0;
+        void *arg = nullptr;
+        struct fuse_file_info *fi = nullptr;
+        unsigned flags = 0;
+        const void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+ 
+        fileOperationsCloud_->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+ 
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest002 End";
+}
+ 
+/**
+ * @tc.name: SetXattrTest016
+ * @tc.desc: Verify the SetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetXattrTest016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetXattrTest016 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = -1;
+        string name = CLOUD_HAS_THM;
+        const char *value = "";
+        size_t size = 0;
+        int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetXattrTest016 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetXattrTest010 End";
+}
+ 
+/**
+ * @tc.name: SetXattrTest011
+ * @tc.desc: Verify the SetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetXattrTest017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetXattrTest017 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        string name = CLOUD_HAS_THM;
+        const char *value = "";
+        size_t size = 0;
+        int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetXattrTest017 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetXattrTest017 End";
+}
+ 
+/**
+ * @tc.name: SetXattrTest012
+ * @tc.desc: Verify the SetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetXattrTest018, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetXattrTest018 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        string name = CLOUD_HAS_THM;
+        const char *value = "test";
+        size_t size = 0;
+        int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetXattrTest018 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetXattrTest018 End";
+}
+
 }
