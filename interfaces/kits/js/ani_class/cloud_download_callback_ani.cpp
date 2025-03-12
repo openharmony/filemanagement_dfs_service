@@ -31,7 +31,7 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 {
     ani_method ctor;
     ani_status ret = env_->Class_FindMethod(
-        cls, "<ctor>", "Lcloud_sync_ani/cloudSync/SyncState;Lcloud_sync_ani/cloudSync/ErrorType;:V", &ctor);
+        cls, "<ctor>", "Lani_cloud_sync/cloudSync/SyncState;Lani_cloud_sync/cloudSync/ErrorType;:V", &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
@@ -66,7 +66,7 @@ void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &
         return;
     }
     ani_namespace ns {};
-    ret = env_->FindNamespace("Lcloud_sync_ani/cloudSync;", &ns);
+    ret = env_->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return;

@@ -34,7 +34,7 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
         return;
     }
     ani_namespace ns {};
-    ret = env_->FindNamespace("Lcloud_sync_ani/cloudSync;", &ns);
+    ret = env_->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return;
@@ -49,7 +49,7 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
     ani_object pg;
     ani_method ctor;
     ret = env_->Class_FindMethod(
-        cls, "<ctor>", "Lcloud_sync_ani/cloudSync/SyncState;Lcloud_sync_ani/cloudSync/ErrorType;:V", &ctor);
+        cls, "<ctor>", "Lani_cloud_sync/cloudSync/SyncState;Lani_cloud_sync/cloudSync/ErrorType;:V", &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
