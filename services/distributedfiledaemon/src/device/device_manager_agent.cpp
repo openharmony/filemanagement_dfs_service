@@ -201,43 +201,6 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
 
 void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("networkId %{public}s, OnDeviceReady begin", Utils::GetAnonyString(deviceInfo.networkId).c_str());
-    int32_t ret = IsSupportedDevice(deviceInfo);
-    if (ret != FileManagement::ERR_OK) {
-        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
-        return;
-    }
-
-    // online first query this dev's trust info
-    DeviceInfo info(deviceInfo);
-    QueryRelatedGroups(info.udid_, info.cid_);
-
-    // based on dev's trust info, choose corresponding network agent to obtain socket
-    unique_lock<mutex> lock(mpToNetworksMutex_);
-
-    auto it = cidNetTypeRecord_.find(info.cid_);
-    if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
-        LOGI("OnDeviceReady end");
-        return;
-    }
-
-    auto type_ = cidNetworkType_.find(info.cid_);
-    if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
-        LOGI("OnDeviceReady end");
-        return;
-    }
-
-    int32_t newNetworkType = type_->second = GetNetworkType(info.cid_);
-    LOGI("newNetworkType:%{public}d", newNetworkType);
-
-    if (!IsWifiNetworkType(newNetworkType)) {
-        LOGE("cid %{public}s networkType:%{public}d",  Utils::GetAnonyString(info.cid_).c_str(), type_->second);
-        LOGI("OnDeviceReady end");
-        return;
-    }
-    LOGI("OnDeviceReady end");
 }
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -675,6 +638,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
+    unique_lock<mutex> lock(mpToNetworksMutex_);
     auto network = FindNetworkBaseTrustRelation(false);
     if (network != nullptr) {
         cidNetTypeRecord_.insert({ networkId, network });
