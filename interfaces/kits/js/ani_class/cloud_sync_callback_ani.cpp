@@ -54,7 +54,19 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
     }
-    ret = env_->Object_New(cls, ctor, &pg, state, error);
+
+    // Please replace it with GetEnumItemByValue_Int if suppored in the future.
+    ani_enum stateEnum;
+    env_->FindEnum("Lcloud_sync_ani/cloudSync/SyncState", &stateEnum);
+    ani_enum errorEnum;
+    env_->FindEnum("Lcloud_sync_ani/cloudSync/ErrorType", &errorEnum);
+
+    ani_enum_item stateEnumItem;
+    env_->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
+    ani_enum_item errorEnumItem;
+    env_->Enum_GetEnumItemByIndex(errorEnum, error, &errorEnumItem);
+
+    ret = env_->Object_New(cls, ctor, &pg, stateEnumItem, errorEnumItem);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
         return;

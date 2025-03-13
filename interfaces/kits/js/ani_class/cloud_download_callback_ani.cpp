@@ -43,13 +43,25 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
         return;
     }
 
+    // Please replace it with GetEnumItemByValue_Int if suppored in the future.
+    ani_enum stateEnum;
+    env_->FindEnum("Lcloud_sync_ani/cloudSync/SyncState", &stateEnum);
+    ani_enum downloadErrorEnum;
+    env_->FindEnum("Lcloud_sync_ani/cloudSync/ErrorType", &downloadErrorEnum);
+
+    ani_enum_item stateEnumItem;
+    ani_enum_item downloadErrorEnumItem;
+    env_->Enum_GetEnumItemByIndex(downloadErrorEnum, progress.downloadErrorType, &downloadErrorEnumItem);
+
     if (!isBatch_) {
-        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, progress.state, progress.downloadedSize,
-            progress.totalSize, uri, progress.downloadErrorType);
+        env_->Enum_GetEnumItemByIndex(stateEnum, progress.state, &stateEnumItem);
+        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, stateEnumItem, progress.downloadedSize,
+            progress.totalSize, uri, downloadErrorEnumItem);
     } else {
-        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, progress.batchState, progress.batchDownloadSize,
+        env_->Enum_GetEnumItemByIndex(stateEnum, progress.batchState, &stateEnumItem);
+        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, stateEnumItem, progress.batchDownloadSize,
             progress.batchTotalSize, progress.batchSuccNum, progress.batchFailNum, progress.batchTotalNum,
-            progress.downloadErrorType);
+            downloadErrorEnumItem);
     }
 
     if (ret != ANI_OK) {
