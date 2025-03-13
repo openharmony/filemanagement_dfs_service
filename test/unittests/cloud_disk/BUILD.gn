@@ -67,6 +67,7 @@ ohos_unittest("file_operations_cloud_test") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/clouddisk_database/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
     "mock",
   ]
 

@@ -449,7 +449,11 @@ ohos_unittest("cloud_sync_asset_manager_test") {
 ohos_unittest("download_asset_callback_client_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "download_asset_callback_client_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
+    "download_asset_callback_client_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
