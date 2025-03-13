@@ -74,6 +74,8 @@ private:
     static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
     std::string className_;
     static std::mutex sOnOffMutex_;
+    inline static std::mutex callbackMutex_;
+    inline static bool isCallbackRegistered_;
 };
 
 class CloudSyncCallbackImpl : public CloudSyncCallback, public std::enable_shared_from_this<CloudSyncCallbackImpl> {

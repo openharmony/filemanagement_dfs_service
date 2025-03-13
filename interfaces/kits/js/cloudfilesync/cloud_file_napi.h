@@ -37,6 +37,8 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
 
 private:
+    inline static std::mutex mtx_;
+    inline static bool isDownloadCallbackRegistered_;
     static inline std::shared_ptr<CloudDownloadCallbackImpl> callback_;
     inline static std::string className_ = "CloudFileNapi";
 };
