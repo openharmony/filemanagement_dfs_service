@@ -23,6 +23,8 @@ class CloudFileKitMock : public CloudFile::CloudFileKit {
 public:
     MOCK_METHOD2(GetCloudUserInfo, int32_t(const int32_t userId, CloudFile::CloudUserInfo &userInfo));
     MOCK_METHOD3(GetAppSwitchStatus, int32_t(const std::string &bundleName, const int32_t userId, bool &switchStatus));
+    MOCK_METHOD3(GetAppConfigParams, int32_t(const int32_t userId,
+                const std::string &bundleName, std::map<std::string, std::string> &param));
 };
 
 }

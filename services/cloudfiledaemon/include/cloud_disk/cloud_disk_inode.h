@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "cloud_asset_read_session.h"
+#include "ffrt_inner.h"
 #include "file_operations_base.h"
 
 namespace OHOS {
@@ -78,6 +79,8 @@ struct CloudDiskFile {
     std::atomic<int> refCount{0};
     std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
     bool isWriteOpen{false};
+    ffrt::mutex readLock;
+    ffrt::mutex openLock;
 };
 
 struct CloudDiskFuseData {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -741,7 +741,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0200, TestSize
     bool res = true;
 
     try {
-        weak_ptr<MountPoint> nullwmp;
+        shared_ptr<MountPoint> nullwmp;
         DeviceManagerAgent::GetInstance()->QuitGroup(nullwmp);
     } catch (const exception &e) {
         EXPECT_EQ(string(e.what()), "Failed to quit group: Received empty mountpoint");

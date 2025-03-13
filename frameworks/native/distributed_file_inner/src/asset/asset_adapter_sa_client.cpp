@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 
 #include "dfs_error.h"
 #include "distributed_file_daemon_manager_impl.h"
-#include "distributed_file_daemon_proxy.h"
+#include "daemon_proxy.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -77,7 +77,7 @@ int32_t AssetAdapterSaClient::AddListener(const sptr<IAssetRecvCallback> &listen
         return E_OK;
     }
 
-    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
@@ -118,7 +118,7 @@ int32_t AssetAdapterSaClient::RemoveListener(const sptr<IAssetRecvCallback> &lis
         }
     }
 
-    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
@@ -135,7 +135,7 @@ int32_t AssetAdapterSaClient::RemoveListener(const sptr<IAssetRecvCallback> &lis
 void AssetAdapterSaClient::OnAddSystemAbility()
 {
     LOGI("Sa client on add system ability enter.");
-    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return;

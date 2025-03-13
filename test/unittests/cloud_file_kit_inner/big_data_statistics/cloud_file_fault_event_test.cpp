@@ -67,11 +67,41 @@ HWTEST_F(CloudFileFultEventTest, CloudSyncFaultReportTest_001, TestSize.Level1)
     EXPECT_EQ(result, event.faultErrorCode_);
 }
 
+HWTEST_F(CloudFileFultEventTest, CloudFileFaultReportTest_001, TestSize.Level1)
+{
+    std::string functionName = "TestFunction";
+    int lineNumber = 123;
+    CloudFileFaultInfo event;
+    event.bundleName_ = "com.example.app";
+    event.faultOperation_ = FaultOperation::LOOKUP;
+    event.faultType_ = FaultType::TIMEOUT;
+    event.faultErrorCode_ = -1;
+    event.message_ = "Sync failed";
+    int32_t result = CloudFileFaultEvent::CloudFileFaultReport(functionName, lineNumber, event);
+    EXPECT_EQ(result, event.faultErrorCode_);
+}
+
+HWTEST_F(CloudFileFultEventTest, CloudSyncCacheReportTest_001, TestSize.Level1)
+{
+    std::string functionName = "TestFunction";
+    int lineNumber = 123;
+    CloudCacheFaultInfo event;
+    event.bundleName_ = "com.example.app";
+    event.faultType_ = FaultType::DENTRY_FILE;
+    event.faultErrorCode_ = -1;
+    event.message_ = "Sync failed";
+    int32_t result = CloudFileFaultEvent::CloudSyncCacheReport(functionName, lineNumber, event);
+    EXPECT_EQ(result, event.faultErrorCode_);
+}
+
 HWTEST_F(CloudFileFultEventTest, IsAllowToReporttTest_001, TestSize.Level1)
 {
     FaultType faultType = FaultType::OPEN_CLOUD_FILE_TIMEOUT;
     EXPECT_TRUE(status.IsAllowToReport(faultType));
     EXPECT_FALSE(status.IsAllowToReport(faultType));
+
+    faultType = FaultType::DENTRY_FILE;
+    EXPECT_TRUE(status.IsAllowToReport(faultType));
 }
 
 }

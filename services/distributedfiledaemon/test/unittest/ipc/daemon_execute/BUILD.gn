@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -44,6 +44,7 @@ ohos_unittest("daemon_execute_test") {
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+    "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
   sources = [
@@ -53,8 +54,9 @@ ohos_unittest("daemon_execute_test") {
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
@@ -76,6 +78,7 @@ ohos_unittest("daemon_execute_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

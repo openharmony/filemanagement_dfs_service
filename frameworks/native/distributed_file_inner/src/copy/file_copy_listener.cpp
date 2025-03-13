@@ -79,7 +79,6 @@ std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(c
 
 void FileCopyLocalListener::StartListener()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
     if (processCallback_ == nullptr || totalSize_ == 0) {
         return;
     }
@@ -90,6 +89,7 @@ void FileCopyLocalListener::StartListener()
 
 void FileCopyLocalListener::StopListener()
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
     if (processCallback_ != nullptr) {
         processCallback_(progressSize_, totalSize_);
     }

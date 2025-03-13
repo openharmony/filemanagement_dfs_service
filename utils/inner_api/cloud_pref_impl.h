@@ -21,7 +21,6 @@ namespace OHOS::FileManagement::CloudSync {
 const static std::string START_CURSOR = "start_cursor";
 const static std::string NEXT_CURSOR = "next_cursor";
 const static std::string TEMP_START_CURSOR = "temp_start_cursor";
-const static std::string CLOUDFILE_DIR = "/data/service/el1/public/cloudfile/";
 class CloudPrefImpl {
 public:
     CloudPrefImpl(const std::string& fileName);

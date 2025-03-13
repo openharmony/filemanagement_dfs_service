@@ -867,6 +867,179 @@ HWTEST_F(CloudDiskRdbStoreTest, LocationSetXattrTest4, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest1, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = "100";
+    const std::string cloudId = "100";
+    const std::string value = "test";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest2, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = "100";
+    const std::string cloudId = "100";
+    const std::string value = "2";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest3, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_LCD;
+    const std::string cloudId = "100";
+    const std::string value = "0";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest4, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_THM;
+    const std::string cloudId = "100";
+    const std::string value = "0";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest5, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_LCD;
+    const std::string cloudId = "100";
+    const std::string value = "1";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest6, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_THM;
+    const std::string cloudId = "100";
+    const std::string value = "1";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest7, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_THM;
+    const std::string cloudId = "100";
+    const std::string value = "1";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
  * @tc.name: GetRowId
  * @tc.desc: Verify the CloudDiskRdbStore::GetRowId function
  * @tc.type: FUNC
@@ -1017,6 +1190,157 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentCloudIdTestTest4, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetSourcePath
+ * @tc.desc: Verify the CloudDiskRdbStore::GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetSourcePathTest1, TestSize.Level1)
+{
+    const std::string attr = R"({"srcPath": "/data/service"})";
+    const std::string parentCloudId = "100";
+    std::string sourcePath = "/data";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->GetSourcePath(attr, parentCloudId, sourcePath);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetSourcePath
+ * @tc.desc: Verify the CloudDiskRdbStore::GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetSourcePathTest2, TestSize.Level1)
+{
+    const std::string attr = R"({"srcPath": 100})";
+    const std::string parentCloudId = "100";
+    std::string sourcePath = "/data";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->GetSourcePath(attr, parentCloudId, sourcePath);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetSourcePath
+ * @tc.desc: Verify the CloudDiskRdbStore::GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetSourcePathTest3, TestSize.Level1)
+{
+    const std::string attr = "";
+    const std::string parentCloudId = "100";
+    std::string sourcePath = "/data";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->GetSourcePath(attr, parentCloudId, sourcePath);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetSourcePath
+ * @tc.desc: Verify the CloudDiskRdbStore::GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetSourcePathTest4, TestSize.Level1)
+{
+    const std::string attr = "";
+    const std::string parentCloudId = "";
+    std::string sourcePath = "/data";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->GetSourcePath(attr, parentCloudId, sourcePath);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetSourcePath
+ * @tc.desc: Verify the CloudDiskRdbStore::GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetSourcePathTest5, TestSize.Level1)
+{
+    const std::string attr = "";
+    const std::string parentCloudId = "100";
+    std::string sourcePath = "/data";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->GetSourcePath(attr, parentCloudId, sourcePath);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: SourcePathSetValue
+ * @tc.desc: Verify the CloudDiskRdbStore::SourcePathSetValue function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SourcePathSetValueTest1, TestSize.Level1)
+{
+    const std::string cloudId = "";
+    const std::string attr = "";
+    ValuesBucket setXattr;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->SourcePathSetValue(cloudId, attr, setXattr);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: SourcePathSetValue
+ * @tc.desc: Verify the CloudDiskRdbStore::SourcePathSetValue function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SourcePathSetValueTest2, TestSize.Level1)
+{
+    const std::string cloudId = "rootId";
+    const std::string attr = "";
+    ValuesBucket setXattr;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->SourcePathSetValue(cloudId, attr, setXattr);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: SourcePathSetValue
+ * @tc.desc: Verify the CloudDiskRdbStore::SourcePathSetValue function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SourcePathSetValueTest3, TestSize.Level1)
+{
+    const std::string cloudId = "test";
+    const std::string attr = "";
+    ValuesBucket setXattr;
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
+
+    int32_t ret = clouddiskrdbStore_->SourcePathSetValue(cloudId, attr, setXattr);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
  * @tc.name: RecycleSetXattr
  * @tc.desc: Verify the CloudDiskRdbStore::RecycleSetXattr function
  * @tc.type: FUNC
@@ -1146,6 +1470,179 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest6, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: CheckIsConflict
+ * @tc.desc: Verify the CloudDiskRdbStore::CheckIsConflict function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, CheckIsConflictTest1, TestSize.Level1)
+{
+    const std::string name = "mock";
+    const std::string parentCloudId = "100";
+    std::string newName = "test1";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->CheckIsConflict(name, parentCloudId, newName);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: CheckIsConflict
+ * @tc.desc: Verify the CloudDiskRdbStore::CheckIsConflict function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, CheckIsConflictTest2, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string parentCloudId = "100";
+    std::string newName = "test1";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    int32_t ret = clouddiskrdbStore_->CheckIsConflict(name, parentCloudId, newName);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RestoreUpdateRdb
+ * @tc.desc: Verify the CloudDiskRdbStore::RestoreUpdateRdb function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RestoreUpdateRdbTest1, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const struct RestoreInfo restoreInfo;
+    ValuesBucket setXattr;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
+
+    int32_t ret = clouddiskrdbStore_->RestoreUpdateRdb(cloudId, restoreInfo, setXattr);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: RestoreUpdateRdb
+ * @tc.desc: Verify the CloudDiskRdbStore::RestoreUpdateRdb function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RestoreUpdateRdbTest2, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const struct RestoreInfo restoreInfo;
+    ValuesBucket setXattr;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->RestoreUpdateRdb(cloudId, restoreInfo, setXattr);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RestoreUpdateRdb
+ * @tc.desc: Verify the CloudDiskRdbStore::RestoreUpdateRdb function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RestoreUpdateRdbTest3, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const struct RestoreInfo restoreInfo;
+    ValuesBucket setXattr;
+    restoreInfo.parentCloudId == "mock";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->RestoreUpdateRdb(cloudId, restoreInfo, setXattr);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: HandleRestoreXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HandleRestoreXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest1, TestSize.Level1)
+{
+    const std::string name = "";
+    const std::string parentCloudId = "";
+    const std::string cloudId = "100";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
+
+    int32_t ret = clouddiskrdbStore_->HandleRestoreXattr(name, parentCloudId, cloudId);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: HandleRestoreXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HandleRestoreXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest2, TestSize.Level1)
+{
+    const std::string name = "";
+    const std::string parentCloudId = "";
+    const std::string cloudId = "100";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(1));
+
+    int32_t ret = clouddiskrdbStore_->HandleRestoreXattr(name, parentCloudId, cloudId);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: HandleRestoreXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HandleRestoreXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest3, TestSize.Level1)
+{
+    const std::string name = "";
+    const std::string parentCloudId = "";
+    const std::string cloudId = "100";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(0));
+
+    int32_t ret = clouddiskrdbStore_->HandleRestoreXattr(name, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
 }
 
