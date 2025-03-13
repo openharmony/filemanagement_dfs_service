@@ -191,7 +191,6 @@ void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
 void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_PREPARE_SESSION);
-    HmdfsInfoExt info;
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
