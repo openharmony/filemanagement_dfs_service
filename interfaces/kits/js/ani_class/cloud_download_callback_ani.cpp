@@ -45,9 +45,9 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
     // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("Lcloud_sync_ani/cloudSync/SyncState", &stateEnum);
+    env_->FindEnum("Lani_cloud_sync/cloudSync/SyncState", &stateEnum);
     ani_enum downloadErrorEnum;
-    env_->FindEnum("Lcloud_sync_ani/cloudSync/ErrorType", &downloadErrorEnum);
+    env_->FindEnum("Lani_cloud_sync/cloudSync/ErrorType", &downloadErrorEnum);
 
     ani_enum_item stateEnumItem;
     ani_enum_item downloadErrorEnumItem;

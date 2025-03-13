@@ -57,9 +57,9 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
 
     // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("Lcloud_sync_ani/cloudSync/SyncState", &stateEnum);
+    env_->FindEnum("Lani_cloud_sync/cloudSync/SyncState", &stateEnum);
     ani_enum errorEnum;
-    env_->FindEnum("Lcloud_sync_ani/cloudSync/ErrorType", &errorEnum);
+    env_->FindEnum("Lani_cloud_sync/cloudSync/ErrorType", &errorEnum);
 
     ani_enum_item stateEnumItem;
     env_->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
