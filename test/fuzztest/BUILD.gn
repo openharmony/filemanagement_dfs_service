@@ -17,6 +17,7 @@ group("dfs_service_fuzztest") {
 
   deps = [
     "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer:CloudDaemonStubFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer:DaemonStubFuzzTest",
     "${distributedfile_path}/test/fuzztest/ffrttimer_fuzzer:FfrtTimerFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
   ]
