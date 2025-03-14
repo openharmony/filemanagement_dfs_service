@@ -12,6 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
+
 #include <copy/file_copy_manager.h>
 #include <gtest/gtest.h>
 #include <fstream>
@@ -250,7 +251,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0001 Start";
 
     auto infos = std::make_shared<FileInfos>();
-    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback)); // 正确构造 TransListener
+    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback));
     infos->destPath = "/data/test/test.txt";
 
     // 创建测试文件
@@ -276,7 +277,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0002 Start";
 
     auto infos = std::make_shared<FileInfos>();
-    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback)); // 正确构造 TransListener
+    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback));
     infos->destPath = "/data/test/nonexistent.txt";
 
     // 确保文件不存在
