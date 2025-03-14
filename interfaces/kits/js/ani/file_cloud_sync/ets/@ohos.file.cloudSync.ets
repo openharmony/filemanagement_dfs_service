@@ -17,7 +17,7 @@ export default namespace cloudSync {
 
     export class BusinessError<T = void> {
         code: number;
-        data: T;
+        data?: T;
     }
 
     type AsyncCallback<T, E = void> = (err: BusinessError<E> | null, data: T) => void;
@@ -42,7 +42,12 @@ export default namespace cloudSync {
         STOPPED = 5,
     };
 
-    export class SyncProgress {
+    export interface SyncProgress {
+        state: SyncState;
+        error: ErrorType;
+    }
+
+    export class SyncProgressInner implements SyncProgress {
         constructor(
             syncState: SyncState,
             errorType: ErrorType
@@ -123,7 +128,7 @@ export default namespace cloudSync {
         STOPPED = 3
     };
 
-    enum DownloadErrorType {
+    export enum DownloadErrorType {
         NO_ERROR = 0,
         UNKNOWN_ERROR = 1,
         NETWORK_UNAVAILABLE = 2,
@@ -132,7 +137,16 @@ export default namespace cloudSync {
         FREQUENT_USER_REQUESTS = 5,
     };
 
-    export class DownloadProgress {
+    export interface DownloadProgress {
+        taskId: number;
+        state: State;
+        processed: number;
+        size: number;
+        uri: string;
+        error: DownloadErrorType;
+    }
+
+    export class DownloadProgressInner implements DownloadProgress {
         constructor(
             taskId: number,
             state: State,
@@ -148,37 +162,11 @@ export default namespace cloudSync {
             this.uri = uri;
             this.error = error;
         }
-
-        constructor(
-            taskId: number,
-            state: State,
-            downloadedSize: number,
-            totalSize: number,
-            successfulNum: number,
-            failedNum: number,
-            totalNum: number,
-            error: DownloadErrorType
-        ) {
-            this.taskId = taskId
-            this.state = state;
-            this.downloadedSize = downloadedSize;
-            this.totalSize = totalSize;
-            this.successfulNum = successfulNum;
-            this.failedNum = failedNum;
-            this.totalNum = totalNum;
-            this.error = error;
-        }
-
         taskId: number;
         public state: State;
         processed: number;
         size: number;
         uri: string;
-        downloadedSize: number;
-        totalSize: number;
-        successfulNum: number;
-        failedNum: number;
-        totalNum: number;
         error: DownloadErrorType;
     };
 

@@ -26,7 +26,7 @@ using namespace OHOS::FileManagement::CloudSync;
 static ani_status BindContextOnGallery(ani_env *env)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return ret;
@@ -63,7 +63,7 @@ static ani_status BindContextOnGallery(ani_env *env)
 static ani_status BindContextOnDownload(ani_env *env)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return ret;

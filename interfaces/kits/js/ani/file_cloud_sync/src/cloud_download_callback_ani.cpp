@@ -30,8 +30,10 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
     const DownloadProgressObj &progress, const ani_class &cls, ani_object &pg)
 {
     ani_method ctor;
-    ani_status ret = env_->Class_FindMethod(
-        cls, "<ctor>", "Lani_cloud_sync/cloudSync/SyncState;Lani_cloud_sync/cloudSync/ErrorType;:V", &ctor);
+    std::string argPre = "Lstd/core/Double;L@ohos/file/cloudSync/cloudSync/#State;Lstd/core/Double;Lstd/core/Double;";
+    std::string argBack = "Lstd/core/String;L@ohos/file/cloudSync/cloudSync/#DownloadErrorType;:V";
+    std::string arg = argPre + argBack;
+    ani_status ret = env_->Class_FindMethod(cls, "<ctor>", arg.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
@@ -45,9 +47,9 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
     // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("Lani_cloud_sync/cloudSync/SyncState", &stateEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#State", &stateEnum);
     ani_enum downloadErrorEnum;
-    env_->FindEnum("Lani_cloud_sync/cloudSync/ErrorType", &downloadErrorEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#DownloadErrorType", &downloadErrorEnum);
 
     ani_enum_item stateEnumItem;
     ani_enum_item downloadErrorEnumItem;
@@ -78,12 +80,12 @@ void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &
         return;
     }
     ani_namespace ns {};
-    ret = env_->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
+    ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return;
     }
-    static const char *className = "LDownloadProgress;";
+    static const char *className = "LDownloadProgressInner;";
     ani_class cls;
     ret = env_->Namespace_FindClass(ns, className, &cls);
     if (ret != ANI_OK) {

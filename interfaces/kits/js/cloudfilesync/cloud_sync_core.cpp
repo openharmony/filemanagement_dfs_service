@@ -32,14 +32,20 @@ const string &CloudSyncCore::GetBundleName() const
     return (bundleEntity) ? bundleEntity->bundleName_ : emptyString;
 }
 
-FsResult<CloudSyncCore *> CloudSyncCore::Constructor(const string &bundleName)
+FsResult<CloudSyncCore *> CloudSyncCore::Constructor(const optional<string> &bundleName)
 {
-    if (bundleName == "") {
-        LOGE("Failed to get bundle name");
-        return FsResult<CloudSyncCore *>::Error(E_PARAMS);
+    CloudSyncCore *cloudSyncPtr = nullptr;
+    if (bundleName.has_value()) {
+        const string &name = *bundleName;
+        if (name == "") {
+            LOGE("Failed to get bundle name");
+            return FsResult<CloudSyncCore *>::Error(E_PARAMS);
+        }
+        cloudSyncPtr = new CloudSyncCore(name);
+    } else {
+        cloudSyncPtr = new CloudSyncCore();
     }
 
-    CloudSyncCore *cloudSyncPtr = new CloudSyncCore(bundleName);
     if (cloudSyncPtr == nullptr) {
         LOGE("Failed to create CloudSyncCore object on heap.");
         return FsResult<CloudSyncCore *>::Error(ENOMEM);
@@ -52,6 +58,12 @@ CloudSyncCore::CloudSyncCore(const string &bundleName)
 {
     LOGI("init with bundle name");
     bundleEntity = make_unique<BundleEntity>(bundleName);
+}
+
+CloudSyncCore::CloudSyncCore()
+{
+    LOGI("init without bundle name");
+    bundleEntity = nullptr;
 }
 
 FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSyncCallbackMiddle> callback)
