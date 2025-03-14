@@ -15,31 +15,25 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-group("cloud_sync_package") {
-  deps = [
-    ":ani_cloud_sync_abc_etc",
-    ":cloud_sync_ani",
-  ]
-}
-
 config("ani_config") {
   include_dirs = [
-    ".",
     "./include",
-    "../cloudfilesync",
+    "../ani_helper/include",
+    "../../cloudfilesync",
   ]
 }
 
 ohos_shared_library("cloud_sync_ani") {
   public_configs = [ ":ani_config" ]
   sources = [
-    "../cloudfilesync/cloud_file_core.cpp",
-    "../cloudfilesync/cloud_sync_core.cpp",
-    "bind_function_class.cpp",
-    "cloud_download_ani.cpp",
-    "cloud_download_callback_ani.cpp",
-    "cloud_sync_ani.cpp",
-    "cloud_sync_callback_ani.cpp",
+    "../../cloudfilesync/cloud_file_core.cpp",
+    "../../cloudfilesync/cloud_sync_core.cpp",
+    "../ani_helper/src/error_handler.cpp",
+    "./src/bind_function_class.cpp",
+    "./src/cloud_download_ani.cpp",
+    "./src/cloud_download_callback_ani.cpp",
+    "./src/cloud_sync_ani.cpp",
+    "./src/cloud_sync_callback_ani.cpp",
   ]
   sanitize = {
     integer_overflow = true
@@ -64,17 +58,17 @@ ohos_shared_library("cloud_sync_ani") {
   output_extension = "so"
 }
 
-generate_static_abc("ani_cloud_sync") {
+generate_static_abc("file_cloud_sync") {
   base_url = "./ets"
-  files = [ "./ets/ani_cloud_sync.ets" ]
+  files = [ "./ets/@ohos.file.cloudSync.ets" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/ani_cloud_sync.abc"
+  device_dst_file = "/system/framework/file_cloud_sync.abc"
 }
 
-ohos_prebuilt_etc("ani_cloud_sync_abc_etc") {
-  source = "$target_out_dir/ani_cloud_sync.abc"
+ohos_prebuilt_etc("file_cloud_sync_etc") {
+  source = "$target_out_dir/file_cloud_sync.abc"
   module_install_dir = "framework"
   subsystem_name = "filemanagement"
   part_name = "dfs_service"
-  deps = [ ":ani_cloud_sync" ]
+  deps = [ ":file_cloud_sync" ]
 }

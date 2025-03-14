@@ -31,7 +31,7 @@ struct BundleEntity {
 
 class CloudSyncCore {
 public:
-    static FsResult<CloudSyncCore *> Constructor(const std::string &bundleName);
+    static FsResult<CloudSyncCore *> Constructor(const std::optional<std::string> &bundleName = std::nullopt);
 
     FsResult<void> DoStart();
     FsResult<void> DoStop();
@@ -41,6 +41,7 @@ public:
 
     const std::string &GetBundleName() const;
     explicit CloudSyncCore(const std::string &bundleName);
+    CloudSyncCore();
     ~CloudSyncCore() = default;
 
 private:

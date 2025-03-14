@@ -34,12 +34,12 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
         return;
     }
     ani_namespace ns {};
-    ret = env_->FindNamespace("Lani_cloud_sync/cloudSync;", &ns);
+    ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return;
     }
-    static const char *className = "LSyncProgress;";
+    static const char *className = "LSyncProgressInner;";
     ani_class cls;
     ret = env_->Namespace_FindClass(ns, className, &cls);
     if (ret != ANI_OK) {
@@ -48,8 +48,8 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
     }
     ani_object pg;
     ani_method ctor;
-    ret = env_->Class_FindMethod(
-        cls, "<ctor>", "Lani_cloud_sync/cloudSync/SyncState;Lani_cloud_sync/cloudSync/ErrorType;:V", &ctor);
+    ret = env_->Class_FindMethod(cls, "<ctor>",
+        "L@ohos/file/cloudSync/cloudSync/#SyncState;L@ohos/file/cloudSync/cloudSync/#ErrorType;:V", &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
@@ -57,9 +57,9 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
 
     // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("Lani_cloud_sync/cloudSync/SyncState", &stateEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#SyncState", &stateEnum);
     ani_enum errorEnum;
-    env_->FindEnum("Lani_cloud_sync/cloudSync/ErrorType", &errorEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#ErrorType", &errorEnum);
 
     ani_enum_item stateEnumItem;
     env_->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
