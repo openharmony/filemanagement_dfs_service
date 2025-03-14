@@ -251,7 +251,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0001 Start";
 
     auto infos = std::make_shared<FileInfos>();
-    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback));
+    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback)); // 正确构造 TransListener
     infos->destPath = "/data/test/test.txt";
 
     // 创建测试文件
@@ -277,7 +277,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0002 Start";
 
     auto infos = std::make_shared<FileInfos>();
-    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback));
+    infos->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback)); // 正确构造 TransListener
     infos->destPath = "/data/test/nonexistent.txt";
 
     // 确保文件不存在
@@ -365,7 +365,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0004, TestSize.Level
 * @tc.desc: Verify the OpenSrcFile function when srcUri is a media URI.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
- */
+*/
 HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0001 Start";
@@ -394,7 +394,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level1)
 * @tc.desc: Verify the OpenSrcFile function when srcUri is a media URI.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
- */
+*/
 HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0002 Start";
@@ -427,7 +427,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level1)
 * @tc.desc: Verify the OpenSrcFile function when srcUri is a local file URI and file does not exist.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
- */
+*/
 HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0003 Start";
@@ -453,7 +453,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level1)
 * @tc.desc: Verify the OpenSrcFile function when srcUri is a local file URI and file exists.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
- */
+*/
 HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0004 Start";
