@@ -14,6 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#include <filesystem>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <memory>
 
 #include "cloud_sync_manager_impl.h"
@@ -26,6 +29,7 @@
 namespace OHOS {
 namespace FileManagement::CloudSync {
 namespace Test {
+namespace fs = std::filesystem;
 using namespace testing::ext;
 using namespace testing;
 using namespace std;
@@ -707,6 +711,138 @@ HWTEST_F(CloudSyncManagerImplTest, OnAddSystemAbilityTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << " OnAddSystemAbilityTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 End";
+}
+
+ /*
+  * @tc.name: CleanGalleryDentryFile
+  * @tc.desc: Verify the CleanGalleryDentryFile function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest001 Start";
+    try {
+        managePtr_->CleanGalleryDentryFile();
+
+        EXPECT_FALSE(fs::exists("/storage/media/cloud/files/Photo"));
+        EXPECT_FALSE(fs::exists("/storage/media/cloud/files/.thumbs/Photo"));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest001 End";
+}
+
+ /*
+  * @tc.name: CleanGalleryDentryFile
+  * @tc.desc: Verify the CleanGalleryDentryFile function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 Start";
+    try {
+        fs::remove_all("/storage/media/cloud/files/Photo");
+        fs::remove_all("/storage/media/cloud/files/.thumbs/Photo");
+
+        managePtr_->CleanGalleryDentryFile();
+
+        EXPECT_FALSE(fs::exists("/storage/media/cloud/files/Photo"));
+        EXPECT_FALSE(fs::exists("/storage/media/cloud/files/.thumbs/Photo"));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 End";
+}
+
+ /*
+  * @tc.name: ResetProxyCallback
+  * @tc.desc: Verify the ResetProxyCallback function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 Start";
+    try {
+        CloudSyncManagerImpl cloudSyncManagerImpl;
+
+        EXPECT_TRUE(cloudSyncManagerImpl.ResetProxyCallback(1, "testBundle"));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 End";
+}
+
+ /*
+  * @tc.name: ResetProxyCallback
+  * @tc.desc: Verify the ResetProxyCallback function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 Start";
+    try {
+        CloudSyncManagerImpl cloudSyncManagerImpl;
+        CloudSyncServiceProxy::GetInstance();
+
+        EXPECT_TRUE(cloudSyncManagerImpl.ResetProxyCallback(1, "testBundle"));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 End";
+}
+
+ /*
+  * @tc.name: SubscribeListener
+  * @tc.desc: Verify the SubscribeListener function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SubscribeListenerTest1 Start";
+    try {
+        CloudSyncManagerImpl cloudSyncManagerImpl;
+        cloudSyncManagerImpl.SubscribeListener("testBundleName");
+
+        EXPECT_EQ(cloudSyncManagerImpl.listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SubscribeListenerTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SubscribeListenerTest1 End";
+}
+
+ /*
+  * @tc.name: StopFileCache
+  * @tc.desc: Verify the StopFileCache function.
+  * @tc.type: FUNC
+  * @tc.require: I6H5MH
+  */
+HWTEST_F(CloudSyncManagerImplTest, StopFileCacheTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopFileCacheTest1 Start";
+    try {
+        CloudSyncManagerImpl &cloudSyncManagerImpl = CloudSyncManagerImpl::GetInstance();
+        int64_t downloadId = 1;
+        bool needClean = true;
+        int32_t timeout = 10;
+
+        int32_t result = cloudSyncManagerImpl.StopFileCache(downloadId, needClean, timeout);
+
+        EXPECT_EQ(result, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopFileCacheTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopFileCacheTest1 End";
 }
 
 } // namespace Test

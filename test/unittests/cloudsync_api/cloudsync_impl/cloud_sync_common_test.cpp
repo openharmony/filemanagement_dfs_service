@@ -607,6 +607,49 @@ HWTEST_F(CloudSyncCommonTest, Unmarshalling, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "Unmarshalling End";
 }
+
+/*
+ * @tc.name: Unmarshalling
+ * @tc.desc: Verify the Unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, UnmarshallingTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnmarshallingTest1 Start";
+    try {
+        auto Info = make_shared<DentryFileInfoObj>();
+        Parcel parcel;
+        auto res = Info->Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnmarshallingTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnmarshallingTest1 End";
+}
+
+/*
+ * @tc.name: Unmarshalling
+ * @tc.desc: Verify the Unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, UnmarshallingTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnmarshallingTest2 Start";
+    try {
+        auto Info = make_shared<CleanFileInfoObj>();
+        Parcel parcel;
+        auto res = Info->Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnmarshallingTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnmarshallingTest2 End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
