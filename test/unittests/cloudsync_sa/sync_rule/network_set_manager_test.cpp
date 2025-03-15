@@ -196,4 +196,77 @@ HWTEST_F(NetworkSetManagerTest, RegisterObserverTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserverTest End";
 }
 
+/**
+ * @tc.name: GetCellularConnectTest
+ * @tc.desc: Verify the GetCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, GetCellularConnectTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCellularConnectTest Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+
+        (networkSetManager_->cellularNetMap_).Insert(std::to_string(userId) + "/" + bundleName, true);
+        networkSetManager_->dataSyncManager_ = std::make_shared<CloudFile::DataSyncManager>();
+        networkSetManager_->GetCellularConnect(bundleName, userId);
+        EXPECT_NE(networkSetManager_->netStatus_, NetworkSetManager::NetConnStatus::WIFI_CONNECT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCellularConnectTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCellularConnectTest End";
+}
+
+/**
+ * @tc.name: OnChangeTest001
+ * @tc.desc: Verify the OnChange function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, OnChangeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeTest Start";
+    try {
+        std::string bundleName;
+        int32_t userId = 0;
+        int32_t type = 0;
+        MobileNetworkObserver mobile(bundleName, userId, type);
+        mobile.observerCallback_ = [] () {};
+        mobile.type_ = 0;
+
+        mobile.OnChange();
+        EXPECT_NE(mobile.observerCallback_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChange FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnChange End";
+}
+
+/**
+ * @tc.name: OnChangeTest002
+ * @tc.desc: Verify the OnChange function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, OnChangeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeTest Start";
+    try {
+        std::string bundleName;
+        int32_t userId = 0;
+        int32_t type = -1;
+        MobileNetworkObserver mobile(bundleName, userId, type);
+
+        mobile.OnChange();
+        EXPECT_EQ(mobile.observerCallback_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChange FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnChange End";
+}
 }
