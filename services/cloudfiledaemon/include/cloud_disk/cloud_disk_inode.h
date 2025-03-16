@@ -58,20 +58,6 @@ enum CLOUD_DISK_FILE_TYPE {
     CLOUD_DISK_FILE_TYPE_CLOUD
 };
 
-struct CloudDiskInode {
-    int layer{CLOUD_DISK_INODE_ZERO_LAYER};
-    struct stat stat;
-    std::string cloudId{"rootId"};
-    std::string bundleName;
-    std::string fileName;
-    fuse_ino_t parent{0};
-    std::atomic<int> refCount{0};
-    std::string path; // just used in local file operation
-
-    /* ops means file operation that uses local or database */
-    std::shared_ptr<FileOperationsBase> ops{nullptr};
-};
-
 struct CloudDiskFile {
     int type{CLOUD_DISK_FILE_TYPE_UNKNOWN};
     int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
@@ -81,6 +67,22 @@ struct CloudDiskFile {
     bool isWriteOpen{false};
     ffrt::mutex readLock;
     ffrt::mutex openLock;
+    std::shared_mutex sessionLock;
+};
+
+struct CloudDiskInode {
+    int layer{CLOUD_DISK_INODE_ZERO_LAYER};
+    struct stat stat;
+    std::string cloudId{"rootId"};
+    std::string bundleName;
+    std::string fileName;
+    fuse_ino_t parent{0};
+    std::atomic<int> refCount{0};
+    std::string path; // just used in local file operation
+    std::shared_ptr<CloudDiskFile> filePtr;
+
+    /* ops means file operation that uses local or database */
+    std::shared_ptr<FileOperationsBase> ops{nullptr};
 };
 
 struct CloudDiskFuseData {

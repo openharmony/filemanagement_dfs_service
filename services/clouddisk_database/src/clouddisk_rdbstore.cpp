@@ -553,7 +553,9 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         return ret;
     }
     rdbTransaction.Finish();
-    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    if (!noNeedUpload) {
+        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    }
     return E_OK;
 }
 
@@ -675,6 +677,30 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     if (ret != E_OK) {
         LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
+    }
+    rdbTransaction.Finish();
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::UpdateTHMStatus(MetaBase &metaBase, int32_t status)
+{
+    ValuesBucket fileInfo;
+    if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
+        fileInfo.PutInt(FileColumn::THM_FLAG, status);
+    } else {
+        fileInfo.PutInt(FileColumn::LCD_FLAG, status);
+    }
+    string srcCloudId;
+    GetSrcCloudId(metaBase.cloudId, srcCloudId);
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    int32_t changedRows = -1;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, srcCloudId);
+    std::tie(ret, changedRows) = transaction->Update(fileInfo, predicates);
+    if (ret !=E_OK) {
+        LOGE("set thm_flag failed, ret = %{public}d", ret);
+        return E_RDB;
     }
     rdbTransaction.Finish();
     return E_OK;
@@ -1574,6 +1600,29 @@ int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dir
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::SRC_CLOUD_ID});
+    if (resultSet == nullptr) {
+        LOGE("get null result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
+        return E_RDB;
+    }
+    
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::SRC_CLOUD_ID, srcCloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file src_cloudid failed, ret = %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &curNode)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -1967,6 +2016,20 @@ static void VersionAddSrcCloudId(RdbStore &store)
     }
 }
 
+static void VersionAddThmSize(RdbStore &store)
+{
+    const string addThmSize = FileColumn::ADD_THM_SIZE;
+    int32_t ret = store.ExecuteSql(addThmSize);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add thm_size fail, err %{public}d", ret);
+    }
+    const string addLcdSize = FileColumn::ADD_LCD_SIZE;
+    ret = store.ExecuteSql(addLcdSize);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add lcd_size fail, err %{public}d", ret);
+    }
+}
+
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
@@ -2198,6 +2261,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_SRC_CLOUD_ID) {
         VersionAddSrcCloudId(store);
+    }
+    if (oldVersion < VERSION_ADD_THM_SIZE) {
+        VersionAddThmSize(store);
     }
     return NativeRdb::E_OK;
 }
