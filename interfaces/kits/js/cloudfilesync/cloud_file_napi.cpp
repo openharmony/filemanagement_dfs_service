@@ -38,7 +38,7 @@ napi_value CloudFileNapi::Constructor(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    isDownloadCallbackRegistered_ = false;
     LOGI("CloudFileNapi::Constructor end");
     return funcArg.GetThisVar();
 }
@@ -60,6 +60,16 @@ napi_value CloudFileNapi::Start(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [uri = string(uri.get()), env = env]() -> NError {
+        lock_guard<mutex> lock(mtx_);
+        if (callback_ != nullptr && !isDownloadCallbackRegistered_) {
+            int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback_);
+            if (ret != E_OK) {
+                LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
+                return NError(Convert2JsErrNum(ret));
+            }
+            isDownloadCallbackRegistered_ = true;
+        }
+
         int32_t ret = CloudSyncManager::GetInstance().StartDownloadFile(uri);
         if (ret != E_OK) {
             LOGE("Start Download failed! ret = %{public}d", ret);
@@ -210,12 +220,6 @@ napi_value CloudFileNapi::On(napi_env env, napi_callback_info info)
     }
 
     callback_ = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback_);
-    if (ret != E_OK) {
-        LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
-        NError(Convert2JsErrNum(ret)).ThrowErr(env);
-        return nullptr;
-    }
 
     return NVal::CreateUndefined(env).val_;
 }
