@@ -37,6 +37,7 @@ public:
     AccountStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     ~AccountStatusSubscriber() override {}
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
+    void RemovedClean(const EventFwk::CommonEventData &eventData);
 };
 } // namespace CloudDisk
 } // namespace FileManagement
