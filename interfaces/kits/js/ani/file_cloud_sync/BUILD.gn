@@ -47,6 +47,10 @@ ohos_shared_library("cloud_sync_ani") {
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfileutils",
   ]
+  defines = [
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_FILE_SYNC\"",
+  ]
   external_deps = [
     "file_api:filemgmt_libfs",
     "hilog:libhilog",
