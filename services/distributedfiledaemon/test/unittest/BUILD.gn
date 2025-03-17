@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
+module_output_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
 config("module_private_config") {
   visibility = [ ":*" ]
