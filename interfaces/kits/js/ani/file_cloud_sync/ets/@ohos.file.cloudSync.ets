@@ -16,11 +16,21 @@
 export default namespace cloudSync {
 
     export class BusinessError<T = void> {
+        name: string;
+        message: string;
         code: number;
         data?: T;
+        constructor(code: number, msg: string, data?: T) {
+            this.name = "BusinessError";
+            this.code = code;
+            this.message = msg;
+            if (data !== undefined) {
+                this.data = data;
+            }
+        }
     }
 
-    type AsyncCallback<T, E = void> = (err: BusinessError<E> | null, data: T) => void;
+    export type AsyncCallback<T, E = void> = (err: BusinessError<E>, data: T) => void;
 
     export enum ErrorType {
         NO_ERROR = 0,
@@ -81,43 +91,59 @@ export default namespace cloudSync {
         native off(evt: string): void;
 
         start(): Promise<void> {
-            return new Promise<void>(() => {
-                let promise = taskpool.execute(GallerySync.StartInner);
-                promise.then<void>((): void => {});
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => this.StartInner());
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
             });
         }
 
         start(callback: AsyncCallback<void>): void {
-            let promise = taskpool.execute(GallerySync.StartInner);
+            let promise = taskpool.execute((): int => this.StartInner());
             promise.then<void>((): void => {
-                callback(null, undefined);
+                let e = new BusinessError(0, "");
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
             });
         }
 
         stop(): Promise<void> {
-            return new Promise<void>(() => {
-                let promise = taskpool.execute(GallerySync.StopInner);
-                promise.then<void>((): void => {});
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => this.StopInner());
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
             });
         }
 
         stop(callback: AsyncCallback<void>): void {
-            let promise = taskpool.execute(GallerySync.StopInner);
+            let promise = taskpool.execute((): int => this.StopInner());
             promise.then((): void => {
-                callback(null, undefined);
+                let e = new BusinessError(0, "");
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
             });
         }
 
-        static native GallerySyncStart(): void;
-        static native GallerySyncStop(): void;
+        native GallerySyncStart(): void;
+        native GallerySyncStop(): void;
 
-        static StartInner(): undefined {
-            GallerySync.GallerySyncStart();
-            return undefined;
+        StartInner(): int {
+            this.GallerySyncStart();
+            return 0;
         }
-        static StopInner(): undefined {
-            GallerySync.GallerySyncStop();
-            return undefined;
+        StopInner(): int {
+            this.GallerySyncStop();
+            return 0;
         }
     };
 
@@ -192,43 +218,59 @@ export default namespace cloudSync {
         native off(evt: string): void;
 
         start(uri: string): Promise<void> {
-            return new Promise<void>(() => {
-                let promise = taskpool.execute(Download.StartInner, uri);
-                promise.then<void>((): void => {});
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError) => void): void => {
+                let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
             });
         }
 
         start(uri: string, callback: AsyncCallback<void>): void {
-            let promise = taskpool.execute(Download.StartInner, uri);
+            let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
             promise.then<void>((): void => {
-                callback(null, undefined);
+                let e = new BusinessError(0, "");
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
             });
         }
 
         stop(uri: string): Promise<void> {
-            return new Promise<void>(() => {
-                let promise = taskpool.execute(Download.StopInner, uri);
-                promise.then<void>((): void => {});
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
             });
         }
 
         stop(uri: string, callback: AsyncCallback<void>): void {
-            let promise = taskpool.execute(Download.StopInner, uri);
+            let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
             promise.then<void>((): void => {
-                callback(null, undefined);
+                let e = new BusinessError(0, "");
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
             });
         }
 
-        static native DownloadStart(uri: string): void;
-        static native DownloadStop(uri: string): void;
+        native DownloadStart(uri: string): void;
+        native DownloadStop(uri: string): void;
 
-        static StartInner(uri: string): undefined {
-            Download.DownloadStart(uri);
-            return undefined;
+        StartInner(uri: string): int {
+            this.DownloadStart(uri);
+            return 0;
         }
-        static StopInner(uri: string): undefined {
-            Download.DownloadStop(uri);
-            return undefined;
+        StopInner(uri: string): int {
+            this.DownloadStop(uri);
+            return 0;
         }
     };
 };
