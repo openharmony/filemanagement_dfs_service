@@ -119,10 +119,10 @@ const std::string FileColumn::ADD_SRC_CLOUD_ID = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + SRC_CLOUD_ID + " TEXT";
 
 const std::string FileColumn::ADD_THM_SIZE = "ALTER Table " + FILES_TABLE +
-    " ADD COLUMN " + THM_SIZE + " BIGINT";
+    " ADD COLUMN " + THM_SIZE + " BIGINT DEFAULT 0";
 
 const std::string FileColumn::ADD_LCD_SIZE = "ALTER Table " + FILES_TABLE +
-    " ADD COLUMN " + LCD_SIZE + " BIGINT";
+    " ADD COLUMN " + LCD_SIZE + " BIGINT DEFAULT 0";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
