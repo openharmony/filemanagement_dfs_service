@@ -33,10 +33,15 @@ class MockService final : public CloudSyncServiceStub {
 public:
     MOCK_METHOD2(RegisterCallbackInner,
                  int32_t(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName));
+    MOCK_METHOD2(RegisterFileSyncCallbackInner,
+                 int32_t(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName));
     MOCK_METHOD1(UnRegisterCallbackInner, int32_t(const std::string &bundleName));
+    MOCK_METHOD1(UnRegisterFileSyncCallbackInner, int32_t(const std::string &bundleName));
     MOCK_METHOD2(StartSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
+    MOCK_METHOD2(StartFileSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
     MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, const int32_t &userId));
     MOCK_METHOD2(StopSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
+    MOCK_METHOD2(StopFileSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
     MOCK_METHOD1(ResetCursor, int32_t(const std::string &bundleName));
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
@@ -53,7 +58,9 @@ public:
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
     MOCK_METHOD3(StopFileCache, int32_t(int64_t downloadId, bool needClean, int32_t timeout));
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
+    MOCK_METHOD1(RegisterFileCacheCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
+    MOCK_METHOD0(UnregisterFileCacheCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
