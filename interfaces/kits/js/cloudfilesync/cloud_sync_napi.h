@@ -142,7 +142,7 @@ public:
 
     ~ChangeListenerNapi(){};
     void OnChange(CloudChangeListener &listener, const napi_ref cbRef);
-    int32_t UvQueueWork(uv_loop_s *loop, uv_work_t *work);
+    int32_t SendEvent(UvChangeMsg *msg);
     static napi_value SolveOnChange(napi_env env, UvChangeMsg *msg);
     napi_ref cbOnRef_ = nullptr;
     napi_ref cbOffRef_ = nullptr;

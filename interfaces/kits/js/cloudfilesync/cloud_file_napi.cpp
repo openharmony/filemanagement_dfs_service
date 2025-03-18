@@ -149,38 +149,25 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
 
 void CloudDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &progress)
 {
-    uv_loop_s *loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(env_, &loop);
-    if (status != napi_ok) {
-        LOGE("Failed to get uv event loop");
-        return;
-    }
-
-    uv_work_t *work = new (nothrow) uv_work_t;
-    if (work == nullptr) {
-        LOGE("Failed to create uv work");
-        return;
-    }
-
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress, isBatch_);
     if (msg == nullptr) {
         LOGE("Failed to create uv message object");
-        delete work;
         return;
     }
-    work->data = reinterpret_cast<void *>(msg);
-    int ret = uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            auto msg = reinterpret_cast<UvChangeMsg *>(work->data);
-            OnComplete(msg);
+    auto task = [msg]() {
+        if (msg->CloudDownloadCallback_.expired()) {
+            LOGE("CloudDownloadCallback_ is expired");
             delete msg;
-            delete work;
-        });
-    if (ret != 0) {
+            return;
+        }
+        msg->CloudDownloadCallback_.lock()->OnComplete(msg);
+        delete msg;
+    };
+    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
+    if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
-        delete work;
+        return;
     }
 }
 
@@ -189,6 +176,7 @@ void CloudDownloadCallbackImpl::DeleteReference()
     if (cbOnRef_ != nullptr) {
         napi_delete_reference(env_, cbOnRef_);
         cbOnRef_ = nullptr;
+        return;
     }
 }
 
