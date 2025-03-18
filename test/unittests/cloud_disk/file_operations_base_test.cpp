@@ -642,4 +642,34 @@ HWTEST_F(FileOperationBaseTest, LseekTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "LseekTest001 end";
 }
+
+/**
+ * @tc.name: IoctlTest001
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB4SSZ
+ */
+HWTEST_F(FileOperationBaseTest, IoctlTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest001 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        int cmd = 0x1234;
+        void *arg = nullptr;
+        unsigned flags = 0;
+        const void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+        struct fuse_file_info *fi = nullptr;
+
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).Times(1);
+        fileoperationBase_->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest001 end";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
