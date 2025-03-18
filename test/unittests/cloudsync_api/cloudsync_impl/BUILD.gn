@@ -253,6 +253,7 @@ ohos_unittest("cloud_download_callback_stub_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
     "../../../mock/cloud_download_uri_manager_hook.cpp",
     "cloud_download_callback_stub_test.cpp",
   ]
