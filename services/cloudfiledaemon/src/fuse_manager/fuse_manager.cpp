@@ -70,6 +70,7 @@ using namespace std;
 using PAGE_FLAG_TYPE = const uint32_t;
 
 static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
+static const string LOCAL_PATH_HMDFS_ACCOUNT = "/hmdfs/account";
 static const string LOCAL_PATH_HMDFS_CLOUD_CACHE = "/hmdfs/cache/cloud_cache";
 static const string CLOUD_CACHE_DIR = "/pread_cache";
 static const string CLOUD_CACHE_XATTR_NAME = "user.cloud.cacheMap";
@@ -288,6 +289,11 @@ static string GetCacheTmpPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + "/services/drivekit_cache/" +
         relativePath + PATH_TEMP_SUFFIX;
+}
+
+static string GetLowerPath(int32_t userId, const string &relativePath)
+{
+    return LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_ACCOUNT + "/" + relativePath;
 }
 
 static int HandleCloudError(CloudError error, FaultOperation faultOperation, string prepareTraceId)
@@ -640,8 +646,22 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetCacheTmpPath(data->userId, cInode->path);
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    if (remove(cloudMergeViewPath.c_str()) < 0) {
+        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
+        return 0;
+    }
+
+    filesystem::path parentPath = filesystem::path(localPath).parent_path();
+    ForceCreateDirectory(parentPath.string());
+    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
+        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
+        return -errno;
+    }
+
+    string lowerPath = GetLowerPath(data->userId, cInode->path);
     char resolvedPath[PATH_MAX + 1] = {'\0'};
-    char *realPath = realpath(tmpPath.c_str(), resolvedPath);
+    char *realPath = realpath(lowerPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         LOGE("Failed to realpath, errno: %{public}d", errno);
         return 0;
@@ -656,27 +676,6 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         return 0;
     }
     auto fdsan = new fdsan_fd(fd);
-    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
-    if (remove(cloudMergeViewPath.c_str()) < 0) {
-        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        delete fdsan;
-        return 0;
-    }
-
-    filesystem::path parentPath = filesystem::path(localPath).parent_path();
-    ForceCreateDirectory(parentPath.string());
-    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
-        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        delete fdsan;
-        return -errno;
-    }
-    auto parentInode = GetCloudInode(data, cInode->parent);
-    if (parentInode == nullptr) {
-        LOGE("fail to find parent inode");
-        delete fdsan;
-        return -ENOMEM;
-    }
-    MetaFile(data->userId, parentInode->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
@@ -813,7 +812,7 @@ static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<Cloud
         if (!cInode->mBase->hasDownloaded) {
             break;
         }
-        string localPath = GetLocalPath(data->userId, cInode->path);
+        string localPath = GetLowerPath(data->userId, cInode->path);
         char realPath[PATH_MAX + 1]{'\0'};
         if (realpath(localPath.c_str(), realPath) == nullptr) {
             LOGE("realpath failed with %{public}d", errno);
