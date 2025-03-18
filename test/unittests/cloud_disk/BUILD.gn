@@ -54,6 +54,7 @@ ohos_unittest("account_status_listener_test") {
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "libfuse:libfuse",
     "relational_store:native_rdb",
