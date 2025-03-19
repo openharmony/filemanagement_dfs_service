@@ -13,24 +13,9 @@
  * limitations under the License.
  */
 
+import { BusinessError, AsyncCallback, Callback } from "@ohos.base";
+
 export default namespace cloudSync {
-
-    export class BusinessError<T = void> {
-        name: string;
-        message: string;
-        code: number;
-        data?: T;
-        constructor(code: number, msg: string, data?: T) {
-            this.name = "BusinessError";
-            this.code = code;
-            this.message = msg;
-            if (data !== undefined) {
-                this.data = data;
-            }
-        }
-    }
-
-    export type AsyncCallback<T, E = void> = (err: BusinessError<E>, data: T) => void;
 
     export enum ErrorType {
         NO_ERROR = 0,
@@ -105,7 +90,8 @@ export default namespace cloudSync {
         start(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StartInner());
             promise.then<void>((): void => {
-                let e = new BusinessError(0, "");
+                let e = new BusinessError<void>();
+                e.code = 0;
                 callback(e, undefined);
             }, (e: BusinessError<void>): void => {
                 callback(e, undefined);
@@ -127,7 +113,8 @@ export default namespace cloudSync {
         stop(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StopInner());
             promise.then((): void => {
-                let e = new BusinessError(0, "");
+                let e = new BusinessError<void>();
+                e.code = 0;
                 callback(e, undefined);
             }, (e: BusinessError<void>): void => {
                 callback(e, undefined);
@@ -232,7 +219,8 @@ export default namespace cloudSync {
         start(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
             promise.then<void>((): void => {
-                let e = new BusinessError(0, "");
+                let e = new BusinessError<void>();
+                e.code = 0;
                 callback(e, undefined);
             }, (e: BusinessError<void>): void => {
                 callback(e, undefined);
@@ -254,7 +242,8 @@ export default namespace cloudSync {
         stop(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
             promise.then<void>((): void => {
-                let e = new BusinessError(0, "");
+                let e = new BusinessError<void>();
+                e.code = 0;
                 callback(e, undefined);
             }, (e: BusinessError<void>): void => {
                 callback(e, undefined);
@@ -273,4 +262,107 @@ export default namespace cloudSync {
             return 0;
         }
     };
+    export class FileSync{
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
+        private nativePtr: long = 0;
+        native constructor();
+
+        bindNativePtr(ptr: long): void {
+            if (this.nativePtr == 0) {
+                this.nativePtr = ptr;
+            }
+        }
+
+        native on(evt: string, callback: Callback<SyncProgress>): void;
+
+        native off(evt: string, callback: Callback<SyncProgress>): void;
+
+        native off(evt: string): void;
+
+        start(): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => this.StartInner());
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        start(callback: AsyncCallback<void>): void {
+            let promise = taskpool.execute((): int => this.StartInner());
+            promise.then<void>((): void => {
+                let e = new BusinessError<void>();
+                e.code = 0;
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
+            });
+        }
+
+        stop(): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => this.StopInner());
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        stop(callback: AsyncCallback<void>): void {
+            let promise = taskpool.execute((): int => this.StopInner());
+            promise.then((): void => {
+                let e = new BusinessError<void>();
+                e.code = 0;
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
+            });
+        }
+
+        getLastSyncTime(): Promise<number> {
+            return new Promise<number>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): number => {
+                let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+                promise.then<number>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        getLastSyncTime(callback: AsyncCallback<number>): void {
+            let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+            let num: number = 0;
+            promise.then((): void => {
+                let e = new BusinessError<void>();
+                e.code = 0;
+                callback(e, num);
+            }, (e: BusinessError<void>): void => {
+                callback(e, num);
+            });
+        }
+
+        native FileSyncStart(): void;
+        native FileSyncStop(): void;
+        native GallerySyncGetLastSyncTime(): number;
+
+        StartInner(): int {
+            this.FileSyncStart();
+            return 0;
+        }
+        StopInner(): int {
+            this.FileSyncStop();
+            return 0;
+        }
+
+    }
 };

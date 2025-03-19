@@ -17,8 +17,7 @@
 #include "error_handler.h"
 #include "utils_log.h"
 
-using namespace OHOS;
-using namespace OHOS::FileManagement::CloudSync;
+namespace OHOS::FileManagement::CloudSync {
 
 static CloudSyncCore *CloudSyncUnwrap(ani_env *env, ani_object object)
 {
@@ -54,7 +53,7 @@ static ani_status AniString2String(ani_env *env, ani_string str, std::string &re
     return ANI_OK;
 }
 
-void CloudSyncAni::GallerySyncConstructor(ani_env *env, ani_object object)
+void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
     ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
@@ -97,7 +96,57 @@ void CloudSyncAni::GallerySyncConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudSyncAni::GallerySyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudSyncAni::CloudyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
+{
+    std::string bnm;
+    ani_status ret = AniString2String(env, bundleName, bnm);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    ani_namespace ns {};
+    ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    static const char *className = "LGallerySync;";
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    ani_method bindNativePtr;
+    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    if (ret != ANI_OK) {
+        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor(bnm);
+    if (!data.IsSuccess()) {
+        LOGE("CloudSyncCore constructor failed.");
+        const auto &err = data.GetError();
+        ErrorHandler::Throw(env, err);
+        return;
+    }
+
+    const CloudSyncCore *cloudSync = data.GetData().value();
+    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
+    if (ret != ANI_OK) {
+        LOGE("bindNativePtr failed.");
+        delete cloudSync;
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+    }
+}
+
+void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, fun);
 
@@ -122,7 +171,7 @@ void CloudSyncAni::GallerySyncOn(ani_env *env, ani_object object, ani_string evt
     }
 }
 
-void CloudSyncAni::GallerySyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, fun);
 
@@ -147,7 +196,7 @@ void CloudSyncAni::GallerySyncOff0(ani_env *env, ani_object object, ani_string e
     }
 }
 
-void CloudSyncAni::GallerySyncOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudSyncAni::CloudSyncOff1(ani_env *env, ani_object object, ani_string evt)
 {
     std::string event;
     ani_status ret = AniString2String(env, evt, event);
@@ -170,7 +219,7 @@ void CloudSyncAni::GallerySyncOff1(ani_env *env, ani_object object, ani_string e
     }
 }
 
-void CloudSyncAni::GallerySyncStart(ani_env *env, ani_object object)
+void CloudSyncAni::CloudSyncStart(ani_env *env, ani_object object)
 {
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
@@ -186,7 +235,7 @@ void CloudSyncAni::GallerySyncStart(ani_env *env, ani_object object)
     }
 }
 
-void CloudSyncAni::GallerySyncStop(ani_env *env, ani_object object)
+void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
 {
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
@@ -200,4 +249,26 @@ void CloudSyncAni::GallerySyncStop(ani_env *env, ani_object object)
         LOGE("cloud sync do stop failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
+}
+
+ani_double CloudSyncAni::CloudyncGetLastSyncTime(ani_env *env, ani_object object)
+{
+    auto cloudSync = CloudSyncUnwrap(env, object);
+    if (cloudSync == nullptr) {
+        LOGE("Cannot wrap cloudcynccore.");
+        ErrorHandler::Throw(env, UNKNOWN_ERR);
+        return 0;
+    }
+
+    auto data = cloudSync->CoreGetLastSyncTime();
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do GetLastSyncTime failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+        return 0;
+    }
+
+    const int64_t lastSyncTime = data.GetData().value();
+    return static_cast<ani_double>(lastSyncTime);
+}
 }

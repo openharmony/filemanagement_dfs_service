@@ -41,14 +41,55 @@ static ani_status BindContextOnGallery(ani_env *env)
     }
 
     std::array methods = {
-        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncConstructor) },
+        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor) },
         ani_native_function {
-            "on", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncOn) },
+            "on", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn) },
         ani_native_function {
-            "off", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncOff0) },
-        ani_native_function { "off", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncOff1) },
-        ani_native_function { "GallerySyncStart", ":V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncStart) },
-        ani_native_function { "GallerySyncStop", ":V", reinterpret_cast<void *>(CloudSyncAni::GallerySyncStop) },
+            "off", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff0) },
+        ani_native_function { "off", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1) },
+        ani_native_function { "GallerySyncStart", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart) },
+        ani_native_function { "GallerySyncStop", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop) },
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+
+    return ANI_OK;
+}
+
+static ani_status BindContextOnFileSync(ani_env *env)
+{
+    ani_namespace ns {};
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    static const char *className = "LFileSync;";
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    std::array methods = {
+        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor) },
+        ani_native_function {
+            "<ctor>", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudyncConstructor1) },
+        ani_native_function {
+            "on", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn) },
+        ani_native_function {
+            "off", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff0) },
+        ani_native_function { "off", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1) },
+        ani_native_function { "FileSyncStart", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart) },
+        ani_native_function { "FileSyncStop", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop) },
+        ani_native_function {
+            "GallerySyncGetLastSyncTime", ":D", reinterpret_cast<void *>(CloudSyncAni::CloudyncGetLastSyncTime) },
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -108,6 +149,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     auto status = BindContextOnGallery(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+    status = BindContextOnFileSync(env);
     if (status != ANI_OK) {
         return status;
     }
