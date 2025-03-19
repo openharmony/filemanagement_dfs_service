@@ -722,7 +722,7 @@ int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<I
         LOGE("[PushAsset] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    const sptr<AssetObj> assetObjPtr = new AssetObj(assetObj);
+    const sptr<AssetObj> assetObjPtr = new (std::nothrow) AssetObj(assetObj);
     if (assetObjPtr == nullptr || sendCallback == nullptr) {
         LOGE("param is nullptr.");
         return E_NULLPTR;
