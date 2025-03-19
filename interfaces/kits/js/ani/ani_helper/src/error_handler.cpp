@@ -19,16 +19,9 @@ namespace OHOS::FileManagement::CloudSync {
 
 ani_status ErrorHandler::Throw(ani_env *env, int32_t code, const std::string &errMsg)
 {
-    ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    const char *className = "LBusinessError;";
+    const char *className = "L@ohos/base/BusinessError;";
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ani_status ret = env->FindClass(className, &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;

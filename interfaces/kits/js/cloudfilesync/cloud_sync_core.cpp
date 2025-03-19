@@ -135,4 +135,18 @@ FsResult<void> CloudSyncCore::DoStop()
 
     return FsResult<void>::Success();
 }
+
+FsResult<int64_t> CloudSyncCore::CoreGetLastSyncTime()
+{
+    LOGI("Start begin");
+    int64_t time = 0;
+    string bundleName = GetBundleName();
+    int32_t ret = CloudSyncManager::GetInstance().GetSyncTime(time, bundleName);
+    if (ret != E_OK) {
+        LOGE("GetLastSyncTime error, result: %{public}d", ret);
+        return FsResult<int64_t>::Error(Convert2ErrNum(ret));
+    }
+    LOGI("Start GetLastSyncTime Success!");
+    return FsResult<int64_t>::Success(time);
+}
 } // namespace OHOS::FileManagement::CloudSync

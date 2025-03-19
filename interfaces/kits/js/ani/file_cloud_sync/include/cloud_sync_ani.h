@@ -18,13 +18,17 @@
 
 #include "cloud_sync_core.h"
 
+namespace OHOS::FileManagement::CloudSync {
 class CloudSyncAni final {
 public:
-    static void GallerySyncConstructor(ani_env *env, ani_object object);
-    static void GallerySyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void GallerySyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void GallerySyncOff1(ani_env *env, ani_object object, ani_string evt);
-    static void GallerySyncStart(ani_env *env, ani_object object);
-    static void GallerySyncStop(ani_env *env, ani_object object);
+    static void CloudSyncConstructor(ani_env *env, ani_object object);
+    static void CloudyncConstructor1(ani_env *env, ani_object object, ani_string bundleName);
+    static void CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
+    static void CloudSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
+    static void CloudSyncOff1(ani_env *env, ani_object object, ani_string evt);
+    static void CloudSyncStart(ani_env *env, ani_object object);
+    static void CloudSyncStop(ani_env *env, ani_object object);
+    static ani_double CloudyncGetLastSyncTime(ani_env *env, ani_object object);
 };
+} // OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_ANI_H
