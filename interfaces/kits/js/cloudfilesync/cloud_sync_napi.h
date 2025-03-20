@@ -78,8 +78,6 @@ private:
     static napi_value UnregisterFromObs(napi_env env, const std::string &uri);
     std::string className_;
     static std::mutex sOnOffMutex_;
-    inline static std::mutex callbackMutex_;
-    inline static bool isCallbackRegistered_;
 };
 
 class CloudSyncCallbackImpl : public CloudSyncCallback, public std::enable_shared_from_this<CloudSyncCallbackImpl> {
