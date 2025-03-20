@@ -25,7 +25,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudSyncCallbackAniImpl : public CloudSyncCallbackMiddle,
                                  public std::enable_shared_from_this<CloudSyncCallbackAniImpl> {
 public:
-    CloudSyncCallbackAniImpl(ani_env *env, ani_object fun);
+    CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun);
     ~CloudSyncCallbackAniImpl() override = default;
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
@@ -33,7 +33,7 @@ public:
 
 private:
     ani_env *env_;
-    ani_object cbOnRef_ = nullptr;
+    ani_ref cbOnRef_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_ANI_H

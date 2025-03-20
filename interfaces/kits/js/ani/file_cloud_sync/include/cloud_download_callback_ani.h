@@ -25,7 +25,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadCallbackAniImpl : public CloudDownloadCallbackMiddle,
                                      public std::enable_shared_from_this<CloudDownloadCallbackAniImpl> {
 public:
-    CloudDownloadCallbackAniImpl(ani_env *env, ani_object fun, bool isBatch = false);
+    CloudDownloadCallbackAniImpl(ani_env *env, ani_ref fun, bool isBatch = false);
     ~CloudDownloadCallbackAniImpl() override = default;
     void OnDownloadProcess(const DownloadProgressObj &progress) override;
     void DeleteReference() override;
@@ -33,7 +33,7 @@ public:
 private:
     void GetDownloadProgress(const DownloadProgressObj &progress, const ani_class &cls, ani_object &pg);
     ani_env *env_;
-    ani_object cbOnRef_ = nullptr;
+    ani_ref cbOnRef_ = nullptr;
     bool isBatch_;
 };
 } // namespace OHOS::FileManagement::CloudSync

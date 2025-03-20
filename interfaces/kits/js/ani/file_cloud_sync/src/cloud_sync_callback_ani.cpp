@@ -18,7 +18,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_object fun) : env_(env)
+CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun) : env_(env)
 {
     if (fun != nullptr) {
         cbOnRef_ = fun;
@@ -49,7 +49,7 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
     ani_object pg;
     ani_method ctor;
     ret = env_->Class_FindMethod(cls, "<ctor>",
-        "L@ohos/file/cloudSync/cloudSync/#SyncState;L@ohos/file/cloudSync/cloudSync/#ErrorType;:V", &ctor);
+        "L@ohos/file/cloudSync/cloudSync/SyncState;L@ohos/file/cloudSync/cloudSync/ErrorType;:V", &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
@@ -57,9 +57,9 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
 
     // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#SyncState", &stateEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/SyncState;", &stateEnum);
     ani_enum errorEnum;
-    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/#ErrorType", &errorEnum);
+    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/ErrorType;", &errorEnum);
 
     ani_enum_item stateEnumItem;
     env_->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
@@ -72,7 +72,8 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
         return;
     }
     ani_ref ref_;
-    ret = env_->Object_CallMethodByName_Ref(cbOnRef_, "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, pg);
+    ret = env_->Object_CallMethodByName_Ref(
+        static_cast<ani_object>(cbOnRef_), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, pg);
     if (ret != ANI_OK) {
         LOGE("ani call function failed. ret = %{public}d", ret);
         return;
@@ -86,6 +87,7 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
 void CloudSyncCallbackAniImpl::DeleteReference()
 {
     if (cbOnRef_ != nullptr) {
+        env_->GlobalReference_Delete(cbOnRef_);
         cbOnRef_ = nullptr;
     }
 }
