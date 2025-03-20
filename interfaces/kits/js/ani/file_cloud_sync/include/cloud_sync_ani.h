@@ -28,6 +28,7 @@ public:
     static void CloudSyncOff1(ani_env *env, ani_object object, ani_string evt);
     static void CloudSyncStart(ani_env *env, ani_object object);
     static void CloudSyncStop(ani_env *env, ani_object object);
+    static ani_int GetFileSyncState(ani_env *env, ani_object object, ani_string path);
     static ani_double CloudyncGetLastSyncTime(ani_env *env, ani_object object);
 };
 } // OHOS::FileManagement::CloudSync

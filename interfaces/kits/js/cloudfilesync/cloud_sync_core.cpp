@@ -20,6 +20,7 @@
 
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
+#include "uri.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -134,6 +135,36 @@ FsResult<void> CloudSyncCore::DoStop()
     }
 
     return FsResult<void>::Success();
+}
+
+FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
+{
+    Uri uri(path);
+    string sandBoxPath = uri.GetPath();
+    string xattrKey = "user.cloud.filestatus";
+
+    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
+    if (xattrValueSize < 0) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
+    if (xattrValue == nullptr) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
+    if (xattrValueSize <= 0) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    int32_t fileStatus = stoi(xattrValue.get());
+    int32_t val;
+    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
+        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
+        val = statusMap[fileStatus];
+    } else {
+        val = FileSyncState::FILESYNCSTATE_COMPLETED;
+    }
+
+    return FsResult<int32_t>::Success(val);
 }
 
 FsResult<int64_t> CloudSyncCore::CoreGetLastSyncTime()

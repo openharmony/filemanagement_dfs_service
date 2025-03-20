@@ -54,6 +54,9 @@ ohos_shared_library("cloud_sync_ani") {
     "LOG_TAG=\"CLOUD_FILE_SYNC\"",
   ]
   external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "file_api:filemgmt_libfs",
     "hilog:libhilog",
     "runtime_core:ani",
