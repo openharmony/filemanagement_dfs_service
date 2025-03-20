@@ -26,12 +26,14 @@ config("ani_config") {
 ohos_shared_library("cloud_sync_ani") {
   public_configs = [ ":ani_config" ]
   sources = [
+    "../../cloudfilesync/cloud_file_cache_core.cpp",
     "../../cloudfilesync/cloud_file_core.cpp",
     "../../cloudfilesync/cloud_sync_core.cpp",
     "../ani_helper/src/error_handler.cpp",
     "./src/bind_function_class.cpp",
     "./src/cloud_download_ani.cpp",
     "./src/cloud_download_callback_ani.cpp",
+    "./src/cloud_file_cache_ani.cpp",
     "./src/cloud_sync_ani.cpp",
     "./src/cloud_sync_callback_ani.cpp",
   ]
