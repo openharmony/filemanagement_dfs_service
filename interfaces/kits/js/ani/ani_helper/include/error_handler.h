@@ -55,23 +55,45 @@ private:
     static ani_status Throw(ani_env *env, const ani_class &cls, int32_t code, const std::string &errMsg)
     {
         ani_method ctor;
-        if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            LOGE("Cannot find constructor for class");
-            return ANI_NOT_FOUND;
+        ani_status status = env->Class_FindMethod(cls, "<ctor>", ":V", &ctor);
+        if (status != ANI_OK) {
+            LOGE("Cannot find constructor for class. ret = %{public}d", status);
+            return status;
         }
-
         ani_string msg = nullptr;
-        if (ANI_OK != env->String_NewUTF8(errMsg.c_str(), errMsg.size(), &msg)) {
-            LOGE("Convert string to ani string failed.");
-            return ANI_ERROR;
+        status = env->String_NewUTF8(errMsg.c_str(), errMsg.size(), &msg);
+        if (status != ANI_OK) {
+            LOGE("Convert string to ani string failed. ret = %{public}d", status);
+            return status;
         }
-
         ani_object obj;
-        if (ANI_OK != env->Object_New(cls, ctor, &obj, static_cast<double>(code), msg)) {
-            LOGE("Cannot create ani error object");
-            return ANI_ERROR;
+        status = env->Object_New(cls, ctor, &obj);
+        if (status != ANI_OK) {
+            LOGE("Cannot create ani error object. ret = %{public}d", status);
+            return status;
         }
-        auto status = env->ThrowError(static_cast<ani_error>(obj));
+        ani_field field = nullptr;
+        status = env->Class_FindField(cls, "code", &field);
+        if (status != ANI_OK) {
+            LOGE("Class_FindField : %{public}d", status);
+            return status;
+        }
+        status = env->Object_SetField_Double(obj, field, code);
+        if (status != ANI_OK) {
+            LOGE("Object_SetField_Double : %{public}d", status);
+            return status;
+        }
+        status = env->Class_FindField(cls, "message", &field);
+        if (status != ANI_OK) {
+            LOGE("Class_FindField : %{public}d", status);
+            return status;
+        }
+        status = env->Object_SetField_Ref(obj, field, msg);
+        if (status != ANI_OK) {
+            LOGE("Object_SetField_Ref : %{public}d", status);
+            return status;
+        }
+        status = env->ThrowError(static_cast<ani_error>(obj));
         if (status != ANI_OK) {
             LOGE("Throw ani error object failed!");
             return status;

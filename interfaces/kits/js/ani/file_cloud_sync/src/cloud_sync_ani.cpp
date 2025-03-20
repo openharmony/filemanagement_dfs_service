@@ -148,10 +148,16 @@ void CloudSyncAni::CloudyncConstructor1(ani_env *env, ani_object object, ani_str
 
 void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, fun);
+    ani_ref cbOnRef;
+    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
     std::string event;
-    ani_status ret = AniString2String(env, evt, event);
+    ret = AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -173,10 +179,16 @@ void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, 
 
 void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, fun);
+    ani_ref cbOnRef;
+    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
     std::string event;
-    ani_status ret = AniString2String(env, evt, event);
+    ret = AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;

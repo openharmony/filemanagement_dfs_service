@@ -105,11 +105,17 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
         return;
     }
 
+    ani_ref cbOnRef;
+    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
     std::shared_ptr<CloudDownloadCallbackAniImpl> callback = nullptr;
     if (event == "progress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, fun);
+        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
     } else if (event == "multiProgress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, fun, true);
+        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef, true);
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
@@ -128,10 +134,16 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
 
 void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, fun);
+    ani_ref cbOnRef;
+    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
     std::string event;
-    ani_status ret = AniString2String(env, evt, event);
+    ret = AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;

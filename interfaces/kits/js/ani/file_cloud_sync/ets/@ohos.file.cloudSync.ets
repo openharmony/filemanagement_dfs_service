@@ -262,12 +262,52 @@ export default namespace cloudSync {
             return 0;
         }
     };
+
+    export enum NotifyType {
+        NOTIFY_ADDED = 0,
+        NOTIFY_MODIFIED = 1,
+        NOTIFY_DELETED = 2,
+        NOTIFY_RENAMED = 3
+    }
+
+    export interface ChangeData {
+        type: NotifyType;
+        isDirectory: Array<boolean>;
+        uris: Array<string>;
+    }
+
+    enum FileSyncState {
+        UPLOADING = 0,
+        DOWNLOADING = 1,
+        COMPLETED = 2,
+        STOPPED = 3,
+        TO_BE_UPLOADED = 4,
+        UPLOAD_SUCCESS = 5,
+        UPLOAD_FAILURE = 6,
+    }
+
+    export class ChangeDataInner implements ChangeData {
+        constructor(
+            type: NotifyType,
+            isDirectory: Array<boolean>,
+            uris: Array<string>
+        ) {
+            this.type = type
+            this.isDirectory = isDirectory;
+            this.uris = uris;
+        }
+        type: NotifyType;
+        isDirectory: Array<boolean>;
+        uris: Array<string>;
+    };
+
     export class FileSync{
         static {
             loadLibrary("cloud_sync_ani");
         }
         private nativePtr: long = 0;
         native constructor();
+        native constructor(bundleName: string);
 
         bindNativePtr(ptr: long): void {
             if (this.nativePtr == 0) {
