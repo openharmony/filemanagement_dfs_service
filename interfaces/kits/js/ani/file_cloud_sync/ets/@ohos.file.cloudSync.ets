@@ -363,6 +363,93 @@ export default namespace cloudSync {
             this.FileSyncStop();
             return 0;
         }
+    };
 
-    }
+    export class CloudFileCache {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
+        private nativePtr: long = 0;
+        native constructor();
+
+        bindNativePtr(ptr: long): void {
+            if (this.nativePtr == 0) {
+                this.nativePtr = ptr;
+            }
+        }
+
+        native on(evt: string, callback: Callback<DownloadProgress>): void;
+
+        native off(evt: string, callback: Callback<DownloadProgress>): void;
+
+        native off(evt: string): void;
+
+        start(uri: string): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError) => void): void => {
+                let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        start(uri: string, callback: AsyncCallback<void>): void {
+            let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
+            promise.then<void>((): void => {
+                let e = new BusinessError<void>();
+                e.code = 0;
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
+            });
+        }
+
+        stop(uri: string, needClean?: boolean): Promise<void> {
+            let clean: boolean = false;
+            if (needClean !== undefined) {
+                clean = needClean;
+            }
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((uri: string, clean: boolean): int => {
+                    return this.StopInner(uri, clean);
+                }, uri, clean);
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        stop(uri: string, callback: AsyncCallback<void>): void {
+            let clean: boolean = false;
+            let promise = taskpool.execute((uri: string, clean: boolean): int => {
+                return this.StopInner(uri, clean);
+            }, uri, clean);
+            promise.then<void>((): void => {
+                let e = new BusinessError<void>();
+                e.code = 0;
+                callback(e, undefined);
+            }, (e: BusinessError<void>): void => {
+                callback(e, undefined);
+            });
+        }
+
+        native CloudFileCacheStart(uri: string): void;
+        native CloudFileCacheStop(uri: string, clean: boolean): void;
+        native cleanCache(uri: string): void;
+
+        StartInner(uri: string): int {
+            this.CloudFileCacheStart(uri);
+            return 0;
+        }
+        StopInner(uri: string, clean: boolean): int {
+            this.CloudFileCacheStop(uri, clean);
+            return 0;
+        }
+    };
 };

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "cloud_download_ani.h"
+#include "cloud_file_cache_ani.h"
 #include "cloud_sync_ani.h"
 #include "utils_log.h"
 
@@ -49,6 +50,48 @@ static ani_status BindContextOnGallery(ani_env *env)
         ani_native_function { "off", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1) },
         ani_native_function { "GallerySyncStart", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart) },
         ani_native_function { "GallerySyncStop", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop) },
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+
+    return ANI_OK;
+}
+
+static ani_status BindContextOnCloudFileCache(ani_env *env)
+{
+    ani_namespace ns {};
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    static const char *className = "LCloudFileCache;";
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    std::array methods = {
+        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor) },
+        ani_native_function { "on", "Lstd/core/String;Lstd/core/Function1;:V",
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOn) },
+        ani_native_function { "off", "Lstd/core/String;Lstd/core/Function1;:V",
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0) },
+        ani_native_function {
+            "off", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1) },
+        ani_native_function { "CloudFileCacheStart", "Lstd/core/String;:V",
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStart) },
+        ani_native_function { "CloudFileCacheStop", "Lstd/core/String;Z:V",
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStop) },
+        ani_native_function { "cleanCache", "Lstd/core/String;:V",
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCache) },
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -149,6 +192,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     auto status = BindContextOnGallery(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+    status = BindContextOnCloudFileCache(env);
     if (status != ANI_OK) {
         return status;
     }
