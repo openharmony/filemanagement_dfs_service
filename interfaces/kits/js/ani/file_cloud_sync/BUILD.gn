@@ -59,6 +59,7 @@ ohos_shared_library("cloud_sync_ani") {
     "c_utils:utils",
     "file_api:filemgmt_libfs",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "runtime_core:ani",
     "runtime_core:libarkruntime",
   ]
