@@ -190,6 +190,39 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(SyncType type, SyncPromptState st
     return;
 }
 
+void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
+{
+    napi_env env = env_;
+    auto task = [this, env, state, progress] () {
+        if (!cbOnRef_) {
+            LOGE("cbOnRef_ is nullptr");
+            return;
+        }
+
+        napi_handle_scope scope = nullptr;
+        napi_status status = napi_open_handle_scope(env, &scope);
+        if (status != napi_ok) {
+            LOGE("Create reference failed, status: %{public}d", status);
+            return;
+        }
+
+        napi_value jsCallback = cbOnRef_.Deref(env).val_;
+        NVal obj = NVal::CreateObject(env);
+        obj.AddProp("state", NVal::CreateInt32(env, (int32_t)state).val_);
+        obj.AddProp("progress", NVal::CreateInt32(env, (int32_t)progress).val_);
+        napi_value retVal = nullptr;
+        status = napi_call_function(env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+        if (status != napi_ok) {
+            LOGE("napi call function failed, status: %{public}d", status);
+        }
+        napi_close_handle_scope(env, scope);
+    };
+    auto ret = napi_send_event(env, task, napi_eprio_immediate);
+    if  (ret != 0) {
+        LOGE("failed to send event, ret: %{public}d", ret);
+    }
+}
+
 string CloudSyncNapi::GetBundleName(const napi_env &env, const NFuncArg &funcArg)
 {
     string bundleName;
@@ -637,6 +670,8 @@ bool CloudSyncNapi::Export()
         NVal::DeclareNapiFunction("stop", Stop),
         NVal::DeclareNapiFunction("getFileSyncState", GetFileSyncState),
         NVal::DeclareNapiFunction("optimizeStorage", OptimizeStorage),
+        NVal::DeclareNapiFunction("startOptimizeSpace", StartOptimizeStorage),
+        NVal::DeclareNapiFunction("stopOptimizeSpace", StopOptimizeStorage),
     };
     std::string className = GetClassName();
     auto [succ, classValue] =
@@ -657,6 +692,89 @@ bool CloudSyncNapi::Export()
     return exports_.AddProp(className, classValue);
 }
 
+int32_t CloudSyncNapi::HandOptimizeStorageParams(napi_env env, napi_callback_info info, NFuncArg &funcArg,
+    OptimizeSpaceOptions &optimizeOptions)
+{
+    bool succ = false;
+    auto argv = NVal(env, funcArg[NARG_POS::FIRST]);
+    if (!argv.HasProp("totalSize") || !argv.HasProp("agingDays")) {
+        return ERR_BAD_VALUE;
+    }
+
+    int64_t totalSize = 0;
+    int32_t agingDays = 0;
+    tie(succ, totalSize) = argv.GetProp("totalSize").ToInt64();
+    if (!succ) {
+        return ERR_BAD_VALUE;
+    }
+    tie(succ, agingDays) = argv.GetProp("agingDays").ToInt32();
+    if (!succ) {
+        return ERR_BAD_VALUE;
+    }
+
+    if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
+        return ERR_BAD_VALUE;
+    }
+
+    LOGI("totalSize:%{public}lld, agingDays:%{public}d", static_cast<long long>(totalSize), agingDays);
+    optimizeOptions.totalSize = totalSize;
+    optimizeOptions.agingDays = agingDays;
+    return ERR_OK;
+}
+
+napi_value CloudSyncNapi::StartOptimizeStorage(napi_env env, napi_callback_info info)
+{
+    LOGI("StartOptimizeStorage enter");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO)) {
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        LOGE("Number of arguments unmatched");
+        return nullptr;
+    }
+    OptimizeSpaceOptions optimizeOptions {};
+    int32_t res = HandOptimizeStorageParams(env, info, funcArg, optimizeOptions);
+    if (res != ERR_OK) {
+        LOGE("hand paeams failed");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto callback = make_shared<CloudOptimizeCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]));
+    auto cbExec = [optimizeOptions, callback]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions, callback);
+        if (ret != E_OK) {
+            LOGE("StartOptimizeStorage error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string procedureName = "StartOptimizeStorage";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
+napi_value CloudSyncNapi::StopOptimizeStorage(napi_env env, napi_callback_info info)
+{
+    LOGI("StopOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().StopOptimizeStorage();
+    if (ret != E_OK) {
+        LOGE("StopOptimizeStorage error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
+    return NVal::CreateUndefined(env).val_;
+}
+
 napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -664,8 +782,12 @@ napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
     }
 
-    auto cbExec = []() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(AGING_DAYS);
+    OptimizeSpaceOptions optimizeOptions {};
+    optimizeOptions.totalSize = 0;
+    optimizeOptions.agingDays = AGING_DAYS;
+
+    auto cbExec = [optimizeOptions]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions);
         if (ret != E_OK) {
             LOGE("OptimizeStorage error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
