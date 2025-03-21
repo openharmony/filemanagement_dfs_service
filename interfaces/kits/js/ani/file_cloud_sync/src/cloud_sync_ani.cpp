@@ -263,6 +263,25 @@ void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
     }
 }
 
+ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_object object, ani_string path)
+{
+    string filePath;
+    ani_status ret = AniString2String(env, path, filePath);
+    if (ret != ANI_OK) {
+        LOGE("ani string get size failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return static_cast<int32_t>(ret);
+    }
+    auto data = CloudSyncCore::DoGetFileSyncState(filePath);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do stop failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+        return err.GetErrNo();
+    }
+    return static_cast<ani_int>(data.GetData().value());
+}
+
 ani_double CloudSyncAni::CloudyncGetLastSyncTime(ani_env *env, ani_object object)
 {
     auto cloudSync = CloudSyncUnwrap(env, object);

@@ -38,6 +38,7 @@ public:
     FsResult<void> DoOn(const std::string &event, const std::shared_ptr<CloudSyncCallbackMiddle> callback);
     FsResult<void> DoOff(const std::string &event,
         const std::optional<std::shared_ptr<CloudSyncCallbackMiddle>> &callback = std::nullopt);
+    static FsResult<int32_t> DoGetFileSyncState(std::string path);
     FsResult<int64_t> CoreGetLastSyncTime();
 
     const std::string &GetBundleName() const;

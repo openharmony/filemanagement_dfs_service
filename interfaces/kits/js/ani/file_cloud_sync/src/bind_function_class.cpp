@@ -144,6 +144,37 @@ static ani_status BindContextOnFileSync(ani_env *env)
     return ANI_OK;
 }
 
+static ani_status BindContextOnStaticFunction(ani_env *env)
+{
+    ani_namespace ns {};
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    static const char *className = "LStaticFunction;";
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    std::array methods = {
+        ani_native_function {
+            "getFileSyncStateInner", "Lstd/core/String;:I", reinterpret_cast<void *>(CloudSyncAni::GetFileSyncState) },
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+
+    return ANI_OK;
+}
+
 static ani_status BindContextOnDownload(ani_env *env)
 {
     ani_namespace ns {};
@@ -204,6 +235,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return status;
     }
     status = BindContextOnDownload(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+    status = BindContextOnStaticFunction(env);
     if (status != ANI_OK) {
         return status;
     }
