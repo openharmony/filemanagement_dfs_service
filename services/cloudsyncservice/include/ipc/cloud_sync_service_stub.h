@@ -31,10 +31,14 @@ public:
 private:
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
     int32_t HandleUnRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUnRegisterFileSyncCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleRegisterFileSyncCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStartFileSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStopFileSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleResetCursor(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
     int32_t HandleOptimizeStorage(MessageParcel &data, MessageParcel &reply);
@@ -49,7 +53,9 @@ private:
     int32_t HandleStopFileCache(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadThumb(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleRegisterFileCacheCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUnregisterFileCacheCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUploadAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadFile(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadFiles(MessageParcel &data, MessageParcel &reply);

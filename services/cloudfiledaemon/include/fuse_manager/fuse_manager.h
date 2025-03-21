@@ -16,6 +16,7 @@
 #ifndef FUSE_MANAGER_H
 #define FUSE_MANAGER_H
 
+#include <shared_mutex>
 #include <string>
 #include <map>
 
@@ -32,11 +33,13 @@ public:
     int32_t StartFuse(int32_t userId, int32_t devFd, const string &path);
     FuseManager(const FuseManager&) = delete;
     FuseManager& operator=(const FuseManager&) = delete;
+    struct fuse_session* GetSession(std::string path);
 private:
     FuseManager() = default;
     ~FuseManager() = default;
 private:
-    map<int32_t, struct fuse_session *> sessions_;
+    std::mutex sessionMutex_;
+    map<std::string, struct fuse_session *> sessions_;
 };
 } // namespace CloudFile
 } // namespace FileManagement

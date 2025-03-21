@@ -66,6 +66,8 @@ namespace {
     static const uint64_t UNKNOWN_INODE_ID = 0;
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
+    static const std::chrono::seconds READ_TIMEOUT_S = 16s;
+    static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 }
 
 const int32_t MAX_SIZE = 4096;
@@ -103,6 +105,16 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
         childInode->stat.st_nlink = STAT_NLINK_REG;
         childInode->stat.st_size = metaBase.size;
     }
+}
+
+static void InsertFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi,
+                           shared_ptr<CloudDiskFile> filePtr)
+{
+    std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
+    wLock.lock();
+    data->fileCache[fi->fh] = filePtr;
+    wLock.unlock();
+    filePtr->refCount++;
 }
 
 static shared_ptr<CloudDiskFile> InitFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi)
@@ -341,40 +353,105 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundl
     return database;
 }
 
+static void DoCloudOpen(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
+                        struct fuse_file_info *fi)
+{
+    auto error = make_shared<CloudError>();
+    auto openFinish = make_shared<bool>(false);
+    auto cond = make_shared<ffrt::condition_variable>();
+
+    ffrt::submit([filePtr, error, openFinish, cond] {
+        HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+        auto session = filePtr->readSession;
+        if (!session) {
+            LOGE("readSession is nullptr");
+            return;
+        }
+        *error = session->InitSession();
+        {
+            unique_lock lck(filePtr->openLock);
+            *openFinish = true;
+        }
+        cond->notify_one();
+        LOGI("download done");
+        return;
+    });
+
+    unique_lock lck(filePtr->openLock);
+    auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
+        return *openFinish;
+        });
+    if (!waitStatus) {
+        LOGE("init session timeout");
+        fuse_reply_err(req, ENETUNREACH);
+        return;
+    }
+    if (!HandleCloudError(req, *error)) {
+        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
+        fuse_reply_open(req, fi);
+    } else {
+        filePtr->readSession = nullptr;
+        LOGE("open fail");
+    }
+    return;
+}
+
+static void GetNewSession(shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskFile> filePtr,
+                          string &path, struct CloudDiskFuseData *data, shared_ptr<CloudDatabase> database)
+{
+    string cloudId = inoPtr->cloudId;
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        parentInode->bundleName, parentInode->cloudId);
+    MetaBase metaBase(inoPtr->fileName);
+    auto ret = metaFile->DoLookup(metaBase);
+    string assets = "content";
+    if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
+        assets = "thumbnail";
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+        int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
+    }
+    if (metaBase.fileType == FILE_TYPE_LCD) {
+        assets = "lcd";
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+        int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
+    }
+    LOGD("cloudId %s", cloudId.c_str());
+    filePtr->readSession = database->NewAssetReadSession("file", cloudId, assets, path);
+}
+
 static void CloudOpen(fuse_req_t req,
     shared_ptr<CloudDiskInode> inoPtr, struct fuse_file_info *fi, string path)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
-    if (filePtr == nullptr) {
+    shared_ptr<CloudDiskFile> filePtr;
+    if (inoPtr->filePtr != nullptr) {
+        filePtr = inoPtr->filePtr;
+        InsertFileAttr(data, fi, filePtr);
+    } else {
         filePtr = InitFileAttr(data, fi);
-    }
-    auto database = GetDatabase(data->userId, inoPtr->bundleName);
-    if (!database) {
-        fuse_reply_err(req, EPERM);
-        LOGE("database is null");
-        return;
+        inoPtr->filePtr = filePtr;
     }
 
+    std::unique_lock<std::shared_mutex> wSesLock(filePtr->sessionLock);
     if (filePtr->readSession) {
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         fuse_reply_open(req, fi);
         return;
     }
 
-    string cloudId = inoPtr->cloudId;
-    LOGD("cloudId: %s", cloudId.c_str());
-    filePtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path);
+    auto database = GetDatabase(data->userId, inoPtr->bundleName);
+    if (!database) {
+        fuse_reply_err(req, EPERM);
+        LOGE("database is null");
+        return;
+    }
+    GetNewSession(inoPtr, filePtr, path, data, database);
     if (filePtr->readSession) {
-        auto error = filePtr->readSession->InitSession();
-        if (!HandleCloudError(req, error)) {
-            filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
-            fuse_reply_open(req, fi);
-        } else {
-            filePtr->readSession = nullptr;
-            LOGE("open fail");
-        }
+        DoCloudOpen(req, filePtr, fi);
     } else {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
             CloudFile::FaultType::DRIVERKIT, EPERM, "readSession is null"});
@@ -1376,6 +1453,50 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     return (void) fuse_reply_err(req, 0);
 }
 
+static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
+                        off_t offset, size_t size, shared_ptr<char> buf)
+{
+    auto readSize = make_shared<int64_t>();
+    auto error = make_shared<CloudError>();
+    auto readFinish = make_shared<bool>(false);
+    auto cond = make_shared<ffrt::condition_variable>();
+
+    ffrt::submit([filePtr, error, readFinish, cond, offset, size, buf, readSize] {
+        HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+        auto session = filePtr->readSession;
+        if (!session) {
+            LOGE("readSession is nullptr");
+            return;
+        }
+        *readSize = session->PRead(offset, size, buf.get(), *error);
+        {
+            unique_lock lck(filePtr->readLock);
+            *readFinish = true;
+        }
+        cond->notify_one();
+        LOGI("download done");
+        return;
+    });
+
+    unique_lock lck(filePtr->readLock);
+    auto waitStatus = cond->wait_for(lck, READ_TIMEOUT_S, [readFinish] {
+        return *readFinish;
+        });
+    if (!waitStatus) {
+        LOGE("PRead timeout");
+        fuse_reply_err(req, ENETUNREACH);
+        return;
+    }
+    if (!HandleCloudError(req, *error)) {
+        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
+        fuse_reply_buf(req, buf.get(), *readSize);
+    } else {
+        filePtr->readSession = nullptr;
+        LOGE("read fail");
+    }
+    return;
+}
+
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
@@ -1405,7 +1526,6 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         return;
     }
 
-    int64_t readSize;
     shared_ptr<char> buf = nullptr;
 
     buf.reset(new char[size], [](char* ptr) {
@@ -1418,15 +1538,7 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-
-    CloudError preadError;
-    readSize = filePtr->readSession->PRead(offset, size, buf.get(), preadError);
-    if (!HandleCloudError(req, preadError)) {
-        LOGD("read success, %lld bytes", static_cast<long long>(readSize));
-        fuse_reply_buf(req, buf.get(), readSize);
-    } else {
-        LOGE("read fail");
-    }
+    DoCloudRead(req, filePtr, offset, size, buf);
 }
 
 static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, shared_ptr<CloudDiskInode> inoPtr)
@@ -1575,6 +1687,30 @@ static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName
     }
 }
 
+static bool DocloudClose(struct CloudDiskFuseData *data, shared_ptr<CloudDiskFile> filePtr,
+                         shared_ptr<CloudDiskInode> parentInode, shared_ptr<CloudDiskInode> inoPtr)
+{
+    bool res;
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        parentInode->bundleName, parentInode->cloudId);
+    MetaBase metaBase(inoPtr->fileName);
+    auto ret = metaFile->DoLookup(metaBase);
+    if (metaBase.fileType == FILE_TYPE_CONTENT) {
+        res = filePtr->readSession->Close(false);
+    } else {
+        res = filePtr->readSession->Close(true);
+        string path = CloudFileUtils::GetLocalBucketPath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+        string tmpPath = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+        ret = rename(tmpPath.c_str(), path.c_str());
+        if (ret == NativeRdb::E_OK) {
+            DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+            auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+            rdbstore->UpdateTHMStatus(metaBase, CloudSync::DOWNLOADED_THM);
+        }
+    }
+    return res;
+}
+
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1602,8 +1738,10 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         fuse_reply_err(req, EINVAL);
         return;
     }
+    FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
     filePtr->refCount--;
     if (filePtr->refCount == 0) {
+        inoPtr->filePtr = nullptr;
         if (filePtr->type == CLOUD_DISK_FILE_TYPE_LOCAL) {
             close(filePtr->fd);
             if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
@@ -1611,18 +1749,14 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
             } else if (filePtr->isWriteOpen) {
                 UploadLocalFile(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             }
-        } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD &&
-            filePtr->readSession != nullptr) {
-            bool res = filePtr->readSession->Close(false);
+        } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD && filePtr->readSession != nullptr) {
+            bool res = DocloudClose(data, filePtr, parentInode, inoPtr);
             if (!res) {
                 LOGE("close error");
-                fuse_reply_err(req, EINVAL);
-                return;
             }
             filePtr->readSession = nullptr;
             LOGD("readSession released");
         }
-        FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
     }
     fuse_reply_err(req, 0);
 }

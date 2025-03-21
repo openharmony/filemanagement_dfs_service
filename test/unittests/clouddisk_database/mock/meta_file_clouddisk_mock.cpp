@@ -115,6 +115,14 @@ int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskM
     return E_OK;
 }
 
+int32_t CloudDiskMetaFile::DoLookupAndCreate(const std::string &name, CloudDiskMetaFileCallBack metaFileCallBack)
+{
+    if (name == "mock") {
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskMetaFile::DoChildUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
     if (name == "mock") {

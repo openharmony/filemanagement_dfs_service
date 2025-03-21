@@ -1669,4 +1669,85 @@ HWTEST_F(FuseOperationsTest, LseekTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "LseekTest End";
 }
+
+/**
+ * @tc.name: IoctlTest001
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesI92WQP
+ */
+HWTEST_F(FuseOperationsTest, IoctlTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest001 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = FUSE_ROOT_ID;
+        int cmd = 0;
+        unsigned flags = true;
+
+        fuseoperations_->Ioctl(req, ino, cmd, nullptr, nullptr, flags, nullptr, 0, 0);
+        EXPECT_NE(ino, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest001  ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest001 End";
+}
+
+/**
+ * @tc.name: IoctlTest002
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesI92WQP
+ */
+HWTEST_F(FuseOperationsTest, IoctlTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest002 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        int cmd = 0;
+        unsigned flags = true;
+
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+
+        fuseoperations_->Ioctl(req, ino, cmd, nullptr, nullptr, flags, nullptr, 0, 0);
+        EXPECT_NE(ino, FUSE_ROOT_ID);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest002  ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest002 End";
+}
+
+/**
+ * @tc.name: IoctlTest003
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: issuesI92WQP
+ */
+HWTEST_F(FuseOperationsTest, IoctlTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest002 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        int cmd = 0;
+        unsigned flags = true;
+
+        CloudDiskFuseData data;
+        (data.inodeCache)[0] = make_shared<CloudDiskInode>();
+        (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+
+        fuseoperations_->Ioctl(req, ino, cmd, nullptr, nullptr, flags, nullptr, 0, 0);
+        EXPECT_NE(ino, FUSE_ROOT_ID);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest003  ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest003 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

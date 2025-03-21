@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -27,6 +27,13 @@ ohos_sa_profile("distributedfile_sa_profile") {
 
 ohos_prebuilt_etc("distributedfile_etc") {
   source = "distributedfile.cfg"
+  relative_install_dir = "init"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("cloudfiledaemon_etc") {
+  source = "cloudfiledaemon.cfg"
   relative_install_dir = "init"
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

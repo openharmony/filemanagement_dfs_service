@@ -191,7 +191,7 @@ std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::s
 {
     string physicalPath = "";
     int ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, std::to_string(userId), physicalPath);
-    if (ret != 0) {
+    if (ret != 0 || !AppFileService::SandboxHelper::IsValidPath(physicalPath)) {
         LOGE("Get physical path failed with %{public}d", ret);
         return {"", ""};
     }

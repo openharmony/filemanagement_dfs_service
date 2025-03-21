@@ -23,7 +23,7 @@ ohos_unittest("distributed_file_daemon_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
@@ -118,7 +118,7 @@ ohos_unittest("daemon_manager_impl_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
@@ -168,7 +168,7 @@ ohos_unittest("daemon_manager_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
@@ -214,7 +214,7 @@ ohos_unittest("connection_detector_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
@@ -262,7 +262,7 @@ ohos_unittest("file_dfs_listener_proxy_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
@@ -314,7 +314,7 @@ ohos_unittest("file_trans_listener_proxy_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
@@ -365,7 +365,7 @@ ohos_unittest("trans_mananger_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
     "${distributedfile_path}/utils/log/src/utils_log.cpp",

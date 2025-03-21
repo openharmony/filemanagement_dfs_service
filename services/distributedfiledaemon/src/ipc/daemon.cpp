@@ -93,6 +93,7 @@ void Daemon::RegisterOsAccount()
 {
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subScriber_ = std::make_shared<OsAccountObserver>(subscribeInfo);
     bool subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(subScriber_);
@@ -186,6 +187,9 @@ int32_t Daemon::OpenP2PConnection(const DmDeviceInfoExt &deviceInfo)
     if (ret == E_OK) {
         ConnectCount::GetInstance()->AddConnect(callingTokenId, deviceInfo.networkId, listener);
     } else {
+        if (ret == ERR_CHECKOUT_COUNT) {
+            ConnectCount::GetInstance()->RemoveConnect(callingTokenId, deviceInfo.networkId);
+        }
         CleanUp(deviceInfo);
     }
     return ret;
@@ -225,6 +229,10 @@ int32_t Daemon::ConnectionCount(const DmDeviceInfoExt &deviceInfo)
         if (ret == NO_ERROR) {
             ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
         }
+    } else {
+        if (ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId) != E_OK) {
+            ret = ERR_CHECKOUT_COUNT;
+        }
     }
     if (ret == E_OK) {
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
@@ -261,6 +269,9 @@ int32_t Daemon::ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
     ret = ConnectionCount(deviceInfo);
     if (ret != NO_ERROR) {
         LOGE("connection failed");
+        if (ret == ERR_CHECKOUT_COUNT) {
+            ConnectCount::GetInstance()->RemoveConnect(callingTokenId, networkId);
+        }
         return ret;
     }
     ConnectCount::GetInstance()->AddConnect(callingTokenId, networkId, remoteReverseObj);
@@ -465,7 +476,6 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
                             HmdfsInfo &info,
                             const sptr<IDaemon> &daemon)
 {
-    auto start = std::chrono::high_resolution_clock::now();
     bool isSrcFile = false;
     bool isSrcDir = false;
     if (daemon == nullptr) {
@@ -505,9 +515,6 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("CheckCopyRule failed, ret = %{public}d", ret);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    Utils::SysEventFileParse(duration.count());
     return E_OK;
 }
 

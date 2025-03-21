@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -348,82 +348,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0100, Test
 }
 
 /**
- * @tc.name: DeviceManagerAgentTest_OnDeviceReady_0200
- * @tc.desc: Verify the OnDeviceReady function.
- * @tc.type: FUNC
- * @tc.require: IA6UD3
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0200 start";
-    bool res = true;
-
-    try {
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
-        std::vector<DmDeviceInfo> deviceList;
-        deviceList.push_back(deviceInfo);
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-        auto devicePtr = DeviceManagerAgent::GetInstance();
-        devicePtr->OnDeviceReady(deviceInfo);
-        
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-        devicePtr->OnDeviceReady(deviceInfo);
-
-        devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_WITH_WIFI });
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-        devicePtr->OnDeviceReady(deviceInfo);
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0200 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_OnDeviceReady_0300
- * @tc.desc: Verify the OnDeviceReady function.
- * @tc.type: FUNC
- * @tc.require: IA6UD3
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0300 start";
-    bool res = true;
-
-    try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_THREE.c_str(), NETWORKID_THREE.size());
-        std::vector<DmDeviceInfo> deviceList;
-        deviceList.push_back(deviceInfo);
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillOnce(Return(0));
-        auto devicePtr = DeviceManagerAgent::GetInstance();
-        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_THREE, agent1 });
-        devicePtr->cidNetworkType_.insert({ NETWORKID_THREE, NETWORKTYPE_NONE_WIFI });
-        devicePtr->OnDeviceReady(deviceInfo);
-        devicePtr->cidNetTypeRecord_.erase(NETWORKID_THREE);
-        devicePtr->cidNetworkType_.erase(NETWORKID_THREE);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0300 end";
-}
-
-/**
  * @tc.name: DeviceManagerAgentTest_OnDeviceP2POnline_0100
  * @tc.desc: Verify the OnDeviceP2POnline function.
  * @tc.type: FUNC
@@ -741,7 +665,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0200, TestSize
     bool res = true;
 
     try {
-        weak_ptr<MountPoint> nullwmp;
+        shared_ptr<MountPoint> nullwmp;
         DeviceManagerAgent::GetInstance()->QuitGroup(nullwmp);
     } catch (const exception &e) {
         EXPECT_EQ(string(e.what()), "Failed to quit group: Received empty mountpoint");

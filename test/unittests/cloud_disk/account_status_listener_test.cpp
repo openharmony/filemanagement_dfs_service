@@ -45,6 +45,7 @@ void AccountStatusListenerTest::SetUpTestCase(void)
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGIN);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     subscribeInfo_ = make_shared<EventFwk::CommonEventSubscribeInfo>(matchingSkills);
     accountStatusSubscriber_ = make_shared<AccountStatusSubscriber>(*subscribeInfo_);
     accountStatusListener_ = make_shared<AccountStatusListener>();
@@ -109,6 +110,29 @@ HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnReceiveEventTest002  ERROR";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest002 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest003
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: issuesIBMCHL
+ */
+HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+        string data(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+        EventFwk::CommonEventData eventData(want, USER_ID, data);
+        accountStatusSubscriber_->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest003  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 End";
 }
 
 /**

@@ -153,37 +153,27 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
 
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        return;
-    }
-
-    uv_work_t *work = new (nothrow) uv_work_t;
-    if (work == nullptr) {
-        LOGE("Failed to create uv work");
-        return;
-    }
-
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), state, error);
     if (msg == nullptr) {
-        delete work;
+        LOGE("Failed to create uv message object");
         return;
     }
 
-    work->data = reinterpret_cast<void *>(msg);
-    int ret = uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            auto msg = reinterpret_cast<UvChangeMsg *>(work->data);
-            OnComplete(msg);
+    auto task = [msg]() {
+        if (msg->cloudSyncCallback_.expired()) {
+            LOGE("cloudSyncCallback_ is expired");
             delete msg;
-            delete work;
-        });
-    if (ret != 0) {
+            return;
+        }
+        msg->cloudSyncCallback_.lock()->OnComplete(msg);
+        delete msg;
+    };
+
+    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
+    if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
-        delete work;
+        return;
     }
 }
 
@@ -240,30 +230,38 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOnCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (callback_ != nullptr) {
         LOGI("callback already exist");
-        return NVal::CreateUndefined(env).val_;
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOnCallback(env, funcArg)) {
+        return nullptr;
     }
 
     string bundleName = GetBundleName(env, funcArg);
@@ -278,24 +276,32 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
     return NVal::CreateUndefined(env).val_;
 }
 
-napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOffCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOffCallback(env, funcArg)) {
         return nullptr;
     }
 
@@ -496,17 +502,6 @@ int32_t CloudSyncNapi::RegisterToObs(napi_env env, const RegisterParams &registe
 
 napi_value CloudSyncNapi::RegisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr) {
         g_listObj = make_unique<ChangeListenerNapi>(env);
     }
@@ -581,17 +576,6 @@ napi_value CloudSyncNapi::UnregisterFromObs(napi_env env, const string &uri)
 
 napi_value CloudSyncNapi::UnregisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr || g_listObj->observers_.empty()) {
         LOGI("no obs to unregister");
         return nullptr;
@@ -748,27 +732,16 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
 
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        return;
-    }
-
-    uv_work_t *work = new (nothrow) uv_work_t;
-    if (work == nullptr) {
-        return;
-    }
-
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbRef, listener.changeInfo, listener.strUri);
     if (msg == nullptr) {
-        delete work;
+        LOGE("Failed to create uv message object");
         return;
     }
+
     if (!listener.changeInfo.uris_.empty()) {
         if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
             LOGE("changeInfo.changeType_ is other");
             delete msg;
-            delete work;
             return;
         }
         if (msg->changeInfo_.size_ > 0) {
@@ -776,75 +749,62 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
             if (msg->data_ == nullptr) {
                 LOGE("new msg->data failed");
                 delete msg;
-                delete work;
                 return;
             }
-            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
+            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_,
+                msg->changeInfo_.data_, msg->changeInfo_.size_);
             if (copyRet != 0) {
                 LOGE("Parcel data copy failed, err = %{public}d", copyRet);
                 free(msg->data_);
                 delete msg;
-                delete work;
                 return;
             }
         }
     }
-    work->data = reinterpret_cast<void *>(msg);
-
-    int ret = UvQueueWork(loop, work);
-    if (ret != 0) {
+    auto ret = SendEvent(msg);
+    if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         free(msg->data_);
         delete msg;
-        delete work;
+        return;
     }
 }
 
-int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
+int32_t ChangeListenerNapi::SendEvent(UvChangeMsg *msg)
 {
-    return uv_queue_work(
-        loop, work, [](uv_work_t *w) {},
-        [](uv_work_t *w, int s) {
-            // js thread
-            if (w == nullptr) {
-                return;
+    auto task = [msg]() {
+        // js thread
+        napi_env env = msg->env_;
+        napi_handle_scope scope = nullptr;
+        if (napi_open_handle_scope(env, &scope) != napi_ok) {
+            LOGE("Failed to open handle scope");
+            return;
+        }
+        do {
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(env, msg->ref_, &jsCallback);
+            if (status != napi_ok) {
+                LOGE("Create reference fail, status: %{public}d", status);
+                break;
             }
 
-            UvChangeMsg *msg = reinterpret_cast<UvChangeMsg *>(w->data);
-            do {
-                if (msg == nullptr) {
-                    LOGE("UvChangeMsg is null");
-                    break;
-                }
-                napi_env env = msg->env_;
-                napi_handle_scope scope = nullptr;
-                napi_open_handle_scope(env, &scope);
+            napi_value retVal = nullptr;
+            napi_value result[ARGS_ONE];
+            result[PARAM0] = ChangeListenerNapi::SolveOnChange(env, msg);
+            if (result[PARAM0] == nullptr) {
+                break;
+            }
 
-                napi_value jsCallback = nullptr;
-                napi_status status = napi_get_reference_value(env, msg->ref_, &jsCallback);
-                if (status != napi_ok) {
-                    napi_close_handle_scope(env, scope);
-                    LOGE("Create reference fail, status: %{public}d", status);
-                    break;
-                }
-                napi_value retVal = nullptr;
-                napi_value result[ARGS_ONE];
-                result[PARAM0] = ChangeListenerNapi::SolveOnChange(env, msg);
-                if (result[PARAM0] == nullptr) {
-                    napi_close_handle_scope(env, scope);
-                    break;
-                }
-                napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
-                napi_close_handle_scope(env, scope);
-                if (status != napi_ok) {
-                    LOGE("CallJs napi_call_function fail, status: %{public}d", status);
-                    break;
-                }
-            } while (0);
-            free(msg->data_);
-            delete msg;
-            delete w;
-        });
+            status = napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
+            if (status != napi_ok) {
+                LOGE("CallJs napi_call_function fail, status: %{public}d", status);
+            }
+        } while (0);
+        napi_close_handle_scope(env, scope);
+        free(msg->data_);
+        delete msg;
+    };
+    return napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
 }
 
 static napi_status SetValueArray(const napi_env &env, const char *fieldStr, const std::list<Uri> listValue,

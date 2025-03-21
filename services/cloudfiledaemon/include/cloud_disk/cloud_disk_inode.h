@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "cloud_asset_read_session.h"
+#include "ffrt_inner.h"
 #include "file_operations_base.h"
 
 namespace OHOS {
@@ -57,6 +58,18 @@ enum CLOUD_DISK_FILE_TYPE {
     CLOUD_DISK_FILE_TYPE_CLOUD
 };
 
+struct CloudDiskFile {
+    int type{CLOUD_DISK_FILE_TYPE_UNKNOWN};
+    int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
+    int32_t fd{-1};
+    std::atomic<int> refCount{0};
+    std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
+    bool isWriteOpen{false};
+    ffrt::mutex readLock;
+    ffrt::mutex openLock;
+    std::shared_mutex sessionLock;
+};
+
 struct CloudDiskInode {
     int layer{CLOUD_DISK_INODE_ZERO_LAYER};
     struct stat stat;
@@ -66,18 +79,10 @@ struct CloudDiskInode {
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
     std::string path; // just used in local file operation
+    std::shared_ptr<CloudDiskFile> filePtr;
 
     /* ops means file operation that uses local or database */
     std::shared_ptr<FileOperationsBase> ops{nullptr};
-};
-
-struct CloudDiskFile {
-    int type{CLOUD_DISK_FILE_TYPE_UNKNOWN};
-    int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
-    int32_t fd{-1};
-    std::atomic<int> refCount{0};
-    std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
-    bool isWriteOpen{false};
 };
 
 struct CloudDiskFuseData {

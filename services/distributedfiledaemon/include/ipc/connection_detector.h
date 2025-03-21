@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@ const std::string HMDFS_PATH = "/mnt/hmdfs/<currentUserId>/account";
 const std::string SYS_HMDFS_PATH = "/sys/fs/hmdfs/";
 const std::string CONNECTION_STATUS_FILE_NAME = "status";
 const std::string CURRENT_USER_ID_FLAG = "<currentUserId>";
-constexpr int32_t MAX_RETRY = 25;
+constexpr int32_t MAX_RETRY = 50;
 constexpr int32_t CHECK_SESSION_DELAY_TIME = 200000;
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t INVALID_USER_ID = -1;

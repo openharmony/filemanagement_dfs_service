@@ -50,6 +50,8 @@ const std::string FileColumn::ATTRIBUTE = "attribute";
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
 const std::string FileColumn::SRC_CLOUD_ID = "src_cloud_id";
+const std::string FileColumn::THM_SIZE = "thm_size";
+const std::string FileColumn::LCD_SIZE = "lcd_size";
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
@@ -81,7 +83,9 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     THM_FLAG + " INT DEFAULT 0, " +
     LCD_FLAG + " INT DEFAULT 0, " +
     NO_NEED_UPLOAD + " INT DEFAULT 0, " +
-    SRC_CLOUD_ID + " TEXT)";
+    SRC_CLOUD_ID + " TEXT, " +
+    THM_SIZE + "BIGINT DEFAULT 0, " +
+    LCD_SIZE + "BIGINT DEFAULT 0)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
@@ -114,6 +118,12 @@ const std::string FileColumn::ADD_UPLOAD_FLAG = "ALTER Table " + FILES_TABLE +
 const std::string FileColumn::ADD_SRC_CLOUD_ID = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + SRC_CLOUD_ID + " TEXT";
 
+const std::string FileColumn::ADD_THM_SIZE = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + THM_SIZE + " BIGINT DEFAULT 0";
+
+const std::string FileColumn::ADD_LCD_SIZE = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + LCD_SIZE + " BIGINT DEFAULT 0";
+
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
     CLOUD_ID,
@@ -145,7 +155,9 @@ const std::vector<std::string> FileColumn::DISK_CLOUD_SYNC_COLUMNS = {
     ATTRIBUTE,
     THM_FLAG,
     LCD_FLAG,
-    ROW_ID
+    ROW_ID,
+    THM_SIZE,
+    LCD_SIZE
 };
 
 //File copy requires all fields in the database, and one is added here when adding a new column ...

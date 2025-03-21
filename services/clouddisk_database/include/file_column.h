@@ -58,6 +58,8 @@ public:
     static const std::string IS_FAVORITE;
     static const std::string NO_NEED_UPLOAD;
     static const std::string SRC_CLOUD_ID;
+    static const std::string THM_SIZE;
+    static const std::string LCD_SIZE;
 
     // table name
     static const std::string FILES_TABLE;
@@ -91,6 +93,10 @@ public:
     static const std::string ADD_LCD_FLAG;
 
     static const std::string ADD_UPLOAD_FLAG;
+
+    static const std::string ADD_THM_SIZE;
+
+    static const std::string ADD_LCD_SIZE;
 
     // Add copy field
     static const std::string ADD_SRC_CLOUD_ID;

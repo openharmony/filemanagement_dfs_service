@@ -24,7 +24,7 @@ ohos_unittest("file_trans_listener_stub_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
@@ -70,7 +70,7 @@ ohos_unittest("asset_recv_callback_stub_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
@@ -119,7 +119,7 @@ ohos_unittest("asset_send_callback_stub_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
@@ -169,7 +169,7 @@ ohos_unittest("file_copy_manager_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
@@ -232,7 +232,7 @@ ohos_unittest("trans_listener_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
@@ -295,7 +295,7 @@ ohos_unittest("file_size_utils_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",

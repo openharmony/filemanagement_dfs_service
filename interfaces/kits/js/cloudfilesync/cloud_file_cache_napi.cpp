@@ -374,7 +374,7 @@ napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(arg->callback);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileCacheCallback(arg->callback);
     if (ret != E_OK) {
         LOGE("Failed to register callback, error: %{public}d", ret);
         (void)fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType);
@@ -420,7 +420,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
+    int32_t ret = CloudSyncManager::GetInstance().UnregisterFileCacheCallback();
     if (ret != E_OK) {
         LOGE("Failed to unregister callback, error: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);

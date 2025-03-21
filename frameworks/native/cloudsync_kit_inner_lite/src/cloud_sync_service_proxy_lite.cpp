@@ -139,13 +139,29 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundle
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::UnRegisterFileSyncCallbackInner(const std::string &bundleName)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
                                                      const std::string &bundleName)
 {
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+    const std::string &bundleName)
+{
+return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StartFileSyncInner(bool forceFlag, const std::string &bundleName)
 {
     return E_OK;
 }
@@ -167,6 +183,11 @@ int32_t CloudSyncServiceProxy::BatchDentryFileInsert(const std::vector<DentryFil
 }
 
 int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StopFileSyncInner(const std::string &bundleName, bool forceFlag)
 {
     return E_OK;
 }
@@ -258,7 +279,17 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::UnregisterFileCacheCallback()
 {
     return E_OK;
 }

@@ -94,4 +94,24 @@ HWTEST_F(DatabaseManagerTest, GetInstanceTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetInstanceTest001 end";
 }
+
+/**
+ * @tc.name: ClearRdbStoreTest001
+ * @tc.desc: Verify the ClearRdbStore function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB4SSZ
+ */
+HWTEST_F(DatabaseManagerTest, ClearRdbStoreTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearRdbStore001 start";
+    try{
+        databaseManager_->ClearRdbStore();
+        EXPECT_TRUE(true);
+    }
+    catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ClearRdbStoreTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ClearRdbStoreTest001 end";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
