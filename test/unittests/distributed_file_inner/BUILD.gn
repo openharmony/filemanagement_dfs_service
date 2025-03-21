@@ -172,11 +172,6 @@ ohos_unittest("file_copy_manager_test") {
   module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
@@ -187,6 +182,7 @@ ohos_unittest("file_copy_manager_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
