@@ -492,4 +492,66 @@ export default namespace cloudSync {
             return 0;
         }
     };
+
+    class StaticFunction {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
+        static native getFileSyncStateInner(uri: string): int;
+        static native registerChangeInner(uri: string, recursion: boolean, callback: Callback<ChangeData>): void;
+        static native unregisterChangeInner(uri: string): void;
+    };
+
+    function getPromiseFileSyncState(uri: string): Promise<int> {
+        let promise = new Promise<int> ((resolve, reject) => {
+            let taskPool = taskpool.execute((uri: string): int => {
+                return StaticFunction.getFileSyncStateInner(uri);
+            }, uri);
+
+            taskPool.then((result: NullishType): void => {
+                resolve(result as int);
+            }, (error: BusinessError<void>): void => {
+                reject(error);
+            });
+        });
+        return promise;
+    }
+
+    function getFileSyncState(uri: Array<string>): Promise<Array<FileSyncState>> {
+        let promise = new Promise<Array<FileSyncState>>((resolve, reject) => {
+            let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+            Promise.all(promises).then<void, void>((re: Array<int>): void => {
+                let res: Array<FileSyncState> = re.map((result: int) => {
+                    return result as FileSyncState;
+                });
+                resolve(res);
+            });
+        });
+        return promise;
+    }
+
+    function getFileSyncState(uri: Array<string>, callback: AsyncCallback<Array<FileSyncState>>): void {
+        let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+        Promise.all(promises).then<void, void>((re: Array<int>): void => {
+            let res: Array<FileSyncState> = re.map((result: int) => {
+                return result as FileSyncState;
+            });
+            let e = new BusinessError<void>();
+            e.code = 0;
+            callback(e, res);
+        });
+    }
+
+    function getFileSyncState(uri: string): FileSyncState {
+        let res: int = StaticFunction.getFileSyncStateInner(uri);
+        return res as FileSyncState;
+    }
+
+    function registerChange(uri: string, recursion: boolean, callback: Callback<ChangeData>): void {
+        StaticFunction.registerChangeInner(uri, recursion, callback);
+    }
+
+    function unregisterChange(uri: string): void {
+        StaticFunction.unregisterChangeInner(uri);
+    }
 };
