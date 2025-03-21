@@ -121,9 +121,9 @@ static ani_status BindContextOnFileSync(ani_env *env)
     }
 
     std::array methods = {
-        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor) },
+        ani_native_function { "<ctor>", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor0) },
         ani_native_function {
-            "<ctor>", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudyncConstructor1) },
+            "<ctor>", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor1) },
         ani_native_function {
             "on", "Lstd/core/String;Lstd/core/Function1;:V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn) },
         ani_native_function {

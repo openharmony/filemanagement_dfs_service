@@ -96,7 +96,50 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudSyncAni::CloudyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
+void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
+{
+    ani_namespace ns {};
+    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    static const char *className = "LFileSync;";
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    ani_method bindNativePtr;
+    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    if (ret != ANI_OK) {
+        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor();
+    if (!data.IsSuccess()) {
+        LOGE("cloudsync constructor failed.");
+        const auto &err = data.GetError();
+        ErrorHandler::Throw(env, err);
+        return;
+    }
+
+    const CloudSyncCore *cloudSync = data.GetData().value();
+    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
+    if (ret != ANI_OK) {
+        LOGE("bindNativePtr failed.");
+        delete cloudSync;
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+    }
+}
+
+void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
 {
     std::string bnm;
     ani_status ret = AniString2String(env, bundleName, bnm);
@@ -112,7 +155,7 @@ void CloudSyncAni::CloudyncConstructor1(ani_env *env, ani_object object, ani_str
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LGallerySync;";
+    static const char *className = "LFileSync;";
     ani_class cls;
     ret = env->Namespace_FindClass(ns, className, &cls);
     if (ret != ANI_OK) {
