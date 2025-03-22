@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
+module_output_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
 config("module_private_config") {
   visibility = [ ":*" ]
@@ -24,7 +24,6 @@ config("module_private_config") {
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/json/include",
   ]
 }
 
@@ -46,15 +45,8 @@ ohos_unittest("connect_count_test") {
   ]
 
   sources = [
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "${services_path}/distributedfiledaemon/test/mock/library_func_mock.cpp",
-    "all_connect_manager_test.cpp",
+    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
+    "connect_count_test.cpp",
   ]
 
   configs = [
@@ -64,20 +56,13 @@ ohos_unittest("connect_count_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:sandbox_helper_native",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "os_account:os_account_innerkits",
   ]
 
   defines = [
