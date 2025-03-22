@@ -135,7 +135,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest1, TestSize.Level1)
     EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _)).WillOnce(Return(nullptr));
 
     int32_t ret = clouddiskrdbStore_->RdbInit();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -151,7 +151,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest2, TestSize.Level1)
     EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _)).WillOnce(Return(rdb));
 
     int32_t ret = clouddiskrdbStore_->RdbInit();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
