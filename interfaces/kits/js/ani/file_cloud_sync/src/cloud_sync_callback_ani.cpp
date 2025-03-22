@@ -330,7 +330,7 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
 
     ani_ref ref_;
     ret = env_->Object_CallMethodByName_Ref(
-        static_cast<ani_object>(cbOnRef_), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, changeData);
+        static_cast<ani_object>(cbRef), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, changeData);
     if (ret != ANI_OK) {
         LOGE("ani call function failed. ret = %{public}d", ret);
         return;
