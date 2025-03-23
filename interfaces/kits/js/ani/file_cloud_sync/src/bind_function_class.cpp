@@ -164,6 +164,10 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
     std::array methods = {
         ani_native_function {
             "getFileSyncStateInner", "Lstd/core/String;:I", reinterpret_cast<void *>(CloudSyncAni::GetFileSyncState) },
+        ani_native_function { "registerChangeInner", "Lstd/core/String;ZLstd/core/Function1;:V",
+            reinterpret_cast<void *>(CloudSyncAni::RegisterChange) },
+        ani_native_function {
+            "unregisterChangeInner", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncAni::UnRegisterChange) },
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());

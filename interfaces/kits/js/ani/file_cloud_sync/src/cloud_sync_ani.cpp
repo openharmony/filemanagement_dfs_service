@@ -14,10 +14,17 @@
  */
 
 #include "cloud_sync_ani.h"
+#include "cloud_sync_callback_ani.h"
+#include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
 #include "error_handler.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
+const string FILE_SCHEME = "file";
+thread_local unique_ptr<ChangeListenerAni> g_listObj = nullptr;
+mutex CloudSyncAni::sOnOffMutex_;
 
 static CloudSyncCore *CloudSyncUnwrap(ani_env *env, ani_object object)
 {
@@ -345,4 +352,223 @@ ani_double CloudSyncAni::CloudyncGetLastSyncTime(ani_env *env, ani_object object
     const int64_t lastSyncTime = data.GetData().value();
     return static_cast<ani_double>(lastSyncTime);
 }
+
+static bool CheckIsValidUri(Uri uri)
+{
+    string scheme = uri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return false;
+    }
+    string sandboxPath = uri.GetPath();
+    char realPath[PATH_MAX + 1] { '\0' };
+    if (sandboxPath.length() > PATH_MAX) {
+        LOGE("sandboxPath length is too long.");
+        return false;
+    }
+    if (realpath(sandboxPath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
+        return false;
+    }
+    if (strncmp(realPath, sandboxPath.c_str(), sandboxPath.size()) != 0) {
+        LOGE("sandboxPath is not equal to realPath");
+        return false;
+    }
+    if (sandboxPath.find("/data/storage/el2/cloud") != 0) {
+        LOGE("not surported uri");
+        return false;
+    }
+    return true;
 }
+
+int32_t CloudSyncAni::RegisterToObs(const RegisterParams &registerParams)
+{
+    auto observer = make_shared<CloudNotifyObserver>(*g_listObj, registerParams.uri, registerParams.cbOnRef);
+    Uri uri(registerParams.uri);
+    auto obsMgrClient = AAFwk::DataObsMgrClient::GetInstance();
+    if (obsMgrClient == nullptr) {
+        LOGE("get DataObsMgrClient failed");
+        return E_SA_LOAD_FAILED;
+    }
+    sptr<ObserverImpl> obs = ObserverImpl::GetObserver(uri, observer);
+    if (obs == nullptr) {
+        LOGE("new ObserverImpl failed");
+        return E_INVAL_ARG;
+    }
+    ErrCode ret = obsMgrClient->RegisterObserverExt(uri, obs, registerParams.recursion);
+    if (ret != E_OK) {
+        LOGE("ObsMgr register fail");
+        ObserverImpl::DeleteObserver(uri, observer);
+        return E_INVAL_ARG;
+    }
+    lock_guard<mutex> lock(CloudSyncAni::sOnOffMutex_);
+    g_listObj->observers_.push_back(observer);
+    return E_OK;
+}
+
+bool CloudSyncAni::CheckRef(ani_env *env, ani_ref ref, ChangeListenerAni &listObj, const string &uri)
+{
+    ani_boolean isSame = false;
+    shared_ptr<CloudNotifyObserver> obs;
+    string obsUri;
+    {
+        std::lock_guard<mutex> lock(CloudSyncAni::sOnOffMutex_);
+        for (auto it = listObj.observers_.begin(); it < listObj.observers_.end(); it++) {
+            ani_status ret = env->Reference_StrictEquals(ref, (*it)->ref_, &isSame);
+            if (ret != ANI_OK) {
+                LOGE("compare ref failed. ret = %{public}d", static_cast<int32_t>(ret));
+                return false;
+            }
+
+            if (isSame) {
+                obsUri = (*it)->uri_;
+                if (uri.compare(obsUri) != 0) {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+int32_t CloudSyncAni::GetRegisterParams(
+    ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun, RegisterParams &registerParams)
+{
+    std::string uriInput;
+    ani_status ret = AniString2String(env, uri, uriInput);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return static_cast<int32_t>(ret);
+    }
+    registerParams.uri = uriInput;
+    if (!CheckIsValidUri(Uri(registerParams.uri))) {
+        LOGE("RegisterChange uri parameter format error!");
+        return E_PARAMS;
+    }
+    registerParams.recursion = recursion;
+    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &registerParams.cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return static_cast<int32_t>(ret);
+    }
+
+    return E_OK;
+}
+
+void CloudSyncAni::RegisterChange(ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
+        return;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
+        return;
+    }
+
+    if (g_listObj == nullptr) {
+        g_listObj = make_unique<ChangeListenerAni>(env);
+    }
+
+    RegisterParams registerParams;
+    int32_t ret = GetRegisterParams(env, uri, recursion, fun, registerParams);
+    if (ret != ERR_OK) {
+        LOGE("Get Params fail");
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    if (CheckRef(env, registerParams.cbOnRef, *g_listObj, registerParams.uri)) {
+        ret = RegisterToObs(registerParams);
+        if (ret != E_OK) {
+            LOGE("Get Params fail");
+            ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+            return;
+        }
+    } else {
+        LOGE("Check Ref fail");
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        env->GlobalReference_Delete(registerParams.cbOnRef);
+        return;
+    }
+}
+
+void CloudSyncAni::UnregisterFromObs(ani_env *env, std::string uri)
+{
+    if (!CheckIsValidUri(Uri(uri))) {
+        LOGE("unavaiable uri.");
+        ErrorHandler::Throw(env, E_PARAMS);
+        return;
+    }
+
+    auto obsMgrClient = AAFwk::DataObsMgrClient::GetInstance();
+    if (obsMgrClient == nullptr) {
+        LOGE("get DataObsMgrClient failed");
+        ErrorHandler::Throw(env, E_SA_LOAD_FAILED);
+        return;
+    }
+    std::vector<std::shared_ptr<CloudNotifyObserver>> offObservers;
+    {
+        std::lock_guard<mutex> lock(CloudSyncAni::sOnOffMutex_);
+        for (auto iter = g_listObj->observers_.begin(); iter != g_listObj->observers_.end();) {
+            if (uri == (*iter)->uri_) {
+                offObservers.push_back(*iter);
+                vector<shared_ptr<CloudNotifyObserver>>::iterator tmp = iter;
+                iter = g_listObj->observers_.erase(tmp);
+            } else {
+                iter++;
+            }
+        }
+    }
+    for (auto observer : offObservers) {
+        if (!ObserverImpl::FindObserver(Uri(uri), observer)) {
+            LOGE("observer not exist");
+            ErrorHandler::Throw(env, E_PARAMS);
+            return;
+        }
+        sptr<ObserverImpl> obs = ObserverImpl::GetObserver(Uri(uri), observer);
+        if (obs == nullptr) {
+            LOGE("new observerimpl failed");
+            ErrorHandler::Throw(env, E_PARAMS);
+            return;
+        }
+        ErrCode ret = obsMgrClient->UnregisterObserverExt(Uri(uri), obs);
+        if (ret != ERR_OK) {
+            LOGE("call obs unregister fail");
+            ErrorHandler::Throw(env, E_PARAMS);
+            return;
+        }
+        ObserverImpl::DeleteObserver(Uri(uri), observer);
+    }
+}
+
+void CloudSyncAni::UnRegisterChange(ani_env *env, ani_string uri)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
+        return;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
+        return;
+    }
+
+    if (g_listObj == nullptr || g_listObj->observers_.empty()) {
+        LOGI("no obs to unregister");
+        return;
+    }
+
+    std::string uriInput;
+    ani_status ret = AniString2String(env, uri, uriInput);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    UnregisterFromObs(env, uriInput);
+}
+} // namespace OHOS::FileManagement::CloudSync

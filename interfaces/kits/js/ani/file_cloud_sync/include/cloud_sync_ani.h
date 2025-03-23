@@ -31,6 +31,14 @@ public:
     static void CloudSyncStop(ani_env *env, ani_object object);
     static ani_int GetFileSyncState(ani_env *env, ani_object object, ani_string path);
     static ani_double CloudyncGetLastSyncTime(ani_env *env, ani_object object);
+    static int32_t RegisterToObs(const RegisterParams &registerParams);
+    static bool CheckRef(ani_env *env, ani_ref ref, ChangeListenerAni &listObj, const string &uri);
+    static int32_t GetRegisterParams(
+        ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun, RegisterParams &registerParams);
+    static void RegisterChange(ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun);
+    static void UnRegisterChange(ani_env *env, ani_string uri);
+    static void UnregisterFromObs(ani_env *env, std::string uri);
+    static std::mutex sOnOffMutex_;
 };
-} // OHOS::FileManagement::CloudSync
+} // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_ANI_H
