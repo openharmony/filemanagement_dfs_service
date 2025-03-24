@@ -525,6 +525,8 @@ export default namespace cloudSync {
                     return result as FileSyncState;
                 });
                 resolve(res);
+            }).catch((e: BusinessError<void>): void => {
+                reject(e);
             });
         });
         return promise;
@@ -538,6 +540,9 @@ export default namespace cloudSync {
             });
             let e = new BusinessError<void>();
             e.code = 0;
+            callback(e, res);
+        }).catch((e: BusinessError<void>): void => {
+            let res: Array<FileSyncState> = new Array<FileSyncState>();
             callback(e, res);
         });
     }
