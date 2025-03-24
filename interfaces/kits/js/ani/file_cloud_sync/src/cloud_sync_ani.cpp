@@ -313,7 +313,7 @@ void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
     }
 }
 
-ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_object object, ani_string path)
+ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string path)
 {
     string filePath;
     ani_status ret = AniString2String(env, path, filePath);
@@ -455,7 +455,7 @@ int32_t CloudSyncAni::GetRegisterParams(
     return E_OK;
 }
 
-void CloudSyncAni::RegisterChange(ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun)
+void CloudSyncAni::RegisterChange(ani_env *env, ani_class clazz, ani_string uri, ani_boolean recursion, ani_object fun)
 {
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
@@ -544,7 +544,7 @@ void CloudSyncAni::UnregisterFromObs(ani_env *env, std::string uri)
     }
 }
 
-void CloudSyncAni::UnRegisterChange(ani_env *env, ani_string uri)
+void CloudSyncAni::UnRegisterChange(ani_env *env, ani_class clazz, ani_string uri)
 {
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
