@@ -368,11 +368,11 @@ export default namespace cloudSync {
         }
 
         getLastSyncTime(): Promise<number> {
-            return new Promise<number>((resolve: (result: undefined) => void,
+            return new Promise<number>((resolve: (result: number) => void,
                 reject: (e: BusinessError<void>) => void): number => {
                 let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
-                promise.then<number>((): void => {
-                    resolve(undefined);
+                promise.then<number>((ret: number): void => {
+                    resolve(ret);
                 }, (e: BusinessError<void>): void => {
                     reject(e);
                 });
@@ -381,12 +381,12 @@ export default namespace cloudSync {
 
         getLastSyncTime(callback: AsyncCallback<number>): void {
             let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
-            let num: number = 0;
-            promise.then((): void => {
+            promise.then<number>((ret: number): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
-                callback(e, num);
+                callback(e, ret);
             }, (e: BusinessError<void>): void => {
+                let num: number = 0;
                 callback(e, num);
             });
         }
