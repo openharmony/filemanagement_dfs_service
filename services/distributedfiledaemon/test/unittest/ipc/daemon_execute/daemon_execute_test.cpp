@@ -413,7 +413,6 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     HmdfsInfo info;
-    info.authority = FILE_MANAGER_AUTHORITY;
 
     // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
@@ -505,7 +504,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_003, TestSize.Le
     auto prepareSessionData =
         std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info, nullBlock);
 
-    // 创建事件对象
+    // Initialize InnerEvent
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData);
 
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
@@ -528,7 +527,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Le
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     HmdfsInfo info;
 
-    // 正确构造 PrepareSessionData（包含所有6个参数）
+    // Initialize PrepareSessionData
     auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
                                                                    info, prepareSessionBlock);
 
@@ -559,7 +558,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Le
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     HmdfsInfo info;
 
-    // 正确构造 PrepareSessionData（包含所有6个参数）
+    // Initialize PrepareSessionData
     auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
                                                                    info, prepareSessionBlock);
 
