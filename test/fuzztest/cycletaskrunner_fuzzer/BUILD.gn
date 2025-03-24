@@ -53,6 +53,7 @@ ohos_fuzztest("CycleTaskRunnerFuzzTest") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
+    "preferences:native_preferences",
   ]
 }
 

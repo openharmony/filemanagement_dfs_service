@@ -17,9 +17,7 @@ ohos_unittest("cloud_pref_impl_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "../../../../../distributeddatamgr/preferences/frameworks/native/src/preferences_value.cpp",
-    "../../../utils/preference/src/cloud_pref_impl.cpp",
-    "../../mock/preference_helper_mock.cpp",
+    "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
     "./preference/cloud_pref_impl_test.cpp",
   ]
 
@@ -29,9 +27,6 @@ ohos_unittest("cloud_pref_impl_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/log/include",
-    "${distributedfile_path}/utils/preference/include",
-    "../../../../../distributeddatamgr/preferences/interfaces/inner_api/include",
-    "../../../../../distributeddatamgr/preferences/frameworks/native/include",
   ]
 
   deps = [
@@ -45,6 +40,7 @@ ohos_unittest("cloud_pref_impl_test") {
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "preferences:native_preferences",
   ]
 
   defines = [ "private=public" ]
