@@ -81,7 +81,7 @@ CloudFileCacheCore::CloudFileCacheCore()
 FsResult<void> CloudFileCacheCore::DoOn(const string &event, const shared_ptr<CloudDownloadCallbackMiddle> callback)
 {
     LOGI("On begin");
-    if (event != PROGRESS || event != MULTI_PROGRESS) {
+    if (event != PROGRESS && event != MULTI_PROGRESS) {
         LOGE("On get progress failed!");
         return FsResult<void>::Error(E_PARAMS);
     }
