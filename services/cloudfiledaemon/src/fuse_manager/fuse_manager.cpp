@@ -750,15 +750,20 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        if (fd < 0) {
+        std::FILE = fopen(cachePath.c_std(), "w+");
+        if (file != nullptr) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
         }
-        if (ftruncate(fd, cInode->mBase->size) == -1) {
-            LOGE("failed to truncate file, ret: %{public}d", errno);
+        int fd = fileno(file);
+        if (fd < 0) {
+            LOGE("failed to get fd, ret: %{public}d", errno);
+        } else {
+            if (ftruncate(fd, cInode->mBase->size) == -1) {
+                LOGE("failed to truncate file, ret: %{public}d", errno);
+            }
         }
-        close(fd);
+        fclose(file);
         return;
     }
 
@@ -1135,17 +1140,22 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         return;
     }
     int fd = open(realPaths, O_RDWR);
+    std::FILE *file = fopen(realPaths, "r+");
     free(realPaths);
-    if (fd < 0) {
+    if (file == nullptr) {
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
     }
-    if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
+    if (cInode->cacheFileIndex.get()[cacheIndex] != NOT_CACHE) {
+        fclose(file);
+        return;
+    }
+    if (fseek(file, readArgs->offset, SEEK_SET) == 0 &&
         pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
         LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
         cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
-    close(fd);
+    fclose(file);
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
@@ -1386,12 +1396,18 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         return -1;
     }
     int fd = open(realPaths, O_RDONLY);
+    std::FILE *file = fopen(realPaths, "r");
     free(realPaths);
-    if (fd < 0) {
-        return fd;
+    if (file == nullptr) {
+        return -1;
     }
-    ssize_t bytesRead = pread(fd, readArgs->buf.get(), readArgs->size, readArgs->offset);
-    close(fd);
+    int ret = fseek(file, readArgs->offset, SEEK_SET);
+    if (ret != 0) {
+        LOGE("fseek failed, errno: %{public}d", errno);
+        return -1;
+    }
+    ssize_t bytesRead = fread(readArgs->buf.get(), 1, readArgs->size, file);
+    fclose(file);
     return bytesRead;
 }
 
