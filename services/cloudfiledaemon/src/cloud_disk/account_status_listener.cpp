@@ -15,6 +15,7 @@
 
 #include "account_status_listener.h"
 
+#include <cstdio>
 #include <fcntl.h>
 
 #include "cloud_daemon_statistic.h"
