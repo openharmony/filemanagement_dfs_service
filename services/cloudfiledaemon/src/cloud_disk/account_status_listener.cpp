@@ -40,7 +40,7 @@ static const std::string LOCAL_PATH_DATA = "/data";
 static void SwapMemory()
 {
     std::FILE *file = fopen("/proc/self/reclaim", "w");
-    if (*file == nullptr)
+    if (file == nullptr)
         LOGE("Failed to open reclaim, errno:%{public}d", errno);
         return;
     }
