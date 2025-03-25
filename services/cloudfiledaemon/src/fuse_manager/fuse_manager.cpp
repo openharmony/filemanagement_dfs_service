@@ -750,7 +750,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        std::FILE *file = fopen(cachePath.c_str(), "w+");
+        std::FILE *file = fopen(cachePath.c_str(), "a+");
         if (file != nullptr) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
@@ -763,7 +763,9 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
                 LOGE("failed to truncate file, ret: %{public}d", errno);
             }
         }
-        fclose(file);
+        if (fclose(file)) {
+            LOGE("failed to close cache file, ret: %{public}d", errno);
+        }
         return;
     }
 
@@ -1146,16 +1148,15 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
     }
-    if (cInode->cacheFileIndex.get()[cacheIndex] != NOT_CACHE) {
-        fclose(file);
-        return;
-    }
-    if (fseek(file, readArgs->offset, SEEK_SET) == 0 &&
-        pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
+    if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
+        fseek(file, readArgs->offset, SEEK_SET) == 0 &&
+        fwrite(readArgs->buf.get(), 1, *readArgs->readResult, file) == *readArgs->readResult) {
         LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
         cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
-    fclose(file);
+    if (fclose(file)) {
+        LOGE("Failed to close cache file, err: %{public}d", errno);
+    }
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
@@ -1399,15 +1400,28 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
     std::FILE *file = fopen(realPaths, "r");
     free(realPaths);
     if (file == nullptr) {
+        LOGE("fopen faild, errno: %{public}d", errno);
         return -1;
     }
     int ret = fseek(file, readArgs->offset, SEEK_SET);
     if (ret != 0) {
         LOGE("fseek failed, errno: %{public}d", errno);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno: %{public}d", errno);
+        }
         return -1;
     }
     ssize_t bytesRead = fread(readArgs->buf.get(), 1, readArgs->size, file);
-    fclose(file);
+    if (ferror(file)) {
+        LOGE("fread failed, errno: %{public}d", errno);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno: %{public}d", errno);
+        }
+        return -1;
+    }
+    if (fclose(file)) {
+        LOGE("fclose failed, errno: %{public}d", errno);
+    }
     return bytesRead;
 }
 
