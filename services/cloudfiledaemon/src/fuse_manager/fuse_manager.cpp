@@ -750,7 +750,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        std::FILE *file = fopen(cachePath.c_std(), "w+");
+        std::FILE *file = fopen(cachePath.c_str(), "w+");
         if (file != nullptr) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
