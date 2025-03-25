@@ -17,8 +17,7 @@
 #include "error_handler.h"
 #include "utils_log.h"
 
-using namespace OHOS;
-using namespace OHOS::FileManagement::CloudSync;
+namespace OHOS::FileManagement::CloudSync {
 
 static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
 {
@@ -226,4 +225,5 @@ void CloudDownloadAni::DownloadStop(ani_env *env, ani_object object, ani_string 
         LOGE("cloud download do stop failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
+}
 }

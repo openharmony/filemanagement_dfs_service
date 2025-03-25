@@ -18,6 +18,7 @@
 
 #include "cloud_file_core.h"
 
+namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadAni final {
 public:
     static void DownloadConstructor(ani_env *env, ani_object object);
@@ -27,4 +28,5 @@ public:
     static void DownloadStart(ani_env *env, ani_object object, ani_string uri);
     static void DownloadStop(ani_env *env, ani_object object, ani_string uri);
 };
+} // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_ANI_H
