@@ -87,11 +87,6 @@ using namespace std;
 
 constexpr int USER_ID = 100;
 constexpr int TEST_SESSION_ID = 10;
-constexpr int TEST_SESSION_ID_TWO = 20;
-constexpr uint8_t LINK_TYPE_P2P = 2;
-constexpr uint8_t LINK_TYPE_AP = 1;
-constexpr int32_t MOUNT_DFS_COUNT_ONE = 1;
-
 class SessionPoolTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -121,90 +116,6 @@ void SessionPoolTest::TearDown(void)
 }
 
 /**
- * @tc.name: SessionPoolTest_OccupySession_0100
- * @tc.desc: Verify the OccupySession by Cid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_OccupySession_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_OccupySession_0100 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    bool res = true;
-    try {
-        pool->OccupySession(TEST_SESSION_ID, 1);
-    } catch (const exception &e) {
-        res = false;
-        GTEST_LOG_(INFO) << e.what();
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SessionPoolTest_OccupySession_0100 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_FindSession_0100
- * @tc.desc: Verify the FindSession by Cid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_FindSession_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0100 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    bool res = true;
-    try {
-        pool->occupySession_.erase(TEST_SESSION_ID);
-        pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_AP));
-        bool flag = pool->FindSession(TEST_SESSION_ID);
-        EXPECT_EQ(flag, true);
-        pool->occupySession_.erase(TEST_SESSION_ID);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0100 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_FindSession_0200
- * @tc.desc: Verify the FindSession by Cid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_FindSession_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0200 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    bool res = true;
-    try {
-        pool->occupySession_.erase(TEST_SESSION_ID_TWO);
-        bool flag = pool->FindSession(TEST_SESSION_ID_TWO);
-        EXPECT_EQ(flag, false);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0200 end";
-}
-
-/**
  * @tc.name: SessionPoolTest_HoldSession_0100
  * @tc.desc: Verify the HoldSession function.
  * @tc.type: FUNC
@@ -217,7 +128,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
     bool res = true;
     try {
@@ -234,39 +145,6 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 }
 
 /**
- * @tc.name: SessionPoolTest_HoldSession_0200
- * @tc.desc: Verify the HoldSession function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0200 start";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  "testNetWork");
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-    pool->occupySession_.erase(TEST_SESSION_ID);
-    pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-    pool->deviceConnectCount_["testNetWork_2"] = 1;
-    bool res = true;
-    try {
-        auto size = pool->usrSpaceSessionPool_.size();
-        pool->HoldSession(session, "Server");
-        EXPECT_EQ(pool->usrSpaceSessionPool_.size(), size);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0200 end";
-}
-
-/**
  * @tc.name: SessionPoolTest_ReleaseSession_Fd_0100
  * @tc.desc: Verify the ReleaseSession by Fd function.
  * @tc.type: FUNC
@@ -277,65 +155,17 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0100, TestSize.Level
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    bool res = true;
-    try {
-        pool->ReleaseSession(1);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_ReleaseSession_Fd_0200
- * @tc.desc: Verify the ReleaseSession by Fd function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0200 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
     std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
-    session->socketFd_ = 1;
     pool->usrSpaceSessionPool_.push_back(session);
+    pool->ReleaseSession(0);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: session size
 
-    std::string peerDeviceId2 = "f6d4c0864707aefte7a78f09473aa122ff57ed9";
-    auto session2 = make_shared<SoftbusSession>(TEST_SESSION_ID_TWO,  peerDeviceId2);
-    session2->socketFd_ = 1;
-    pool->usrSpaceSessionPool_.push_back(session2);
-
-    auto size = pool->usrSpaceSessionPool_.size();
-    pool->occupySession_.insert(make_pair(TEST_SESSION_ID_TWO, LINK_TYPE_P2P));
-    string key = "deviceId1_" + to_string(LINK_TYPE_P2P);
-    pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
-    EXPECT_EQ(pool->ReleaseSession(1), LINK_TYPE_P2P);
-    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), size - 1);
-
-    auto iter = pool->occupySession_.find(TEST_SESSION_ID_TWO);
-    if (iter == pool->occupySession_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
-
-    pool->deviceConnectCount_["test"] = 0;
-    pool->ReleaseSession(-2);
-    EXPECT_EQ(pool->deviceConnectCount_.size(), 0);
-
-    pool->usrSpaceSessionPool_.clear();
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0200 end";
+    pool->ReleaseSession(-1); // -1: session fd
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0); // 0: session size
+    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 end";
 }
 
 /**
@@ -349,106 +179,38 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    bool res = true;
-    try {
-        pool->ReleaseSession("testSession", 1);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
+    session->SetFromServer(true);
+    pool->usrSpaceSessionPool_.push_back(session);
 
-    EXPECT_TRUE(res == true);
+    std::string peerDeviceId1 = "f6d4c0864707aefte7a78f09473aa122ff57fc7";
+    auto session1 = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId1);
+    session1->SetFromServer(false);
+    pool->usrSpaceSessionPool_.push_back(session1);
+
+    auto session2 = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
+    session2->SetFromServer(false);
+    pool->usrSpaceSessionPool_.push_back(session2);
+    bool ifReleaseService = false;
+    size_t len = 3; // 3: session size;
+
+    pool->ReleaseSession("test", ifReleaseService);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), len);
+
+    pool->ReleaseSession(peerDeviceId, ifReleaseService);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), len - 1); // 1: remove session
+
+    pool->ReleaseSession(peerDeviceId1, ifReleaseService);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), len - 2); // 2: remove session1
+
+    ifReleaseService = true;
+    pool->ReleaseSession(peerDeviceId, ifReleaseService);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0); // 1: remove one
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_ReleaseSession_Cid_0200
- * @tc.desc: Verify the ReleaseSession by Cid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0200 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
-    pool->usrSpaceSessionPool_.push_back(session);
-
-    bool res = true;
-    try {
-        pool->ReleaseSession("testSession", 1);
-        pool->ReleaseSession(peerDeviceId, 1);
-        pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-        pool->ReleaseSession(peerDeviceId, 1);
-        auto iter = pool->occupySession_.find(TEST_SESSION_ID);
-        if (iter == pool->occupySession_.end()) {
-            EXPECT_TRUE(false);
-        } else {
-            EXPECT_TRUE(true);
-        }
-        pool->occupySession_.erase(TEST_SESSION_ID);
-        pool->occupySession_.insert(make_pair(TEST_SESSION_ID, 0));
-        pool->ReleaseSession(peerDeviceId, 1);
-        iter = pool->occupySession_.find(TEST_SESSION_ID);
-        if (iter == pool->occupySession_.end()) {
-            EXPECT_TRUE(true);
-        } else {
-            EXPECT_TRUE(false);
-        }
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0200 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_ReleaseSession_Cid_0300
- * @tc.desc: Verify the ReleaseSession by Cid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0300 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
-    pool->usrSpaceSessionPool_.push_back(session);
-
-    string key = "deviceId2_2";
-    pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
-
-    bool res = true;
-    try {
-        pool->occupySession_.erase(TEST_SESSION_ID);
-        pool->occupySession_.insert(make_pair(TEST_SESSION_ID, 0));
-        pool->ReleaseSession(peerDeviceId, LINK_TYPE_P2P);
-        auto iter = pool->occupySession_.find(TEST_SESSION_ID);
-        if (iter == pool->occupySession_.end()) {
-            EXPECT_TRUE(true);
-        } else {
-            EXPECT_TRUE(false);
-        }
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0300 end";
 }
 
 /**
@@ -462,8 +224,11 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseAllSession_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
+    pool->usrSpaceSessionPool_.push_back(session);
 
     bool res = true;
     try {
@@ -490,7 +255,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -506,101 +271,73 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1
 }
 
 /**
- * @tc.name: SessionPoolTest_DeviceDisconnectCountOnly_0100
- * @tc.desc: Verify the DeviceDisconnectCountOnly function.
+ * @tc.name: SessionPoolTest_CheckIfGetSession_0100
+ * @tc.desc: Verify the CheckIfGetSession function.
  * @tc.type: FUNC
- * @tc.require: IA4TFG
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceDisconnectCountOnly_0100, TestSize.Level1)
+HWTEST_F(SessionPoolTest, SessionPoolTest_CheckIfGetSession_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceDisconnectCountOnly_0100 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("", LINK_TYPE_AP, false), false);
-
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), false);
-
-    string key = "cid_2";
-    pool->deviceConnectCount_[key] = 2;
-
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, true), false);
-
-    auto itCount = pool->deviceConnectCount_.find(key);
-    if (itCount == pool->deviceConnectCount_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceDisconnectCountOnly_0100 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_DeviceDisconnectCountOnly_0200
- * @tc.desc: Verify the DeviceDisconnectCountOnly function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceDisconnectCountOnly_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceDisconnectCountOnly_0200 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-
-    string key = "cid_2";
-    pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
-
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), true);
-
-    EXPECT_EQ(pool->deviceConnectCount_[key], MOUNT_DFS_COUNT_ONE);
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), false);
-
-    auto itCount = pool->deviceConnectCount_.find(key);
-    if (itCount == pool->deviceConnectCount_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceDisconnectCountOnly_0200 end";
-}
-
-/**
- * @tc.name: SessionPoolTest_DeviceConnectCountOnly_0100
- * @tc.desc: Verify the DeviceConnectCountOnly function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceConnectCountOnly_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceConnectCountOnly_0100 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    GTEST_LOG_(INFO) << "SessionPoolTest_CheckIfGetSession_0100 start";
     std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
-    EXPECT_EQ(pool->DeviceConnectCountOnly(session), false);
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    int32_t fd = -1; // -1: fd
+    bool ret = pool->CheckIfGetSession(fd);
+    EXPECT_EQ(ret, false);
 
-    auto session2 = make_shared<SoftbusSession>(TEST_SESSION_ID,  "");
-    EXPECT_EQ(pool->DeviceConnectCountOnly(session2), false);
+    pool->usrSpaceSessionPool_.push_back(session);
+    ret = pool->CheckIfGetSession(fd);
+    EXPECT_EQ(ret, true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_CheckIfGetSession_0100 end";
+}
 
-    auto session3 = make_shared<SoftbusSession>(TEST_SESSION_ID,  "testNetWork");
-    pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_AP));
-    EXPECT_EQ(pool->DeviceConnectCountOnly(session3), false);
+/**
+ * @tc.name: SessionPoolTest_SinkOffLine_0100
+ * @tc.desc: Verify the SinkOffLine function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_SinkOffLine_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_SinkOffLine_0100 start";
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(session);
+    pool->SinkOffline(peerDeviceId);
+    pool->SinkOffline("test");
+    GTEST_LOG_(INFO) << "SessionPoolTest_SinkOffLine_0100 end";
+}
 
-    pool->occupySession_.erase(TEST_SESSION_ID);
-    pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-    pool->deviceConnectCount_["testNetWork_2"] = 0;
-    EXPECT_EQ(pool->DeviceConnectCountOnly(session3), false);
-    EXPECT_EQ(pool->deviceConnectCount_["testNetWork_2"], 1);
-    
-    EXPECT_EQ(pool->DeviceConnectCountOnly(session3), true);
-    EXPECT_EQ(pool->deviceConnectCount_["testNetWork_2"], 2);
-    GTEST_LOG_(INFO) << "SessionPoolTest_DeviceConnectCountOnly_0100 end";
+/**
+ * @tc.name: SessionPoolTest_FindSocketId_0100
+ * @tc.desc: Verify the FindSocketId function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_FindSocketId_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindSocketId_0100 start";
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(session);
+    bool ret = pool->FindSocketId(-1); // -1: session id
+    EXPECT_EQ(ret, false);
+
+    ret = pool->FindSocketId(TEST_SESSION_ID);
+    EXPECT_EQ(ret, true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindSocketId_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

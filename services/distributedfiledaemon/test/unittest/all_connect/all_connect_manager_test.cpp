@@ -176,10 +176,20 @@ HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_001, TestSize.Level1)
 
         allConnectManager.dllHandle_ = nullptr;
         EXPECT_CALL(*libraryFuncMock_, dlclose(_)).WillOnce(Return(0));
-
-
         int32_t ret = allConnectManager.UnInitAllConnectManager();
         EXPECT_EQ(ret, FileManagement::ERR_OK);
+
+        int test = 0;
+        EXPECT_CALL(*libraryFuncMock_, dlclose(_)).WillOnce(Return(0));
+        allConnectManager.dllHandle_ = &test;
+        auto tmpfunc = [](const char *servcieName) -> int32_t {
+            return FileManagement::ERR_OK;
+        };
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = tmpfunc;
+        ret = allConnectManager.UnInitAllConnectManager();
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+        allConnectManager.dllHandle_ = nullptr;
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -278,15 +288,26 @@ HWTEST_F(AllConnectManagerTest, PublishServiceState_004, TestSize.Level1)
 
         allConnectManager.dllHandle_ = (void *)0x1;
         allConnectManager.allConnect_.ServiceCollaborationManager_PublishServiceState = [](
-            const char *peerNetworkId,
-            const char *serviceName,
-            const char *extraInfo,
+            const char *peerNetworkId, const char *serviceName, const char *extraInfo,
             ServiceCollaborationManagerBussinessStatus state) -> int32_t {
             return 0;
         };
 
         int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
         EXPECT_EQ(ret, FileManagement::ERR_OK);
+
+        state = ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED;
+        ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+
+        allConnectManager.connectStates_.clear();
+        allConnectManager.allConnect_.ServiceCollaborationManager_PublishServiceState = [](
+            const char *peerNetworkId, const char *serviceName, const char *extraInfo,
+            ServiceCollaborationManagerBussinessStatus state) -> int32_t {
+            return FileManagement::ERR_PUBLISH_STATE;
+        };
+        ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
+        EXPECT_EQ(ret, FileManagement::ERR_PUBLISH_STATE);
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -850,13 +871,59 @@ HWTEST_F(AllConnectManagerTest, BuildResourceRequest_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "BuildResourceRequest_001 start";
     try {
         auto &allConnectManager = AllConnectManager::GetInstance();
-        
         auto ret = allConnectManager.BuildResourceRequest();
+        EXPECT_TRUE(ret != nullptr);
+
+        ret = allConnectManager.BuildResourceRequest();
         EXPECT_TRUE(ret != nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "BuildResourceRequest_001 end";
+}
+
+/**
+ * @tc.name: AllConnectManagerTest_GetPublicState_001
+ * @tc.desc: verify GetPublicState.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AllConnectManagerTest, GetPublicState_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPublicState_001 start";
+    try {
+        auto &allConnectManager = AllConnectManager::GetInstance();
+        auto state = ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED;
+        allConnectManager.connectStates_.clear();
+        allConnectManager.connectStates_.emplace(peerNetworkId,
+            std::map<DfsConnectCode, ServiceCollaborationManagerBussinessStatus>{{DfsConnectCode::OPEN_P2P, state}});
+        auto ret = allConnectManager.GetPublicState(DfsConnectCode::PUSH_ASSET, peerNetworkId, state);
+        EXPECT_TRUE(ret);
+
+        state = ServiceCollaborationManagerBussinessStatus::SCM_CONNECTING;
+        allConnectManager.connectStates_[peerNetworkId].erase(DfsConnectCode::PUSH_ASSET);
+        ret = allConnectManager.GetPublicState(DfsConnectCode::PUSH_ASSET, peerNetworkId, state);
+        EXPECT_TRUE(!ret);
+        allConnectManager.connectStates_[peerNetworkId].erase(DfsConnectCode::PUSH_ASSET);
+        ret = allConnectManager.GetPublicState(DfsConnectCode::OPEN_P2P, peerNetworkId, state);
+        EXPECT_TRUE(ret);
+
+        state = ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED;
+        allConnectManager.connectStates_[peerNetworkId][DfsConnectCode::OPEN_P2P] = state;
+        state = ServiceCollaborationManagerBussinessStatus::SCM_IDLE;
+        ret = allConnectManager.GetPublicState(DfsConnectCode::OPEN_P2P, peerNetworkId, state);
+        EXPECT_TRUE(ret);
+
+        state = ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED;
+        allConnectManager.connectStates_[peerNetworkId].emplace(DfsConnectCode::PUSH_ASSET, state);
+        allConnectManager.connectStates_[peerNetworkId][DfsConnectCode::OPEN_P2P] = state;
+        state = ServiceCollaborationManagerBussinessStatus::SCM_IDLE;
+        ret = allConnectManager.GetPublicState(DfsConnectCode::PUSH_ASSET, peerNetworkId, state);
+        EXPECT_TRUE(!ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "GetPublicState_001 end";
 }
 }
 } // namespace DistributedFile
