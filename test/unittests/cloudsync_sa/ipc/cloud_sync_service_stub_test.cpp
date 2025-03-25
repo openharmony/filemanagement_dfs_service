@@ -190,7 +190,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleOptimizeStorageTest003, TestSize.Level1
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         int32_t res = service.HandleOptimizeStorage(data, reply);
-        EXPECT_EQ(res, E_INVAL_ARG );
+        EXPECT_EQ(res, E_INVAL_ARG);
 
     } catch (...) {
         EXPECT_TRUE(false);
