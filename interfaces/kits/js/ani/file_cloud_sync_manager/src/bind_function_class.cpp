@@ -43,7 +43,7 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
         ani_native_function { "changeAppCloudSwitchInner", "Lstd/core/String;Lstd/core/String;Z:V",
             reinterpret_cast<void *>(CloudSyncManagerAni::ChangeAppCloudSwitch) },
         ani_native_function { "notifyDataChangeInner", "Lstd/core/String;Lstd/core/String;:V",
-            reinterpret_cast<void *>(CloudSyncManagerAni::ChangeAppCloudSwitch) },
+            reinterpret_cast<void *>(CloudSyncManagerAni::NotifyDataChange) },
         ani_native_function { "enableCloudInner", "Lstd/core/String;Lescompat/Record;:V",
             reinterpret_cast<void *>(CloudSyncManagerAni::EnableCloud) },
         ani_native_function {
