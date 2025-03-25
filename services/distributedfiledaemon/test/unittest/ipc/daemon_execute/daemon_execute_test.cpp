@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,8 @@
 
 #include "all_connect_manager_mock.h"
 #include "daemon_execute.h"
+#include "daemon_mock.h"
+#include "device_manager_impl.h"
 #include "dfs_error.h"
 #include "sandbox_helper.h"
 #include "softbus_handler_asset_mock.h"
@@ -30,6 +32,11 @@ std::string g_physicalPath;
 int32_t g_getPhysicalPath = 0;
 bool g_checkValidPath = false;
 bool g_isFolder;
+int32_t g_dmResult = 0;
+
+const int32_t E_INVAL_ARG_NAPI = 401;
+const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string MEDIA_AUTHORITY = "media";
 } // namespace
 
 namespace OHOS::AppFileService {
@@ -44,6 +51,15 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
     return g_checkValidPath;
 }
 } // namespace OHOS::AppFileService
+
+namespace OHOS::DistributedHardware {
+
+int32_t DeviceManagerImpl::GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info)
+{
+    return g_dmResult;
+}
+
+} // namespace OHOS::DistributedHardware
 
 namespace OHOS::Storage::DistributedFile::Utils {
 bool IsFolder(const std::string &name)
@@ -333,5 +349,227 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_HandleZip_001, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, CompressFile(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_OK);
     GTEST_LOG_(INFO) << "DaemonExecute_HandleZip_001 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_PrepareSessionInner_001
+ * @tc.desc: verify PrepareSessionInner.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_001 begin";
+
+    std::string srcUri;
+    std::string physicalPath;
+    std::string sessionName;
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    HmdfsInfo info;
+
+    // Test case 1: CreateSessionServer fails
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info),
+              E_SOFTBUS_SESSION_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_001 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_PrepareSessionInner_002
+ * @tc.desc: verify PrepareSessionInner.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_002 begin";
+
+    std::string srcUri;
+    std::string physicalPath;
+    std::string sessionName;
+    sptr<DaemonMock> daemon = nullptr;
+    HmdfsInfo info;
+
+    // Test case 2: CreateSessionServer success but daemon is nullptr
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_002 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_PrepareSessionInner_003
+ * @tc.desc: verify PrepareSessionInner.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_003 begin";
+
+    std::string srcUri;
+    std::string physicalPath;
+    std::string sessionName;
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    HmdfsInfo info;
+
+    // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_SA_LOAD_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_003 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_PrepareSessionInner_004
+ * @tc.desc: verify PrepareSessionInner.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_004 begin";
+
+    std::string srcUri;
+    std::string physicalPath;
+    std::string sessionName;
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    HmdfsInfo info;
+    info.authority = FILE_MANAGER_AUTHORITY;
+
+    // Test case 4: CreateSessionServer succeeds, authority is media or docs, but Copy fails
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
+
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
+    GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_004 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePrepareSession_001
+ * @tc.desc: Verify ExecutePrepareSession with null event does not throw
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_001 begin";
+
+    // Test case 1: event is nullptr
+    AppExecFwk::InnerEvent::Pointer pointer2 = AppExecFwk::InnerEvent::Get(); // 获取空事件
+    EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(pointer2));
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_001 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePrepareSession_002
+ * @tc.desc: Verify ExecutePrepareSession with null prepareSessionData does not throw
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_002 begin";
+
+    // Test case 2: prepareSessionData is nullptr
+    std::shared_ptr<PrepareSessionData> prepareSessionData = nullptr;
+    auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
+    EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_002 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePrepareSession_003
+ * @tc.desc: Verify ExecutePrepareSession with null prepareSessionBlock does not throw
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_003 begin";
+
+    // Test case 3: prepareSessionBlock is nullptr
+    std::string srcUri = "";
+    std::string physicalPath = "";
+    std::string sessionName = "";
+    sptr<IDaemon> daemon = nullptr;
+    HmdfsInfo info;
+    std::shared_ptr<BlockObject<int32_t>> nullBlock = nullptr;
+
+    // // Initialize the PrepareSessionData
+    auto prepareSessionData =
+        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info, nullBlock);
+
+    // Initialize InnerEvent
+    auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData);
+
+    EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_003 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePrepareSession_004
+ * @tc.desc: Verify ExecutePrepareSession with valid parameters
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_004 begin";
+
+    // Test case 4: All parameters are valid
+    auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    HmdfsInfo info;
+
+    // Initialize PrepareSessionData
+    auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
+                                                                   info, prepareSessionBlock);
+
+    auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
+
+    // Mock PrepareSessionInner to return success
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
+
+    EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
+    EXPECT_EQ(prepareSessionBlock->GetValue(), E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_004 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePrepareSession_005
+ * @tc.desc: Verify ExecutePrepareSession with PrepareSessionInner failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_005 begin";
+
+    // Test case 5: PrepareSessionInner returns failure
+    auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    HmdfsInfo info;
+
+    // Initialize PrepareSessionData
+    auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
+                                                                   info, prepareSessionBlock);
+
+    auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
+
+    // Mock PrepareSessionInner to return failure
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
+
+    EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
+    EXPECT_EQ(prepareSessionBlock->GetValue(), E_SOFTBUS_SESSION_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_005 end";
 }
 } // namespace OHOS::Storage::DistributedFile::Test
