@@ -4192,12 +4192,10 @@ HWTEST_F(CloudDiskRdbStoreTest, InsertCopyDataTest2, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>("mock"), Return(E_OK)));
-    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 
     int32_t ret = clouddiskrdbStore_->InsertCopyData(srcCloudId, destCloudId, destParentCloudId, rset);
     EXPECT_EQ(ret, E_RDB);
