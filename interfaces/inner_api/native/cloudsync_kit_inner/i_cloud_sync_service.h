@@ -40,7 +40,9 @@ public:
     virtual int32_t StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) = 0;
     virtual int32_t ResetCursor(const std::string &bundleName = "") = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
-    virtual int32_t OptimizeStorage(const int32_t agingDays) = 0;
+    virtual int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid = false,
+        const sptr<IRemoteObject> &optimizeCallback = nullptr) = 0;
+    virtual int32_t StopOptimizeStorage() = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
     virtual int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) = 0;

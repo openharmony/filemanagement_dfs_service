@@ -47,6 +47,7 @@ namespace {
     static const std::string CLOUD_HAS_LCD = "user.cloud.hasLcdThumbnail";
     static const std::string CLOUD_HAS_THM = "user.cloud.hasThumbnail";
     static const std::string CLOUD_TIME_RECYCLED = "user.cloud.deletetime";
+    static const std::string CLOUD_RECYCLE_PATH = "user.cloud.recyclePath";
 }
 
 class CloudFileUtils final {
@@ -60,6 +61,7 @@ public:
     static bool CheckIsFavorite(const std::string &key);
     static bool CheckFileStatus(const std::string &key);
     static bool CheckIsTimeRecycled(const std::string &key);
+    static bool CheckIsRecyclePath(const std::string &key);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
     static std::string GetLocalDKCachePath(std::string cloudId, std::string bundleName, int32_t userId);

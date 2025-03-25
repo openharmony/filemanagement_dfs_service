@@ -511,18 +511,34 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
 }
 
-int32_t CloudSyncService::OptimizeStorage(const int32_t agingDays)
+int32_t CloudSyncService::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+    const sptr<IRemoteObject> &optimizeCallback)
 {
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    std::string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
-        return E_INVAL_ARG;
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
     }
 
     LOGI("OptimizeStorage, bundleName: %{private}s, agingDays: %{public}d, callerUserId: %{public}d",
-         bundleName.c_str(), agingDays, callerUserId);
+        bundleNameUserInfo.bundleName.c_str(), optimizeOptions.agingDays, bundleNameUserInfo.userId);
+    if (!isCallbackValid) {
+        return dataSyncManager_->OptimizeStorage(bundleNameUserInfo.bundleName, bundleNameUserInfo.userId,
+            optimizeOptions.agingDays);
+    }
 
-    return dataSyncManager_->OptimizeStorage(bundleName, callerUserId, agingDays);
+    auto optimizeCb = iface_cast<ICloudOptimizeCallback>(optimizeCallback);
+    return dataSyncManager_->StartOptimizeStorage(bundleNameUserInfo, optimizeOptions, optimizeCb);
+}
+
+int32_t CloudSyncService::StopOptimizeStorage()
+{
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return dataSyncManager_->StopOptimizeStorage(bundleNameUserInfo);
 }
 
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)

@@ -40,6 +40,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+constexpr int32_t FILE_NOT_FOUND = 2;
 namespace {
 DistributedHardware::DmDeviceInfo deviceInfo = {
     .deviceId = "testdevid",
@@ -334,6 +335,100 @@ HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize
         GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest ERROR";
     }
     GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest End";
+}
+
+/**
+ * @tc.name: CancelTest
+ * @tc.desc: Verify the Cancel function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CancelTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        int32_t ret = distributedDaemonManagerImpl_->Cancel();
+        EXPECT_EQ(ret, E_OK);
+
+        std::string srcUri = "srcUri";
+        std::string dstUri = "dstUri";
+        ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CancelTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "CancelTest End";
+}
+
+/**
+ * @tc.name: CopyTest
+ * @tc.desc: Verify the Copy function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CopyTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        std::string srcUri = "srcUri";
+        std::string dstUri = "dstUri";
+        int32_t ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
+        EXPECT_EQ(ret, FILE_NOT_FOUND);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CopyTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "CopyTest End";
+}
+
+/**
+ * @tc.name: IsDirectoryTest
+ * @tc.desc: Verify the IsDirectory function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsDirectoryTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        bool isDirectory = false;
+        int32_t ret = distributedDaemonManagerImpl_->IsDirectory("srcUri", true, isDirectory);
+        EXPECT_EQ(ret, FILE_NOT_FOUND);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsDirectoryTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsDirectoryTest End";
+}
+
+/**
+ * @tc.name: GetSizeTest
+ * @tc.desc: Verify the GetSize function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSizeTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        uint64_t size = 0;
+        int32_t ret = distributedDaemonManagerImpl_->GetSize("srcUri", true, size);
+        EXPECT_TRUE(size == 0);
+        EXPECT_EQ(ret, FILE_NOT_FOUND);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSizeTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSizeTest End";
 }
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

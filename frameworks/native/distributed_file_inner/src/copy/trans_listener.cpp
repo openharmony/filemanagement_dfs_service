@@ -37,7 +37,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace AppFileService;
 using namespace FileManagement;
-static const std::string NETWORK_PARA = "?networkid=";
+static const std::string TRANS_NETWORK_PARA = "?networkid=";
 static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string MEDIA_AUTHORITY = "media";
 static const std::string DISTRIBUTED_PATH = "/data/storage/el2/distributedfiles/";
@@ -167,7 +167,7 @@ std::string TransListener::GetFileName(const std::string &path)
  
 std::string TransListener::GetNetworkIdFromUri(const std::string &uri)
 {
-    return uri.substr(uri.find(NETWORK_PARA) + NETWORK_PARA.size(), uri.size());
+    return uri.substr(uri.find(TRANS_NETWORK_PARA) + TRANS_NETWORK_PARA.size(), uri.size());
 }
 
 int32_t TransListener::Cancel()

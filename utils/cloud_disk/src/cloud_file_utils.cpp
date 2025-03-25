@@ -253,6 +253,11 @@ bool CloudFileUtils::CheckFileStatus(const string &key)
     return key == IS_FILE_STATUS_XATTR;
 }
 
+bool CloudFileUtils::CheckIsRecyclePath(const string &key)
+{
+    return key == CLOUD_RECYCLE_PATH;
+}
+
 bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);

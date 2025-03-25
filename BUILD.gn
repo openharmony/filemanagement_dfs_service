@@ -82,6 +82,7 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_test",
     "${services_path}/distributedfiledaemon/test/unittest/all_connect:all_connect_manager_test",
+    "${services_path}/distributedfiledaemon/test/unittest/connect_count:connect_count_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_callback_manager_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_recv_callback_proxy_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_send_callback_proxy_test",

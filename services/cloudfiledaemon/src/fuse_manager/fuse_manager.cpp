@@ -287,7 +287,7 @@ static string GetLocalPath(int32_t userId, const string &relativePath)
 
 static string GetCacheTmpPath(int32_t userId, const string &relativePath)
 {
-    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + "/services/drivekit_cache/" +
+    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + "/files/.cloud_cache/pread_cache/" +
         relativePath + PATH_TEMP_SUFFIX;
 }
 

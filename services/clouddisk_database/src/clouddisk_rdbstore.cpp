@@ -54,7 +54,8 @@ enum XATTR_CODE {
     FILE_SYNC_STATUS,
     IS_EXT_ATTR,
     HAS_THM,
-    TIME_RECYCLED
+    TIME_RECYCLED,
+    RECYCLE_PATH,
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -1127,6 +1128,8 @@ int32_t CheckXattr(const std::string &key)
         return HAS_THM;
     } else if (key == CLOUD_TIME_RECYCLED) {
         return TIME_RECYCLED;
+    } else if (key == CLOUD_RECYCLE_PATH) {
+        return RECYCLE_PATH;
     } else {
         return ERROR_CODE;
     }

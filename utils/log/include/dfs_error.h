@@ -98,6 +98,9 @@ enum CloudSyncServiceErrCode : ErrCode {
     /* download timeout */
     E_TIMEOUT,
 
+    /* task running */
+    E_TASK_RUNNING,
+
     E_SOURCE_BASIC = 10000,
 
     E_THM_SOURCE_BASIC = E_SOURCE_BASIC + 1000,
@@ -203,7 +206,8 @@ enum JsErrCode {
     E_NETWORK_ERR = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 2,
     E_BATTERY_WARNING = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 3,
     E_EXCEED_MAX_LIMIT = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 4,
-    E_DATABASE_FAILED = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 5
+    E_DATABASE_FAILED = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 5,
+    E_OTHER_TASK_RUNNING = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 6
 };
 
 const std::unordered_map<int32_t, int32_t> errCodeTable {
@@ -217,7 +221,8 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
     { E_SYNC_FAILED_BATTERY_TOO_LOW, E_BATTERY_WARNING },
     { E_EXCEED_MAX_SIZE, E_EXCEED_MAX_LIMIT },
     { E_RDB, E_DATABASE_FAILED },
-    { E_DEAD_REPLY, E_IPCSS }
+    { E_DEAD_REPLY, E_IPCSS },
+    { E_TASK_RUNNING, E_OTHER_TASK_RUNNING}
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);

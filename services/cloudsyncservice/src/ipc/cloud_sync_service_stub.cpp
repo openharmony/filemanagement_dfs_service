@@ -113,10 +113,12 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_BATCH_CLEAN_FILE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchCleanFile(data, reply); };
-    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DENTRY_FILE_INSERT)] =
-        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchDentryFileInsert(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_OPTIMIZE_STORAGE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleOptimizeStorage(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DENTRY_FILE_INSERT)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchDentryFileInsert(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_OPTIMIZE_STORAGE)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopOptimizeStorage(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -307,11 +309,41 @@ int32_t CloudSyncServiceStub::HandleOptimizeStorage(MessageParcel &data, Message
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    int32_t agingDays = data.ReadInt32();
 
-    int32_t res = OptimizeStorage(agingDays);
+    sptr<OptimizeSpaceOptions> options = data.ReadParcelable<OptimizeSpaceOptions>();
+    if (!options) {
+        LOGE("object of OptimizeSpaceOptions is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    bool isCallbackValid = data.ReadBool();
+    sptr<IRemoteObject> optimizeCallback = nullptr;
+    if (isCallbackValid) {
+        optimizeCallback = data.ReadRemoteObject();
+    }
+
+    int32_t res = OptimizeStorage(*options, isCallbackValid, optimizeCallback);
     reply.WriteInt32(res);
     LOGI("End HandleOptimizeStorage");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleStopOptimizeStorage(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleStopOptimizeStorage");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    int32_t res = StopOptimizeStorage();
+    reply.WriteInt32(res);
+    LOGI("End HandleStopOptimizeStorage");
     return E_OK;
 }
 
