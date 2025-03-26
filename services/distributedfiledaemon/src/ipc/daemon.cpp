@@ -729,8 +729,7 @@ int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<I
         LOGE("[PushAsset] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    AssetObj assetObjTemp = assetObj;
-    const sptr<AssetObj> assetObjPtr = sptr(&assetObjTemp);
+    const sptr<AssetObj> assetObjPtr (new (std::nothrow) AssetObj(assetObj));
     if (assetObjPtr == nullptr || sendCallback == nullptr) {
         LOGE("param is nullptr.");
         return E_NULLPTR;
@@ -761,16 +760,16 @@ int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<I
 
 int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
+    LOGI("Daemon::RegisterAssetCallback begin.");
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
         return E_PERMISSION_DENIED;
     }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[RegisterRecvCallback] DATASYNC permission denied");
+        LOGE("[RegisterAssetCallback] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    LOGI("Daemon::RegisterAssetCallback begin.");
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;
@@ -781,16 +780,16 @@ int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallba
 
 int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
+    LOGI("Daemon::UnRegisterAssetCallback begin.");
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
         return E_PERMISSION_DENIED;
     }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[UnRegisterRecvCallback] DATASYNC permission denied");
+        LOGE("[UnRegisterAssetCallback] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    LOGI("Daemon::UnRegisterAssetCallback begin.");
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;

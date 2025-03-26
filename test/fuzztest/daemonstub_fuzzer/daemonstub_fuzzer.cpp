@@ -50,6 +50,19 @@ class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
     ~DaemonStubImpl() override {}
+
+    int32_t OnRemoteRequest(
+        uint32_t code,
+        MessageParcel& data,
+        MessageParcel& reply,
+        MessageOption& option) override
+    {
+        if (data.ReadInterfaceToken() != GetDescriptor()) {
+            return ERR_TRANSACTION_FAILED;
+        }
+        return 0;
+    }
+
     int32_t OpenP2PConnection(const DmDeviceInfoExt &deviceInfo) override
     {
         return 0;
@@ -268,8 +281,7 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
                                           size_t size)
 {
     OHOS::UID = DATA_UID;
-    uint32_t code =
-        static_cast<uint32_t>(IDaemonIpcCode::COMMAND_UN_REGISTER_ASSET_CALLBACK);
+    uint32_t code = static_cast<uint32_t>(IDaemonIpcCode::COMMAND_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
