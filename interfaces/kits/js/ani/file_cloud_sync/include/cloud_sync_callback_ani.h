@@ -70,13 +70,19 @@ public:
     void DeleteReference() override;
 
 private:
+    void GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg);
     ani_env *env_;
     ani_ref cbOnRef_ = nullptr;
+    ani_vm *vm = nullptr;
 };
 
 class ChangeListenerAni {
 public:
-    explicit ChangeListenerAni(ani_env *env) : env_(env) {}
+    explicit ChangeListenerAni(ani_env *env)
+    {
+        env_ = env;
+        env_->GetVM(&vm);
+    }
 
     ChangeListenerAni(const ChangeListenerAni &listener)
     {
@@ -84,6 +90,7 @@ public:
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
         this->observers_ = listener.observers_;
+        this->vm = listener.vm;
     }
 
     ChangeListenerAni &operator=(const ChangeListenerAni &listener)
@@ -92,6 +99,7 @@ public:
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
         this->observers_ = listener.observers_;
+        this->vm = listener.vm;
         return *this;
     }
 
@@ -103,6 +111,7 @@ public:
 
 private:
     ani_env *env_;
+    ani_vm *vm = nullptr;
 };
 
 class CloudNotifyObserver {

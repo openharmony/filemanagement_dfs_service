@@ -18,19 +18,24 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-CloudDownloadCallbackAniImpl::CloudDownloadCallbackAniImpl(ani_env *env, ani_ref fun, bool isBatch) : env_(env)
+CloudDownloadCallbackAniImpl::CloudDownloadCallbackAniImpl(ani_env *env, ani_ref fun, bool isBatch)
 {
+    env_ = env;
     if (fun != nullptr) {
         cbOnRef_ = fun;
     }
     isBatch_ = isBatch;
+    ani_status ret = env_->GetVM(&vm);
+    if (ret != ANI_OK) {
+        LOGE("get vim failed. ret = %{public}d", ret);
+    }
 }
 
 void CloudDownloadCallbackAniImpl::GetDownloadProgress(
     const DownloadProgressObj &progress, const ani_class &cls, ani_object &pg)
 {
     ani_method ctor;
-    std::string argPre = "Lstd/core/Double;L@ohos/file/cloudSync/cloudSync/State;Lstd/core/Double;Lstd/core/Double;";
+    std::string argPre = "DL@ohos/file/cloudSync/cloudSync/State;DD";
     std::string argBack = "Lstd/core/String;L@ohos/file/cloudSync/cloudSync/DownloadErrorType;:V";
     std::string arg = argPre + argBack;
     ani_status ret = env_->Class_FindMethod(cls, "<ctor>", arg.c_str(), &ctor);
@@ -57,13 +62,15 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
     if (!isBatch_) {
         env_->Enum_GetEnumItemByIndex(stateEnum, progress.state, &stateEnumItem);
-        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, stateEnumItem, progress.downloadedSize,
-            progress.totalSize, uri, downloadErrorEnumItem);
+        ret = env_->Object_New(cls, ctor, &pg, static_cast<double>(progress.downloadId), stateEnumItem,
+            static_cast<double>(progress.downloadedSize), static_cast<double>(progress.totalSize), uri,
+            downloadErrorEnumItem);
     } else {
         env_->Enum_GetEnumItemByIndex(stateEnum, progress.batchState, &stateEnumItem);
-        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, stateEnumItem, progress.batchDownloadSize,
-            progress.batchTotalSize, progress.batchSuccNum, progress.batchFailNum, progress.batchTotalNum,
-            downloadErrorEnumItem);
+        ret = env_->Object_New(cls, ctor, &pg, static_cast<double>(progress.downloadId), stateEnumItem,
+            static_cast<double>(progress.batchDownloadSize), static_cast<double>(progress.batchTotalSize),
+            static_cast<double>(progress.batchSuccNum), static_cast<double>(progress.batchFailNum),
+            static_cast<double>(progress.batchTotalNum), downloadErrorEnumItem);
     }
 
     if (ret != ANI_OK) {
@@ -73,8 +80,20 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
 void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &progress)
 {
+    ani_status ret = vm->GetEnv(ANI_VERSION_1, &env_);
+    bool attach = false;
+    if (ret != ANI_OK) {
+        LOGE("vm get env failed. ret = %{public}d", ret);
+        ani_options aniArgs {0, nullptr};
+        ret = vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env_);
+        if (ret != ANI_OK) {
+            LOGE("AttachCurrentThread failed. ret = %{public}d", ret);
+            return;
+        }
+        attach = true;
+    }
     ani_size nr_refs = 16;
-    ani_status ret = env_->CreateLocalScope(nr_refs);
+    ret = env_->CreateLocalScope(nr_refs);
     if (ret != ANI_OK) {
         LOGE("crete local scope failed. ret = %{public}d", ret);
         return;
@@ -95,8 +114,8 @@ void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &
     ani_object pg;
     GetDownloadProgress(progress, cls, pg);
     ani_ref ref_;
-    ret = env_->Object_CallMethodByName_Ref(
-        static_cast<ani_object>(cbOnRef_), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, pg);
+    std::vector<ani_ref> vec = { pg };
+    ret = env_->FunctionalObject_Call(static_cast<ani_fn_object>(cbOnRef_), 1, vec.data(), &ref_);
     if (ret != ANI_OK) {
         LOGE("ani call function failed. ret = %{public}d", ret);
         return;
@@ -104,6 +123,9 @@ void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &
     ret = env_->DestroyLocalScope();
     if (ret != ANI_OK) {
         LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
+    }
+    if (attach) {
+        vm->DetachCurrentThread();
     }
 }
 

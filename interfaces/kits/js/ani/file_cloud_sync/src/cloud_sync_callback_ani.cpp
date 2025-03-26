@@ -79,38 +79,24 @@ bool ObserverImpl::DeleteObserver(const Uri &uri, const shared_ptr<CloudNotifyOb
     });
 }
 
-CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun) : env_(env)
+CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun)
 {
+    env_ = env;
     if (fun != nullptr) {
         cbOnRef_ = fun;
     }
+    ani_status ret = env_->GetVM(&vm);
+    if (ret != ANI_OK) {
+        LOGE("get vim failed. ret = %{public}d", ret);
+    }
 }
 
-void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
+void CloudSyncCallbackAniImpl::GetSyncProgress(
+    CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg)
 {
-    ani_size nr_refs = 16;
-    ani_status ret = env_->CreateLocalScope(nr_refs);
-    if (ret != ANI_OK) {
-        LOGE("crete local scope failed. ret = %{public}d", ret);
-        return;
-    }
-    ani_namespace ns {};
-    ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return;
-    }
-    static const char *className = "LSyncProgressInner;";
-    ani_class cls;
-    ret = env_->Namespace_FindClass(ns, className, &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", ret);
-        return;
-    }
-    ani_object pg;
     ani_method ctor;
-    ret = env_->Class_FindMethod(cls, "<ctor>",
-        "L@ohos/file/cloudSync/cloudSync/SyncState;L@ohos/file/cloudSync/cloudSync/ErrorType;:V", &ctor);
+    ani_status ret = env_->Class_FindMethod(
+        cls, "<ctor>", "L@ohos/file/cloudSync/cloudSync/SyncState;L@ohos/file/cloudSync/cloudSync/ErrorType;:V", &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
@@ -130,11 +116,47 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
     ret = env_->Object_New(cls, ctor, &pg, stateEnumItem, errorEnumItem);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
+    }
+}
+
+void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
+{
+    ani_status ret = vm->GetEnv(ANI_VERSION_1, &env_);
+    bool attach = false;
+    if (ret != ANI_OK) {
+        LOGE("vm get env failed. ret = %{public}d", ret);
+        ani_options aniArgs {0, nullptr};
+        ret = vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env_);
+        if (ret != ANI_OK) {
+            LOGE("AttachCurrentThread failed. ret = %{public}d", ret);
+            return;
+        }
+        attach = true;
+    }
+    ani_size nr_refs = 16;
+    ret = env_->CreateLocalScope(nr_refs);
+    if (ret != ANI_OK) {
+        LOGE("crete local scope failed. ret = %{public}d", ret);
         return;
     }
+    ani_namespace ns {};
+    ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", ret);
+        return;
+    }
+    static const char *className = "LSyncProgressInner;";
+    ani_class cls;
+    ret = env_->Namespace_FindClass(ns, className, &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return;
+    }
+    ani_object pg;
+    GetSyncProgress(state, error, cls, pg);
     ani_ref ref_;
-    ret = env_->Object_CallMethodByName_Ref(
-        static_cast<ani_object>(cbOnRef_), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, pg);
+    std::vector<ani_ref> vec = { pg };
+    ret = env_->FunctionalObject_Call(static_cast<ani_fn_object>(cbOnRef_), 1, vec.data(), &ref_);
     if (ret != ANI_OK) {
         LOGE("ani call function failed. ret = %{public}d", ret);
         return;
@@ -142,6 +164,9 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
     ret = env_->DestroyLocalScope();
     if (ret != ANI_OK) {
         LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
+    }
+    if (attach) {
+        vm->DetachCurrentThread();
     }
 }
 
@@ -299,18 +324,27 @@ static ani_status GetChangeDataObject(
 
 void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cbRef)
 {
+    ani_status ret = vm->GetEnv(ANI_VERSION_1, &env_);
+    bool attach = false;
+    if (ret != ANI_OK) {
+        LOGE("vm get env failed. ret = %{public}d", ret);
+        ani_options aniArgs {0, nullptr};
+        ret = vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env_);
+        if (ret != ANI_OK) {
+            LOGE("AttachCurrentThread failed. ret = %{public}d", ret);
+            return;
+        }
+        attach = true;
+    }
     ani_size nr_refs = 16;
-    ani_status ret = env_->CreateLocalScope(nr_refs);
+    ret = env_->CreateLocalScope(nr_refs);
     if (ret != ANI_OK) {
         LOGE("crete local scope failed. ret = %{public}d", ret);
         return;
     }
-
     if (listener.changeInfo.uris_.empty()) {
-        LOGI("listener uri is empty.");
         return;
     }
-
     ani_namespace ns {};
     ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
     if (ret != ANI_OK) {
@@ -324,21 +358,18 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
         LOGE("find class failed. ret = %{public}d", ret);
         return;
     }
-
     ani_object changeData;
     ret = GetChangeDataObject(env_, listener, cls, changeData);
-
     ani_ref ref_;
-    ret = env_->Object_CallMethodByName_Ref(
-        static_cast<ani_object>(cbRef), "invoke0", "Lstd/core/Object;:Lstd/core/Object;", &ref_, changeData);
+    std::vector<ani_ref> vec = { changeData };
+    ret = env_->FunctionalObject_Call(static_cast<ani_fn_object>(cbRef), 1, vec.data(), &ref_);
     if (ret != ANI_OK) {
         LOGE("ani call function failed. ret = %{public}d", ret);
         return;
     }
-
     ret = env_->DestroyLocalScope();
-    if (ret != ANI_OK) {
-        LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
+    if (attach) {
+        vm->DetachCurrentThread();
     }
 }
 
