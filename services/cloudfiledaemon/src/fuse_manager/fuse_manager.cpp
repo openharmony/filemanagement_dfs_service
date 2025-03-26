@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <pthread.h>
@@ -243,6 +244,30 @@ static void EraseReadArgs(shared_ptr<CloudInode> cInode, vector<shared_ptr<ReadA
             }
         }
     }
+}
+
+static pid_t GetPidFromTid(pid_t tid)
+{
+    pid_t tgid = 0;
+    std::string path = "/proc" + to_string(tid) + "/status";
+    std::ifstream procTidStatusFile(path);
+    if (!procTidStatusFile.is_open()) {
+        LOGI("Failed to open %{public}s", path.c_str());
+        return tgid;
+    }
+    std::string line;
+    while (std::getline(procTidStatusFile, line)) {
+        if (line.find("Tgid:") != std::string::npos) {
+            size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos) {
+                std::string tgidStr = line.substr(colonPos + 1);
+                tgid = std::stoi(tgidStr.c_str());
+            }
+            break;
+        }
+    }
+    procTidStatusFile.close();
+    return tgid;
 }
 
 static string GetLocalPath(int32_t userId, const string &relativePath)
@@ -774,11 +799,12 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
 static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
     struct FuseData *data, shared_ptr<CloudInode>& cInode)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
-    LOGI("%{public}d open %{public}s", req->ctx.pid, GetAnonyString(CloudPath(data, ino)).c_str());
+    LOGI("%{public}d open %{public}s", pid, GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
         fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
@@ -841,6 +867,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
@@ -850,7 +877,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         return;
     }
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", req->ctx.pid,
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", pid,
          GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load());
     wSesLock.lock();
     cInode->sessionRefCount--;
@@ -943,6 +970,7 @@ static bool CheckReadIsCanceled(pid_t pid, shared_ptr<CloudInode> cInode)
 
 static void CancelRead(fuse_req_t req, fuse_ino_t ino)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
@@ -951,12 +979,12 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    LOGI("Cancel read for pid: %{public}d", req->ctx.pid);
+    LOGI("Cancel read for pid: %{public}d", pid);
     {
         std::unique_lock<std::mutex> lock(cInode->readArgsLock);
-        cInode->readCtlMap[req->ctx.pid] = true;
+        cInode->readCtlMap[pid] = true;
         for (const auto &it : cInode->readArgsSet) {
-            if (it->pid == req->ctx.pid) {
+            if if (it->pid == pid) {
                 {
                     std::unique_lock lck(cInode->readLock);
                     *it->readStatus = READ_CANCELED;
@@ -980,6 +1008,7 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
 
 static void ResetRead(fuse_req_t req, fuse_ino_t ino)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
@@ -988,10 +1017,10 @@ static void ResetRead(fuse_req_t req, fuse_ino_t ino)
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    LOGI("Reset read for pid: %{public}d", req->ctx.pid);
+    LOGI("Reset read for pid: %{public}d", pid);
     {
         std::unique_lock<std::mutex> lock(cInode->readArgsLock);
-        cInode->readCtlMap[req->ctx.pid] = false;
+        cInode->readCtlMap[pid] = false;
     }
     fuse_reply_ioctl(req, 0, NULL, 0);
 }
@@ -1299,6 +1328,7 @@ static bool DoReadSlice(fuse_req_t req,
                         shared_ptr<ReadArguments> readArgs,
                         bool needCheck)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     if (!readArgs) {
         return true;
     }
@@ -1323,20 +1353,21 @@ static bool DoReadSlice(fuse_req_t req,
     }
 
     LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
-    if (needCheck && !CheckAndWait(req->ctx.pid, cInode, readArgs->offset)) {
+    if (needCheck && !CheckAndWait(pid, cInode, readArgs->offset)) {
         fuse_reply_err(req, ENETUNREACH);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
             FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
         return false;
     }
-    ffrt::submit([req, readArgs, cInode, readSession, data] {
-        CloudReadOnCloudFile(req->ctx.pid, data->userId, readArgs, cInode, readSession);
+    ffrt::submit([pid, readArgs, cInode, readSession, data] {
+        CloudReadOnCloudFile(pid, data->userId, readArgs, cInode, readSession);
     });
     return true;
 }
 
 static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     if (!DoReadSlice(req, params.cInode, params.readSession, params.readArgsHead, true)) {
         return false;
     }
@@ -1356,7 +1387,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
-        auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
+        auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, pid);
         if (!readArgsCache) {
             LOGE("Init readArgsCache failed");
             break;
@@ -1370,7 +1401,8 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
 
 static bool CloudReadHelper(fuse_req_t req, size_t size, shared_ptr<CloudInode> cInode)
 {
-    if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
+    if (CheckReadIsCanceled(pid, cInode)) {
         LOGI("read is cancelled");
         fuse_reply_err(req, EIO);
         return false;
@@ -1387,6 +1419,7 @@ static bool CloudReadHelper(fuse_req_t req, size_t size, shared_ptr<CloudInode> 
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
+    pid_t pid = GetPidFromTid(req->ctx.pid);
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
@@ -1426,10 +1459,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     /* slice read request into 4M pages */
     InitReadSlice(size, off, readSlice);
     /* init readArgs for current page, and next page if cross pages */
-    auto readArgsHead = make_shared<ReadArguments>(readSlice.sizeHead, readSlice.offHead, req->ctx.pid);
+    auto readArgsHead = make_shared<ReadArguments>(readSlice.sizeHead, readSlice.offHead, pid);
     shared_ptr<ReadArguments> readArgsTail = nullptr;
     if (readSlice.sizeTail > 0) {
-        readArgsTail = make_shared<ReadArguments>(readSlice.sizeTail, readSlice.offTail, req->ctx.pid);
+        readArgsTail = make_shared<ReadArguments>(readSlice.sizeTail, readSlice.offTail, pid);
     }
     if (!DoCloudRead(req, fi->flags, {cInode, dkReadSession, readArgsHead, readArgsTail})) {
         return;
