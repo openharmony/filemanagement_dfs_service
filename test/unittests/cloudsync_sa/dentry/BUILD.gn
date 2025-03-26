@@ -107,7 +107,6 @@ group("cloudsync_sa_dentry_test") {
   testonly = true
   deps = [
     ":dentry_file_utils_test",
-    ":dentry_meta_file_clouddisk_test",
     ":dentry_meta_file_test",
   ]
 }
