@@ -1141,7 +1141,6 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         LOGE("realpath failed");
         return;
     }
-    int fd = open(realPaths, O_RDWR);
     std::FILE *file = fopen(realPaths, "r+");
     free(realPaths);
     if (file == nullptr) {
@@ -1396,7 +1395,6 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         LOGE("realpath failed");
         return -1;
     }
-    int fd = open(realPaths, O_RDONLY);
     std::FILE *file = fopen(realPaths, "r");
     free(realPaths);
     if (file == nullptr) {
