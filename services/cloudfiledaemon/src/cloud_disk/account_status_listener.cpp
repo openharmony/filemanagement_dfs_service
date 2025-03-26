@@ -46,7 +46,7 @@ static void SwapMemory()
     }
     std::string content = "1";
     ssize_t ret = fwrite(content.c_str(), content.size(), 1, file);
-    if (ferror(file)) {
+    if (ret < content.size() || ferror(file)) {
         LOGE("Failed to write reclaim, errno:%{public}d", errno);
     }
     if (fclose(file)) {
