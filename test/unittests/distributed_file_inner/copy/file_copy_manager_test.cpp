@@ -753,7 +753,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level1)
     res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopySubDir(srcPath, tmpDstDir, infos);
     EXPECT_EQ(res, E_OK);
     std::string rootPath = "/data/test/CopySubDir";
-    if (!ForceCreateDirectory(rootPath)) {
+    if (!ForceRemoveDirectory(rootPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 create dir err" << rootPath;
     }
     GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 End";
