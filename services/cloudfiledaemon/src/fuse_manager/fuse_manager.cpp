@@ -1013,7 +1013,7 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
         std::unique_lock<std::mutex> lock(cInode->readArgsLock);
         cInode->readCtlMap[pid] = true;
         for (const auto &it : cInode->readArgsSet) {
-            if if (it->pid == pid) {
+            if (it->pid == pid) {
                 {
                     std::unique_lock lck(cInode->readLock);
                     *it->readStatus = READ_CANCELED;
