@@ -72,25 +72,14 @@ private:
             LOGE("Cannot create ani error object. ret = %{public}d", status);
             return status;
         }
-        ani_field field = nullptr;
-        status = env->Class_FindField(cls, "code", &field);
+        status = env->Object_SetPropertyByName_Double(obj, "code", static_cast<ani_double>(code));
         if (status != ANI_OK) {
-            LOGE("Class_FindField : %{public}d", status);
+            LOGE("Object_SetPropertyByName_Double : %{public}d", status);
             return status;
         }
-        status = env->Object_SetField_Double(obj, field, code);
+        status = env->Object_SetPropertyByName_Ref(obj, "message", static_cast<ani_ref>(msg));
         if (status != ANI_OK) {
-            LOGE("Object_SetField_Double : %{public}d", status);
-            return status;
-        }
-        status = env->Class_FindField(cls, "message", &field);
-        if (status != ANI_OK) {
-            LOGE("Class_FindField : %{public}d", status);
-            return status;
-        }
-        status = env->Object_SetField_Ref(obj, field, msg);
-        if (status != ANI_OK) {
-            LOGE("Object_SetField_Ref : %{public}d", status);
+            LOGE("Object_SetPropertyByName_Ref : %{public}d", status);
             return status;
         }
         status = env->ThrowError(static_cast<ani_error>(obj));
