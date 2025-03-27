@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 
 #include <sstream>
 
@@ -66,7 +66,7 @@ int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, c
     return reply.ReadInt32();
 }
 
-sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
+sptr<ICloudSyncService> ServiceProxy::GetInstance()
 {
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -101,7 +101,7 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
     return serviceProxy_;
 }
 
-void CloudSyncServiceProxy::InvaildInstance()
+void ServiceProxy::InvaildInstance()
 {
     LOGI("Invalid Instance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -248,7 +248,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
-                                                         std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
+                                                         int32_t &fieldkey,
                                                          bool isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback,
                                                          int32_t timeout)
@@ -257,7 +257,7 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
 }
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
-                                              int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                              int64_t &downloadId, int32_t fieldkey,
                                               bool isCallbackValid,
                                               const sptr<IRemoteObject> &downloadCallback,
                                               int32_t timeout)

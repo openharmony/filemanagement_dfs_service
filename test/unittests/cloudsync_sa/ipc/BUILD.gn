@@ -59,9 +59,9 @@ ohos_unittest("cloud_sync_service_stub_test") {
 
 ohos_unittest("cloud_sync_service_test") {
   module_out_path = "filemanagement/dfs_service"
-
+  public_configs =
+      [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
@@ -80,7 +80,6 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/report_statistics_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/save_subscription_task.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service.cpp",
-    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
@@ -124,6 +123,7 @@ ohos_unittest("cloud_sync_service_test") {
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloud_sync_service_stub",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -259,7 +259,6 @@ ohos_unittest("download_asset_callback_proxy_test") {
 group("cloudsync_sa_ipc_test") {
   testonly = true
   deps = [
-    ":cloud_sync_service_stub_test",
     ":cloud_sync_service_test",
     ":download_asset_callback_manager_test",
     ":download_asset_callback_proxy_test",

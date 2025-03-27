@@ -21,7 +21,7 @@
 #include "cloud_fuzzer_helper.h"
 #include "cloud_sync_manager.h"
 #include "cloud_sync_manager_impl.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "i_cloud_download_callback.h"
 #include "i_cloud_sync_callback.h"
 
@@ -158,7 +158,7 @@ void EnableCloudFuzzTest(FuzzData &fuzzData, size_t size)
     SwitchDataObj switchDataObj;
     switchDataObj.switchData.insert({itemStr, itemBool});
     CloudSyncManager::GetInstance().EnableCloud(accoutId, switchDataObj);
-    auto proxy = CloudSyncServiceProxy::GetInstance();
+    auto proxy = ServiceProxy::GetInstance();
     CloudSyncManagerImpl::GetInstance().SetDeathRecipient(proxy->AsObject());
 }
 

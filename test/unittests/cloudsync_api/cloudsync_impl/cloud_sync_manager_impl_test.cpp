@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "cloud_sync_manager_impl.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "dfs_error.h"
 #include "i_cloud_sync_service_mock.h"
 #include "iservice_registry.h"
@@ -464,7 +464,7 @@ HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
     try {
-        auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+        auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
@@ -789,7 +789,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest2, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 Start";
     try {
         CloudSyncManagerImpl cloudSyncManagerImpl;
-        CloudSyncServiceProxy::GetInstance();
+        ServiceProxy::GetInstance();
 
         EXPECT_TRUE(cloudSyncManagerImpl.ResetProxyCallback(1, "testBundle"));
     } catch (...) {

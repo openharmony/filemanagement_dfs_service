@@ -77,7 +77,7 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t
 
 int32_t DataSyncManager::StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                            const std::vector<std::string> &pathVec,
-                                           int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                           int64_t &downloadId, int32_t fieldkey,
                                            const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
                                            int32_t timeout)
 {

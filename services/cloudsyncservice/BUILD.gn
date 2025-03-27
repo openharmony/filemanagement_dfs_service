@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 config("optimize-size") {
@@ -24,9 +25,83 @@ config("optimize-size") {
     "-Oz",
   ]
 }
+
+config("cloud_sync_service_public_config") {
+  include_dirs = [ "${target_gen_dir}" ]
+}
+
+idl_gen_interface("cloud_sync_service_interface") {
+  sources = [ "ICloudSyncService.idl" ]
+}
+
+ohos_source_set("cloud_sync_service_proxy") {
+  configs = [ ":optimize-size" ]
+  public_configs = [ ":cloud_sync_service_public_config" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "${distributedfile_path}/utils/log/include",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+  ]
+
+  output_values = get_target_outputs(":cloud_sync_service_interface")
+  sources = filter_include(output_values, [ "*_proxy.cpp" ])
+  sources += [ "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp" ]
+
+  deps = [ ":cloud_sync_service_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_source_set("cloud_sync_service_stub") {
+  configs = [ ":optimize-size" ]
+  public_configs = [ ":cloud_sync_service_public_config" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "${distributedfile_path}/utils/log/include",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+  ]
+
+  output_values = get_target_outputs(":cloud_sync_service_interface")
+  sources = filter_include(output_values, [ "*_stub.cpp" ])
+  sources += [ "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp" ]
+
+  deps = [ ":cloud_sync_service_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 ohos_shared_library("cloudsync_sa") {
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
+  public_configs = [ ":cloud_sync_service_public_config" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -67,7 +142,6 @@ ohos_shared_library("cloudsync_sa") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "src/ipc/cloud_sync_service.cpp",
-    "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status_listener.cpp",
@@ -79,12 +153,16 @@ ohos_shared_library("cloudsync_sa") {
   sources += cycle_task
   sources += transport
 
+  output_values = get_target_outputs(":cloud_sync_service_interface")
+  sources += filter_include(output_values, [ "*_stub.cpp" ])
+
   defines = [
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
   deps = [
+    ":cloud_sync_service_interface",
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
@@ -128,6 +206,7 @@ ohos_shared_library("cloudsync_sa") {
 
 ohos_static_library("cloudsync_sa_static") {
   branch_protector_ret = "pac_ret"
+  public_configs = [ ":cloud_sync_service_public_config" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -180,7 +259,6 @@ ohos_static_library("cloudsync_sa_static") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "src/ipc/cloud_sync_service.cpp",
-    "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status_listener.cpp",
@@ -192,12 +270,16 @@ ohos_static_library("cloudsync_sa_static") {
   sources += cycle_task
   sources += transport
 
+  output_values = get_target_outputs(":cloud_sync_service_interface")
+  sources += filter_include(output_values, [ "*_stub.cpp" ])
+
   defines = [
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
   deps = [
+    ":cloud_sync_service_interface",
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",

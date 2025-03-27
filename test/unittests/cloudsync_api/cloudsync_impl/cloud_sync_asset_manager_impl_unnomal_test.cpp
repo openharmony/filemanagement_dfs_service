@@ -17,7 +17,7 @@
 #include <gmock/gmock.h>
 
 #include "cloud_sync_asset_manager_impl.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 

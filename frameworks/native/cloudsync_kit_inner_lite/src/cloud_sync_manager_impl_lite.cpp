@@ -14,7 +14,7 @@
  */
 
 #include "cloud_sync_manager_impl_lite.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -34,7 +34,7 @@ int32_t CloudSyncManagerImplLite::TriggerSync(const std::string &bundleName, con
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -48,7 +48,7 @@ void CloudSyncManagerImplLite::SetDeathRecipient(const sptr<IRemoteObject> &remo
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
             LOGE("service dead");
-            CloudSyncServiceProxy::InvaildInstance();
+            ServiceProxy::InvaildInstance();
             isFirstCall_.clear();
         };
         deathRecipient_ = sptr(new SvcDeathRecipientLite(deathCallback));

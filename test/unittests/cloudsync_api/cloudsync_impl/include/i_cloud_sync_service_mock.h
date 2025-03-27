@@ -16,7 +16,7 @@
 #ifndef MOCK_I_CLOUD_SYNC_SERVICE_H
 #define MOCK_I_CLOUD_SYNC_SERVICE_H
 
-#include "i_cloud_sync_service.h"
+#include "icloud_sync_service.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -72,7 +72,7 @@ public:
         return E_OK;
     }
 
-    int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override
+    int32_t TriggerSyncInner(const std::string &bundleName, int32_t userId) override
     {
         return E_OK;
     }
@@ -123,7 +123,7 @@ public:
         return E_OK;
     }
     int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                           std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                           int32_t fieldkey,
                            bool isCallbackValid,
                            const sptr<IRemoteObject> &downloadCallback,
                            int32_t timeout = -1)
@@ -158,7 +158,7 @@ public:
     {
         return E_OK;
     }
-    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
+    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, const AssetInfoObj &assetInfoObj)
     {
         return E_OK;
     }
@@ -204,7 +204,7 @@ public:
                           const int32_t userId,
                           const std::string &bundleName,
                           const std::string &networkId,
-                          AssetInfoObj &assetInfoObj)
+                          const AssetInfoObj &assetInfoObj)
     {
         return E_OK;
     }

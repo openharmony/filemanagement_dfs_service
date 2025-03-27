@@ -14,7 +14,7 @@
  */
 
 #include "cloud_sync_asset_manager_impl.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -180,7 +180,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
-        auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+        auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
         CloudSyncAssetManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
