@@ -39,16 +39,19 @@ static const std::string LOCAL_PATH_DATA = "/data";
 
 static void SwapMemory()
 {
-    auto fd = open("/proc/self/reclaim", O_WRONLY);
-    if (fd < 0) {
+    std::FILE *file = fopen("/proc/self/reclaim", "r+");
+    if (file == nullptr) {
         LOGE("Failed to open reclaim, errno:%{public}d", errno);
         return;
     }
     std::string content = "1";
-    if (write(fd, content.c_str(), content.size()) < 0) {
+    ssize_t ret = fwrite(content.c_str(), content.size(), 1, file);
+    if (ret < content.size() || ferror(file)) {
         LOGE("Failed to write reclaim, errno:%{public}d", errno);
     }
-    close(fd);
+    if (fclose(file)) {
+        LOGE("Failed to close reclaim, errno:%{public}d", errno);
+    }
     return;
 }
 

@@ -271,19 +271,30 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
         LOGE("realpath failed");
         return false;
     }
-    int fd = open(realPaths, O_RDONLY);
+    std::FILE *file = fopen(realPaths, "r");
+    if (file == nullptr) {
+        LOGE("fopen failed, errno:%{public}d", errno);
+        return false;
+    }
+    int fd = fileno(file);
     if (fd < 0) {
-        LOGE("open failed, errno:%{public}d", errno);
+        LOGE("get fd failed, errno:%{public}d", errno);
         return false;
     }
     uint32_t writeOpenCnt = 0;
     int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
     if (ret < 0) {
         LOGE("ioctl failed, errno:%{public}d", errno);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno:%{public}d", errno);
+        }
         return false;
     }
 
-    close(fd);
+    if (fclose(file)) {
+        LOGE("fclose failed, errno:%{public}d", errno);
+        return false;
+    }
     return writeOpenCnt != 0;
 }
 
@@ -294,19 +305,29 @@ bool CloudFileUtils::ClearCache(const string &dfsPath)
         LOGE("realpath failed");
         return false;
     }
-    int fd = open(resolvedPath, O_RDONLY);
+    std::FILE *file = fopen(resolvedPath, "r");
+    if (file == nullptr) {
+        LOGE("fopen failed, errno:%{public}d", errno);
+        return false;
+    }
+    int fd = fileno(file);
     free(resolvedPath);
     if (fd < 0) {
-        LOGE("open failed, errno:%{public}d", errno);
+        LOGE("get fd failed, errno:%{public}d", errno);
         return false;
     }
     int ret = ioctl(fd, HMDFS_IOC_SET_CLOUD_GENERATION);
     if (ret < 0) {
         LOGE("ioctl failed, errno:%{public}d", errno);
-        close(fd);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno:%{public}d", errno);
+        }
         return false;
     }
-    close(fd);
+    if (fclose(file)) {
+        LOGE("fclose failed, errno:%{public}d", errno);
+        return false;
+    }
     return true;
 }
 

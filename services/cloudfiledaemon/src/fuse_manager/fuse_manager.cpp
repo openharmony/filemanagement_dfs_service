@@ -750,15 +750,22 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        if (fd < 0) {
+        std::FILE *file = fopen(cachePath.c_str(), "a+");
+        if (file != nullptr) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
         }
-        if (ftruncate(fd, cInode->mBase->size) == -1) {
-            LOGE("failed to truncate file, ret: %{public}d", errno);
+        int fd = fileno(file);
+        if (fd < 0) {
+            LOGE("failed to get fd, ret: %{public}d", errno);
+        } else {
+            if (ftruncate(fd, cInode->mBase->size) == -1) {
+                LOGE("failed to truncate file, ret: %{public}d", errno);
+            }
         }
-        close(fd);
+        if (fclose(file)) {
+            LOGE("failed to close cache file, ret: %{public}d", errno);
+        }
         return;
     }
 
@@ -1134,18 +1141,21 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         LOGE("realpath failed");
         return;
     }
-    int fd = open(realPaths, O_RDWR);
+    std::FILE *file = fopen(realPaths, "r+");
     free(realPaths);
-    if (fd < 0) {
+    if (file == nullptr) {
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
     }
     if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
-        pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
+        fseek(file, readArgs->offset, SEEK_SET) == 0 &&
+        fwrite(readArgs->buf.get(), 1, *readArgs->readResult, file) == *readArgs->readResult) {
         LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
         cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
-    close(fd);
+    if (fclose(file)) {
+        LOGE("Failed to close cache file, err: %{public}d", errno);
+    }
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
@@ -1385,13 +1395,31 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         LOGE("realpath failed");
         return -1;
     }
-    int fd = open(realPaths, O_RDONLY);
+    std::FILE *file = fopen(realPaths, "r");
     free(realPaths);
-    if (fd < 0) {
-        return fd;
+    if (file == nullptr) {
+        LOGE("fopen faild, errno: %{public}d", errno);
+        return -1;
     }
-    ssize_t bytesRead = pread(fd, readArgs->buf.get(), readArgs->size, readArgs->offset);
-    close(fd);
+    int ret = fseek(file, readArgs->offset, SEEK_SET);
+    if (ret != 0) {
+        LOGE("fseek failed, errno: %{public}d", errno);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno: %{public}d", errno);
+        }
+        return -1;
+    }
+    ssize_t bytesRead = fread(readArgs->buf.get(), 1, readArgs->size, file);
+    if (ferror(file)) {
+        LOGE("fread failed, errno: %{public}d", errno);
+        if (fclose(file)) {
+            LOGE("fclose failed, errno: %{public}d", errno);
+        }
+        return -1;
+    }
+    if (fclose(file)) {
+        LOGE("fclose failed, errno: %{public}d", errno);
+    }
     return bytesRead;
 }
 

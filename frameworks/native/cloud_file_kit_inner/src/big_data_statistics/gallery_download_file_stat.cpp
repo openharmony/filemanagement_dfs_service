@@ -70,12 +70,14 @@ static int32_t CreateDownloadFileStatData()
         LOGI("download file statistics data file already exists");
         return E_OK;
     }
-    int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE);
-    if (fd == -1) {
+    std::FILE *file = fopen(path.c_str(), "w");
+    if (file == nullptr) {
         LOGE("create file downloadstatistic report fail, ret = %{public}d", errno);
         return errno;
     }
-    close(fd);
+    if (fclose(file)) {
+        LOGE("close file downloadstatistic report fail, ret = %{public}d", errno);
+    }
     return E_OK;
 }
 
