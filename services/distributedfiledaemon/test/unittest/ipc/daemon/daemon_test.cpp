@@ -65,6 +65,8 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
+const int32_t UID = 1009;
+const int32_t DATA_UID = 3012;
 } // namespace
 
 namespace OHOS::FileManagement {
@@ -594,6 +596,7 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_001 begin";
     daemon_->eventHandler_ = nullptr;
+    g_getCallingUid = UID;
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_EVENT_HANDLER);
 
     daemon_->StartEventHandler();
@@ -801,6 +804,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfo_001 begin";
+    g_getCallingUid = UID;
     EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return(""));
     bool isSrcFile = false;
     bool srcIsDir = false;
@@ -892,6 +896,8 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 begin";
     int32_t userId = 100;
+    g_getCallingUid = DATA_UID;
+    g_checkCallerPermissionDatasync = true;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
     EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, nullptr), E_NULLPTR);
@@ -914,6 +920,8 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 begin";
     daemon_->StartEventHandler();
     int32_t userId = 100;
+    g_getCallingUid = DATA_UID;
+    g_checkCallerPermissionDatasync = true;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
@@ -938,6 +946,8 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 begin";
+    g_getCallingUid = DATA_UID;
+    g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->RegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
@@ -955,6 +965,8 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 begin";
+    g_getCallingUid = DATA_UID;
+    g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
