@@ -580,6 +580,7 @@ void CloudSyncManagerImpl::SystemAbilityStatusChange::OnRemoveSystemAbility(int3
 
 void CloudSyncManagerImpl::CleanGalleryDentryFile()
 {
+    LOGI("CleanGalleryDentryFile start");
     const std::string photoDir = "/storage/media/cloud/files/Photo";
     const std::string thumbsDir = "/storage/media/cloud/files/.thumbs/Photo";
     if (!OHOS::Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(photoDir)) {
