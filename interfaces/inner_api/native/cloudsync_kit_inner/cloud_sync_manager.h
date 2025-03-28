@@ -115,7 +115,7 @@ public:
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                                   std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
+                                   int32_t fieldkey = FIELDKEY_CONTENT,
                                    const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr,
                                    int32_t timeout = -1) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;

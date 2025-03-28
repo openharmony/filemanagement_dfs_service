@@ -35,7 +35,6 @@ type:*OHOS::NativeRdb*
 src:*cloud_download_callback_stub.cpp
 src:*cloud_sync_callback_stub.cpp
 src:*cloud_daemon_stub.cpp
-src:*cloud_sync_service_stub.cpp
 src:*daemon_stub.cpp
 src:*dfsu_access_token_helper.cpp
 src:*third_party/googletest/googlemock/include/gmock/*

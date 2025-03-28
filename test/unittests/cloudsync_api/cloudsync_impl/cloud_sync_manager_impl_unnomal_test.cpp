@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "cloud_sync_manager_impl.h"
-#include "cloud_sync_service_proxy.h"
+#include "service_proxy.h"
 #include "dfs_error.h"
 #include "i_cloud_sync_service_mock.h"
 #include "iservice_registry.h"

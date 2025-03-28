@@ -27,11 +27,11 @@
 #include "file_transfer_manager.h"
 #include "i_cloud_download_callback.h"
 #include "i_cloud_sync_callback.h"
-#include "sync_rule/user_status_listener.h"
+#include "svc_death_recipient.h"
 #include "sync_rule/battery_status_listener.h"
 #include "sync_rule/package_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
-#include "svc_death_recipient.h"
+#include "sync_rule/user_status_listener.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
@@ -40,64 +40,67 @@ class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub
 public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudSyncService() = default;
-    int32_t UnRegisterCallbackInner(const std::string &bundleName = "") override;
-    int32_t UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
-    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
-    int32_t RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
-        const std::string &bundleName = "") override;
-    int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
-    int32_t StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") override;
-    int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
-    int32_t StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
-    int32_t ResetCursor(const std::string &bundleName = "") override;
-    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
-        const sptr<IRemoteObject> &optimizeCallback) override;
-    int32_t StopOptimizeStorage() override;
-    int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
-    int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
-    int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
-    int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
-    int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
-    int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t StartDownloadFile(const std::string &path) override;
-    int32_t StartFileCache(const std::vector<std::string> &uriVec,
-                           int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+    ErrCode UnRegisterCallbackInner(const std::string &bundleName = "") override;
+    ErrCode UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
+    ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
+    ErrCode RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                          const std::string &bundleName = "") override;
+    ErrCode StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
+    ErrCode StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") override;
+    ErrCode TriggerSyncInner(const std::string &bundleName, int32_t userId) override;
+    ErrCode StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
+    ErrCode StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
+    ErrCode ResetCursor(const std::string &bundleName = "") override;
+    ErrCode OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+                            bool isCallbackValid,
+                            const sptr<IRemoteObject> &optimizeCallback) override;
+    ErrCode StopOptimizeStorage() override;
+    ErrCode ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
+    ErrCode Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
+    ErrCode NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
+    ErrCode NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
+    ErrCode EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
+    ErrCode DisableCloud(const std::string &accoutId) override;
+    ErrCode StartDownloadFile(const std::string &path) override;
+    ErrCode StartFileCache(const std::vector<std::string> &uriVec,
+                           int64_t &downloadId,
+                           int32_t fieldkey,
                            bool isCallbackValid,
                            const sptr<IRemoteObject> &downloadCallback,
                            int32_t timeout = -1) override;
-    int32_t StopDownloadFile(const std::string &path, bool needClean = false) override;
-    int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
-    int32_t DownloadThumb() override;
-    int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    int32_t RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    int32_t UnregisterDownloadFileCallback() override;
-    int32_t UnregisterFileCacheCallback() override;
-    int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
-    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) override;
-    int32_t DownloadFiles(const int32_t userId,
+    ErrCode StopDownloadFile(const std::string &path, bool needClean = false) override;
+    ErrCode StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
+    ErrCode DownloadThumb() override;
+    ErrCode RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
+    ErrCode RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback) override;
+    ErrCode UnregisterDownloadFileCallback() override;
+    ErrCode UnregisterFileCacheCallback() override;
+    ErrCode UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
+    ErrCode DownloadFile(const int32_t userId, const std::string &bundleName,
+                         const AssetInfoObj &assetInfoObj) override;
+    ErrCode DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
                           const std::vector<AssetInfoObj> &assetInfoObj,
                           std::vector<bool> &assetResultMap) override;
-    int32_t DownloadAsset(const uint64_t taskId,
+    ErrCode DownloadAsset(const uint64_t taskId,
                           const int32_t userId,
                           const std::string &bundleName,
                           const std::string &networkId,
-                          AssetInfoObj &assetInfoObj) override;
-    int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) override;
-    int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
-    int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
-    int32_t CleanCacheInner(const std::string &uri) override;
+                          const AssetInfoObj &assetInfoObj) override;
+    ErrCode RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) override;
+    ErrCode DeleteAsset(const int32_t userId, const std::string &uri) override;
+    ErrCode GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
+    ErrCode CleanCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
-    int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
-        std::vector<std::string> &failCloudId) override;
-    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
-        std::vector<std::string> &failCloudId) override;
+    ErrCode BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+                           std::vector<std::string> &failCloudId) override;
+    ErrCode BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+                                  std::vector<std::string> &failCloudId) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
-    void OnStart(const SystemAbilityOnDemandReason& startReason) override;
-    void OnActive(const SystemAbilityOnDemandReason& startReason) override;
+    void OnStart(const SystemAbilityOnDemandReason &startReason) override;
+    void OnActive(const SystemAbilityOnDemandReason &startReason) override;
     void OnStop() override;
     void PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;

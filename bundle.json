@@ -94,7 +94,6 @@
                 "cloud_sync_callback.h",
                 "cloud_sync_manager.h",
                 "i_cloud_sync_callback.h",
-                "i_cloud_sync_service.h",
                 "svc_death_recipient.h",
                 "cloud_sync_constants.h",
                 "cloud_sync_common.h"

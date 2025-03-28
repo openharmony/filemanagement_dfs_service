@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+sequenceable OHOS.IRemoteObject;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.AssetInfoObj;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CleanFileInfoObj;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CleanOptions;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.DentryFileInfoObj;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.OptimizeSpaceOptions;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
+
+interface OHOS.FileManagement.CloudSync.ICloudSyncService
+{
+    void UnRegisterCallbackInner([in] String bundleName);
+    void UnRegisterFileSyncCallbackInner([in] String bundleName);
+    void RegisterCallbackInner([in] IRemoteObject remoteObject, [in] String bundleName);
+    void RegisterFileSyncCallbackInner([in] IRemoteObject remoteObject, [in] String bundleName);
+    void StartSyncInner([in] boolean forceFlag, [in] String bundleName);
+    void StartFileSyncInner([in] boolean forceFlag, [in] String bundleName);
+    void TriggerSyncInner([in] String bundleName, [in] int userId);
+    void StopSyncInner([in] String bundleName, [in] boolean forceFlag);
+    void StopFileSyncInner([in] String bundleName, [in] boolean forceFlag);
+    void ResetCursor([in] String bundleName);
+    void ChangeAppSwitch([in] String accoutId, [in] String bundleName, [in] boolean status);
+    void OptimizeStorage([in] OptimizeSpaceOptions optimizeOptions, [in] boolean isCallbackValid,
+                         [in] IRemoteObject optimizeCallback);
+    void StopOptimizeStorage();
+    void Clean([in] String accountId, [in] CleanOptions cleanOptions);
+    void NotifyDataChange([in] String accoutId, [in] String bundleName);
+    void NotifyEventChange([in] int userId, [in] String eventId, [in] String extraData);
+    void EnableCloud([in] String accoutId, [in] SwitchDataObj switchData);
+    void DisableCloud([in] String accoutId);
+    void StartDownloadFile([in] String path);
+    void StartFileCache([in] String[] pathVec, [out] long downloadId, [in] int fieldkey, [in] boolean isCallbackValid,
+                        [in] IRemoteObject downloadCallback, [in] int timeout);
+    void StopDownloadFile([in] String path, [in] boolean needClean);
+    void StopFileCache([in] long downloadId, [in] boolean needClean, [in] int timeout);
+    void DownloadThumb();
+    void RegisterDownloadFileCallback([in] IRemoteObject downloadCallback);
+    void RegisterFileCacheCallback([in] IRemoteObject downloadCallback);
+    void UnregisterDownloadFileCallback();
+    void UnregisterFileCacheCallback();
+    void UploadAsset([in] int userId, [in] String request, [out] String resultStr);
+    void DownloadFile([in] int userId, [in] String bundleName, [in] AssetInfoObj assetInfoObj);
+    void DownloadFiles([in] int userId, [in] String bundleName, [in] AssetInfoObj[] assetInfoObj,
+                       [out] boolean[] assetResultMap);
+    void DownloadAsset([in] unsigned long taskId, [in] int userId, [in] String bundleName, [in] String networkId,
+                       [in] AssetInfoObj assetInfoObj);
+    void RegisterDownloadAssetCallback([in] IRemoteObject remoteObject);
+    void DeleteAsset([in] int userId, [in] String uri);
+    void GetSyncTimeInner([out] long syncTime, [in] String bundleName);
+    void CleanCacheInner([in] String uri);
+    void BatchCleanFile([in] CleanFileInfoObj[] fileInfo, [out] String[] failCloudId);
+    void BatchDentryFileInsert([in] DentryFileInfoObj[] fileInfo, [out] String[] failCloudId);
+}

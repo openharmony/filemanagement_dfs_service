@@ -58,10 +58,9 @@ ohos_shared_library("cloudsync_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
 
@@ -71,7 +70,10 @@ ohos_shared_library("cloudsync_kit_inner") {
   ]
 
   configs += [ ":private_config" ]
-  public_configs = [ ":public_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
 
   external_deps = [
     "ability_base:zuri",
@@ -84,7 +86,10 @@ ohos_shared_library("cloudsync_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${utils_path}:libdistributedfiledentry" ]
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfiledentry",
+  ]
 
   if (cloudsync_service_media_library) {
     external_deps += [ "media_library:media_library" ]
@@ -111,10 +116,9 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
   ]
 
   defines = [
@@ -123,7 +127,10 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
   ]
 
   configs += [ ":private_config" ]
-  public_configs = [ ":public_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
 
   external_deps = [
     "ability_base:zuri",
@@ -134,7 +141,10 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
 
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
@@ -155,9 +165,9 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
     cfi_vcall_icall_only = true
   }
   sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_service_proxy_lite.cpp",
   ]
 
   defines = [
@@ -166,7 +176,10 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
   ]
 
   configs += [ ":private_config" ]
-  public_configs = [ ":public_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -176,7 +189,10 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
 
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]

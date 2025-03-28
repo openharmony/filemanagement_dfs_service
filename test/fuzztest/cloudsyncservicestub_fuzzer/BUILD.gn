@@ -78,5 +78,5 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
 
 group("fuzztest") {
   testonly = true
-  deps = [ ":CloudSyncServiceStubFuzzTest" ]
+  deps = []
 }
