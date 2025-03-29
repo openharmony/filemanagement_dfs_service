@@ -15,45 +15,25 @@
 
 #include "cloud_sync_manager_ani.h"
 
+#include "ani_utils.h"
 #include "dfs_error.h"
 #include "error_handler.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
-static ani_status AniString2String(ani_env *env, ani_string str, std::string &res)
-{
-    ani_size strSize;
-    ani_status ret = env->String_GetUTF8Size(str, &strSize);
-    if (ret != ANI_OK) {
-        LOGE("ani string get size failed. ret = %{public}d", static_cast<int32_t>(ret));
-        return ret;
-    }
-    std::vector<char> buffer(strSize + 1);
-    char *utf8Buffer = buffer.data();
-    ani_size byteWrite = 0;
-    ret = env->String_GetUTF8(str, utf8Buffer, strSize + 1, &byteWrite);
-    if (ret != ANI_OK) {
-        LOGE("ani string to string failed. ret = %{public}d", static_cast<int32_t>(ret));
-        return ret;
-    }
-    utf8Buffer[byteWrite] = '\0';
-    res = std::string(utf8Buffer);
-    return ANI_OK;
-}
-
 void CloudSyncManagerAni::ChangeAppCloudSwitch(
     ani_env *env, ani_class clazz, ani_string accoutId, ani_string bundleName, ani_boolean status)
 {
     std::string accoutIdStr;
-    ani_status ret = AniString2String(env, accoutId, accoutIdStr);
+    ani_status ret = ANIUtils::AniString2String(env, accoutId, accoutIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
 
     std::string bundleNameStr;
-    ret = AniString2String(env, bundleName, bundleNameStr);
+    ret = ANIUtils::AniString2String(env, bundleName, bundleNameStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -71,14 +51,14 @@ void CloudSyncManagerAni::ChangeAppCloudSwitch(
 void CloudSyncManagerAni::NotifyDataChange(ani_env *env, ani_class clazz, ani_string accoutId, ani_string bundleName)
 {
     std::string accoutIdStr;
-    ani_status ret = AniString2String(env, accoutId, accoutIdStr);
+    ani_status ret = ANIUtils::AniString2String(env, accoutId, accoutIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
 
     std::string bundleNameStr;
-    ret = AniString2String(env, bundleName, bundleNameStr);
+    ret = ANIUtils::AniString2String(env, bundleName, bundleNameStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -131,7 +111,7 @@ static ani_status ParseSwitches(ani_env *env, ani_object map_object, SwitchDataO
             return ret;
         }
         std::string bundleId;
-        ret = AniString2String(env, static_cast<ani_string>(key_value), bundleId);
+        ret = ANIUtils::AniString2String(env, static_cast<ani_string>(key_value), bundleId);
         if (ret != ANI_OK) {
             ErrorHandler::Throw(env, static_cast<int32_t>(ret));
             return ret;
@@ -145,7 +125,7 @@ static ani_status ParseSwitches(ani_env *env, ani_object map_object, SwitchDataO
 void CloudSyncManagerAni::EnableCloud(ani_env *env, ani_class clazz, ani_string accoutId, ani_object record)
 {
     std::string accoutIdStr;
-    ani_status ret = AniString2String(env, accoutId, accoutIdStr);
+    ani_status ret = ANIUtils::AniString2String(env, accoutId, accoutIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -178,7 +158,7 @@ void CloudSyncManagerAni::EnableCloud(ani_env *env, ani_class clazz, ani_string 
 void CloudSyncManagerAni::DisableCloud(ani_env *env, ani_class clazz, ani_string accoutId)
 {
     std::string accoutIdStr;
-    ani_status ret = AniString2String(env, accoutId, accoutIdStr);
+    ani_status ret = ANIUtils::AniString2String(env, accoutId, accoutIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -231,7 +211,7 @@ static ani_status ParseAppActions(ani_env *env, ani_object map_object, CleanOpti
             return ret;
         }
         std::string bundleName;
-        ret = AniString2String(env, static_cast<ani_string>(key_value), bundleName);
+        ret = ANIUtils::AniString2String(env, static_cast<ani_string>(key_value), bundleName);
         if (ret != ANI_OK) {
             ErrorHandler::Throw(env, static_cast<int32_t>(ret));
             return ret;
@@ -246,7 +226,7 @@ static ani_status ParseAppActions(ani_env *env, ani_object map_object, CleanOpti
 void CloudSyncManagerAni::Clean(ani_env *env, ani_class clazz, ani_string accoutId, ani_object record)
 {
     std::string accoutIdStr;
-    ani_status ret = AniString2String(env, accoutId, accoutIdStr);
+    ani_status ret = ANIUtils::AniString2String(env, accoutId, accoutIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -293,13 +273,13 @@ void CloudSyncManagerAni::NotifyEventChange(ani_env *env, ani_class clazz, ani_d
     }
 
     std::string eventIdStr;
-    ret = AniString2String(env, static_cast<ani_string>(eventId), eventIdStr);
+    ret = ANIUtils::AniString2String(env, static_cast<ani_string>(eventId), eventIdStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
     }
 
     std::string extraDataStr;
-    ret = AniString2String(env, static_cast<ani_string>(extraDataRef), extraDataStr);
+    ret = ANIUtils::AniString2String(env, static_cast<ani_string>(extraDataRef), extraDataStr);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
     }

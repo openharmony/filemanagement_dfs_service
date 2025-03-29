@@ -27,6 +27,7 @@ ohos_shared_library("cloud_sync_manager_ani") {
   public_configs = [ ":ani_config" ]
   sources = [
     "../../cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "../ani_helper/src/ani_utils.cpp",
     "../ani_helper/src/error_handler.cpp",
     "./src/bind_function_class.cpp",
     "./src/cloud_sync_manager_ani.cpp",
@@ -49,6 +50,7 @@ ohos_shared_library("cloud_sync_manager_ani") {
   ]
   external_deps = [
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "file_api:filemgmt_libfs",
     "hilog:libhilog",
     "runtime_core:ani",

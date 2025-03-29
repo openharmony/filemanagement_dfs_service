@@ -14,6 +14,8 @@
  */
 
 #include "cloud_sync_ani.h"
+
+#include "ani_utils.h"
 #include "cloud_sync_callback_ani.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -37,27 +39,6 @@ static CloudSyncCore *CloudSyncUnwrap(ani_env *env, ani_object object)
     std::uintptr_t ptrValue = static_cast<std::uintptr_t>(nativePtr);
     CloudSyncCore *cloudSync = reinterpret_cast<CloudSyncCore *>(ptrValue);
     return cloudSync;
-}
-
-static ani_status AniString2String(ani_env *env, ani_string str, std::string &res)
-{
-    ani_size strSize;
-    ani_status ret = env->String_GetUTF8Size(str, &strSize);
-    if (ret != ANI_OK) {
-        LOGE("ani string get size failed. ret = %{public}d", static_cast<int32_t>(ret));
-        return ret;
-    }
-    std::vector<char> buffer(strSize + 1);
-    char *utf8Buffer = buffer.data();
-    ani_size byteWrite = 0;
-    ret = env->String_GetUTF8(str, utf8Buffer, strSize + 1, &byteWrite);
-    if (ret != ANI_OK) {
-        LOGE("ani string to string failed. ret = %{public}d", static_cast<int32_t>(ret));
-        return ret;
-    }
-    utf8Buffer[byteWrite] = '\0';
-    res = std::string(utf8Buffer);
-    return ANI_OK;
 }
 
 void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
@@ -149,7 +130,7 @@ void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
 void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
 {
     std::string bnm;
-    ani_status ret = AniString2String(env, bundleName, bnm);
+    ani_status ret = ANIUtils::AniString2String(env, bundleName, bnm);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -207,7 +188,7 @@ void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, 
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
     std::string event;
-    ret = AniString2String(env, evt, event);
+    ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -238,7 +219,7 @@ void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
     std::string event;
-    ret = AniString2String(env, evt, event);
+    ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -261,7 +242,7 @@ void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt
 void CloudSyncAni::CloudSyncOff1(ani_env *env, ani_object object, ani_string evt)
 {
     std::string event;
-    ani_status ret = AniString2String(env, evt, event);
+    ani_status ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -316,7 +297,7 @@ void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
 ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string path)
 {
     string filePath;
-    ani_status ret = AniString2String(env, path, filePath);
+    ani_status ret = ANIUtils::AniString2String(env, path, filePath);
     if (ret != ANI_OK) {
         LOGE("ani string get size failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -435,7 +416,7 @@ int32_t CloudSyncAni::GetRegisterParams(
     ani_env *env, ani_string uri, ani_boolean recursion, ani_object fun, RegisterParams &registerParams)
 {
     std::string uriInput;
-    ani_status ret = AniString2String(env, uri, uriInput);
+    ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return static_cast<int32_t>(ret);
@@ -563,7 +544,7 @@ void CloudSyncAni::UnRegisterChange(ani_env *env, ani_class clazz, ani_string ur
     }
 
     std::string uriInput;
-    ani_status ret = AniString2String(env, uri, uriInput);
+    ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
