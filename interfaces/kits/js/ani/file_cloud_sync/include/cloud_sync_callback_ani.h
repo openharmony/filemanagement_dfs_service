@@ -73,7 +73,6 @@ private:
     void GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg);
     ani_env *env_;
     ani_ref cbOnRef_ = nullptr;
-    ani_vm *vm = nullptr;
 };
 
 class ChangeListenerAni {
@@ -81,7 +80,6 @@ public:
     explicit ChangeListenerAni(ani_env *env)
     {
         env_ = env;
-        env_->GetVM(&vm);
     }
 
     ChangeListenerAni(const ChangeListenerAni &listener)
@@ -90,7 +88,6 @@ public:
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
         this->observers_ = listener.observers_;
-        this->vm = listener.vm;
     }
 
     ChangeListenerAni &operator=(const ChangeListenerAni &listener)
@@ -99,19 +96,21 @@ public:
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
         this->observers_ = listener.observers_;
-        this->vm = listener.vm;
         return *this;
     }
 
     ~ChangeListenerAni() {};
     void OnChange(CloudChangeListener &listener, const ani_ref cbRef);
+    ani_status GetChangeDataObject(
+        ani_env *env, CloudChangeListener &listener, ani_class cls, ani_object &changeData);
+    ani_status SetIsDir(ani_env *env, const std::shared_ptr<MessageParcel> parcel, ani_object &isDirectory);
+    ani_status SetValueArray(ani_env *env, const std::list<Uri> listValue, ani_object &uris);
     ani_ref cbOnRef_ = nullptr;
     ani_ref cbOffRef_ = nullptr;
     std::vector<std::shared_ptr<CloudNotifyObserver>> observers_;
 
 private:
     ani_env *env_;
-    ani_vm *vm = nullptr;
 };
 
 class CloudNotifyObserver {

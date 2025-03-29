@@ -14,9 +14,13 @@
  */
 
 #include "cloud_download_callback_ani.h"
+
+#include "ani_utils.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
+constexpr int32_t ANI_SCOPE_SIZE = 16;
 
 CloudDownloadCallbackAniImpl::CloudDownloadCallbackAniImpl(ani_env *env, ani_ref fun, bool isBatch)
 {
@@ -25,10 +29,6 @@ CloudDownloadCallbackAniImpl::CloudDownloadCallbackAniImpl(ani_env *env, ani_ref
         cbOnRef_ = fun;
     }
     isBatch_ = isBatch;
-    ani_status ret = env_->GetVM(&vm);
-    if (ret != ANI_OK) {
-        LOGE("get vim failed. ret = %{public}d", ret);
-    }
 }
 
 void CloudDownloadCallbackAniImpl::GetDownloadProgress(
@@ -80,52 +80,45 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
 void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &progress)
 {
-    ani_status ret = vm->GetEnv(ANI_VERSION_1, &env_);
-    bool attach = false;
-    if (ret != ANI_OK) {
-        LOGE("vm get env failed. ret = %{public}d", ret);
-        ani_options aniArgs {0, nullptr};
-        ret = vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env_);
+    auto task = [this, progress]() {
+        LOGI("CloudDownloadCallbackAniImpl OnDownloadProcess");
+        ani_env *tmpEnv = env_;
+        ani_size nr_refs = ANI_SCOPE_SIZE;
+        ani_status ret = tmpEnv->CreateLocalScope(nr_refs);
         if (ret != ANI_OK) {
-            LOGE("AttachCurrentThread failed. ret = %{public}d", ret);
+            LOGE("crete local scope failed. ret = %{public}d", ret);
             return;
         }
-        attach = true;
-    }
-    ani_size nr_refs = 16;
-    ret = env_->CreateLocalScope(nr_refs);
-    if (ret != ANI_OK) {
-        LOGE("crete local scope failed. ret = %{public}d", ret);
-        return;
-    }
-    ani_namespace ns {};
-    ret = env_->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return;
-    }
-    static const char *className = "LDownloadProgressInner;";
-    ani_class cls;
-    ret = env_->Namespace_FindClass(ns, className, &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", ret);
-        return;
-    }
-    ani_object pg;
-    GetDownloadProgress(progress, cls, pg);
-    ani_ref ref_;
-    std::vector<ani_ref> vec = { pg };
-    ret = env_->FunctionalObject_Call(static_cast<ani_fn_object>(cbOnRef_), 1, vec.data(), &ref_);
-    if (ret != ANI_OK) {
-        LOGE("ani call function failed. ret = %{public}d", ret);
-        return;
-    }
-    ret = env_->DestroyLocalScope();
-    if (ret != ANI_OK) {
-        LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
-    }
-    if (attach) {
-        vm->DetachCurrentThread();
+        ani_namespace ns {};
+        ret = tmpEnv->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+        if (ret != ANI_OK) {
+            LOGE("find namespace failed. ret = %{public}d", ret);
+            return;
+        }
+        static const char *className = "LDownloadProgressInner;";
+        ani_class cls;
+        ret = tmpEnv->Namespace_FindClass(ns, className, &cls);
+        if (ret != ANI_OK) {
+            LOGE("find class failed. ret = %{public}d", ret);
+            return;
+        }
+        ani_object pg;
+        GetDownloadProgress(progress, cls, pg);
+        ani_ref ref_;
+        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbOnRef_);
+        std::vector<ani_ref> vec = { pg };
+        ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
+        if (ret != ANI_OK) {
+            LOGE("ani call function failed. ret = %{public}d", ret);
+            return;
+        }
+        ret = tmpEnv->DestroyLocalScope();
+        if (ret != ANI_OK) {
+            LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
+        }
+    };
+    if (!ANIUtils::SendEventToMainThread(task)) {
+        LOGE("failed to send event");
     }
 }
 

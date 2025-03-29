@@ -34,7 +34,6 @@ private:
     void GetDownloadProgress(const DownloadProgressObj &progress, const ani_class &cls, ani_object &pg);
     ani_env *env_;
     ani_ref cbOnRef_ = nullptr;
-    ani_vm *vm = nullptr;
     bool isBatch_;
 };
 } // namespace OHOS::FileManagement::CloudSync
