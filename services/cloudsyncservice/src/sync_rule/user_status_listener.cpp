@@ -17,6 +17,10 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "iservice_registry.h"
+#include "parameters.h"
+#include "system_ability_definition.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -37,6 +41,11 @@ void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT) {
         LOGI("account logout");
         listener_->DoCleanVideoCache();
+        return;
+    }
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING) {
+        LOGI("account stopping");
+        listener_->DoUnloadSA();
         return;
     }
 }
@@ -71,6 +80,7 @@ void UserStatusListener::Start()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<UserStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
@@ -88,5 +98,21 @@ void UserStatusListener::Stop()
 void UserStatusListener::DoCleanVideoCache()
 {
     dataSyncManager_->CleanVideoCache();
+}
+
+void UserStatusListener::DoUnloadSA()
+{
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        LOGE("get samgr failed");
+        return;
+    }
+    system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_END);
+    int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+    if (ret != ERR_OK) {
+        LOGE("remove system ability failed");
+        return;
+    }
+    LOGI("unload cloudfileservice end");
 }
 } // namespace OHOS::FileManagement::CloudSync
