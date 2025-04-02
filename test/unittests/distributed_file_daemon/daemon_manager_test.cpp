@@ -57,7 +57,7 @@ void DistributedDaemonManagerTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerTest, GetInstanceTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerTest, GetInstanceTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest Start";
     try {

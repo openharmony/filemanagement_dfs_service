@@ -25,7 +25,6 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
     "${services_path}/distributedfiledaemon/test/mock/include",
-    "//third_party/json/include",
   ]
 }
 
@@ -52,15 +51,13 @@ ohos_unittest("asset_callback_manager_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "zlib:shared_libz",
@@ -98,15 +95,13 @@ ohos_unittest("asset_recv_callback_proxy_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
@@ -136,15 +131,13 @@ ohos_unittest("asset_send_callback_proxy_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

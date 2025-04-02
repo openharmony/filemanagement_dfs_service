@@ -37,15 +37,13 @@ ohos_unittest("file_trans_listener_stub_test") {
     "${distributedfile_path}/test/mock",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
@@ -86,15 +84,13 @@ ohos_unittest("asset_recv_callback_stub_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
@@ -136,15 +132,13 @@ ohos_unittest("asset_send_callback_stub_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

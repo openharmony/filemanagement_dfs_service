@@ -23,7 +23,6 @@ config("module_private_config") {
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/json/include",
   ]
 }
 
@@ -51,13 +50,13 @@ ohos_unittest("device_info_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_head",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
@@ -131,8 +130,6 @@ ohos_unittest("device_manager_agent_sup_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -147,6 +144,8 @@ ohos_unittest("device_manager_agent_sup_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -227,8 +226,6 @@ ohos_unittest("device_manager_agent_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -243,6 +240,8 @@ ohos_unittest("device_manager_agent_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -319,7 +318,6 @@ ohos_unittest("os_account_observer_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -334,6 +332,8 @@ ohos_unittest("os_account_observer_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -408,7 +408,6 @@ ohos_unittest("devsl_dispatcher_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -423,6 +422,8 @@ ohos_unittest("devsl_dispatcher_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -498,7 +499,6 @@ ohos_unittest("kernel_talker_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -513,6 +513,8 @@ ohos_unittest("kernel_talker_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -583,7 +585,6 @@ ohos_unittest("network_agent_template_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -598,6 +599,8 @@ ohos_unittest("network_agent_template_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -671,7 +674,6 @@ ohos_unittest("session_pool_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -686,6 +688,8 @@ ohos_unittest("session_pool_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -763,8 +767,6 @@ ohos_unittest("softbus_agent_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -779,6 +781,8 @@ ohos_unittest("softbus_agent_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -861,8 +865,6 @@ ohos_unittest("softbus_agent_sup_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -877,6 +879,8 @@ ohos_unittest("softbus_agent_sup_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -932,10 +936,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
@@ -943,6 +944,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -988,10 +990,7 @@ ohos_unittest("softbus_file_send_listener_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
@@ -999,6 +998,7 @@ ohos_unittest("softbus_file_send_listener_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -1068,7 +1068,6 @@ ohos_unittest("softbus_session_dispatcher_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -1083,6 +1082,8 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -1158,7 +1159,6 @@ ohos_unittest("softbus_session_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -1173,6 +1173,8 @@ ohos_unittest("softbus_session_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -1230,8 +1232,6 @@ ohos_unittest("softbus_handler_asset_test") {
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -1240,6 +1240,8 @@ ohos_unittest("softbus_handler_asset_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
@@ -1288,11 +1290,7 @@ ohos_unittest("softbus_handler_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -1300,6 +1298,8 @@ ohos_unittest("softbus_handler_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -1335,15 +1335,14 @@ ohos_unittest("softbus_session_pool_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
   ]
 }
@@ -1382,11 +1381,7 @@ ohos_unittest("softbus_session_listener_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -1395,6 +1390,8 @@ ohos_unittest("softbus_session_listener_test") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
@@ -1436,10 +1433,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -1447,6 +1441,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "os_account:os_account_innerkits",
     "zlib:shared_libz",
@@ -1488,17 +1483,15 @@ ohos_unittest("softbus_asset_send_listener_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "os_account:os_account_innerkits",
     "zlib:shared_libz",
