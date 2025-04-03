@@ -76,11 +76,6 @@ void PackageStatusListener::RemovedClean(const std::string &bundleName, const in
         LOGE("DataSyncerManager Trigger Stopsync failed, ret: %{public}d", ret);
         return;
     }
-    ret = dataSyncManager_->ChangeAppSwitch(bundleName, userId, false);
-    if (ret != 0) {
-        LOGE("DataSyncerManager ChangeAppSwitch failed, ret: %{public}d", ret);
-        return;
-    }
     ret = dataSyncManager_->CleanCloudFile(userId, bundleName, CLEAR_DATA);
     if (ret != 0) {
         LOGE("CleanCloudFile failed, ret: %{public}d", ret);
