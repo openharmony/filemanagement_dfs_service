@@ -102,7 +102,8 @@ int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime, const std::string &
     return CloudSyncServiceProxy->GetSyncTimeInner(syncTime, bundleName);
 }
 
-int32_t CloudSyncManagerImpl::OptimizeStorage(const int32_t agingDays)
+int32_t CloudSyncManagerImpl::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+    const std::shared_ptr<CloudOptimizeCallback> optimizeCallback)
 {
     LOGI("OptimizeStorage Start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
@@ -111,7 +112,32 @@ int32_t CloudSyncManagerImpl::OptimizeStorage(const int32_t agingDays)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->OptimizeStorage(agingDays);
+
+    bool isCallbackValid = false;
+    sptr<CloudOptimizeCallbackClient> opCallback = nullptr;
+    if (optimizeCallback != nullptr) {
+        opCallback = sptr(new (std::nothrow) CloudOptimizeCallbackClient(optimizeCallback));
+        isCallbackValid = true;
+        if (opCallback == nullptr) {
+            isCallbackValid = false;
+            LOGE("OptimizeStorage callback failed");
+        }
+    }
+
+    return CloudSyncServiceProxy->OptimizeStorage(optimizeOptions, isCallbackValid, opCallback);
+}
+
+int32_t CloudSyncManagerImpl::StopOptimizeStorage()
+{
+    LOGI("StopOptimizeStorage Start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+
+    return CloudSyncServiceProxy->StopOptimizeStorage();
 }
 
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)

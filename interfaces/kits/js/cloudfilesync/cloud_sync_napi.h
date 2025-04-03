@@ -17,6 +17,8 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H
 
 #include "cloud_sync_callback.h"
+#include "cloud_optimize_callback.h"
+#include "cloud_sync_common.h"
 #include "data_ability_observer_interface.h"
 #include "data_ability_observer_stub.h"
 #include "dataobs_mgr_client.h"
@@ -62,6 +64,8 @@ public:
     static napi_value RegisterChange(napi_env env, napi_callback_info info);
     static napi_value UnregisterChange(napi_env env, napi_callback_info info);
     static napi_value OptimizeStorage(napi_env env, napi_callback_info info);
+    static napi_value StartOptimizeStorage(napi_env env, napi_callback_info info);
+    static napi_value StopOptimizeStorage(napi_env env, napi_callback_info info);
 
     static std::string GetBundleName(const napi_env &env, const LibN::NFuncArg &funcArg);
     CloudSyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
@@ -71,6 +75,8 @@ private:
     static bool CheckRef(napi_env env, napi_ref ref, ChangeListenerNapi &listObj, const std::string &uri);
     static int32_t RegisterToObs(napi_env env, const RegisterParams &registerParams);
     static napi_value UnregisterFromObs(napi_env env, const std::string &uri);
+    static int32_t HandOptimizeStorageParams(napi_env env, napi_callback_info info, LibN::NFuncArg &funcArg,
+        OptimizeSpaceOptions &optimizeOptions);
     static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
     std::string className_;
     static std::mutex sOnOffMutex_;
@@ -164,6 +170,18 @@ public:
     ChangeListenerNapi listObj_;
     std::string uri_;
     napi_ref ref_;
+};
+
+class CloudOptimizeCallbackImpl : public CloudOptimizeCallback,
+                                  public std::enable_shared_from_this<CloudOptimizeCallbackImpl> {
+public:
+    CloudOptimizeCallbackImpl(napi_env env, LibN::NVal callbcakVal) : env_(env), cbOnRef_(callbcakVal) {}
+    ~CloudOptimizeCallbackImpl() = default;
+    void OnOptimizeProcess(const OptimizeState state, const int32_t progress) override;
+
+private:
+    napi_env env_ = nullptr;;
+    LibN::NRef cbOnRef_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H

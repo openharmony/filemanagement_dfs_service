@@ -183,7 +183,13 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId,
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::OptimizeStorage(const int32_t agingDays)
+int32_t CloudSyncServiceProxy::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+    const sptr<IRemoteObject> &optimizeCallback)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StopOptimizeStorage()
 {
     return E_OK;
 }

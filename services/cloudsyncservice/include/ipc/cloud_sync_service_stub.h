@@ -38,6 +38,7 @@ private:
     int32_t HandleResetCursor(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
     int32_t HandleOptimizeStorage(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStopOptimizeStorage(MessageParcel &data, MessageParcel &reply);
     int32_t HandleClean(MessageParcel &data, MessageParcel &reply);
     int32_t HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply);
     int32_t HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply);
