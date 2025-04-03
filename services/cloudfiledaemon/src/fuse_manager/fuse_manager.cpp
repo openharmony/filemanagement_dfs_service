@@ -1686,6 +1686,8 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         cloudDiskData.userId = userId;
         cloudDiskData.se = se;
         config.max_idle_threads = 1;
+        std::lock_guard<std::mutex> lock(sessionMutex_);
+        sessions_[path] = se;
     } else {
         se = fuse_session_new(&args, &cloudMediaFuseOps, sizeof(cloudMediaFuseOps), &data);
         if (se == nullptr) {
@@ -1699,6 +1701,17 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     int ret = SetNewSessionInfo(se, config, devFd, path, userId);
     return ret;
+}
+
+struct fuse_session* FuseManager::GetSession(std::string path)
+{
+    std::lock_guard<std::mutex> lock(sessionMutex_);
+    auto iterator = sessions_.find(path);
+    if (iterator != sessions_.end()) {
+        return iterator->second;
+    } else {
+        return nullptr;
+    }
 }
 
 FuseManager &FuseManager::GetInstance()
