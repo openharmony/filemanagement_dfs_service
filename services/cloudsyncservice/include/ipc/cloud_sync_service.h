@@ -29,6 +29,7 @@
 #include "i_cloud_sync_callback.h"
 #include "sync_rule/user_status_listener.h"
 #include "sync_rule/battery_status_listener.h"
+#include "sync_rule/package_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
 #include "svc_death_recipient.h"
 
@@ -91,6 +92,7 @@ private:
     void PreInit();
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
+    void HandlePackageRemoved(const SystemAbilityOnDemandReason &startReason);
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
     void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
 
@@ -110,6 +112,7 @@ private:
     std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     std::shared_ptr<UserStatusListener> userStatusListener_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
+    std::shared_ptr<PackageStatusListener> packageStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;
     std::shared_ptr<FileTransferManager> fileTransferManager_;
     sptr<SvcDeathRecipient> deathRecipient_;

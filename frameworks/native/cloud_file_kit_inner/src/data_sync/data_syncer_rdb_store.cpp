@@ -173,6 +173,16 @@ int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<Nati
     return Query(predicates, resultSet);
 }
 
+int32_t DataSyncerRdbStore::QueryCloudSync(int32_t userId,
+                                           const std::string &bundleName,
+                                           std::shared_ptr<NativeRdb::ResultSet> &resultSet)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
+    predicates.EqualTo(USER_ID, userId);
+    predicates.EqualTo(BUNDLE_NAME, bundleName);
+    return Query(predicates, resultSet);
+}
+
 int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
     std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
