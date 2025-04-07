@@ -23,6 +23,7 @@
 #include "daemon_mock.h"
 #include "device_manager_impl.h"
 #include "dfs_error.h"
+#include "network/devsl_dispatcher.h"
 #include "sandbox_helper.h"
 #include "softbus_handler_asset_mock.h"
 #include "softbus_handler_mock.h"
@@ -160,6 +161,9 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     daemonExecute_->ExecutePushAsset(event);
 
     assetObj = new (std::nothrow) AssetObj();
+    assetObj->dstNetworkId_ = "test";
+    DevslDispatcher::devslMap_.clear();
+    DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(-1));
@@ -291,33 +295,35 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
 
     uris.push_back("test");
     srcBundleName = "com.example.app";
-    auto ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    auto ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     uris.clear();
     uris.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     g_getPhysicalPath = -1;
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
     g_getPhysicalPath = E_OK;
     g_checkValidPath = false;
     EXPECT_TRUE(ret.empty());
 
     g_checkValidPath = true;
     g_isFolder = true;
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     g_isFolder = false;
     g_physicalPath = "test";
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    DevslDispatcher::devslMap_.insert(make_pair("test", 4));
+    ret = daemonExecute_->GetFileList("test", uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
 
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList("test", uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
+    DevslDispatcher::devslMap_.clear();
     GTEST_LOG_(INFO) << "DaemonExecute_GetFileList_001 end";
 }
 

@@ -33,6 +33,7 @@
 #include "dfsu_access_token_helper.h"
 #include "i_file_trans_listener.h"
 #include "ipc_skeleton.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "sandbox_helper.h"
 #include "softbus_handler_asset_mock.h"
@@ -923,6 +924,9 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_getCallingUid = DATA_UID;
     g_checkCallerPermissionDatasync = true;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    assetObj->dstNetworkId_ = "test";
+    DevslDispatcher::devslMap_.clear();
+    DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();

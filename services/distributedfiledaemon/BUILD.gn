@@ -164,6 +164,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "file_api:securitylabel",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",

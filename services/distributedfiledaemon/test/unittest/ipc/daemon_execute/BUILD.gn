@@ -47,20 +47,6 @@ ohos_unittest("daemon_execute_test") {
   ]
 
   sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/connection_detector_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
@@ -77,7 +63,9 @@ ohos_unittest("daemon_execute_test") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:idaemon_base_source",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
 
@@ -87,6 +75,7 @@ ohos_unittest("daemon_execute_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",

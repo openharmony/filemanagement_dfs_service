@@ -34,6 +34,7 @@
 #include "utils_log.h"
 
 #include "all_connect/all_connect_manager.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_handler.h"
 #include "device/device_info.h"
 
@@ -42,6 +43,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
+using namespace std;
 namespace {
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
@@ -99,7 +101,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     }
     SoftBusHandlerAsset::GetInstance().AddAssetObj(socketId, assetObj);
 
-    auto fileList = GetFileList(assetObj->uris_, userId, assetObj->srcBundleName_);
+    auto fileList = GetFileList(assetObj->dstNetworkId_, assetObj->uris_, userId, assetObj->srcBundleName_);
     if (fileList.empty()) {
         LOGE("get fileList is empty.");
         HandlePushAssetFail(socketId, assetObj);
@@ -178,7 +180,7 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
                                                          ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     LOGI("RequestSendFile OpenSession success");
 
-    ret = SoftBusHandler::GetInstance().CopySendFile(socketId, sessionName, srcUri, dstPath);
+    ret = SoftBusHandler::GetInstance().CopySendFile(socketId, dstDeviceId, srcUri, dstPath);
     if (ret != E_OK) {
         LOGE("CopySendFile failed, ret is %{public}d", ret);
         SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
@@ -259,9 +261,8 @@ std::string DaemonExecute::GetZipName(const std::string &relativePath)
     return zipName;
 }
 
-std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
-                                                    int32_t userId,
-                                                    const std::string &srcBundleName)
+std::vector<std::string> DaemonExecute::GetFileList(const string &peerNetworkId, const std::vector<std::string> &uris,
+                                                    int32_t userId, const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
     for (const auto &uri : uris) {
@@ -287,6 +288,11 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
         }
 
         fileList.emplace_back(physicalPath);
+    }
+
+    if (!DevslDispatcher::CompareDevslWithLocal(peerNetworkId, fileList)) {
+        LOGE("remote device cannot read this files");
+        return {};
     }
     LOGI("GetFileList success, file num is %{public}s", std::to_string(fileList.size()).c_str());
     return fileList;
