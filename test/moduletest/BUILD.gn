@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-module_output_path = "filemanagement/dfs_service/"
+module_output_path = "dfs_service/dfs_service_daemon/"
 
 config("module_private_config") {
   visibility = [ ":*" ]
@@ -24,7 +24,6 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include/ipc",
     "${dsoftbus_path}/interfaces/kits/bus_center",
     "${dsoftbus_path}/interfaces/kits/common",
-    "//third_party/json/include",
   ]
 }
 
@@ -80,8 +79,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -96,6 +93,8 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",

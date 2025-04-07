@@ -25,7 +25,6 @@ config("module_private_config") {
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/json/include",
   ]
 }
 
@@ -80,8 +79,6 @@ ohos_unittest("daemon_execute_test") {
   deps = [
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -94,6 +91,8 @@ ohos_unittest("daemon_execute_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_single",

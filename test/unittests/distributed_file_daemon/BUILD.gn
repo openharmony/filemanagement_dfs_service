@@ -70,8 +70,6 @@ ohos_unittest("distributed_file_daemon_test") {
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -86,6 +84,8 @@ ohos_unittest("distributed_file_daemon_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -137,13 +137,13 @@ ohos_unittest("daemon_manager_impl_test") {
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:idaemon_base_head",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_single",
     "libfuse:libfuse",
@@ -184,13 +184,13 @@ ohos_unittest("daemon_manager_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
@@ -227,16 +227,14 @@ ohos_unittest("connection_detector_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
@@ -279,16 +277,14 @@ ohos_unittest("file_dfs_listener_proxy_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
@@ -331,16 +327,14 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
@@ -379,16 +373,14 @@ ohos_unittest("trans_mananger_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",

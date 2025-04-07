@@ -22,7 +22,6 @@ config("module_private_config") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/json/include",
   ]
 }
 
@@ -49,13 +48,14 @@ ohos_unittest("mount_manager_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+  ]
 }
 
 ohos_unittest("mount_point_test") {
@@ -80,13 +80,14 @@ ohos_unittest("mount_point_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+  ]
 
   defines = [ "private=public" ]
 }
