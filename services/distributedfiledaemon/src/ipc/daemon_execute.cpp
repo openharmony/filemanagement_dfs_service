@@ -273,7 +273,8 @@ std::string DaemonExecute::GetZipName(const std::string &relativePath)
 }
 
 std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
-                                                    int32_t userId, const std::string &srcBundleName)
+                                                    int32_t userId,
+                                                    const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
     for (const auto &uri : uris) {
@@ -300,7 +301,6 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
 
         fileList.emplace_back(physicalPath);
     }
-
     LOGI("GetFileList success, file num is %{public}s", std::to_string(fileList.size()).c_str());
     return fileList;
 }

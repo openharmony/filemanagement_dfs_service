@@ -176,7 +176,24 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     daemonExecute_->ExecutePushAsset(event);
 
-    assetObj->uris_.clear();
+
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_001 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePushAsset_001
+ * @tc.desc: verify ExecutePushAsset.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 begin";
+    int32_t userId = 100;
+    assetObj = new (std::nothrow) AssetObj();
+    assetObj->dstNetworkId_ = "test";
+    DevslDispatcher::devslMap_.clear();
+    DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
     g_getPhysicalPath = E_OK;
@@ -199,7 +216,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, CompressFile(_, _, _)).WillOnce(Return(-1));
     daemonExecute_->ExecutePushAsset(event);
-    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_001 end";
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 end";
 }
 
 /**
