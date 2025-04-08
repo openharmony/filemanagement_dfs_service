@@ -226,6 +226,7 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);
+int32_t Convert2ErrNum(int32_t errNum);
 } // namespace OHOS::FileManagement
 
 #endif // OHOS_FILEMGMT_DFS_ERROR_H

@@ -13,24 +13,18 @@
  * limitations under the License.
  */
 
-#include "dfs_error.h"
+#ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
+#define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
 
-namespace OHOS::FileManagement {
-int32_t Convert2JsErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
+#include "cloud_download_callback.h"
 
-int32_t Convert2ErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
-} // namespace OHOS::FileManagement
+namespace OHOS::FileManagement::CloudSync {
+
+class CloudDownloadCallbackMiddle : public CloudDownloadCallback {
+public:
+    virtual ~CloudDownloadCallbackMiddle() = default;
+    virtual void OnDownloadProcess(const DownloadProgressObj &progress) = 0;
+    virtual void DeleteReference() {};
+};
+} // namespace OHOS::FileManagement::CloudSync
+#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
