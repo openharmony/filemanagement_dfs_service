@@ -20,6 +20,7 @@
 #include "file_operations_cloud.h"
 #include "file_operations_helper.h"
 #include "utils_log.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -28,6 +29,9 @@ using namespace std;
 static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
 static const int32_t STAT_MODE_DIR = 0771;
 static const float LOOKUP_TIMEOUT = 60.0;
+#ifdef HICOLLIE_ENABLE
+static const unsigned int LOOKUP_TIMEOUT_S = 1;
+#endif
 
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
@@ -88,12 +92,18 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
     int32_t err;
     e.attr_timeout = LOOKUP_TIMEOUT;
     e.entry_timeout = LOOKUP_TIMEOUT;
+#ifdef HICOLLIE_ENABLE
+    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_Lookup", LOOKUP_TIMEOUT_S, nullptr, nullptr, false);
+#endif
     err = DoLocalLookup(req, parent, name, &e);
     if (err) {
         fuse_reply_err(req, err);
     } else {
         fuse_reply_entry(req, &e);
     }
+#ifdef HICOLLIE_ENABLE
+    XCollieHelper::CancelTimer(xcollieId);
+#endif
 }
 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
