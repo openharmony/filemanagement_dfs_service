@@ -90,6 +90,11 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         LOGE("assetObj is nullptr.");
         return;
     }
+    PushAssetInner(userId, assetObj);
+}
+
+void DaemonExecute::PushAssetInner(int32_t userId, const AssetObj &assetObj)
+{
     int32_t socketId;
     auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId);
     if (ret != E_OK) {
@@ -101,11 +106,17 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     }
     SoftBusHandlerAsset::GetInstance().AddAssetObj(socketId, assetObj);
 
-    auto fileList = GetFileList(assetObj->dstNetworkId_, assetObj->uris_, userId, assetObj->srcBundleName_);
+    auto fileList = GetFileList(assetObj->uris_, userId, assetObj->srcBundleName_);
     if (fileList.empty()) {
         LOGE("get fileList is empty.");
         HandlePushAssetFail(socketId, assetObj);
         return;
+    }
+
+    if (!DevslDispatcher::CompareDevslWithLocal(assetObj->dstNetworkId_, fileList)) {
+        LOGE("remote device cannot read this files");
+        HandlePushAssetFail(socketId, assetObj);
+        return ;
     }
 
     std::string sendFileName;
@@ -261,7 +272,7 @@ std::string DaemonExecute::GetZipName(const std::string &relativePath)
     return zipName;
 }
 
-std::vector<std::string> DaemonExecute::GetFileList(const string &peerNetworkId, const std::vector<std::string> &uris,
+std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
                                                     int32_t userId, const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
@@ -290,10 +301,6 @@ std::vector<std::string> DaemonExecute::GetFileList(const string &peerNetworkId,
         fileList.emplace_back(physicalPath);
     }
 
-    if (!DevslDispatcher::CompareDevslWithLocal(peerNetworkId, fileList)) {
-        LOGE("remote device cannot read this files");
-        return {};
-    }
     LOGI("GetFileList success, file num is %{public}s", std::to_string(fileList.size()).c_str());
     return fileList;
 }

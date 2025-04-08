@@ -36,6 +36,7 @@ public:
 private:
     using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
     void ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event);
+    void PushAssetInner(int32_t userId, const AssetObj &assetObj);
     void ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer &event);
     int32_t RequestSendFileInner(const std::string &srcUri,
                                  const std::string &dstPath,
@@ -49,7 +50,7 @@ private:
                                 HmdfsInfo &info);
 private:
     std::string GetZipName(const std::string &relativePath);
-    std::vector<std::string> GetFileList(const std::string &peerNetworkId, const std::vector<std::string> &uris,
+    std::vector<std::string> GetFileList(const std::vector<std::string> &uris,
                                          int32_t userId,
                                          const std::string &srcBundleName);
     int32_t HandleZip(const std::vector<std::string> &fileList,
