@@ -22,14 +22,14 @@
 #include "asset_send_callback_mock.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_manager_impl.h"
-#include "daemon_proxy.h"
+#include "distributed_file_daemon_proxy.h"
 #include "ipc/hmdfs_info.h"
 #include "i_daemon_mock.h"
 #include "file_dfs_listener_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::Storage::DistributedFile {
-sptr<IDaemon> DistributedFileDaemonManagerImpl::GetDaemonInterface()
+sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 {
     daemonProxy_ = iface_cast<IDaemon>(sptr(new DaemonServiceMock()));
     return daemonProxy_;
@@ -111,7 +111,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level
 {
     GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->OpenP2PConnection(deviceInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -132,7 +132,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->CloseP2PConnection(deviceInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -154,7 +154,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Lev
     auto remoteReverseObj = sptr(new FileDfsListenerMock());
     GTEST_LOG_(INFO) << "OpenP2PConnectionExTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->OpenP2PConnectionEx("test", remoteReverseObj);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -175,7 +175,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Le
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionEx Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->CloseP2PConnectionEx("test");
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -207,7 +207,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
     };
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -228,7 +228,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RequestSendFileTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->RequestSendFile("uri", "path", "deviceId", "test");
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -251,7 +251,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level
     bool isDir = false;
     GTEST_LOG_(INFO) << "GetRemoteCopyInfoTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->GetRemoteCopyInfo("test", isFile, isDir);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -275,7 +275,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "PushAssetTest Start";
     try {
         sptr<IAssetSendCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->PushAsset(userId, assetObj, nullptr);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -297,7 +297,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.L
     GTEST_LOG_(INFO) << "RegisterAssetCallbackTest Start";
     try {
         sptr<IAssetRecvCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->RegisterAssetCallback(errPtr);
         EXPECT_EQ(res, E_NULLPTR);
@@ -322,7 +322,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize
     GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest Start";
     try {
         sptr<IAssetRecvCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->UnRegisterAssetCallback(errPtr);
         EXPECT_EQ(res, E_NULLPTR);
@@ -347,7 +347,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CancelTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         int32_t ret = distributedDaemonManagerImpl_->Cancel();
         EXPECT_EQ(ret, E_OK);
@@ -373,7 +373,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CopyTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         std::string srcUri = "srcUri";
         std::string dstUri = "dstUri";
@@ -396,7 +396,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsDirectoryTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         bool isDirectory = false;
         int32_t ret = distributedDaemonManagerImpl_->IsDirectory("srcUri", true, isDirectory);
@@ -418,7 +418,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSizeTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         uint64_t size = 0;
         int32_t ret = distributedDaemonManagerImpl_->GetSize("srcUri", true, size);
