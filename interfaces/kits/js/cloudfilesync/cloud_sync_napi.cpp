@@ -36,7 +36,6 @@ thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
 static mutex obsMutex_;
 const int32_t AGING_DAYS = 30;
-const int32_t GET_FILE_SYNC_MAX = 100;
 
 class ObserverImpl : public AAFwk::DataAbilityObserverStub {
 public:
@@ -674,6 +673,51 @@ bool CloudSyncNapi::Export()
     return exports_.AddProp(className, classValue);
 }
 
+napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(static_cast<int>(NARG_CNT::ONE))) {
+        HILOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    bool succ = false;
+    std::unique_ptr<char []> path;
+    tie(succ, path, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
+    if (!succ) {
+        HILOGE("Invalid path");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    Uri uri(path.get());
+    std::string sandBoxPath = uri.GetPath();
+    std::string xattrKey = "user.cloud.filestatus";
+    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
+    if (xattrValueSize < 0) {
+        NError(E_UNKNOWN_ERR).ThrowErr(env);
+        return nullptr;
+    }
+    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
+    if (xattrValue == nullptr) {
+        NError(ENOMEM).ThrowErr(env);
+        return nullptr;
+    }
+    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
+    if (xattrValueSize <= 0) {
+        NError(E_UNKNOWN_ERR).ThrowErr(env);
+        return nullptr;
+    }
+    int32_t fileStatus = std::stoi(xattrValue.get());
+    int32_t val;
+    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
+        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
+        val = statusMap[fileStatus];
+    } else {
+        val = FileSyncState::FILESYNCSTATE_COMPLETED;
+    }
+    return NVal::CreateInt32(env, val).val_;
+}
+
 napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -700,172 +744,6 @@ napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
     std::string procedureName = "OptimizeStorage";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
-}
-
-static bool IsGetSingleFileStatus(const napi_env &env, const NFuncArg &funcArg)
-{
-    if (!NVal(env, funcArg[(int)NARG_POS::FIRST]).TypeIs(napi_string)) {
-        return false;
-    }
-    return true;
-}
-
-tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path)
-{
-    Uri uri(path);
-    char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
-        LOGE("get realPath failed");
-        return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
-    }
-    std::string sandBoxPath(resolvedPath);
-    std::string xattrKey = "user.cloud.filestatus";
-    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
-    if (xattrValueSize < 0) {
-        return { E_UNKNOWN_ERR, -1 };
-    }
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
-    if (xattrValue == nullptr) {
-        return { E_UNKNOWN_ERR, -1 };
-    }
-    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
-    if (xattrValueSize <= 0) {
-        return { E_UNKNOWN_ERR, -1 };
-    }
-    int32_t fileStatus = std::stoi(xattrValue.get());
-    int32_t val;
-    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
-        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
-        val = statusMap[fileStatus];
-    } else {
-        val = FileSyncState::FILESYNCSTATE_COMPLETED;
-    }
-    return { E_OK, val };
-}
-
-tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &path)
-{
-    Uri uri(path);
-    char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
-        LOGE("get realPath failed");
-        return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
-    }
-    std::string sandBoxPath(resolvedPath);
-    std::string xattrKey = "user.cloud.filestatus";
-    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
-    if (xattrValueSize < 0) {
-        return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
-    }
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
-    if (xattrValue == nullptr) {
-        return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
-    }
-    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
-    if (xattrValueSize <= 0) {
-        return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
-    }
-    int32_t fileStatus = std::stoi(xattrValue.get());
-    int32_t val;
-    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
-        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
-        val = statusMap[fileStatus];
-    } else {
-        val = FileSyncState::FILESYNCSTATE_COMPLETED;
-    }
-    return { E_OK, val };
-}
-
-static NVal AsyncComplete(const napi_env &env, std::shared_ptr<BatchContext> ctx)
-{
-    napi_value results = nullptr;
-    napi_status status = napi_create_array(env, &results);
-    if (status != napi_ok) {
-        LOGE("Failed to create array");
-        return { env, NError(LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS).GetNapiErr(env) };
-    }
-    int32_t index = 0;
-    for (auto result : ctx->resultList) {
-        status = napi_set_element(env, results, index, NVal::CreateInt32(env, result).val_);
-        if (status != napi_ok) {
-            LOGE("Failed to set element on data");
-            return { env, NError(LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS).GetNapiErr(env) };
-        }
-        index++;
-    }
-    return { env, results };
-}
-
-napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFuncArg &funcArg)
-{
-    NVal arrayVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]);
-    if (!arrayVal.TypeIs(napi_object)) {
-        LOGE("Invalid argments");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-    auto [succ, uris, ignore] = arrayVal.ToStringArray();
-    auto ctx = std::make_shared<BatchContext>();
-    ctx->uriList.swap(uris);
-    if (ctx->uriList.size() > GET_FILE_SYNC_MAX) {
-        LOGE("The parameter is too long");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-
-    auto cbExec = [env, ctx]() ->NError {
-        int32_t result = 0;
-        int32_t fileStatus = 0;
-        for (auto &path : ctx->uriList) {
-            tie(result, fileStatus) = GetFileSyncStateForBatch(path);
-            if (result != E_OK) {
-                return NError(result);
-            }
-            ctx->resultList.push_back(fileStatus);
-        }
-        return NError(NO_ERROR);
-    };
-
-    auto cbComplete = [ctx](napi_env env, NError err) -> NVal {
-        if (err) {
-            return { env, err.GetNapiErr(env) };
-        }
-        return AsyncComplete(env, ctx);
-    };
-
-    std::string procedureName = "GetFileSyncState";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
-    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
-}
-
-napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info)
-{
-    NFuncArg funcArg(env, info);
-    int32_t result = 0;
-    int32_t fileStatus = 0;
-
-    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        LOGE("Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-    if (IsGetSingleFileStatus(env, funcArg)) {
-        std::unique_ptr<char []> path;
-        bool succ = false;
-        tie(succ, path, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
-        if (!succ) {
-            LOGE("Invalid path");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        tie(result, fileStatus) = GetSingleFileSyncState(string(path.get()));
-        if (result != E_OK) {
-            NError(result).ThrowErr(env);
-            return nullptr;
-        }
-        return NVal::CreateInt32(env, fileStatus).val_;
-    }
-    return GetBatchFileSyncState(env, funcArg);
 }
 
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
