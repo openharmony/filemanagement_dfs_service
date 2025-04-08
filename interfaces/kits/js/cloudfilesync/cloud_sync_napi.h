@@ -43,6 +43,11 @@ struct RegisterParams {
     napi_ref cbOnRef;
 };
 
+struct BatchContext {
+    std::vector<std::string> uriList;
+    std::vector<int32_t> resultList;
+};
+
 class CloudSyncCallbackImpl;
 class ChangeListenerNapi;
 class CloudNotifyObserver;
@@ -58,6 +63,9 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
+    static std::tuple<int32_t, int32_t> GetSingleFileSyncState(const std::string &path);
+    static std::tuple<int32_t, int32_t> GetFileSyncStateForBatch(const std::string &path);
+    static napi_value GetBatchFileSyncState(const napi_env &env, const LibN::NFuncArg &funcArg);
     static napi_value GetFileSyncState(napi_env env, napi_callback_info info);
     static napi_value RegisterChange(napi_env env, napi_callback_info info);
     static napi_value UnregisterChange(napi_env env, napi_callback_info info);
