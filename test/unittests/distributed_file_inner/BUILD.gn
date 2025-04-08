@@ -24,7 +24,7 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
@@ -75,7 +75,7 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
