@@ -676,16 +676,25 @@ std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::s
         metaFileList_.splice(metaFileList_.begin(), metaFileList_, it->second);
         mFile = it->second->second;
     } else {
-        if (metaFiles_.size() == MAX_META_FILE_NUM) {
+        mFile = std::make_shared<MetaFile>(userId, path);
+        while (metaFiles_.size() >= MAX_META_FILE_NUM) {
             auto deleteKey = metaFileList_.back().first;
             metaFiles_.erase(deleteKey);
             metaFileList_.pop_back();
         }
-        mFile = std::make_shared<MetaFile>(userId, path);
         metaFileList_.emplace_front(key, mFile);
         metaFiles_[key] = metaFileList_.begin();
     }
     return mFile;
+}
+
+int32_t MetaFileMgr::CheckMetaFileSize()
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx_);
+    if (metaFiles_.size() != metaFileList_.size()) {
+        return -1;
+    }
+    return metaFileList_.size();
 }
 
 void MetaFileMgr::ClearAll()
