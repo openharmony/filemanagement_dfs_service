@@ -93,7 +93,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     PushAssetInner(userId, assetObj);
 }
 
-void DaemonExecute::PushAssetInner(int32_t userId, const AssetObj &assetObj)
+void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetObj)
 {
     int32_t socketId;
     auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId);

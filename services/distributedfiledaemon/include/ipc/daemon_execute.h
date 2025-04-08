@@ -36,7 +36,7 @@ public:
 private:
     using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
     void ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event);
-    void PushAssetInner(int32_t userId, const AssetObj &assetObj);
+    void PushAssetInner(int32_t userId, const sptr<AssetObj> &assetObj);
     void ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer &event);
     int32_t RequestSendFileInner(const std::string &srcUri,
                                  const std::string &dstPath,

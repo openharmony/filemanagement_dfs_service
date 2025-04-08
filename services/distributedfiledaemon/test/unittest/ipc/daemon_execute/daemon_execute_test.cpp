@@ -176,12 +176,11 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     daemonExecute_->ExecutePushAsset(event);
 
-
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_001 end";
 }
 
 /**
- * @tc.name: DaemonExecute_ExecutePushAsset_001
+ * @tc.name: DaemonExecute_ExecutePushAsset_002
  * @tc.desc: verify ExecutePushAsset.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
@@ -190,7 +189,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 begin";
     int32_t userId = 100;
-    assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
     assetObj->dstNetworkId_ = "test";
     DevslDispatcher::devslMap_.clear();
     DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
@@ -200,8 +199,8 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
     g_checkValidPath = true;
     g_isFolder = false;
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
-    pushData = std::make_shared<PushAssetData>(userId, assetObj);
-    event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
+    std::shared_ptr<PushAssetData> pushData = std::make_shared<PushAssetData>(userId, assetObj);
+    auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(-1));
     daemonExecute_->ExecutePushAsset(event);
@@ -312,35 +311,33 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
 
     uris.push_back("test");
     srcBundleName = "com.example.app";
-    auto ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
+    auto ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     uris.clear();
     uris.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     g_getPhysicalPath = -1;
-    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
-    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     g_getPhysicalPath = E_OK;
     g_checkValidPath = false;
     EXPECT_TRUE(ret.empty());
 
     g_checkValidPath = true;
     g_isFolder = true;
-    ret = daemonExecute_->GetFileList("", uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     g_isFolder = false;
     g_physicalPath = "test";
-    DevslDispatcher::devslMap_.insert(make_pair("test", 4));
-    ret = daemonExecute_->GetFileList("test", uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
 
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
-    ret = daemonExecute_->GetFileList("test", uris, userId, srcBundleName);
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
-    DevslDispatcher::devslMap_.clear();
     GTEST_LOG_(INFO) << "DaemonExecute_GetFileList_001 end";
 }
 
