@@ -337,6 +337,32 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MetaFileMgr003
+ * @tc.desc: Verify the MetaFileMgr
+ * @tc.type: FUNC
+ * @tc.require: issueIBLAKM
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileMgr003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MetaFileMgr003 Start";
+    try {
+        uint32_t userId = 100;
+        for (int i = 0; i < MAX_META_FILE_NUM; i++) {
+            auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, to_string(i));
+        }
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
+        auto checkSize = MetaFileMgr::GetInstance().CheckMetaFileSize();
+        m = nullptr;
+        MetaFileMgr::GetInstance().ClearAll();
+        EXPECT_EQ(checkSize, MAX_META_FILE_NUM);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " MetaFileMgr003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MetaFileMgr003 End";
+}
+
+/**
  * @tc.name:RecordIdToCloudId001
  * @tc.desc: Verify the RecordIdToCloudId
  * @tc.type: FUNC
