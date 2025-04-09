@@ -180,7 +180,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
         return "";
     }
-    if (!Utils::IsFilePathValid(physicalPath)) {
+    if (Utils::IsFilePathInvalid(physicalPath)) {
         LOGE("Check physicalPath err, physicalPath is forbidden");
         return "";
     }

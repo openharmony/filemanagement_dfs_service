@@ -20,7 +20,6 @@
 
 #include "dfs_error.h"
 #include "file_uri.h"
-#include "utils_directory.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -39,10 +38,6 @@ static constexpr int MATCH = 1;
 
 int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
-        LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
-    }
     auto path = GetPathFromUri(uri, isSrcUri);
     if (path.empty()) {
         return ERR_BAD_VALUE;
@@ -62,10 +57,6 @@ int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &
 
 int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
-        LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
-    }
     auto path = GetPathFromUri(uri, isSrcUri);
     if (path.empty()) {
         return ERR_BAD_VALUE;

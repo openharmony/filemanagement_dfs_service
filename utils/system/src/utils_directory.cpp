@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,6 @@ namespace {
     static const std::string PATH_INVALID_FLAG2 = "/..";
     static const uint32_t PATH_INVALID_FLAG_LEN = 3;
     static const char FILE_SEPARATOR_CHAR = '/';
-    constexpr char NETWORK_ID[] = "?networkid=";
 }
 
 std::string GetAnonyString(const std::string &value)
@@ -377,14 +376,14 @@ bool IsInt32(const nlohmann::json &jsonObj, const std::string &key)
     return res;
 }
 
-bool IsFilePathValid(const std::string &filePath)
+bool IsFilePathInvalid(const std::string &filePath)
 {
     size_t pos = filePath.find(PATH_INVALID_FLAG1);
     while (pos != string::npos) {
         if (pos == 0 || filePath[pos - 1] == FILE_SEPARATOR_CHAR) {
             LOGE("Relative path is not allowed, path contain ../, path = %{private}s",
                 GetAnonyString(filePath).c_str());
-            return false;
+            return true;
         }
         pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
     }
@@ -392,19 +391,9 @@ bool IsFilePathValid(const std::string &filePath)
     if ((pos != string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
         LOGE("Relative path is not allowed, path tail is /.., path = %{private}s",
             GetAnonyString(filePath).c_str());
-        return false;
+        return true;
     }
-    return true;
-}
-
-std::string GetRealUri(const std::string &uri)
-{
-    std::string realUri = uri;
-    auto pos = uri.find(std::string(NETWORK_ID));
-    if (pos != std::string::npos) {
-        realUri = uri.substr(0, pos);
-    }
-    return realUri;
+    return false;
 }
 } // namespace Utils
 } // namespace DistributedFile

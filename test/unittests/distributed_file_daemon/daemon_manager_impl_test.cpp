@@ -356,14 +356,6 @@ HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
         std::string dstUri = "dstUri";
         ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
         EXPECT_EQ(ret, E_OK);
-
-        dstUri = "../../dstUri";
-        ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
-
-        srcUri = "../../srcUri";
-        ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CancelTest ERROR";
@@ -387,14 +379,6 @@ HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
         std::string dstUri = "dstUri";
         int32_t ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
         EXPECT_EQ(ret, FILE_NOT_FOUND);
-
-        dstUri = "../dstUri";
-        ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
-
-        srcUri = "../srcUri";
-        ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CopyTest ERROR";
@@ -415,13 +399,8 @@ HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level1)
         auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         bool isDirectory = false;
-        std::string srcUri = "srcUri";
-        int32_t ret = distributedDaemonManagerImpl_->IsDirectory(srcUri, true, isDirectory);
+        int32_t ret = distributedDaemonManagerImpl_->IsDirectory("srcUri", true, isDirectory);
         EXPECT_EQ(ret, FILE_NOT_FOUND);
-
-        srcUri = "../srcUri";
-        ret = distributedDaemonManagerImpl_->IsDirectory(srcUri, true, isDirectory);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "IsDirectoryTest ERROR";
@@ -442,14 +421,9 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level1)
         auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         uint64_t size = 0;
-        std::string srcUri = "srcUri";
-        int32_t ret = distributedDaemonManagerImpl_->GetSize(srcUri, true, size);
+        int32_t ret = distributedDaemonManagerImpl_->GetSize("srcUri", true, size);
         EXPECT_TRUE(size == 0);
         EXPECT_EQ(ret, FILE_NOT_FOUND);
-
-        srcUri = "../srcUri";
-        ret = distributedDaemonManagerImpl_->GetSize(srcUri, true, size);
-        EXPECT_TRUE(size == 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetSizeTest ERROR";

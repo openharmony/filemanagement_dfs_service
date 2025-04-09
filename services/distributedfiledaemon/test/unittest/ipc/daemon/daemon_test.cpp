@@ -600,10 +600,6 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
     g_getCallingUid = UID;
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_EVENT_HANDLER);
 
-    EXPECT_EQ(daemon_->RequestSendFile("../srcUri", "", "", ""), E_ILLEGAL_URI);
-
-    EXPECT_EQ(daemon_->RequestSendFile("", "../dstUri", "", ""), E_ILLEGAL_URI);
-
     daemon_->StartEventHandler();
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_001 end";
@@ -669,11 +665,6 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
-
-    EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon), E_ILLEGAL_URI);
-
-    EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon), E_ILLEGAL_URI);
-
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_SOFTBUS_SESSION_FAILED);
 
@@ -945,9 +936,6 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, assetSendCallback), E_OK);
-
-    assetObj->uris_.push_back("../srcUri");
-    EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, assetSendCallback), E_ILLEGAL_URI);
     sleep(1);
     AssetCallbackManager::GetInstance().RemoveSendCallback(assetObj->srcBundleName_);
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 end";
