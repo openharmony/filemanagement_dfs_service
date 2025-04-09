@@ -198,6 +198,7 @@ ohos_unittest("file_copy_manager_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "libuv:uv",
     "samgr:samgr_proxy",
   ]
@@ -261,6 +262,7 @@ ohos_unittest("trans_listener_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "libuv:uv",
     "samgr:samgr_proxy",
   ]
@@ -324,6 +326,7 @@ ohos_unittest("file_size_utils_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "libuv:uv",
     "samgr:samgr_proxy",
   ]
