@@ -34,6 +34,7 @@
 #include "utils_log.h"
 
 #include "all_connect/all_connect_manager.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_handler.h"
 #include "device/device_info.h"
 
@@ -42,6 +43,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
+using namespace std;
 namespace {
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
@@ -88,6 +90,11 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         LOGE("assetObj is nullptr.");
         return;
     }
+    PushAssetInner(userId, assetObj);
+}
+
+void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetObj)
+{
     int32_t socketId;
     auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId);
     if (ret != E_OK) {
@@ -104,6 +111,12 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         LOGE("get fileList is empty.");
         HandlePushAssetFail(socketId, assetObj);
         return;
+    }
+
+    if (!DevslDispatcher::CompareDevslWithLocal(assetObj->dstNetworkId_, fileList)) {
+        LOGE("remote device cannot read this files");
+        HandlePushAssetFail(socketId, assetObj);
+        return ;
     }
 
     std::string sendFileName;
@@ -178,7 +191,7 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
                                                          ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     LOGI("RequestSendFile OpenSession success");
 
-    ret = SoftBusHandler::GetInstance().CopySendFile(socketId, sessionName, srcUri, dstPath);
+    ret = SoftBusHandler::GetInstance().CopySendFile(socketId, dstDeviceId, srcUri, dstPath);
     if (ret != E_OK) {
         LOGE("CopySendFile failed, ret is %{public}d", ret);
         SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);

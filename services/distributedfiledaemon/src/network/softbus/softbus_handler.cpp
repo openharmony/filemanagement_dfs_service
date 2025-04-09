@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-
+#include "network/devsl_dispatcher.h"
 #ifdef SUPPORT_SAME_ACCOUNT
 #include "inner_socket.h"
 #include "trans_type_enhanced.h"
@@ -266,7 +266,7 @@ void SoftBusHandler::SetSocketOpt(int32_t socketId, const char **src, uint32_t s
 }
 
 int32_t SoftBusHandler::CopySendFile(int32_t socketId,
-                                     const std::string &sessionName,
+                                     const std::string &peerNetworkId,
                                      const std::string &srcUri,
                                      const std::string &dstPath)
 {
@@ -280,6 +280,10 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
     auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
     if (fileList.empty()) {
         LOGE("GetFilePath failed or file is empty, path %{public}s", physicalPath.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    if (!DevslDispatcher::CompareDevslWithLocal(peerNetworkId, fileList)) {
+        LOGE("remote device cannot read this files");
         return FileManagement::ERR_BAD_VALUE;
     }
     const char *src[MAX_SIZE] = {};
