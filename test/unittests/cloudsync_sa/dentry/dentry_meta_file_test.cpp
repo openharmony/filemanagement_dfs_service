@@ -352,13 +352,6 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr003, TestSize.Level1)
         }
         auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         auto checkSize = MetaFileMgr::GetInstance().CheckMetaFileSize();
-        if (checkSize == -1) {
-            GTEST_LOG_(INFO) << "metaFiles_.size() and metaFileList_.size() not same";
-            EXPECT_FALSE(false);
-        } else if (checkSize > MAX_META_FILE_NUM) {
-            GTEST_LOG_(INFO) << "metaFileList_.size() more than MAX_META_FILE_NUM";
-            EXPECT_FALSE(false);
-        }
         m = nullptr;
         MetaFileMgr::GetInstance().ClearAll();
         EXPECT_EQ(checkSize, MAX_META_FILE_NUM);
