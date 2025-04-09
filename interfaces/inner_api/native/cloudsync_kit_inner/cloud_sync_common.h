@@ -84,6 +84,15 @@ struct CleanOptions : public Parcelable {
     static CleanOptions *Unmarshalling(Parcel &parcel);
 };
 
+struct OptimizeSpaceOptions : public Parcelable {
+    int64_t totalSize;
+    int32_t agingDays;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static OptimizeSpaceOptions *Unmarshalling(Parcel &parcel);
+};
+
+
 struct DentryFileInfo {
     std::string cloudId;
     int64_t size;

@@ -160,7 +160,13 @@ public:
         return E_OK;
     }
 
-    int32_t OptimizeStorage(const int32_t agingDays)
+    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+        const sptr<IRemoteObject> &optimizeCallback)
+    {
+        return E_OK;
+    }
+
+    int32_t StopOptimizeStorage()
     {
         return E_OK;
     }

@@ -75,9 +75,11 @@ public:
     MOCK_METHOD0(DownloadThumb, int32_t());
     MOCK_METHOD2(BatchCleanFile, int32_t(const std::vector<CleanFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId));
+    MOCK_METHOD3(OptimizeStorage, int32_t(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+            const sptr<IRemoteObject> &optimizeCallback));
     MOCK_METHOD2(BatchDentryFileInsert, int32_t(const std::vector<DentryFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId));
-    MOCK_METHOD1(OptimizeStorage, int32_t(const int32_t agingDays));
+    MOCK_METHOD0(StopOptimizeStorage, int32_t());
 };
 
 class CloudSyncServiceStubTest : public testing::Test {

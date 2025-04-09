@@ -45,7 +45,9 @@ public:
     int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
     int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ResetCursor(const std::string &bundleName = "") override;
-    int32_t OptimizeStorage(const int32_t agingDays) override;
+    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+        const sptr<IRemoteObject> &optimizeCallback) override;
+    int32_t StopOptimizeStorage() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;

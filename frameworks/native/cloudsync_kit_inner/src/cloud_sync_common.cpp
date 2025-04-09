@@ -157,6 +157,44 @@ CleanOptions *CleanOptions::Unmarshalling(Parcel &parcel)
     return info;
 }
 
+OptimizeSpaceOptions *OptimizeSpaceOptions::Unmarshalling(Parcel &parcel)
+{
+    OptimizeSpaceOptions *info = new (std::nothrow) OptimizeSpaceOptions();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool OptimizeSpaceOptions::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadInt64(totalSize)) {
+        LOGE("failed to read totalSize");
+        return false;
+    }
+    if (!parcel.ReadInt32(agingDays)) {
+        LOGE("failed to read agingDays");
+        return false;
+    }
+    return true;
+}
+
+bool OptimizeSpaceOptions::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt64(totalSize)) {
+        LOGE("failed to write totalSize");
+        return false;
+    }
+    if (!parcel.WriteInt32(agingDays)) {
+        LOGE("failed to write agingDays");
+        return false;
+    }
+
+    return true;
+}
+
 bool SwitchDataObj::ReadFromParcel(Parcel &parcel)
 {
     switchData.clear();
