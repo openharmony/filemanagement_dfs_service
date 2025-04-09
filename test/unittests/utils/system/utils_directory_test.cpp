@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -352,42 +352,56 @@ HWTEST_F(UtilsDirectoryTest, SysEventWriteTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsFilePathValid001
- * @tc.desc: Verify the IsFilePathValid function
+ * @tc.name: IsFilePathInvalid001
+ * @tc.desc: Verify the IsFilePathInvalid function
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(UtilsDirectoryTest, IsFilePathValid001, TestSize.Level1)
+HWTEST_F(UtilsDirectoryTest, IsFilePathInvalid001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsFilePathValid001 Start";
+    GTEST_LOG_(INFO) << "IsFilePathInvalid001 Start";
     try {
-        bool isValid = IsFilePathValid("../test../test1");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("/../test../test1");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../../test");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../../");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../test../..");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("/test/..test/..");
-        EXPECT_FALSE(isValid);
+        std::string testPath1 = "../test../test1";
+        std::string testPath2 = "/../test../test1";
+        std::string testPath3 = "test../../test";
+        std::string testPath4 = "test../../";
+        std::string testPath5 = "test../test../..";
+        std::string testPath6 = "/test/..test/..";
 
-        isValid = IsFilePathValid("test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test/test../test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test../");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test../..test");
-        EXPECT_TRUE(isValid);
+        std::string testPath7 = "test";
+        std::string testPath8 = "/test/test../test";
+        std::string testPath9 = "/test../test../test";
+        std::string testPath10 = "/test../test../test../";
+        std::string testPath11 = "/test../test../test../..test";
+
+        bool isForbid1 = IsFilePathInvalid(testPath1);
+        EXPECT_TRUE(isForbid1);
+        bool isForbid2 = IsFilePathInvalid(testPath2);
+        EXPECT_TRUE(isForbid2);
+        bool isForbid3 = IsFilePathInvalid(testPath3);
+        EXPECT_TRUE(isForbid3);
+        bool isForbid4 = IsFilePathInvalid(testPath4);
+        EXPECT_TRUE(isForbid4);
+        bool isForbid5 = IsFilePathInvalid(testPath5);
+        EXPECT_TRUE(isForbid5);
+        bool isForbid6 = IsFilePathInvalid(testPath6);
+        EXPECT_TRUE(isForbid6);
+
+        bool isForbid7 = IsFilePathInvalid(testPath7);
+        EXPECT_FALSE(isForbid7);
+        bool isForbid8 = IsFilePathInvalid(testPath8);
+        EXPECT_FALSE(isForbid8);
+        bool isForbid9 = IsFilePathInvalid(testPath9);
+        EXPECT_FALSE(isForbid9);
+        bool isForbid10 = IsFilePathInvalid(testPath10);
+        EXPECT_FALSE(isForbid10);
+        bool isForbid11 = IsFilePathInvalid(testPath11);
+        EXPECT_FALSE(isForbid11);
+        
     } catch (...) {
-        GTEST_LOG_(INFO) << " IsFilePathValid001 ERROR";
+        GTEST_LOG_(INFO) << " IsFilePathInvalid001 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsFilePathValid001 End";
+    GTEST_LOG_(INFO) << "IsFilePathInvalid001 End";
 }
 } // namespace Utils
 } // namespace DistributedFile

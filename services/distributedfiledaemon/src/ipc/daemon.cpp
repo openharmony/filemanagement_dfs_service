@@ -377,11 +377,6 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstPath))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstPath).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -486,11 +481,6 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     if (daemon == nullptr) {
         LOGE("Daemon::GetRealPath daemon is nullptr");
         return E_INVAL_ARG_NAPI;
-    }
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstUri).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
     if (ret != E_OK) {
@@ -730,13 +720,6 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
 int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    const auto &uriVec = assetObj.uris_;
-    for (const auto &uri : uriVec) {
-        if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
-            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
-            return OHOS::FileManagement::E_ILLEGAL_URI;
-        }
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
