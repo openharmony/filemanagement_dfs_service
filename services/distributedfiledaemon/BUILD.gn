@@ -233,7 +233,10 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "src/ipc/hmdfs_info.cpp",
   ]
 
-  deps = [ ":idaemon_base_source" ]
+  deps = [
+    ":idaemon_base_source",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
 

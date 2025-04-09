@@ -34,6 +34,7 @@
 #include "file_uri.h"
 #include "iremote_stub.h"
 #include "sandbox_helper.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 #include "distributed_file_daemon_manager_impl.h"
 
@@ -86,7 +87,11 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return E_NOENT;
     }
-
+    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(destUri))) {
+        LOGE("path: %{public}s or %{public}s is forbidden",
+            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        return OHOS::FileManagement::E_ILLEGAL_URI;
+    }
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
@@ -169,6 +174,11 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
+    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(destUri))) {
+        LOGE("path: %{public}s or %{public}s is forbidden",
+            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        return OHOS::FileManagement::E_ILLEGAL_URI;
+    }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
         if ((*item)->srcUri != srcUri || (*item)->destUri != destUri) {
             ++item;
