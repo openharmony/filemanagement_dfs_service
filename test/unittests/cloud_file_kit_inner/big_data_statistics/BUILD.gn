@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("gallery_download_file_stat_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "gallery_download_file_stat_test.cpp" ]
 
@@ -45,7 +45,7 @@ ohos_unittest("gallery_download_file_stat_test") {
 }
 
 ohos_unittest("cloud_file_fault_event_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
@@ -78,7 +78,7 @@ ohos_unittest("cloud_file_fault_event_test") {
 }
 
 ohos_unittest("cloud_report_cacher_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",

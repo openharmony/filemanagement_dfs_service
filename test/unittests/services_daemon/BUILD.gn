@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("fuse_manager_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
@@ -92,7 +92,7 @@ ohos_unittest("fuse_manager_test") {
 }
 
 ohos_unittest("cloud_daemon_statistic_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
@@ -161,7 +161,7 @@ ohos_unittest("cloud_daemon_statistic_test") {
 }
 
 ohos_unittest("cloud_daemon_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
@@ -254,7 +254,7 @@ ohos_unittest("cloud_daemon_test") {
 }
 
 ohos_unittest("cloud_daemon_stub_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",

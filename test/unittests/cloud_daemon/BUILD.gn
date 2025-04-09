@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("cloud_daemon_manager_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_manager_impl.cpp",
@@ -55,7 +55,7 @@ ohos_unittest("cloud_daemon_manager_test") {
 }
 
 ohos_unittest("cloud_daemon_manager_impl_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_manager_impl.cpp",
@@ -94,7 +94,7 @@ ohos_unittest("cloud_daemon_manager_impl_test") {
 }
 
 ohos_unittest("cloud_daemon_service_proxy_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_service_proxy.cpp",

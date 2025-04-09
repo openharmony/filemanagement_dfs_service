@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("clouddisk_rdb_utils_test") {
-  module_out_path = "filemanagement/dfs_service/tests"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
@@ -99,7 +99,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     debug = false
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
@@ -223,7 +223,7 @@ ohos_unittest("clouddisk_notify_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
@@ -301,7 +301,7 @@ ohos_unittest("clouddisk_notify_test") {
 }
 
 ohos_unittest("clouddisk_rdb_transaction_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
@@ -374,7 +374,7 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
 }
 
 ohos_unittest("clouddisk_sync_helper_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
   public_configs =
       [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
 
@@ -466,7 +466,7 @@ ohos_unittest("clouddisk_notify_utils_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",

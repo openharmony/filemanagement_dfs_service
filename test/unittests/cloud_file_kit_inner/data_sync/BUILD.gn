@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("data_syncer_rdb_store_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
@@ -54,7 +54,7 @@ ohos_unittest("data_syncer_rdb_store_test") {
 }
 
 ohos_unittest("sync_state_manager_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/sync_state_manager.cpp",
@@ -90,7 +90,7 @@ ohos_unittest("sync_state_manager_test") {
 }
 
 ohos_unittest("task_state_manager_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/task_state_manager.cpp",
