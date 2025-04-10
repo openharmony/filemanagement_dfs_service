@@ -1680,7 +1680,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     struct CloudDisk::CloudDiskFuseData cloudDiskData;
     struct FuseData data;
     struct fuse_session *se = nullptr;
-    if (fuse_opt_add_arg(&args, path.c_str()) || !CheckPathForStartFuse(path)) {
+    if (!CheckPathForStartFuse(path) || fuse_opt_add_arg(&args, path.c_str())) {
         LOGE("Mount path invalid");
         return -EINVAL;
     }
