@@ -70,7 +70,11 @@ ohos_unittest("daemon_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:zuri",
