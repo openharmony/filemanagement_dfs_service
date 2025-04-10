@@ -114,6 +114,11 @@ ohos_unittest("file_operations_cloud_test") {
     "LOG_TAG=\"CLOUD_DAEMON_API\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   use_exceptions = true
 }
 
@@ -281,6 +286,11 @@ ohos_unittest("fuse_operations_test") {
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CLOUD_DAEMON_API\"",
   ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 
   use_exceptions = true
 }
