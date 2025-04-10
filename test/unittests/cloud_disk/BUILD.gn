@@ -18,7 +18,12 @@ ohos_unittest("account_status_listener_test") {
   module_out_path = "filemanagement/dfs_service"
 
   include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/utils/log/include",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
+    "${services_path}/cloudfiledaemon/include/",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/include/fuse_manager/",
   ]
@@ -26,12 +31,16 @@ ohos_unittest("account_status_listener_test") {
   sources = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status_listener.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${services_path}/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
+    "${services_path}/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "account_status_listener_test.cpp",
   ]
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
@@ -43,7 +52,11 @@ ohos_unittest("account_status_listener_test") {
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
   ]
 
   defines = [
