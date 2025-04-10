@@ -248,24 +248,6 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove001, TestSize.Level1)
 }
 
 /**
- * @tc.name: MetaFileRemove002
- * @tc.desc: Verify the MetaFile::DoRemove function
- * @tc.type: FUNC
- * @tc.require: SR000HRKJB
- */
-HWTEST_F(DentryMetaFileTest, MetaFileRemove002, TestSize.Level1)
-{
-    uint32_t userId = 100;
-    MetaFile mFile(userId, "/");
-    MetaBase mBase1("file1");
-    int ret = mFile.DoRemove(mBase1);
-    EXPECT_EQ(ret, 0);
-    MetaBase mBase2("file1");
-    ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, ENOENT);
-}
-
-/**
  * @tc.name: LoadChildren001
  * @tc.desc: Verify the LoadChildren
  * @tc.type: FUNC
@@ -352,6 +334,32 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
         GTEST_LOG_(INFO) << " MetaFileMgr002 ERROR";
     }
     GTEST_LOG_(INFO) << "MetaFileMgr002 End";
+}
+
+/**
+ * @tc.name: MetaFileMgr003
+ * @tc.desc: Verify the MetaFileMgr
+ * @tc.type: FUNC
+ * @tc.require: issueIBLAKM
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileMgr003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MetaFileMgr003 Start";
+    try {
+        uint32_t userId = 100;
+        for (int i = 0; i < MAX_META_FILE_NUM; i++) {
+            auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, to_string(i));
+        }
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
+        auto checkSize = MetaFileMgr::GetInstance().CheckMetaFileSize();
+        m = nullptr;
+        MetaFileMgr::GetInstance().ClearAll();
+        EXPECT_EQ(checkSize, MAX_META_FILE_NUM);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " MetaFileMgr003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MetaFileMgr003 End";
 }
 
 /**

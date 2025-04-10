@@ -150,6 +150,7 @@ public:
         const struct RestoreInfo &restoreinfo);
     int32_t GetNewName(std::shared_ptr<CloudDiskMetaFile> metaFile,
         const std::string &oldName, std::string &newName);
+    int32_t CheckMetaFileSize();
 private:
     MetaFileMgr() = default;
     ~MetaFileMgr() = default;

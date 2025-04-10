@@ -16,8 +16,11 @@
 #include "network/devsl_dispatcher.h"
 
 #include "device_manager.h"
+#include "device/device_manager_agent.h"
 #include "ipc/i_daemon.h"
 #include "securec.h"
+#include "security_label.h"
+#include "softbus_bus_center.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -26,6 +29,8 @@ namespace DistributedFile {
 std::map<std::string, std::vector<std::weak_ptr<KernelTalker>>> DevslDispatcher::talkersMap_;
 std::map<std::string, std::string> DevslDispatcher::idMap_;
 std::mutex DevslDispatcher::mutex;
+std::mutex DevslDispatcher::devslMapMutex_;
+std::map<std::string, int32_t> DevslDispatcher::devslMap_;
 
 int32_t DevslDispatcher::Start()
 {
@@ -117,6 +122,84 @@ void DevslDispatcher::DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t
     std::thread callbackThread =
         std::thread([udid, levelInfo]() { DevslGottonCallbackAsync(udid, levelInfo); });
     callbackThread.detach();
+}
+
+int32_t DevslDispatcher::GetSecurityLabel(const std::string &path)
+{
+    if (path.empty()) {
+        LOGE("GetSecurityLabel path is empty");
+        return -1;
+    }
+
+    static std::map<std::string, SecurityLabel> labels = {
+        {"s1", SecurityLabel::S1},
+        {"s2", SecurityLabel::S2},
+        {"s3", SecurityLabel::S3},
+        {"s4", SecurityLabel::S4},
+    };
+
+    std::string current = OHOS::FileManagement::ModuleSecurityLabel::SecurityLabel::GetSecurityLabel(path);
+    auto iter = labels.find(current);
+    if (iter == labels.end()) {
+        LOGE("GetSecurityLabel cannot find label= %{public}s", current.c_str());
+        return -1;
+    }
+    return static_cast<int32_t>(iter->second);
+}
+
+bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, const std::vector<std::string> &paths)
+{
+    if (paths.size() == 0) {
+        return false;
+    }
+
+    auto remoteDevsl = GetDeviceDevsl(peerNetworkId);
+    if (remoteDevsl < 0) {
+        LOGE("remoteDevsl < 0");
+        return false;
+    }
+
+    for (auto path : paths) {
+        auto securityLabel = GetSecurityLabel(path);
+        if (securityLabel < 0) {
+            LOGE("localDevsl < 0");
+            return false;
+        }
+        if (remoteDevsl < securityLabel) {
+            LOGE("remoteDevsl=%{public}d, securityLabel=%{public}d, path=%{public}s}",
+                 remoteDevsl, securityLabel, Utils::GetAnonyString(path).c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+int32_t DevslDispatcher::GetDeviceDevsl(const std::string &networkId)
+{
+    if (networkId.empty()) {
+        LOGE("GetDeviceDevsl networkId is empty");
+        return -1;
+    }
+    std::lock_guard<std::mutex> lock(mutex);
+    auto iter = devslMap_.find(networkId);
+    if (iter != devslMap_.end()) {
+        LOGI("find devsl in map");
+        return iter->second;
+    }
+
+    std::string udid;
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    deviceManager.GetUdidByNetworkId(SERVICE_NAME, networkId, udid);
+
+    DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
+    uint32_t levelInfo;
+    auto ret = DATASL_GetHighestSecLevel(&queryParams, &levelInfo);
+    if (ret != 0) {
+        LOGE("devsl dispatcher register callback error %{public}d", ret);
+        return -1;
+    }
+    devslMap_[networkId] = static_cast<int32_t>(levelInfo);
+    return devslMap_[networkId];
 }
 } // namespace DistributedFile
 } // namespace Storage
