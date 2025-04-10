@@ -61,6 +61,11 @@ public:
      * BUSINESS_MODE_CHANGED                商业模式变更
      */
     virtual void OnSyncStateChanged(CloudSyncState state, ErrorType error) {};
+    /**
+     * @brief 死亡回调通知同步状态逻辑
+     *
+     */
+    virtual void OnDeathRecipient() {};
 };
 } // namespace OHOS::FileManagement::CloudSync
 
