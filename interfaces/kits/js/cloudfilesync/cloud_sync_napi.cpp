@@ -37,6 +37,8 @@ mutex CloudSyncNapi::sOnOffMutex_;
 static mutex obsMutex_;
 const int32_t AGING_DAYS = 30;
 const int32_t GET_FILE_SYNC_MAX = 100;
+CloudSyncState CloudSyncCallbackImpl::preState_ = CloudSyncState::COMPLETED;
+ErrorType CloudSyncCallbackImpl::preError_ = ErrorType::NO_ERROR;
 
 class ObserverImpl : public AAFwk::DataAbilityObserverStub {
 public:
@@ -151,9 +153,17 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     }
     napi_close_handle_scope(env, scope);
 }
+void CloudSyncCallbackImpl::OnDeathRecipient()
+{
+    auto isInDownOrUpload = preState_ == CloudSyncState::UPLOADING or preState_ == CloudSyncState::DOWNLOADING;
+    if (isInDownOrUpload && preError_ == ErrorType::NO_ERROR) {
+        OnSyncStateChanged(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
+    }
+}
 
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
+    LOGI("notify - state: %{public}d, error: %{public}d", state, error);
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), state, error);
     if (msg == nullptr) {
         LOGE("Failed to create uv message object");
@@ -169,7 +179,8 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
         msg->cloudSyncCallback_.lock()->OnComplete(msg);
         delete msg;
     };
-
+    preState_ = state;
+    preError_ = error;
     napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
     if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
