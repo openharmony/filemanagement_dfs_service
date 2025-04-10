@@ -189,7 +189,7 @@ int32_t DevslDispatcher::GetDeviceDevsl(const std::string &networkId)
 
     std::string udid;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(SERVICE_NAME, networkId, udid);
+    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, networkId, udid);
 
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
     uint32_t levelInfo;
