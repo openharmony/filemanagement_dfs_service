@@ -45,13 +45,6 @@ ohos_unittest("all_connect_manager_test") {
   ]
 
   sources = [
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "${services_path}/distributedfiledaemon/test/mock/library_func_mock.cpp",
     "all_connect_manager_test.cpp",
   ]
@@ -61,7 +54,10 @@ ohos_unittest("all_connect_manager_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:zuri",

@@ -30,40 +30,7 @@ config("module_private_config") {
 ohos_moduletest("DistributedFileDaemonServiceTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-  ]
-
-  sources += [ "src/distributedfiledaemon_service_test.cpp" ]
+  sources = [ "src/distributedfiledaemon_service_test.cpp" ]
 
   configs = [
     ":module_private_config",
@@ -76,6 +43,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   ]
 
   deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
