@@ -851,7 +851,7 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path
     }
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
     bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
-    if (!isValid){
+    if (!isValid) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }
@@ -890,7 +890,7 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &pa
     }
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
     bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
-    if (!isValid){
+    if (!isValid) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }

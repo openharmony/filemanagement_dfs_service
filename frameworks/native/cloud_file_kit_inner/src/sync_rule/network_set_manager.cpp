@@ -170,7 +170,7 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
     }
     std::string networkDataStr = param["useMobileNetworkData"];
     bool isValid = std::all_of(networkDataStr.begin(), networkDataStr.end(), ::isdigit);
-    if (!isValid){
+    if (!isValid) {
         LOGE("invalid param");
         return false;
     }
