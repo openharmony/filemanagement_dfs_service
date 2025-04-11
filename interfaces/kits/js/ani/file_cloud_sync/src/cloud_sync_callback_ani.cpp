@@ -35,7 +35,7 @@ void ObserverImpl::OnChangeExt(const AAFwk::ChangeInfo &info)
         LOGE("cloudNotifyObserver_ is null!");
         return;
     }
-    cloudNotifyObserver_->OnchangeExt(info);
+    cloudNotifyObserver_->OnChangeExt(info);
 }
 
 sptr<ObserverImpl> ObserverImpl::GetObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer)
@@ -364,7 +364,7 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
 
 void CloudNotifyObserver::OnChange() {}
 
-void CloudNotifyObserver::OnchangeExt(const AAFwk::ChangeInfo &changeInfo)
+void CloudNotifyObserver::OnChangeExt(const AAFwk::ChangeInfo &changeInfo)
 {
     CloudChangeListener listener;
     listener.changeInfo = changeInfo;

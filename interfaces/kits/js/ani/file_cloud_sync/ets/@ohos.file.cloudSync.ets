@@ -502,7 +502,7 @@ export default namespace cloudSync {
         static native unregisterChangeInner(uri: string): void;
     };
 
-    export function getPromiseFileSyncState(uri: string): Promise<int> {
+    function getPromiseFileSyncState(uri: string): Promise<int> {
         let promise = new Promise<int> ((resolve, reject) => {
             let taskPool = taskpool.execute((uri: string): int => {
                 return StaticFunction.getFileSyncStateInner(uri);

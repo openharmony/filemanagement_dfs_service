@@ -17,20 +17,20 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("ani_config") {
   include_dirs = [
-    "./include",
-    "../ani_helper/include",
-    "../../cloudsyncmanager",
+    "include",
+    "${interfaces_js_path}/ani/ani_helper/include",
+    "${interfaces_js_path}/cloudsyncmanager",
   ]
 }
 
 ohos_shared_library("cloud_sync_manager_ani") {
   public_configs = [ ":ani_config" ]
   sources = [
-    "../../cloudsyncmanager/cloud_sync_manager_core.cpp",
-    "../ani_helper/src/ani_utils.cpp",
-    "../ani_helper/src/error_handler.cpp",
-    "./src/bind_function_class.cpp",
-    "./src/cloud_sync_manager_ani.cpp",
+    "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
+    "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
+    "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "src/bind_function_class.cpp",
+    "src/cloud_sync_manager_ani.cpp",
   ]
   sanitize = {
     integer_overflow = true

@@ -122,7 +122,7 @@ public:
     ~CloudNotifyObserver() = default;
 
     void OnChange();
-    void OnchangeExt(const AAFwk::ChangeInfo &changeInfo);
+    void OnChangeExt(const AAFwk::ChangeInfo &changeInfo);
 
     ChangeListenerAni listObj_;
     std::string uri_;

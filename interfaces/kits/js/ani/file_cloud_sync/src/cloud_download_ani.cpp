@@ -30,8 +30,8 @@ static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
         return nullptr;
     }
     std::uintptr_t ptrValue = static_cast<std::uintptr_t>(nativePtr);
-    CloudFileCore *cloudDwonload = reinterpret_cast<CloudFileCore *>(ptrValue);
-    return cloudDwonload;
+    CloudFileCore *cloudDownload = reinterpret_cast<CloudFileCore *>(ptrValue);
+    return cloudDownload;
 }
 
 void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
