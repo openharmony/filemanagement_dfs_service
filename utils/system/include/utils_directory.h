@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -96,7 +96,8 @@ bool IsFolder(const std::string &name);
 std::vector<std::string> GetFilePath(const std::string &name);
 int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid);
 bool IsInt32(const nlohmann::json &jsonObj, const std::string &key);
-bool IsFilePathInvalid(const std::string &filePath);
+bool IsFilePathValid(const std::string &filePath);
+std::string GetRealUri(const std::string &uri);
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage
