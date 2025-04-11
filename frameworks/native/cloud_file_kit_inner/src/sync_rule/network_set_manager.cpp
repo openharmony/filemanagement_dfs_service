@@ -168,7 +168,13 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
         LOGE("GetAppConfigParams failed");
         return false;
     }
-    int32_t networkData = std::stoi(param["useMobileNetworkData"]);
+    std::string networkDataStr = param["useMobileNetworkData"];
+    bool isValid = std::all_of(networkDataStr.begin(), networkDataStr.end(), ::isdigit);
+    if (!isValid){
+        LOGE("invalid param");
+        return false;
+    }
+    int32_t networkData = std::stoi(networkDataStr);
     if (networkData == 0) {
         return false;
     }
