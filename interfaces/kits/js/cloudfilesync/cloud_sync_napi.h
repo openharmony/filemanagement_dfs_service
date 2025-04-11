@@ -100,6 +100,7 @@ public:
     ~CloudSyncCallbackImpl() = default;
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
+    void OnDeathRecipient() override;
     void DeleteReference();
 
     class UvChangeMsg {
@@ -118,6 +119,8 @@ private:
     static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
+    static CloudSyncState preState_;
+    static ErrorType preError_;
 };
 
 class ChangeListenerNapi {

@@ -361,6 +361,11 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
+    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstPath))) {
+        LOGE("path: %{public}s or %{public}s is forbidden",
+            GetAnonyString(srcUri).c_str(), GetAnonyString(dstPath).c_str());
+        return OHOS::FileManagement::E_ILLEGAL_URI;
+    }
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto requestSendFileData = std::make_shared<RequestSendFileData>(
         srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
@@ -458,6 +463,11 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     if (daemon == nullptr) {
         LOGE("Daemon::GetRealPath daemon is nullptr");
         return E_INVAL_ARG_NAPI;
+    }
+    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstUri))) {
+        LOGE("path: %{public}s or %{public}s is forbidden",
+            GetAnonyString(srcUri).c_str(), GetAnonyString(dstUri).c_str());
+        return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
     if (ret != E_OK) {
@@ -694,6 +704,13 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
+    const auto &uriVec = assetObj.uris_;
+    for (const auto &uri : uriVec) {
+        if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
+            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            return OHOS::FileManagement::E_ILLEGAL_URI;
+        }
+    }
     if (assetObj == nullptr || sendCallback == nullptr) {
         LOGE("param is nullptr.");
         return E_NULLPTR;
