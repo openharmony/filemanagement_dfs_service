@@ -704,7 +704,7 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    const auto &uriVec = assetObj.uris_;
+    const auto &uriVec = assetObj->uris_;
     for (const auto &uri : uriVec) {
         if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
             LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
