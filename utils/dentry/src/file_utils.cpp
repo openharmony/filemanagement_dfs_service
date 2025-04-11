@@ -48,7 +48,7 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
         } else if (ret == 0) {
             break;
         }
-        readLen += ret;
+        readLen += static_cast<size_t>(ret);
     }
 
     return readLen;
@@ -74,7 +74,7 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
             LOGE("write failed, errno %{public}d, fd=%{public}d", errno, fd);
             return ret;
         }
-        writeLen += ret;
+        writeLen += static_cast<size_t>(ret);
     }
 
     return writeLen;
