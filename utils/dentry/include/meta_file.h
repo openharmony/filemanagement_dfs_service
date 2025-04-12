@@ -187,7 +187,6 @@ struct MetaBase {
     std::string name{};
     std::string cloudId{};
     off_t nextOff{0};
-    bool hasDownloaded{false};
 };
 
 struct BitOps {

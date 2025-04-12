@@ -261,13 +261,12 @@ static pid_t GetPidFromTid(pid_t tid)
     std::string path = "/proc/" + to_string(tid) + "/status";
     std::ifstream procTidStatusFile(path);
     if (!procTidStatusFile.is_open()) {
-        LOGI("Failed to open %{public}s", path.c_str());
+        LOGD("Failed to open %{public}s", path.c_str());
         return tgid;
     }
     std::string line;
     while (std::getline(procTidStatusFile, line)) {
         if (line.find("Tgid:") != std::string::npos) {
-            LOGI("Find Tgid: %{public}s", line.c_str());
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos) {
                 std::string tgidStr = line.substr(colonPos + 1);
@@ -676,7 +675,6 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         return 0;
     }
     auto fdsan = new fdsan_fd(fd);
-    cInode->mBase->hasDownloaded = true;
     fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
 }
@@ -812,11 +810,25 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     return HandleOpenResult(*error, data, cInode, fi);
 }
 
+static bool IsLocalFile(struct FuseData *data, shared_ptr<CloudInode> cInode)
+{
+    string localPath = GetLowerPath(data->userId, cInode->path);
+    return access(localPath.c_str(), F_OK) == 0;
+}
+
+static bool NeedReCloudOpen(struct FuseData *data, shared_ptr<CloudInode> cInode)
+{
+    if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
+        return false;
+    }
+    return !IsLocalFile(data, cInode);
+}
+
 static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<CloudInode> cInode,
     struct fuse_file_info *fi)
 {
     do {
-        if (!cInode->mBase->hasDownloaded) {
+        if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
             break;
         }
         string localPath = GetLowerPath(data->userId, cInode->path);
@@ -881,7 +893,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
         return;
     }
     wSesLock.lock();
-    if (!cInode->readSession) {
+    if (!cInode->readSession || NeedReCloudOpen(data, cInode)) {
         /*
          * 'recordType' is fixed to "media" now
          * 'assetKey' is one of "content"/"lcd"/"thumbnail"
@@ -1545,7 +1557,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
             FaultType::FILE, ENOMEM, "buffer is null"});
         return;
     }
-    if (cInode->mBase->hasDownloaded && fi->fh != UINT64_MAX) {
+    if (fi->fh != UINT64_MAX) {
         CloudReadOnLocalFile(req, buf, size, off, fi);
         return;
     }
