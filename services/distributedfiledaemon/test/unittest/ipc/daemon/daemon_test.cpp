@@ -396,7 +396,12 @@ HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
     g_subscribeCommonEvent = false;
     try {
         daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
-        EXPECT_TRUE(true);
+        std::shared_ptr<OsAccountObserver> subScriber = daemon_->subScriber_;
+        EXPECT_TRUE(subScriber != nullptr);
+
+        daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
+        std::shared_ptr<OsAccountObserver> subScriber1 = daemon_->subScriber_;
+        EXPECT_TRUE(subScriber == subScriber1);
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -419,10 +424,14 @@ HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_001 begin";
-    daemon_->subScriber_ = nullptr;
     try {
+        daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
         daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
-        EXPECT_TRUE(true);
+        EXPECT_TRUE(daemon_->subScriber_ != nullptr);
+
+        daemon_->subScriber_ = nullptr;
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
+        EXPECT_TRUE(daemon_->subScriber_ == nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
     }
