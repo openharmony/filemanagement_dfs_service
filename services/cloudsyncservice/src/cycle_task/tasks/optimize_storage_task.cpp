@@ -48,8 +48,8 @@ int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundle
         return ret;
     }
 
-    int32_t agingDays = std::stoi(param["validDays"]);
-    int32_t agingPolicy = std::stoi(param["dataAgingPolicy"]);
+    int32_t agingDays = std::atoi(param["validDays"].c_str());
+    int32_t agingPolicy = std::atoi(param["dataAgingPolicy"].c_str());
     if (agingPolicy == 0) {
         return dataSyncManager_->OptimizeStorage(bundleName, userId, agingDays);
     }
