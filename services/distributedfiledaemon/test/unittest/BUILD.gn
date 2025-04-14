@@ -78,38 +78,6 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
   ]
 
   sources += [
@@ -122,7 +90,11 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -173,38 +145,7 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "device/device_manager_agent_test.cpp",
   ]
 
   configs = [
@@ -212,7 +153,11 @@ ohos_unittest("device_manager_agent_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -258,50 +203,18 @@ ohos_unittest("os_account_observer_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-  ]
-
-  sources += [ "multiuser/os_account_observer_test.cpp" ]
+  sources = [ "multiuser/os_account_observer_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -346,49 +259,18 @@ ohos_unittest("devsl_dispatcher_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/devsl_dispatcher_test.cpp",
-  ]
+  sources = [ "network/devsl_dispatcher_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -434,49 +316,18 @@ ohos_unittest("kernel_talker_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/kernel_talker_test.cpp",
-  ]
+  sources = [ "network/kernel_talker_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -522,44 +373,18 @@ ohos_unittest("network_agent_template_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/network_agent_template_test.cpp",
-  ]
+  sources = [ "network/network_agent_template_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -604,48 +429,18 @@ ohos_unittest("session_pool_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/session_pool_test.cpp",
-  ]
+  sources = [ "network/session_pool_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -694,38 +489,6 @@ ohos_unittest("softbus_agent_test") {
 
   sources = [
     "${distributedfile_path}/test/mock/socket_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus/softbus_agent_test.cpp",
   ]
 
@@ -734,7 +497,11 @@ ohos_unittest("softbus_agent_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -788,37 +555,6 @@ ohos_unittest("softbus_agent_sup_test") {
 
   sources = [
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
     "network/softbus/softbus_agent_sup_test.cpp",
   ]
@@ -828,7 +564,11 @@ ohos_unittest("softbus_agent_sup_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -982,49 +722,18 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/softbus/softbus_session_dispatcher_test.cpp",
-  ]
+  sources = [ "network/softbus/softbus_session_dispatcher_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -1070,49 +779,18 @@ ohos_unittest("softbus_session_test") {
 
   module_out_path = module_output_path
 
-  sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/connect_count/connect_count.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/softbus/softbus_session_test.cpp",
-  ]
+  sources = [ "network/softbus/softbus_session_test.cpp" ]
 
   configs = [
     ":module_private_config",
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",
