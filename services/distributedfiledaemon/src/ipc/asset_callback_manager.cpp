@@ -109,7 +109,7 @@ void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetwork
     LOGI("NotifyAssetRecvFinished.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
-        if (callback == nullptr) {
+        if (callback == nullptr && assetObj != nullptr) {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
                  assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
         } else {
