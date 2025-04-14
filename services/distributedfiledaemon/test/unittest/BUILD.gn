@@ -47,10 +47,7 @@ ohos_unittest("device_info_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [
-    "${services_path}/distributedfiledaemon:idaemon_base_head",
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -81,6 +78,9 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+  ]
+
+  sources += [
     "device/device_manager_agent_sup_test.cpp",
     "device/mock_other_method.cpp",
   ]
@@ -92,7 +92,6 @@ ohos_unittest("device_manager_agent_sup_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -156,7 +155,6 @@ ohos_unittest("device_manager_agent_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -214,7 +212,6 @@ ohos_unittest("os_account_observer_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -271,7 +268,6 @@ ohos_unittest("devsl_dispatcher_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -329,7 +325,6 @@ ohos_unittest("kernel_talker_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -386,7 +381,7 @@ ohos_unittest("network_agent_template_test") {
   ]
 
   deps = [
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -443,7 +438,6 @@ ohos_unittest("session_pool_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -505,7 +499,6 @@ ohos_unittest("softbus_agent_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -573,7 +566,6 @@ ohos_unittest("softbus_agent_sup_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -739,7 +731,6 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -797,7 +788,6 @@ ohos_unittest("softbus_session_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]

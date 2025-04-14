@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 
 #include "device_manager.h"
 #include "device/device_manager_agent.h"
-#include "idaemon.h"
+#include "ipc/i_daemon.h"
 #include "securec.h"
 #include "security_label.h"
 #include "softbus_bus_center.h"
@@ -62,7 +62,7 @@ uint32_t DevslDispatcher::DevslGetRegister(const std::string &cid, std::weak_ptr
 {
     std::string udid;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(SERVICE_NAME, cid, udid);
+    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid, udid);
 
     std::lock_guard<std::mutex> lock(mutex);
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
@@ -189,7 +189,7 @@ int32_t DevslDispatcher::GetDeviceDevsl(const std::string &networkId)
 
     std::string udid;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(SERVICE_NAME, networkId, udid);
+    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, networkId, udid);
 
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
     uint32_t levelInfo;

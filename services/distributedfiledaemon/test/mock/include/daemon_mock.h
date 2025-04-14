@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -24,10 +24,9 @@ namespace Storage {
 namespace DistributedFile {
 class DaemonMock : public DaemonStub {
 public:
-    MOCK_METHOD1(OpenP2PConnection, int32_t(const DmDeviceInfoExt &deviceInfo));
-    MOCK_METHOD1(CloseP2PConnection, int32_t(const DmDeviceInfoExt &deviceInfo));
-    MOCK_METHOD2(OpenP2PConnectionEx,
-                 int32_t(const std::string &networkId, const sptr<IFileDfsListener> &remoteReverseObj));
+    MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD2(OpenP2PConnectionEx, int32_t(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj));
     MOCK_METHOD1(CloseP2PConnectionEx, int32_t(const std::string &networkId));
     MOCK_METHOD4(RequestSendFile,
                  int32_t(const std::string &srcUri,
@@ -39,13 +38,13 @@ public:
                          const std::string &dstUri,
                          const std::string &srcDeviceId,
                          const sptr<IRemoteObject> &listener,
-                         HmdfsInfoExt &fileInfo));
+                         HmdfsInfo &fileInfo));
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 
     MOCK_METHOD3(PushAsset,
                  int32_t(int32_t userId,
-                         const AssetObj &assetObj,
+                         const sptr<AssetObj> &assetObj,
                          const sptr<IAssetSendCallback> &sendCallback));
     MOCK_METHOD1(RegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
     MOCK_METHOD1(UnRegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));

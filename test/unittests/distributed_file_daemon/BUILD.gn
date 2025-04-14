@@ -36,7 +36,141 @@ ohos_unittest("distributed_file_daemon_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
+    "file_api:securitylabel",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "libfuse:libfuse",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("distributed_file_daemon_stub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon"
+
+  sources = [ "daemon_stub_test.cpp" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "${services_path}/distributedfiledaemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
+    "file_api:securitylabel",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "libfuse:libfuse",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("distributed_file_daemon_stub_sup_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon"
+
+  sources = [
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "daemon_stub_sup_test.cpp",
+  ]
+
+  include_dirs = [
+    "include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "${distributedfile_path}/test/mock",
+    "${services_path}/distributedfiledaemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/test/mock/include",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -105,7 +239,6 @@ ohos_unittest("daemon_manager_impl_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_head",
     "${utils_path}:libdistributedfileutils",
   ]
 
@@ -157,6 +290,54 @@ ohos_unittest("daemon_manager_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("daemon_service_proxy_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon"
+
+  sources = [
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "daemon_service_proxy_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "${services_path}/distributedfiledaemon/include",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "googletest:gmock_main",
@@ -373,6 +554,9 @@ group("distributed_daemon_test") {
     ":connection_detector_test",
     ":daemon_manager_impl_test",
     ":daemon_manager_test",
+    ":daemon_service_proxy_test",
+    ":distributed_file_daemon_stub_sup_test",
+    ":distributed_file_daemon_stub_test",
     ":distributed_file_daemon_test",
     ":file_dfs_listener_proxy_test",
     ":file_trans_listener_proxy_test",

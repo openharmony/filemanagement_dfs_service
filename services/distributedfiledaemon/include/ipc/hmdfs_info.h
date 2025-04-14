@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -17,8 +17,6 @@
 #define FILEMANAGEMENT_DFS_SERVICE_HMDFS_INFO_H
 
 #include <string>
-#include "string_ex.h"
-#include "parcel.h"
 
 namespace OHOS {
 namespace Storage {
@@ -31,18 +29,7 @@ struct HmdfsInfo {
     std::string sessionName;
     std::string dstPhysicalPath;
 };
-
-struct HmdfsInfoExt : public HmdfsInfo, public Parcelable {
-        using HmdfsInfo::HmdfsInfo;
-        HmdfsInfoExt(const HmdfsInfo& hmdfsInfo) : HmdfsInfo(hmdfsInfo) {}
-
-        virtual bool Marshalling(Parcel &parcel) const override;
-
-        static HmdfsInfoExt *Unmarshalling(Parcel &parcel);
-};
-
-HmdfsInfo convertExttoInfo(HmdfsInfoExt &infoExt);
-} //DistributedFile
-} //Storage
-} //OHOS
+}
+}
+}
 #endif // FILEMANAGEMENT_DFS_SERVICE_HMDFS_INFO_H

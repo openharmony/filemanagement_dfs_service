@@ -44,7 +44,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
