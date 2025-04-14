@@ -22,11 +22,6 @@ int fuse_opt_add_arg(struct fuse_args *args, const char *arg)
     return FuseAssistant::ins->fuse_opt_add_arg(args, arg);
 }
 
-bool CheckPathForStartFuse(const std::string &path)
-{
-    return FuseAssistant::ins->CheckPathForStartFuse(path);
-}
-
 struct fuse_session* fuse_session_new(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
     size_t opSize, void *userData)
 {
