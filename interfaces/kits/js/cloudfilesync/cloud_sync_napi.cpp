@@ -849,6 +849,12 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path
     if (xattrValueSize <= 0) {
         return { E_UNKNOWN_ERR, -1 };
     }
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        LOGE("invalid xattrValue");
+        return { E_PARAMS, -1};
+    }
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
@@ -881,6 +887,12 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &pa
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
+    }
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        LOGE("invalid xattrValue");
+        return { E_PARAMS, -1};
     }
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
