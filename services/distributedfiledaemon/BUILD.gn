@@ -32,7 +32,6 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   cflags = [
     "-D_FORTIFY_SOURCE=2",
-    "-fstack-protector-strong",
   ]
 
   sources = [
@@ -169,7 +168,6 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
 
   cflags = [
     "-D_FORTIFY_SOURCE=2",
-    "-fstack-protector-strong",
   ]
 
   external_deps = [

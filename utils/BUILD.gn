@@ -100,7 +100,6 @@ ohos_shared_library("libdistributedfileutils") {
 
   cflags = [
     "-D_FORTIFY_SOURCE=2",
-    "-fstack-protector-strong",
   ]
 
   defines = [
@@ -174,7 +173,6 @@ ohos_shared_library("libdistributedfiledentry") {
 
   cflags = [
     "-D_FORTIFY_SOURCE=2",
-    "-fstack-protector-strong",
   ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
@@ -242,7 +240,6 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   cflags = [
     "-D_FORTIFY_SOURCE=2",
-    "-fstack-protector-strong",
   ]
 
   defines = [
