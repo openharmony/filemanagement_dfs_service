@@ -39,7 +39,7 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
         return -errno;
     }
 
-    size_t readLen = 0;
+    ssize_t readLen = 0;
     while (readLen < size) {
         ssize_t ret = read(fd, data, size - readLen);
         if (ret < 0) {
@@ -67,7 +67,7 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
         return -errno;
     }
 
-    size_t writeLen = 0;
+    ssize_t writeLen = 0;
     while (writeLen < size) {
         ssize_t ret = write(fd, data, size - writeLen);
         if (ret <= 0) {

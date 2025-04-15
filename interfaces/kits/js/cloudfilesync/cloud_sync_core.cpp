@@ -155,7 +155,7 @@ FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
     if (xattrValueSize <= 0) {
         return FsResult<int32_t>::Error(EINVAL);
     }
-    int32_t fileStatus = stoi(xattrValue.get());
+    int32_t fileStatus = atoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
         fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
