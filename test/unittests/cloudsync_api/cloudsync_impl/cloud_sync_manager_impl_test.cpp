@@ -85,6 +85,448 @@ void CloudSyncManagerImplTest::TearDown(void)
 }
 
 /**
+ * @tc.name: RegisterCallbackTest002
+ * @tc.desc: Verify the RegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
+    try {
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackTest End";
+}
+
+/*
+ * @tc.name: UnRegisterCallbackTest001
+ * @tc.desc: Verify the UnRegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest001
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest003
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        bool forceFlag = true;
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: GetSyncTimeTest001
+ * @tc.desc: Verify the GetSyncTime function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetSyncTimeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncTimeTest Start";
+    try {
+        int64_t syncTime = 0;
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetSyncTime(syncTime, bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncTimeTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetSyncTimeTest End";
+}
+
+/**
+ * @tc.name: TriggerSyncTest002
+ * @tc.desc: Verify the TriggerSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncTest End";
+}
+
+/*
+ * @tc.name: StopSyncTest
+ * @tc.desc: Verify the StopSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StopSyncTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int res = CloudSyncManagerImpl::GetInstance().StopSync(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopSyncTest End";
+}
+
+/*
+ * @tc.name: ChangeAppSwitchTest
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, ChangeAppSwitchTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        std::string bundleName = "bundleName";
+        bool status = true;
+        auto res = CloudSyncManagerImpl::GetInstance().ChangeAppSwitch(accoutId, bundleName, status);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ChangeAppSwitchTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest End";
+}
+
+/*
+ * @tc.name: NotifyEventChangeTest
+ * @tc.desc: Verify the NotifyEventChange function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, NotifyEventChangeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyEventChangeTest Start";
+    try {
+        int32_t userId = 100;
+        std::string eventId = "eventId";
+        std::string extraData = "extraData";
+        auto res = CloudSyncManagerImpl::GetInstance().NotifyEventChange(userId, eventId, extraData);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NotifyEventChangeTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "NotifyEventChangeTest End";
+}
+
+/*
+ * @tc.name: StartDownloadFileTest
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StartDownloadFileTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFileTest End";
+}
+
+/*
+ * @tc.name: StartFileCacheTest
+ * @tc.desc: Verify the StartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileCacheTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().StartFileCache(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFileCacheTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartFileCacheTest End";
+}
+
+/*
+ * @tc.name: StopDownloadFileTest
+ * @tc.desc: Verify the StopDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StopDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().StopDownloadFile(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopDownloadFileTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopDownloadFileTest End";
+}
+
+/*
+ * @tc.name: UnregisterDownloadFileCallbackTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest Start";
+    try {
+        auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnregisterDownloadFileCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest End";
+}
+
+/*
+ * @tc.name: EnableCloudTest
+ * @tc.desc: Verify the EnableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, EnableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        SwitchDataObj switchData;
+        auto res = CloudSyncManagerImpl::GetInstance().EnableCloud(accoutId, switchData);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " EnableCloudTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "EnableCloudTest End";
+}
+
+/*
+ * @tc.name: DisableCloudTest
+ * @tc.desc: Verify the DisableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, DisableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        auto res = CloudSyncManagerImpl::GetInstance().DisableCloud(accoutId);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DisableCloudTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DisableCloudTest End";
+}
+
+/*
+ * @tc.name: CleanTest
+ * @tc.desc: Verify the Clean function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        CleanOptions cleanOptions;
+        auto res = CloudSyncManagerImpl::GetInstance().Clean(accoutId, cleanOptions);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanTest End";
+}
+
+/*
+ * @tc.name: CleanCacheTest
+ * @tc.desc: Verify the CleanCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCacheTest Start";
+    try {
+        string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().CleanCache(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanCacheTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanCacheTest End";
+}
+
+HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFileTest1 Start";
+    try {
+        CleanFileInfo cleanFileInfo;
+        std::vector<CleanFileInfo> fileInfo;
+        fileInfo.emplace_back(cleanFileInfo);
+        std::vector<std::string> failCloudId;
+        auto res = CloudSyncManagerImpl::GetInstance().BatchCleanFile(fileInfo, failCloudId);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BatchCleanFileTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "BatchCleanFileTest1 End";
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(bundleName);
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest003, TestSize.Level1)
+{
+    std::vector<std::string> uriVec = {"uri"};
+    int64_t downloadId = 0;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StartFileCache(uriVec, downloadId);
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StopFileCacheTest, TestSize.Level1)
+{
+    int64_t downloadId = 0;
+    bool needClean = true;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StopFileCache(downloadId, needClean);
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
+{
+    int32_t res = CloudSyncManagerImpl::GetInstance().DownloadThumb();
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+/*
+ * @tc.name: BatchDentryFileInsertTest
+ * @tc.desc: Verify the BatchDentryFileInsert function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, BatchDentryFileInsertTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest002 Start";
+    try {
+        std::vector<DentryFileInfo> fileInfo(MAX_DENTRY_FILE_SIZE - 1);
+        std::vector<std::string> failCloudId;
+        int32_t result = CloudSyncManagerImpl::GetInstance().BatchDentryFileInsert(fileInfo, failCloudId);
+
+        EXPECT_EQ(result, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchDentryFileInsertTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest002 End";
+}
+
+/**
+ * @tc.name: StopFileCache
+ * @tc.desc: Verify the StopFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+**/
+HWTEST_F(CloudSyncManagerImplTest, StopFileCacheTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopFileCacheTest1 Start";
+    try {
+        CloudSyncManagerImpl &cloudSyncManagerImpl = CloudSyncManagerImpl::GetInstance();
+        int64_t downloadId = 1;
+        bool needClean = true;
+        int32_t timeout = 10;
+
+        int32_t result = cloudSyncManagerImpl.StopFileCache(downloadId, needClean, timeout);
+
+        EXPECT_EQ(result, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopFileCacheTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopFileCacheTest1 End";
+}
+
+/**
  * @tc.name: RegisterCallbackTest001
  * @tc.desc: Verify the RegisterCallback function.
  * @tc.type: FUNC
