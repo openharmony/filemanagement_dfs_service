@@ -15,9 +15,9 @@ import("//build/ohos.gni")
 
 group("ani_package") {
   deps = [
-    "./file_cloud_sync:cloud_sync_ani",
-    "./file_cloud_sync:file_cloud_sync_etc",
-    "./file_cloud_sync_manager:cloud_sync_manager_ani",
-    "./file_cloud_sync_manager:file_cloud_sync_manager_etc",
+    "file_cloud_sync:cloud_sync_ani",
+    "file_cloud_sync:file_cloud_sync_etc",
+    "file_cloud_sync_manager:cloud_sync_manager_ani",
+    "file_cloud_sync_manager:file_cloud_sync_manager_etc",
   ]
 }

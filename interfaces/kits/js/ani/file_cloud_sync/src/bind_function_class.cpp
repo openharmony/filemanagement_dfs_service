@@ -132,7 +132,7 @@ static ani_status BindContextOnFileSync(ani_env *env)
         ani_native_function { "FileSyncStart", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart) },
         ani_native_function { "FileSyncStop", ":V", reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop) },
         ani_native_function {
-            "GallerySyncGetLastSyncTime", ":D", reinterpret_cast<void *>(CloudSyncAni::CloudyncGetLastSyncTime) },
+            "GallerySyncGetLastSyncTime", ":D", reinterpret_cast<void *>(CloudSyncAni::CloudSyncGetLastSyncTime) },
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -222,7 +222,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        std::cerr << "Unsupported ANI_VERSION_1" << std::endl;
+        LOGE("Unsupported ANI_VERSION_1");
         return (ani_status)ANI_ERROR;
     }
 

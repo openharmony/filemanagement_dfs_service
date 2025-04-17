@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2025 Huawei Device Co., Ltd.
+* Copyright (c) 2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_FILEMGMT_ANI_UITLS_H
-#define OHOS_FILEMGMT_ANI_UITLS_H
+#ifndef OHOS_FILEMGMT_ANI_UTILS_H
+#define OHOS_FILEMGMT_ANI_UTILS_H
 
 #include <ani.h>
 #include <functional>
@@ -36,4 +36,4 @@ private:
     ~ANIUtils() = default;
 };
 } // OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_ANI_UITLS_H
+#endif // OHOS_FILEMGMT_ANI_UTILS_H

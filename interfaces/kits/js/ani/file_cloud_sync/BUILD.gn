@@ -17,26 +17,26 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("ani_config") {
   include_dirs = [
-    "./include",
-    "../ani_helper/include",
-    "../../cloudfilesync",
+    "include",
+    "${interfaces_js_path}/ani/ani_helper/include",
+    "${interfaces_js_path}/cloudfilesync",
   ]
 }
 
 ohos_shared_library("cloud_sync_ani") {
   public_configs = [ ":ani_config" ]
   sources = [
-    "../../cloudfilesync/cloud_file_cache_core.cpp",
-    "../../cloudfilesync/cloud_file_core.cpp",
-    "../../cloudfilesync/cloud_sync_core.cpp",
-    "../ani_helper/src/ani_utils.cpp",
-    "../ani_helper/src/error_handler.cpp",
-    "./src/bind_function_class.cpp",
-    "./src/cloud_download_ani.cpp",
-    "./src/cloud_download_callback_ani.cpp",
-    "./src/cloud_file_cache_ani.cpp",
-    "./src/cloud_sync_ani.cpp",
-    "./src/cloud_sync_callback_ani.cpp",
+    "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
+    "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
+    "src/bind_function_class.cpp",
+    "src/cloud_download_ani.cpp",
+    "src/cloud_download_callback_ani.cpp",
+    "src/cloud_file_cache_ani.cpp",
+    "src/cloud_sync_ani.cpp",
+    "src/cloud_sync_callback_ani.cpp",
   ]
   sanitize = {
     integer_overflow = true

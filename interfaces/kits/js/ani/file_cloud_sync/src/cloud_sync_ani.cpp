@@ -313,7 +313,7 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
     return static_cast<ani_int>(data.GetData().value());
 }
 
-ani_double CloudSyncAni::CloudyncGetLastSyncTime(ani_env *env, ani_object object)
+ani_double CloudSyncAni::CloudSyncGetLastSyncTime(ani_env *env, ani_object object)
 {
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {

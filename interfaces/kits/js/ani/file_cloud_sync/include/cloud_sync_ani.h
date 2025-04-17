@@ -30,7 +30,7 @@ public:
     static void CloudSyncStart(ani_env *env, ani_object object);
     static void CloudSyncStop(ani_env *env, ani_object object);
     static ani_int GetFileSyncState(ani_env *env, ani_class clazz, ani_string path);
-    static ani_double CloudyncGetLastSyncTime(ani_env *env, ani_object object);
+    static ani_double CloudSyncGetLastSyncTime(ani_env *env, ani_object object);
     static int32_t RegisterToObs(const RegisterParams &registerParams);
     static bool CheckRef(ani_env *env, ani_ref ref, ChangeListenerAni &listObj, const string &uri);
     static int32_t GetRegisterParams(
