@@ -76,6 +76,95 @@ HWTEST_F(CloudSyncAssetManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
 }
 
+/*
+ * @tc.name: UploadAssetTest
+ * @tc.desc: Verify the UploadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadAssetTest Start";
+    try {
+        int32_t userId = 100;
+        std::string request = "";
+        std::string result = "";
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().UploadAsset(userId, request, result);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UploadAsseteTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UploadAssetTest End";
+}
+ 
+/*
+ * @tc.name: DownloadFileTest001
+ * @tc.desc: Verify the DownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFileTest Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        AssetInfo assetInfo;
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(userId, bundleName, assetInfo);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFileTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFileTest End";
+}
+
+/*
+ * @tc.name: DownloadFilesTest
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::vector<AssetInfo> assetInfo;
+        std::vector<bool> assetResultMap;
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFiles(userId,
+                                                    bundleName, assetInfo, assetResultMap);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFilesTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest End";
+}
+ 
+/*
+ * @tc.name: DeleteAssetTest
+ * @tc.desc: Verify the DeleteAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DeleteAssetTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetTest Start";
+    try {
+        int32_t userId = 100;
+        std::string uri = "uri";
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DeleteAsset(userId, uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteAssetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetTest End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

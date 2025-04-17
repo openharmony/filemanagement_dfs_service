@@ -56,6 +56,38 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
     std::cout << "TearDown" << std::endl;
 }
 
+/**
+ * @tc.name: UploadAssetTest
+ * @tc.desc: Verify the UploadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
+{
+    CloudSyncAssetManagerImpl assetManager;
+    int32_t userId = 100;
+    std::string request = "sample_request";
+    std::string result;
+    int32_t ret = assetManager.UploadAsset(userId, request, result);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: DownloadFileTest
+ * @tc.desc: Verify the DownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest, TestSize.Level1)
+{
+    CloudSyncAssetManagerImpl assetManager;
+    int32_t userId = 100;
+    std::string request = "sample_request";
+    AssetInfo assetInfo;
+    int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
