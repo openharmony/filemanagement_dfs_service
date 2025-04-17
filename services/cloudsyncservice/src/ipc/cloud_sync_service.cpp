@@ -78,6 +78,7 @@ void CloudSyncService::PreInit()
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
+    packageStatusListener_ = make_shared<PackageStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::Init()
@@ -225,12 +226,41 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
+    } else if (reason == "usual.event.PACKAGE_REMOVED") {
+        HandlePackageRemoved(startReason);
     }
 
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
         taskRunner->StartTask();
     }
+}
+
+void CloudSyncService::HandlePackageRemoved(const SystemAbilityOnDemandReason& startReason)
+{
+    std::string bundleName;
+    std::string userId;
+    auto extraData = startReason.GetExtraData().GetWant();
+    auto iter = extraData.find("bundleName");
+    if (iter != extraData.end()) {
+        bundleName = iter->second;
+    } else {
+        LOGE("Cant find bundleName");
+        return;
+    }
+    iter = extraData.find("userId");
+    if (iter != extraData.end()) {
+        userId = iter->second;
+    } else {
+        LOGE("Cant find userId");
+        return;
+    }
+    int32_t userIdNum = std::atoi(userId.c_str());
+    if (userIdNum < 0 || (userIdNum == 0 && userId != "0")) {
+        LOGE("Get UserId Failed!");
+        return;
+    }
+    packageStatusListener_->RemovedClean(bundleName, userIdNum);
 }
 
 void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
@@ -240,6 +270,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->Start();
         batteryStatusListener_->Start();
         screenStatusListener_->Start();
+        packageStatusListener_->Start();
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         auto sessionManager = make_shared<SessionManager>();
         sessionManager->Init();
