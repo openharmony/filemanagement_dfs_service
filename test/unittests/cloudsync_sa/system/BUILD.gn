@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("dfsu_fd_guard_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${utils_path}/system/src/dfsu_fd_guard.cpp",
@@ -49,7 +49,7 @@ ohos_unittest("dfsu_fd_guard_test") {
 }
 
 ohos_unittest("dfsu_access_token_helper_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${utils_path}/system/src/dfsu_access_token_helper.cpp",
@@ -99,7 +99,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
 }
 
 ohos_unittest("dfsu_mount_argument_descriptors_test") {
-  module_out_path = "filemanagement/dfs_service"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${utils_path}/system/src/dfsu_mount_argument_descriptors.cpp",

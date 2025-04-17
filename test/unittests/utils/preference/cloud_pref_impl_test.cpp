@@ -294,7 +294,7 @@ HWTEST_F(CloudPrefImplTest, DeleteTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "DeleteTest End";
 }
 
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_001, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, CloudPrefImpl_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpl_001 Start";
     try {
@@ -310,7 +310,7 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpl_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "CloudPrefImpl_001 End";
 }
 
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_002, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, CloudPrefImpl_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpl_002 Start";
     try {
@@ -326,7 +326,7 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpl_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "CloudPrefImpl_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, CloudPrefImpl_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpl_003 Start";
     try {
@@ -342,7 +342,7 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpl_003, TestSize.Level0)
     GTEST_LOG_(INFO) << "CloudPrefImpl_003 End";
 }
 
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_004, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, CloudPrefImpl_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpl_004 Start";
     try {
@@ -358,7 +358,7 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpl_004, TestSize.Level0)
     GTEST_LOG_(INFO) << "CloudPrefImpl_004 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetString_001, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetString_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetString_001 Start";
     try {
@@ -380,7 +380,7 @@ HWTEST_F(CloudPrefImplTest, SetString_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetString_001 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetString_002, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetString_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetString_002 Start";
     try {
@@ -401,7 +401,7 @@ HWTEST_F(CloudPrefImplTest, SetString_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetString_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetString_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetString_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetString_003 Start";
     try {
@@ -422,7 +422,7 @@ HWTEST_F(CloudPrefImplTest, SetString_003, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetString_003 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetString_004, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetString_004, TestSize.Level1)
 {
     string key = "";
     string value = "test_value";
@@ -436,7 +436,7 @@ HWTEST_F(CloudPrefImplTest, SetString_004, TestSize.Level0)
     EXPECT_EQ(preferencesMock_->FlushSync(), X_OK);
 }
 
-HWTEST_F(CloudPrefImplTest, SetLong_001, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetLong_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetLong_001 Start";
     try {
@@ -457,7 +457,7 @@ HWTEST_F(CloudPrefImplTest, SetLong_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetLong_001 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetLong_002, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetLong_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetLong_002 Start";
     try {
@@ -478,7 +478,7 @@ HWTEST_F(CloudPrefImplTest, SetLong_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetLong_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetLong_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetLong_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetLong_003 Start";
     try {
@@ -499,7 +499,7 @@ HWTEST_F(CloudPrefImplTest, SetLong_003, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetLong_003 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetLong_004, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetLong_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetLong_004 Start";
     try {
@@ -520,7 +520,7 @@ HWTEST_F(CloudPrefImplTest, SetLong_004, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetLong_004 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetInt_001, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetInt_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetInt_001 Start";
     try {
@@ -541,7 +541,7 @@ HWTEST_F(CloudPrefImplTest, SetInt_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetInt_001 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetInt_002, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetInt_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetInt_002 Start";
     try {
@@ -562,7 +562,7 @@ HWTEST_F(CloudPrefImplTest, SetInt_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetInt_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetInt_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetInt_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetInt_003 Start";
     try {
@@ -583,7 +583,7 @@ HWTEST_F(CloudPrefImplTest, SetInt_003, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetInt_003 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetInt_004, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetInt_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetInt_004 Start";
     try {
@@ -604,7 +604,7 @@ HWTEST_F(CloudPrefImplTest, SetInt_004, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetInt_004 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetBool_001, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetBool_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetBool_001 Start";
     try {
@@ -625,7 +625,7 @@ HWTEST_F(CloudPrefImplTest, SetBool_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetBool_001 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetBool_002, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetBool_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetBool_002 Start";
     try {
@@ -646,7 +646,7 @@ HWTEST_F(CloudPrefImplTest, SetBool_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetBool_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetBool_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetBool_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetBool_003 Start";
     try {
@@ -667,7 +667,7 @@ HWTEST_F(CloudPrefImplTest, SetBool_003, TestSize.Level0)
     GTEST_LOG_(INFO) << "SetBool_003 End";
 }
 
-HWTEST_F(CloudPrefImplTest, SetBool_004, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, SetBool_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetBool_004 Start";
     try {
@@ -726,7 +726,7 @@ HWTEST_F(CloudPrefImplTest, Delete_002, TestSize.Level0)
     GTEST_LOG_(INFO) << "Delete_002 End";
 }
 
-HWTEST_F(CloudPrefImplTest, Delete_003, TestSize.Level0)
+HWTEST_F(CloudPrefImplTest, Delete_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Delete_003 Start";
     try {
