@@ -48,7 +48,7 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
-
+const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -108,6 +108,14 @@ int32_t CloudSyncService::GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUs
     bundleNameUserInfo.pid = callerPid;
 
     return E_OK;
+}
+
+void CloudSyncService::CovertBundleName(std::string &bundleName)
+{
+    auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
+    if (bundleName == clouddriveBundleName) {
+        bundleName = GALLERY_BUNDLE_NAME;
+    }
 }
 
 void CloudSyncService::GetBundleNameUserInfo(const std::vector<std::string> &uriVec,
@@ -627,6 +635,7 @@ int32_t CloudSyncService::OptimizeStorage(const OptimizeSpaceOptions &optimizeOp
         return ret;
     }
 
+    CovertBundleName(bundleNameUserInfo.bundleName);
     LOGI("OptimizeStorage, bundleName: %{private}s, agingDays: %{public}d, callerUserId: %{public}d",
          bundleNameUserInfo.bundleName.c_str(), optimizeOptions.agingDays, bundleNameUserInfo.userId);
     if (!isCallbackValid) {
@@ -650,6 +659,7 @@ int32_t CloudSyncService::StopOptimizeStorage()
     if (ret != E_OK) {
         return ret;
     }
+    CovertBundleName(bundleNameUserInfo.bundleName);
     ret = dataSyncManager_->StopOptimizeStorage(bundleNameUserInfo);
     LOGI("End StopOptimizeStorage");
     return ret;
