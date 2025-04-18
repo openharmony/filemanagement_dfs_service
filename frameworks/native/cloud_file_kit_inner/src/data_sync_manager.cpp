@@ -137,11 +137,6 @@ int32_t DataSyncManager::StopOptimizeStorage(const BundleNameUserInfo &bundleNam
     return E_OK;
 }
 
-int32_t DataSyncManager::OptimizeCache(const int32_t userId, const std::string &bundleName)
-{
-    return E_OK;
-}
-
 int32_t DataSyncManager::DownloadThumb()
 {
     return E_OK;
