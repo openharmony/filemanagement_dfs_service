@@ -155,8 +155,8 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
 }
 void CloudSyncCallbackImpl::OnDeathRecipient()
 {
-    auto isInDownOrUpload = preState_ == CloudSyncState::UPLOADING or preState_ == CloudSyncState::DOWNLOADING;
-    if (isInDownOrUpload && preError_ == ErrorType::NO_ERROR) {
+    auto isInDownOrUpload = (preState_ == CloudSyncState::UPLOADING) || (preState_ == CloudSyncState::DOWNLOADING);
+    if (isInDownOrUpload && (preError_ == ErrorType::NO_ERROR)) {
         OnSyncStateChanged(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
     }
 }
