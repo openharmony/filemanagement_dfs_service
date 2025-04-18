@@ -36,6 +36,8 @@ thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
 static mutex obsMutex_;
 const int32_t AGING_DAYS = 30;
+CloudSyncState CloudSyncCallbackImpl::preState_ = CloudSyncState::COMPLETED;
+ErrorType CloudSyncCallbackImpl::preError_ = ErrorType::NO_ERROR;
 
 class ObserverImpl : public AAFwk::DataAbilityObserverStub {
 public:
@@ -151,8 +153,17 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_close_handle_scope(env, scope);
 }
 
+void CloudSyncCallbackImpl::OnDeathRecipient()
+{
+    auto isInDownOrUpload = (preState_ == CloudSyncState::UPLOADING) || (preState_ == CloudSyncState::DOWNLOADING);
+    if (isInDownOrUpload && (preError_ == ErrorType::NO_ERROR)) {
+        OnSyncStateChanged(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
+    }
+}
+
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
+    LOGI("notify - state: %{public}d, error: %{public}d", state, error);
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
@@ -180,6 +191,8 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
             delete msg;
             delete work;
         });
+    preState_ = state;
+    preError_ = error;
     if (ret != 0) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
