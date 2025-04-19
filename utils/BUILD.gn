@@ -98,9 +98,7 @@ ohos_shared_library("libdistributedfileutils") {
   configs += [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_public_config" ]
 
-  cflags = [
-    "-D_FORTIFY_SOURCE=2",
-  ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   defines = [
     "LOG_DOMAIN=0xD004308",
@@ -171,9 +169,7 @@ ohos_shared_library("libdistributedfiledentry") {
 
   public_configs = [ ":dentry_public_config" ]
 
-  cflags = [
-    "-D_FORTIFY_SOURCE=2",
-  ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
@@ -238,9 +234,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
   configs += [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_lite_public_config" ]
 
-  cflags = [
-    "-D_FORTIFY_SOURCE=2",
-  ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   defines = [
     "LOG_DOMAIN=0xD004308",
