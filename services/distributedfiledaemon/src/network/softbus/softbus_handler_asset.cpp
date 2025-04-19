@@ -355,6 +355,11 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
                                                   const std::string &fileName,
                                                   const sptr<AssetObj> &assetObj)
 {
+    if (assetObj == nullptr) {
+        LOGE("assetObj is nullptr!");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+
     size_t pos = fileName.find(RELATIVE_PATH_FLAG);
     if (pos == std::string::npos) {
         LOGE("Generate dstBundleName fail, firstFile is %{public}s", GetAnonyString(fileName).c_str());
