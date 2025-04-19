@@ -1,0 +1,73 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("cloud_sync_core_test") {
+  module_out_path = "filemanagement/dfs_service/tests"
+
+  sources = [
+    "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
+    "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/cloud_download_callback_ani.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/cloud_sync_callback_ani.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
+    "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "cloud_file_cache_core_test.cpp",
+    "cloud_file_core_test.cpp",
+    "cloud_sync_core_test.cpp",
+    "cloud_sync_manager_core_test.cpp",
+  ]
+
+  include_dirs = [
+    "${interfaces_js_path}/ani/ani_helper/include",
+    "${interfaces_js_path}/ani/file_cloud_sync/include",
+    "${interfaces_js_path}/cloudfilesync",
+    "${interfaces_js_path}/cloudsyncmanager",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "file_api:filemgmt_libfs",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "runtime_core:ani",
+    "runtime_core:libarkruntime",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_FILE_SYNC\"",
+  ]
+
+  use_exceptions = true
+}
+
+group("ani_core_test") {
+  testonly = true
+  deps = [ ":cloud_sync_core_test" ]
+}
