@@ -20,12 +20,11 @@
 #include <random>
 
 #include "dfs_error.h"
-#include "daemon_proxy.h"
+#include "distributed_file_daemon_proxy.h"
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"
 #include "uri.h"
 #include "utils_log.h"
-#include "distributed_file_daemon_manager_impl.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
@@ -172,7 +171,7 @@ std::string TransListener::GetNetworkIdFromUri(const std::string &uri)
 
 int32_t TransListener::Cancel()
 {
-    auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;

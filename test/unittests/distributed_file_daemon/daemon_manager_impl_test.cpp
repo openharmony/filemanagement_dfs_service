@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,14 +22,14 @@
 #include "asset_send_callback_mock.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_manager_impl.h"
-#include "daemon_proxy.h"
+#include "distributed_file_daemon_proxy.h"
 #include "ipc/hmdfs_info.h"
 #include "i_daemon_mock.h"
 #include "file_dfs_listener_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::Storage::DistributedFile {
-sptr<IDaemon> DistributedFileDaemonManagerImpl::GetDaemonInterface()
+sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 {
     daemonProxy_ = iface_cast<IDaemon>(sptr(new DaemonServiceMock()));
     return daemonProxy_;
@@ -110,7 +110,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level
 {
     GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->OpenP2PConnection(deviceInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -131,7 +131,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->CloseP2PConnection(deviceInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -153,7 +153,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Lev
     auto remoteReverseObj = sptr(new FileDfsListenerMock());
     GTEST_LOG_(INFO) << "OpenP2PConnectionExTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->OpenP2PConnectionEx("test", remoteReverseObj);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -174,7 +174,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Le
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionEx Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->CloseP2PConnectionEx("test");
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -206,7 +206,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
     };
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -227,7 +227,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RequestSendFileTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->RequestSendFile("uri", "path", "deviceId", "test");
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -250,7 +250,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level
     bool isDir = false;
     GTEST_LOG_(INFO) << "GetRemoteCopyInfoTest Start";
     try {
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->GetRemoteCopyInfo("test", isFile, isDir);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -274,7 +274,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "PushAssetTest Start";
     try {
         sptr<IAssetSendCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->PushAsset(userId, assetObj, nullptr);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
@@ -296,7 +296,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.L
     GTEST_LOG_(INFO) << "RegisterAssetCallbackTest Start";
     try {
         sptr<IAssetRecvCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->RegisterAssetCallback(errPtr);
         EXPECT_EQ(res, E_NULLPTR);
@@ -321,7 +321,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize
     GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest Start";
     try {
         sptr<IAssetRecvCallbackMock> errPtr = nullptr;
-        auto distributedFileDaemonProxy = DistributedFileDaemonManagerImpl::GetDaemonInterface();
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
         auto res = distributedDaemonManagerImpl_->UnRegisterAssetCallback(errPtr);
         EXPECT_EQ(res, E_NULLPTR);

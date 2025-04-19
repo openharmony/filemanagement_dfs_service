@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -35,7 +35,6 @@
 
 #include "all_connect/all_connect_manager.h"
 #include "network/softbus/softbus_handler.h"
-#include "device/device_info.h"
 
 namespace OHOS {
 namespace Storage {
@@ -220,7 +219,7 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
                                            HmdfsInfo &info)
 {
     LOGI("PrepareSessionInner begin.");
-    auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(SERVICE_NAME, sessionName,
+    auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
                                                                       DFS_CHANNLE_ROLE_SINK, physicalPath);
     if (socketId <= 0) {
         LOGE("CreateSessionServer failed, socketId = %{public}d", socketId);
