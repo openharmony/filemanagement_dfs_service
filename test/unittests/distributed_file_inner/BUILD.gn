@@ -280,25 +280,22 @@ ohos_unittest("file_copy_manager_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "copy/file_copy_manager_test.cpp",
   ]
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:fileuri_native",
@@ -343,9 +340,8 @@ ohos_unittest("trans_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "copy/trans_listener_test.cpp",
   ]
 
@@ -358,10 +354,7 @@ ohos_unittest("trans_listener_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:fileuri_native",
@@ -406,9 +399,8 @@ ohos_unittest("file_size_utils_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/dm_device_info_ext.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/hmdfs_info.cpp",
     "copy/file_size_utils_test.cpp",
   ]
 
@@ -421,10 +413,7 @@ ohos_unittest("file_size_utils_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${services_path}/distributedfiledaemon:idaemon_base_source",
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:fileuri_native",
