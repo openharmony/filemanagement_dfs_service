@@ -70,7 +70,6 @@ public:
         const CloudSync::OptimizeSpaceOptions &optimizeOptions,
         const sptr<CloudSync::ICloudOptimizeCallback> &optimizeCallback);
     virtual int32_t StopOptimizeStorage(const BundleNameUserInfo &bundleNameUserInfo);
-    virtual int32_t OptimizeCache(const int32_t userId, const std::string &bundleName);
     virtual int32_t BatchCleanFile(const std::vector<CloudSync::CleanFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId);
     virtual int32_t DownloadThumb();

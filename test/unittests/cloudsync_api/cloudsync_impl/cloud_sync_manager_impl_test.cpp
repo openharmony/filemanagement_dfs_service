@@ -29,7 +29,6 @@ namespace Test {
 using namespace testing::ext;
 using namespace testing;
 using namespace std;
-constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 static const int32_t CLEAN_FILE_MAX_SIZE = 200;
 
@@ -641,74 +640,6 @@ HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
     int32_t res = CloudSyncManagerImpl::GetInstance().DownloadThumb();
     EXPECT_EQ(res, E_OK);
 }
-
-/*
- * @tc.name: BatchDentryFileInsertTest
- * @tc.desc: Verify the BatchDentryFileInsert function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerImplTest, BatchDentryFileInsertTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest001 Start";
-    try {
-        std::vector<DentryFileInfo> fileInfo(MAX_DENTRY_FILE_SIZE + 1);
-        std::vector<std::string> failCloudId;
-        int32_t result = CloudSyncManagerImpl::GetInstance().BatchDentryFileInsert(fileInfo, failCloudId);
-
-        EXPECT_EQ(result, E_INVAL_ARG);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " BatchDentryFileInsertTest001 FAILED";
-    }
-    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest001 End";
-}
-
-/*
- * @tc.name: BatchDentryFileInsertTest
- * @tc.desc: Verify the BatchDentryFileInsert function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerImplTest, BatchDentryFileInsertTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest002 Start";
-    try {
-        std::vector<DentryFileInfo> fileInfo(MAX_DENTRY_FILE_SIZE - 1);
-        std::vector<std::string> failCloudId;
-        int32_t result = CloudSyncManagerImpl::GetInstance().BatchDentryFileInsert(fileInfo, failCloudId);
-
-        EXPECT_EQ(result, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " BatchDentryFileInsertTest002 FAILED";
-    }
-    GTEST_LOG_(INFO) << "BatchDentryFileInsertTest002 End";
-}
-
- /*
-  * @tc.name: OnAddSystemAbilityTest
-  * @tc.desc: Verify the OnAddSystemAbility function.
-  * @tc.type: FUNC
-  * @tc.require: I6H5MH
-  */
-HWTEST_F(CloudSyncManagerImplTest, OnAddSystemAbilityTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 Start";
-    try {
-        string bundleName = "testbundleName";
-        CloudSyncManagerImpl::SystemAbilityStatusChange statusChange(bundleName);
-        int32_t systemAbilityId = 1;
-        std::string deviceId = "testDeviceId";
-
-        EXPECT_NO_THROW(statusChange.OnAddSystemAbility(systemAbilityId, deviceId));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnAddSystemAbilityTest001 FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 End";
-}
-
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

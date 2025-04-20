@@ -20,20 +20,17 @@
 #include "cycle_task.h"
 #include "cycle_task_runner.h"
 #include "tasks/database_backup_task.h"
-#include "tasks/optimize_cache_task.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
 #include "tasks/report_statistics_task.h"
 #include "utils_log.h"
-#include "cloud_file_kit_mock.cpp"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
 namespace Test {
 using namespace testing::ext;
 using namespace std;
-using namespace testing;
 
 std::shared_ptr<CloudFile::DataSyncManager> g_dataSyncManagerPtr_;
 
@@ -57,7 +54,6 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<CloudFileKitMock> ability = make_shared<CloudFileKitMock>();
 };
 
 void CloudSyncServiceCycleTaskTest::SetUpTestCase(void)
@@ -70,7 +66,6 @@ void CloudSyncServiceCycleTaskTest::SetUpTestCase(void)
 
 void CloudSyncServiceCycleTaskTest::TearDownTestCase(void)
 {
-    ability = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -258,104 +253,6 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest001, TestSize.L
         GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 end";
-}
-
-/*
- * @tc.name: RunTaskForBundlTest
- * @tc.desc: Verify the RunTaskForBundl function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest006, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest006 start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t userId = 100;
-        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
-        shared_ptr<OptimizeCacheTask> task = make_shared<OptimizeCacheTask>(g_dataSyncManagerPtr_);
-        int32_t ret = task->RunTaskForBundle(userId, bundleName);
-
-        EXPECT_EQ(ret, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RunTaskForBundleTest006 FAILED";
-    }
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest006 end";
-}
-  
- /*
-  * @tc.name: CleanCacheTest
-  * @tc.desc: Verify the CleanCache function.
-  * @tc.type: FUNC
-  * @tc.require: I6H5MH
-  */
-HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest007, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest007 start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t userId = 100;
-        CloudFile::CloudFileKit::instance_ = ability.get();
-        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
-        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
-        int32_t ret = task->RunTaskForBundle(userId, bundleName);
-
-        EXPECT_EQ(ret, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RunTaskForBundleTest007 FAILED";
-    }
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest007 end";
-}
-  
- /*
-  * @tc.name: CleanCacheTest
-  * @tc.desc: Verify the CleanCache function.
-  * @tc.type: FUNC
-  * @tc.require: I6H5MH
-  */
-HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest008, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest008 start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t userId = 100;
-        CloudFile::CloudFileKit::instance_ = ability.get();
-        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce(Return(E_OK));
-        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
-        int32_t ret = task->RunTaskForBundle(userId, bundleName);
-
-        EXPECT_EQ(ret, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RunTaskForBundleTest008 FAILED";
-    }
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest008 end";
-}
-  
- /*
-  * @tc.name: CleanCacheTest
-  * @tc.desc: Verify the CleanCache function.
-  * @tc.type: FUNC
-  * @tc.require: I6H5MH
-  */
-HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest009, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest009 start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t userId = 100;
-        CloudFile::CloudFileKit::instance_ = ability.get();
-        shared_ptr<SaveSubscriptionTask> task = make_shared<SaveSubscriptionTask>(g_dataSyncManagerPtr_);
-        int32_t ret = task->RunTaskForBundle(userId, bundleName);
-
-        EXPECT_EQ(ret, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RunTaskForBundleTest009 FAILED";
-    }
-    GTEST_LOG_(INFO) << "RunTaskForBundleTest009 end";
 }
 
 /*

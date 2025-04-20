@@ -19,12 +19,10 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
-    "${distributedfile_path}/test/mock/cloud_file_kit_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/database_backup_task.cpp",
-    "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_cache_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_storage_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/report_statistics_task.cpp",
@@ -34,7 +32,6 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
-    "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${services_path}/cloudsyncservice/include",
