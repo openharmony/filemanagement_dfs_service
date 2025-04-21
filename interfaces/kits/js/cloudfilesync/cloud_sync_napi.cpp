@@ -932,7 +932,12 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
 int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
 {
     return uv_queue_work(
-        loop, work, [](uv_work_t *w) {},
+        loop, work,
+        [](uv_work_t *w) {
+            if (w == nullptr) {
+                LOGE("Invalid uv_work");
+            }
+        },
         [](uv_work_t *w, int s) {
             // js thread
             if (w == nullptr) {
