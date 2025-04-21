@@ -618,7 +618,6 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
             return -err;
         }
     }
-
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore =
         databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
