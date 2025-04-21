@@ -270,7 +270,7 @@ static pid_t GetPidFromTid(pid_t tid)
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos) {
                 std::string tgidStr = line.substr(colonPos + 1);
-                tgid = std::stoi(tgidStr.c_str());
+                tgid = std::atoi(tgidStr.c_str());
             }
             break;
         }
@@ -353,7 +353,7 @@ static void XcollieCallback(void *xcollie)
         default:
             break;
     }
-    
+
     string msg = "In XcollieCallback, path:" + GetAnonyString((inode->path).c_str());
     CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, xcollieInput->faultOperation_,
         faultType, EWOULDBLOCK, msg});
@@ -884,7 +884,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     string prepareTraceId = GetPrepareTraceId(data->userId);
-    
+
     LOGI("%{public}d open %{public}s", pid, GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
