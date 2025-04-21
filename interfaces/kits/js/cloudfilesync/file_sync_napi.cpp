@@ -79,6 +79,106 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
+napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!FileSyncNapi::InitArgsOnCallback(env, funcArg)) {
+        return nullptr;
+    }
+
+    string bundleName = GetBundleName(env, funcArg);
+    callback_ = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(callback_, bundleName);
+    if (ret != E_OK) {
+        LOGE("OnCallback Register error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!FileSyncNapi::InitArgsOffCallback(env, funcArg)) {
+        return nullptr;
+    }
+
+    string bundleName = GetBundleName(env, funcArg);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleName);
+    if (ret != E_OK) {
+        LOGE("OffCallback UnRegister error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+    if (callback_ != nullptr) {
+        /* napi delete reference */
+        callback_->DeleteReference();
+        callback_ = nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+    }
+
+    string bundleName = GetBundleName(env, funcArg);
+    auto cbExec = [bundleName]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StartFileSync(bundleName);
+        if (ret != E_OK) {
+            LOGE("Start Sync error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string procedureName = "Start";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
+napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    string bundleName = GetBundleName(env, funcArg);
+    auto cbExec = [bundleName]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StopFileSync(bundleName);
+        if (ret != E_OK) {
+            LOGE("Stop Sync error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string procedureName = "Stop";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
 struct SyncStateArg {
     vector<int32_t> stateList {};
 };
