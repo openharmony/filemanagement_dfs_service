@@ -125,7 +125,14 @@ int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const in
     return E_OK;
 }
 
-int32_t DataSyncManager::OptimizeCache(const int32_t userId, const std::string &bundleName)
+int32_t DataSyncManager::StartOptimizeStorage(const BundleNameUserInfo &bundleNameUserInfo,
+    const CloudSync::OptimizeSpaceOptions &optimizeOptions,
+    const sptr<CloudSync::ICloudOptimizeCallback> &optimizeCallback)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::StopOptimizeStorage(const BundleNameUserInfo &bundleNameUserInfo)
 {
     return E_OK;
 }

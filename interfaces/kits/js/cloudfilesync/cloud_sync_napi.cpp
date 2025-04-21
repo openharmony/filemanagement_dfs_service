@@ -37,6 +37,8 @@ mutex CloudSyncNapi::sOnOffMutex_;
 static mutex obsMutex_;
 const int32_t AGING_DAYS = 30;
 const int32_t GET_FILE_SYNC_MAX = 100;
+CloudSyncState CloudSyncCallbackImpl::preState_ = CloudSyncState::COMPLETED;
+ErrorType CloudSyncCallbackImpl::preError_ = ErrorType::NO_ERROR;
 
 class ObserverImpl : public AAFwk::DataAbilityObserverStub {
 public:
@@ -152,8 +154,17 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_close_handle_scope(env, scope);
 }
 
+void CloudSyncCallbackImpl::OnDeathRecipient()
+{
+    auto isInDownOrUpload = (preState_ == CloudSyncState::UPLOADING) || (preState_ == CloudSyncState::DOWNLOADING);
+    if (isInDownOrUpload && (preError_ == ErrorType::NO_ERROR)) {
+        OnSyncStateChanged(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
+    }
+}
+
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
+    LOGI("notify - state: %{public}d, error: %{public}d", state, error);
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
@@ -181,6 +192,8 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
             delete msg;
             delete work;
         });
+    preState_ = state;
+    preError_ = error;
     if (ret != 0) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
@@ -199,6 +212,39 @@ void CloudSyncCallbackImpl::DeleteReference()
 void CloudSyncCallbackImpl::OnSyncStateChanged(SyncType type, SyncPromptState state)
 {
     return;
+}
+
+void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
+{
+    napi_env env = env_;
+    auto task = [this, env, state, progress] () {
+        if (!cbOnRef_) {
+            LOGE("cbOnRef_ is nullptr");
+            return;
+        }
+
+        napi_handle_scope scope = nullptr;
+        napi_status status = napi_open_handle_scope(env, &scope);
+        if (status != napi_ok) {
+            LOGE("Create reference failed, status: %{public}d", status);
+            return;
+        }
+
+        napi_value jsCallback = cbOnRef_.Deref(env).val_;
+        NVal obj = NVal::CreateObject(env);
+        obj.AddProp("state", NVal::CreateInt32(env, (int32_t)state).val_);
+        obj.AddProp("progress", NVal::CreateInt32(env, (int32_t)progress).val_);
+        napi_value retVal = nullptr;
+        status = napi_call_function(env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+        if (status != napi_ok) {
+            LOGE("napi call function failed, status: %{public}d", status);
+        }
+        napi_close_handle_scope(env, scope);
+    };
+    auto ret = napi_send_event(env, task, napi_eprio_immediate);
+    if  (ret != 0) {
+        LOGE("failed to send event, ret: %{public}d", ret);
+    }
 }
 
 string CloudSyncNapi::GetBundleName(const napi_env &env, const NFuncArg &funcArg)
@@ -241,30 +287,38 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOnCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (callback_ != nullptr) {
         LOGI("callback already exist");
-        return NVal::CreateUndefined(env).val_;
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOnCallback(env, funcArg)) {
+        return nullptr;
     }
 
     string bundleName = GetBundleName(env, funcArg);
@@ -279,24 +333,32 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
     return NVal::CreateUndefined(env).val_;
 }
 
-napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+bool CloudSyncNapi::InitArgsOffCallback(const napi_env &env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
-        return nullptr;
+        return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
         NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+        return false;
     }
 
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
+        return false;
+    }
+    return true;
+}
+
+napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!InitArgsOffCallback(env, funcArg)) {
         return nullptr;
     }
 
@@ -497,17 +559,6 @@ int32_t CloudSyncNapi::RegisterToObs(napi_env env, const RegisterParams &registe
 
 napi_value CloudSyncNapi::RegisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr) {
         g_listObj = make_unique<ChangeListenerNapi>(env);
     }
@@ -582,17 +633,6 @@ napi_value CloudSyncNapi::UnregisterFromObs(napi_env env, const string &uri)
 
 napi_value CloudSyncNapi::UnregisterChange(napi_env env, napi_callback_info info)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        NError(E_PERMISSION_DENIED).ThrowErr(env);
-        return nullptr;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
-        return nullptr;
-    }
-
     if (g_listObj == nullptr || g_listObj->observers_.empty()) {
         LOGI("no obs to unregister");
         return nullptr;
@@ -654,6 +694,8 @@ bool CloudSyncNapi::Export()
         NVal::DeclareNapiFunction("stop", Stop),
         NVal::DeclareNapiFunction("getFileSyncState", GetFileSyncState),
         NVal::DeclareNapiFunction("optimizeStorage", OptimizeStorage),
+        NVal::DeclareNapiFunction("startOptimizeSpace", StartOptimizeStorage),
+        NVal::DeclareNapiFunction("stopOptimizeSpace", StopOptimizeStorage),
     };
     std::string className = GetClassName();
     auto [succ, classValue] =
@@ -674,6 +716,89 @@ bool CloudSyncNapi::Export()
     return exports_.AddProp(className, classValue);
 }
 
+int32_t CloudSyncNapi::HandOptimizeStorageParams(napi_env env, napi_callback_info info, NFuncArg &funcArg,
+    OptimizeSpaceOptions &optimizeOptions)
+{
+    bool succ = false;
+    auto argv = NVal(env, funcArg[NARG_POS::FIRST]);
+    if (!argv.HasProp("totalSize") || !argv.HasProp("agingDays")) {
+        return ERR_BAD_VALUE;
+    }
+
+    int64_t totalSize = 0;
+    int32_t agingDays = 0;
+    tie(succ, totalSize) = argv.GetProp("totalSize").ToInt64();
+    if (!succ) {
+        return ERR_BAD_VALUE;
+    }
+    tie(succ, agingDays) = argv.GetProp("agingDays").ToInt32();
+    if (!succ) {
+        return ERR_BAD_VALUE;
+    }
+
+    if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
+        return ERR_BAD_VALUE;
+    }
+
+    LOGI("totalSize:%{public}lld, agingDays:%{public}d", static_cast<long long>(totalSize), agingDays);
+    optimizeOptions.totalSize = totalSize;
+    optimizeOptions.agingDays = agingDays;
+    return ERR_OK;
+}
+
+napi_value CloudSyncNapi::StartOptimizeStorage(napi_env env, napi_callback_info info)
+{
+    LOGI("StartOptimizeStorage enter");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO)) {
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        LOGE("Number of arguments unmatched");
+        return nullptr;
+    }
+    OptimizeSpaceOptions optimizeOptions {};
+    int32_t res = HandOptimizeStorageParams(env, info, funcArg, optimizeOptions);
+    if (res != ERR_OK) {
+        LOGE("hand paeams failed");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto callback = make_shared<CloudOptimizeCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]));
+    auto cbExec = [optimizeOptions, callback]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions, callback);
+        if (ret != E_OK) {
+            LOGE("StartOptimizeStorage error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string procedureName = "StartOptimizeStorage";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
+napi_value CloudSyncNapi::StopOptimizeStorage(napi_env env, napi_callback_info info)
+{
+    LOGI("StopOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().StopOptimizeStorage();
+    if (ret != E_OK) {
+        LOGE("StopOptimizeStorage error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
+    return NVal::CreateUndefined(env).val_;
+}
+
 napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -681,8 +806,12 @@ napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
     }
 
-    auto cbExec = []() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(AGING_DAYS);
+    OptimizeSpaceOptions optimizeOptions {};
+    optimizeOptions.totalSize = 0;
+    optimizeOptions.agingDays = AGING_DAYS;
+
+    auto cbExec = [optimizeOptions]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions);
         if (ret != E_OK) {
             LOGE("OptimizeStorage error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
@@ -937,7 +1066,12 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
 int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
 {
     return uv_queue_work(
-        loop, work, [](uv_work_t *w) {},
+        loop, work,
+        [](uv_work_t *w) {
+            if (w == nullptr) {
+                LOGE("Invalid uv_work");
+            }
+        },
         [](uv_work_t *w, int s) {
             // js thread
             if (w == nullptr) {

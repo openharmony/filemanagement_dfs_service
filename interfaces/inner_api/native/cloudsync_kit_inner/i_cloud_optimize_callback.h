@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,15 +13,22 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include "cloud_file_kit.h"
+#ifndef OHOS_FILEMGMT_I_CLOUD_OPTOMIZE_CALLBACK_H
+#define OHOS_FILEMGMT_I_CLOUD_OPTOMIZE_CALLBACK_H
+
+#include "iremote_broker.h"
+
+#include "cloud_optimize_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
-
-class CloudFileKitMock : public CloudFile::CloudFileKit {
+class ICloudOptimizeCallback : public CloudOptimizeCallback, public IRemoteBroker {
 public:
-    MOCK_METHOD2(GetCloudUserInfo, int32_t(const int32_t userId, CloudFile::CloudUserInfo &userInfo));
-    MOCK_METHOD3(GetAppSwitchStatus, int32_t(const std::string &bundleName, const int32_t userId, bool &switchStatus));
-};
+    enum {
+        SERVICE_CMD_ON_PROCESS = 0,
+    };
 
-}
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudOptimizeCallback")
+};
+} // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_I_CLOUD_OPTOMIZE_CALLBACK_H

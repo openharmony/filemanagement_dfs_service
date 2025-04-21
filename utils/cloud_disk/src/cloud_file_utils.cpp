@@ -27,8 +27,6 @@ using namespace std;
 namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
-    static const string LOCAL_PATH_HMDFS_CLOUD_CACHE = "/hmdfs/cache/cloud_cache";
-    static const string CLOUDDISK_CACHE_DIR = "/disk_drivekit_cache/";
     static const string CLOUD_FILE_CLOUD_ID_XATTR = "user.cloud.cloudid";
     static const uint32_t CLOUD_ID_MIN_SIZE = 3;
     static const uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
@@ -159,15 +157,6 @@ string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int
     uint32_t bucketId = GetBucketId(cloudId);
     string bucketPath = baseDir + to_string(bucketId);
     return bucketPath;
-}
-
-string CloudFileUtils::GetLocalDKCachePath(string cloudId, string bundleName, int32_t userId)
-{
-    string baseDir = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
-                     CLOUDDISK_CACHE_DIR + bundleName + "/";
-    uint32_t bucketId = GetBucketId(cloudId);
-    string cachePath = baseDir + to_string(bucketId) + "/" + cloudId;
-    return cachePath;
 }
 
 string CloudFileUtils::GetLocalFilePath(string cloudId, string bundleName, int32_t userId)

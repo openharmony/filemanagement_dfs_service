@@ -48,7 +48,6 @@ ohos_shared_library("cloudsync_sa") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
-    "src/cycle_task/tasks/optimize_cache_task.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",
@@ -71,6 +70,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status_listener.cpp",
+    "src/sync_rule/package_status_listener.cpp",
     "src/sync_rule/screen_status_listener.cpp",
     "src/sync_rule/user_status_listener.cpp",
   ]
@@ -155,7 +155,6 @@ ohos_static_library("cloudsync_sa_static") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
-    "src/cycle_task/tasks/optimize_cache_task.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",
@@ -183,6 +182,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status_listener.cpp",
+    "src/sync_rule/package_status_listener.cpp",
     "src/sync_rule/screen_status_listener.cpp",
     "src/sync_rule/user_status_listener.cpp",
   ]

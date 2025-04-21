@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,15 +13,19 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include "cloud_file_kit.h"
+#include "cloud_optimize_callback_client.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+using namespace std;
 
-class CloudFileKitMock : public CloudFile::CloudFileKit {
-public:
-    MOCK_METHOD2(GetCloudUserInfo, int32_t(const int32_t userId, CloudFile::CloudUserInfo &userInfo));
-    MOCK_METHOD3(GetAppSwitchStatus, int32_t(const std::string &bundleName, const int32_t userId, bool &switchStatus));
-};
-
+void CloudOptimizeCallbackClient::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
+{
+    if (!callback_) {
+        LOGE("callback_ is null, maybe not registered");
+        return;
+    }
+    callback_->OnOptimizeProcess(state, progress);
 }
+
+} // namespace OHOS::FileManagement::CloudSync

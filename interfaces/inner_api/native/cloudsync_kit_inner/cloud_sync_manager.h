@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "cloud_download_callback.h"
+#include "cloud_optimize_callback.h"
 #include "cloud_sync_callback.h"
 #include "cloud_sync_common.h"
 
@@ -34,6 +35,8 @@ public:
      */
     virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
                                      const std::string &bundleName = "") = 0;
+    virtual int32_t RegisterFileSyncCallback(const std::shared_ptr<CloudSyncCallback> callback,
+                                     const std::string &bundleName = "") = 0;
     /**
      * @brief 注册
      *
@@ -41,12 +44,14 @@ public:
      * @return int32_t 返回执行结果
      */
     virtual int32_t UnRegisterCallback(const std::string &bundleName = "") = 0;
+    virtual int32_t UnRegisterFileSyncCallback(const std::string &bundleName = "") = 0;
     /**
      * @brief 启动同步
      *
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t StartSync(const std::string &bundleName = "") = 0;
+    virtual int32_t StartFileSync(const std::string &bundleName = "") = 0;
     /**
      * @brief 启动同步
      *
@@ -69,6 +74,7 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t StopSync(const std::string &bundleName = "", bool forceFlag = false) = 0;
+    virtual int32_t StopFileSync(const std::string &bundleName = "", bool forceFlag = false) = 0;
     /**
      * @brief 清理水位
      *
@@ -103,7 +109,9 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
-    virtual int32_t OptimizeStorage(const int32_t agingDays) = 0;
+    virtual int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+        const std::shared_ptr<CloudOptimizeCallback> optimizeCallback = nullptr) = 0;
+    virtual int32_t StopOptimizeStorage() = 0;
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
@@ -114,7 +122,9 @@ public:
     virtual int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) = 0;
     virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
+    virtual int32_t RegisterFileCacheCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
+    virtual int32_t UnregisterFileCacheCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
     virtual void CleanGalleryDentryFile() = 0;

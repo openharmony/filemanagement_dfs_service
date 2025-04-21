@@ -603,22 +603,4 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndCreate_001, TestSize
     }
     GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 End";
 }
-
-/**
- * @tc.name: GetNewNameTest
- * @tc.desc: Verify the GetNewName function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, GetNewNameTest, TestSize.Level1)
-{
-    std::shared_ptr<CloudDiskMetaFile> metaFile = std::make_shared<CloudDiskMetaFile>(1, "bundleName", "cloudId");
-    std::string oldName = "test.txt";
-    std::string newName;
-    std::vector<MetaBase> metaBases;
-    int32_t ret = MetaFileMgr::GetInstance().GetNewName(metaFile, oldName, newName);
-
-    EXPECT_EQ(ret, 0);
-}
-
 } // namespace OHOS::FileManagement::CloudSync::Test

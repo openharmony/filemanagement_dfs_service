@@ -46,12 +46,28 @@ public:
         return E_OK;
     }
 
+    int32_t UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override
+    {
+        return E_OK;
+    }
+
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override
     {
         return E_OK;
     }
 
+    int32_t RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+        const std::string &bundleName = "") override
+    {
+        return E_OK;
+    }
+
     int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override
+    {
+        return E_OK;
+    }
+
+    int32_t StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") override
     {
         return E_OK;
     }
@@ -62,6 +78,11 @@ public:
     }
 
     int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
+    {
+        return E_OK;
+    }
+
+    int32_t StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
     {
         return E_OK;
     }
@@ -121,7 +142,15 @@ public:
     {
         return E_OK;
     }
+    int32_t RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
+    {
+        return E_OK;
+    }
     int32_t UnregisterDownloadFileCallback()
+    {
+        return E_OK;
+    }
+    int32_t UnregisterFileCacheCallback()
     {
         return E_OK;
     }
@@ -160,7 +189,13 @@ public:
         return E_OK;
     }
 
-    int32_t OptimizeStorage(const int32_t agingDays)
+    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+        const sptr<IRemoteObject> &optimizeCallback)
+    {
+        return E_OK;
+    }
+
+    int32_t StopOptimizeStorage()
     {
         return E_OK;
     }

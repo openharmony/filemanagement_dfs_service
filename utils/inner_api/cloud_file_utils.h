@@ -62,7 +62,6 @@ public:
     static bool CheckIsTimeRecycled(const std::string &key);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
-    static std::string GetLocalDKCachePath(std::string cloudId, std::string bundleName, int32_t userId);
     static std::string GetLocalFilePath(std::string cloudId, std::string bundleName,
                                         int32_t userId);
     static std::string GetPathWithoutTmp(const std::string &path);

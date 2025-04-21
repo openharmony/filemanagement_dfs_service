@@ -13,21 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_CACHE_TASK_H
-#define OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_CACHE_TASK_H
-#include "cloud_pref_impl.h"
-#include "cycle_task.h"
+#ifndef OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_H
+#define OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_H
 
-namespace OHOS {
-namespace FileManagement {
-namespace CloudSync {
+#include <functional>
+#include "cloud_sync_constants.h"
 
-class OptimizeCacheTask : public CycleTask {
+namespace OHOS::FileManagement::CloudSync {
+
+class CloudOptimizeCallback {
 public:
-    OptimizeCacheTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
-    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
+    virtual ~CloudOptimizeCallback() = default;
+    virtual void OnOptimizeProcess(const OptimizeState state, const int32_t progress) = 0;
 };
-} // namespace CloudSync
-} // namespace FileManagement
-} // namespace OHOS
-#endif // OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_CACHE_TASK_H
+} // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_H

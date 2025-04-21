@@ -58,6 +58,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitCloudSyncApi(env, exports);
     InitNotifyType(env, exports);
     InitCloudSyncFuncs(env, exports);
+    InitOptimizeState(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<CloudFileCacheNapi>(env, exports));
@@ -86,6 +87,21 @@ void InitCloudSyncState(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("DOWNLOAD_FAILED", NVal::CreateInt32(env, DOWNLOAD_FAILED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, COMPLETED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, STOPPED).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitOptimizeState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "OptimizeState";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("RUNNING", NVal::CreateInt32(env, OPTIMIZE_RUNNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, OPTIMIZE_COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FAILED", NVal::CreateInt32(env, OPTIMIZE_FAILED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, OPTIMIZE_STOPPED).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
@@ -158,6 +174,8 @@ void InitCloudSyncApi(napi_env env, napi_value exports)
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getFileSyncState", CloudSyncNapi::GetFileSyncState),
         DECLARE_NAPI_FUNCTION("optimizeStorage", CloudSyncNapi::OptimizeStorage),
+        DECLARE_NAPI_FUNCTION("startOptimizeSpace", CloudSyncNapi::StartOptimizeStorage),
+        DECLARE_NAPI_FUNCTION("stopOptimizeSpace", CloudSyncNapi::StopOptimizeStorage),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }

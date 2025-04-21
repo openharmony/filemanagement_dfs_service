@@ -45,6 +45,13 @@ enum CloudSyncState {
     STOPPED,
 };
 
+enum OptimizeState {
+    OPTIMIZE_RUNNING = 0,
+    OPTIMIZE_COMPLETED = 1,
+    OPTIMIZE_FAILED = 2,
+    OPTIMIZE_STOPPED = 3,
+};
+
 enum ErrorType {
     NO_ERROR = 0,
     NETWORK_UNAVAILABLE,
@@ -54,7 +61,7 @@ enum ErrorType {
     CLOUD_STORAGE_FULL,
     LOCAL_STORAGE_FULL,
     DEVICE_TEMPERATURE_TOO_HIGH,
-    BUSIENSS_MODE_CHANGED,
+    BUSINESS_MODE_CHANGED,
     PERMISSION_NOT_ALLOW,
 };
 

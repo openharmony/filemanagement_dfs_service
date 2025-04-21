@@ -78,6 +78,7 @@ void CloudSyncService::PreInit()
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
+    packageStatusListener_ = make_shared<PackageStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::Init()
@@ -225,12 +226,41 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
+    } else if (reason == "usual.event.PACKAGE_REMOVED") {
+        HandlePackageRemoved(startReason);
     }
 
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
         taskRunner->StartTask();
     }
+}
+
+void CloudSyncService::HandlePackageRemoved(const SystemAbilityOnDemandReason& startReason)
+{
+    std::string bundleName;
+    std::string userId;
+    auto extraData = startReason.GetExtraData().GetWant();
+    auto iter = extraData.find("bundleName");
+    if (iter != extraData.end()) {
+        bundleName = iter->second;
+    } else {
+        LOGE("Cant find bundleName");
+        return;
+    }
+    iter = extraData.find("userId");
+    if (iter != extraData.end()) {
+        userId = iter->second;
+    } else {
+        LOGE("Cant find userId");
+        return;
+    }
+    int32_t userIdNum = std::atoi(userId.c_str());
+    if (userIdNum < 0 || (userIdNum == 0 && userId != "0")) {
+        LOGE("Get UserId Failed!");
+        return;
+    }
+    packageStatusListener_->RemovedClean(bundleName, userIdNum);
 }
 
 void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
@@ -240,6 +270,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->Start();
         batteryStatusListener_->Start();
         screenStatusListener_->Start();
+        packageStatusListener_->Start();
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         auto sessionManager = make_shared<SessionManager>();
         sessionManager->Init();
@@ -353,6 +384,11 @@ int32_t CloudSyncService::UnRegisterCallbackInner(const string &bundleName)
     return E_OK;
 }
 
+int32_t CloudSyncService::UnRegisterFileSyncCallbackInner(const string &bundleName)
+{
+    return UnRegisterCallbackInner(bundleName);
+}
+
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const string &bundleName)
 {
     if (remoteObject == nullptr) {
@@ -374,6 +410,12 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     return E_OK;
 }
 
+int32_t CloudSyncService::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+    const string &bundleName)
+{
+    return RegisterCallbackInner(remoteObject, bundleName);
+}
+
 int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleName)
 {
     string targetBundleName = bundleName;
@@ -386,6 +428,11 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleNam
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStartSync(targetBundleName, callerUserId, forceFlag,
         SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::StartFileSyncInner(bool forceFlag, const string &bundleName)
+{
+    return StartSyncInner(forceFlag, bundleName);
 }
 
 int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
@@ -409,6 +456,11 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName, bool forceFlag
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::StopFileSyncInner(const string &bundleName, bool forceFlag)
+{
+    return StopSyncInner(bundleName, forceFlag);
 }
 
 int32_t CloudSyncService::ResetCursor(const string &bundleName)
@@ -459,18 +511,34 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
 }
 
-int32_t CloudSyncService::OptimizeStorage(const int32_t agingDays)
+int32_t CloudSyncService::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
+    const sptr<IRemoteObject> &optimizeCallback)
 {
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    std::string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
-        return E_INVAL_ARG;
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
     }
 
     LOGI("OptimizeStorage, bundleName: %{private}s, agingDays: %{public}d, callerUserId: %{public}d",
-         bundleName.c_str(), agingDays, callerUserId);
+        bundleNameUserInfo.bundleName.c_str(), optimizeOptions.agingDays, bundleNameUserInfo.userId);
+    if (!isCallbackValid) {
+        return dataSyncManager_->OptimizeStorage(bundleNameUserInfo.bundleName, bundleNameUserInfo.userId,
+            optimizeOptions.agingDays);
+    }
 
-    return dataSyncManager_->OptimizeStorage(bundleName, callerUserId, agingDays);
+    auto optimizeCb = iface_cast<ICloudOptimizeCallback>(optimizeCallback);
+    return dataSyncManager_->StartOptimizeStorage(bundleNameUserInfo, optimizeOptions, optimizeCb);
+}
+
+int32_t CloudSyncService::StopOptimizeStorage()
+{
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return dataSyncManager_->StopOptimizeStorage(bundleNameUserInfo);
 }
 
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
@@ -574,7 +642,11 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
     }
     LOGI("start StartFileCache");
     auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
+    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
+    if (ret != E_OK && ret != E_INVAL_ARG) {
+        ret = E_BROKEN_IPC;
+    }
+    return ret;
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
@@ -611,7 +683,11 @@ int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int3
         return ret;
     }
     LOGI("start StopFileCache");
-    return dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
+    ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
+    if (ret != E_OK && ret != E_INVAL_ARG) {
+        ret = E_BROKEN_IPC;
+    }
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadThumb()
@@ -632,6 +708,11 @@ int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject>
     return dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
 }
 
+int32_t CloudSyncService::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    return RegisterDownloadFileCallback(downloadCallback);
+}
+
 int32_t CloudSyncService::UnregisterDownloadFileCallback()
 {
     BundleNameUserInfo bundleNameUserInfo;
@@ -641,6 +722,11 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
     }
     LOGI("start UnregisterDownloadFileCallback");
     return dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
+}
+
+int32_t CloudSyncService::UnregisterFileCacheCallback()
+{
+    return UnregisterDownloadFileCallback();
 }
 
 int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)

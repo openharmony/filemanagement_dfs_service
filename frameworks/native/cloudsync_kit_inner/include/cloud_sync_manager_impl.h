@@ -20,6 +20,7 @@
 
 #include "nocopyable.h"
 
+#include "cloud_optimize_callback_client.h"
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
@@ -33,14 +34,21 @@ public:
 
     int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
                              const std::string &bundleName = "") override;
+    int32_t RegisterFileSyncCallback(const std::shared_ptr<CloudSyncCallback> callback,
+                             const std::string &bundleName = "") override;
     int32_t UnRegisterCallback(const std::string &bundleName = "") override;
+    int32_t UnRegisterFileSyncCallback(const std::string &bundleName = "") override;
     int32_t StartSync(const std::string &bundleName = "") override;
+    int32_t StartFileSync(const std::string &bundleName = "") override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) override;
     int32_t StopSync(const std::string &bundleName = "", bool forceFlag = false) override;
+    int32_t StopFileSync(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ResetCursor(const std::string &bundleName = "") override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
-    int32_t OptimizeStorage(const int32_t agingDays) override;
+    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+        const std::shared_ptr<CloudOptimizeCallback> optimizeCallback = nullptr) override;
+    int32_t StopOptimizeStorage() override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
@@ -56,7 +64,9 @@ public:
     int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
     int32_t DownloadThumb() override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
+    int32_t RegisterFileCacheCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
+    int32_t UnregisterFileCacheCallback() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
