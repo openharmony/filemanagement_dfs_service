@@ -96,8 +96,6 @@ bool IsFolder(const std::string &name);
 std::vector<std::string> GetFilePath(const std::string &name);
 int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid);
 bool IsInt32(const nlohmann::json &jsonObj, const std::string &key);
-bool IsFilePathValid(const std::string &filePath);
-std::string GetRealUri(const std::string &uri);
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

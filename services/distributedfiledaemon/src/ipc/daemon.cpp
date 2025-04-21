@@ -30,6 +30,7 @@
 #include "common_event_support.h"
 #include "connection_detector.h"
 #include "connect_count/connect_count.h"
+#include "copy/file_size_utils.h"
 #include "device/device_manager_agent.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
@@ -359,7 +360,8 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstPath))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(dstPath).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
@@ -462,7 +464,8 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("Daemon::GetRealPath daemon is nullptr");
         return E_INVAL_ARG_NAPI;
     }
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(dstUri))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(dstUri).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
@@ -708,7 +711,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     }
     const auto &uriVec = assetObj->uris_;
     for (const auto &uri : uriVec) {
-        if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
             LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }

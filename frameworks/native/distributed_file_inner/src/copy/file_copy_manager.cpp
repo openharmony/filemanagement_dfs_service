@@ -34,7 +34,6 @@
 #include "file_uri.h"
 #include "iremote_stub.h"
 #include "sandbox_helper.h"
-#include "utils_directory.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -86,7 +85,8 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return E_NOENT;
     }
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
@@ -172,7 +172,8 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(srcUri)) || !Utils::IsFilePathValid(Utils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
