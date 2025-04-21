@@ -40,6 +40,8 @@ public:
     static int32_t GetDirSize(const std::string &path, uint64_t &size);
     static void Deleter(struct NameList *arg);
     static std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> GetDirNameList(const std::string &path);
+    static std::string GetRealUri(const std::string &uri);
+    static bool IsFilePathValid(const std::string &filePath);
 
 private:
     static int FilterFunc(const struct dirent *filename);

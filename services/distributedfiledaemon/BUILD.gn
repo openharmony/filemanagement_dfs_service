@@ -30,9 +30,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
 
-  cflags = [
-    "-D_FORTIFY_SOURCE=2",
-  ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   sources = [
     "src/all_connect/all_connect_manager.cpp",
@@ -158,17 +156,13 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
-
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
 
   configs = [ ":private_config" ]
 
   public_configs = [ ":public_config" ]
 
-  cflags = [
-    "-D_FORTIFY_SOURCE=2",
-  ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",

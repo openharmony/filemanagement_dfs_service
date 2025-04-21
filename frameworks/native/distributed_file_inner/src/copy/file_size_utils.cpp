@@ -20,7 +20,6 @@
 
 #include "dfs_error.h"
 #include "file_uri.h"
-#include "utils_directory.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -36,10 +35,15 @@ using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
 static constexpr int DISMATCH = 0;
 static constexpr int MATCH = 1;
+static constexpr char PATH_INVALID_FLAG1[] = "../";
+static constexpr char PATH_INVALID_FLAG2[] = "/..";
+static const uint32_t PATH_INVALID_FLAG_LEN = 3;
+static const char FILE_SEPARATOR_CHAR = '/';
+static constexpr char NETWORK_ID[] = "?networkid=";
 
 int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
+    if (!IsFilePathValid(GetRealUri(uri))) {
         LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
@@ -62,7 +66,7 @@ int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &
 
 int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
-    if (!Utils::IsFilePathValid(Utils::GetRealUri(uri))) {
+    if (!IsFilePathValid(GetRealUri(uri))) {
         LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
@@ -215,6 +219,34 @@ std::string FileSizeUtils::GetRealPath(const std::string &path)
         }
     }
     return realPath.string();
+}
+
+std::string FileSizeUtils::GetRealUri(const std::string &uri)
+{
+    std::string realUri = uri;
+    auto pos = uri.find(NETWORK_ID);
+    if (pos != std::string::npos) {
+        realUri = uri.substr(0, pos);
+    }
+    return realUri;
+}
+
+bool FileSizeUtils::IsFilePathValid(const std::string &filePath)
+{
+    size_t pos = filePath.find(PATH_INVALID_FLAG1);
+    while (pos != std::string::npos) {
+        if (pos == 0 || filePath[pos - 1] == FILE_SEPARATOR_CHAR) {
+            LOGE("Relative path is not allowed, path contain ../, path = %{private}s", filePath.c_str());
+            return false;
+        }
+        pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
+    }
+    pos = filePath.rfind(PATH_INVALID_FLAG2);
+    if ((pos != std::string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
+        LOGE("Relative path is not allowed, path tail is /.., path = %{private}s", filePath.c_str());
+        return false;
+    }
+    return true;
 }
 } // namespace DistributedFile
 } // namespace Storage

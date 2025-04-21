@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_session_listener.h"
 
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "os_account_manager.h"
@@ -180,7 +181,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
         return "";
     }
-    if (!Utils::IsFilePathValid(physicalPath)) {
+    if (!FileSizeUtils::IsFilePathValid(physicalPath)) {
         LOGE("Check physicalPath err, physicalPath is forbidden");
         return "";
     }

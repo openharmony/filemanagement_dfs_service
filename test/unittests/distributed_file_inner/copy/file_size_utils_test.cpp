@@ -219,4 +219,61 @@ HWTEST_F(FileSizeUtilsTest, IsFile_0001, TestSize.Level1)
     EXPECT_EQ(isFile, false);
     GTEST_LOG_(INFO) << "IsFile_0001 End";
 }
+
+/**
+* @tc.name: GetRealUri_0001
+* @tc.desc: Judge is file
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileSizeUtilsTest, GetRealUri_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRealUri_0001 Start";
+    std::string testUri = "file://docs/storage/";
+    std::string remoteInfo = "?networkid=123456";
+    std::string realUri = FileSizeUtils::GetRealUri(testUri);
+    EXPECT_EQ(testUri, realUri);
+    realUri = FileSizeUtils::GetRealUri(testUri + remoteInfo);
+    EXPECT_EQ(testUri, realUri);
+    GTEST_LOG_(INFO) << "GetRealUri_0001 End";
+}
+
+/**
+ * @tc.name: IsFilePathValid001
+ * @tc.desc: Verify the IsFilePathValid function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileSizeUtilsTest, IsFilePathValid001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFilePathValid001 Start";
+    try {
+        bool isValid = FileSizeUtils::IsFilePathValid("../test../test1");
+        EXPECT_FALSE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/../test../test1");
+        EXPECT_FALSE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("test../../test");
+        EXPECT_FALSE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("test../../");
+        EXPECT_FALSE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("test../test../..");
+        EXPECT_FALSE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/test/..test/..");
+        EXPECT_FALSE(isValid);
+
+        isValid = FileSizeUtils::IsFilePathValid("test");
+        EXPECT_TRUE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/test/test../test");
+        EXPECT_TRUE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/test../test../test");
+        EXPECT_TRUE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/test../test../test../");
+        EXPECT_TRUE(isValid);
+        isValid = FileSizeUtils::IsFilePathValid("/test../test../test../..test");
+        EXPECT_TRUE(isValid);
+    } catch (...) {
+        GTEST_LOG_(INFO) << " IsFilePathValid001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsFilePathValid001 End";
+}
 }

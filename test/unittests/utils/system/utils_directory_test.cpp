@@ -350,45 +350,6 @@ HWTEST_F(UtilsDirectoryTest, SysEventWriteTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SysEventWriteTest001 End";
 }
-
-/**
- * @tc.name: IsFilePathValid001
- * @tc.desc: Verify the IsFilePathValid function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(UtilsDirectoryTest, IsFilePathValid001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFilePathValid001 Start";
-    try {
-        bool isValid = IsFilePathValid("../test../test1");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("/../test../test1");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../../test");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../../");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("test../test../..");
-        EXPECT_FALSE(isValid);
-        isValid = IsFilePathValid("/test/..test/..");
-        EXPECT_FALSE(isValid);
-
-        isValid = IsFilePathValid("test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test/test../test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test../");
-        EXPECT_TRUE(isValid);
-        isValid = IsFilePathValid("/test../test../test../..test");
-        EXPECT_TRUE(isValid);
-    } catch (...) {
-        GTEST_LOG_(INFO) << " IsFilePathValid001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "IsFilePathValid001 End";
-}
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage
