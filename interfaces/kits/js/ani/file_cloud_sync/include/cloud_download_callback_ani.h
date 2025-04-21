@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_ANI_H
 
 #include <ani.h>
+#include <ani_signature_builder.h>
 
 #include "cloud_download_callback_middle.h"
 

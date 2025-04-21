@@ -55,6 +55,7 @@ ohos_unittest("cloud_sync_core_test") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "runtime_core:libarkruntime",
   ]
 
