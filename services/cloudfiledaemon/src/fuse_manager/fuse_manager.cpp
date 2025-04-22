@@ -328,7 +328,7 @@ static int HandleCloudError(CloudError error, FaultOperation faultOperation, str
 #ifdef HICOLLIE_ENABLE
 
 struct XcollieInput {
-    CloudInode *node_;
+    shared_ptr<CloudInode> node_;
     FaultOperation faultOperation_;
 };
 
@@ -338,7 +338,7 @@ static void XcollieCallback(void *xcollie)
     if (xcollieInput == nullptr) {
         return;
     }
-    CloudInode *inode = xcollieInput->node_;
+    shared_ptr<CloudInode> inode = xcollieInput->node_;
     if (inode == nullptr) {
         return;
     }
@@ -484,7 +484,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     if (create) {
         child->mBase = make_shared<MetaBase>(mBase);
 #ifdef HICOLLIE_ENABLE
-        XcollieInput xcollieInput{child.get(), FaultOperation::LOOKUP};
+        XcollieInput xcollieInput{child, FaultOperation::LOOKUP};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
             XcollieCallback, &xcollieInput, false);
 #endif
@@ -549,7 +549,7 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
 #ifdef HICOLLIE_ENABLE
-        XcollieInput xcollieInput{node.get(), FaultOperation::FORGET};
+        XcollieInput xcollieInput{node, FaultOperation::FORGET};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
             XcollieCallback, &xcollieInput, false);
 #endif
