@@ -249,7 +249,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
     LOGI("ExecLocal not support this srcUri and destUri");
-    return -1;
+    return E_NOENT;
 }
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
