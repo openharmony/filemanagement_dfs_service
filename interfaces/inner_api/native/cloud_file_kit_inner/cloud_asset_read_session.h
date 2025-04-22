@@ -24,7 +24,8 @@
 namespace OHOS::FileManagement::CloudFile {
 class CloudAssetReadSession {
 public:
-    CloudAssetReadSession(std::string recordType, std::string recordId, std::string assetKey, std::string assetPath);
+    CloudAssetReadSession(const int32_t userId, std::string recordType,
+        std::string recordId, std::string assetKey, std::string assetPath);
     virtual ~CloudAssetReadSession() = default;
 
     virtual CloudError InitSession();
@@ -37,6 +38,9 @@ public:
 
 private:
     std::string traceId_;
+
+protected:
+    int32_t userId_;
 };
 } // namespace OHOS::FileManagement::CloudFile
 

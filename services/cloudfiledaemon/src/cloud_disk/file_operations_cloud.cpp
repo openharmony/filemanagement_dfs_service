@@ -420,7 +420,7 @@ static void GetNewSession(shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDis
         int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
     }
     LOGD("cloudId %s", cloudId.c_str());
-    filePtr->readSession = database->NewAssetReadSession("file", cloudId, assets, path);
+    filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
 }
 
 static void CloudOpen(fuse_req_t req,

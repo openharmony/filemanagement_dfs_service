@@ -154,7 +154,7 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
         string assetPath = "";
         ptr -> type = CLOUD_DISK_FILE_TYPE_CLOUD;
         ptr -> readSession =
-        make_shared<CloudFile::CloudAssetReadSession>(recordType, recordId, assetKey, assetPath);
+        make_shared<CloudFile::CloudAssetReadSession>(data->userId, recordType, recordId, assetKey, assetPath);
     } else if (key == MOCK3) {
         ptr -> refCount = 0;
     } else if (key == MOCK4) {
