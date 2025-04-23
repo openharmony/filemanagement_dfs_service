@@ -21,36 +21,46 @@
 
 using namespace OHOS;
 using namespace OHOS::FileManagement::CloudSync;
+using namespace arkts::ani_signature;
 
 static ani_status BindContextOnCloudSyncManager(ani_env *env)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSyncManager/cloudSyncManager;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSyncManager.cloudSyncManager");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", ret);
         return ret;
     }
 
-    static const char *className = "LStaticFunction;";
+    Type clsName = Builder::BuildClass("StaticFunction");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
     }
-
+    std::string ssbSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
+    std::string ssSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String")});
+    std::string srSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.String"), Builder::BuildClass("escompat.Record")});
+    std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::string deSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildClass("std.core.String"),
+        Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.ExtraData")});
     std::array methods = {
-        ani_native_function { "changeAppCloudSwitchInner", "Lstd/core/String;Lstd/core/String;Z:V",
+        ani_native_function { "changeAppCloudSwitchInner", ssbSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::ChangeAppCloudSwitch) },
-        ani_native_function { "notifyDataChangeInner", "Lstd/core/String;Lstd/core/String;:V",
+        ani_native_function { "notifyDataChangeInner", ssSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::NotifyDataChange) },
-        ani_native_function { "enableCloudInner", "Lstd/core/String;Lescompat/Record;:V",
+        ani_native_function { "enableCloudInner", srSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::EnableCloud) },
         ani_native_function {
-            "disableCloudInner", "Lstd/core/String;:V", reinterpret_cast<void *>(CloudSyncManagerAni::DisableCloud) },
-        ani_native_function { "cleanInner", "Lstd/core/String;Lescompat/Record;:V",
-            reinterpret_cast<void *>(CloudSyncManagerAni::Clean) },
-        ani_native_function { "notifyEventChangeInner", "DL@ohos/file/cloudSyncManager/cloudSyncManager/ExtraData;:V",
+            "disableCloudInner", sSign.c_str(), reinterpret_cast<void *>(CloudSyncManagerAni::DisableCloud) },
+        ani_native_function { "cleanInner", srSign.c_str(), reinterpret_cast<void *>(CloudSyncManagerAni::Clean) },
+        ani_native_function { "notifyEventChangeInner", deSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::NotifyEventChange) },
     };
 

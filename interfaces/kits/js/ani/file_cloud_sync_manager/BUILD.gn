@@ -54,6 +54,7 @@ ohos_shared_library("cloud_sync_manager_ani") {
     "file_api:filemgmt_libfs",
     "hilog:libhilog",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "runtime_core:libarkruntime",
   ]
   part_name = "dfs_service"
