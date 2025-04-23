@@ -142,9 +142,10 @@ void Daemon::OnStop()
 void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
-        (void)systemAbilityId;
-        (void)deviceId;
-        RegisterOsAccount();
+        LOGI("Daemon::OnAddSystemAbility common event service online");
+        if (subScriber_ == nullptr) {
+            RegisterOsAccount();
+        }
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().CreateAssetLocalSessionServer();
     }
@@ -158,10 +159,7 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
             LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
             return;
         }
-
-        bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
-        LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
-        subScriber_ = nullptr;
+        LOGI("OnRemoveSystemAbility common event service offline");
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     }

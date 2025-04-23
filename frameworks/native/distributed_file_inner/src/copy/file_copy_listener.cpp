@@ -32,7 +32,6 @@ namespace DistributedFile {
 using namespace FileManagement;
 static constexpr int BUF_SIZE = 1024;
 static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
-static constexpr int32_t SLEEP_TIME_MS = 100;
 
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
@@ -89,7 +88,6 @@ void FileCopyLocalListener::StartListener()
 
 void FileCopyLocalListener::StopListener()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
     if (processCallback_ != nullptr) {
         processCallback_(progressSize_, totalSize_);
     }
