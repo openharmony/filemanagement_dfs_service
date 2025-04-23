@@ -203,7 +203,12 @@ ohos_unittest("os_account_observer_test") {
 
   module_out_path = module_output_path
 
-  sources = [ "multiuser/os_account_observer_test.cpp" ]
+  include_dirs = [ "${services_path}/distributedfiledaemon/test/mock/include/" ]
+
+  sources = [
+    "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
+    "multiuser/os_account_observer_test.cpp",
+  ]
 
   configs = [
     ":module_private_config",
@@ -487,8 +492,13 @@ ohos_unittest("softbus_agent_test") {
 
   module_out_path = module_output_path
 
+  include_dirs = [ "${services_path}/distributedfiledaemon/test/mock/include/" ]
+
   sources = [
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
+    "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
     "network/softbus/softbus_agent_test.cpp",
   ]
 
@@ -532,6 +542,7 @@ ohos_unittest("softbus_agent_test") {
   defines = [
     "private=public",
     "protected=public",
+    "NORMAL_MOCK",
   ]
 
   if (support_same_account) {

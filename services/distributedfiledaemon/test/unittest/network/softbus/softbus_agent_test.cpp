@@ -18,7 +18,8 @@
 #include <memory>
 #include <unistd.h>
 
-#include "device_manager_impl.h"
+#include "device_manager_agent_mock.h"
+#include "device_manager_impl_mock.h"
 #include "dm_constants.h"
 #include "softbus_error_code.h"
 
@@ -29,25 +30,40 @@
 
 using namespace std;
 namespace {
-bool g_mockGetTrustedDeviceList = true;
-bool g_mockGetNetworkTypeByNetworkId = true;
-bool g_mockNetworkTypWIFI = true;
 const string NETWORKID_ONE = "45656596896323231";
 const string NETWORKID_TWO = "45656596896323232";
 const string NETWORKID_THREE = "45656596896323233";
 constexpr int32_t NETWORKTYPE_WITH_WIFI = 2;
 constexpr int32_t NETWORKTYPE_NONE_WIFI = 4;
 }
-
 namespace OHOS {
-namespace DistributedHardware {
-int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, const std::string &extra,
-                                                std::vector<DmDeviceInfo> &deviceList)
-{
-    if (!g_mockGetTrustedDeviceList) {
-        return ERR_DM_INPUT_PARA_INVALID;
-    }
+namespace Storage {
+namespace DistributedFile {
+namespace Test {
+using namespace testing;
+using namespace testing::ext;
+constexpr int USER_ID = 100;
+constexpr int MAX_RETRY_COUNT = 7;
+constexpr int DEFAULT_VALUE = -1;
+static const string SAME_ACCOUNT = "account";
+const string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
 
+class SoftbusAgentTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp() {};
+    void TearDown() {};
+    void CreateDeviceList(std::vector<DmDeviceInfo> &deviceList);
+
+    static inline shared_ptr<SocketMock> socketMock_ = nullptr;
+    static inline std::shared_ptr<DeviceManagerAgentMock> deviceManagerAgentMock_ = nullptr;
+    static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
+};
+
+
+void SoftbusAgentTest::CreateDeviceList(std::vector<DmDeviceInfo> &deviceList)
+{
     DmDeviceInfo testInfo;
     (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
                    NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
@@ -59,51 +75,17 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, cons
                    NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
     testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
     deviceList.push_back(testInfo1);
-    return DM_OK;
 }
-
-int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName, const std::string &netWorkId,
-                                                     int32_t &netWorkType)
-{
-    if (!g_mockGetNetworkTypeByNetworkId) {
-        return ERR_DM_INPUT_PARA_INVALID;
-    }
-
-    if (g_mockNetworkTypWIFI) {
-        netWorkType = NETWORKTYPE_WITH_WIFI;
-        return DM_OK;
-    }
-
-    netWorkType = NETWORKTYPE_NONE_WIFI;
-    return DM_OK;
-}
-}
-}
-namespace OHOS {
-namespace Storage {
-namespace DistributedFile {
-namespace Test {
-using namespace testing;
-using namespace testing::ext;
-constexpr int USER_ID = 100;
-constexpr int MAX_RETRY_COUNT = 7;
-static const string SAME_ACCOUNT = "account";
-const string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
-
-class SoftbusAgentTest : public testing::Test {
-public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp() {};
-    void TearDown() {};
-    static inline shared_ptr<SocketMock> socketMock_ = nullptr;
-};
 
 void SoftbusAgentTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
     socketMock_ = make_shared<SocketMock>();
     SocketMock::dfsSocket = socketMock_;
+    deviceManagerAgentMock_ = std::make_shared<DeviceManagerAgentMock>();
+    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = deviceManagerAgentMock_;
+    deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
+    DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
 void SoftbusAgentTest::TearDownTestCase(void)
@@ -111,6 +93,10 @@ void SoftbusAgentTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
     SocketMock::dfsSocket = nullptr;
     socketMock_ = nullptr;
+    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = nullptr;
+    deviceManagerAgentMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
 }
 
 /**
@@ -147,18 +133,33 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsSameAccount_0100, TestSize.Level1)
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool flag = agent->IsSameAccount(NETWORKID_ONE);
-    EXPECT_EQ(flag, true);
+    bool flag = false;
 #ifdef SUPPORT_SAME_ACCOUNT
+    std::vector<DmDeviceInfo> deviceList;
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     flag = agent->IsSameAccount(NETWORKID_TWO);
     EXPECT_EQ(flag, false);
+
+    CreateDeviceList(deviceList);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    flag = agent->IsSameAccount(NETWORKID_TWO);
+    EXPECT_EQ(flag, false);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     flag = agent->IsSameAccount(NETWORKID_THREE);
     EXPECT_EQ(flag, false);
-    g_mockGetTrustedDeviceList = false;
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     flag = agent->IsSameAccount(NETWORKID_ONE);
-    EXPECT_EQ(flag, false);
+    EXPECT_EQ(flag, true);
+#else
+    flag = agent->IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(flag, true);
 #endif
-    g_mockGetTrustedDeviceList = true;
     GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 end";
 }
 
@@ -381,9 +382,34 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0100, TestSize.
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
-    g_mockGetTrustedDeviceList = true;
-    g_mockGetNetworkTypeByNetworkId = false;
     try {
+        vector<DeviceInfo> deviceInfos;
+        DeviceInfo deviceInfo;
+        deviceInfo.SetCid("test");
+        deviceInfos.emplace_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        agent->ConnectOnlineDevices();
+
+        deviceInfo.extraData_ = "  ";
+        deviceInfos.clear();
+        deviceInfos.emplace_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        agent->ConnectOnlineDevices();
+
+        deviceInfo.extraData_ = "{\"OS_TYPE\":\"test\"}";
+        deviceInfos.clear();
+        deviceInfos.emplace_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        agent->ConnectOnlineDevices();
+
+        deviceInfo.extraData_ = "{\"OS_TYPE\":0}";
+        deviceInfos.clear();
+        deviceInfos.emplace_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
         agent->ConnectOnlineDevices();
     } catch (const exception &e) {
         res = false;
@@ -407,10 +433,37 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0200, TestSize.
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
-    g_mockGetTrustedDeviceList = true;
-    g_mockGetNetworkTypeByNetworkId = true;
-    g_mockNetworkTypWIFI = true;
     try {
+        vector<DeviceInfo> deviceInfos;
+        DeviceInfo deviceInfo;
+        deviceInfo.SetCid("test");
+        deviceInfo.extraData_ = "{\"OS_TYPE\":10}";
+        deviceInfos.emplace_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        EXPECT_CALL(*deviceManagerImplMock_, GetNetworkTypeByNetworkId(_, _, _))
+            .WillOnce(Return(DEFAULT_VALUE));
+        agent->ConnectOnlineDevices();
+
+        deviceInfo.extraData_ = "{\"OS_TYPE\":10}";
+        deviceInfos.clear();
+        deviceInfos.emplace_back(deviceInfo);
+        int32_t networkType = 0;
+        networkType = NETWORKTYPE_WITH_WIFI;
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        EXPECT_CALL(*deviceManagerImplMock_, GetNetworkTypeByNetworkId(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(networkType), Return(0)));
+        agent->ConnectOnlineDevices();
+
+        deviceInfo.extraData_ = "{\"OS_TYPE\":10}";
+        deviceInfos.clear();
+        deviceInfos.emplace_back(deviceInfo);
+        networkType = NETWORKTYPE_NONE_WIFI;
+        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo())
+            .WillOnce(Return(deviceInfos));
+        EXPECT_CALL(*deviceManagerImplMock_, GetNetworkTypeByNetworkId(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(networkType), Return(0)));
         agent->ConnectOnlineDevices();
     } catch (const exception &e) {
         res = false;
@@ -418,58 +471,6 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0200, TestSize.
     }
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0200 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_ConnectOnlineDevices_0300
- * @tc.desc: Verify the ConnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0300 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool res = true;
-    g_mockGetTrustedDeviceList = true;
-    g_mockGetNetworkTypeByNetworkId = true;
-    g_mockNetworkTypWIFI = false;
-    try {
-        agent->ConnectOnlineDevices();
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0100 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_ConnectOnlineDevices_0400
- * @tc.desc: Verify the ConnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0400, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0400 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool res = true;
-    g_mockGetTrustedDeviceList = false;
-    try {
-        agent->ConnectOnlineDevices();
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0400 end";
 }
 
 /**
