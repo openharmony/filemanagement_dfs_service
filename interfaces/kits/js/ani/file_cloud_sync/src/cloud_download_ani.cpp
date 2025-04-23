@@ -21,6 +21,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+using namespace arkts::ani_signature;
+
 static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
 {
     ani_long nativePtr;
@@ -37,15 +39,16 @@ static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
 void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LDownload;";
+    Type clsName = Builder::BuildClass("Download");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -53,7 +56,8 @@ void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
     }
 
     ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
+    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
     if (ret != ANI_OK) {
         LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));

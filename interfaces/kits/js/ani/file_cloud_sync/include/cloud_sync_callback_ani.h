@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_ANI_H
 
 #include <ani.h>
+#include <ani_signature_builder.h>
 
 #include "cloud_sync_callback_middle.h"
 #include "data_ability_observer_interface.h"

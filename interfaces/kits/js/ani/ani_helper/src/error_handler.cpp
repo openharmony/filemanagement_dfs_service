@@ -19,9 +19,9 @@ namespace OHOS::FileManagement::CloudSync {
 
 ani_status ErrorHandler::Throw(ani_env *env, int32_t code, const std::string &errMsg)
 {
-    const char *className = "L@ohos/base/BusinessError;";
+    Type clsName = Builder::BuildClass("@ohos.base.BusinessError");
     ani_class cls;
-    ani_status ret = env->FindClass(className, &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
