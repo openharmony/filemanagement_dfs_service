@@ -749,7 +749,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             return;
         }
         std::FILE *file = fopen(cachePath.c_str(), "a+");
-        if (file != nullptr) {
+        if (file == nullptr) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
         }

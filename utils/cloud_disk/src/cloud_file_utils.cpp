@@ -306,12 +306,12 @@ bool CloudFileUtils::ClearCache(const string &dfsPath)
         return false;
     }
     std::FILE *file = fopen(resolvedPath, "r");
+    free(resolvedPath);
     if (file == nullptr) {
         LOGE("fopen failed, errno:%{public}d", errno);
         return false;
     }
     int fd = fileno(file);
-    free(resolvedPath);
     if (fd < 0) {
         LOGE("get fd failed, errno:%{public}d", errno);
         return false;
