@@ -900,8 +900,8 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
          */
         LOGD("recordId: %s", recordId.c_str());
         uint64_t startTime = UTCTimeMilliSeconds();
-        cInode->readSession = database->NewAssetReadSession("media", recordId, GetAssetKey(cInode->mBase->fileType),
-                                                            GetAssetPath(cInode, data));
+        cInode->readSession = database->NewAssetReadSession(data->userId, "media", recordId,
+            GetAssetKey(cInode->mBase->fileType), GetAssetPath(cInode, data));
         if (cInode->readSession) {
             cInode->readSession->SetPrepareTraceId(prepareTraceId);
             auto ret = DoCloudOpen(cInode, fi, data);

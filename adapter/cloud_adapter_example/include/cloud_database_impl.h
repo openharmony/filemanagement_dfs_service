@@ -22,7 +22,8 @@ namespace OHOS::FileManagement::CloudFile {
 class CloudDatabaseImpl : public CloudDatabase {
 public:
     CloudDatabaseImpl(const int32_t userId, const std::string &bundleName);
-    std::shared_ptr<CloudAssetReadSession> NewAssetReadSession(std::string recordType,
+    std::shared_ptr<CloudAssetReadSession> NewAssetReadSession(const int32_t userId,
+                                                               std::string recordType,
                                                                std::string recordId,
                                                                std::string assetKey,
                                                                std::string assetPath) override;

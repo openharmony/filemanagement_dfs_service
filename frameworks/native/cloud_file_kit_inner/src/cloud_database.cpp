@@ -23,12 +23,13 @@ CloudDatabase::CloudDatabase(const int32_t userId, const std::string &bundleName
 {
 }
 
-std::shared_ptr<CloudAssetReadSession> CloudDatabase::NewAssetReadSession(std::string recordType,
+std::shared_ptr<CloudAssetReadSession> CloudDatabase::NewAssetReadSession(const int32_t userId,
+                                                                          std::string recordType,
                                                                           std::string recordId,
                                                                           std::string assetKey,
                                                                           std::string assetPath)
 {
-    return std::make_shared<CloudAssetReadSession>(recordType, recordId, assetKey, assetPath);
+    return std::make_shared<CloudAssetReadSession>(userId, recordType, recordId, assetKey, assetPath);
 }
 
 int32_t CloudDatabase::Init()
