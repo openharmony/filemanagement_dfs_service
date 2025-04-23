@@ -39,6 +39,7 @@ const std::string TEST_DIR = "/data/test_file_copy_listener/";
 const std::string SRC_FILE = TEST_DIR + "test_src.txt";
 const std::string DEST_DIR = TEST_DIR + "dest/";
 constexpr uint64_t TEST_FILE_SIZE = 1024; // 1KB test file
+constexpr mode_t TEST_DIR_MODE = 0777;
 
 /* Test Fixture */
 class FileCopyLocalListenerTest : public testing::Test {
@@ -56,8 +57,8 @@ public:
 void FileCopyLocalListenerTest::SetUpTestCase()
 {
     // Create test directories
-    mkdir(TEST_DIR.c_str(), 0777);
-    mkdir(DEST_DIR.c_str(), 0777);
+    mkdir(TEST_DIR.c_str(), TEST_DIR_MODE);
+    mkdir(DEST_DIR.c_str(), TEST_DIR_MODE);
 }
 
 void FileCopyLocalListenerTest::TearDownTestCase()
@@ -204,15 +205,15 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_FileProgress_0001, Tes
     listener->AddListenerFile(SRC_FILE, IN_MODIFY);
 
     /* Simulate 5 file modifications */
-    constexpr int MODIFY_COUNT = 5;
-    for (int i = 0; i < MODIFY_COUNT; i++) {
+    constexpr int modifyCount = 5;
+    for (int i = 0; i < modifyCount; i++) {
         CreateTestFile(SRC_FILE, TEST_FILE_SIZE * (i + 1));
         usleep(50000); // Allow time for event processing
     }
 
     /* Verify final progress */
     listener->StopListener();
-    EXPECT_EQ(lastProgress, TEST_FILE_SIZE * MODIFY_COUNT);
+    EXPECT_EQ(lastProgress, TEST_FILE_SIZE * modifyCount);
 
     GTEST_LOG_(INFO) << "FileCopyLocalListener_FileProgress_0001 End";
 }
@@ -231,14 +232,14 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_ThreadSafety_0001, Tes
     auto listener = FileCopyLocalListener::GetLocalListener(SRC_FILE, false, nullptr);
 
     /* Configure concurrent test */
-    constexpr int THREAD_COUNT = 5;
-    constexpr int FILES_PER_THREAD = 10;
+    constexpr int threadCount = 5;
+    constexpr int filesPerThread = 10;
     std::vector<std::thread> workers;
 
     /* Launch concurrent adders */
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    for (int i = 0; i < threadCount; i++) {
         workers.emplace_back([&, i] {
-            for (int j = 0; j < FILES_PER_THREAD; j++) {
+            for (int j = 0; j < filesPerThread; j++) {
                 std::string filename = SRC_FILE + "_t" + std::to_string(i) + "_f" + std::to_string(j);
                 listener->AddFile(filename);
             }
@@ -251,7 +252,7 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_ThreadSafety_0001, Tes
     }
 
     /* Verify all files registered */
-    EXPECT_EQ(listener->GetFilePath().size(), THREAD_COUNT * FILES_PER_THREAD);
+    EXPECT_EQ(listener->GetFilePath().size(), threadCount * filesPerThread);
 
     GTEST_LOG_(INFO) << "FileCopyLocalListener_ThreadSafety_0001 End";
 }
