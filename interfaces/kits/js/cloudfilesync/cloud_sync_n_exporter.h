@@ -27,5 +27,6 @@ void InitDownloadErrorType(napi_env env, napi_value exports);
 void InitNotifyType(napi_env env, napi_value exports);
 void InitCloudSyncFuncs(napi_env env, napi_value exports);
 void InitOptimizeState(napi_env env, napi_value exports);
+void InitDownloadFileType(napi_env env, napi_value exports);
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_N_EXPORTER_H
