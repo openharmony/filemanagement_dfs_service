@@ -19,7 +19,9 @@
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
 using namespace std;
+using namespace arkts::ani_signature;
 
 constexpr int32_t ANI_SCOPE_SIZE = 16;
 static const unsigned int READ_SIZE = 1024;
@@ -94,18 +96,23 @@ void CloudSyncCallbackAniImpl::GetSyncProgress(
     CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg)
 {
     ani_method ctor;
-    ani_status ret = env_->Class_FindMethod(
-        cls, "<ctor>", "L@ohos/file/cloudSync/cloudSync/SyncState;L@ohos/file/cloudSync/cloudSync/ErrorType;:V", &ctor);
+    std::string ct = Builder::BuildConstructorName();
+    std::string argSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.SyncState"),
+        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.ErrorType")
+    });
+    ani_status ret = env_->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return;
     }
 
-    // Please replace it with GetEnumItemByValue_Int if suppored in the future.
     ani_enum stateEnum;
-    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/SyncState;", &stateEnum);
+    Type stateSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.SyncState");
+    env_->FindEnum(stateSign.Descriptor().c_str(), &stateEnum);
     ani_enum errorEnum;
-    env_->FindEnum("L@ohos/file/cloudSync/cloudSync/ErrorType;", &errorEnum);
+    Type errorSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.ErrorType");
+    env_->FindEnum(errorSign.Descriptor().c_str(), &errorEnum);
 
     ani_enum_item stateEnumItem;
     env_->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
@@ -130,14 +137,15 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
             return;
         }
         ani_namespace ns {};
-        ret = tmpEnv->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
         if (ret != ANI_OK) {
             LOGE("find namespace failed. ret = %{public}d", ret);
             return;
         }
-        static const char *className = "LSyncProgressInner;";
+        Type clsName = Builder::BuildClass("SyncProgressInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, className, &cls);
+        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
             return;
@@ -178,14 +186,17 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(SyncType type, SyncPromptState
 ani_status ChangeListenerAni::SetValueArray(ani_env *env, const std::list<Uri> listValue, ani_object &uris)
 {
     ani_class arrayCls = nullptr;
-    ani_status ret = env->FindClass("Lescompat/Array;", &arrayCls);
+    Type arrSign = Builder::BuildClass("escompat.Array");
+    ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
     if (ret != ANI_OK) {
         LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
         return ret;
     }
 
     ani_method arrayCtor;
-    ret = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    std::string ct = Builder::BuildConstructorName();
+    std::string ctSign = Builder::BuildSignatureDescriptor({Builder::BuildInt()});
+    ret = env->Class_FindMethod(arrayCls, ct.c_str(), ctSign.c_str(), &arrayCtor);
     if (ret != ANI_OK) {
         LOGE("array find method failed. ret = %{public}d", static_cast<int32_t>(ret));
         return ret;
@@ -211,7 +222,8 @@ ani_status ChangeListenerAni::SetValueArray(ani_env *env, const std::list<Uri> l
             LOGE("std string to ani string failed. ret = %{public}d", static_cast<int32_t>(ret));
             return ret;
         }
-        ret = env->Object_CallMethodByName_Void(uris, "$_set", "ILstd/core/Object;:V", index, ani_str);
+        std::string setSign = Builder::BuildSignatureDescriptor({Builder::BuildInt(), Builder::BuildNull()});
+        ret = env->Object_CallMethodByName_Void(uris, "$_set", setSign.c_str(), index, ani_str);
         if (ret != ANI_OK) {
             LOGE("set array uri value failed. ret = %{public}d", static_cast<int32_t>(ret));
             return ret;
@@ -228,40 +240,39 @@ ani_status ChangeListenerAni::SetIsDir(ani_env *env, const shared_ptr<MessagePar
         LOGE("Failed to read sub uri list length");
         return ANI_INVALID_ARGS;
     }
-
     if (len > READ_SIZE) {
         return ANI_INVALID_ARGS;
     }
-
     ani_class arrayCls = nullptr;
-    ani_status ret = env->FindClass("Lescompat/Array;", &arrayCls);
+    Type arrSign = Builder::BuildClass("escompat.Array");
+    ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
     if (ret != ANI_OK) {
         LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
         return ret;
     }
 
     ani_method arrayCtor;
-    ret = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    std::string ct = Builder::BuildConstructorName();
+    std::string ctSign = Builder::BuildSignatureDescriptor({Builder::BuildInt()});
+    ret = env->Class_FindMethod(arrayCls, ct.c_str(), ctSign.c_str(), &arrayCtor);
     if (ret != ANI_OK) {
         LOGE("array find method failed. ret = %{public}d", static_cast<int32_t>(ret));
         return ret;
     }
-
     std::vector<bool> isDirs(len);
     for (uint32_t i = 0; i < len; i++) {
         isDirs[i] = parcel->ReadBool();
     }
-
     ret = env->Object_New(arrayCls, arrayCtor, &isDirectory, isDirs.size());
     if (ret != ANI_OK) {
         LOGE("set array uri new object failed. ret = %{public}d", static_cast<int32_t>(ret));
         return ret;
     }
-
     ani_size index = 0;
     for (auto isDir : isDirs) {
+        std::string setSign = Builder::BuildSignatureDescriptor({Builder::BuildInt(), Builder::BuildNull()});
         ret = env->Object_CallMethodByName_Void(
-            isDirectory, "$_set", "ILstd/core/Object;:V", index, static_cast<ani_boolean>(isDir));
+            isDirectory, "$_set", setSign.c_str(), index, static_cast<ani_boolean>(isDir));
         if (ret != ANI_OK) {
             LOGE("set array uri value failed. ret = %{public}d", static_cast<int32_t>(ret));
             return ret;
@@ -280,7 +291,6 @@ ani_status ChangeListenerAni::GetChangeDataObject(
         LOGE("set array uris failed. ret = %{public}d", ret);
         return ret;
     }
-
     ani_object isDirectory;
     if (listener.changeInfo.size_ > 0) {
         shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
@@ -292,20 +302,20 @@ ani_status ChangeListenerAni::GetChangeDataObject(
             }
         }
     }
-
     ani_enum notifyTypeEnum;
-    env->FindEnum("L@ohos/file/cloudSync/cloudSync/NotifyType;", &notifyTypeEnum);
+    Type notifyTypeSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.NotifyType");
+    env->FindEnum(notifyTypeSign.Descriptor().c_str(), &notifyTypeEnum);
     ani_enum_item notifyTypeEnumItem;
     env->Enum_GetEnumItemByIndex(notifyTypeEnum, listener.changeInfo.changeType_, &notifyTypeEnumItem);
-
     ani_method ctor;
-    ret = env->Class_FindMethod(
-        cls, "<ctor>", "L@ohos/file/cloudSync/cloudSync/NotifyType;Lescompat/Array;Lescompat/Array;:V", &ctor);
+    std::string ct = Builder::BuildConstructorName();
+    std::string ctSign = Builder::BuildSignatureDescriptor({notifyTypeSign,
+        Builder::BuildClass("escompat.Array"), Builder::BuildClass("escompat.Array")});
+    ret = env->Class_FindMethod(cls, ct.c_str(), ctSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return ret;
     }
-
     ret = env->Object_New(cls, ctor, &changeData, notifyTypeEnumItem, isDirectory, uris);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
@@ -330,14 +340,15 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
             return;
         }
         ani_namespace ns {};
-        ret = tmpEnv->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
         if (ret != ANI_OK) {
             LOGE("find namespace failed. ret = %{public}d", ret);
             return;
         }
-        static const char *className = "LChangeDataInner;";
+        Type clsName = Builder::BuildClass("ChangeDataInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, className, &cls);
+        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
             return;

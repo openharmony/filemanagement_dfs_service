@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_ERROR_HANDLER_H
 
 #include <ani.h>
+#include <ani_signature_builder.h>
 #include <cstdint>
 #include <string>
 
@@ -25,6 +26,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace ModuleFileIO;
+using namespace arkts::ani_signature;
 
 class ErrorHandler {
 public:
@@ -55,7 +57,9 @@ private:
     static ani_status Throw(ani_env *env, const ani_class &cls, int32_t code, const std::string &errMsg)
     {
         ani_method ctor;
-        ani_status status = env->Class_FindMethod(cls, "<ctor>", ":V", &ctor);
+        std::string ct = Builder::BuildConstructorName();
+        std::string vSign = Builder::BuildSignatureDescriptor({});
+        ani_status status = env->Class_FindMethod(cls, ct.c_str(), vSign.c_str(), &ctor);
         if (status != ANI_OK) {
             LOGE("Cannot find constructor for class. ret = %{public}d", status);
             return status;

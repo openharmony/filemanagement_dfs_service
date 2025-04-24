@@ -24,6 +24,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+using namespace arkts::ani_signature;
+
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerAni> g_listObj = nullptr;
 mutex CloudSyncAni::sOnOffMutex_;
@@ -44,15 +46,16 @@ static CloudSyncCore *CloudSyncUnwrap(ani_env *env, ani_object object)
 void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LGallerySync;";
+    Type clsName = Builder::BuildClass("GallerySync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -60,7 +63,8 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     }
 
     ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
+    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
     if (ret != ANI_OK) {
         LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -87,15 +91,16 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
 void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LFileSync;";
+    Type clsName = Builder::BuildClass("FileSync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -103,7 +108,8 @@ void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
     }
 
     ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
+    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
     if (ret != ANI_OK) {
         LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -137,15 +143,16 @@ void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_st
     }
 
     ani_namespace ns {};
-    ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LFileSync;";
+    Type clsName = Builder::BuildClass("FileSync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -153,7 +160,8 @@ void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_st
     }
 
     ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
+    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
     if (ret != ANI_OK) {
         LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -306,7 +314,7 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
     auto data = CloudSyncCore::DoGetFileSyncState(filePath);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
-        LOGE("cloud sync do stop failed, ret = %{public}d", err.GetErrNo());
+        LOGE("cloud sync do GetFileSyncState failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
         return err.GetErrNo();
     }
