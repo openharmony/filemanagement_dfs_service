@@ -569,15 +569,12 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
             CloudFile::FaultType::FILE, err, "Failed to generate cloud id"});
         return -err;
     }
-
     int32_t fd = CreateLocalFile(cloudId, parentInode->bundleName, data->userId, mode);
     if (fd < 0) {
         LOGD("Create local file failed error:%{public}d", fd);
         return fd;
     }
-
     string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
-
     bool noNeedUpload = false;
     if (parentInode->cloudId != ROOT_CLOUD_ID) {
         err = GetParentUpload(parentInode, data, noNeedUpload);
@@ -589,7 +586,6 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
             return -err;
         }
     }
-
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore =
         databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
@@ -1314,6 +1310,7 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         return (void) fuse_reply_err(req, EBUSY);
     }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
     if (parentInode == nullptr) {
