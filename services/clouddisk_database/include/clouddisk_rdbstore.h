@@ -96,7 +96,7 @@ public:
                      const int userId, std::string destPath);
     int32_t CreateDentryFile(MetaBase metaBase, std::string destParentCloudId);
     int32_t GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId);
-    int32_t UpdateTHMStatus(MetaBase &metabase, int32_t status);
+    int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status);
 
     void DatabaseRestore();
 

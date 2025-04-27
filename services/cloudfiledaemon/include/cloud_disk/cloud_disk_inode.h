@@ -67,7 +67,6 @@ struct CloudDiskFile {
     bool isWriteOpen{false};
     ffrt::mutex readLock;
     ffrt::mutex openLock;
-    std::shared_mutex sessionLock;
 };
 
 struct CloudDiskInode {
@@ -79,7 +78,7 @@ struct CloudDiskInode {
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
     std::string path; // just used in local file operation
-    std::shared_ptr<CloudDiskFile> filePtr;
+    std::shared_mutex inodeLock;
 
     /* ops means file operation that uses local or database */
     std::shared_ptr<FileOperationsBase> ops{nullptr};

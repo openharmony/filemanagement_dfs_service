@@ -80,6 +80,16 @@ struct CloudDiskCopy {
     char destPath[MAX_SIZE];
 };
 
+static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
+{
+    auto task = [se, parentIno, childIno, childName] {
+        if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
+            fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
+        }
+    };
+    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt_qos_background));
+}
+
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     struct CloudDiskInode *childInode, const MetaBase &metaBase, const int64_t &inodeId)
 {
@@ -302,30 +312,36 @@ void FileOperationsCloud::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 
-static bool HandleCloudError(fuse_req_t req, CloudError error)
+static int32_t HandleCloudError(fuse_req_t req, CloudError error)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (error == CloudError::CK_NO_ERROR) {
-        return false;
+    int32_t ret = 0;
+    switch (error) {
+        case CloudError::CK_NO_ERROR:
+            ret = 0;
+            break;
+        case CloudError::CK_NETWORK_ERROR:
+            ret = ENOTCONN;
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::WARNING, ENOTCONN, "network error"});
+            break;
+        case CloudError::CK_SERVER_ERROR:
+            ret = EIO;
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::WARNING, EIO, "server error"});
+            break;
+        case CloudError::CK_LOCAL_ERROR:
+            ret = EINVAL;
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::WARNING, EINVAL, "local error"});
+            break;
+        default:
+            ret = EIO;
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::WARNING, EIO, "unknown error"});
+            break;
     }
-    if (error == CloudError::CK_NETWORK_ERROR) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-            CloudFile::FaultType::WARNING, ENOTCONN, "network error"});
-        fuse_reply_err(req, ENOTCONN);
-    } else if (error == CloudError::CK_SERVER_ERROR) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-            CloudFile::FaultType::WARNING, EIO, "server error"});
-        fuse_reply_err(req, EIO);
-    } else if (error == CloudError::CK_LOCAL_ERROR) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-            CloudFile::FaultType::WARNING, EINVAL, "local error"});
-        fuse_reply_err(req, EINVAL);
-    } else {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-            CloudFile::FaultType::WARNING, EIO, "unknown error"});
-        fuse_reply_err(req, EIO);
-    }
-    return true;
+    return ret;
 }
 
 static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundleName)
@@ -354,13 +370,70 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundl
     return database;
 }
 
-static void DoCloudOpen(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
-                        struct fuse_file_info *fi)
+static unsigned int GetFileOpenFlags(int32_t fileFlags)
 {
-    auto error = make_shared<CloudError>();
-    auto openFinish = make_shared<bool>(false);
-    auto cond = make_shared<ffrt::condition_variable>();
+    unsigned int flags = static_cast<unsigned int>(fileFlags);
+    if ((flags & O_ACCMODE) & O_WRONLY) {
+        flags &= ~O_WRONLY;
+        flags |= O_RDWR;
+    }
+    if (flags & O_APPEND) {
+        flags &= ~O_APPEND;
+    }
+    if (flags & O_DIRECT) {
+        flags &= ~O_DIRECT;
+    }
+    return flags;
+}
 
+static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDiskFuseData *data,
+    shared_ptr<CloudDiskInode> inoPtr, CloudOpenParams cloudOpenParams)
+{
+    auto metaBase = cloudOpenParams.metaBase;
+    auto metaFile = cloudOpenParams.metaFile;
+    auto filePtr = cloudOpenParams.filePtr;
+    if (metaBase.fileType != FILE_TYPE_CONTENT) {
+        string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+        string tmpPath = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+        {
+            std::unique_lock<std::shared_mutex> lck(inoPtr->inodeLock);
+            if (access(path.c_str(), F_OK) != 0) {
+                if (errno != ENOENT) {
+                    LOGE("access file failed, filePath:%{public}s, errno:%{public}d", path.c_str(), errno);
+                    return errno;
+                }
+                if (access(tmpPath.c_str(), F_OK) != 0) {
+                    LOGE("access temp path failed, errno:%{public}d", errno);
+                    return errno;
+                }
+                auto ret = rename(tmpPath.c_str(), path.c_str());
+                if (ret == EOK) {
+                    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+                    auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+                    rdbstore->UpdateTHMStatus(metaFile, metaBase, CloudSync::DOWNLOADED_THM);
+                } else {
+                    LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d", tmpPath.c_str(), errno);
+                    return errno;
+                }
+            }
+        }
+        unsigned int flags = GetFileOpenFlags(fi->flags);
+        int32_t fd = open(path.c_str(), flags);
+        if (fd < 0) {
+            LOGE("failed to open local file, errno: %{public}d", errno);
+            return errno;
+        }
+        filePtr->type = CLOUD_DISK_FILE_TYPE_LOCAL;
+        filePtr->fd = fd;
+    } else {
+        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
+    }
+    return EOK;
+}
+
+static void DoSessionInit(shared_ptr<CloudDiskFile> filePtr, shared_ptr<CloudError> error,
+    shared_ptr<bool> openFinish, shared_ptr<ffrt::condition_variable> cond)
+{
     ffrt::submit([filePtr, error, openFinish, cond] {
         HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
         auto session = filePtr->readSession;
@@ -377,88 +450,114 @@ static void DoCloudOpen(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         LOGI("download done");
         return;
     });
+}
 
+static int32_t DoCloudOpen(fuse_req_t req, struct fuse_file_info *fi,
+    shared_ptr<CloudDiskInode> inoPtr, struct CloudDiskFuseData *data, CloudOpenParams cloudOpenParams)
+{
+    auto error = make_shared<CloudError>();
+    auto openFinish = make_shared<bool>(false);
+    auto cond = make_shared<ffrt::condition_variable>();
+    auto filePtr = cloudOpenParams.filePtr;
+    DoSessionInit(filePtr, error, openFinish, cond);
     unique_lock lck(filePtr->openLock);
     auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
         return *openFinish;
-        });
+    });
     if (!waitStatus) {
         LOGE("init session timeout");
-        fuse_reply_err(req, ENETUNREACH);
-        return;
+        return ENETUNREACH;
     }
-    if (!HandleCloudError(req, *error)) {
-        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
-        fuse_reply_open(req, fi);
+    auto ret = HandleCloudError(req, *error);
+    if (!ret) {
+        auto cloudOpenRet = HandleCloudOpenSuccess(fi, data, inoPtr, cloudOpenParams);
+        if (cloudOpenRet) {
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName, CloudFile::FaultOperation::OPEN,
+                CloudFile::FaultType::FILE, cloudOpenRet, "cloud open failed"});
+            return cloudOpenRet;
+        }
+        return 0;
     } else {
-        filePtr->readSession = nullptr;
-        LOGE("open fail");
+        LOGE("cloud open failed");
+        return ret;
     }
-    return;
 }
 
-static void GetNewSession(shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskFile> filePtr,
-                          string &path, struct CloudDiskFuseData *data, shared_ptr<CloudDatabase> database)
+static int32_t GetNewSession(shared_ptr<CloudDiskInode> inoPtr,
+    string &path, struct CloudDiskFuseData *data, shared_ptr<CloudDatabase> database,
+    CloudOpenParams cloudOpenParams)
 {
     string cloudId = inoPtr->cloudId;
+    string assets = "content";
+    auto metaBase = cloudOpenParams.metaBase;
+    auto filePtr = cloudOpenParams.filePtr;
+    if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
+        assets = "thumbnail";
+    }
+    if (metaBase.fileType == FILE_TYPE_LCD) {
+        assets = "lcd";
+    }
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
+    if (ret) {
+        LOGE("get %{public}s cloudId failed", assets.c_str());
+        return ret;
+    }
+    LOGD("cloudId %s", cloudId.c_str());
+    filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+    return EOK;
+}
+
+static void CloudOpen(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr,
+    struct fuse_file_info *fi, string path, fuse_ino_t ino)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto database = GetDatabase(data->userId, inoPtr->bundleName);
+    if (!database) {
+        LOGE("database is null");
+        fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+        return (void) fuse_reply_err(req, EPERM);
+    }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+        return (void) fuse_reply_err(req, EPERM);
+    }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);
     MetaBase metaBase(inoPtr->fileName);
     auto ret = metaFile->DoLookup(metaBase);
-    string assets = "content";
-    if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
-        assets = "thumbnail";
-        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-        int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
+    if (ret != EOK) {
+        fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+        return (void) fuse_reply_err(req, EPERM);
     }
-    if (metaBase.fileType == FILE_TYPE_LCD) {
-        assets = "lcd";
-        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-        int32_t ret = rdbStore->GetSrcCloudId(inoPtr->cloudId, cloudId);
+    auto filePtr = InitFileAttr(data, fi);
+    CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+    if (GetNewSession(inoPtr, path, data, database, cloudOpenParams)) {
+        FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
+        fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+        return (void) fuse_reply_err(req, EPERM);
     }
-    LOGD("cloudId %s", cloudId.c_str());
-    filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
-}
-
-static void CloudOpen(fuse_req_t req,
-    shared_ptr<CloudDiskInode> inoPtr, struct fuse_file_info *fi, string path)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    shared_ptr<CloudDiskFile> filePtr;
-    if (inoPtr->filePtr != nullptr) {
-        filePtr = inoPtr->filePtr;
-        InsertFileAttr(data, fi, filePtr);
-    } else {
-        filePtr = InitFileAttr(data, fi);
-        inoPtr->filePtr = filePtr;
-    }
-
-    std::unique_lock<std::shared_mutex> wSesLock(filePtr->sessionLock);
     if (filePtr->readSession) {
-        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
-        fuse_reply_open(req, fi);
-        return;
-    }
-
-    auto database = GetDatabase(data->userId, inoPtr->bundleName);
-    if (!database) {
-        fuse_reply_err(req, EPERM);
-        LOGE("database is null");
-        return;
-    }
-    GetNewSession(inoPtr, filePtr, path, data, database);
-    if (filePtr->readSession) {
-        DoCloudOpen(req, filePtr, fi);
+        auto ret = DoCloudOpen(req, fi, inoPtr, data, cloudOpenParams);
+        if (!ret) {
+            fuse_reply_open(req, fi);
+        } else {
+            filePtr->readSession = nullptr;
+            FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
+            fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+            return (void) fuse_reply_err(req, ret);
+        }
     } else {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
             CloudFile::FaultType::DRIVERKIT, EPERM, "readSession is null"});
-        fuse_reply_err(req, EPERM);
+        FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
+        fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
+        return (void) fuse_reply_err(req, EPERM);
     }
-    return;
 }
 
 void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
@@ -482,23 +581,14 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         return;
     }
     string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    unsigned int flags = static_cast<unsigned int>(fi->flags);
+    unsigned int flags = GetFileOpenFlags(fi->flags);
     if (access(path.c_str(), F_OK) == 0) {
-        if ((flags & O_ACCMODE) & O_WRONLY) {
-            flags &= ~O_WRONLY;
-            flags |= O_RDWR;
-        }
-        if (flags & O_APPEND) {
-            flags &= ~O_APPEND;
-        }
-        if (flags & O_DIRECT) {
-            flags &= ~O_DIRECT;
-        }
         int32_t fd = open(path.c_str(), flags);
         if (fd < 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
                 CloudFile::FaultType::FILE, errno, "open file failed path:" + GetAnonyString(path) +
                 " errno: " + std::to_string(errno)});
+            fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
             return (void) fuse_reply_err(req, errno);
         }
         auto filePtr = InitFileAttr(data, fi);
@@ -508,7 +598,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         fuse_reply_open(req, fi);
     } else {
         path = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-        CloudOpen(req, inoPtr, fi, path);
+        CloudOpen(req, inoPtr, fi, path, ino);
     }
 }
 
@@ -1702,30 +1792,6 @@ static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName
     }
 }
 
-static bool DocloudClose(struct CloudDiskFuseData *data, shared_ptr<CloudDiskFile> filePtr,
-                         shared_ptr<CloudDiskInode> parentInode, shared_ptr<CloudDiskInode> inoPtr)
-{
-    bool res;
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
-        parentInode->bundleName, parentInode->cloudId);
-    MetaBase metaBase(inoPtr->fileName);
-    auto ret = metaFile->DoLookup(metaBase);
-    if (metaBase.fileType == FILE_TYPE_CONTENT) {
-        res = filePtr->readSession->Close(false);
-    } else {
-        res = filePtr->readSession->Close(true);
-        string path = CloudFileUtils::GetLocalBucketPath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-        string tmpPath = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-        ret = rename(tmpPath.c_str(), path.c_str());
-        if (ret == NativeRdb::E_OK) {
-            DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-            auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-            rdbstore->UpdateTHMStatus(metaBase, CloudSync::DOWNLOADED_THM);
-        }
-    }
-    return res;
-}
-
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1756,23 +1822,25 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
     filePtr->refCount--;
     if (filePtr->refCount == 0) {
-        inoPtr->filePtr = nullptr;
         if (filePtr->type == CLOUD_DISK_FILE_TYPE_LOCAL) {
             close(filePtr->fd);
+            filePtr->readSession = nullptr;
             if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
                 UpdateCloudStore(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             } else if (filePtr->isWriteOpen) {
                 UploadLocalFile(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             }
         } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD && filePtr->readSession != nullptr) {
-            bool res = DocloudClose(data, filePtr, parentInode, inoPtr);
+            bool res = filePtr->readSession->Close(false);
             if (!res) {
                 LOGE("close error");
             }
             filePtr->readSession = nullptr;
             LOGD("readSession released");
         }
+        FileOperationsHelper::PutCloudDiskFile(data, filePtr, fi->fh);
     }
+    fuse_inval(data->se, inoPtr->parent, ino, inoPtr->fileName);
     fuse_reply_err(req, 0);
 }
 
