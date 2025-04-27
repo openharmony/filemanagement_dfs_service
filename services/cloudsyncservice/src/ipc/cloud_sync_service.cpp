@@ -743,7 +743,7 @@ int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
     system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_LOGOUT);
     int32_t ret = dataSyncManager_->DisableCloud(callerUserId);
     LOGI("End DisableCloud");
-    return E_OK;
+    return ret;
 }
 
 int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
