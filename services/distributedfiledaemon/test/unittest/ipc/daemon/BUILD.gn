@@ -94,6 +94,7 @@ ohos_unittest("daemon_test") {
     "ipc:ipc_single",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
     "zlib:shared_libz",
   ]

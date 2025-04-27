@@ -55,6 +55,7 @@ ohos_unittest("device_info_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "ipc:ipc_core",
   ]
 
   defines = [ "private=public" ]
@@ -881,6 +882,7 @@ ohos_unittest("softbus_handler_asset_test") {
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
     "zlib:shared_libz",
   ]
 
@@ -936,6 +938,7 @@ ohos_unittest("softbus_handler_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -1027,6 +1030,7 @@ ohos_unittest("softbus_session_listener_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]

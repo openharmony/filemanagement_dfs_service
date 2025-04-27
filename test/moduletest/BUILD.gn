@@ -22,8 +22,6 @@ config("module_private_config") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "${dsoftbus_path}/interfaces/kits/bus_center",
-    "${dsoftbus_path}/interfaces/kits/common",
   ]
 }
 

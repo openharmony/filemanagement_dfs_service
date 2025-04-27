@@ -23,11 +23,14 @@ ohos_unittest("dfs_error_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private=public" ]
 
@@ -43,11 +46,13 @@ ohos_unittest("utils_log_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private=public" ]
 

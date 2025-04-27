@@ -104,6 +104,7 @@ ohos_unittest("asset_recv_callback_proxy_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -140,6 +141,7 @@ ohos_unittest("asset_send_callback_proxy_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 }
 

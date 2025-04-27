@@ -42,6 +42,7 @@
           "device_auth",
           "device_manager",
           "dsoftbus",
+          "e2fsprogs",
           "eventhandler",
           "ffrt",
           "file_api",
@@ -66,9 +67,7 @@
           "libfuse",
           "zlib"
         ],
-        "third_party": [
-          "e2fsprogs"
-        ]
+        "third_party": []
       },
       "build": {
         "group_type": {
