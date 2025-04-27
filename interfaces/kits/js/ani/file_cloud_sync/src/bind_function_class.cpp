@@ -19,6 +19,7 @@
 #include "cloud_download_ani.h"
 #include "cloud_file_cache_ani.h"
 #include "cloud_sync_ani.h"
+#include "file_sync_ani.h"
 #include "utils_log.h"
 
 using namespace OHOS;
@@ -137,15 +138,15 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildDouble());
     std::array methods = {
-        ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor0)},
-        ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor1)},
-        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn)},
-        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff0)},
-        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1)},
-        ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart)},
-        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop)},
+        ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
+        ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
+        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
+        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0)},
+        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1)},
+        ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStart)},
+        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStop)},
         ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
-                            reinterpret_cast<void *>(CloudSyncAni::CloudSyncGetLastSyncTime)},
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTime)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());

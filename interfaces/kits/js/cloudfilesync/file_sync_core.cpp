@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_core.h"
+#include "file_sync_core.h"
 
 #include <sys/types.h>
 #include <sys/xattr.h>
@@ -27,31 +27,47 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 const int32_t E_PARAMS = 401;
 
-const string &CloudSyncCore::GetBundleName() const
+const string &FileSyncCore::GetBundleName() const
 {
     static const string emptyString = "";
     return (bundleEntity) ? bundleEntity->bundleName_ : emptyString;
 }
 
-FsResult<CloudSyncCore *> CloudSyncCore::Constructor()
+FsResult<FileSyncCore *> FileSyncCore::Constructor(const optional<string> &bundleName)
 {
-    CloudSyncCore *cloudSyncPtr = new CloudSyncCore();
-
-    if (cloudSyncPtr == nullptr) {
-        LOGE("Failed to create CloudSyncCore object on heap.");
-        return FsResult<CloudSyncCore *>::Error(ENOMEM);
+    FileSyncCore *fileSyncPtr = nullptr;
+    if (bundleName.has_value()) {
+        const string &name = *bundleName;
+        if (name == "") {
+            LOGE("Failed to get bundle name");
+            return FsResult<FileSyncCore *>::Error(E_PARAMS);
+        }
+        fileSyncPtr = new FileSyncCore(name);
+    } else {
+        fileSyncPtr = new FileSyncCore();
     }
 
-    return FsResult<CloudSyncCore *>::Success(move(cloudSyncPtr));
+    if (fileSyncPtr == nullptr) {
+        LOGE("Failed to create CloudSyncCore object on heap.");
+        return FsResult<FileSyncCore *>::Error(ENOMEM);
+    }
+
+    return FsResult<FileSyncCore *>::Success(move(fileSyncPtr));
 }
 
-CloudSyncCore::CloudSyncCore()
+FileSyncCore::FileSyncCore(const string &bundleName)
+{
+    LOGI("init with bundle name");
+    bundleEntity = make_unique<BundleEntity>(bundleName);
+}
+
+FileSyncCore::FileSyncCore()
 {
     LOGI("init without bundle name");
     bundleEntity = nullptr;
 }
 
-FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSyncCallbackMiddle> callback)
+FsResult<void> FileSyncCore::DoOn(const string &event, const shared_ptr<CloudSyncCallbackMiddle> callback)
 {
     if (event != "progress") {
         LOGE("event is not progress.");
@@ -65,7 +81,7 @@ FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSy
 
     string bundleName = GetBundleName();
     callback_ = callback;
-    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_, bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(callback_, bundleName);
     if (ret != E_OK) {
         LOGE("DoOn Register error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -74,7 +90,7 @@ FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSy
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncCore::DoOff(const string &event, const optional<shared_ptr<CloudSyncCallbackMiddle>> &callback)
+FsResult<void> FileSyncCore::DoOff(const string &event, const optional<shared_ptr<CloudSyncCallbackMiddle>> &callback)
 {
     if (event != "progress") {
         LOGE("event is not progress");
@@ -82,7 +98,7 @@ FsResult<void> CloudSyncCore::DoOff(const string &event, const optional<shared_p
     }
 
     string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleName);
     if (ret != E_OK) {
         LOGE("DoOff UnRegister error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -97,10 +113,10 @@ FsResult<void> CloudSyncCore::DoOff(const string &event, const optional<shared_p
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncCore::DoStart()
+FsResult<void> FileSyncCore::DoStart()
 {
     string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().StartSync(bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().StartFileSync(bundleName);
     if (ret != E_OK) {
         LOGE("Start Sync error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -109,10 +125,10 @@ FsResult<void> CloudSyncCore::DoStart()
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncCore::DoStop()
+FsResult<void> FileSyncCore::DoStop()
 {
     string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().StopSync(bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().StopFileSync(bundleName);
     if (ret != E_OK) {
         LOGE("Stop Sync error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -121,33 +137,17 @@ FsResult<void> CloudSyncCore::DoStop()
     return FsResult<void>::Success();
 }
 
-FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
+FsResult<int64_t> FileSyncCore::DoGetLastSyncTime()
 {
-    Uri uri(path);
-    string sandBoxPath = uri.GetPath();
-    string xattrKey = "user.cloud.filestatus";
-
-    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
-    if (xattrValueSize < 0) {
-        return FsResult<int32_t>::Error(EINVAL);
+    LOGI("Start begin");
+    int64_t time = 0;
+    string bundleName = GetBundleName();
+    int32_t ret = CloudSyncManager::GetInstance().GetSyncTime(time, bundleName);
+    if (ret != E_OK) {
+        LOGE("GetLastSyncTime error, result: %{public}d", ret);
+        return FsResult<int64_t>::Error(Convert2ErrNum(ret));
     }
-    unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
-    if (xattrValue == nullptr) {
-        return FsResult<int32_t>::Error(EINVAL);
-    }
-    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
-    if (xattrValueSize <= 0) {
-        return FsResult<int32_t>::Error(EINVAL);
-    }
-    int32_t fileStatus = atoi(xattrValue.get());
-    int32_t val;
-    if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
-        fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
-        val = statusMap[fileStatus];
-    } else {
-        val = FileSyncState::FILESYNCSTATE_COMPLETED;
-    }
-
-    return FsResult<int32_t>::Success(val);
+    LOGI("Start GetLastSyncTime Success!");
+    return FsResult<int64_t>::Success(time);
 }
 } // namespace OHOS::FileManagement::CloudSync

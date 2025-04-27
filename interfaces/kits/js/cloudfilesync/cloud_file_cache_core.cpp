@@ -99,7 +99,7 @@ FsResult<void> CloudFileCacheCore::DoOn(const string &event, const shared_ptr<Cl
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(arg->callback);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileCacheCallback(arg->callback);
     if (ret != E_OK) {
         LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
         (void)fileCacheEntity->registerMgr.RemoveRegisterInfo(event);
@@ -128,7 +128,7 @@ FsResult<void> CloudFileCacheCore::DoOff(
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
+    int32_t ret = CloudSyncManager::GetInstance().UnregisterFileCacheCallback();
     if (ret != E_OK) {
         LOGE("Failed to unregister callback, error: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
