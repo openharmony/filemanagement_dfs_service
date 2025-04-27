@@ -90,7 +90,7 @@ int32_t CloudSyncServiceProxy::UnRegisterFileSyncCallbackInner(const std::string
         data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("UnRegisterFileSyncCallbackInner Success");
     return reply.ReadInt32();
@@ -177,7 +177,7 @@ int32_t CloudSyncServiceProxy::RegisterFileSyncCallbackInner(const sptr<IRemoteO
         data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("RegisterFileSyncCallbackInner Success");
     return reply.ReadInt32();
@@ -251,7 +251,7 @@ int32_t CloudSyncServiceProxy::StartFileSyncInner(bool forceFlag, const std::str
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_SYNC), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("StartFileSyncInner Success");
     return reply.ReadInt32();
@@ -473,7 +473,7 @@ int32_t CloudSyncServiceProxy::StopFileSyncInner(const std::string &bundleName, 
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_SYNC), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("StopFileSyncInner Success");
     return reply.ReadInt32();
@@ -1120,7 +1120,7 @@ int32_t CloudSyncServiceProxy::RegisterFileCacheCallback(const sptr<IRemoteObjec
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("RegisterFileCacheCallback Success");
     return reply.ReadInt32();
@@ -1176,7 +1176,7 @@ int32_t CloudSyncServiceProxy::UnregisterFileCacheCallback()
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("UnregisterFileCacheCallback Success");
     return reply.ReadInt32();
