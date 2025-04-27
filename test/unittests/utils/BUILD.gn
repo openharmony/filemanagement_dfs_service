@@ -18,14 +18,12 @@ ohos_unittest("cloud_pref_impl_test") {
 
   sources = [
     "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
+    "${distributedfile_path}/test/mock/preference_helper_mock.cpp",
     "./preference/cloud_pref_impl_test.cpp",
   ]
 
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/test/mock",
     "${distributedfile_path}/utils/log/include",
   ]
 
@@ -36,11 +34,7 @@ ohos_unittest("cloud_pref_impl_test") {
   ]
 
   external_deps = [
-    "c_utils:utils",
-    "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
-    "ipc:ipc_single",
-    "preferences:native_preferences",
   ]
 
   defines = [ "private=public" ]
