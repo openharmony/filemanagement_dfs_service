@@ -71,7 +71,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
     if (serviceProxy_ != nullptr) {
-        return serviceProxy_;
+        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
+            return serviceProxy_;
+        }
     }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
