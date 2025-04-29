@@ -864,6 +864,12 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
