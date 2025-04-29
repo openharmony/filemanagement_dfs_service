@@ -591,7 +591,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
     if (err != 0) {
         close(fd);
         RemoveLocalFile(path);
-        return -err;
+        return -EINVAL;
     }
     err = DoCloudLookup(req, parent, name, &e);
     if (err != 0) {
