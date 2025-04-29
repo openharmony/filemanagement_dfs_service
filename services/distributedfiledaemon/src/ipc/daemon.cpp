@@ -446,7 +446,7 @@ int32_t Daemon::StoreSessionAndListener(const std::string &physicalPath,
                                         const sptr<IFileTransListener> &listener)
 {
     SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
-    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
     if (sessionName.empty()) {
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
