@@ -236,7 +236,6 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
                                                                       DFS_CHANNLE_ROLE_SINK, physicalPath);
     if (socketId <= 0) {
         LOGE("CreateSessionServer failed, socketId = %{public}d", socketId);
-        Daemon::DeleteSessionAndListener(sessionName, socketId);
         return E_SOFTBUS_SESSION_FAILED;
     }
     physicalPath.clear();
@@ -247,7 +246,7 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
     auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
-        Daemon::DeleteSessionAndListener(sessionName, socketId);
+        SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
         return ret;
     }
     return ret;

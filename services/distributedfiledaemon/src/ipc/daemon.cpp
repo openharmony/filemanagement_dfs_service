@@ -69,7 +69,7 @@ const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 constexpr mode_t DEFAULT_UMASK = 0002;
-constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 8 * 1000;
+constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -413,19 +413,14 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
     }
-
-    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
-    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
-    if (sessionName.empty()) {
+    if (StoreSessionAndListener(physicalPath, info.sessionName, listenerCallback) != E_OK) {
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-    info.sessionName = sessionName;
-    StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto prepareSessionData = std::make_shared<PrepareSessionData>(
-        srcUri, physicalPath, sessionName, daemon, info, prepareSessionBlock);
+        srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -441,15 +436,25 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     ret = prepareSessionBlock->GetValue();
+    if (ret != E_OK) {
+        DeleteSessionAndListener(info.sessionName);
+    }
     LOGI("PrepareSession end, ret is %{public}d", ret);
     return ret;
 }
 
-void Daemon::StoreSessionAndListener(const std::string &physicalPath,
-                                     const std::string &sessionName,
-                                     const sptr<IFileTransListener> &listener)
+int32_t Daemon::StoreSessionAndListener(const std::string &physicalPath,
+                                        std::string &sessionName,
+                                        const sptr<IFileTransListener> &listener)
 {
+    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
+    if (sessionName.empty()) {
+        LOGE("SessionServer exceed max");
+        return E_SOFTBUS_SESSION_FAILED;
+    }
     TransManager::GetInstance().AddTransTask(sessionName, listener);
+    return E_OK;
 }
 
 int32_t Daemon::GetRealPath(const std::string &srcUri,
@@ -648,11 +653,10 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     return E_OK;
 }
 
-void Daemon::DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId)
+void Daemon::DeleteSessionAndListener(const std::string &sessionName)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
 }
 
 void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
