@@ -88,7 +88,6 @@ public:
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,
                         const std::string &sessionName);
-    static void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
 
 private:
     Daemon();
@@ -100,9 +99,10 @@ private:
     void PublishSA();
     void RegisterOsAccount();
     sptr<IDaemon> GetRemoteSA(const std::string &remoteDeviceId);
-    void StoreSessionAndListener(const std::string &physicalPath,
-                                 const std::string &sessionName,
-                                 const sptr<IFileTransListener> &listener);
+    int32_t StoreSessionAndListener(const std::string &physicalPath,
+                                    std::string &sessionName,
+                                    const sptr<IFileTransListener> &listener);
+    void DeleteSessionAndListener(const std::string &sessionName);
     int32_t GetRealPath(const std::string &srcUri,
                         const std::string &dstUri,
                         std::string &physicalPath,
