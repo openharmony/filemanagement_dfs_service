@@ -34,7 +34,7 @@ void AssetCallbackManager::AddRecvCallback(const sptr<IAssetRecvCallback> &recvC
         return;
     }
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
         if (recvCallback->AsObject() == callback->AsObject()) {
             LOGI("recvCallback registered!");
             return;
@@ -92,7 +92,7 @@ void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
 {
     LOGI("NotifyAssetRecvStart.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
         if (callback != nullptr) {
             callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
         } else {
@@ -108,7 +108,7 @@ void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetwork
 {
     LOGI("NotifyAssetRecvFinished.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
         if (callback == nullptr) {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
                  assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());

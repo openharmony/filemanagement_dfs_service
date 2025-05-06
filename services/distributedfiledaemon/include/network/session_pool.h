@@ -34,7 +34,7 @@ public:
     ~SessionPool() = default;
     void HoldSession(std::shared_ptr<BaseSession> session, const std::string backStage);
     void ReleaseSession(const int32_t fd);
-    void ReleaseSession(const std::string &cid, bool releaseServer);
+    void ReleaseSession(const std::string &cid, bool isReleaseAll);
     void ReleaseAllSession();
     bool CheckIfGetSession(const int32_t fd);
     void SinkOffline(const std::string &cid);

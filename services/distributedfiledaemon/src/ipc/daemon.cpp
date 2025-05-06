@@ -322,7 +322,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     auto deviceManager = DeviceManagerAgent::GetInstance();
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
-        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid.");
+        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu",  networkId.length());
         return E_INVAL_ARG_NAPI;
     }
     std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
@@ -333,7 +333,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGE("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
         int32_t ret_umount = deviceManager->UMountDfsDocs(networkId, deviceId, false);
-        if (ret_umount != E_OK) {
+        if (ret_umount != NO_ERROR) {
             LOGE("[UMountDfsDocs] failed");
             return E_UNMOUNT;
         }
