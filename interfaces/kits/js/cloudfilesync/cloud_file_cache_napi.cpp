@@ -165,6 +165,9 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
         int32_t ret = CloudSyncManager::GetInstance().StartFileCache(uri);
         if (ret != E_OK) {
             LOGE("Start Download failed! ret = %{public}d", ret);
+            if (ret != E_INVAL_ARG) {
+                ret = E_BROKEN_IPC;
+            }
             return NError(Convert2JsErrNum(ret));
         }
         LOGI("Start Download Success!");
@@ -215,6 +218,9 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
         int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
         if (ret != E_OK) {
             LOGE("Stop Download failed! ret = %{public}d", ret);
+            if (ret != E_INVAL_ARG) {
+                ret = E_BROKEN_IPC;
+            }
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
