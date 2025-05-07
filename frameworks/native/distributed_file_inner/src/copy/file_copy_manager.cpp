@@ -53,7 +53,7 @@ static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 std::shared_ptr<FileCopyManager> FileCopyManager::instance_ = nullptr;
 
-static bool CheckPath(std::shared_ptr<FileInfos> &infos)
+static bool CheckPath(const std::shared_ptr<FileInfos> &infos)
 {
     std::string destPath = infos->destPath;
     if (infos->srcUriIsFile) {
