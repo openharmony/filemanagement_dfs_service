@@ -354,9 +354,15 @@ void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason 
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
+    if (srcNetworkId.empty()) {
+        LOGW("get srcNetworkId fail");
+        return;
+    }
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(sessionId);
     if (assetObj == nullptr) {
         LOGW("get assetObj is nullptr");
+        SoftBusHandlerAsset::GetInstance().RemoveClientInfo(sessionId);
         return;
     }
     AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(
