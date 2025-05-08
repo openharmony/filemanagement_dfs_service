@@ -354,7 +354,7 @@ void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason 
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
-    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
+    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(sessionId);
     if (srcNetworkId.empty()) {
         LOGW("get srcNetworkId fail");
         return;
