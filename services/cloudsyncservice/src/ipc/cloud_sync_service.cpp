@@ -802,10 +802,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
     }
     ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
-    if (ret != E_OK && ret != E_INVAL_ARG) {
-        ret = E_BROKEN_IPC;
-    }
-    LOGI("End StartFileCache");
+    LOGI("End StartFileCache, ret: %{public}d", ret);
     return ret;
 }
 
@@ -856,10 +853,7 @@ int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int3
     }
 
     ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
-    if (ret != E_OK && ret != E_INVAL_ARG) {
-        ret = E_BROKEN_IPC;
-    }
-    LOGI("End StopFileCache");
+    LOGI("End StopFileCache, ret: %{public}d", ret);
     return ret;
 }
 
