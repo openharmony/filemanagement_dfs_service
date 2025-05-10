@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_napi.h"
-
 #include <sys/types.h>
 #include <sys/xattr.h>
+#include <set>
 
 #include "async_work.h"
 #include "cloud_sync_manager.h"
+#include "cloud_sync_napi.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "securec.h"
