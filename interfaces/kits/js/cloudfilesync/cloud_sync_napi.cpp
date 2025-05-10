@@ -710,28 +710,49 @@ static bool IsGetSingleFileStatus(const napi_env &env, const NFuncArg &funcArg)
     return true;
 }
 
-tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path)
+static tuple<int32_t, int32_t> GetxattrErr()
 {
-    Uri uri(path);
+    LOGE("getxattr failed, errno : %{public}d", errno);
+    std::set<int32_t> errForSingleFileSync = { ENOENT, EACCES, EAGAIN, EINTR, ENOSYS };
+    if (errForSingleFileSync.find(errno) != errForSingleFileSync.end()) {
+        return { errno, -1 };
+    }
+    return { E_UNKNOWN_ERR, -1 };
+}
+
+tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
+{
+    Uri fileUri(uri);
     char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
+
+    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
+
     std::string sandBoxPath(resolvedPath);
     std::string xattrKey = "user.cloud.filestatus";
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
     if (xattrValueSize < 0) {
-        return { E_UNKNOWN_ERR, -1 };
+        return GetxattrErr();
     }
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         return { E_UNKNOWN_ERR, -1 };
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
-        return { E_UNKNOWN_ERR, -1 };
+        return GetxattrErr();
     }
+
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        LOGE("invalid xattrValue");
+        return { E_PARAMS, -1};
+    }
+
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
@@ -743,28 +764,41 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path
     return { E_OK, val };
 }
 
-tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &path)
+tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &uri)
 {
-    Uri uri(path);
+    Uri fileUri(uri);
     char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
+
+    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
+
     std::string sandBoxPath(resolvedPath);
     std::string xattrKey = "user.cloud.filestatus";
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
     if (xattrValueSize < 0) {
+        LOGE("getxattr failed, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
+        LOGE("getxattr failed, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
+
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        LOGE("invalid xattrValue");
+        return { E_PARAMS, -1};
+    }
+
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
@@ -779,11 +813,13 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &pa
 static NVal AsyncComplete(const napi_env &env, std::shared_ptr<BatchContext> ctx)
 {
     napi_value results = nullptr;
+
     napi_status status = napi_create_array(env, &results);
     if (status != napi_ok) {
         LOGE("Failed to create array");
         return { env, NError(LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS).GetNapiErr(env) };
     }
+
     int32_t index = 0;
     for (auto result : ctx->resultList) {
         status = napi_set_element(env, results, index, NVal::CreateInt32(env, result).val_);
@@ -804,6 +840,7 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+
     auto [succ, uris, ignore] = arrayVal.ToStringArray();
     auto ctx = std::make_shared<BatchContext>();
     ctx->uriList.swap(uris);
@@ -816,8 +853,8 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
     auto cbExec = [env, ctx]() ->NError {
         int32_t result = 0;
         int32_t fileStatus = 0;
-        for (auto &path : ctx->uriList) {
-            tie(result, fileStatus) = GetFileSyncStateForBatch(path);
+        for (auto &uri : ctx->uriList) {
+            tie(result, fileStatus) = GetFileSyncStateForBatch(uri);
             if (result != E_OK) {
                 return NError(result);
             }
@@ -849,16 +886,17 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+
     if (IsGetSingleFileStatus(env, funcArg)) {
-        std::unique_ptr<char []> path;
+        std::unique_ptr<char []> uri;
         bool succ = false;
-        tie(succ, path, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
+        tie(succ, uri, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
         if (!succ) {
-            LOGE("Invalid path");
+            LOGE("Invalid uri");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        tie(result, fileStatus) = GetSingleFileSyncState(string(path.get()));
+        tie(result, fileStatus) = GetSingleFileSyncState(string(uri.get()));
         if (result != E_OK) {
             NError(result).ThrowErr(env);
             return nullptr;
