@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,8 +65,6 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
-const int32_t UID = 1009;
-const int32_t DATA_UID = 3012;
 } // namespace
 
 namespace OHOS::FileManagement {
@@ -395,7 +393,12 @@ HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
     g_subscribeCommonEvent = false;
     try {
         daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
-        EXPECT_TRUE(true);
+        std::shared_ptr<OsAccountObserver> subScriber = daemon_->subScriber_;
+        EXPECT_TRUE(subScriber != nullptr);
+
+        daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
+        std::shared_ptr<OsAccountObserver> subScriber1 = daemon_->subScriber_;
+        EXPECT_TRUE(subScriber == subScriber1);
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -418,10 +421,14 @@ HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_001 begin";
-    daemon_->subScriber_ = nullptr;
     try {
+        daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
         daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
-        EXPECT_TRUE(true);
+        EXPECT_TRUE(daemon_->subScriber_ != nullptr);
+
+        daemon_->subScriber_ = nullptr;
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
+        EXPECT_TRUE(daemon_->subScriber_ == nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -453,7 +460,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
-    DmDeviceInfoExt deviceInfo;
+    DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
@@ -473,7 +480,7 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 begin";
-    DmDeviceInfoExt deviceInfo;
+    DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), ERR_BAD_VALUE);
@@ -596,7 +603,6 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_001 begin";
     daemon_->eventHandler_ = nullptr;
-    g_getCallingUid = UID;
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_EVENT_HANDLER);
 
     daemon_->StartEventHandler();
@@ -613,7 +619,7 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_001 begin";
-    HmdfsInfoExt hmdfsInfo;
+    HmdfsInfo hmdfsInfo;
     EXPECT_EQ(daemon_->PrepareSession("", "", "", nullptr, hmdfsInfo), E_NULLPTR);
 
     sptr<IRemoteObject> listener = new (std::nothrow) FileTransListenerMock();
@@ -660,7 +666,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRealPath_001 begin";
     std::string physicalPath;
-    HmdfsInfoExt info;
+    HmdfsInfo info;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
@@ -702,7 +708,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_001 begin";
     std::string physicalPath;
     HapTokenInfo hapTokenInfo;
-    HmdfsInfoExt info;
+    HmdfsInfo info;
 
     g_isFolder = false;
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
@@ -750,7 +756,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_002 begin";
     std::string physicalPath;
     HapTokenInfo hapTokenInfo;
-    HmdfsInfoExt info;
+    HmdfsInfo info;
 
     g_isFolder = true;
     physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
@@ -804,7 +810,6 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfo_001 begin";
-    g_getCallingUid = UID;
     EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return(""));
     bool isSrcFile = false;
     bool srcIsDir = false;
@@ -896,16 +901,16 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 begin";
     int32_t userId = 100;
-    g_getCallingUid = DATA_UID;
-    g_checkCallerPermissionDatasync = true;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
-    EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, nullptr), E_NULLPTR);
-    EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, assetSendCallback), E_NULLPTR);
+    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, nullptr), E_NULLPTR);
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, nullptr), E_NULLPTR);
+    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_NULLPTR);
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_NULLPTR);
 
     assetObj->srcBundleName_ = "test";
     daemon_->eventHandler_ = nullptr;
-    EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, assetSendCallback), E_EVENT_HANDLER);
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_EVENT_HANDLER);
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 end";
 }
 
@@ -920,8 +925,6 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 begin";
     daemon_->StartEventHandler();
     int32_t userId = 100;
-    g_getCallingUid = DATA_UID;
-    g_checkCallerPermissionDatasync = true;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
@@ -931,7 +934,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_isFolder = false;
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->PushAsset(userId, *assetObj, assetSendCallback), E_OK);
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
     sleep(1);
     AssetCallbackManager::GetInstance().RemoveSendCallback(assetObj->srcBundleName_);
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 end";
@@ -946,8 +949,6 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 begin";
-    g_getCallingUid = DATA_UID;
-    g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->RegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
@@ -965,8 +966,6 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 begin";
-    g_getCallingUid = DATA_UID;
-    g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();

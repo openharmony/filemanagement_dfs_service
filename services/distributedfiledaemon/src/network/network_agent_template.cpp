@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
 
 void NetworkAgentTemplate::ConnectOnlineDevices()
 {
-    string pkgName = SERVICE_NAME;
+    string pkgName = IDaemon::SERVICE_NAME;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
 
     auto dma = DeviceManagerAgent::GetInstance();

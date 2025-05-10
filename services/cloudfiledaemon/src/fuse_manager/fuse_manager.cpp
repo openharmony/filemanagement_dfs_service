@@ -271,7 +271,7 @@ static pid_t GetPidFromTid(pid_t tid)
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos) {
                 std::string tgidStr = line.substr(colonPos + 1);
-                tgid = std::stoi(tgidStr.c_str());
+                tgid = std::atoi(tgidStr.c_str());
             }
             break;
         }
@@ -328,7 +328,7 @@ static int HandleCloudError(CloudError error, FaultOperation faultOperation, str
 #ifdef HICOLLIE_ENABLE
 
 struct XcollieInput {
-    CloudInode *node_;
+    shared_ptr<CloudInode> node_;
     FaultOperation faultOperation_;
 };
 
@@ -338,7 +338,7 @@ static void XcollieCallback(void *xcollie)
     if (xcollieInput == nullptr) {
         return;
     }
-    CloudInode *inode = xcollieInput->node_;
+    shared_ptr<CloudInode> inode = xcollieInput->node_;
     if (inode == nullptr) {
         return;
     }
@@ -354,7 +354,7 @@ static void XcollieCallback(void *xcollie)
         default:
             break;
     }
-    
+
     string msg = "In XcollieCallback, path:" + GetAnonyString((inode->path).c_str());
     CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, xcollieInput->faultOperation_,
         faultType, EWOULDBLOCK, msg});
@@ -484,7 +484,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     if (create) {
         child->mBase = make_shared<MetaBase>(mBase);
 #ifdef HICOLLIE_ENABLE
-        XcollieInput xcollieInput{child.get(), FaultOperation::LOOKUP};
+        XcollieInput xcollieInput{child, FaultOperation::LOOKUP};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
             XcollieCallback, &xcollieInput, false);
 #endif
@@ -549,7 +549,7 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
 #ifdef HICOLLIE_ENABLE
-        XcollieInput xcollieInput{node.get(), FaultOperation::FORGET};
+        XcollieInput xcollieInput{node, FaultOperation::FORGET};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
             XcollieCallback, &xcollieInput, false);
 #endif
@@ -865,7 +865,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     string prepareTraceId = GetPrepareTraceId(data->userId);
-    
+
     LOGI("%{public}d open %{public}s", pid, GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
@@ -1658,7 +1658,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     struct CloudDisk::CloudDiskFuseData cloudDiskData;
     struct FuseData data;
     struct fuse_session *se = nullptr;
-    if (fuse_opt_add_arg(&args, path.c_str()) || !CheckPathForStartFuse(path)) {
+    if (!CheckPathForStartFuse(path) || fuse_opt_add_arg(&args, path.c_str())) {
         LOGE("Mount path invalid");
         return -EINVAL;
     }

@@ -28,9 +28,8 @@
 #include "asset_callback_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "connect_count/connect_count.h"
 #include "connection_detector.h"
-#include "device/device_info.h"
+#include "connect_count/connect_count.h"
 #include "device/device_manager_agent.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
@@ -40,8 +39,8 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_handler_asset.h"
+#include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -70,9 +69,7 @@ const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 8 * 1000;
-const int32_t UID = 1009;
-const int32_t DATA_UID = 3012;
-} // namespace
+}
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
@@ -145,9 +142,10 @@ void Daemon::OnStop()
 void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
-        (void)systemAbilityId;
-        (void)deviceId;
-        RegisterOsAccount();
+        LOGI("Daemon::OnAddSystemAbility common event service online");
+        if (subScriber_ == nullptr) {
+            RegisterOsAccount();
+        }
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().CreateAssetLocalSessionServer();
     }
@@ -161,29 +159,21 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
             LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
             return;
         }
-
-        bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
-        LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
-        subScriber_ = nullptr;
+        LOGI("OnRemoveSystemAbility common event service offline");
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     }
 }
 
-int32_t Daemon::OpenP2PConnection(const DmDeviceInfoExt &deviceInfo)
+int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[HandleOpenP2PConnection] DATASYNC permission denied");
-        return E_PERMISSION_DENIED;
-    }
     LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     sptr<IFileDfsListener> listener = nullptr;
-    DmDeviceInfoExt deviceInfoTemp = deviceInfo;
-    auto ret = ConnectionCount(deviceInfoTemp.ConvertToDmDeviceInfo());
+    auto ret = ConnectionCount(deviceInfo);
     if (ret == E_OK) {
         ConnectCount::GetInstance()->AddConnect(callingTokenId, deviceInfo.networkId, listener);
     } else {
@@ -195,13 +185,9 @@ int32_t Daemon::OpenP2PConnection(const DmDeviceInfoExt &deviceInfo)
     return ret;
 }
 
-int32_t Daemon::CloseP2PConnection(const DmDeviceInfoExt &deviceInfo)
+int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[HandleCloseP2PConnection] DATASYNC permission denied");
-        return E_PERMISSION_DENIED;
-    }
     LOGI("Close P2P Connection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     auto networkId = std::string(deviceInfo.networkId);
@@ -210,9 +196,8 @@ int32_t Daemon::CloseP2PConnection(const DmDeviceInfoExt &deviceInfo)
     return 0;
 }
 
-int32_t Daemon::ConnectionCount(const DmDeviceInfoExt &deviceInfo)
+int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Connection Count networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     auto st_dev = ConnectionDetector::MocklispHash(path);
@@ -223,9 +208,8 @@ int32_t Daemon::ConnectionCount(const DmDeviceInfoExt &deviceInfo)
     auto targetDir = ss.str();
     auto networkId = std::string(deviceInfo.networkId);
     int32_t ret = 0;
-    DmDeviceInfoExt deviceInfoTemp = deviceInfo;
     if (!ConnectCount::GetInstance()->CheckCount(networkId)) {
-        ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfoTemp.ConvertToDmDeviceInfo());
+        ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
         if (ret == NO_ERROR) {
             ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
         }
@@ -246,23 +230,20 @@ int32_t Daemon::ConnectionCount(const DmDeviceInfoExt &deviceInfo)
     return ret;
 }
 
-int32_t Daemon::CleanUp(const DmDeviceInfoExt &deviceInfo)
+int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("CleanUp start");
     auto networkId = std::string(deviceInfo.networkId);
     if (!ConnectCount::GetInstance()->CheckCount(networkId)) {
-        DmDeviceInfoExt deviceInfoTemp = deviceInfo;
-        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfoTemp.ConvertToDmDeviceInfo());
+        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
         LOGI("Close P2P Connection result %{public}d", ret);
         return ret;
     }
     return E_OK;
 }
 
-int32_t Daemon::ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
-                                   const std::string &networkId,
-                                   uint32_t callingTokenId,
-                                   sptr<IFileDfsListener> remoteReverseObj)
+int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
+    const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("ConnectionAndMount start");
     int32_t ret = NO_ERROR;
@@ -290,7 +271,7 @@ int32_t Daemon::ConnectionAndMount(const DmDeviceInfoExt &deviceInfo,
     return ret;
 }
 
-int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, const sptr<IFileDfsListener> &remoteReverseObj)
+int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
     LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
@@ -377,14 +358,9 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != UID) {
-        LOGE("Permission denied, caller is not dfs!");
-        return E_PERMISSION_DENIED;
-    }
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
-    auto requestSendFileData =
-        std::make_shared<RequestSendFileData>(srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
+    auto requestSendFileData = std::make_shared<RequestSendFileData>(
+        srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_REQUEST_SEND_FILE, requestSendFileData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -408,9 +384,8 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const std::string &dstUri,
                                const std::string &srcDeviceId,
                                const sptr<IRemoteObject> &listener,
-                               HmdfsInfoExt &info)
+                               HmdfsInfo &info)
 {
-    HmdfsInfo info_ = convertExttoInfo(info);
     LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
@@ -425,7 +400,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info_, daemon);
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
@@ -437,12 +412,12 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-    info_.sessionName = sessionName;
+    info.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
-    auto prepareSessionData =
-        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info_, prepareSessionBlock);
+    auto prepareSessionData = std::make_shared<PrepareSessionData>(
+        srcUri, physicalPath, sessionName, daemon, info, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -459,7 +434,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
 
     ret = prepareSessionBlock->GetValue();
     LOGI("PrepareSession end, ret is %{public}d", ret);
-    info = HmdfsInfoExt(info_);
     return ret;
 }
 
@@ -487,8 +461,8 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     if (ret != E_OK) {
         LOGE("GetRemoteCopyInfo failed, ret = %{public}d", ret);
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
-                     RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-                     RadarReporter::GET_REMOTE_COPY_INFO_ERROR);
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_REMOTE_COPY_INFO_ERROR);
         return E_SOFTBUS_SESSION_FAILED;
     }
 
@@ -497,9 +471,9 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     if (result != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOGE("GetHapTokenInfo failed, errCode = %{public}d", result);
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
-                     RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-                     RadarReporter::GET_HAP_TOKEN_INFO_ERROR, RadarReporter::PACKAGE_NAME,
-                     RadarReporter::accessTokenKit + to_string(result));
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_HAP_TOKEN_INFO_ERROR, RadarReporter::PACKAGE_NAME,
+            RadarReporter::accessTokenKit + to_string(result));
         return E_GET_USER_ID;
     }
     ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
@@ -581,11 +555,6 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
     LOGI("GetRemoteCopyInfo begin.");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != UID) {
-        LOGE("Permission denied, caller is not dfs!");
-        return E_PERMISSION_DENIED;
-    }
     auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
     if (physicalPath.empty()) {
         LOGE("GetRemoteCopyInfo GetRealPath failed.");
@@ -609,8 +578,8 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
     if (object == nullptr) {
         LOGE("GetSystemAbility failed");
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
-                     RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-                     RadarReporter::GET_SYSTEM_ABILITY_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::saMgr);
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_SYSTEM_ABILITY_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::saMgr);
         return nullptr;
     }
     auto daemon = iface_cast<IDaemon>(object);
@@ -629,7 +598,7 @@ int32_t Daemon::Copy(const std::string &srcUri,
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
-    int errCode = deviceManager.GetLocalDeviceInfo(SERVICE_NAME, localDeviceInfo);
+    int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
     if (errCode != E_OK) {
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
         return E_GET_DEVICE_ID;
@@ -643,8 +612,8 @@ int32_t Daemon::Copy(const std::string &srcUri,
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
-                     RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-                     RadarReporter::REQUEST_SEND_FILE_ERROR, RadarReporter::PACKAGE_NAME, ret);
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::REQUEST_SEND_FILE_ERROR, RadarReporter::PACKAGE_NAME, ret);
         return E_SA_LOAD_FAILED;
     }
     return E_OK;
@@ -721,30 +690,22 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
     return;
 }
 
-int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<IAssetSendCallback> &sendCallback)
+int32_t Daemon::PushAsset(int32_t userId,
+                          const sptr<AssetObj> &assetObj,
+                          const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != DATA_UID) {
-        LOGE("Permission denied, caller is not data!");
-        return E_PERMISSION_DENIED;
-    }
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[PushAsset] DATASYNC permission denied");
-        return E_PERMISSION_DENIED;
-    }
-    const sptr<AssetObj> assetObjPtr (new (std::nothrow) AssetObj(assetObj));
-    if (assetObjPtr == nullptr || sendCallback == nullptr) {
+    if (assetObj == nullptr || sendCallback == nullptr) {
         LOGE("param is nullptr.");
         return E_NULLPTR;
     }
-    auto taskId = assetObjPtr->srcBundleName_ + assetObjPtr->sessionId_;
+    auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     if (taskId.empty()) {
         LOGE("assetObj info is null.");
         return E_NULLPTR;
     }
     AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
-    auto pushData = std::make_shared<PushAssetData>(userId, assetObjPtr);
+    auto pushData = std::make_shared<PushAssetData>(userId, assetObj);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
 
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -765,15 +726,6 @@ int32_t Daemon::PushAsset(int32_t userId, const AssetObj &assetObj, const sptr<I
 int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::RegisterAssetCallback begin.");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != DATA_UID) {
-        LOGE("Permission denied, caller is not data!");
-        return E_PERMISSION_DENIED;
-    }
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[RegisterRecvCallback] DATASYNC permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;
@@ -785,15 +737,6 @@ int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallba
 int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::UnRegisterAssetCallback begin.");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != DATA_UID) {
-        LOGE("Permission denied, caller is not data!");
-        return E_PERMISSION_DENIED;
-    }
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[UnRegisterRecvCallback] DATASYNC permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;
@@ -810,7 +753,7 @@ void Daemon::StartEventHandler()
     }
 
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
-    auto runer = AppExecFwk::EventRunner::Create(SERVICE_NAME.c_str());
+    auto runer = AppExecFwk::EventRunner::Create(IDaemon::SERVICE_NAME.c_str());
     eventHandler_ = std::make_shared<DaemonEventHandler>(runer, daemonExecute_);
 }
 } // namespace DistributedFile

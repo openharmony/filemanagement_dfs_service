@@ -17,6 +17,7 @@
 #define OHOS_STORAGE_CLOUD_DAEMON_MANAGER_IMPL_H
 
 #include <atomic>
+#include <mutex>
 
 #include "cloud_daemon_manager.h"
 #include "nocopyable.h"
@@ -34,6 +35,7 @@ private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
     std::atomic_flag isFirstCall_{false};
+    std::mutex recipientMutex_;
     sptr<SvcDeathRecipient> deathRecipient_;
 };
 } // namespace OHOS::FileManagement::CloudFile

@@ -49,6 +49,7 @@ void CloudDaemonManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remote
         CloudDaemonServiceProxy::InvaildInstance();
         isFirstCall_.clear();
     };
+    std::lock_guard<std::mutex> lock(recipientMutex_);
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
     remoteObject->AddDeathRecipient(deathRecipient_);
 }
