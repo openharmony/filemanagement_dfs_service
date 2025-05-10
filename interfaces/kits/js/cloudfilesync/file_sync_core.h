@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_SYNC_CORE_H
-#define OHOS_FILEMGMT_CLOUD_SYNC_CORE_H
+#ifndef OHOS_FILEMGMT_FILE_SYNC_CORE_H
+#define OHOS_FILEMGMT_FILE_SYNC_CORE_H
 
 #include <optional>
 
@@ -24,24 +24,25 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace ModuleFileIO;
 
-class CloudSyncCore {
+class FileSyncCore {
 public:
-    static FsResult<CloudSyncCore *> Constructor();
+    static FsResult<FileSyncCore *> Constructor(const std::optional<std::string> &bundleName = std::nullopt);
 
     FsResult<void> DoStart();
     FsResult<void> DoStop();
     FsResult<void> DoOn(const std::string &event, const std::shared_ptr<CloudSyncCallbackMiddle> callback);
     FsResult<void> DoOff(const std::string &event,
         const std::optional<std::shared_ptr<CloudSyncCallbackMiddle>> &callback = std::nullopt);
-    static FsResult<int32_t> DoGetFileSyncState(std::string path);
+    FsResult<int64_t> DoGetLastSyncTime();
 
     const std::string &GetBundleName() const;
-    CloudSyncCore();
-    ~CloudSyncCore() = default;
+    explicit FileSyncCore(const std::string &bundleName);
+    FileSyncCore();
+    ~FileSyncCore() = default;
 
 private:
     std::shared_ptr<CloudSyncCallbackMiddle> callback_;
     std::unique_ptr<BundleEntity> bundleEntity;
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_SYNC_CORE_H
+#endif // OHOS_FILEMGMT_FILE_SYNC_CORE_H

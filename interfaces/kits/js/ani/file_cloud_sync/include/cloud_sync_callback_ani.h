@@ -30,6 +30,11 @@ namespace OHOS::FileManagement::CloudSync {
 
 class CloudNotifyObserver;
 
+struct BundleEntity {
+    std::string bundleName_;
+    explicit BundleEntity(const std::string bundleName) : bundleName_(bundleName) {};
+};
+
 struct CloudChangeListener {
     NotifyType notifyType;
     AAFwk::ChangeInfo changeInfo;

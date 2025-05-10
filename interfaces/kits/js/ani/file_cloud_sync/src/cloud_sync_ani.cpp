@@ -88,103 +88,6 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
-{
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-    Type clsName = Builder::BuildClass("FileSync");
-    ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_method bindNativePtr;
-    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
-    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
-    if (ret != ANI_OK) {
-        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor();
-    if (!data.IsSuccess()) {
-        LOGE("cloudsync constructor failed.");
-        const auto &err = data.GetError();
-        ErrorHandler::Throw(env, err);
-        return;
-    }
-
-    const CloudSyncCore *cloudSync = data.GetData().value();
-    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
-    if (ret != ANI_OK) {
-        LOGE("bindNativePtr failed.");
-        delete cloudSync;
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-    }
-}
-
-void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
-{
-    std::string bnm;
-    ani_status ret = ANIUtils::AniString2String(env, bundleName, bnm);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-    Type clsName = Builder::BuildClass("FileSync");
-    ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_method bindNativePtr;
-    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
-    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
-    if (ret != ANI_OK) {
-        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor(bnm);
-    if (!data.IsSuccess()) {
-        LOGE("CloudSyncCore constructor failed.");
-        const auto &err = data.GetError();
-        ErrorHandler::Throw(env, err);
-        return;
-    }
-
-    const CloudSyncCore *cloudSync = data.GetData().value();
-    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
-    if (ret != ANI_OK) {
-        LOGE("bindNativePtr failed.");
-        delete cloudSync;
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-    }
-}
-
 void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
     ani_ref cbOnRef;
@@ -321,27 +224,6 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
     return static_cast<ani_int>(data.GetData().value());
 }
 
-ani_double CloudSyncAni::CloudSyncGetLastSyncTime(ani_env *env, ani_object object)
-{
-    auto cloudSync = CloudSyncUnwrap(env, object);
-    if (cloudSync == nullptr) {
-        LOGE("Cannot wrap cloudcynccore.");
-        ErrorHandler::Throw(env, UNKNOWN_ERR);
-        return 0;
-    }
-
-    auto data = cloudSync->CoreGetLastSyncTime();
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloud sync do GetLastSyncTime failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
-        return 0;
-    }
-
-    const int64_t lastSyncTime = data.GetData().value();
-    return static_cast<ani_double>(lastSyncTime);
-}
-
 static bool CheckIsValidUri(Uri uri)
 {
     string scheme = uri.GetScheme();
@@ -446,17 +328,6 @@ int32_t CloudSyncAni::GetRegisterParams(
 
 void CloudSyncAni::RegisterChange(ani_env *env, ani_class clazz, ani_string uri, ani_boolean recursion, ani_object fun)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-
     if (g_listObj == nullptr) {
         g_listObj = make_unique<ChangeListenerAni>(env);
     }
@@ -535,17 +406,6 @@ void CloudSyncAni::UnregisterFromObs(ani_env *env, std::string uri)
 
 void CloudSyncAni::UnRegisterChange(ani_env *env, ani_class clazz, ani_string uri)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-
     if (g_listObj == nullptr || g_listObj->observers_.empty()) {
         LOGI("no obs to unregister");
         return;

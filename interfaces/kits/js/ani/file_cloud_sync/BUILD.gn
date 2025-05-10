@@ -31,12 +31,14 @@ ohos_shared_library("cloud_sync_ani") {
     "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/file_sync_core.cpp",
     "src/bind_function_class.cpp",
     "src/cloud_download_ani.cpp",
     "src/cloud_download_callback_ani.cpp",
     "src/cloud_file_cache_ani.cpp",
     "src/cloud_sync_ani.cpp",
     "src/cloud_sync_callback_ani.cpp",
+    "src/file_sync_ani.cpp",
   ]
   sanitize = {
     integer_overflow = true
