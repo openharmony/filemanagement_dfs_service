@@ -247,8 +247,8 @@ int32_t CloudSyncServiceProxy::StartFileSyncInner(bool forceFlag, const std::str
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC),
-                                      data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_SYNC), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno: %{public}d", ret);
         return E_BROKEN_IPC;

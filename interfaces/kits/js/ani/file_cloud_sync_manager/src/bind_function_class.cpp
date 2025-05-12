@@ -48,7 +48,7 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
         {Builder::BuildClass("std.core.String"), Builder::BuildClass("escompat.Record")});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string deSign = Builder::BuildSignatureDescriptor({
-        Builder::BuildClass("std.core.String"),
+        Builder::BuildDouble(),
         Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.ExtraData")});
     std::array methods = {
         ani_native_function { "changeAppCloudSwitchInner", ssbSign.c_str(),
