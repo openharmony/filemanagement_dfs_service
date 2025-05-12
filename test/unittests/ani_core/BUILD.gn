@@ -25,11 +25,13 @@ ohos_unittest("cloud_sync_core_test") {
     "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/file_sync_core.cpp",
     "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
     "cloud_file_cache_core_test.cpp",
     "cloud_file_core_test.cpp",
     "cloud_sync_core_test.cpp",
     "cloud_sync_manager_core_test.cpp",
+    "file_sync_core_test.cpp",
   ]
 
   include_dirs = [
