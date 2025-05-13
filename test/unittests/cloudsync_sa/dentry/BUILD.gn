@@ -27,13 +27,13 @@ ohos_unittest("dentry_meta_file_test") {
     "${utils_path}/dentry/include",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfiledentry" ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+  ]
 
   defines = [ "private=public" ]
   defines += [
@@ -50,13 +50,13 @@ ohos_unittest("dentry_file_utils_test") {
 
   include_dirs = [ "${utils_path}/dentry/include" ]
 
-  deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfiledentry" ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+  ]
 
   defines = [ "private=public" ]
   defines += [
@@ -89,11 +89,13 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+  ]
 
   defines = [ "private=public" ]
   defines += [

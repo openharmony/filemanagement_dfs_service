@@ -36,12 +36,14 @@
           "app_file_service",
           "battery_manager",
           "c_utils",
+          "cJSON",
           "common_event_service",
           "dataclassification",
           "data_share",
           "device_auth",
           "device_manager",
           "dsoftbus",
+          "e2fsprogs",
           "eventhandler",
           "ffrt",
           "file_api",
@@ -60,15 +62,14 @@
           "safwk",
           "storage_service",
           "samgr",
+          "selinux_adapter",
           "os_account",
           "power_manager",
           "resource_schedule_service",
           "libfuse",
           "zlib"
         ],
-        "third_party": [
-          "e2fsprogs"
-        ]
+        "third_party": []
       },
       "build": {
         "group_type": {

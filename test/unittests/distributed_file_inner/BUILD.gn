@@ -102,6 +102,7 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   defines = [

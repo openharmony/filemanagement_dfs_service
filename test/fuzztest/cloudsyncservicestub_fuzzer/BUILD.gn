@@ -23,7 +23,6 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
   include_dirs = [
     "${distributedfile_path}/test/fuzztest/fuzz_common",
     "${innerkits_native_path}/cloudsync_kit_inner",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/cycle_task/tasks",
@@ -74,6 +73,10 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (cloudsync_service_media_library) {
+    external_deps += [ "media_library:media_library" ]
+  }
 }
 
 group("fuzztest") {

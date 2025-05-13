@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <sys/types.h>
 
-#include "access_token_adapter.h"
+#include "access_token_adapter_mock.h"
 #include "accesstoken_kit.h"
 #include "iosfwd"
 #include "ipc_process_skeleton.h"

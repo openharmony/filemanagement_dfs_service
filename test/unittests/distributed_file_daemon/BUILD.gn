@@ -439,6 +439,7 @@ ohos_unittest("file_dfs_listener_proxy_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -489,6 +490,7 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
   ]
 
   defines = [

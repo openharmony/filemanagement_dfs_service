@@ -67,6 +67,8 @@ ohos_shared_library("cloud_adapter") {
     "${utils_path}:libdistributedfileutils",
   ]
 
+  external_deps = [ "ipc:ipc_core" ]
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
