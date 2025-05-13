@@ -180,6 +180,10 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
     std::string sbfSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildBoolean(), Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::string vSign = Builder::BuildSignatureDescriptor({});
+    std::string optfSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildClass("@ohos.file.cloudSync.cloudSync.OptimizeSpaceParam"),
+        Builder::BuildFunctionalObject(1, false)});
     std::array methods = {
         ani_native_function{"getFileSyncStateInner", siSign.c_str(),
             reinterpret_cast<void *>(CloudSyncAni::GetFileSyncState)},
@@ -187,6 +191,12 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
             reinterpret_cast<void *>(CloudSyncAni::RegisterChange)},
         ani_native_function{"unregisterChangeInner", sSign.c_str(),
             reinterpret_cast<void *>(CloudSyncAni::UnRegisterChange)},
+        ani_native_function{"optimizeStorageInner", vSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncAni::OptimizeStorage)},
+        ani_native_function{"startOptimizeSpaceInner", optfSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncAni::StartOptimizeStorage)},
+        ani_native_function{"stopOptimizeSpaceInner", vSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncAni::StopOptimizeStorage)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());

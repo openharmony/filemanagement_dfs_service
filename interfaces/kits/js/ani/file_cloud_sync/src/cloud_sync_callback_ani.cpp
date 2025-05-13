@@ -382,4 +382,91 @@ void CloudNotifyObserver::OnChangeExt(const AAFwk::ChangeInfo &changeInfo)
     listener.strUri = uri_;
     listObj_.OnChange(listener, ref_);
 }
+
+ani_status CloudOptimizeCallbackAniImpl::GetOptimProgress(
+    ani_env *env, OptimizeState state, int32_t progress, ani_class cls, ani_object &data)
+{
+    LOGI("CloudOptimizeCallbackAniImpl OnOptimizeProcess");
+    ani_enum optimizeStateEnum;
+    Type optimizeStateSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.OptimizeState");
+    ani_status ret = env->FindEnum(optimizeStateSign.Descriptor().c_str(), &optimizeStateEnum);
+    if (ret != ANI_OK) {
+        LOGE("find optim state failed. ret = %{public}d", ret);
+        return ret;
+    }
+    ani_enum_item optimizeStateTypeEnumItem;
+    ret = env->Enum_GetEnumItemByIndex(optimizeStateEnum, state, &optimizeStateTypeEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("set optim state item failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    ani_method ctor;
+    std::string ct = Builder::BuildConstructorName();
+    std::string ctSign = Builder::BuildSignatureDescriptor({optimizeStateSign, Builder::BuildDouble()});
+    ret = env->Class_FindMethod(cls, ct.c_str(), ctSign.c_str(), &ctor);
+    if (ret != ANI_OK) {
+        LOGE("find ctor method failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    ret = env->Object_New(cls, ctor, &data, optimizeStateTypeEnumItem, static_cast<double>(progress));
+    if (ret != ANI_OK) {
+        LOGE("create new object failed. ret = %{public}d", ret);
+        return ret;
+    }
+    return ANI_OK;
+}
+
+void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
+{
+    auto task = [this, state, progress]() {
+        if (!cbOnRef_) {
+            LOGE("cbOnRef_ is nullptr");
+            return;
+        }
+        ani_env *tmpEnv = env_;
+        ani_size nr_refs = ANI_SCOPE_SIZE;
+        ani_status ret = tmpEnv->CreateLocalScope(nr_refs);
+        if (ret != ANI_OK) {
+            LOGE("crete local scope failed. ret = %{public}d", ret);
+            return;
+        }
+        ani_namespace ns {};
+        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
+        if (ret != ANI_OK) {
+            LOGE("find namespace failed. ret = %{public}d", ret);
+            return;
+        }
+        Type clsName = Builder::BuildClass("OptimizeSpaceProgressInner");
+        ani_class cls;
+        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+        if (ret != ANI_OK) {
+            LOGE("find class failed. ret = %{public}d", ret);
+            return;
+        }
+        ani_object optimProgressData;
+        ret = GetOptimProgress(tmpEnv, state, progress, cls, optimProgressData);
+        if (ret != ANI_OK) {
+            LOGE("GetOptimProgress failed. ret = %{public}d", ret);
+            return;
+        }
+        ani_ref ref_;
+        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbOnRef_);
+        std::vector<ani_ref> vec = { optimProgressData };
+        ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
+        if (ret != ANI_OK) {
+            LOGE("ani call function failed. ret = %{public}d", ret);
+            return;
+        }
+        ret = tmpEnv->DestroyLocalScope();
+        if (ret != ANI_OK) {
+            LOGE("failed to DestroyLocalScope. ret = %{public}d", ret);
+        }
+    };
+    if (!ANIUtils::SendEventToMainThread(task)) {
+        LOGE("failed to send event");
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync

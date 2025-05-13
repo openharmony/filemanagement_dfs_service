@@ -27,6 +27,9 @@ public:
     static void CloudSyncOff1(ani_env *env, ani_object object, ani_string evt);
     static void CloudSyncStart(ani_env *env, ani_object object);
     static void CloudSyncStop(ani_env *env, ani_object object);
+    static void OptimizeStorage(ani_env *env, ani_class clazz);
+    static void StartOptimizeStorage(ani_env *env, ani_class clazz, ani_object optim, ani_object fun);
+    static void StopOptimizeStorage(ani_env *env, ani_class clazz);
     static ani_int GetFileSyncState(ani_env *env, ani_class clazz, ani_string path);
     static int32_t RegisterToObs(const RegisterParams &registerParams);
     static bool CheckRef(ani_env *env, ani_ref ref, ChangeListenerAni &listObj, const string &uri);

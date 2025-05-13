@@ -26,6 +26,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 const int32_t E_PARAMS = 401;
+const int32_t AGING_DAYS = 30;
 
 const string &CloudSyncCore::GetBundleName() const
 {
@@ -115,6 +116,47 @@ FsResult<void> CloudSyncCore::DoStop()
     int32_t ret = CloudSyncManager::GetInstance().StopSync(bundleName);
     if (ret != E_OK) {
         LOGE("Stop Sync error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudSyncCore::DoOptimizeStorage()
+{
+    LOGI("DoOptimizeStorage enter");
+    OptimizeSpaceOptions optimizeOptions {};
+    optimizeOptions.totalSize = 0;
+    optimizeOptions.agingDays = AGING_DAYS;
+
+    int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions);
+    if (ret != E_OK) {
+        LOGE("DoOptimizeStorage error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudSyncCore::DoStartOptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+    const std::shared_ptr<CloudOptimizeCallbackMiddle> callback)
+{
+    LOGI("DoStartOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions, callback);
+    if (ret != E_OK) {
+        LOGE("DoStartOptimizeStorage error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudSyncCore::DoStopOptimizeStorage()
+{
+    LOGI("DoStopOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().StopOptimizeStorage();
+    if (ret != E_OK) {
+        LOGE("DoStopOptimizeStorage error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 

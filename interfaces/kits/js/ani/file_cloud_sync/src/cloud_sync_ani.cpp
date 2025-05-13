@@ -205,6 +205,65 @@ void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
     }
 }
 
+void CloudSyncAni::OptimizeStorage(ani_env *env, ani_class clazz)
+{
+    auto data = CloudSyncCore::DoOptimizeStorage();
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do OptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
+void CloudSyncAni::StartOptimizeStorage(ani_env *env, ani_class clazz, ani_object optim, ani_object fun)
+{
+    OptimizeSpaceOptions optimizeOptions {};
+    ani_double totalSize;
+    ani_status ret = env->Object_GetPropertyByName_Double(optim, "totalSize", &totalSize);
+    if (ret != ANI_OK) {
+        LOGE("get totalSize failed. ret = %{public}d", ret);
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    ani_double agingDays;
+    ret = env->Object_GetPropertyByName_Double(optim, "agingDays", &agingDays);
+    if (ret != ANI_OK) {
+        LOGE("get agingDays failed. ret = %{public}d", ret);
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    LOGI("totalSize: %{public}lld, agingDays:%{public}d",
+        static_cast<long long>(totalSize), static_cast<int32_t>(agingDays));
+    optimizeOptions.totalSize = static_cast<int64_t>(totalSize);
+    optimizeOptions.agingDays = static_cast<int32_t>(agingDays);
+
+    ani_ref cbOnRef;
+    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    auto callback = std::make_shared<CloudOptimizeCallbackAniImpl>(env, cbOnRef);
+
+    auto data = CloudSyncCore::DoStartOptimizeStorage(optimizeOptions, callback);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do StopOptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
+void CloudSyncAni::StopOptimizeStorage(ani_env *env, ani_class clazz)
+{
+    auto data = CloudSyncCore::DoStopOptimizeStorage();
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do StopOptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
 ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string path)
 {
     string filePath;
