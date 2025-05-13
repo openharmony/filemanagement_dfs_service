@@ -152,10 +152,16 @@ int64_t CloudFileUtils::Timespec2Milliseconds(const struct timespec &time)
     return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
-string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int32_t userId)
+string CloudFileUtils::GetLocalBaseDir(string bundleName, int32_t userId)
 {
     string baseDir = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) +
                      LOCAL_PATH_HMDFS_CLOUD_DATA + bundleName + "/";
+    return baseDir;
+}
+
+string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int32_t userId)
+{
+    string baseDir = GetLocalBaseDir(bundleName, userId);
     uint32_t bucketId = GetBucketId(cloudId);
     string bucketPath = baseDir + to_string(bucketId);
     return bucketPath;

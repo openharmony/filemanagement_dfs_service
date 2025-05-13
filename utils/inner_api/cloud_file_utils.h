@@ -62,6 +62,7 @@ public:
     static bool CheckFileStatus(const std::string &key);
     static bool CheckIsTimeRecycled(const std::string &key);
     static bool CheckIsRecyclePath(const std::string &key);
+    static std::string GetLocalBaseDir(std::string bundleName, int32_t userId);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
     static std::string GetLocalDKCachePath(std::string cloudId, std::string bundleName, int32_t userId);
