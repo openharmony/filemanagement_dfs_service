@@ -25,8 +25,8 @@
 #include <vector>
 
 #include "asset/asset_obj.h"
-#include "third_party/zlib/contrib/minizip/unzip.h"
-#include "third_party/zlib/contrib/minizip/zip.h"
+#include "unzip.h"
+#include "zip.h"
 #include "transport/socket.h"
 #include "transport/trans_type.h"
 
