@@ -248,11 +248,6 @@ ohos_static_library("cloudsync_sa_static") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/medialibrary_business_record_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
