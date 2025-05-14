@@ -386,6 +386,34 @@ static unsigned int GetFileOpenFlags(int32_t fileFlags)
     return flags;
 }
 
+static int32_t CheckBucketPath(string cloudId, string bundleName, int32_t userId, string tmpPath)
+{
+    string baseDir = CloudFileUtils::GetLocalBaseDir(bundleName, userId);
+    string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);
+    if (access(baseDir.c_str(), F_OK) != 0) {
+        LOGE("bucket path's parent directory not exits, errno=%{public}d", errno);
+        auto accessErrno = errno;
+        if (unlink(tmpPath.c_str()) != 0) {
+            LOGE("unlink tmpPath failed, errno=%{public}d", errno);
+            return errno;
+        }
+        return accessErrno;
+    }
+    if (access(bucketPath.c_str(), F_OK) != 0) {
+        if (mkdir(bucketPath.c_str(), STAT_MODE_DIR) != 0) {
+            LOGE("create bucket path directory failed, errno=%{public}d", errno);
+            auto mkdirErrno = errno;
+            if (unlink(tmpPath.c_str()) != 0) {
+                LOGE("unlink tmpPath failed, errno=%{public}d", errno);
+                return errno;
+            }
+            return mkdirErrno;
+        }
+        LOGW("mkdir bucketPath success");
+    }
+    return EOK;
+}
+
 static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDiskFuseData *data,
     shared_ptr<CloudDiskInode> inoPtr, CloudOpenParams cloudOpenParams)
 {
@@ -397,16 +425,13 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
         string tmpPath = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
         {
             std::unique_lock<std::shared_mutex> lck(inoPtr->inodeLock);
+            auto ret = CheckBucketPath(inoPtr->cloudId, inoPtr->bundleName, data->userId, tmpPath);
+            if (ret != EOK) {
+                LOGE("check bucketPath failed, ret = %{public}d", ret);
+                return ret;
+            }
             if (access(path.c_str(), F_OK) != 0) {
-                if (errno != ENOENT) {
-                    LOGE("access file failed, filePath:%{public}s, errno:%{public}d", path.c_str(), errno);
-                    return errno;
-                }
-                if (access(tmpPath.c_str(), F_OK) != 0) {
-                    LOGE("access temp path failed, errno:%{public}d", errno);
-                    return errno;
-                }
-                auto ret = rename(tmpPath.c_str(), path.c_str());
+                ret = rename(tmpPath.c_str(), path.c_str());
                 if (ret == EOK) {
                     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
                     auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
