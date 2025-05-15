@@ -682,13 +682,16 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     }
     if (status) {
         ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        if (ret != E_OK) {
+            LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
+            return ret;
+        }
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
-        dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
-    }
-    if (ret != E_OK) {
-        LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
-        return ret;
+        ret = dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        if (ret != E_OK) {
+            LOGE("StopSyncSynced failed, ret: %{public}d", ret);
+        }
     }
 
     ret = dataSyncManager_->ChangeAppSwitch(bundleName, callerUserId, status);
