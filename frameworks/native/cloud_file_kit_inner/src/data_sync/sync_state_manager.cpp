@@ -35,6 +35,7 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     if (!CheckCleaningFlag() &&
         !CheckDisableCloudFlag() &&
+        !CheckMediaLibCleaning() &&
         state_ != SyncState::SYNCING) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
@@ -55,9 +56,18 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
     return true;
 }
 
+bool SyncStateManager::CheckMediaLibCleaning()
+{
+    auto ret = system::GetParameter(CLOUDSYNC_STATUS_KEY, "");
+    LOGI("CLOUDSYNC_STATUS_KEY %{public}s", ret.c_str());
+    return ret == CLOUDSYNC_STATUS_CLEANING;
+}
+
 bool SyncStateManager::CheckCleaningFlag()
 {
-    return syncSignal.test(static_cast<uint32_t>(SignalPos::CLEANING));
+    auto ret = syncSignal.test(static_cast<uint32_t>(SignalPos::CLEANING));
+    LOGI("CleaningFlag %{public}d", ret);
+    return ret;
 }
 
 void SyncStateManager::SetCleaningFlag()
@@ -76,7 +86,9 @@ Action SyncStateManager::ClearCleaningFlag()
 
 bool SyncStateManager::CheckDisableCloudFlag()
 {
-    return syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
+    auto ret = syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
+    LOGI("DisableCloudFlag %{public}d", ret);
+    return ret;
 }
 
 void SyncStateManager::SetDisableCloudFlag()

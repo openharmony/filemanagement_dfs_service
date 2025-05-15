@@ -19,8 +19,9 @@
 #include <atomic>
 #include <shared_mutex>
 #include <bitset>
-
 #include "data_sync_const.h"
+#include "parameters.h"
+
 namespace OHOS::FileManagement::CloudSync {
 enum class SyncState : int32_t {
     INIT = 0,
@@ -54,6 +55,7 @@ public:
     void SetDisableCloudFlag();
     Action ClearDisableCloudFlag();
     bool CheckDisableCloudFlag();
+    bool CheckMediaLibCleaning();
     SyncState GetSyncState() const;
     bool GetForceFlag() const;
 

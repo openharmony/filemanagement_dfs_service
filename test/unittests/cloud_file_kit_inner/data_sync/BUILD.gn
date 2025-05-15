@@ -77,6 +77,7 @@ ohos_unittest("sync_state_manager_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "init:libbegetutil",
     "preferences:native_preferences",
   ]
 

@@ -95,6 +95,7 @@ static const std::string CLOUDSYNC_STATUS_INC_SYNC = "2";
 static const std::string CLOUDSYNC_STATUS_FULL_SYNC = "3";
 static const std::string CLOUDSYNC_STATUS_FINISH = "4";
 static const std::string CLOUDSYNC_STATUS_SWITCHOFF = "5";
+static const std::string CLOUDSYNC_STATUS_CLEANING = "6";
 
 static inline uint64_t GetCurrentTimeStamp()
 {

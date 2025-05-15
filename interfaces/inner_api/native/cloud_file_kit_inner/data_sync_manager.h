@@ -38,6 +38,8 @@ public:
                                      std::string prepareTraceId = "");
     virtual int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId,
                                     bool forceFlag, SyncTriggerType triggerType);
+    virtual int32_t StopSyncSynced(const std::string &bundleName, const int32_t userId,
+                                        bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     virtual int32_t StopUploadTask(const std::string &bundleName, const int32_t userId);
     virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId);
