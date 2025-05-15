@@ -85,6 +85,157 @@ HWTEST_F(CloudSyncCoreTest, GetBundleNameTest1, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DoOn
+ * @tc.desc: Verify the CloudSyncCore::DoOn function
+ * @tc.type: FUNC
+ * @tc.require: IC7I52
+ */
+HWTEST_F(CloudSyncCoreTest, DoOnTest1, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
+    std::string event = "progress";
+    auto ret = cloudSync->DoOn(event, callback);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
+ * @tc.name: DoOff
+ * @tc.desc: Verify the CloudSyncCore::DoOff function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoOffTest3, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
+    std::string event = "progress";
+    auto ret = cloudSync->DoOn(event, callback);
+    EXPECT_FALSE(ret.IsSuccess());
+    ret = cloudSync->DoOff(event);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
+ * @tc.name: DoOn
+ * @tc.desc: Verify the CloudSyncCore::DoOn function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoOnTest2, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
+    std::string event = "";
+    auto ret = cloudSync->DoOn(event, callback);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, E_PARAMS);
+}
+
+/**
+ * @tc.name: DoOn
+ * @tc.desc: Verify the CloudSyncCore::DoOn function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoOnTest3, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
+    std::string event = "progress";
+    auto ret = cloudSync->DoOn(event, callback);
+    ret = cloudSync->DoOn(event, callback);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoOff
+ * @tc.desc: Verify the CloudSyncCore::DoOff function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoOffTest1, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    std::string event = "progress";
+    auto ret = cloudSync->DoOff(event);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
+ * @tc.name: DoOff
+ * @tc.desc: Verify the CloudSyncCore::DoOff function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoOffTest2, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    std::string event = "";
+    auto ret = cloudSync->DoOff(event);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, E_PARAMS);
+}
+
+/**
+ * @tc.name: DoStart
+ * @tc.desc: Verify the CloudSyncCore::DoStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoStartTest1, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto ret = cloudSync->DoStart();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
+ * @tc.name: DoStart
+ * @tc.desc: Verify the CloudSyncCore::DoStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoStartTest2, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto ret = cloudSync->DoStart();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+    ret = cloudSync->DoStop();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &error = ret.GetError();
+    errorCode = error.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
+ * @tc.name: DoStop
+ * @tc.desc: Verify the CloudSyncCore::DoStop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoStopTest1, TestSize.Level1)
+{
+    CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto ret = cloudSync->DoStop();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+}
+
+/**
  * @tc.name: DoGetFileSyncState
  * @tc.desc: Verify the CloudSyncCore::DoGetFileSyncState function
  * @tc.type: FUNC
