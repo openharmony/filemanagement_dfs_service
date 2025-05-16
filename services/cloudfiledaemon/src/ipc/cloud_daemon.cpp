@@ -170,11 +170,11 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 
 void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)
 {
-    std::thread([=]() {
+    ffrt::submit([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
             CloudFile::FaultType::FILE, ret, "start fuse, ret = " + std::to_string(ret)});
-        }).detach();
+        });
 }
 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
