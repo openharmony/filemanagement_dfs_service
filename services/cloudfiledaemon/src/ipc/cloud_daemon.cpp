@@ -24,6 +24,7 @@
 
 #include "cloud_file_fault_event.h"
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "fuse_manager/fuse_manager.h"
 #include "iremote_object.h"
 #include "parameters.h"
