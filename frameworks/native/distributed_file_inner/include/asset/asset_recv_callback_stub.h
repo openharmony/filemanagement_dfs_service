@@ -38,6 +38,7 @@ private:
     std::map<uint32_t, AssetRecvCallbackInterface> opToInterfaceMap_;
 
     int32_t HandleOnStart(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOnRecvProcess(MessageParcel &data, MessageParcel &reply);
     int32_t HandleOnFinished(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace DistributedFile

@@ -34,6 +34,11 @@ public:
                          const std::string &dstNetworkId,
                          const std::string &sessionId,
                          const std::string &dstBundleName));
+    MOCK_METHOD4(OnRecvProcess,
+                 int32_t(const std::string &srcNetworkId,
+                         const sptr<AssetObj> &assetObj,
+                         uint64_t totalBytes,
+                         uint64_t processBytes));
     MOCK_METHOD3(OnFinished, int32_t(const std::string &srcNetworkId, const sptr<AssetObj> &assetObj, int32_t result));
 };
 } // namespace OHOS::Storage::DistributedFile

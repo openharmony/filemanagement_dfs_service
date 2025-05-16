@@ -32,6 +32,10 @@ public:
                                   const std::string &dstNetworkId,
                                   const std::string &sessionId,
                                   const std::string &dstBundleName));
+    MOCK_METHOD4(OnRecvProcess, int32_t(const std::string &srcNetworkId,
+                                const sptr<AssetObj> &assetObj,
+                                uint64_t totalBytes,
+                                uint64_t processBytes));
     MOCK_METHOD3(OnFinished, int32_t(const std::string &srcNetworkId,
                                      const sptr<AssetObj> &assetObj,
                                      int32_t result));
@@ -163,6 +167,47 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, Te
 }
 
 /**
+ * @tc.name: AssetRecvCallbackStub_HandleOnRecvProcess_0100
+ * @tc.desc: verify HandleOnRecvProcess.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnRecvProcess_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnRecvProcess_0100 Start";
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = mockStub_->HandleOnRecvProcess(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    ret = mockStub_->HandleOnRecvProcess(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    data.WriteParcelable(assetObj);
+    ret = mockStub_->HandleOnRecvProcess(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    data.WriteParcelable(assetObj);
+    data.WriteUint64(1024);
+    ret = mockStub_->HandleOnRecvProcess(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    data.WriteParcelable(assetObj);
+    data.WriteUint64(1024);
+    data.WriteUint64(256);
+    EXPECT_CALL(*mockStub_, OnRecvProcess(_, _, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+    ret = mockStub_->HandleOnRecvProcess(data, reply);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnRecvProcess_0100 End";
+}
+
+/**
  * @tc.name: AssetRecvCallbackStub_HandleOnFinished_0100
  * @tc.desc: verify HandleOnFinished.
  * @tc.type: FUNC
@@ -175,7 +220,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100,
     MessageParcel reply;
     auto ret = mockStub_->HandleOnFinished(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);
-    
+
     data.WriteString("srcNetworkId");
     ret = mockStub_->HandleOnFinished(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);

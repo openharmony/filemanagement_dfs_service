@@ -41,6 +41,10 @@ public:
                               const std::string &dstNetworkId,
                               const std::string &sessionId,
                               const std::string &dstBundleName);
+    void NotifyAssetRecvProcess(const std::string &srcNetworkId,
+                                const sptr<AssetObj> &assetObj,
+                                uint64_t total,
+                                uint64_t processed);
     void NotifyAssetRecvFinished(const std::string &srcNetworkId,
                                  const sptr<AssetObj> &assetObj,
                                  int32_t result);

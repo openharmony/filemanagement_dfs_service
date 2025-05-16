@@ -23,6 +23,7 @@ enum class AssetCallbackInterfaceCode {
     ASSET_CALLBACK_ON_START = 0,
     ASSET_CALLBACK_ON_FINISHED,
     ASSET_CALLBACK_ON_SEND_RESULT,
+    ASSET_CALLBACK_ON_PROCESS,
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -32,6 +32,10 @@ public:
                     const std::string &destNetworkId,
                     const std::string &sessionId,
                     const std::string &destBundleName) override;
+    int32_t OnRecvProcess(const std::string &srcNetworkId,
+                          const sptr<AssetObj> &assetObj,
+                          uint64_t totalBytes,
+                          uint64_t processBytes) override;
     int32_t OnFinished(const std::string &srcNetworkId,
                        const sptr<AssetObj> &assetObj,
                        int32_t result) override;

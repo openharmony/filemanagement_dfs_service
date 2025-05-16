@@ -49,6 +49,9 @@ void SoftbusAssetRecvListener::OnFile(int32_t socket, FileEvent *event)
         case FILE_EVENT_RECV_START:
             OnRecvAssetStart(socket, event->files, event->fileCnt);
             break;
+        case FILE_EVENT_RECV_PROCESS:
+            OnRecvAssetProcess(socket, event->files, event->bytesTotal, event->bytesProcessed);
+            break;
         case FILE_EVENT_RECV_FINISH:
             OnRecvAssetFinished(socket, event->files, event->fileCnt);
             break;
@@ -105,6 +108,36 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
                                                              assetObj->dstNetworkId_,
                                                              assetObj->sessionId_,
                                                              assetObj->dstBundleName_);
+}
+
+void SoftbusAssetRecvListener::OnRecvAssetProcess(int32_t socketId, const char **fileList, uint64_t bytesTotal, uint64_t bytesUpload)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    LOGI("OnRecvFileProcess, sessionId = %{public}d, bytesTotal = %{public}llu, bytesUpload = %{public}llu", socketId, bytesTotal, bytesUpload);
+
+    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
+    if (srcNetworkId.empty()) {
+        LOGE("get srcNetworkId fail");
+        return;
+    }
+
+    std::string filePath(path_ + fileList[0]);
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    if (assetObj == nullptr) {
+        LOGE("new assetObj failed!");
+        return;
+    }
+    int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("Generate assetObjInfo fail");
+        return;
+    }
+    AssetCallbackManager::GetInstance().NotifyAssetRecvProcess(srcNetworkId,
+                                                               assetObj,
+                                                               bytesTotal,
+                                                               bytesUpload);
+
 }
 
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)

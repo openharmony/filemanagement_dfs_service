@@ -34,6 +34,7 @@ public:
     static const char* GetRecvPath();
 
     static void OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt);
+    static void OnRecvAssetProcess(int32_t socketId, const char **fileList, uint64_t bytesTotal, uint64_t bytesUpload);
     static void OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
     static void OnRecvAssetError(int32_t socketId, int32_t errorCode, const char **fileList, int32_t fileCnt);
 

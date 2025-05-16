@@ -71,6 +71,51 @@ int32_t AssetRecvCallbackProxy::OnStart(const std::string &srcNetworkId,
     return reply.ReadInt32();
 }
 
+int32_t AssetRecvCallbackProxy::OnRecvProcess(const std::string &srcNetworkId,
+                                              const sptr<AssetObj> &assetObj,
+                                              uint64_t totalBytes,
+                                              uint64_t processBytes)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcNetworkId)) {
+        LOGE("Failed to send srcNetworkId");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteParcelable(assetObj)) {
+        LOGE("Failed to send the assetInfoObj");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteUint64(totalBytes)) {
+        LOGE("Failed to send totalBytes");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteUint64(processBytes)) {
+        LOGE("Failed to send processBytes");
+        return E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROCESS), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno:%{public}d", errno);
+        return E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t AssetRecvCallbackProxy::OnFinished(const std::string &srcNetworkId,
                                            const sptr<AssetObj> &assetObj,
                                            int32_t result)

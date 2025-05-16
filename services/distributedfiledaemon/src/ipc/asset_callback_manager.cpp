@@ -102,6 +102,23 @@ void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
     }
 }
 
+void AssetCallbackManager::NotifyAssetRecvProcess(const std::string &srcNetworkId,
+                                                  const sptr<AssetObj> &assetObj,
+                                                  uint64_t total,
+                                                  uint64_t processed)
+{
+    LOGI("NotifyAssetRecvProcess.");
+    std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
+    for (const auto &callback : recvCallbackList_) {
+        if (callback == nullptr) {
+            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
+                 assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+        } else {
+            callback->OnRecvProcess(srcNetworkId, assetObj, total, processed);
+        }
+    }
+}
+
 void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetworkId,
                                                    const sptr<AssetObj> &assetObj,
                                                    int32_t result)

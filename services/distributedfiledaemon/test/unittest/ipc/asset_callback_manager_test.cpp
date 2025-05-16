@@ -123,7 +123,7 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_SendCallback_0100, TestS
 
 /**
  * @tc.name: AssetCallbackManager_NotifyAssetRecv_0100
- * @tc.desc: verify NotifyAssetRecvStart and NotifyAssetRecvFinished.
+ * @tc.desc: verify NotifyAssetRecvStart, NotifyAssetRecvProcess and NotifyAssetRecvFinished.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
@@ -131,8 +131,10 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetRecv_0100, Te
 {
     GTEST_LOG_(INFO) << "AssetCallbackManager_NotifyAssetRecv_0100 Start";
     auto recvCallback = sptr(new IAssetRecvCallbackMock());
-    // 预期只能调用一次
+    // OnStart OnFinished 预期只能调用一次
     EXPECT_CALL(*recvCallback, OnStart(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*recvCallback, OnRecvProcess(_, _, _, _)).Times(2)
+                                                         .WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*recvCallback, OnFinished(_, _, _)).WillOnce(Return(E_OK));
     try {
         AssetCallbackManager::GetInstance().AddRecvCallback(recvCallback);
@@ -140,8 +142,14 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetRecv_0100, Te
         AssetCallbackManager::GetInstance().NotifyAssetRecvStart("srcNetworkId", "dstNetworkId",
             "sessionId", "dstBundleName");
 
-        sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
-        AssetCallbackManager::GetInstance().NotifyAssetRecvFinished("srcNetworkId", assetObj, 0);
+        sptr<AssetObj> assetObj1 (new (std::nothrow) AssetObj());
+        AssetCallbackManager::GetInstance().NotifyAssetRecvProcess("srcNetworkId", assetObj1, 1024, 256);
+
+        sptr<AssetObj> assetObj2 (new (std::nothrow) AssetObj());
+        AssetCallbackManager::GetInstance().NotifyAssetRecvProcess("srcNetworkId", assetObj2, 1024, 512);
+
+        sptr<AssetObj> assetObj3 (new (std::nothrow) AssetObj());
+        AssetCallbackManager::GetInstance().NotifyAssetRecvFinished("srcNetworkId", assetObj3, 0);
         AssetCallbackManager::GetInstance().recvCallbackList_.clear();
     EXPECT_TRUE(true);
     } catch(...) {

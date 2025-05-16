@@ -35,6 +35,10 @@ public:
                             const std::string &dstNetworkId,
                             const std::string &sessionId,
                             const std::string &dstBundleName) = 0;
+    virtual int32_t OnRecvProcess(const std::string &srcNetworkId,
+                                  const sptr<AssetObj> &assetObj,
+                                  uint64_t totalBytes,
+                                  uint64_t processBytes) = 0;
     virtual int32_t OnFinished(const std::string &srcNetworkId,
                                const sptr<AssetObj> &assetObj,
                                int32_t result) = 0;

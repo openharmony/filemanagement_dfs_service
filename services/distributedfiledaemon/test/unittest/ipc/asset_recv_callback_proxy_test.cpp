@@ -153,6 +153,108 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnStart_0300, TestSi
 }
 
 /**
+ * @tc.name: AssetRecvCallbackProxy_OnRecvProcess_0100
+ * @tc.desc: The execution of the OnRecvProcess failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnRecvProcess_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0100 Start";
+
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    ASSERT_NE(proxy_, nullptr);
+    auto ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(false));
+    ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).WillOnce(Return(false));
+    ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).Times(2)
+                                                    .WillOnce(Return(true))
+                                                    .WillOnce(Return(false));
+    ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0100 End";
+}
+
+/**
+ * @tc.name: AssetRecvCallbackProxy_OnRecvProcess_0200
+ * @tc.desc: The execution of the OnRecvProcess failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnRecvProcess_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0200 Start";
+
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).Times(2)
+                                                    .WillRepeatedly(Return(true));
+    auto testProxy = make_shared<AssetRecvCallbackProxy>(nullptr);
+    auto ret = testProxy->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).Times(2)
+                                                    .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ASSERT_NE(proxy_, nullptr);
+    ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0200 End";
+}
+
+/**
+ * @tc.name: AssetRecvCallbackProxy_OnRecvProcess_0300
+ * @tc.desc: The execution of the OnRecvProcess success.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnRecvProcess_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0300 Start";
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).Times(2)
+                                                    .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
+    ASSERT_NE(proxy_, nullptr);
+    auto ret = proxy_->OnRecvProcess("srcNetworkId", assetObj, 1024, 256);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnRecvProcess_0300 End";
+}
+
+/**
  * @tc.name: AssetRecvCallbackProxy_OnFinished_0100
  * @tc.desc: The execution of the OnFinished failed.
  * @tc.type: FUNC

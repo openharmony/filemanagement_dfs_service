@@ -27,6 +27,8 @@ AssetRecvCallbackStub::AssetRecvCallbackStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START)] =
         &AssetRecvCallbackStub::HandleOnStart;
+    opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROCESS)] =
+        &AssetRecvCallbackStub::HandleOnRecvProcess;
     opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_FINISHED)] =
         &AssetRecvCallbackStub::HandleOnFinished;
 }
@@ -74,6 +76,42 @@ int32_t AssetRecvCallbackStub::HandleOnStart(MessageParcel &data, MessageParcel 
         LOGE("OnStart call failed");
         return E_BROKEN_IPC;
     }
+    reply.WriteInt32(res);
+    return res;
+}
+
+int32_t AssetRecvCallbackStub::HandleOnRecvProcess(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcNetworkId;
+    if (!data.ReadString(srcNetworkId)) {
+        LOGE("read srcNetworkId failed");
+        return E_INVAL_ARG;
+    }
+
+    sptr<AssetObj> assetObj = data.ReadParcelable<AssetObj>();
+    if (!assetObj) {
+        LOGE("object of AssetObj is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    uint64_t totalBytes;
+    if (!data.ReadUint64(totalBytes)) {
+        LOGE("read totalBytes failed");
+        return E_INVAL_ARG;
+    }
+
+    uint64_t processBytes;
+    if (!data.ReadUint64(processBytes)) {
+        LOGE("read processBytes failed");
+        return E_INVAL_ARG;
+    }
+
+    int32_t res = OnRecvProcess(srcNetworkId, assetObj, totalBytes, processBytes);
+    if (res != E_OK) {
+        LOGE("OnRecvProcess call failed");
+        return E_BROKEN_IPC;
+    }
+
     reply.WriteInt32(res);
     return res;
 }
