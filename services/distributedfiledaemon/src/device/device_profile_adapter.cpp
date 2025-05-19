@@ -56,7 +56,7 @@ static inline bool Str2Bool(const std::string &value)
     return value == STATUS_ENABLE;
 }
 
-bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string& remoteNetworkId,
+bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
     VersionPackageNames packageName)
 {
     LOGI("remoteDevice.networkId: %{public}s", remoteNetworkId.c_str());
@@ -70,8 +70,8 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string& remoteNetw
 }
 
 // Comparison of version numbers later than the current version number is not supported.
-bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string& remoteNetworkId, 
-    const DfsVersion& thresholdDfsVersion, VersionPackageNames packageName)
+bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
+    const DfsVersion &thresholdDfsVersion, VersionPackageNames packageName)
 {
     LOGI("remoteDevice.networkId: %{public}s", remoteNetworkId.c_str());
     if (remoteNetworkId.empty()) {
@@ -142,7 +142,7 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
     return FileManagement::ERR_OK;
 }
 
-int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageNames packageName, DfsVersion& dfsVersion)
+int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageNames packageName, DfsVersion &dfsVersion)
 {
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -161,7 +161,7 @@ int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageNames packageName
 }
 
 int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
-    const std::string &networkId, DfsVersion& dfsVersion, VersionPackageNames packageName)
+    const std::string &networkId, DfsVersion &dfsVersion, VersionPackageNames packageName)
 {
     if (networkId.empty()) {
         LOGE("GetDfsVersionFromNetworkId networkId is empty");
@@ -176,7 +176,7 @@ int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
 }
 
 int32_t DeviceProfileAdapter::GetDfsVersion(const std::string &udid,
-    VersionPackageNames packageName, DfsVersion& dfsVersion, bool IsVerifyCode)
+    VersionPackageNames packageName, DfsVersion &dfsVersion, bool IsVerifyCode)
 {
     std::string appInfoJsonData;
     int32_t ret = GetAppInfoFromDP(udid, DFS_SERVICE_ID, appInfoJsonData);
@@ -227,7 +227,7 @@ int32_t DeviceProfileAdapter::GetDfsVersion(const std::string &udid,
     return FileManagement::ERR_OK;
 }
 
-bool DeviceProfileAdapter::ParseDfsVersion(const std::string& dfsVersionData, DfsVersion& dfsVersion)
+bool DeviceProfileAdapter::ParseDfsVersion(const std::string &dfsVersionData, DfsVersion &dfsVersion)
 {
     std::vector<std::string> versionNumList;
     SplitStr(dfsVersionData, ".", versionNumList);
@@ -254,8 +254,8 @@ bool DeviceProfileAdapter::ParseDfsVersion(const std::string& dfsVersionData, Df
     return true;
 }
 
-int32_t DeviceProfileAdapter::ParseAppInfo(const std::string& appInfoJsonData, std::string& packageNamesData,
-    std::string& versionsData)
+int32_t DeviceProfileAdapter::ParseAppInfo(const std::string &appInfoJsonData, std::string &packageNamesData,
+    std::string &versionsData)
 {
     if (appInfoJsonData.empty()) {
         return ERR_DFS_VERSION_EMPTY;
@@ -277,8 +277,8 @@ int32_t DeviceProfileAdapter::ParseAppInfo(const std::string& appInfoJsonData, s
     return FileManagement::ERR_OK;
 }
 
-int32_t DeviceProfileAdapter::GetDfsVersionDataFromAppInfo(const std::string& packageNamesData,
-    const std::string& versionsData, VersionPackageNames packageName, std::string& dfsVersionData)
+int32_t DeviceProfileAdapter::GetDfsVersionDataFromAppInfo(const std::string &packageNamesData,
+    const std::string &versionsData, VersionPackageNames packageName, std::string &dfsVersionData)
 {
     std::string packageNameString = GetPackageName(packageName);
     if (packageNamesData.empty() || versionsData.empty() || packageNameString.empty()) {
@@ -301,8 +301,8 @@ int32_t DeviceProfileAdapter::GetDfsVersionDataFromAppInfo(const std::string& pa
     return ERR_NO_FIND_PACKAGE_NAME;
 }
 
-int32_t DeviceProfileAdapter::GetAppInfoFromDP(const std::string& udid,
-    const std::string& serviceName, std::string& appInfoJsonData)
+int32_t DeviceProfileAdapter::GetAppInfoFromDP(const std::string &udid,
+    const std::string &serviceName, std::string &appInfoJsonData)
 {
     DistributedDeviceProfile::CharacteristicProfile profile;
     int32_t ret = DistributedDeviceProfileClient::GetInstance().GetCharacteristicProfile(
