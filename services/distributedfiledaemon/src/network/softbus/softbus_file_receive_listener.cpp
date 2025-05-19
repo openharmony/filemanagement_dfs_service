@@ -93,9 +93,9 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
 void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info)
 {
     LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
-    std::unique_lock<std::shared_mutex> lock(rwMtx_);
     bindSuccess.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
+    std::unique_lock<std::shared_mutex> lock(rwMtx_);
     bindSuccess.store(true);
     cv_.notify_all();
 }
