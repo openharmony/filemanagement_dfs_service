@@ -19,6 +19,7 @@
 #include <optional>
 
 #include "cloud_sync_callback_ani.h"
+#include "cloud_sync_common.h"
 #include "filemgmt_libfs.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -34,6 +35,10 @@ public:
     FsResult<void> DoOff(const std::string &event,
         const std::optional<std::shared_ptr<CloudSyncCallbackMiddle>> &callback = std::nullopt);
     static FsResult<int32_t> DoGetFileSyncState(std::string path);
+    static FsResult<void> DoOptimizeStorage();
+    static FsResult<void> DoStartOptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+        const std::shared_ptr<CloudOptimizeCallbackMiddle> callback);
+    static FsResult<void> DoStopOptimizeStorage();
 
     const std::string &GetBundleName() const;
     CloudSyncCore();

@@ -493,6 +493,47 @@ export default namespace cloudSync {
         }
     };
 
+    export enum OptimizeState {
+        RUNNING = 0,
+        COMPLETED = 1,
+        FAILED = 2,
+        STOPPED = 3
+    }
+
+    export interface OptimizeSpaceProgress {
+        state: OptimizeState;
+        progress: number;
+    }
+
+    export class OptimizeSpaceProgressInner implements OptimizeSpaceProgress {
+        constructor(
+            state: OptimizeState,
+            progress: number
+        ) {
+            this.state = state;
+            this.progress = progress;
+        }
+        state: OptimizeState;
+        progress: number;
+    }
+
+    export interface OptimizeSpaceParam {
+        totalSize: number;
+        agingDays: number;
+    }
+
+    export class OptimizeSpaceParamInner implements OptimizeSpaceParam {
+        constructor(
+            totalSize: number,
+            agingDays: number
+        ) {
+            this.totalSize = totalSize;
+            this.agingDays = agingDays;
+        }
+        totalSize: number;
+        agingDays: number;
+    }
+
     class StaticFunction {
         static {
             loadLibrary("cloud_sync_ani");
@@ -500,10 +541,13 @@ export default namespace cloudSync {
         static native getFileSyncStateInner(uri: string): int;
         static native registerChangeInner(uri: string, recursion: boolean, callback: Callback<ChangeData>): void;
         static native unregisterChangeInner(uri: string): void;
+        static native optimizeStorageInner(): void;
+        static native startOptimizeSpaceInner(para: OptimizeSpaceParam, cbk: Callback<OptimizeSpaceProgress>): void;
+        static native stopOptimizeSpaceInner(): void;
     };
 
     function getPromiseFileSyncState(uri: string): Promise<int> {
-        let promise = new Promise<int> ((resolve, reject) => {
+        let promise = new Promise<int>((resolve, reject) => {
             let taskPool = taskpool.execute((uri: string): int => {
                 return StaticFunction.getFileSyncStateInner(uri);
             }, uri);
@@ -558,5 +602,46 @@ export default namespace cloudSync {
 
     export function unregisterChange(uri: string): void {
         StaticFunction.unregisterChangeInner(uri);
+    }
+
+    export function optimizeStorage(): Promise<void> {
+        return new Promise<void>((resolve: (result: undefined) => void,
+            reject: (e: BusinessError<void>) => void): void => {
+            let promise = taskpool.execute((): int => {
+                StaticFunction.optimizeStorageInner();
+                return 0;
+            });
+            promise.then<void>((): void => {
+                resolve(undefined);
+            }, (e: BusinessError<void>): void => {
+                reject(e);
+            });
+        });
+    }
+
+    export function startOptimizeSpace(para: OptimizeSpaceParam, cb?: Callback<OptimizeSpaceProgress>): Promise<void> {
+        let callback: Callback<OptimizeSpaceProgress> = (data: OptimizeSpaceProgress) => {};
+        if (cb !== undefined) {
+            callback = cb;
+        }
+        return new Promise<void>((resolve: (result: undefined) => void,
+            reject: (e: BusinessError<void>) => void): void => {
+            let promise = taskpool.execute((
+                param: OptimizeSpaceParam,
+                cbk: Callback<OptimizeSpaceProgress>
+            ): int => {
+                StaticFunction.startOptimizeSpaceInner(param, cbk);
+                return 0;
+            }, para, callback);
+            promise.then<void>((): void => {
+                resolve(undefined);
+            }, (e: BusinessError<void>): void => {
+                reject(e);
+            });
+        });
+    }
+
+    export function stopOptimizeSpace(): void {
+        StaticFunction.stopOptimizeSpaceInner();
     }
 };
