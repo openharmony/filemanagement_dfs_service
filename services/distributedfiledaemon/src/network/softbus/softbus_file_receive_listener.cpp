@@ -116,7 +116,8 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
     LOGI("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
     std::shared_lock<std::shared_mutex> lock(rwMtx_);
-    cv_.wait_for(lock, std::chrono::milliseconds(WAIT_TIME_MS), [] { return SoftBusFileReceiveListener::bindSuccess});
+    cv_.wait_for(lock, std::chrono::milliseconds(WAIT_TIME_MS),
+        [] { return SoftBusFileReceiveListener::bindSuccess.load(); });
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
