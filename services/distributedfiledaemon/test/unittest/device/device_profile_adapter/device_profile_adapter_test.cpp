@@ -17,9 +17,9 @@
 #include <gtest/gtest.h>
 
 #include "device/device_profile_adapter.h"
-#include "distributed_device_profile_client.h"
 #include "device_manager_impl.h"
 #include "dfs_error.h"
+#include "distributed_device_profile_client.h"
 
 namespace {
 constexpr const char* DMS_SERVICE_ID = "dmsfwk_svr_id";

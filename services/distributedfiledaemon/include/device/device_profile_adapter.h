@@ -15,10 +15,10 @@
  
 #ifndef FILEMANAGEMENT_DFS_SERVICE_DEVICE_PROFILE_ADAPTER_H
 #define FILEMANAGEMENT_DFS_SERVICE_DEVICE_PROFILE_ADAPTER_H
- 
-#include <string>
-#include <sstream>
+
 #include <map>
+#include <sstream>
+#include <string>
  
 namespace OHOS {
 namespace Storage {

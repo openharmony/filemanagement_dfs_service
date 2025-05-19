@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "device/device_profile_adapter.h"
- 
-#include "distributed_device_profile_client.h"
-#include "utils_log.h"
-#include "dfs_error.h"
+
 #include "device_manager.h"
+#include "dfs_error.h"
+#include "distributed_device_profile_client.h"
 #include "ipc/i_daemon.h"
 #include "nlohmann/json.hpp"
 #include "string_ex.h"
+#include "utils_log.h"
  
 namespace OHOS {
 namespace Storage {
