@@ -31,7 +31,9 @@ namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
-static const int32_t SLEEP_TIME_MS = 10;
+std::shared_mutex SoftBusFileReceiveListener::rwMtx_;
+std::condition_variable_any SoftBusFileReceiveListener::cv_;
+const static int32_t WAIT_TIME_MS = 2 * 1000;
 void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -91,6 +93,7 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
 void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info)
 {
     LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
+    std::unique_lock<std::shared_mutex> lock(rwMtx_);
     bindSuccess.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
     bindSuccess.store(true);
@@ -112,9 +115,8 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
 {
     LOGI("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
-    while (!bindSuccess.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
-    }
+    std::shared_lock<std::shared_mutex> lock(rwMtx_);
+    cv_.wait_for(lock, std::chrono::milliseconds(WAIT_TIME_MS), [] { return SoftBusFileReceiveListener::bindSuccess});
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

@@ -18,6 +18,8 @@
 
 #include "network/softbus/softbus_session_pool.h"
 #include <cstdint>
+#include <shared_mutex>
+#include <condition_variable>
 #include "transport/socket.h"
 #include "transport/trans_type.h"
 
@@ -42,6 +44,8 @@ private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     static std::string path_;
     static inline std::atomic_bool bindSuccess { false };
+    static std::shared_mutex rwMtx_;
+    static std::condition_variable_any cv_;
 };
 } // namespace DistributedFile
 } // namespace Storage
