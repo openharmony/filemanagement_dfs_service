@@ -41,7 +41,7 @@ int32_t DistributedDeviceProfileClient::GetCharacteristicProfile(const std::stri
     return serviceName == DMS_SERVICE_ID ? g_GetCharacteristicProfile2 : g_GetCharacteristicProfile;
 }
 
-int32_t DistributedDeviceProfileClient::PutCharacteristicProfile(CharacteristicProfile &characteristicProfile)
+int32_t DistributedDeviceProfileClient::PutCharacteristicProfile(const CharacteristicProfile &characteristicProfile)
 {
     return g_PutCharacteristicProfile;
 }
