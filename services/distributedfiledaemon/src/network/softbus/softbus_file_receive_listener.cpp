@@ -97,6 +97,7 @@ void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketI
     bindSuccess.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
     bindSuccess.store(true);
+    cv_.notify_all();
 }
 
 std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
