@@ -23,9 +23,10 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-enum class VersionPackageNames {
+enum class VersionPackageName {
     DFS_VERSION = 1,
 };
+
 struct DfsVersion {
     uint32_t majorVersionNum = 0;
     uint32_t minorVersionNum = 0;
@@ -47,20 +48,20 @@ public:
         return instance;
     }
     bool IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
-        VersionPackageNames packageName = VersionPackageNames::DFS_VERSION);
+        VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
-        const DfsVersion& thresholdDfsVersion, VersionPackageNames packageName = VersionPackageNames::DFS_VERSION);
+        const DfsVersion& thresholdDfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     int32_t GetDfsVersionFromNetworkId(const std::string &networketId,
-        DfsVersion &dfsVersion, VersionPackageNames packageName = VersionPackageNames::DFS_VERSION);
+        DfsVersion &dfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool CompareDfsVersion(const DfsVersion &dfsVersion, const DfsVersion &thresholdDfsVersion);
     int32_t GetDeviceStatus(const std::string &networkId, bool &status);
     int32_t PutDeviceStatus(bool status);
 
 private:
-    std::string GetPackageName(VersionPackageNames packageName)
+    const std::string &GetPackageName(VersionPackageName packageName)
     {
-        static std::map<VersionPackageNames, std::string> packageNamesMap = {
-            {VersionPackageNames::DFS_VERSION, "dfsVersion"},
+        static std::map<VersionPackageName, std::string> packageNamesMap = {
+            {VersionPackageName::DFS_VERSION, "dfsVersion"},
         };
         auto it = packageNamesMap.find(packageName);
         if (it == packageNamesMap.end()) {
@@ -69,13 +70,13 @@ private:
         return it->second;
     }
     int32_t GetDfsVersionDataFromAppInfo(const std::string &packageNamesData,
-        const std::string &versionsData, VersionPackageNames packageName, std::string &dfsVersionData);
+        const std::string &versionsData, VersionPackageName packageName, std::string &dfsVersionData);
     int32_t GetAppInfoFromDP(const std::string &udid, const std::string &serviceName, std::string &appInfoJsonData);
-    int32_t GetDfsVersion(const std::string &udid, VersionPackageNames packageName,
+    int32_t GetDfsVersion(const std::string &udid, VersionPackageName packageName,
         DfsVersion &dfsVersion, bool IsVerifyCode);
     bool ParseDfsVersion(const std::string &dfsVersionData, DfsVersion &dfsVersion);
     int32_t ParseAppInfo(const std::string &appInfoJsonData, std::string &packageNamesData, std::string &versionsData);
-    int32_t GetLocalDfsVersion(VersionPackageNames packageName, DfsVersion &dfsVersion);
+    int32_t GetLocalDfsVersion(VersionPackageName packageName, DfsVersion &dfsVersion);
     std::string GetUdidByNetworkId(const std::string &networkId);
 };
 } // namespace DistributedFile

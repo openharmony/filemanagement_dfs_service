@@ -223,17 +223,17 @@ HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_GetLocalDfsVersion_0
 
     g_GetLocalDeviceInfo = -1;
     DfsVersion dfsVersion;
-    auto ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageNames::DFS_VERSION, dfsVersion);
+    auto ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageName::DFS_VERSION, dfsVersion);
     EXPECT_EQ(ret, -1);
 
     g_GetLocalDeviceInfo = FileManagement::ERR_OK;
     g_GetUdidByNetworkId = -1;
-    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageNames::DFS_VERSION, dfsVersion);
+    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageName::DFS_VERSION, dfsVersion);
     EXPECT_EQ(ret, ERR_GET_UDID);
 
     g_GetUdidByNetworkId = FileManagement::ERR_OK;
     g_GetCharacteristicProfile = FileManagement::ERR_OK;
-    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageNames::DFS_VERSION, dfsVersion);
+    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageName::DFS_VERSION, dfsVersion);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_GetLocalDfsVersion_001 end";
@@ -259,7 +259,7 @@ HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_GetDfsVersionFromNet
 
     g_GetUdidByNetworkId = FileManagement::ERR_OK;
     g_GetCharacteristicProfile = FileManagement::ERR_OK;
-    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageNames::DFS_VERSION, dfsVersion);
+    ret = DeviceProfileAdapter::GetInstance().GetLocalDfsVersion(VersionPackageName::DFS_VERSION, dfsVersion);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_GetDfsVersionFromNetworkId_001 end";
@@ -278,20 +278,20 @@ HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_GetDfsVersion_001, T
 
     DfsVersion dfsVersion;
     g_GetCharacteristicProfile = -1;
-    auto ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    auto ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, -1);
 
     g_GetCharacteristicProfile = DistributedDeviceProfile::DP_NOT_FOUND_FAIL;
     g_GetCharacteristicProfile2 = -1;
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, -1);
 
     g_GetCharacteristicProfile2 = DistributedDeviceProfile::DP_SUCCESS;
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, true);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, true);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     g_GetLocalDeviceInfo = DistributedDeviceProfile::DP_NOT_FOUND_FAIL;
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, true);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, true);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_GetDfsVersion_001 end";
@@ -311,24 +311,24 @@ HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_GetDfsVersion_002, T
     DfsVersion dfsVersion;
     g_GetCharacteristicProfile = DistributedDeviceProfile::DP_SUCCESS;
     g_Profile = "test";
-    auto ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    auto ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, ERR_DFS_VERSION_EMPTY);
 
     g_Profile = "{\n\t\"packageNames\":\t\"version\",\n\t\"versions\":\t\"7.0.0\"\n}";
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
 
     g_Profile = "{\n\t\"packageNames\":\t\"dfsVersion,copyVersion\",\n\t\"versions\":\t\"7.0.0\"\n}";
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, ERR_DFS_VERSION_PARSE_EXCEPTION);
 
     g_Profile = "{\n\t\"packageNames\":\t\"dfsVersion,copyVersion\",\n\t\"versions\":\t\"7.0\"\n}";
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, ERR_DFS_VERSION_PARSE_EXCEPTION);
 
     g_Profile = "";
-    ret = dpa.GetDfsVersion("", VersionPackageNames::DFS_VERSION, dfsVersion, false);
+    ret = dpa.GetDfsVersion("", VersionPackageName::DFS_VERSION, dfsVersion, false);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_GetDfsVersion_002 end";
@@ -402,24 +402,24 @@ HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_GetDfsVersionDataFro
 
     std::string dfsVersionData;
     auto dpa = DeviceProfileAdapter::GetInstance();
-    auto ret = dpa.GetDfsVersionDataFromAppInfo("", "", VersionPackageNames::DFS_VERSION, dfsVersionData);
+    auto ret = dpa.GetDfsVersionDataFromAppInfo("", "", VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, ERR_DFS_VERSION_EMPTY);
-    ret = dpa.GetDfsVersionDataFromAppInfo("test", "", VersionPackageNames::DFS_VERSION, dfsVersionData);
+    ret = dpa.GetDfsVersionDataFromAppInfo("test", "", VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, ERR_DFS_VERSION_EMPTY);
-    ret = dpa.GetDfsVersionDataFromAppInfo("", "test", VersionPackageNames::DFS_VERSION, dfsVersionData);
+    ret = dpa.GetDfsVersionDataFromAppInfo("", "test", VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, ERR_DFS_VERSION_EMPTY);
 
     std::string packageNames = "dfsVersion,copyVersion";
     std::string versions = "6.0.0";
-    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageNames::DFS_VERSION, dfsVersionData);
+    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, ERR_DFS_VERSION_PARSE_EXCEPTION);
 
     versions = "6.0.0,7.0.0";
-    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageNames::DFS_VERSION, dfsVersionData);
+    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, FileManagement::ERR_OK);
 
     packageNames = "assetVersion,copyVersion";
-    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageNames::DFS_VERSION, dfsVersionData);
+    ret = dpa.GetDfsVersionDataFromAppInfo(packageNames, versions, VersionPackageName::DFS_VERSION, dfsVersionData);
     EXPECT_EQ(ret, ERR_NO_FIND_PACKAGE_NAME);
 
     GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_GetDfsVersionDataFromAppInfo_001 end";

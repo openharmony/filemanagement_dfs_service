@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "device/device_profile_adapter.h"
 
 #include "device_manager.h"
@@ -44,6 +45,7 @@ const static int32_t DFS_MAJOR_VERSION_INDEX = 0;
 const static int32_t DFS_MINOR_VERSION_INDEX = 1;
 const static int32_t DFS_FEATURE_VERSION_INDEX = 2;
 const static DfsVersion NO_VERSION = {0, 0, 0};
+const static int32_t MAX_JSON_SIZE = 9999;
 }
 
 static inline std::string Bool2Str(bool value)
@@ -57,9 +59,9 @@ static inline bool Str2Bool(const std::string &value)
 }
 
 bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
-    VersionPackageNames packageName)
+    VersionPackageName packageName)
 {
-    LOGI("remoteDevice.networkId: %{public}s", remoteNetworkId.c_str());
+    LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     DfsVersion localDfsVersion;
     int32_t ret = GetLocalDfsVersion(packageName, localDfsVersion);
     if (ret != FileManagement::ERR_OK) {
@@ -71,9 +73,9 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetw
 
 // Comparison of version numbers later than the current version number is not supported.
 bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
-    const DfsVersion &thresholdDfsVersion, VersionPackageNames packageName)
+    const DfsVersion &thresholdDfsVersion, VersionPackageName packageName)
 {
-    LOGI("remoteDevice.networkId: %{public}s", remoteNetworkId.c_str());
+    LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     if (remoteNetworkId.empty()) {
         LOGE("remoteNetworkId is empty");
         return false;
@@ -119,7 +121,7 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", ret);
         return ret;
     }
-    LOGD("GetLocalDeviceInfo success, localDeviceInfo.networkId = %{public}s", localDeviceInfo.networkId);
+    LOGD("GetLocalDeviceInfo success, localDeviceInfo.networkId = %{public}.5s", localDeviceInfo.networkId);
     auto udid = GetUdidByNetworkId(localDeviceInfo.networkId);
     if (udid.empty()) {
         LOGE("remote GetUdidByNetworkId failed");
@@ -142,7 +144,7 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
     return FileManagement::ERR_OK;
 }
 
-int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageNames packageName, DfsVersion &dfsVersion)
+int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageName packageName, DfsVersion &dfsVersion)
 {
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -151,37 +153,36 @@ int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageNames packageName
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", ret);
         return ret;
     }
-    LOGD("GetLocalDeviceInfo success, localDeviceInfo.networkId = %{public}s", localDeviceInfo.networkId);
+    LOGD("GetLocalDeviceInfo success, localDeviceInfo.networkId=%{public}.5s", localDeviceInfo.networkId);
     auto udid = GetUdidByNetworkId(localDeviceInfo.networkId);
     if (udid.empty()) {
-        LOGE("remote GetUdidByNetworkId failed");
+        LOGE("remote GetUdidByNetworkId failed, networkId=%{public}.5s", localDeviceInfo.networkId);
         return ERR_GET_UDID;
     }
     return GetDfsVersion(udid, packageName, dfsVersion, false);
 }
 
 int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
-    const std::string &networkId, DfsVersion &dfsVersion, VersionPackageNames packageName)
+    const std::string &networkId, DfsVersion &dfsVersion, VersionPackageName packageName)
 {
     if (networkId.empty()) {
-        LOGE("GetDfsVersionFromNetworkId networkId is empty");
+        LOGE("networkId: %{public}.5s is empty", networkId.c_str());
         return ERR_NULLPTR;
     }
     auto udid = GetUdidByNetworkId(networkId);
     if (udid.empty()) {
-        LOGE("remote GetUdidByNetworkId failed");
+        LOGE("remote GetUdidByNetworkId failed, networkId=%{public}.5s ", networkId.c_str());
         return ERR_GET_UDID;
     }
     return GetDfsVersion(udid, packageName, dfsVersion, true);
 }
 
 int32_t DeviceProfileAdapter::GetDfsVersion(const std::string &udid,
-    VersionPackageNames packageName, DfsVersion &dfsVersion, bool IsVerifyCode)
+    VersionPackageName packageName, DfsVersion &dfsVersion, bool IsVerifyCode)
 {
     std::string appInfoJsonData;
     int32_t ret = GetAppInfoFromDP(udid, DFS_SERVICE_ID, appInfoJsonData);
     if (ret == DistributedDeviceProfile::DP_NOT_FOUND_FAIL) {
-        std::string dmsAppInfoJsonData;
         auto dmsResult = GetAppInfoFromDP(udid, DMS_SERVICE_ID, appInfoJsonData);
         if (IsVerifyCode && dmsResult == DistributedDeviceProfile::DP_NOT_FOUND_FAIL) {
             LOGW("The DP version of the remote device is later, return local dfsVersion.");
@@ -257,7 +258,7 @@ bool DeviceProfileAdapter::ParseDfsVersion(const std::string &dfsVersionData, Df
 int32_t DeviceProfileAdapter::ParseAppInfo(const std::string &appInfoJsonData, std::string &packageNamesData,
     std::string &versionsData)
 {
-    if (appInfoJsonData.empty()) {
+    if (appInfoJsonData.empty() || appInfoJsonData.size() > MAX_JSON_SIZE) {
         return ERR_DFS_VERSION_EMPTY;
     }
     nlohmann::json appInfoJson = nlohmann::json::parse(appInfoJsonData.c_str(), nullptr, false);
@@ -278,7 +279,7 @@ int32_t DeviceProfileAdapter::ParseAppInfo(const std::string &appInfoJsonData, s
 }
 
 int32_t DeviceProfileAdapter::GetDfsVersionDataFromAppInfo(const std::string &packageNamesData,
-    const std::string &versionsData, VersionPackageNames packageName, std::string &dfsVersionData)
+    const std::string &versionsData, VersionPackageName packageName, std::string &dfsVersionData)
 {
     std::string packageNameString = GetPackageName(packageName);
     if (packageNamesData.empty() || versionsData.empty() || packageNameString.empty()) {
@@ -316,19 +317,13 @@ int32_t DeviceProfileAdapter::GetAppInfoFromDP(const std::string &udid,
 
 bool DeviceProfileAdapter::CompareDfsVersion(const DfsVersion &dfsVersion, const DfsVersion &thresholdDfsVersion)
 {
-    if (dfsVersion.majorVersionNum < thresholdDfsVersion.majorVersionNum) {
-        return true;
+    if (dfsVersion.majorVersionNum != thresholdDfsVersion.majorVersionNum) {
+        return dfsVersion.majorVersionNum < thresholdDfsVersion.majorVersionNum;
     }
-    if (dfsVersion.majorVersionNum == thresholdDfsVersion.majorVersionNum &&
-        dfsVersion.minorVersionNum < thresholdDfsVersion.minorVersionNum) {
-        return true;
+    if (dfsVersion.minorVersionNum != thresholdDfsVersion.minorVersionNum) {
+        return dfsVersion.minorVersionNum < thresholdDfsVersion.minorVersionNum;
     }
-    if (dfsVersion.majorVersionNum == thresholdDfsVersion.majorVersionNum &&
-        dfsVersion.minorVersionNum == thresholdDfsVersion.minorVersionNum &&
-        dfsVersion.featureVersionNum < thresholdDfsVersion.featureVersionNum) {
-        return true;
-    }
-    return false;
+    return dfsVersion.featureVersionNum < thresholdDfsVersion.featureVersionNum;
 }
 
 std::string DeviceProfileAdapter::GetUdidByNetworkId(const std::string &networkId)
