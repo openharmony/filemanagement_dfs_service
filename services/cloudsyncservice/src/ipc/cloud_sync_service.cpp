@@ -27,6 +27,7 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
+#include "ipc_skeleton.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "net_conn_callback_observer.h"
@@ -1104,4 +1105,18 @@ int32_t CloudSyncService::BatchCleanFile(const std::vector<CleanFileInfoObj> &fi
     return ret;
 }
 
+int32_t CloudSyncService::CallbackEnter(uint32_t code)
+{
+    if (!IPCSkeleton::IsLocalCalling()) {
+        LOGE("remote requeset is not allowed, cmd:%{public}u", code);
+        return ERR_TRANSACTION_FAILED;
+    }
+
+    return ERR_NONE;
+}
+
+int32_t CloudSyncService::CallbackExit(uint32_t code, int32_t result)
+{
+    return ERR_NONE;
+}
 } // namespace OHOS::FileManagement::CloudSync
