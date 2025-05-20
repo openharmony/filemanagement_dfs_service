@@ -33,7 +33,7 @@ using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
 std::shared_mutex SoftBusFileReceiveListener::rwMtx_;
 std::condition_variable_any SoftBusFileReceiveListener::cv_;
-const static int32_t WAIT_TIME_MS = 2 * 1000;
+const static int32_t WAIT_TIME_MS = 10 * 1000;
 void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
