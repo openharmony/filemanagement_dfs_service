@@ -83,7 +83,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 {
     LOGE("FileCopyManager Copy start ");
     if (srcUri.empty() || destUri.empty()) {
-        return E_NOENT;
+        return ERR_BAD_VALUE;
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
@@ -106,7 +106,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (!CheckPath(infos)) {
         LOGE("invalid srcPath : %{private}s, destPath: %{private}s", GetAnonyString(infos->srcPath).c_str(),
             GetAnonyString(infos->destPath).c_str());
-        return E_NOENT;
+        return ERR_BAD_VALUE;
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
@@ -260,7 +260,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
     LOGI("ExecLocal not support this srcUri and destUri");
-    return E_NOENT;
+    return ERR_BAD_VALUE;
 }
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
