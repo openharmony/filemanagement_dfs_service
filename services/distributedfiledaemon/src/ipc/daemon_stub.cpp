@@ -98,10 +98,6 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin OpenP2PConnection");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[HandleOpenP2PConnection] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
@@ -135,10 +131,6 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
 int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin CloseP2PConnection");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[HandleCloseP2PConnection] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
@@ -172,10 +164,6 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
 int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("DaemonStub::Begin OpenP2PConnectionEx");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     std::string networkId;
     if (!data.ReadString(networkId)) {
         LOGE("read networkId failed");
@@ -200,10 +188,6 @@ int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel
 int32_t DaemonStub::HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("DaemonStub::Begin CloseP2PConnection.");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     std::string networkId;
     if (!data.ReadString(networkId)) {
         LOGE("read networkId failed");
@@ -219,10 +203,6 @@ int32_t DaemonStub::HandleCloseP2PConnectionEx(MessageParcel &data, MessageParce
 int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("DaemonStub::Begin CloseP2PConnection.");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -269,10 +249,6 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
 int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleRequestSendFile");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -307,6 +283,10 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
 int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleGetRemoteCopyInfo");
+    if (!IPCSkeleton::IsLocalCalling()) {
+        LOGE("function is only allowed to be called locally.");
+        return E_ALLOW_LOCAL_ONLY;
+    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -343,10 +323,6 @@ int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &
 int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleCancelCopyTask");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     std::string sessionName;
     if (!data.ReadString(sessionName)) {
         LOGE("read sessionName failed");
@@ -358,10 +334,6 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
 int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin RegisterRecvCallback");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
@@ -392,10 +364,6 @@ int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParce
 int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin UnRegisterRecvCallback");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
@@ -426,10 +394,6 @@ int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessagePar
 int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin PushAsset");
-    if (!IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
-        return E_ALLOW_LOCAL_ONLY;
-    }
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != DATA_UID) {
         LOGE("Permission denied, caller is not data!");
