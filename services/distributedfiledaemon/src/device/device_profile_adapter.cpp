@@ -31,11 +31,11 @@ using namespace OHOS::DistributedDeviceProfile;
 using namespace OHOS::FileManagement;
  
 namespace {
-constexpr const char* DFS_SERVICE_ID = "distributedfiledaemon";
-constexpr const char* DMS_SERVICE_ID = "dmsfwk_svr_id";
-constexpr const char* DFS_CHAR_ID = "static_capability";
-constexpr const char* PACKAGE_NAMES = "packageNames";
-constexpr const char* VERSIONS = "versions";
+constexpr const char *DFS_SERVICE_ID = "distributedfiledaemon";
+constexpr const char *DMS_SERVICE_ID = "dmsfwk_svr_id";
+constexpr const char *DFS_CHAR_ID = "static_capability";
+constexpr const char *PACKAGE_NAMES = "packageNames";
+constexpr const char *VERSIONS = "versions";
 constexpr const char *SWITCH_ID = "SwitchStatus_Distributed_Super_Manager";
 constexpr const char *CHARACTER_ID = "SwitchStatus";
 constexpr const char *STATUS_ENABLE = "1";
