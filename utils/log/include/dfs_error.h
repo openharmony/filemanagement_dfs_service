@@ -57,7 +57,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_SYSTEM_LOAD_OVER,
     E_EXCEED_MAX_SIZE,
     E_ILLEGAL_URI,
-    E_ALLOW_LOCAL_ONLY,
+    E_ALLOW_LOCAL_CALL_ONLY,
 
     /* data syncer */
     E_CLOUD_SDK,
