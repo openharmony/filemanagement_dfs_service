@@ -192,6 +192,16 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
+        int32_t userId = 0;
+        if (dataSyncManager_->GetUserId(userId) != E_OK) {
+            return;
+        }
+        string oldPath = "/data/service/el2/" + to_string(userId) + "/hmdfs/cache/cloud_cache/pread_cache";
+        if (access(oldPath.c_str(), F_OK) == 0) {
+            if (!ForceRemoveDirectory(oldPath)) {
+                LOGE("rm old video cache path fail, err: %{public}d", errno);
+            }
+        }
     });
 }
 
