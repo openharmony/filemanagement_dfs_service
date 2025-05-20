@@ -28,6 +28,7 @@ namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t UID = 1009;
 const int32_t DATA_UID = 3012;
+
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
@@ -44,7 +45,7 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)] =
         &DaemonStub::HandlePrepareSession;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK)] =
-            &DaemonStub::HandleCancelCopyTask;
+        &DaemonStub::HandleCancelCopyTask;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)] =
         &DaemonStub::HandleRequestSendFile;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -56,8 +57,7 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK)] =
         &DaemonStub::HandleUnRegisterRecvCallback;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET)] =
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET)] =
         &DaemonStub::HandlePushAsset;
 }
 
@@ -65,6 +65,12 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return DFS_DAEMON_DESCRIPTOR_IS_EMPTY;
+    }
+    if (code != static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE) &&
+        code != static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO) &&
+        !IPCSkeleton::IsLocalCalling()) {
+        LOGE("function is only allowed to be called locally.");
+        return E_ALLOW_LOCAL_CALL_ONLY;
     }
     switch (code) {
         case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION):
@@ -202,6 +208,7 @@ int32_t DaemonStub::HandleCloseP2PConnectionEx(MessageParcel &data, MessageParce
 
 int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &reply)
 {
+    LOGI("DaemonStub::Begin HandlePrepareSession.");
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -247,6 +254,7 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
 
 int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &reply)
 {
+    LOGI("Begin HandleRequestSendFile");
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -280,6 +288,7 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
 
 int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
 {
+    LOGI("Begin HandleGetRemoteCopyInfo");
     auto uid = IPCSkeleton::GetCallingUid();
     if (uid != UID) {
         LOGE("Permission denied, caller is not dfs!");
@@ -315,6 +324,7 @@ int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &
 
 int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &reply)
 {
+    LOGI("Begin HandleCancelCopyTask");
     std::string sessionName;
     if (!data.ReadString(sessionName)) {
         LOGE("read sessionName failed");
@@ -425,6 +435,6 @@ int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
     }
     return res;
 }
-} // namespace DistributedFile
-} // namespace Storage
-} // namespace OHOS
+}  // namespace DistributedFile
+}  // namespace Storage
+}  // namespace OHOS
