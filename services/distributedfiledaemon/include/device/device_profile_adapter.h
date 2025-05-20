@@ -51,7 +51,7 @@ public:
         VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
         const DfsVersion& thresholdDfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
-    int32_t GetDfsVersionFromNetworkId(const std::string &networketId,
+    int32_t GetDfsVersionFromNetworkId(const std::string &networkId,
         DfsVersion &dfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool CompareDfsVersion(const DfsVersion &dfsVersion, const DfsVersion &thresholdDfsVersion);
     int32_t GetDeviceStatus(const std::string &networkId, bool &status);
