@@ -20,6 +20,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CleanOptions;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.DentryFileInfoObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.OptimizeSpaceOptions;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
+option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
 {

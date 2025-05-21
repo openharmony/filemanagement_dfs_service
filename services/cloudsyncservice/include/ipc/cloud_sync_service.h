@@ -40,6 +40,8 @@ class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub
 public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudSyncService() = default;
+    int32_t CallbackEnter(uint32_t code) override;
+    int32_t CallbackExit(uint32_t code, int32_t result) override;
     ErrCode UnRegisterCallbackInner(const std::string &bundleName = "") override;
     ErrCode UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
     ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
