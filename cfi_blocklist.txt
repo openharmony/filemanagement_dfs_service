@@ -25,7 +25,6 @@ type:*OHOS::FileManagement::CloudSync::ICloudSyncService*
 type:*OHOS::Storage::DistributedFile::IDaemon*
 type:*OHOS::ISystemAbilityManager*
 type:*OHOS::ThreadPool*
-type:*OHOS::Media::MediaFileUri*
 type:*OHOS::IPCSkeleton*
 type:*OHOS::Security::AccessToken::AccessTokenKit*
 type:*OHOS::NativeRdb*

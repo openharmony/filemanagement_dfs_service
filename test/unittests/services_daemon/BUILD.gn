@@ -82,11 +82,6 @@ ohos_unittest("fuse_manager_test") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
@@ -151,11 +146,6 @@ ohos_unittest("cloud_daemon_statistic_test") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
-  }
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
   }
 
   use_exceptions = true
@@ -245,11 +235,6 @@ ohos_unittest("cloud_daemon_test") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
-  }
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
   }
 
   use_exceptions = true

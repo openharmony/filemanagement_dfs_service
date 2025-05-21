@@ -132,11 +132,6 @@ ohos_unittest("file_operations_cloud_test") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   use_exceptions = true
 }
 
@@ -191,10 +186,6 @@ ohos_unittest("database_manager_test") {
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-  }
 
   defines = [
     "private=public",

@@ -91,11 +91,6 @@ ohos_shared_library("cloudsync_kit_inner") {
     "${utils_path}:libdistributedfiledentry",
   ]
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

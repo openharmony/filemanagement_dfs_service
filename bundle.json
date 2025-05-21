@@ -56,7 +56,6 @@
           "json",
           "napi",
           "preferences",
-          "media_library",
           "netmanager_base",
           "relational_store",
           "safwk",

@@ -73,10 +73,6 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-  }
 }
 
 group("fuzztest") {
