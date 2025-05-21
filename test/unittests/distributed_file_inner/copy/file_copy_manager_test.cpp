@@ -85,13 +85,13 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
     string dstUri = "/data/test/test.txt";
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, listener_);
-    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    EXPECT_EQ(ret, E_NOENT);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
-    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    EXPECT_EQ(ret, E_NOENT);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", "", listener_);
-    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    EXPECT_EQ(ret, E_NOENT);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
     EXPECT_EQ(ret, FILE_NOT_FOUND);
@@ -101,7 +101,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 create dir err";
     }
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(remoteUri, "", listener_);
-    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    EXPECT_EQ(ret, E_NOENT);
     if (!ForceRemoveDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 remove dir err";
     }
@@ -147,7 +147,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
     close(fd);
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    EXPECT_EQ(ret, E_NOENT);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
 }
