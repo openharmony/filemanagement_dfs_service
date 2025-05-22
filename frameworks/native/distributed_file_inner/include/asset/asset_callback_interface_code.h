@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ enum class AssetCallbackInterfaceCode {
     ASSET_CALLBACK_ON_START = 0,
     ASSET_CALLBACK_ON_FINISHED,
     ASSET_CALLBACK_ON_SEND_RESULT,
-    ASSET_CALLBACK_ON_PROCESS,
+    ASSET_CALLBACK_ON_PROGRESS,
 };
 } // namespace DistributedFile
 } // namespace Storage

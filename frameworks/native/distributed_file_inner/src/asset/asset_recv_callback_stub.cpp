@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -27,8 +27,8 @@ AssetRecvCallbackStub::AssetRecvCallbackStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START)] =
         &AssetRecvCallbackStub::HandleOnStart;
-    opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROCESS)] =
-        &AssetRecvCallbackStub::HandleOnRecvProcess;
+    opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROGRESS)] =
+        &AssetRecvCallbackStub::HandleOnRecvProgress;
     opToInterfaceMap_[static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_FINISHED)] =
         &AssetRecvCallbackStub::HandleOnFinished;
 }
@@ -80,7 +80,7 @@ int32_t AssetRecvCallbackStub::HandleOnStart(MessageParcel &data, MessageParcel 
     return res;
 }
 
-int32_t AssetRecvCallbackStub::HandleOnRecvProcess(MessageParcel &data, MessageParcel &reply)
+int32_t AssetRecvCallbackStub::HandleOnRecvProgress(MessageParcel &data, MessageParcel &reply)
 {
     std::string srcNetworkId;
     if (!data.ReadString(srcNetworkId)) {
@@ -106,9 +106,9 @@ int32_t AssetRecvCallbackStub::HandleOnRecvProcess(MessageParcel &data, MessageP
         return E_INVAL_ARG;
     }
 
-    int32_t res = OnRecvProcess(srcNetworkId, assetObj, totalBytes, processBytes);
+    int32_t res = OnRecvProgress(srcNetworkId, assetObj, totalBytes, processBytes);
     if (res != E_OK) {
-        LOGE("OnRecvProcess call failed");
+        LOGE("OnRecvProgress call failed");
         return E_BROKEN_IPC;
     }
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -102,20 +102,20 @@ void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
     }
 }
 
-void AssetCallbackManager::NotifyAssetRecvProcess(const std::string &srcNetworkId,
-                                                  const sptr<AssetObj> &assetObj,
-                                                  uint64_t total,
-                                                  uint64_t processed)
+void AssetCallbackManager::NotifyAssetRecvProgress(const std::string &srcNetworkId,
+                                                   const sptr<AssetObj> &assetObj,
+                                                   uint64_t total,
+                                                   uint64_t processed)
 {
-    LOGI("NotifyAssetRecvProcess.");
+    LOGD("NotifyAssetRecvProgress.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (const auto &callback : recvCallbackList_) {
         if (callback == nullptr) {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
                  assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
-        } else {
-            callback->OnRecvProcess(srcNetworkId, assetObj, total, processed);
+            return;
         }
+        callback->OnRecvProgress(srcNetworkId, assetObj, total, processed);
     }
 }
 

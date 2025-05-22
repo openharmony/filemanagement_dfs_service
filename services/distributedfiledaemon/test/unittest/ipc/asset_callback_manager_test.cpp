@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,7 +123,7 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_SendCallback_0100, TestS
 
 /**
  * @tc.name: AssetCallbackManager_NotifyAssetRecv_0100
- * @tc.desc: verify NotifyAssetRecvStart, NotifyAssetRecvProcess and NotifyAssetRecvFinished.
+ * @tc.desc: verify NotifyAssetRecvStart, NotifyAssetRecvProgress and NotifyAssetRecvFinished.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
@@ -133,7 +133,7 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetRecv_0100, Te
     auto recvCallback = sptr(new IAssetRecvCallbackMock());
     // OnStart OnFinished 预期只能调用一次
     EXPECT_CALL(*recvCallback, OnStart(_, _, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*recvCallback, OnRecvProcess(_, _, _, _)).Times(2)
+    EXPECT_CALL(*recvCallback, OnRecvProgress(_, _, _, _)).Times(2)
                                                          .WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*recvCallback, OnFinished(_, _, _)).WillOnce(Return(E_OK));
     try {
@@ -143,10 +143,10 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetRecv_0100, Te
             "sessionId", "dstBundleName");
 
         sptr<AssetObj> assetObj1 (new (std::nothrow) AssetObj());
-        AssetCallbackManager::GetInstance().NotifyAssetRecvProcess("srcNetworkId", assetObj1, 1024, 256);
+        AssetCallbackManager::GetInstance().NotifyAssetRecvProgress("srcNetworkId", assetObj1, 1024, 256);
 
         sptr<AssetObj> assetObj2 (new (std::nothrow) AssetObj());
-        AssetCallbackManager::GetInstance().NotifyAssetRecvProcess("srcNetworkId", assetObj2, 1024, 512);
+        AssetCallbackManager::GetInstance().NotifyAssetRecvProgress("srcNetworkId", assetObj2, 1024, 512);
 
         sptr<AssetObj> assetObj3 (new (std::nothrow) AssetObj());
         AssetCallbackManager::GetInstance().NotifyAssetRecvFinished("srcNetworkId", assetObj3, 0);

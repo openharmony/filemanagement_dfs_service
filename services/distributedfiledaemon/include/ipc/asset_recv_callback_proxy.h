@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -32,10 +32,10 @@ public:
                     const std::string &destNetworkId,
                     const std::string &sessionId,
                     const std::string &destBundleName) override;
-    int32_t OnRecvProcess(const std::string &srcNetworkId,
-                          const sptr<AssetObj> &assetObj,
-                          uint64_t totalBytes,
-                          uint64_t processBytes) override;
+    int32_t OnRecvProgress(const std::string &srcNetworkId,
+                           const sptr<AssetObj> &assetObj,
+                           uint64_t totalBytes,
+                           uint64_t processBytes) override;
     int32_t OnFinished(const std::string &srcNetworkId,
                        const sptr<AssetObj> &assetObj,
                        int32_t result) override;

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -38,7 +38,7 @@ private:
     std::map<uint32_t, AssetRecvCallbackInterface> opToInterfaceMap_;
 
     int32_t HandleOnStart(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleOnRecvProcess(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOnRecvProgress(MessageParcel &data, MessageParcel &reply);
     int32_t HandleOnFinished(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace DistributedFile

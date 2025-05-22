@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ public:
     static const char* GetRecvPath();
 
     static void OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt);
-    static void OnRecvAssetProcess(int32_t socketId, const char **fileList, uint64_t bytesTotal, uint64_t bytesUpload);
+    static void OnRecvAssetProgress(int32_t socketId, const char **fileList, uint64_t bytesTotal, uint64_t bytesUpload);
     static void OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
     static void OnRecvAssetError(int32_t socketId, int32_t errorCode, const char **fileList, int32_t fileCnt);
 

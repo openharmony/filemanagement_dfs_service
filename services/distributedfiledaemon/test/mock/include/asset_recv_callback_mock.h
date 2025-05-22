@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ public:
                          const std::string &dstNetworkId,
                          const std::string &sessionId,
                          const std::string &dstBundleName));
-    MOCK_METHOD4(OnRecvProcess,
+    MOCK_METHOD4(OnRecvProgress,
                  int32_t(const std::string &srcNetworkId,
                          const sptr<AssetObj> &assetObj,
                          uint64_t totalBytes,

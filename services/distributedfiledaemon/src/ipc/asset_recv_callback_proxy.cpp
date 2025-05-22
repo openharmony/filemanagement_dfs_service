@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -71,10 +71,10 @@ int32_t AssetRecvCallbackProxy::OnStart(const std::string &srcNetworkId,
     return reply.ReadInt32();
 }
 
-int32_t AssetRecvCallbackProxy::OnRecvProcess(const std::string &srcNetworkId,
-                                              const sptr<AssetObj> &assetObj,
-                                              uint64_t totalBytes,
-                                              uint64_t processBytes)
+int32_t AssetRecvCallbackProxy::OnRecvProgress(const std::string &srcNetworkId,
+                                               const sptr<AssetObj> &assetObj,
+                                               uint64_t totalBytes,
+                                               uint64_t processBytes)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -108,7 +108,7 @@ int32_t AssetRecvCallbackProxy::OnRecvProcess(const std::string &srcNetworkId,
         return E_BROKEN_IPC;
     }
     int32_t ret = remote->SendRequest(
-        static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROCESS), data, reply, option);
+        static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_PROGRESS), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno:%{public}d", errno);
         return E_BROKEN_IPC;
