@@ -113,7 +113,7 @@ void AssetCallbackManager::NotifyAssetRecvProgress(const std::string &srcNetwork
         if (callback == nullptr) {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
                  assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
-            return;
+            continue;
         }
         callback->OnRecvProgress(srcNetworkId, assetObj, total, processed);
     }
