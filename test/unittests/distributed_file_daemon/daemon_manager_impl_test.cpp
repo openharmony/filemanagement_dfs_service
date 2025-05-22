@@ -359,11 +359,11 @@ HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
 
         dstUri = "../../dstUri";
         ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
+        EXPECT_EQ(ret, EINVAL);
 
         srcUri = "../../srcUri";
         ret = distributedDaemonManagerImpl_->Cancel(srcUri, dstUri);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CancelTest ERROR";
@@ -386,15 +386,15 @@ HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
         std::string srcUri = "srcUri";
         std::string dstUri = "dstUri";
         int32_t ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, FILE_NOT_FOUND);
+        EXPECT_EQ(ret, EINVAL);
 
         dstUri = "../dstUri";
         ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
+        EXPECT_EQ(ret, EINVAL);
 
         srcUri = "../srcUri";
         ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CopyTest ERROR";

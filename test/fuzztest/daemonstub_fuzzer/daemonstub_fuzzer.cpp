@@ -84,6 +84,11 @@ public:
         return 0;
     }
 
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override
+    {
+        return 0;
+    }
+
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &remoteDeviceId,

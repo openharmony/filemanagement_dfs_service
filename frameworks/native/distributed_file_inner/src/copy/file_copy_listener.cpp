@@ -114,7 +114,7 @@ void FileCopyLocalListener::AddListenerFile(const std::string &destPath, uint32_
     std::lock_guard<std::mutex> lock(wdsMutex_);
     int newWd = inotify_add_watch(notifyFd_, destPath.c_str(), mode);
     if (newWd < 0) {
-        LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d", newWd);
+        LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d, errno = %{public}d", newWd, errno);
         return;
     }
     std::shared_ptr<ReceiveInfo> receiveInfo = std::make_shared<ReceiveInfo>();

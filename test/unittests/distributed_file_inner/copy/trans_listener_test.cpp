@@ -258,7 +258,7 @@ HWTEST_F(TransListenerTest, TransListener_Cancel_0001, TestSize.Level1)
 
     // Attempt to cancel operation and verify expected failure
     // (Expecting failure because test environment lacks real proxy)
-    int32_t ret = ptr->Cancel();
+    int32_t ret = ptr->Cancel(srcuri, desturi);
     EXPECT_EQ(ret, E_SA_LOAD_FAILED);
 
     GTEST_LOG_(INFO) << "TransListener_Cancel_0001 End";
@@ -452,7 +452,7 @@ HWTEST_F(TransListenerTest, TransListener_0009, TestSize.Level1)
     // Wait for operation result and verify success
     int32_t ret = ptr->WaitForCopyResult();
     t.join();                // Ensure thread completes
-    EXPECT_EQ(ret, SUCCESS); // Expect success status
+    EXPECT_EQ(ret, DFS_SUCCESS); // Expect success status
 
     GTEST_LOG_(INFO) << "TransListener_0009 End";
 }
@@ -479,7 +479,7 @@ HWTEST_F(TransListenerTest, TransListener_0010, TestSize.Level1)
     // Wait for operation result and verify failure
     int32_t ret = ptr->WaitForCopyResult();
     t.join();               // Ensure thread completes
-    EXPECT_EQ(ret, FAILED); // Expect failure status
+    EXPECT_EQ(ret, DFS_FAILED); // Expect failure status
 
     GTEST_LOG_(INFO) << "TransListener_0010 End";
 }

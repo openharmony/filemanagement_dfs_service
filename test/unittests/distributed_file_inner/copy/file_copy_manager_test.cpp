@@ -85,23 +85,23 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
     string dstUri = "/data/test/test.txt";
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, listener_);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", "", listener_);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
-    EXPECT_EQ(ret, FILE_NOT_FOUND);
+    EXPECT_EQ(ret, EINVAL);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 create dir err";
     }
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(remoteUri, "", listener_);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, EINVAL);
     if (!ForceRemoveDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 remove dir err";
     }
@@ -147,7 +147,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
     close(fd);
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, E_NOENT);
+    EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
 }
@@ -427,7 +427,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level1)
     int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate the file descriptor is opened successfully
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 1);
     EXPECT_GE(srcFd, -1); // Expect a valid file descriptor
 
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0001 End";
@@ -457,7 +457,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level1)
     int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate the file descriptor is opened successfully
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, 1);
     EXPECT_GE(srcFd, -1); // Expect a valid file descriptor
 
     // Clean up the mock file
@@ -774,7 +774,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level1)
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
     auto res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopyDirFunc(srcPath, dstPath, infos);
-    EXPECT_EQ(res, -1); // -1: err code
+    EXPECT_EQ(res, EINVAL);
 
     std::string tmpSrcPath = "/test/CopyDirFunc/";
     res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopyDirFunc(tmpSrcPath, dstPath, infos);

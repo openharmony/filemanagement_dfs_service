@@ -436,8 +436,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
 
     // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_SA_LOAD_FAILED);
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
 
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_003 end";
 }
@@ -461,7 +460,6 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Leve
 
     // Test case 4: CreateSessionServer succeeds, authority is media or docs, but Copy fails
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
 
     EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_004 end";
@@ -555,7 +553,6 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Le
 
     // Mock PrepareSessionInner to return success
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
 
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
     EXPECT_EQ(prepareSessionBlock->GetValue(), E_OK);

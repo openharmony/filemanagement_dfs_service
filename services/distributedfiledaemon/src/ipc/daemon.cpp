@@ -31,6 +31,7 @@
 #include "connection_detector.h"
 #include "connect_count/connect_count.h"
 #include "copy/file_size_utils.h"
+#include "copy/remote_file_copy_manager.h"
 #include "device/device_manager_agent.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
@@ -70,9 +71,21 @@ const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
+constexpr int32_t DEFAULT_USER_ID = 100;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
+
+static int32_t QueryActiveUserId()
+{
+    std::vector<int32_t> ids;
+    ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (errCode != NO_ERROR || ids.empty()) {
+        LOGE("Query active userid failed, errCode: %{public}d, ", errCode);
+        return DEFAULT_USER_ID;
+    }
+    return ids[0];
+}
 
 void Daemon::PublishSA()
 {
@@ -172,6 +185,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
+    RemoveDfsDelayTask(deviceInfo.networkId);
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     sptr<IFileDfsListener> listener = nullptr;
     auto ret = ConnectionCount(deviceInfo);
@@ -237,8 +251,8 @@ int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo)
     LOGI("CleanUp start");
     auto networkId = std::string(deviceInfo.networkId);
     if (!ConnectCount::GetInstance()->CheckCount(networkId)) {
-        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
-        LOGI("Close P2P Connection result %{public}d", ret);
+        auto ret = SendDfsDelayTask(networkId);
+        LOGI("Close P2P Connection");
         return ret;
     }
     return E_OK;
@@ -302,6 +316,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         return E_INVAL_ARG_NAPI;
     }
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
+    RemoveDfsDelayTask(networkId);
     int32_t ret = ConnectionAndMount(deviceInfo, networkId, callingTokenId, remoteReverseObj);
     if (ret != NO_ERROR) {
         CleanUp(deviceInfo);
@@ -388,19 +403,23 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
     return ret;
 }
 
-int32_t Daemon::PrepareSession(const std::string &srcUri,
-                               const std::string &dstUri,
-                               const std::string &srcDeviceId,
-                               const sptr<IRemoteObject> &listener,
-                               HmdfsInfo &info)
+int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
+    const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
-    LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
+    auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(srcUri, dstUri,
+        listener, QueryActiveUserId(), info.copyPath);
+    LOGI("InnerCopy end, ret = %{public}d", ret);
+    return ret;
+}
+
+int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &srcDeviceId,
+    const sptr<IRemoteObject> &listener, HmdfsInfo &info)
+{
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
         return E_NULLPTR;
     }
-
     auto daemon = GetRemoteSA(srcDeviceId);
     if (daemon == nullptr) {
         LOGE("Daemon is nullptr");
@@ -653,6 +672,12 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     return E_OK;
 }
 
+int32_t Daemon::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, dstUri);
+    return E_OK;
+}
+
 void Daemon::DeleteSessionAndListener(const std::string &sessionName)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
@@ -776,6 +801,54 @@ void Daemon::StartEventHandler()
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
     auto runer = AppExecFwk::EventRunner::Create(IDaemon::SERVICE_NAME.c_str());
     eventHandler_ = std::make_shared<DaemonEventHandler>(runer, daemonExecute_);
+}
+
+int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
+{
+    LOGI("Daemon::SendDfsDelayTask enter.");
+    constexpr int32_t DEFAULT_DELAY_INTERVAL = 120 * 1000; // 120s
+    if (networkId.empty()) {
+        LOGE("networkId is empty.");
+        return E_NULLPTR;
+    }
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    if (eventHandler_ == nullptr) {
+        LOGE("eventHandler has not find.");
+        return E_EVENT_HANDLER;
+    }
+
+    auto executeFunc = [this, &networkId] { DisconnectDevice(networkId); };
+    bool isSucc = eventHandler_->PostTask(executeFunc, networkId, DEFAULT_DELAY_INTERVAL,
+        AppExecFwk::EventHandler::Priority::IMMEDIATE);
+    if (!isSucc) {
+        LOGE("Daemon event handler post delay disconnect device event fail.");
+        return E_EVENT_HANDLER;
+    }
+    return E_OK;
+}
+
+void Daemon::RemoveDfsDelayTask(const std::string &networkId)
+{
+    LOGI("Daemon::RemoveDfsDelayTask enter.");
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    if (eventHandler_ == nullptr) {
+        LOGE("eventHandler has not find.");
+        return;
+    }
+    eventHandler_->RemoveTask(networkId);
+}
+
+void Daemon::DisconnectDevice(const std::string &networkId)
+{
+    LOGI("Daemon::DisconnectDevice enter.");
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    auto ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (ret != 0) {
+        LOGE("strcpy for network id failed, ret is %{public}d", ret);
+        return;
+    }
+    ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+    LOGI("Daemon::DisconnectDevice result %{public}d", ret);
 }
 } // namespace DistributedFile
 } // namespace Storage

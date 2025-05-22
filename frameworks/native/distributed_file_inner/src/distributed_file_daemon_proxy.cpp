@@ -436,6 +436,38 @@ int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &sessionNam
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(dstUri)) {
+        LOGE("Failed to send dstUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK), data, reply,
+        option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t DistributedFileDaemonProxy::PushAsset(int32_t userId,
                                               const sptr<AssetObj> &assetObj,
                                               const sptr<IAssetSendCallback> &sendCallback)

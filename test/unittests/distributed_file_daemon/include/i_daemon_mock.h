@@ -87,6 +87,11 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t PushAsset(int32_t userId,
                       const sptr<AssetObj> &assetObj,
                       const sptr<IAssetSendCallback> &sendCallback)
