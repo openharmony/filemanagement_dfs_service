@@ -18,6 +18,7 @@
 #include "cloud_sync_service.h"
 #include "cloud_sync_common.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper_mock.h"
 #include "service_callback_mock.h"
 #include "utils_log.h"
 #include "i_cloud_download_callback_mock.h"
@@ -25,6 +26,7 @@
 namespace OHOS {
 namespace FileManagement::CloudSync {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
@@ -36,6 +38,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -47,10 +50,14 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     }
     std::cout << "SetUpTestCase" << std::endl;
     g_servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
+    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
+    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
 {
+    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    dfsuAccessToken_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -719,6 +726,7 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest001, TestSize.Level1)
     try {
         EXPECT_NE(g_servicePtr_, nullptr);
         BundleNameUserInfo userInfo;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
         int32_t ret = g_servicePtr_->GetBundleNameUserInfo(userInfo);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
