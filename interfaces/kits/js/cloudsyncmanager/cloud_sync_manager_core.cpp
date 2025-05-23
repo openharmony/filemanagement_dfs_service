@@ -62,10 +62,10 @@ FsResult<void> CloudSyncManagerCore::DoNotifyDataChange(const string &accountId,
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncManagerCore::DoDisableCloud(const string &accoutId)
+FsResult<void> CloudSyncManagerCore::DoDisableCloud(const string &accountId)
 {
     LOGI("DisableCloud");
-    int32_t result = CloudSyncManager::GetInstance().DisableCloud(accoutId);
+    int32_t result = CloudSyncManager::GetInstance().DisableCloud(accountId);
     if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
         LOGE("DisableCloud failed. ret = %{public}d", result);
         return FsResult<void>::Error(Convert2ErrNum(result));
@@ -74,10 +74,10 @@ FsResult<void> CloudSyncManagerCore::DoDisableCloud(const string &accoutId)
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncManagerCore::DoEnableCloud(const string &accoutId, const SwitchDataObj &switchData)
+FsResult<void> CloudSyncManagerCore::DoEnableCloud(const string &accountId, const SwitchDataObj &switchData)
 {
     LOGI("EnableCloud");
-    int32_t result = CloudSyncManager::GetInstance().EnableCloud(accoutId, switchData);
+    int32_t result = CloudSyncManager::GetInstance().EnableCloud(accountId, switchData);
     if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
         LOGE("EnableCloud failed. ret = %{public}d", result);
         return FsResult<void>::Error(Convert2ErrNum(result));
@@ -86,10 +86,10 @@ FsResult<void> CloudSyncManagerCore::DoEnableCloud(const string &accoutId, const
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudSyncManagerCore::DoClean(const std::string &accoutId, const CleanOptions &cleanOptions)
+FsResult<void> CloudSyncManagerCore::DoClean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
     LOGI("Clean");
-    int32_t result = CloudSyncManager::GetInstance().Clean(accoutId, cleanOptions);
+    int32_t result = CloudSyncManager::GetInstance().Clean(accountId, cleanOptions);
     if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
         LOGE("Clean failed. ret = %{public}d", result);
         return FsResult<void>::Error(Convert2ErrNum(result));

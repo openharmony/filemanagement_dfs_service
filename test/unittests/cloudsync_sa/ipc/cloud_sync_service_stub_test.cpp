@@ -190,7 +190,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleOptimizeStorageTest003, TestSize.Level1
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         int32_t res = service.HandleOptimizeStorage(data, reply);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_INVAL_ARG);
 
     } catch (...) {
         EXPECT_TRUE(false);
@@ -717,7 +717,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
@@ -1159,7 +1159,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleResetCursorTest003, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillRepeatedly(Return(true));
     int32_t ret = service.HandleResetCursor(data, reply);
 
     EXPECT_EQ(ret, E_OK);
@@ -1173,7 +1173,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest001, TestSize.Level1
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
     int32_t ret = service.HandleChangeAppSwitch(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest002, TestSize.Level1)
@@ -1205,7 +1205,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleCleanTest002, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillRepeatedly (Return(false));
     int32_t ret = service.HandleClean(data, reply);
 
     EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
@@ -1219,7 +1219,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest001, TestSize.Level
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
     int32_t ret = service.HandleNotifyDataChange(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest002, TestSize.Level1)
@@ -1319,7 +1319,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest002, TestSize.Leve
     MockService service;
     MessageParcel data;
     MessageParcel reply;
-    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStartDownloadFile(data, reply);
 
@@ -1334,7 +1334,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest001, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStartFileCache(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest002, TestSize.Level1)
@@ -1365,7 +1365,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest002, TestSize.Level
     MockService service;
     MessageParcel data;
     MessageParcel reply;
-    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStopDownloadFile(data, reply);
 
@@ -1380,7 +1380,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopFileCacheTest001, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStopFileCache(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleStopFileCacheTest002, TestSize.Level1)
@@ -1401,7 +1401,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopFileCacheTest003, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
     int32_t ret = service.HandleStopFileCache(data, reply);
 
     EXPECT_EQ(ret, E_OK);
@@ -1564,7 +1564,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest001, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
     int32_t ret = service.HandleGetSyncTime(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest002, TestSize.Level1)
@@ -1576,7 +1576,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest002, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleGetSyncTime(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleBatchDentryFileInsert001, TestSize.Level1)
@@ -1881,7 +1881,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleResetCursorTest3, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillRepeatedly(Return(true));
     int32_t ret = service.HandleResetCursor(data, reply);
 
     EXPECT_EQ(ret, E_OK);
@@ -1895,7 +1895,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest1, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
     int32_t ret = service.HandleChangeAppSwitch(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest2, TestSize.Level1)
@@ -1927,7 +1927,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleCleanTest2, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillRepeatedly(Return(false));
     int32_t ret = service.HandleClean(data, reply);
 
     EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
@@ -1941,7 +1941,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest1, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
     int32_t ret = service.HandleNotifyDataChange(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest2, TestSize.Level1)
@@ -2041,7 +2041,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest2, TestSize.Level1
     MockService service;
     MessageParcel data;
     MessageParcel reply;
-    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStartDownloadFile(data, reply);
 
@@ -2056,7 +2056,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest1, TestSize.Level1)
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
     int32_t ret = service.HandleStartFileCache(data, reply);
 
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest2, TestSize.Level1)

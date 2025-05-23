@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_ANI_H
 
 #include <ani.h>
+#include <ani_signature_builder.h>
 
 #include "cloud_sync_manager_core.h"
 

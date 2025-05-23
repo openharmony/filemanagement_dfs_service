@@ -26,6 +26,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 const int32_t E_PARAMS = 401;
+const int32_t AGING_DAYS = 30;
 
 const string &CloudSyncCore::GetBundleName() const
 {
@@ -33,19 +34,9 @@ const string &CloudSyncCore::GetBundleName() const
     return (bundleEntity) ? bundleEntity->bundleName_ : emptyString;
 }
 
-FsResult<CloudSyncCore *> CloudSyncCore::Constructor(const optional<string> &bundleName)
+FsResult<CloudSyncCore *> CloudSyncCore::Constructor()
 {
-    CloudSyncCore *cloudSyncPtr = nullptr;
-    if (bundleName.has_value()) {
-        const string &name = *bundleName;
-        if (name == "") {
-            LOGE("Failed to get bundle name");
-            return FsResult<CloudSyncCore *>::Error(E_PARAMS);
-        }
-        cloudSyncPtr = new CloudSyncCore(name);
-    } else {
-        cloudSyncPtr = new CloudSyncCore();
-    }
+    CloudSyncCore *cloudSyncPtr = new CloudSyncCore();
 
     if (cloudSyncPtr == nullptr) {
         LOGE("Failed to create CloudSyncCore object on heap.");
@@ -53,12 +44,6 @@ FsResult<CloudSyncCore *> CloudSyncCore::Constructor(const optional<string> &bun
     }
 
     return FsResult<CloudSyncCore *>::Success(move(cloudSyncPtr));
-}
-
-CloudSyncCore::CloudSyncCore(const string &bundleName)
-{
-    LOGI("init with bundle name");
-    bundleEntity = make_unique<BundleEntity>(bundleName);
 }
 
 CloudSyncCore::CloudSyncCore()
@@ -137,6 +122,47 @@ FsResult<void> CloudSyncCore::DoStop()
     return FsResult<void>::Success();
 }
 
+FsResult<void> CloudSyncCore::DoOptimizeStorage()
+{
+    LOGI("DoOptimizeStorage enter");
+    OptimizeSpaceOptions optimizeOptions {};
+    optimizeOptions.totalSize = 0;
+    optimizeOptions.agingDays = AGING_DAYS;
+
+    int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions);
+    if (ret != E_OK) {
+        LOGE("DoOptimizeStorage error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudSyncCore::DoStartOptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
+    const std::shared_ptr<CloudOptimizeCallbackMiddle> callback)
+{
+    LOGI("DoStartOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions, callback);
+    if (ret != E_OK) {
+        LOGE("DoStartOptimizeStorage error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudSyncCore::DoStopOptimizeStorage()
+{
+    LOGI("DoStopOptimizeStorage enter");
+    int32_t ret = CloudSyncManager::GetInstance().StopOptimizeStorage();
+    if (ret != E_OK) {
+        LOGE("DoStopOptimizeStorage error, result: %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
 FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
 {
     Uri uri(path);
@@ -155,7 +181,7 @@ FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
     if (xattrValueSize <= 0) {
         return FsResult<int32_t>::Error(EINVAL);
     }
-    int32_t fileStatus = stoi(xattrValue.get());
+    int32_t fileStatus = atoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
         fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
@@ -165,19 +191,5 @@ FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
     }
 
     return FsResult<int32_t>::Success(val);
-}
-
-FsResult<int64_t> CloudSyncCore::CoreGetLastSyncTime()
-{
-    LOGI("Start begin");
-    int64_t time = 0;
-    string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().GetSyncTime(time, bundleName);
-    if (ret != E_OK) {
-        LOGE("GetLastSyncTime error, result: %{public}d", ret);
-        return FsResult<int64_t>::Error(Convert2ErrNum(ret));
-    }
-    LOGI("Start GetLastSyncTime Success!");
-    return FsResult<int64_t>::Success(time);
 }
 } // namespace OHOS::FileManagement::CloudSync

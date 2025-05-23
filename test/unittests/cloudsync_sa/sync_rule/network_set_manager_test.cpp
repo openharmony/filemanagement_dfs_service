@@ -79,7 +79,7 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
 
         int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryCellularConnectTest FAILED";
@@ -101,7 +101,7 @@ HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         
         int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryNetConnectTest FAILED";

@@ -26,12 +26,12 @@ class CloudSyncManagerCore {
 public:
     static FsResult<void> DoChangeAppCloudSwitch(
         const std::string &accountId, const std::string &bundleName, bool status);
-    static FsResult<void> DoClean(const std::string &accoutId, const CleanOptions &cleanOptions);
+    static FsResult<void> DoClean(const std::string &accountId, const CleanOptions &cleanOptions);
     static FsResult<void> DoNotifyDataChange(const std::string &accountId, const std::string &bundleName);
     static FsResult<void> DoNotifyEventChange(
         int32_t userId, const std::string &eventId, const std::string &extraData);
-    static FsResult<void> DoEnableCloud(const std::string &accoutId, const SwitchDataObj &switchData);
-    static FsResult<void> DoDisableCloud(const std::string &accoutId);
+    static FsResult<void> DoEnableCloud(const std::string &accountId, const SwitchDataObj &switchData);
+    static FsResult<void> DoDisableCloud(const std::string &accountId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_CORE_H
