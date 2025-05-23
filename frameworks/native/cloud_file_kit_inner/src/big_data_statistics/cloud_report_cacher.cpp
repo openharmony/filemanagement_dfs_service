@@ -53,7 +53,7 @@ void CloudReportCacher::Init(const string &bundleName, const string &traceId, co
 void CloudReportCacher::SetScenarioCode(const string &bundleName, const uint32_t scenarioCode)
 {
     LOGI("set scenario_code : %{public}s %{public}d", bundleName.c_str(), scenarioCode);
-    if (bundleName.empty() || scenarioCode <= 0) {
+    if (bundleName.empty() || scenarioCode == 0) {
         return;
     }
     shared_ptr<ReportInfo> reportInfo;
