@@ -78,6 +78,10 @@ void CloudDiskSyncHelper::UnregisterRepeatingTriggerSync(const std::string &bund
     if (iterator != triggerInfoMap_.end()) {
         LOGD("bundleName: %{public}s, userId: %{public}d is exist", bundleName.c_str(), userId);
         auto triggerInfoPtr = iterator->second;
+        if (triggerInfoPtr == nullptr) {
+            LOGI("triggerInfoPtr is null.");
+            return;
+        }
         timer_->Unregister(triggerInfoPtr->timerId);
         triggerInfoMap_.erase(keyId);
         isSuccess = true;
