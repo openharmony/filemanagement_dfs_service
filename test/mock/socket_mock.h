@@ -30,6 +30,7 @@ public:
     virtual int32_t Bind(int32_t, const QosTV qos[], uint32_t, const ISocketListener *) = 0;
     virtual int SendFile(int32_t, const char *sFileList[], const char *dFileList[], uint32_t) = 0;
     virtual int32_t DfsBind(int32_t socket, const ISocketListener *listener) = 0;
+    virtual int32_t SetAccessInfo(int32_t socket, SocketAccessInfo accessInfo) = 0;
 public:
     static inline std::shared_ptr<DfsSocket> dfsSocket = nullptr;
 };
@@ -41,6 +42,7 @@ public:
     MOCK_METHOD4(Bind, int32_t(int32_t, const QosTV qos[], uint32_t, const ISocketListener *));
     MOCK_METHOD4(SendFile, int(int32_t, const char *sFileList[], const char *dFileList[], uint32_t));
     MOCK_METHOD2(DfsBind, int32_t(int32_t socket, const ISocketListener *listener));
+    MOCK_METHOD2(SetAccessInfo, int32_t(int32_t socket, SocketAccessInfo accessInfo));
 };
 }
 #endif

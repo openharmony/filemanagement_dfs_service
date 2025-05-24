@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -30,6 +30,7 @@
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
 #include "network/softbus/softbus_asset_send_listener.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "refbase.h"
@@ -66,6 +67,7 @@ SoftBusHandlerAsset::SoftBusHandlerAsset()
     fileReceiveListener.OnBind = SoftbusAssetRecvListener::OnAssetRecvBind;
     fileReceiveListener.OnShutdown = SoftbusAssetRecvListener::OnRecvShutdown;
     fileReceiveListener.OnFile = SoftbusAssetRecvListener::OnFile;
+    fileReceiveListener.OnNegotiate2 = SoftBusAssetSendListener::OnNegotiate2;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
     fileReceiveListener.OnQos = nullptr;
@@ -142,6 +144,10 @@ void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
 
 int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId)
 {
+    if (!SoftBusPermissionCheck::CheckSrcPermission(dstNetworkId)) {
+        LOGI("Check src permission failed");
+        return E_PERMISSION_DENIED;
+    }
     if (dstNetworkId.empty()) {
         LOGI("The parameter is empty");
         return E_OPEN_SESSION;
@@ -168,6 +174,10 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     if (socketId < E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
         return E_OPEN_SESSION;
+    }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGE("Set access info faiLed");
+        return false;
     }
 
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_ASSET_ROLE_SEND]);

@@ -342,5 +342,25 @@ int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
     return DM_OK;
 }
 #endif
+
+bool DeviceManagerImpl::CheckSrcAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSrcAccessControl(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSinkAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSinkAccessControl(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSrcIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSrcIsSameAccount(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSinkIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSinkIsSameAccount(caller, callee);
+}
 } // namespace DistributedHardware
 } // namespace OHOS

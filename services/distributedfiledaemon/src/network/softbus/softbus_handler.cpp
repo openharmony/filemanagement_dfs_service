@@ -24,6 +24,7 @@
 #include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
@@ -122,6 +123,7 @@ SoftBusHandler::SoftBusHandler()
     fileReceiveListener.OnBind = DistributedFile::SoftBusFileReceiveListener::OnCopyReceiveBind;
     fileReceiveListener.OnShutdown = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileShutdown;
     fileReceiveListener.OnFile = DistributedFile::SoftBusFileReceiveListener::OnFile;
+    fileReceiveListener.OnNegotiate2 = DistributedFile::SoftBusFileReceiveListener::OnNegotiate2;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
     fileReceiveListener.OnQos = nullptr;
@@ -183,6 +185,10 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
     const std::string &peerDevId, int32_t &socketId)
 {
+    if (!SoftBusPermissionCheck::CheckSrcPermission(peerDevId)) {
+        LOGE("Check src permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
         return FileManagement::ERR_BAD_VALUE;
@@ -199,6 +205,10 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     };
     if (!CreatSocketId(mySessionName, peerSessionName, peerDevId, socketId)) {
         return FileManagement::ERR_BAD_VALUE;
+    }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGE("Check src permission failed");
+        return false;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);
     if (ret != E_OK) {

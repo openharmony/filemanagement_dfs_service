@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -121,6 +121,20 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
         spt->OnSessionClosed(sessionId, peerDevId);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
+    }
+}
+
+bool SoftbusSessionDispatcher::OnNegotiate2(int32_t sessionId,
+    PeerSocketInfo info, SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    LOGI("OnNegotiate2 Enter sessionId = %{public}d", sessionId);
+    std::string peerSessionName(info.name);
+    auto agent = GetAgent(sessionId, peerSessionName);
+    if (auto spt = agent.lock()) {
+        return spt->OnNegotiate2(sessionId, info, peerInfo, localInfo);
+    } else {
+        LOGE("session not exist!, session id is %{public}d", sessionId);
+        return false;
     }
 }
 } // namespace DistributedFile

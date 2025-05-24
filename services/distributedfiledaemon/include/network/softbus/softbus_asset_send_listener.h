@@ -33,6 +33,8 @@ public:
     static void OnSendAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
     static void OnSendAssetError(int32_t socketId, const char **fileList, int32_t fileCnt, int32_t errorCode);
     static void OnSendShutdown(int32_t sessionId, ShutdownReason reason);
+    static bool OnNegotiate2(int32_t socket, PeerSocketInfo info,
+        SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo);
 
     static void AddFileMap(const std::string &taskId, const std::string &filePath, bool isSingleFile);
     static bool GetIsZipFile(const std::string &taskId);

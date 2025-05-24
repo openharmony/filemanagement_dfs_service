@@ -57,7 +57,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_SYSTEM_LOAD_OVER,
     E_EXCEED_MAX_SIZE,
     E_ILLEGAL_URI,
-    E_ALLOW_LOCAL_CALL_ONLY,
 
     /* data syncer */
     E_CLOUD_SDK,
@@ -104,6 +103,10 @@ enum CloudSyncServiceErrCode : ErrCode {
 
     E_SERVICE_INNER_ERROR,
     E_VERSION_FILE_NOT_EXIST,
+
+    /* dfs daemon */
+    E_ALLOW_LOCAL_CALL_ONLY,
+
     E_SOURCE_BASIC = 10000,
 
     E_THM_SOURCE_BASIC = E_SOURCE_BASIC + 1000,

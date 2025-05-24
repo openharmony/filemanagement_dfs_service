@@ -21,6 +21,8 @@
 
 #include "message_parcel.h"
 #include "iremote_broker.h"
+#include "ohos_account_kits.h"
+#include "os_account_manager.h"
 
 namespace OHOS::Storage::DistributedFile {
 class DfsDeviceOtherMethod {
@@ -28,6 +30,7 @@ public:
     virtual ~DfsDeviceOtherMethod() = default;
 public:
     virtual int QueryActiveOsAccountIds(std::vector<int32_t>& ids) = 0;
+    virtual int GetOhosAccountInfo(AccountSA::OhosAccountInfo &accountInfo) = 0;
 public:
     static inline std::shared_ptr<DfsDeviceOtherMethod> otherMethod = nullptr;
 };
@@ -35,6 +38,7 @@ public:
 class DfsDeviceOtherMethodMock : public DfsDeviceOtherMethod {
 public:
     MOCK_METHOD1(QueryActiveOsAccountIds, int(std::vector<int32_t>& ids));
+    MOCK_METHOD1(GetOhosAccountInfo, int(AccountSA::OhosAccountInfo &accountInfo));
 };
 }
 #endif
