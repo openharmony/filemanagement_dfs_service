@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "sandbox_helper.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
@@ -179,6 +180,22 @@ void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, Shutdo
     TransManager::GetInstance().NotifyFileFailed(sessionName, E_SOFTBUS_SESSION_FAILED);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+}
+
+bool SoftBusFileReceiveListener::OnNegotiate2(int32_t socket, PeerSocketInfo info,
+    SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    AccountInfo callerAccountInfo;
+    std::string networkId = info.networkId;
+    if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
+        LOGE("extraAccessInfo is nullptr.");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {
+        LOGE("FillLocalInfo failed.");
+        return false;
+    }
+    return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
 } // namespace DistributedFile
 } // namespace Storage

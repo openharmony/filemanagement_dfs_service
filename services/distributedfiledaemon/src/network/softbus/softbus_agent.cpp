@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -97,6 +97,7 @@ void SoftbusAgent::JoinDomain()
         .OnBytes = nullptr,
         .OnMessage = nullptr,
         .OnStream = nullptr,
+        .OnNegotiate2 = SoftbusSessionDispatcher::OnNegotiate2,
     };
 
     SoftbusSessionDispatcher::RegisterSessionListener(sessionName_, shared_from_this());
@@ -157,8 +158,8 @@ void SoftbusAgent::StopBottomHalf() {}
 int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    if (!IsSameAccount(info.GetCid())) {
-        return FileManagement::E_INVAL_ARG;
+    if (!SoftBusPermissionCheck::CheckSrcPermission(info.GetCid())) {
+        return FileManagement::E_PERMISSION_DENIED;
     }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
@@ -188,6 +189,10 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         LOGW("Has find socketId:%{public}d", socketId);
         return FileManagement::E_OK;
     }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGW("Fill and set accessInfo failed");
+        return FileManagement::E_CONTEXT;
+    }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
@@ -197,12 +202,17 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         Shutdown(socketId);
         return FileManagement::E_CONTEXT;
     }
-    auto session = make_shared<SoftbusSession>(socketId, info.GetCid());
+    HandleAfterOpenSession(socketId, info.GetCid());
+    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(info.GetCid()).c_str());
+    return FileManagement::E_OK;
+}
+
+void SoftbusAgent::HandleAfterOpenSession(const int32_t socketId, const std::string &networkId)
+{
+    auto session = make_shared<SoftbusSession>(socketId, networkId);
     session->DisableSessionListener();
     session->SetFromServer(false);
     AcceptSession(session, "Client");
-    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(info.GetCid()).c_str());
-    return FileManagement::E_OK;
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)
@@ -242,6 +252,22 @@ void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDevi
 {
     LOGI("OnSessionClosed Enter.");
     Shutdown(sessionId);
+}
+
+bool SoftbusAgent::OnNegotiate2(int32_t socket, PeerSocketInfo info,
+    SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    AccountInfo callerAccountInfo;
+    std::string networkId = info.networkId;
+    if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
+        LOGE("extraAccessInfo is nullptr.");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {
+        LOGE("FillLocalInfo failed.");
+        return false;
+    }
+    return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
 } // namespace DistributedFile
 } // namespace Storage

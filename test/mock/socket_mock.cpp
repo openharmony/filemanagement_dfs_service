@@ -47,3 +47,8 @@ int32_t DfsBind(int32_t socket, const ISocketListener *listener)
 {
     return DfsSocket::dfsSocket->DfsBind(socket, listener);
 }
+
+int32_t SetAccessInfo(int32_t socket, SocketAccessInfo accessInfo)
+{
+    return DfsSocket::dfsSocket->SetAccessInfo(socket, accessInfo);
+}

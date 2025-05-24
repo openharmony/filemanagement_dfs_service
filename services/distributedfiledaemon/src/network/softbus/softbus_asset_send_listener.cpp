@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler_asset.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -163,6 +164,21 @@ void SoftBusAssetSendListener::RemoveFileMap(const std::string &taskId)
     taskIsSingleFileMap_.erase(it);
 }
 
+bool SoftBusAssetSendListener::OnNegotiate2(int32_t socket, PeerSocketInfo info,
+    SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    AccountInfo callerAccountInfo;
+    std::string networkId = info.networkId;
+    if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
+        LOGE("extraAccessInfo is nullptr.");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {
+        LOGE("FillLocalInfo failed.");
+        return false;
+    }
+    return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

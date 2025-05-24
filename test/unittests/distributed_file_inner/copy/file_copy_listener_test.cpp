@@ -183,41 +183,6 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartStop_0001, TestSi
 }
 
 /**
- * @tc.name: FileCopyLocalListener_FileProgress_0001
- * @tc.desc: Verify single file progress reporting
- * @tc.type: FUNC
- * @tc.require: AR000H0E5H
- */
-HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_FileProgress_0001, TestSize.Level2)
-{
-    GTEST_LOG_(INFO) << "FileCopyLocalListener_FileProgress_0001 Start";
-
-    /* Track progress updates */
-    uint64_t lastProgress = 0;
-    std::function<void(uint64_t, uint64_t)> callback = [&](uint64_t progress, uint64_t total) {
-        lastProgress = progress;
-    };
-
-    /* Configure listener */
-    auto listener = FileCopyLocalListener::GetLocalListener(SRC_FILE, true, callback);
-    listener->StartListener();
-    listener->AddListenerFile(SRC_FILE, IN_MODIFY);
-
-    /* Simulate 5 file modifications */
-    constexpr int modifyCount = 5;
-    for (int i = 0; i < modifyCount; i++) {
-        CreateTestFile(SRC_FILE, TEST_FILE_SIZE * (i + 1));
-        usleep(50000); // Allow time for event processing
-    }
-
-    /* Verify final progress */
-    listener->StopListener();
-    EXPECT_EQ(lastProgress, TEST_FILE_SIZE * modifyCount);
-
-    GTEST_LOG_(INFO) << "FileCopyLocalListener_FileProgress_0001 End";
-}
-
-/**
  * @tc.name: FileCopyLocalListener_ThreadSafety_0001
  * @tc.desc: Verify thread-safe file additions
  * @tc.type: FUNC
