@@ -94,6 +94,9 @@ static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notify
         ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
             paramDisk.ino, notifyData);
     }
+    if (ret != E_OK) {
+        LOGI("GetNotifyData Not E_OK when GetDataInner ret = %{public}d", ret);
+    }
     return ret;
 }
 
@@ -109,6 +112,9 @@ static int32_t GetDataInnerWithName(const NotifyParamDisk &paramDisk, NotifyData
     } else {
         ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
             paramDisk.ino, paramDisk.name, notifyData);
+    }
+    if (ret != E_OK) {
+        LOGI("GetNotifyData Not E_OK when GetDataInnerWithName ret = %{public}d", ret);
     }
     return ret;
 }
@@ -279,6 +285,8 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
     if (ret == E_OK) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
+    } else {
+        LOGI("HandleInsert failed. ret = %{public}d", ret);
     }
 }
 
