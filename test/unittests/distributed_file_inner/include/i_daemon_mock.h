@@ -43,6 +43,7 @@ public:
         const std::string &, const std::string &));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
+    MOCK_METHOD2(CancelCopyTask, int32_t(const std::string &srcUri, const std::string &dstUri));
     MOCK_METHOD3(PushAsset, int32_t(int32_t userId, const sptr<AssetObj> &assetObj,
         const sptr<IAssetSendCallback> &sendCallback));
     MOCK_METHOD1(RegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));

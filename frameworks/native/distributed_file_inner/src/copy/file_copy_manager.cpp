@@ -21,10 +21,14 @@
 #include <filesystem>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_mgr_client.h"
+#include "bundle_mgr_interface.h"
 #include "copy/distributed_file_fd_guard.h"
 #include "copy/file_copy_listener.h"
 #include "copy/file_size_utils.h"
@@ -32,8 +36,12 @@
 #include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
 #include "file_uri.h"
+#include "if_system_ability_manager.h"
+#include "ipc_skeleton.h"
+#include "iservice_registry.h"
 #include "iremote_stub.h"
 #include "sandbox_helper.h"
+#include "system_ability_definition.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -49,9 +57,15 @@ using namespace FileManagement;
 static const std::string FILE_PREFIX_NAME = "file://";
 static const std::string NETWORK_PARA = "?networkid=";
 static const std::string MEDIALIBRARY_DATA_URI = "datashare:///media";
+static const std::string MTP_PATH_PREFIX = "/storage/External/mtp";
 static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
+static const int OPEN_TRUC_VERSION = 20;
+#if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+const uint32_t API_VERSION_MOD = 1000;
+#endif
 std::shared_ptr<FileCopyManager> FileCopyManager::instance_ = nullptr;
+uint32_t g_apiCompatibleVersion = 0;
 
 static bool CheckPath(const std::shared_ptr<FileInfos> &infos)
 {
@@ -69,6 +83,104 @@ static bool CheckPath(const std::shared_ptr<FileInfos> &infos)
     return true;
 }
 
+#if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+bool IsNumeric(const std::string &str)
+{
+    if (str.empty()) {
+        return false;
+    }
+    for (char const &c : str) {
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void SetQueryMap(Uri* uri, std::unordered_map<std::string,
+      std::string> &queryMap)
+{
+    // file://media/image/12?networkid=xxxx&api_version=xxxx?times=xxx&user=101
+    std::string query = uri->GetQuery();
+    std::string pairString;
+    std::stringstream queryStream(query);
+
+    while (getline(queryStream, pairString, '&')) {
+        size_t splitIndex = pairString.find('=');
+        if (splitIndex == std::string::npos || splitIndex == (pairString.length() - 1)) {
+            LOGE("failed to parse query, query field is %{private}s!", pairString.c_str());
+            continue;
+        }
+        queryMap[pairString.substr(0, splitIndex)] = pairString.substr(splitIndex + 1);
+    }
+    return;
+}
+
+bool GetAndCheckUserId(Uri* uri, std::string &userId)
+{
+    if (uri->ToString().find("user=") == std::string::npos) {
+        return false;
+    }
+
+    std::unordered_map<std::string, std::string> queryMap;
+    SetQueryMap(uri, queryMap);
+    auto it = queryMap.find("user");
+    if (it != queryMap.end()) {
+        userId = it->second;
+        if (!IsNumeric(userId)) {
+            LOGE("IsNumeric check fail");
+            return false;
+        }
+        return true;
+    } else {
+        LOGE("GetAndCheckUserId no match userId");
+    }
+    return false;
+}
+
+/*
+ * For compatibility considerations, filtering system applications require non permission verification
+*/
+bool IsSystemApp()
+{
+    uint64_t fullTokenId = IPCSkeleton::GetSelfTokenID();
+    return Security::AccessToken::AccessTokenKit::IsSystemAppByFullTokenID(fullTokenId);
+}
+
+uint32_t GetApiCompatibleVersion()
+{
+    uint32_t apiCompatibleVersion = 0;
+    OHOS::sptr<OHOS::ISystemAbilityManager> systemAbilityManager =
+        OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        LOGE("systemAbilityManager is null");
+        return apiCompatibleVersion;
+    }
+
+    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        LOGE("remoteObject is null");
+        return apiCompatibleVersion;
+    }
+
+    sptr<AppExecFwk::IBundleMgr> iBundleMgr = OHOS::iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+    if (iBundleMgr == nullptr) {
+        LOGE("IBundleMgr is null");
+        return apiCompatibleVersion;
+    }
+
+    AppExecFwk::BundleInfo bundleInfo;
+    auto res = iBundleMgr->GetBundleInfoForSelf(0, bundleInfo);
+    if (res == E_OK) {
+        apiCompatibleVersion = bundleInfo.targetVersion % API_VERSION_MOD;
+    } else {
+        LOGE("Call for GetApiCompatibleVersion failed, err:%{public}d", res);
+    }
+    return apiCompatibleVersion;
+}
+#endif
+
 std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
 {
     static std::once_flag once;
@@ -81,20 +193,21 @@ std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
 {
-    LOGE("FileCopyManager Copy start ");
+    LOGE("FileCopyManager Copy start, srcUri %{public}s, destUri %{public}s", GetAnonyString(srcUri).c_str(),
+        GetAnonyString(destUri).c_str());
     if (srcUri.empty() || destUri.empty()) {
-        return E_NOENT;
+        return EINVAL;
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
+        return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
-        return ret;
+        return EINVAL;
     }
 
     if (IsRemoteUri(infos->srcUri)) {
@@ -106,7 +219,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (!CheckPath(infos)) {
         LOGE("invalid srcPath : %{private}s, destPath: %{private}s", GetAnonyString(infos->srcPath).c_str(),
             GetAnonyString(infos->destPath).c_str());
-        return E_NOENT;
+        return EINVAL;
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
@@ -146,7 +259,7 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     }
 
     auto copyResult = transListener->WaitForCopyResult();
-    if (copyResult == FAILED) {
+    if (copyResult == DFS_FAILED) {
         return transListener->GetErrCode();
     }
     return transListener->CopyToSandBox(infos->srcUri);
@@ -159,7 +272,9 @@ int32_t FileCopyManager::Cancel()
     for (auto &item : FileInfosVec_) {
         item->needCancel.store(true);
         if (item->transListener != nullptr) {
-            item->transListener->Cancel();
+            LOGE("Cancel, srcUri %{public}s, destUri %{public}s.", GetAnonyString(item->srcUri).c_str(),
+                GetAnonyString(item->destUri).c_str());
+            item->transListener->Cancel(item->srcUri, item->destUri);
         }
         DeleteResFile(item);
     }
@@ -176,7 +291,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
             GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
-        return OHOS::FileManagement::E_ILLEGAL_URI;
+        return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
         if ((*item)->srcUri != srcUri || (*item)->destUri != destUri) {
@@ -185,7 +300,9 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
         }
         (*item)->needCancel.store(true);
         if ((*item)->transListener != nullptr) {
-            ret = (*item)->transListener->Cancel();
+            LOGE("Cancel, srcUri %{public}s, destUri %{public}s.", GetAnonyString(srcUri).c_str(),
+                GetAnonyString(destUri).c_str());
+            ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
         DeleteResFile(*item);
         item = FileInfosVec_.erase(item);
@@ -260,7 +377,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
     LOGI("ExecLocal not support this srcUri and destUri");
-    return E_NOENT;
+    return EINVAL;
 }
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
@@ -272,7 +389,18 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     if (srcFd < 0) {
         return ret;
     }
-    auto destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+    if (g_apiCompatibleVersion == 0) {
+        g_apiCompatibleVersion = GetApiCompatibleVersion();
+    }
+    #endif
+
+    int32_t destFd = -1;
+    if (g_apiCompatibleVersion >= OPEN_TRUC_VERSION) {
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    } else {
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    }
     if (destFd < 0) {
         LOGE("Error opening dest file descriptor. errno = %{public}d", errno);
         close(srcFd);
@@ -284,7 +412,7 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
         LOGE("Failed to request heap memory.");
         close(srcFd);
         close(destFd);
-        return -1;
+        return ENOMEM;
     }
     return SendFileCore(srcFdg, destFdg, infos);
 }
@@ -305,7 +433,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
         new (std::nothrow) uv_fs_t, fs_req_cleanup };
     if (sendFileReq == nullptr) {
         LOGE("Failed to request heap memory.");
-        return -1;
+        return ENOMEM;
     }
     int64_t offset = 0;
     struct stat srcStat{};
@@ -338,7 +466,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
 
     if (size != 0) {
         LOGE("The execution of the sendfile task was terminated, remaining file size %{public}" PRIu64, size);
-        return E_OK; // EIO
+        return EIO;
     }
     return E_OK;
 }
@@ -349,7 +477,7 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
     size_t found = dest.find(src);
     if (found != std::string::npos && found == 0) {
         LOGE("not support copy src to dest");
-        return -1;
+        return EINVAL;
     }
     
     // 获取src目录的目录名称
@@ -474,23 +602,39 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
         sptr<FileIoToken> remote = new (std::nothrow) IRemoteStub<FileIoToken>();
         if (!remote) {
             LOGE("Failed to get remote object");
-            return -1;
+            return ENOMEM;
         }
+#if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM)
+        std::string userId;
+        if (GetAndCheckUserId(&uri, userId) && IsSystemApp()) {
+            dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(),
+                MEDIALIBRARY_DATA_URI + "?user=" + userId);
+        } else {
+            dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
+        }
+#else
         dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
+#endif
         if (!dataShareHelper) {
             LOGE("Failed to connect to datashare");
-            return -1;
+            return E_PERMISSION;
         }
         srcFd = dataShareHelper->OpenFile(uri, GetModeFromFlags(O_RDONLY));
         if (srcFd < 0) {
             LOGE("Open media uri by data share fail. ret = %{public}d", srcFd);
-            return -1;
+            return EPERM;
         }
     } else {
         srcFd = open(srcPth.c_str(), O_RDONLY);
         if (srcFd < 0) {
             LOGE("Error opening src file descriptor. errno = %{public}d", errno);
             return errno;
+        }
+        if ((infos->needCancel) && (srcPth.rfind(MTP_PATH_PREFIX, 0) != std::string::npos)) {
+            close(srcFd);
+            srcFd = -1;
+            LOGE("Source file copying is already canceled, path = %{public}s", GetAnonyString(srcPth).c_str());
+            return FileManagement::E_DFS_CANCEL_SUCCESS;
         }
     }
     return 0;

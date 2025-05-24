@@ -46,6 +46,7 @@ public:
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
     virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
+    virtual int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) = 0;
 
     virtual int32_t PushAsset(int32_t userId,
                               const sptr<AssetObj> &assetObj,

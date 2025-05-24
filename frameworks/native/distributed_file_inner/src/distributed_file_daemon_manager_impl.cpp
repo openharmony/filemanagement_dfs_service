@@ -127,6 +127,16 @@ int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &sess
     return distributedFileDaemonProxy->CancelCopyTask(sessionName);
 }
 
+int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->CancelCopyTask(srcUri, dstUri);
+}
+
 int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
                                                     const sptr<AssetObj> &assetObj,
                                                     const sptr<IAssetSendCallback> &sendCallback)

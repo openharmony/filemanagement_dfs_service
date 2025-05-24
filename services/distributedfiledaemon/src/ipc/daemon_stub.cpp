@@ -46,6 +46,9 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandlePrepareSession;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK)] =
         &DaemonStub::HandleCancelCopyTask;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK)] =
+        &DaemonStub::HandleInnerCancelCopyTask;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)] =
         &DaemonStub::HandleRequestSendFile;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -85,6 +88,8 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
             return HandlePrepareSession(data, reply);
         case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK):
             return HandleCancelCopyTask(data, reply);
+        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK):
+            return HandleInnerCancelCopyTask(data, reply);
         case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE):
             return HandleRequestSendFile(data, reply);
         case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO):
@@ -331,6 +336,22 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
         return E_IPC_READ_FAILED;
     }
     return CancelCopyTask(sessionName);
+}
+
+int32_t DaemonStub::HandleInnerCancelCopyTask(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleCancelCopyTask");
+    std::string srcUri;
+    if (!data.ReadString(srcUri)) {
+        LOGE("read srcUri failed");
+        return E_IPC_READ_FAILED;
+    }
+    std::string dstUri;
+    if (!data.ReadString(dstUri)) {
+        LOGE("read dstUri failed");
+        return E_IPC_READ_FAILED;
+    }
+    return CancelCopyTask(srcUri, dstUri);
 }
 
 int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)

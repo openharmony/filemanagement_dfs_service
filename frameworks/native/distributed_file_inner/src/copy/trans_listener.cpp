@@ -60,7 +60,7 @@ int32_t TransListener::WaitForCopyResult()
     LOGI("WaitForCopyResult.");
     std::unique_lock<std::mutex> lock(cvMutex_);
     cv_.wait(lock, [this]() {
-        return copyEvent_.copyResult == SUCCESS || copyEvent_.copyResult == FAILED;
+        return copyEvent_.copyResult == DFS_SUCCESS || copyEvent_.copyResult == DFS_FAILED;
     });
     return copyEvent_.copyResult;
 }
@@ -169,12 +169,15 @@ std::string TransListener::GetNetworkIdFromUri(const std::string &uri)
     return uri.substr(uri.find(TRANS_NETWORK_PARA) + TRANS_NETWORK_PARA.size(), uri.size());
 }
 
-int32_t TransListener::Cancel()
+int32_t TransListener::Cancel(const std::string &srcUri, const std::string &destUri)
 {
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
+    }
+    if (hmdfsInfo_.sessionName.empty()) {
+        return distributedFileDaemonProxy->CancelCopyTask(srcUri, destUri);
     }
     return distributedFileDaemonProxy->CancelCopyTask(hmdfsInfo_.sessionName);
 }
@@ -193,7 +196,7 @@ int32_t TransListener::OnFinished(const std::string &sessionName)
 {
     LOGI("OnFinished");
     std::lock_guard<std::mutex> lock(cvMutex_);
-    copyEvent_.copyResult = SUCCESS;
+    copyEvent_.copyResult = DFS_SUCCESS;
     cv_.notify_all();
     return E_OK;
 }
@@ -202,7 +205,7 @@ int32_t TransListener::OnFailed(const std::string &sessionName, int32_t errorCod
 {
     LOGI("OnFailed, errorCode is %{public}d", errorCode);
     std::lock_guard<std::mutex> lock(cvMutex_);
-    copyEvent_.copyResult = FAILED;
+    copyEvent_.copyResult = DFS_FAILED;
     copyEvent_.errorCode = errorCode;
     cv_.notify_all();
     return E_OK;

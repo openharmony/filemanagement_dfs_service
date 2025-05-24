@@ -66,12 +66,15 @@ public:
     int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
         const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t InnerCopy(const std::string &srcUri, const std::string &dstUri,
+        const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
                            HmdfsInfo &info) override;
     int32_t CancelCopyTask(const std::string &sessionName) override;
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
@@ -113,6 +116,9 @@ private:
                           HapTokenInfo &hapTokenInfo,
                           const bool &isSrcFile,
                           HmdfsInfo &info);
+    int32_t SendDfsDelayTask(const std::string &networkId);
+    void RemoveDfsDelayTask(const std::string &networkId);
+    void DisconnectDevice(const std::string &networkId);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

@@ -45,6 +45,7 @@ struct FileInfos {
     std::string srcPath;
     std::string destPath;
     bool srcUriIsFile = false;
+    int callingUid {};
     std::shared_ptr<FileCopyLocalListener> localListener = nullptr;
     sptr<TransListener> transListener = nullptr;
     std::atomic_bool needCancel{ false };
@@ -63,7 +64,7 @@ struct FileInfos {
         return srcUri < infos.srcUri;
     }
 };
- 
+
 class FileCopyManager final {
 public:
     using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
@@ -71,15 +72,15 @@ public:
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
     int32_t Cancel(const std::string &srcUri, const std::string &destUri);
     int32_t Cancel();
-    
+    // operator of local copy
+    int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
+
 private:
     static std::shared_ptr<FileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
  
 private:
-    // operator of local copy
-    int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
     int32_t CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos);
     int32_t SendFileCore(std::shared_ptr<FDGuard> srcFdg, std::shared_ptr<FDGuard> destFdg,
         std::shared_ptr<FileInfos> infos);

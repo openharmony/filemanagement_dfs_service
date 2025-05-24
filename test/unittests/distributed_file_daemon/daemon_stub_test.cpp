@@ -82,6 +82,7 @@ public:
                          const sptr<IRemoteObject> &listener,
                          HmdfsInfo &fileInfo));
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
+    MOCK_METHOD2(CancelCopyTask, int32_t(const std::string &srcUri, const std::string &dstUri));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 
     MOCK_METHOD3(PushAsset,
