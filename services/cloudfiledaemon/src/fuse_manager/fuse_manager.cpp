@@ -1254,6 +1254,7 @@ static void CloudReadOnCloudFile(pid_t pid,
     }
     wSesLock.unlock();
     if (isReading && !CheckAndWait(pid, cInode, readArgs->offset)) {
+        LOGD("reading and need wait");
         return;
     }
 
