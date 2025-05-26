@@ -407,8 +407,8 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
     DistributedHardware::DmDeviceInfo deviceInfo;
-    auto ret = strcpy_s(deviceInfo, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
-    if (ret != 0) {
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
+    if (res != 0) {
         LOGE("strcpy failed, res = %{public}d", res);
         return ERR_BAD_VALUE;
     }
