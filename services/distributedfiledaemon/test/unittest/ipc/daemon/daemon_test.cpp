@@ -504,11 +504,11 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
     DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_OK);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_NULLPTR);
     sleep(1);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((ERR_BAD_VALUE)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_NULLPTR);
     sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }

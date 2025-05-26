@@ -406,8 +406,16 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
 int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
+    if (res != 0) {
+        LOGE("strcpy failed, res = %{public}d", res);
+        return ERR_BAD_VALUE;
+    }
+    OpenP2PConnection(deviceInfo);
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(srcUri, dstUri,
         listener, QueryActiveUserId(), info.copyPath);
+    CloseP2PConnection(deviceInfo);
     LOGI("InnerCopy end, ret = %{public}d", ret);
     return ret;
 }
@@ -811,13 +819,14 @@ int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
         LOGE("networkId is empty.");
         return E_NULLPTR;
     }
+    LOGI("SendDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find.");
         return E_EVENT_HANDLER;
     }
 
-    auto executeFunc = [this, &networkId] { DisconnectDevice(networkId); };
+    auto executeFunc = [this, networkId] { DisconnectDevice(networkId); };
     bool isSucc = eventHandler_->PostTask(executeFunc, networkId, DEFAULT_DELAY_INTERVAL,
         AppExecFwk::EventHandler::Priority::IMMEDIATE);
     if (!isSucc) {
@@ -835,10 +844,11 @@ void Daemon::RemoveDfsDelayTask(const std::string &networkId)
         LOGE("eventHandler has not find.");
         return;
     }
+    LOGI("RemoveDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
     eventHandler_->RemoveTask(networkId);
 }
 
-void Daemon::DisconnectDevice(const std::string &networkId)
+void Daemon::DisconnectDevice(const std::string networkId)
 {
     LOGI("Daemon::DisconnectDevice enter.");
     DistributedHardware::DmDeviceInfo deviceInfo;
@@ -847,6 +857,7 @@ void Daemon::DisconnectDevice(const std::string &networkId)
         LOGE("strcpy for network id failed, ret is %{public}d", ret);
         return;
     }
+    LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
     ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
     LOGI("Daemon::DisconnectDevice result %{public}d", ret);
 }
