@@ -118,7 +118,7 @@ private:
                           HmdfsInfo &info);
     int32_t SendDfsDelayTask(const std::string &networkId);
     void RemoveDfsDelayTask(const std::string &networkId);
-    void DisconnectDevice(const std::string &networkId);
+    void DisconnectDevice(const std::string networkId);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
