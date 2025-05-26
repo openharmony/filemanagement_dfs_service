@@ -819,6 +819,7 @@ int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
         LOGE("networkId is empty.");
         return E_NULLPTR;
     }
+    LOGI("SendDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find.");
@@ -843,6 +844,7 @@ void Daemon::RemoveDfsDelayTask(const std::string &networkId)
         LOGE("eventHandler has not find.");
         return;
     }
+    LOGI("RemoveDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
     eventHandler_->RemoveTask(networkId);
 }
 
@@ -855,6 +857,7 @@ void Daemon::DisconnectDevice(const std::string networkId)
         LOGE("strcpy for network id failed, ret is %{public}d", ret);
         return;
     }
+    LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
     ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
     LOGI("Daemon::DisconnectDevice result %{public}d", ret);
 }
