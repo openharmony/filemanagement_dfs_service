@@ -27,6 +27,7 @@
 #include "os_account_manager.h"
 #include "refbase.h"
 #include "utils_log.h"
+#include "inttypes.h"
 
 namespace OHOS {
 namespace Storage {
@@ -110,10 +111,12 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
                                                              assetObj->dstBundleName_);
 }
 
-void SoftbusAssetRecvListener::OnRecvAssetProgress(int32_t socketId, const char **fileList, uint64_t bytesTotal, uint64_t bytesUpload)
+void SoftbusAssetRecvListener::OnRecvAssetProgress(int32_t socketId, const char **fileList,
+                                                   uint64_t bytesTotal, uint64_t bytesUpload)
 {
     std::lock_guard<std::mutex> lock(mtx_);
-    LOGD("OnRecvFileProgress, sessionId = %{public}d, bytesTotal = %{public}llu, bytesUpload = %{public}llu", socketId, bytesTotal, bytesUpload);
+    LOGD("OnRecvAssetProgress, socketId = %{public}d, bytesUpload = %{public}" PRIu64 ", bytesTotal = %{public}" PRIu64,
+        socketId, bytesUpload, bytesTotal);
     if (fileList == nullptr) {
         LOGE("OnRecvAssetProgress: fileList is nullptr");
         return;
