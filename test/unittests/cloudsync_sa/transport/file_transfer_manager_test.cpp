@@ -66,7 +66,7 @@ void FileTransferManagerTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: IB3T5H
  */
-HWTEST_F(FileTransferManagerTest, InitTest001, TestSize.Level1)
+HWTEST_F(FileTransferManagerTest, InitTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "InitTest001 start";
     try {
