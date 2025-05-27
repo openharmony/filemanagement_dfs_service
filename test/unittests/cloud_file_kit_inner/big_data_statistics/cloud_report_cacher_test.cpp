@@ -52,7 +52,7 @@ void CloudReportCacherTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-HWTEST_F(CloudReportCacherTest, InitTest, TestSize.Level1)
+HWTEST_F(CloudReportCacherTest, InitTest, TestSize.Level0)
 {
     std::string bundleName;
     std::string traceId;

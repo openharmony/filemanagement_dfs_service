@@ -61,7 +61,7 @@ void CloudFileKitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudFileKitTest, RegisterCloudInstanceTest001, TestSize.Level1)
+HWTEST_F(CloudFileKitTest, RegisterCloudInstanceTest001, TestSize.Level0)
 {
     CloudFileKit *firstInstance = new CloudFileKit();
     EXPECT_TRUE(CloudFileKit::RegisterCloudInstance(firstInstance));

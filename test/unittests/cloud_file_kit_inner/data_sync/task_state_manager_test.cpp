@@ -62,7 +62,7 @@ void TaskStateManagerTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_001, TestSize.Level1)
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TaskStateManagerTest_001 Start";
     try {
