@@ -306,22 +306,6 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     }
 }
 
-void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std::string &deviceId,
-                                                                       int32_t systemAbilityId,
-                                                                       const sptr<IRemoteObject> &remoteObject)
-{
-    LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", systemAbilityId,
-         (remoteObject == nullptr ? "false" : "true"));
-    unique_lock<mutex> lock(loadRemoteSAMutex_);
-    if (remoteObject == nullptr) {
-        isLoadSuccess_.store(false);
-    } else {
-        isLoadSuccess_.store(true);
-        remoteObjectMap_[deviceId] = remoteObject;
-    }
-    proxyConVar_.notify_one();
-}
-
 void CloudSyncService::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     LOGD("set death recipient");
@@ -342,36 +326,30 @@ void CloudSyncService::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject
 
 int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
 {
+    LOGI("Load remote CloudSync SA start");
+    if (deviceId.empty()) {
+        LOGE("Failed to load remote SA, deviceId is empty");
+        return E_SA_LOAD_FAILED;
+    }
     unique_lock<mutex> lock(loadRemoteSAMutex_);
     auto iter = remoteObjectMap_.find(deviceId);
-    if (iter != remoteObjectMap_.end()) {
+    if (iter != remoteObjectMap_.end() && iter->second != nullptr) {
         return E_OK;
     }
+
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         LOGE("Samgr is nullptr");
         return E_SA_LOAD_FAILED;
     }
-    sptr<LoadRemoteSACallback> cloudSyncLoadCallback = new LoadRemoteSACallback();
-    if (cloudSyncLoadCallback == nullptr) {
-        LOGE("cloudSyncLoadCallback is nullptr");
+    auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId);
+    if (object == nullptr) {
+        LOGE("Failed to Load systemAbility, object is nullptr");
         return E_SA_LOAD_FAILED;
     }
-    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId, cloudSyncLoadCallback);
-    if (ret != E_OK) {
-        LOGE("Failed to Load systemAbility, systemAbilityId:%{public}d, ret code:%{public}d",
-             FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
-        return E_SA_LOAD_FAILED;
-    }
-
-    auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-        [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
-    if (!waitStatus) {
-        LOGE("Load CloudSynd SA timeout");
-        return E_SA_LOAD_FAILED;
-    }
+    remoteObjectMap_[deviceId] = object;
     SetDeathRecipient(remoteObjectMap_[deviceId]);
+    LOGI("Load remote CloudSync SA end");
     return E_OK;
 }
 

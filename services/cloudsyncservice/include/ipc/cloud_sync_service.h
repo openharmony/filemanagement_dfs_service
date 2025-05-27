@@ -114,15 +114,6 @@ private:
     void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
     void CovertBundleName(std::string &bundleName);
 
-    class LoadRemoteSACallback : public SystemAbilityLoadCallbackStub {
-    public:
-        void OnLoadSACompleteForRemote(const std::string &deviceId,
-                                       int32_t systemAbilityId,
-                                       const sptr<IRemoteObject> &remoteObject);
-        std::condition_variable proxyConVar_;
-        std::atomic<bool> isLoadSuccess_{false};
-    };
-
     int32_t LoadRemoteSA(const std::string &deviceId);
 
     static inline std::mutex loadRemoteSAMutex_;
