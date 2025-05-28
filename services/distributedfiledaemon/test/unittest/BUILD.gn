@@ -1194,6 +1194,7 @@ ohos_unittest("softbus_permission_check_test") {
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
     "zlib:shared_libz",
   ]
 
