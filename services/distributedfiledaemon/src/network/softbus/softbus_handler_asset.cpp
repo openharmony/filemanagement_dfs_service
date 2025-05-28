@@ -177,6 +177,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
         LOGE("Set access info faiLed");
+        Shutdown(socketId);
         return false;
     }
 
