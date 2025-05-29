@@ -211,7 +211,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
         return EINVAL;
     }
     if (infos->srcPath == infos->destPath) {
-        LOGE("The srcPath and destPath is same, path=%{public}s", (infos->srcPath).c_str());
+        LOGE("The srcPath and destPath is same, path=%{private}s", GetAnonyString(infos->srcPath).c_str());
         return E_OK;
     }
 
