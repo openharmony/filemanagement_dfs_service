@@ -198,10 +198,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
-    if (infos->srcPath == infos->destPath) {
-        LOGE("The src and dest is same");
-        return E_OK;
-    }
+
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
@@ -212,6 +209,10 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
         return EINVAL;
+    }
+    if (infos->srcPath == infos->destPath) {
+        LOGE("The src and dest is same");
+        return E_OK;
     }
 
     if (IsRemoteUri(infos->srcUri)) {
