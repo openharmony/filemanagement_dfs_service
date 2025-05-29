@@ -23,7 +23,7 @@
 
 namespace OHOS {
 #ifndef LOG_DOMAIN
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #endif
 
 #ifndef LOG_TAG

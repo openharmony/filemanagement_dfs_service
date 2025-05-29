@@ -39,7 +39,7 @@ config("compiler_configs") {
   ]
 
   defines = [
-    "LOG_DOMAIN=0xD001600",
+    "LOG_DOMAIN=0xD004315",
     "LOG_LEVEL=INFO",
   ]
 }
