@@ -164,7 +164,6 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
 #ifdef SUPPORT_DEVICE_PROFILE
 int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageName packageName, DfsVersion &dfsVersion)
 {
-
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     int ret = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
@@ -181,7 +180,6 @@ int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageName packageName,
     return GetDfsVersion(udid, packageName, dfsVersion, false);
 }
 #endif
-
 
 int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
     const std::string &networkId, DfsVersion &dfsVersion, VersionPackageName packageName)
