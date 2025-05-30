@@ -22,6 +22,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+using namespace arkts::ani_signature;
+
 void CloudSyncManagerAni::ChangeAppCloudSwitch(
     ani_env *env, ani_class clazz, ani_string accoutId, ani_string bundleName, ani_boolean status)
 {
@@ -132,8 +134,8 @@ void CloudSyncManagerAni::EnableCloud(ani_env *env, ani_class clazz, ani_string 
     }
 
     ani_class recordCls;
-    const char *recordClassName = "Lescompat/Record;";
-    ret = env->FindClass(recordClassName, &recordCls);
+    Type clsName = Builder::BuildClass("escompat.Record");
+    ret = env->FindClass(clsName.Descriptor().c_str(), &recordCls);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
@@ -233,8 +235,8 @@ void CloudSyncManagerAni::Clean(ani_env *env, ani_class clazz, ani_string accout
     }
 
     ani_class recordCls;
-    const char *recordClassName = "Lescompat/Record;";
-    ret = env->FindClass(recordClassName, &recordCls);
+    Type clsName = Builder::BuildClass("escompat.Record");
+    ret = env->FindClass(clsName.Descriptor().c_str(), &recordCls);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;

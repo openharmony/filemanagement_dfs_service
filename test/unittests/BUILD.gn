@@ -17,6 +17,7 @@ group("cloudsyncunittests") {
   testonly = true
   if (!use_libfuzzer) {
     deps = [
+      "ani_core:ani_core_test",
       "cloud_daemon:cloud_daemon_test",
       "cloud_disk:cloud_disk_test",
       "cloud_file_kit_inner:cloud_file_kit_inner_test",

@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
-#define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
+#ifndef OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
+#define OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
 
-#include "cloud_download_callback.h"
+#include "cloud_optimize_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
-
-class CloudDownloadCallbackMiddle : public CloudDownloadCallback {
+class CloudOptimizeCallbackMiddle : public CloudOptimizeCallback {
 public:
-    virtual ~CloudDownloadCallbackMiddle() = default;
-    virtual void OnDownloadProcess(const DownloadProgressObj &progress) = 0;
-    virtual void DeleteReference() {};
+    virtual ~CloudOptimizeCallbackMiddle() = default;
+    virtual void OnOptimizeProcess(const OptimizeState state, const int32_t progress) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MIDDLE_H
+
+#endif // OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H

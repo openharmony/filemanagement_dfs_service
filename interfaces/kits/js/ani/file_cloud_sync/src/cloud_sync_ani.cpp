@@ -24,6 +24,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+using namespace arkts::ani_signature;
+
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerAni> g_listObj = nullptr;
 mutex CloudSyncAni::sOnOffMutex_;
@@ -44,15 +46,16 @@ static CloudSyncCore *CloudSyncUnwrap(ani_env *env, ani_object object)
 void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
 {
     ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
     if (ret != ANI_OK) {
         LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
         return;
     }
-    static const char *className = "LGallerySync;";
+    Type clsName = Builder::BuildClass("GallerySync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -60,7 +63,8 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     }
 
     ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
+    std::string bindSign = Builder::BuildSignatureDescriptor({Builder::BuildLong()});
+    ret = env->Class_FindMethod(cls, "bindNativePtr", bindSign.c_str(), &bindNativePtr);
     if (ret != ANI_OK) {
         LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
@@ -70,99 +74,6 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor();
     if (!data.IsSuccess()) {
         LOGE("cloudsync constructor failed.");
-        const auto &err = data.GetError();
-        ErrorHandler::Throw(env, err);
-        return;
-    }
-
-    const CloudSyncCore *cloudSync = data.GetData().value();
-    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
-    if (ret != ANI_OK) {
-        LOGE("bindNativePtr failed.");
-        delete cloudSync;
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-    }
-}
-
-void CloudSyncAni::CloudSyncConstructor0(ani_env *env, ani_object object)
-{
-    ani_namespace ns {};
-    ani_status ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-    static const char *className = "LFileSync;";
-    ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
-    if (ret != ANI_OK) {
-        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor();
-    if (!data.IsSuccess()) {
-        LOGE("cloudsync constructor failed.");
-        const auto &err = data.GetError();
-        ErrorHandler::Throw(env, err);
-        return;
-    }
-
-    const CloudSyncCore *cloudSync = data.GetData().value();
-    ret = env->Object_CallMethod_Void(object, bindNativePtr, reinterpret_cast<ani_long>(cloudSync));
-    if (ret != ANI_OK) {
-        LOGE("bindNativePtr failed.");
-        delete cloudSync;
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-    }
-}
-
-void CloudSyncAni::CloudSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName)
-{
-    std::string bnm;
-    ani_status ret = ANIUtils::AniString2String(env, bundleName, bnm);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_namespace ns {};
-    ret = env->FindNamespace("L@ohos/file/cloudSync/cloudSync;", &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-    static const char *className = "LFileSync;";
-    ani_class cls;
-    ret = env->Namespace_FindClass(ns, className, &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    ani_method bindNativePtr;
-    ret = env->Class_FindMethod(cls, "bindNativePtr", "J:V", &bindNativePtr);
-    if (ret != ANI_OK) {
-        LOGE("find class ctor. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-
-    FsResult<CloudSyncCore *> data = CloudSyncCore::Constructor(bnm);
-    if (!data.IsSuccess()) {
-        LOGE("CloudSyncCore constructor failed.");
         const auto &err = data.GetError();
         ErrorHandler::Throw(env, err);
         return;
@@ -294,6 +205,65 @@ void CloudSyncAni::CloudSyncStop(ani_env *env, ani_object object)
     }
 }
 
+void CloudSyncAni::OptimizeStorage(ani_env *env, ani_class clazz)
+{
+    auto data = CloudSyncCore::DoOptimizeStorage();
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do OptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
+void CloudSyncAni::StartOptimizeStorage(ani_env *env, ani_class clazz, ani_object optim, ani_object fun)
+{
+    OptimizeSpaceOptions optimizeOptions {};
+    ani_double totalSize;
+    ani_status ret = env->Object_GetPropertyByName_Double(optim, "totalSize", &totalSize);
+    if (ret != ANI_OK) {
+        LOGE("get totalSize failed. ret = %{public}d", ret);
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    ani_double agingDays;
+    ret = env->Object_GetPropertyByName_Double(optim, "agingDays", &agingDays);
+    if (ret != ANI_OK) {
+        LOGE("get agingDays failed. ret = %{public}d", ret);
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+
+    LOGI("totalSize: %{public}lld, agingDays:%{public}d",
+        static_cast<long long>(totalSize), static_cast<int32_t>(agingDays));
+    optimizeOptions.totalSize = static_cast<int64_t>(totalSize);
+    optimizeOptions.agingDays = static_cast<int32_t>(agingDays);
+
+    ani_ref cbOnRef;
+    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
+        return;
+    }
+    auto callback = std::make_shared<CloudOptimizeCallbackAniImpl>(env, cbOnRef);
+
+    auto data = CloudSyncCore::DoStartOptimizeStorage(optimizeOptions, callback);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do StopOptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
+void CloudSyncAni::StopOptimizeStorage(ani_env *env, ani_class clazz)
+{
+    auto data = CloudSyncCore::DoStopOptimizeStorage();
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do StopOptimizeStorage failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
 ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string path)
 {
     string filePath;
@@ -306,32 +276,11 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
     auto data = CloudSyncCore::DoGetFileSyncState(filePath);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
-        LOGE("cloud sync do stop failed, ret = %{public}d", err.GetErrNo());
+        LOGE("cloud sync do GetFileSyncState failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
         return err.GetErrNo();
     }
     return static_cast<ani_int>(data.GetData().value());
-}
-
-ani_double CloudSyncAni::CloudyncGetLastSyncTime(ani_env *env, ani_object object)
-{
-    auto cloudSync = CloudSyncUnwrap(env, object);
-    if (cloudSync == nullptr) {
-        LOGE("Cannot wrap cloudcynccore.");
-        ErrorHandler::Throw(env, UNKNOWN_ERR);
-        return 0;
-    }
-
-    auto data = cloudSync->CoreGetLastSyncTime();
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloud sync do GetLastSyncTime failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
-        return 0;
-    }
-
-    const int64_t lastSyncTime = data.GetData().value();
-    return static_cast<ani_double>(lastSyncTime);
 }
 
 static bool CheckIsValidUri(Uri uri)
@@ -438,17 +387,6 @@ int32_t CloudSyncAni::GetRegisterParams(
 
 void CloudSyncAni::RegisterChange(ani_env *env, ani_class clazz, ani_string uri, ani_boolean recursion, ani_object fun)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-
     if (g_listObj == nullptr) {
         g_listObj = make_unique<ChangeListenerAni>(env);
     }
@@ -527,17 +465,6 @@ void CloudSyncAni::UnregisterFromObs(ani_env *env, std::string uri)
 
 void CloudSyncAni::UnRegisterChange(ani_env *env, ani_class clazz, ani_string uri)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        ErrorHandler::Throw(env, E_PERMISSION_DENIED);
-        return;
-    }
-
     if (g_listObj == nullptr || g_listObj->observers_.empty()) {
         LOGI("no obs to unregister");
         return;

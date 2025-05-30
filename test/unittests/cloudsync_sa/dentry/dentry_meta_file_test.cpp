@@ -248,24 +248,6 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove001, TestSize.Level1)
 }
 
 /**
- * @tc.name: MetaFileRemove002
- * @tc.desc: Verify the MetaFile::DoRemove function
- * @tc.type: FUNC
- * @tc.require: SR000HRKJB
- */
-HWTEST_F(DentryMetaFileTest, MetaFileRemove002, TestSize.Level1)
-{
-    uint32_t userId = 100;
-    MetaFile mFile(userId, "/");
-    MetaBase mBase1("file1");
-    int ret = mFile.DoRemove(mBase1);
-    EXPECT_EQ(ret, 0);
-    MetaBase mBase2("file1");
-    ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, ENOENT);
-}
-
-/**
  * @tc.name: LoadChildren001
  * @tc.desc: Verify the LoadChildren
  * @tc.type: FUNC

@@ -17,8 +17,10 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_ANI_H
 
 #include <ani.h>
+#include <ani_signature_builder.h>
 
 #include "cloud_sync_callback_middle.h"
+#include "cloud_optimize_callback_middle.h"
 #include "data_ability_observer_interface.h"
 #include "data_ability_observer_stub.h"
 #include "dataobs_mgr_client.h"
@@ -28,6 +30,11 @@
 namespace OHOS::FileManagement::CloudSync {
 
 class CloudNotifyObserver;
+
+struct BundleEntity {
+    std::string bundleName_;
+    explicit BundleEntity(const std::string bundleName) : bundleName_(bundleName) {};
+};
 
 struct CloudChangeListener {
     NotifyType notifyType;
@@ -122,11 +129,24 @@ public:
     ~CloudNotifyObserver() = default;
 
     void OnChange();
-    void OnchangeExt(const AAFwk::ChangeInfo &changeInfo);
+    void OnChangeExt(const AAFwk::ChangeInfo &changeInfo);
 
     ChangeListenerAni listObj_;
     std::string uri_;
     ani_ref ref_;
+};
+
+class CloudOptimizeCallbackAniImpl : public CloudOptimizeCallbackMiddle,
+                                  public std::enable_shared_from_this<CloudOptimizeCallbackAniImpl> {
+public:
+    CloudOptimizeCallbackAniImpl(ani_env *env, ani_ref fun) : env_(env), cbOnRef_(fun) {}
+    ~CloudOptimizeCallbackAniImpl() = default;
+    void OnOptimizeProcess(const OptimizeState state, const int32_t progress) override;
+
+private:
+    ani_status GetOptimProgress(ani_env *env, OptimizeState state, int32_t progress, ani_class cls, ani_object &data);
+    ani_env *env_;
+    ani_ref cbOnRef_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_ANI_H

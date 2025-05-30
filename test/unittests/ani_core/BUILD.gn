@@ -11,51 +11,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/config/components/ets_frontend/ets2abc_config.gni")
-import("//build/ohos.gni")
+import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-config("ani_config") {
-  include_dirs = [
-    "include",
-    "${interfaces_js_path}/ani/ani_helper/include",
-    "${interfaces_js_path}/cloudfilesync",
-  ]
-}
+ohos_unittest("cloud_sync_core_test") {
+  module_out_path = "filemanagement/dfs_service/tests"
 
-ohos_shared_library("cloud_sync_ani") {
-  public_configs = [ ":ani_config" ]
   sources = [
     "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
     "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/cloud_download_callback_ani.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/cloud_sync_callback_ani.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
     "${interfaces_js_path}/cloudfilesync/file_sync_core.cpp",
-    "src/bind_function_class.cpp",
-    "src/cloud_download_ani.cpp",
-    "src/cloud_download_callback_ani.cpp",
-    "src/cloud_file_cache_ani.cpp",
-    "src/cloud_sync_ani.cpp",
-    "src/cloud_sync_callback_ani.cpp",
-    "src/file_sync_ani.cpp",
+    "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "cloud_file_cache_core_test.cpp",
+    "cloud_file_core_test.cpp",
+    "cloud_sync_core_test.cpp",
+    "cloud_sync_manager_core_test.cpp",
+    "file_sync_core_test.cpp",
   ]
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
+
+  include_dirs = [
+    "${interfaces_js_path}/ani/ani_helper/include",
+    "${interfaces_js_path}/ani/file_cloud_sync/include",
+    "${interfaces_js_path}/cloudfilesync",
+    "${interfaces_js_path}/cloudsyncmanager",
+  ]
+
   deps = [
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
   ]
-  defines = [
-    "LOG_DOMAIN=0xD004309",
-    "LOG_TAG=\"CLOUD_FILE_SYNC\"",
-  ]
+
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
@@ -68,22 +60,17 @@ ohos_shared_library("cloud_sync_ani") {
     "runtime_core:ani_helpers",
     "runtime_core:libarkruntime",
   ]
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-  output_extension = "so"
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_FILE_SYNC\"",
+  ]
+
+  use_exceptions = true
 }
 
-generate_static_abc("file_cloud_sync") {
-  base_url = "./ets"
-  files = [ "./ets/@ohos.file.cloudSync.ets" ]
-  is_boot_abc = "True"
-  device_dst_file = "/system/framework/file_cloud_sync.abc"
-}
-
-ohos_prebuilt_etc("file_cloud_sync_etc") {
-  source = "$target_out_dir/file_cloud_sync.abc"
-  module_install_dir = "framework"
-  subsystem_name = "filemanagement"
-  part_name = "dfs_service"
-  deps = [ ":file_cloud_sync" ]
+group("ani_core_test") {
+  testonly = true
+  deps = [ ":cloud_sync_core_test" ]
 }
