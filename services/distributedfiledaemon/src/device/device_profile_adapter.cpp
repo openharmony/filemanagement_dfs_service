@@ -22,7 +22,6 @@
 #include "string_ex.h"
 #include "utils_log.h"
 
-
 #ifdef SUPPORT_DEVICE_PROFILE
 #include "distributed_device_profile_client.h"
 #endif
@@ -31,10 +30,11 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
-using namespace OHOS::DistributedDeviceProfile;
 using namespace OHOS::FileManagement;
 
 #ifdef SUPPORT_DEVICE_PROFILE
+using namespace OHOS::DistributedDeviceProfile;
+
 namespace {
 constexpr const char *DFS_SERVICE_ID = "distributedfiledaemon";
 constexpr const char *DMS_SERVICE_ID = "dmsfwk_svr_id";
