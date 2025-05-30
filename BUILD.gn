@@ -94,6 +94,11 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_point_test",
     "test/moduletest:DistributedFileDaemonServiceTest",
   ]
+
+  if (support_device_profile) {
+    deps +=
+    [ "${services_path}/distributedfiledaemon/test/unittest/device/device_profile_adapter:device_profile_adapter_test" ]
+  }
 }
 
 group("cloudsync_test_module") {

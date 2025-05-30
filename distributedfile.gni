@@ -55,4 +55,6 @@ declare_args() {
           global_parts_info.distributedhardware_distributed_hardware_adapter)) {
     support_same_account = false
   }
+
+  support_device_profile = support_same_account
 }
