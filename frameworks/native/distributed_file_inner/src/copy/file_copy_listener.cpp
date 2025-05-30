@@ -83,6 +83,7 @@ void FileCopyLocalListener::StartListener()
         return;
     }
     notifyHandler_ = std::thread([this] {
+        LOGI("StartListener.");
         GetNotifyEvent();
     });
 }
@@ -90,6 +91,7 @@ void FileCopyLocalListener::StartListener()
 void FileCopyLocalListener::StopListener()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
+    LOGI("StopListener start.");
     if (processCallback_ != nullptr) {
         processCallback_(progressSize_, totalSize_);
     }

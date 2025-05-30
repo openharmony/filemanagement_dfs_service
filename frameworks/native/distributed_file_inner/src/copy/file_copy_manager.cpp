@@ -198,6 +198,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
+
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
@@ -399,7 +400,7 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     if (g_apiCompatibleVersion >= OPEN_TRUC_VERSION) {
         destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     } else {
-        destFd = open(dest.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
     if (destFd < 0) {
         LOGE("Error opening dest file descriptor. errno = %{public}d", errno);
