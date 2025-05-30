@@ -76,7 +76,7 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetw
         return false;
     }
     return IsRemoteDfsVersionLower(remoteNetworkId, localDfsVersion, packageName);
-#elif
+#else
     return false;
 #endif
 }
