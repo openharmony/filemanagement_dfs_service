@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Huawei Device Co., Ltd.
+# Copyright (C) 2023-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -51,6 +51,7 @@ ohos_unittest("fuse_manager_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
@@ -119,6 +120,7 @@ ohos_unittest("cloud_daemon_statistic_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
@@ -204,6 +206,7 @@ ohos_unittest("cloud_daemon_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
