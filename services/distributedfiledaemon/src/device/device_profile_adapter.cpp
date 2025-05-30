@@ -22,7 +22,8 @@
 #include "string_ex.h"
 #include "utils_log.h"
 
-#ifndef SUPPORT_DEVICE_PROFILE
+
+#ifdef SUPPORT_DEVICE_PROFILE
 #include "distributed_device_profile_client.h"
 #endif
  
@@ -33,7 +34,7 @@ using namespace std;
 using namespace OHOS::DistributedDeviceProfile;
 using namespace OHOS::FileManagement;
 
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
 namespace {
 constexpr const char *DFS_SERVICE_ID = "distributedfiledaemon";
 constexpr const char *DMS_SERVICE_ID = "dmsfwk_svr_id";
@@ -66,7 +67,7 @@ static inline bool Str2Bool(const std::string &value)
 bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
     VersionPackageName packageName)
 {
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     DfsVersion localDfsVersion;
     int32_t ret = GetLocalDfsVersion(packageName, localDfsVersion);
@@ -84,7 +85,7 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetw
 bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
     const DfsVersion &thresholdDfsVersion, VersionPackageName packageName)
 {
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     if (remoteNetworkId.empty()) {
         LOGE("remoteNetworkId is empty");
@@ -104,7 +105,7 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetw
 
 int32_t DeviceProfileAdapter::GetDeviceStatus(const std::string &networkId, bool &status)
 {
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     auto udid = GetUdidByNetworkId(networkId);
     if (udid.empty()) {
         LOGE("remote GetUdidByNetworkId failed");
@@ -128,7 +129,7 @@ int32_t DeviceProfileAdapter::GetDeviceStatus(const std::string &networkId, bool
 
 int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
 {
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     int ret = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
@@ -160,7 +161,7 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
     return FileManagement::ERR_OK;
 }
 
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
 int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageName packageName, DfsVersion &dfsVersion)
 {
 
@@ -185,7 +186,7 @@ int32_t DeviceProfileAdapter::GetLocalDfsVersion(VersionPackageName packageName,
 int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
     const std::string &networkId, DfsVersion &dfsVersion, VersionPackageName packageName)
 {
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     if (networkId.empty()) {
         LOGE("networkId: %{public}.5s is empty", networkId.c_str());
         return ERR_NULLPTR;
@@ -201,7 +202,7 @@ int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(
 #endif
 }
 
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
 int32_t DeviceProfileAdapter::GetDfsVersion(const std::string &udid,
     VersionPackageName packageName, DfsVersion &dfsVersion, bool IsVerifyCode)
 {
