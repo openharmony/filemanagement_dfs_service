@@ -80,22 +80,22 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.StartInner());
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         start(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StartInner());
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -103,10 +103,10 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.StopInner());
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -117,8 +117,8 @@ export default namespace cloudSync {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -233,22 +233,22 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError) => void): void => {
                 let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         start(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -256,22 +256,22 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         stop(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -382,22 +382,22 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.StartInner());
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         start(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StartInner());
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -405,10 +405,10 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.StopInner());
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -419,32 +419,32 @@ export default namespace cloudSync {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
         getLastSyncTime(): Promise<number> {
             return new Promise<number>((resolve: (result: number) => void,
-                reject: (e: BusinessError<void>) => void): number => {
+                reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
-                promise.then<number>((ret: number): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as Number);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         getLastSyncTime(callback: AsyncCallback<number>): void {
             let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
-            promise.then<number>((ret: number): void => {
+            promise.then<void, void>((ret: NullishType): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
-                callback(e, ret);
-            }, (e: BusinessError<void>): void => {
+                callback(e, ret as Number);
+            }, (e: Error): void => {
                 let num: number = 0;
-                callback(e, num);
+                callback(e as BusinessError<void>, num);
             });
         }
 
@@ -485,22 +485,22 @@ export default namespace cloudSync {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError) => void): void => {
                 let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         start(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -531,10 +531,10 @@ export default namespace cloudSync {
                 let promise = taskpool.execute((uri: string, clean: boolean): int => {
                     return this.StopInner(uri, clean);
                 }, uri, clean);
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -544,12 +544,12 @@ export default namespace cloudSync {
             let promise = taskpool.execute((uri: string, clean: boolean): int => {
                 return this.StopInner(uri, clean);
             }, uri, clean);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, undefined);
-            }, (e: BusinessError<void>): void => {
-                callback(e, undefined);
+            }, (e: Error): void => {
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
@@ -654,8 +654,8 @@ export default namespace cloudSync {
 
             taskPool.then((result: NullishType): void => {
                 resolve(result as int);
-            }, (error: BusinessError<void>): void => {
-                reject(error);
+            }, (error: Error): void => {
+                reject(error as BusinessError<void>);
             });
         });
         return promise;
@@ -663,31 +663,31 @@ export default namespace cloudSync {
 
     export function getFileSyncState(uri: Array<string>): Promise<Array<FileSyncState>> {
         let promise = new Promise<Array<FileSyncState>>((resolve, reject) => {
-            let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
-            Promise.all(promises).then<void, void>((re: Array<int>): void => {
+            let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+            Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
                 let res: Array<FileSyncState> = re.map((result: int) => {
                     return result as FileSyncState;
                 });
                 resolve(res);
-            }).catch((e: BusinessError<void>): void => {
-                reject(e);
+            }).catch((e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
         return promise;
     }
 
     export function getFileSyncState(uri: Array<string>, callback: AsyncCallback<Array<FileSyncState>>): void {
-        let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
-        Promise.all(promises).then<void, void>((re: Array<int>): void => {
+        let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+        Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
             let res: Array<FileSyncState> = re.map((result: int) => {
                 return result as FileSyncState;
             });
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, res);
-        }).catch((e: BusinessError<void>): void => {
+        }).catch((e: Error): void => {
             let res: Array<FileSyncState> = new Array<FileSyncState>();
-            callback(e, res);
+            callback(e as BusinessError<void>, res);
         });
     }
 
@@ -716,16 +716,16 @@ export default namespace cloudSync {
                 StaticFunction.optimizeStorageInner();
                 return 0;
             });
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
 
     export function startOptimizeSpace(para: OptimizeSpaceParam, cb?: Callback<OptimizeSpaceProgress>): Promise<void> {
-        let callback: Callback<OptimizeSpaceProgress> = (data: OptimizeSpaceProgress) => { };
+        let callback: Callback<OptimizeSpaceProgress> = (data: OptimizeSpaceProgress): void => {};
         if (cb !== undefined) {
             callback = cb;
         }
@@ -738,10 +738,10 @@ export default namespace cloudSync {
                 StaticFunction.startOptimizeSpaceInner(param, cbk);
                 return 0;
             }, para, callback);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
