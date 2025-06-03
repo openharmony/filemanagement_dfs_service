@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@
 #include "clouddisk_rdb_transaction.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_notify.h"
+#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "ffrt_inner.h"
@@ -1392,7 +1393,7 @@ void RDBUnlinkAsync(shared_ptr<CloudDiskRdbStore> rdbStore, const string& cloudI
                 "Failed to unlink DB cloudId: " + cloudId});
         }
     };
-    ffrt::thread(rdbUnlink).detach();
+    ConcurrentQueue::GetInstance().Submit(rdbUnlink);
 }
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)

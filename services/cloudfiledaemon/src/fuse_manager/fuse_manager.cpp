@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,6 +48,7 @@
 #include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_type_const.h"
+#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
@@ -842,7 +843,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
-    ffrt::submit([cInode, error, openFinish, cond, data] {
+    ConcurrentQueue::GetInstance().Submit([cInode, error, openFinish, cond, data] {
         if (IsVideoType(cInode->mBase->name)) {
             LoadCacheFileIndex(cInode, data);
         }
@@ -1281,7 +1282,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                 static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-            ffrt::submit(
+            ConcurrentQueue::GetInstance().Submit(
                 [data, readArgs, cInode, cacheIndex] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
         }
         wSesLock.unlock();
@@ -1334,7 +1335,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
             static_cast<long>(cacheIndex));
     }
     if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-        ffrt::submit([readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
+        ConcurrentQueue::GetInstance().Submit(
+            [readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
     }
     wSesLock.unlock();
     return;
@@ -1521,7 +1523,7 @@ static bool DoReadSlice(fuse_req_t req,
             FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
         return false;
     }
-    ffrt::submit([pid, readArgs, cInode, readSession, data] {
+    ConcurrentQueue::GetInstance().Submit([pid, readArgs, cInode, readSession, data] {
         CloudReadOnCloudFile(pid, data, readArgs, cInode, readSession);
     });
     return true;
@@ -1554,7 +1556,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
             LOGE("Init readArgsCache failed");
             break;
         }
-        ffrt::submit([readArgsCache, params, data] {
+        ConcurrentQueue::GetInstance().Submit([readArgsCache, params, data] {
             CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data);
         });
     }
