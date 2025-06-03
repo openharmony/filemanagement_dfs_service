@@ -147,7 +147,7 @@ void DaemonStubSupPTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupOnRemoteRequestTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupOnRemoteRequestTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupOnRemoteRequestTest001 Start";
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
@@ -177,7 +177,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupOnRemoteRequestTest001, TestSize.Level
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleOpenP2PConnectionExTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleOpenP2PConnectionExTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleOpenP2PConnectionExTest001 Start";
     MessageParcel data;
@@ -207,7 +207,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleOpenP2PConnectionExTest001, Test
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCloseP2PConnectionExTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCloseP2PConnectionExTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleCancelCopyTaskTest001 Start";
     MessageParcel data;
@@ -230,7 +230,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCloseP2PConnectionExTest001, Tes
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandlePrepareSessionTest001 Start";
     MessageParcel data;
@@ -276,7 +276,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest001, TestSize.
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest002, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandlePrepareSessionTest002 Start";
     MessageParcel data;
@@ -317,7 +317,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest002, TestSize.
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileTest001 Start";
     UID = DAEMON_UID;
@@ -362,7 +362,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoTest001 Start";
     UID = DAEMON_UID;
@@ -416,7 +416,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSi
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest002, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoTest002 Start";
     UID = DAEMON_UID;
@@ -439,7 +439,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest002, TestSi
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCancelCopyTaskTest001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCancelCopyTaskTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleCancelCopyTaskTest001 Start";
     MessageParcel data;
@@ -461,7 +461,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCancelCopyTaskTest001, TestSize.
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterRecvCallback001 Start";
     UID = DATA_UID;
@@ -497,7 +497,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSiz
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestSize.Level1)
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 Start";
     UID = DATA_UID;

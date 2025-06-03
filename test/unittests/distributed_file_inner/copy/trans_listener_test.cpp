@@ -76,7 +76,7 @@ void TransListenerTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0001, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0001 Start";
 
@@ -100,7 +100,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0002, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0002 Start";
 
@@ -120,7 +120,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0003, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0003 Start";
     // Setup test directory structure first
@@ -149,7 +149,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0004, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0004 Start";
     // Setup test file first
@@ -178,7 +178,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0005, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0005 Start";
     string srcuri = "file://other/invalid/path/src.txt";
@@ -197,7 +197,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0006, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0006 Start";
     string srcuri = "";
@@ -216,7 +216,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0007, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0007, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_CopyToSandBox_0007 Start";
     // Setup read-only directory
@@ -245,7 +245,7 @@ HWTEST_F(TransListenerTest, TransListener_CopyToSandBox_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_Cancel_0001, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_Cancel_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_Cancel_0001 Start";
 
@@ -270,7 +270,7 @@ HWTEST_F(TransListenerTest, TransListener_Cancel_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0001, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_OnFileReceive_0001 Start";
 
@@ -294,7 +294,7 @@ HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0002, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_OnFileReceive_0002 Start";
 
@@ -318,7 +318,7 @@ HWTEST_F(TransListenerTest, TransListener_OnFileReceive_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0004, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0004 Start";
 
@@ -342,7 +342,7 @@ HWTEST_F(TransListenerTest, TransListener_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0005, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0005 Start";
 
@@ -367,7 +367,7 @@ HWTEST_F(TransListenerTest, TransListener_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0006, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0006 Start";
 
@@ -390,7 +390,7 @@ HWTEST_F(TransListenerTest, TransListener_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0007, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0007, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0007 Start";
 
@@ -413,7 +413,7 @@ HWTEST_F(TransListenerTest, TransListener_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0008, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0008, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0008 Start";
 
@@ -436,7 +436,7 @@ HWTEST_F(TransListenerTest, TransListener_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0009, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0009, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0009 Start";
 
@@ -463,7 +463,7 @@ HWTEST_F(TransListenerTest, TransListener_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0010, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0010, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0010 Start";
 
@@ -490,7 +490,7 @@ HWTEST_F(TransListenerTest, TransListener_0010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0011, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0011, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0011 Start";
 
@@ -511,7 +511,7 @@ HWTEST_F(TransListenerTest, TransListener_0011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0012, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0012, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0012 Start";
 
@@ -532,7 +532,7 @@ HWTEST_F(TransListenerTest, TransListener_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0013, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0013, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0013 Start";
 
@@ -553,7 +553,7 @@ HWTEST_F(TransListenerTest, TransListener_0013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0014, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0014, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0014 Start";
 
@@ -573,7 +573,7 @@ HWTEST_F(TransListenerTest, TransListener_0014, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(TransListenerTest, TransListener_0015, TestSize.Level1)
+HWTEST_F(TransListenerTest, TransListener_0015, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TransListener_0015 Start";
 

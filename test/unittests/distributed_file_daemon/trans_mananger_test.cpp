@@ -53,7 +53,7 @@ void TransManagerTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-HWTEST_F(TransManagerTest, DfsService_AddTransTask_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_AddTransTask_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_AddTransTask_001_Start";
     string sessionName;
@@ -63,7 +63,7 @@ HWTEST_F(TransManagerTest, DfsService_AddTransTask_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_AddTransTask_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_AddTransTask_002, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_AddTransTask_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_AddTransTask_002_Start";
     string sessionName;
@@ -73,7 +73,7 @@ HWTEST_F(TransManagerTest, DfsService_AddTransTask_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_AddTransTask_002_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_DeleteTransTask_001_Start";
     string sessionName;
@@ -82,7 +82,7 @@ HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_DeleteTransTask_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_002, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_DeleteTransTask_002_Start";
     string sessionName;
@@ -91,7 +91,7 @@ HWTEST_F(TransManagerTest, DfsService_DeleteTransTask_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_DeleteTransTask_002_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_GetInstance_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_GetInstance_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetInstance_001_Start";
     TransManager::GetInstance();
@@ -99,7 +99,7 @@ HWTEST_F(TransManagerTest, DfsService_GetInstance_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_GetInstance_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_001_Start";
     string sessionName;
@@ -109,7 +109,7 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_002, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_002_Start";
     string sessionName;
@@ -119,7 +119,7 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_002_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFinished_001_Start";
     string sessionName;
@@ -128,7 +128,7 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFinished_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_002, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFinished_002_Start";
     string sessionName;
@@ -137,7 +137,7 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFinished_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFinished_002_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileProgress_001, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileProgress_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileProgress_001_Start";
     string sessionName;
@@ -148,7 +148,7 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileProgress_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_NotifyFileProgress_001_End";
 }
 
-HWTEST_F(TransManagerTest, DfsService_NotifyFileProgress_002, TestSize.Level1)
+HWTEST_F(TransManagerTest, DfsService_NotifyFileProgress_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileProgress_002_Start";
     string sessionName;

@@ -76,7 +76,7 @@ void RemoteFileCopyManagerTest::TearDown(void)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 Start";
     string localUri = "/data/test/test.txt";
@@ -116,7 +116,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Le
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0002 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
@@ -142,7 +142,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoteCancel_0001, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoteCancel_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Cancel_0001 Start";
     auto infos1 = std::make_shared<FileInfos>();
@@ -180,7 +180,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoteCancel_0001, Tes
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoveFileInfos_0001, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoveFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_RemoveFileInfos_0001 Start";
     auto infos1 = std::make_shared<FileInfos>();
@@ -217,7 +217,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoveFileInfos_0001, 
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 Start";
     auto infos = std::make_shared<FileInfos>();
@@ -235,7 +235,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_IsMediaUri_0001, TestSize.Level1)
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_IsMediaUri_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_IsMediaUri_0001 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
