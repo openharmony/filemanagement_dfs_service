@@ -24,6 +24,12 @@
 #define OPEN_TIME_MAX 7
 #define READ_SIZE_MAX 6
 #define READ_TIME_MAX 10
+#define VIDEO_READ_INFO 2
+
+enum VideoReadInfoIndex {
+    CACHE_SUM = 0,
+    READ_SUM,
+};
 
 namespace OHOS {
 namespace FileManagement {
@@ -42,6 +48,7 @@ public:
     void UpdateReadSizeStat(uint64_t size);
     void UpdateReadTimeStat(uint64_t size, uint64_t time);
     void UpdateStatData();
+    void UpdateReadInfo(uint32_t index);
     mutex mutex_;
 private:
     CloudDaemonStatistic() = default;
@@ -55,6 +62,7 @@ private:
     vector<uint64_t> readSizeStat_ = vector<uint64_t>(READ_SIZE_MAX, 0);
     vector<vector<uint64_t>> readTimeStat_ =
         vector<vector<uint64_t>>(READ_SIZE_MAX, vector<uint64_t>(READ_TIME_MAX, 0));
+    vector<uint64_t> videoReadInfo_ = vector<uint64_t>(VIDEO_READ_INFO, 0);
 };
 } // namespace CloudFile
 } // namespace FileManagement

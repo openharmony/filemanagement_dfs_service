@@ -107,6 +107,14 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
     CheckOverflow(readTimeStat_[indexSize][indexTime], 1);
 }
 
+void CloudDaemonStatistic::UpdateReadInfo(uint32_t)
+{
+    if (index >= VIDEO_READ_INFO) {
+        return;
+    }
+    CheckOverflow(videoReadInfo_[index], 1);
+}
+
 void CloudDaemonStatistic::AddFileData()
 {
     /* file not exist means first time, no former data, normal case */
@@ -141,6 +149,10 @@ void CloudDaemonStatistic::AddFileData()
             statDataFile >> tmpData;
             CheckOverflow(readTimeStat_[i][j], tmpData);
         }
+    }
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        statDataFile >> tmpData;
+        CheckOverflow(videoReadInfo_[i], tmpData);
     }
     statDataFile.close();
 }
@@ -200,6 +212,12 @@ void CloudDaemonStatistic::OutputToFile()
         tmpStr += "\n";
     }
     statDataFile << tmpStr << endl;
+    tmpStr = "";
+
+    for(uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        tmpStr += (to_string(videoReadInfo_[i]) + " ");
+    }
+    statDataFile << tmpStr << endl;
     statDataFile.close();
 }
 
@@ -220,6 +238,9 @@ void CloudDaemonStatistic::ClearStat()
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             readTimeStat_[i][j] = 0;
         }
+    }
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        videoReadInfo_[i] = 0;
     }
 }
 
