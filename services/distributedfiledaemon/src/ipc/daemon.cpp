@@ -72,6 +72,7 @@ const int32_t E_UNMOUNT = 13600004;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -369,12 +370,41 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     return 0;
 }
 
+bool Daemon::IsCallingDeviceTrusted()
+{
+    std::string callingNetworkId = IPCSkeleton::GetCallingDeviceID();
+    LOGI("Daemon::IsCallingDeviceTrusted called, callingNetworkId=%{public}.5s", callingNetworkId.c_str());
+    if (callingNetworkId.empty()) {
+        LOGE("Get callingNetworkId failed");
+        return false;
+    }
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("The size of trust device list is invalid, size=%zu", deviceList.size());
+        return false;
+    }
+    for (const auto &device : deviceList) {
+        if (std::string(device.networkId) == callingNetworkId) {
+            return (device.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
+        }
+    }
+    LOGI("Daemon::IsCallingDeviceTrusted end");
+    return false;
+}
+
 int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstPath,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
+#ifdef SUPPORT_SAME_ACCOUNT
+    if (!IsCallingDeviceTrusted()) {
+        LOGE("Check calling device permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
+#endif
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
@@ -597,6 +627,12 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
     LOGI("GetRemoteCopyInfo begin.");
+#ifdef SUPPORT_SAME_ACCOUNT
+    if (!IsCallingDeviceTrusted()) {
+        LOGE("Check calling device permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
+#endif
     auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
     if (physicalPath.empty()) {
         LOGE("GetRemoteCopyInfo GetRealPath failed.");
