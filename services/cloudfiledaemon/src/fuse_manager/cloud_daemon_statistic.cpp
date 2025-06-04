@@ -214,7 +214,7 @@ void CloudDaemonStatistic::OutputToFile()
     statDataFile << tmpStr << endl;
     tmpStr = "";
 
-    for(uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
         tmpStr += (to_string(videoReadInfo_[i]) + " ");
     }
     statDataFile << tmpStr << endl;

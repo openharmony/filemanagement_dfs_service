@@ -1558,6 +1558,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         int64_t cacheIndex = static_cast<int64_t>(
             (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+            CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
             LOGI("Video expansion, try to up video info cache sum in DoReadSlice");
             readStat.UpdateReadInfo(CACHE_SUM);
             continue;
