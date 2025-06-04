@@ -1528,8 +1528,6 @@ static bool DoReadSlice(fuse_req_t req,
     LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
     if (needCheck && !CheckAndWait(pid, cInode, readArgs->offset)) {
         fuse_reply_err(req, ENETUNREACH);
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
-            FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
         return false;
     }
     ffrt::submit([pid, readArgs, cInode, readSession, data] {
