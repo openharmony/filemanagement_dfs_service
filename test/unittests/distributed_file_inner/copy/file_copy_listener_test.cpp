@@ -103,7 +103,7 @@ bool FileCopyLocalListenerTest::CheckFileExists(const std::string &path)
  * @tc.type: FUNC
  * @tc.require: AR000H0E5H
  */
-HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0001, TestSize.Level1)
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyLocalListener_Constructor_0001 Start";
 
@@ -124,7 +124,7 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0001, Test
  * @tc.type: FUNC
  * @tc.require: AR000H0E5H
  */
-HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0002, TestSize.Level1)
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyLocalListener_Constructor_0002 Start";
 
@@ -143,7 +143,7 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_Constructor_0002, Test
  * @tc.type: FUNC
  * @tc.require: AR000H0E5H
  */
-HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartStop_0001, TestSize.Level1)
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartStop_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyLocalListener_StartStop_0001 Start";
 

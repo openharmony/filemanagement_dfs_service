@@ -79,7 +79,7 @@ void AssetRecvCallbackStubTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_OnRemoteRequest_0100 Start";
     uint32_t code = static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START);
@@ -108,7 +108,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, 
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_OnRemoteRequest_0200 Start";
     uint32_t code = static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START);
@@ -133,7 +133,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, 
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnStart_0100 Start";
     MessageParcel data;
@@ -172,7 +172,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, Te
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnRecvProgress_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnRecvProgress_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnRecvProgress_0100 Start";
     MessageParcel data;
@@ -213,7 +213,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnRecvProgress_0
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnFinished_0100 Start";
     MessageParcel data;
@@ -246,7 +246,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100,
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0200, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnFinished_0200 Start";
     MessageParcel data;

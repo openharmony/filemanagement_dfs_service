@@ -69,7 +69,7 @@ void FileSizeUtilsTest::TearDown(void)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, FileSizeUtils_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, FileSizeUtils_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileSizeUtils_0001 Start";
     string srcuri = "file://docs/storage/media/100/local/files/Docs/aa/";
@@ -107,7 +107,7 @@ HWTEST_F(FileSizeUtilsTest, FileSizeUtils_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, IsDirectory_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, IsDirectory_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "IsDirectory_0001 Start";
     string srcuri = "/data/test/IsDirectory_0001";
@@ -128,7 +128,7 @@ HWTEST_F(FileSizeUtilsTest, IsDirectory_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, FilterFunc_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, FilterFunc_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FilterFunc_0001 Start";
     dirent dir;
@@ -153,7 +153,7 @@ HWTEST_F(FileSizeUtilsTest, FilterFunc_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, GetRealPath_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, GetRealPath_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetRealPath_0001 Start";
     auto ptr = std::make_shared<FileSizeUtils>();
@@ -173,7 +173,7 @@ HWTEST_F(FileSizeUtilsTest, GetRealPath_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, GetGetDirSize_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, GetGetDirSize_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetGetDirSize_0001 Start";
     std::string path = "/data/test/GetGetDirSize_0001";
@@ -209,7 +209,7 @@ HWTEST_F(FileSizeUtilsTest, GetGetDirSize_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, IsFile_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, IsFile_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "IsFile_0001 Start";
     auto ptr = std::make_shared<FileSizeUtils>();
@@ -226,7 +226,7 @@ HWTEST_F(FileSizeUtilsTest, IsFile_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileSizeUtilsTest, GetRealUri_0001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, GetRealUri_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetRealUri_0001 Start";
     std::string testUri = "file://docs/storage/";
@@ -244,7 +244,7 @@ HWTEST_F(FileSizeUtilsTest, GetRealUri_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(FileSizeUtilsTest, IsFilePathValid001, TestSize.Level1)
+HWTEST_F(FileSizeUtilsTest, IsFilePathValid001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "IsFilePathValid001 Start";
     try {

@@ -84,7 +84,7 @@ void ConnectionDetectorTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetConnectionStatus_001_Start";
     string targetDir = "/test/file";
@@ -94,7 +94,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_001, TestSize.Le
     GTEST_LOG_(INFO) << "DfsService_GetConnectionStatus_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetConnectionStatus_002_Start";
     string targetDir;
@@ -104,7 +104,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetConnectionStatus_002, TestSize.Le
     GTEST_LOG_(INFO) << "DfsService_GetConnectionStatus_002_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_001_Start";
     string str;
@@ -113,7 +113,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_Start";
     string str = "test";
@@ -122,7 +122,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_ParseHmdfsPath_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_ParseHmdfsPath_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_ParseHmdfsPath_001_Start";
     g_mockQueryActiveOsAccountIds = false;
@@ -140,7 +140,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_ParseHmdfsPath_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_ParseHmdfsPath_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_RepeatGetConnectionStatus_001_Start";
     string targetDir;
@@ -150,7 +150,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_001, TestS
     GTEST_LOG_(INFO) << "DfsService_RepeatGetConnectionStatus_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_RepeatGetConnectionStatus_002_Start";
     string targetDir = "testDir";
@@ -160,7 +160,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_RepeatGetConnectionStatus_002, TestS
     GTEST_LOG_(INFO) << "DfsService_RepeatGetConnectionStatus_002_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_001_Start";
     string str;
@@ -171,7 +171,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_002_Start";
     string str = "test  %/ lld";
@@ -182,7 +182,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_002_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_003, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_003_Start";
     string str = "test  %/ lld test %//d    txt jpg";
@@ -193,7 +193,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_003_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_004, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_004_Start";
     string str = "       test";
@@ -204,7 +204,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_GetCellByIndex_004, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_GetCellByIndex_004_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionStatus_001_Start";
     ifstream inputFile;
@@ -214,7 +214,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_001, TestSize.
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionStatus_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionStatus_002_Start";
     ifstream inputFile("testName");
@@ -224,7 +224,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionStatus_002, TestSize.
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionStatus_002_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_001_Start";
     string fileName;
@@ -235,7 +235,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_001, TestSize.L
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_002_Start";
     string fileName = "testName";
@@ -252,7 +252,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_002, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I9KNY6
  */
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_003, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_003 start";
     // file not exist
@@ -282,7 +282,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_003, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I9KNY6
  */
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_004, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_004 start";
     string testPath = "/data/test/1.txt";
@@ -318,7 +318,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_004, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I9KNY6
  */
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_005, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_005 start";
     string testPath = "/data/test/1.txt";
@@ -354,7 +354,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_005, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I9KNY6
  */
-HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_006, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_006 start";
     string testPath = "/data/test/1.txt";
@@ -384,7 +384,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_006, TestSize.L
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_005 end";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_001_Start";
     string path;
@@ -394,7 +394,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_001_End";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_002, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_002_Start";
     string path = "test@txt#1";
@@ -410,7 +410,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I9KNY6
  */
-HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_003, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "ConnectionDetectorTest_CheckValidDir_0100 start";
     bool flag = ConnectionDetector::CheckValidDir("/data/test");
@@ -429,7 +429,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_003 end";
 }
 
-HWTEST_F(ConnectionDetectorTest, DfsService_GetCurrentUserId_001, TestSize.Level1)
+HWTEST_F(ConnectionDetectorTest, DfsService_GetCurrentUserId_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DfsService_GetCurrentUserId_001_Start";
     int32_t ret = ConnectionDetector::GetCurrentUserId();
