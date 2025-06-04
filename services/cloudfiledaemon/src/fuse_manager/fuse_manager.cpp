@@ -1190,7 +1190,7 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
             lock, READ_TIMEOUT_S, [&] { return (it->flags & PG_UPTODATE) || CheckReadIsCanceled(pid, cInode); });
         if (!waitStatus) {
             LOGE("CheckAndWait timeout: %{public}ld", static_cast<long>(cacheIndex));
-            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::Read,
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
                 FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
             return false;
         }
