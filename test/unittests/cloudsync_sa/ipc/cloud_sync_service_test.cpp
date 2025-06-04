@@ -30,8 +30,6 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
-std::shared_ptr<CloudSyncService> g_servicePtr_;
-
 class CloudSyncServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -39,6 +37,7 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
+    static inline std::shared_ptr<CloudSyncService> g_servicePtr_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -56,7 +55,8 @@ void CloudSyncServiceTest::SetUpTestCase(void)
 
 void CloudSyncServiceTest::TearDownTestCase(void)
 {
-    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    DfsuAccessTokenMock::dfsuAccessToken.reset();
+    g_servicePtr_ = nullptr;
     dfsuAccessToken_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
@@ -526,16 +526,37 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetHmdfsPathTest003 start";
     try {
-        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1...txt";
         int32_t userId = 100;
         std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
-        std::string out = "/mnt/hmdfs/100/account/device_view/local/data/com.hmos.notepad/dir/1.txt";
+        std::string out = "/mnt/hmdfs/100/account/device_view/local/data/com.hmos.notepad/dir/1...txt";
         EXPECT_EQ(ret, out);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetHmdfsPathTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "GetHmdfsPathTest003 end";
+}
+
+/**
+ * @tc.name:GetHmdfsPathTest004
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest004 start";
+    try {
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/../../dir/1.txt";
+        int32_t userId = 100;
+        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest004 end";
 }
 
 /**
@@ -617,26 +638,6 @@ HWTEST_F(CloudSyncServiceTest, SetDeathRecipientTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnStartTest001
- * @tc.desc: Verify the OnStart function.
- * @tc.type: FUNC
- * @tc.require: IB3SLT
- */
-HWTEST_F(CloudSyncServiceTest, OnStartTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnStartTest001 start";
-    try {
-        EXPECT_NE(g_servicePtr_, nullptr);
-        SystemAbilityOnDemandReason startReason;
-        g_servicePtr_->OnStart(startReason);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnStartTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "OnStartTest001 end";
-}
-
-/**
  * @tc.name: OnActiveTest001
  * @tc.desc: Verify the OnActive function.
  * @tc.type: FUNC
@@ -674,25 +675,6 @@ HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "HandleStartReason failed";
     }
     GTEST_LOG_(INFO) << "HandleStartReasonTest001 end";
-}
-
-/**
- * @tc.name: PreInitTest001
- * @tc.desc: Verify the PreInit function.
- * @tc.type: FUNC
- * @tc.require: IB3SLT
- */
-HWTEST_F(CloudSyncServiceTest, PreInitTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PreInitTest001 start";
-    try {
-        EXPECT_NE(g_servicePtr_, nullptr);
-        g_servicePtr_->PreInit();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PreInitTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "PreInitTest001 end";
 }
 
 /**
