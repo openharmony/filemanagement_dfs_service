@@ -107,7 +107,7 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
     CheckOverflow(readTimeStat_[indexSize][indexTime], 1);
 }
 
-void CloudDaemonStatistic::UpdateReadInfo(uint32_t)
+void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
 {
     if (index >= VIDEO_READ_INFO) {
         return;
