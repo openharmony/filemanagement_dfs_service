@@ -177,19 +177,16 @@ void CloudDaemonStatistic::OutputToFile()
         }
         close(fd);
     }
-    
     std::ofstream statDataFile(statFilePath);
     if (!statDataFile) {
         LOGE("open out stream file cloud_sync_read_file_stat fail.");
         return;
     }
-
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
         tmpStr += (to_string(openSizeStat_[i]) + " ");
     }
     statDataFile << tmpStr << endl << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
         for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
             tmpStr += (to_string(openTimeStat_[i][j]) + " ");
@@ -198,13 +195,11 @@ void CloudDaemonStatistic::OutputToFile()
     }
     statDataFile << tmpStr << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         tmpStr += (to_string(readSizeStat_[i]) + " ");
     }
     statDataFile << tmpStr << endl << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             tmpStr += (to_string(readTimeStat_[i][j]) + " ");
@@ -213,7 +208,6 @@ void CloudDaemonStatistic::OutputToFile()
     }
     statDataFile << tmpStr << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
         tmpStr += (to_string(videoReadInfo_[i]) + " ");
     }
