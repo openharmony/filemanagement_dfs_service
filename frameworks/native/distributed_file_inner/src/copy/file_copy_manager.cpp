@@ -210,6 +210,11 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (ret != E_OK) {
         return EINVAL;
     }
+    if (infos->srcPath == infos->destPath) {
+        LOGE("The src and dest is same");
+        RemoveFileInfos(infos);
+        return E_OK;
+    }
 
     if (IsRemoteUri(infos->srcUri)) {
         ret = ExecRemote(infos, processCallback);
