@@ -28,6 +28,7 @@ clouddisk_database_path = "${services_path}/clouddisk_database"
 
 declare_args() {
   support_same_account = true
+  support_device_profile = true
   if (defined(global_parts_info) &&
       defined(global_parts_info.powermgr_battery_manager)) {
     cloudsync_service_power = true
@@ -54,5 +55,6 @@ declare_args() {
   if (!defined(global_parts_info) || !defined(
           global_parts_info.distributedhardware_distributed_hardware_adapter)) {
     support_same_account = false
+    support_device_profile = false
   }
 }
