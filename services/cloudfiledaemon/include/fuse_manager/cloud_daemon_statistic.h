@@ -56,7 +56,7 @@ private:
     void AddFileData();
     void ClearStat();
     void OutputToFile();
-    int32_t CheckFileStat()
+    int32_t CheckFileStat();
     vector<uint64_t> openSizeStat_ = vector<uint64_t>(OPEN_SIZE_MAX, 0);
     vector<vector<uint64_t>> openTimeStat_ =
         vector<vector<uint64_t>>(FILE_TYPE_MAX, vector<uint64_t>(OPEN_TIME_MAX, 0));
