@@ -1231,6 +1231,17 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
 }
 
+static void UpdateReadStatInfo(shared_ptr<ReadArguments> readArgs, shared_ptr<CloudInode> cInode,
+    uint64_t readTime)
+{
+    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+    readStat.UpdateReadSizeStat(readArgs->size);
+    readStat.UpdateReadTimeStat(readArgs->size, readTime);
+    if (IsVideoType(cInode->mBase->name)) {
+        readStat.UpdateReadInfo(READ_SUM);
+    }
+}
+
 static void CloudReadOnCloudFile(pid_t pid,
                                  struct FuseData *data,
                                  shared_ptr<ReadArguments> readArgs,
@@ -1283,17 +1294,6 @@ static void CloudReadOnCloudFile(pid_t pid,
         wSesLock.unlock();
     }
     return;
-}
-
-static void UpdateReadStatInfo(shared_ptr<ReadArguments> readArgs, shared_ptr<CloudInode> cInode,
-    uint64_t readTime)
-{
-    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-    readStat.UpdateReadSizeStat(readArgs->size);
-    readStat.UpdateReadTimeStat(readArgs->size, readTime);
-    if (IsVideoType(cInode->mBase->name)) {
-        readStat.UpdateReadInfo(READ_SUM);
-    }
 }
 
 static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
