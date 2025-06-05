@@ -386,7 +386,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level0)
         std::string srcUri = "srcUri";
         std::string dstUri = "dstUri";
         int32_t ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
-        EXPECT_EQ(ret, EINVAL);
+        EXPECT_EQ(ret, ENOENT);
 
         dstUri = "../dstUri";
         ret = distributedDaemonManagerImpl_->Copy(srcUri, dstUri, nullptr);
