@@ -104,6 +104,7 @@ ohos_unittest("cloud_file_utils_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "image_framework:image_native",
+    "init:libbegetutil",
   ]
 
   defines = [ "private=public" ]

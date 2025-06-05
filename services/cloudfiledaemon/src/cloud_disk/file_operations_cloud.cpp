@@ -35,6 +35,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "file_operations_helper.h"
+#include "fuse_ioctl.h"
 #include "hitrace_meter.h"
 #include "securec.h"
 #include "utils_log.h"
@@ -73,9 +74,6 @@ namespace {
 }
 
 const int32_t MAX_SIZE = 4096;
-constexpr unsigned HMDFS_IOC = 0xf2;
-constexpr unsigned CLOUD_COPY_CMD = 0x0c;
-#define HMDFS_IOC_COPY_FILE _IOW(HMDFS_IOC, CLOUD_COPY_CMD, struct CloudDiskCopy)
 
 struct CloudDiskCopy {
     char destPath[MAX_SIZE];

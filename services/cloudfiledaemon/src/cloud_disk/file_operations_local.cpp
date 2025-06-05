@@ -20,6 +20,7 @@
 #include "cloud_file_fault_event.h"
 #include "file_operations_cloud.h"
 #include "file_operations_helper.h"
+#include "fuse_ioctl.h"
 #include "utils_log.h"
 #include "xcollie_helper.h"
 
@@ -27,6 +28,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
+using namespace CloudFile;
 static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
 static const int32_t STAT_MODE_DIR = 0771;
 static const float LOOKUP_TIMEOUT = 60.0;
@@ -203,6 +205,25 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
     closedir(dir);
     return;
+}
+
+static void CleanCache(fuse_req_t req)
+{
+    LOGI("begin clean clouddisk metafile");
+    MetaFileMgr::GetInstance().CloudDiskClearAll();
+    fuse_reply_ioctl(req, 0, NULL, 0);
+}
+
+void FileOperationsLocal::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                                unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
+{
+    if (static_cast<unsigned int>(cmd) == HMDFS_IOC_CLEAN_CACHE_DAEMON) {
+        CleanCache(req);
+    } else {
+        LOGE("Invalid argument, cmd is not supported");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
 }
 } // namespace CloudDisk
 } // namespace FileManagement
