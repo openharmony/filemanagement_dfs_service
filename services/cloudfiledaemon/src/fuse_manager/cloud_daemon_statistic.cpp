@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "utils_log.h"
+#include "dfs_error.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -41,7 +42,6 @@ static const vector<uint64_t> OPEN_TIME_RANGE_VECTOR = { 250, 500, 1000, 1500, 2
 static const vector<uint64_t> READ_SIZE_RANGE_VECTOR = { 128, 256, 512, 1 * FILE_SIZE_KB_TO_MB, 2 * FILE_SIZE_KB_TO_MB,
     4 * FILE_SIZE_KB_TO_MB };
 static const vector<uint64_t> READ_TIME_RANGE_VECTOR = { 300, 600, 900, 1200, 1500, 2000, 3000, 5000, 8000 };
-static const int32_t E_OK = 0;
 
 static uint32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
 {
@@ -172,7 +172,7 @@ int32_t CloudDaemonStatistic::CheckFileStat()
         auto fd = creat(statFilePath.c_str(), CLOUD_FILE_MOD);
         if (fd < 0) {
             LOGE("create file cloud_sync_read_file_stat fail.");
-            return fd;
+            return E_NO_SUCH_FILE;
         }
         close(fd);
     }

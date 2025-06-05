@@ -155,11 +155,11 @@ HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_008, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_008 Start";
     CloudDaemonStatistic cds;
-    cds.videoReadInfo_[0] = 0;
+    cds.videoReadInfo_[CACHE_SUM] = 0;
 
     try {
         cds.UpdateReadInfo(0);
-        EXPECT_EQ(cds.videoReadInfo_[0], 1);
+        EXPECT_EQ(cds.videoReadInfo_[CACHE_SUM], 1);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_008 ERROR";
@@ -171,11 +171,11 @@ HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_009, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_009 Start";
     CloudDaemonStatistic cds;
-    cds.videoReadInfo_[0] = 0;
+    cds.videoReadInfo_[CACHE_SUM] = 0;
 
     try {
         cds.UpdateReadInfo(VIDEO_READ_INFO);
-        EXPECT_EQ(cds.videoReadInfo_[0], 0);
+        EXPECT_EQ(cds.videoReadInfo_[CACHE_SUM], 0);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_009 ERROR";

@@ -1231,13 +1231,12 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
 }
 
-static void UpdateReadStatInfo(shared_ptr<ReadArguments> readArgs, shared_ptr<CloudInode> cInode,
-    uint64_t readTime)
+static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
 {
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-    readStat.UpdateReadSizeStat(readArgs->size);
-    readStat.UpdateReadTimeStat(readArgs->size, readTime);
-    if (IsVideoType(cInode->mBase->name)) {
+    readStat.UpdateReadSizeStat(size);
+    readStat.UpdateReadTimeStat(size, readTime);
+    if (IsVideoType(name)) {
         readStat.UpdateReadInfo(READ_SUM);
     }
 }
@@ -1273,7 +1272,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs, cInode, readTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readStatus = READ_FINISHED;
@@ -1329,7 +1328,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs, cInode, startTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, startTime);
 
     cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
     wSesLock.lock();
