@@ -158,7 +158,7 @@ HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_008, TestSize.Level1
     cds.videoReadInfo_[CACHE_SUM] = 0;
 
     try {
-        cds.UpdateReadInfo(0);
+        cds.UpdateReadInfo(CACHE_SUM);
         EXPECT_EQ(cds.videoReadInfo_[CACHE_SUM], 1);
     } catch(...) {
         EXPECT_TRUE(false);
