@@ -41,6 +41,7 @@ static const vector<uint64_t> OPEN_TIME_RANGE_VECTOR = { 250, 500, 1000, 1500, 2
 static const vector<uint64_t> READ_SIZE_RANGE_VECTOR = { 128, 256, 512, 1 * FILE_SIZE_KB_TO_MB, 2 * FILE_SIZE_KB_TO_MB,
     4 * FILE_SIZE_KB_TO_MB };
 static const vector<uint64_t> READ_TIME_RANGE_VECTOR = { 300, 600, 900, 1200, 1500, 2000, 3000, 5000, 8000 };
+static const int32_t E_OK = 0;
 
 static uint32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
 {
@@ -186,6 +187,7 @@ void CloudDaemonStatistic::OutputToFile()
     if (ret != E_OK) {
         return;
     }
+    string statFilePath = STAT_DATA_DIR_NAME + "/" + STAT_DATA_FILE_NAME;
     std::ofstream statDataFile(statFilePath);
     if (!statDataFile) {
         LOGE("open out stream file cloud_sync_read_file_stat fail.");
