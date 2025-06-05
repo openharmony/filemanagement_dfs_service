@@ -183,7 +183,7 @@ void CloudDaemonStatistic::OutputToFile()
     string tmpStr = "";
 
     int32_t ret = CheckFileStat();
-    if(ret != E_OK) {
+    if (ret != E_OK) {
         return;
     }
     std::ofstream statDataFile(statFilePath);
