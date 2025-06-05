@@ -30,6 +30,7 @@
 #include "ipc_skeleton.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
+#include "mem_mgr_client.h"
 #include "net_conn_callback_observer.h"
 #include "network_status.h"
 #include "parameters.h"
@@ -182,6 +183,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
         AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
         AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
+        AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -218,6 +220,7 @@ void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 
 void CloudSyncService::OnStop()
 {
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 0, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     LOGI("Stop finished successfully");
 }
 
@@ -301,6 +304,10 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         SystemLoadStatus::InitSystemload(dataSyncManager_);
     } else if (systemAbilityId == COMM_NET_CONN_MANAGER_SYS_ABILITY_ID) {
         NetworkStatus::InitNetwork(dataSyncManager_);
+    } else if (systemAbilityId == MEMORY_MANAGER_SA_ID) {
+        pid_t pid = getpid();
+        Memory::MemMgrClient::GetInstance().NotifyProcessStatus(pid, 1, 1, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+        Memory::MemMgrClient::GetInstance().SetCritical(pid, true, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     } else {
         LOGE("unexpected");
     }
