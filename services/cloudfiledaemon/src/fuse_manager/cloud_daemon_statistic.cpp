@@ -157,15 +157,13 @@ void CloudDaemonStatistic::AddFileData()
     statDataFile.close();
 }
 
-void CloudDaemonStatistic::OutputToFile()
+int32_t CloudDaemonStatistic::CheckFileStat()
 {
-    string tmpStr = "";
-
     if (access(STAT_DATA_DIR_NAME.c_str(), F_OK) != 0) {
         auto ret = mkdir(STAT_DATA_DIR_NAME.c_str(), CLOUD_FILE_DIR_MOD);
         if (ret != 0) {
             LOGE("mkdir cloud_data_statistic fail, ret = %{public}d.", ret);
-            return;
+            return ret;
         }
     }
     string statFilePath = STAT_DATA_DIR_NAME + "/" + STAT_DATA_FILE_NAME;
@@ -173,9 +171,20 @@ void CloudDaemonStatistic::OutputToFile()
         auto fd = creat(statFilePath.c_str(), CLOUD_FILE_MOD);
         if (fd < 0) {
             LOGE("create file cloud_sync_read_file_stat fail.");
-            return;
+            return fd;
         }
         close(fd);
+    }
+    return E_OK;
+}
+
+void CloudDaemonStatistic::OutputToFile()
+{
+    string tmpStr = "";
+
+    int32_t ret = CheckFileStat();
+    if(ret != E_OK) {
+        return;
     }
     std::ofstream statDataFile(statFilePath);
     if (!statDataFile) {
