@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_asset_recv_listener.h"
 
+#include <cinttypes>
 #include <filesystem>
 #include <memory>
 
@@ -27,7 +28,6 @@
 #include "os_account_manager.h"
 #include "refbase.h"
 #include "utils_log.h"
-#include "inttypes.h"
 
 namespace OHOS {
 namespace Storage {
@@ -116,7 +116,7 @@ void SoftbusAssetRecvListener::OnRecvAssetProgress(int32_t socketId, const char 
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LOGD("OnRecvAssetProgress, socketId = %{public}d, bytesUpload = %{public}" PRIu64 ", bytesTotal = %{public}" PRIu64,
-        socketId, bytesUpload, bytesTotal);
+         socketId, bytesUpload, bytesTotal);
     if (fileList == nullptr) {
         LOGE("OnRecvAssetProgress: fileList is nullptr");
         return;
