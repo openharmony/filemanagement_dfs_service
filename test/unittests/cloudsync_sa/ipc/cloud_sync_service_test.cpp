@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,13 +15,12 @@
 
 #include <gtest/gtest.h>
 
-#include "cloud_sync_service.h"
 #include "cloud_sync_common.h"
-#include "dfs_error.h"
+#include "cloud_sync_service.h"
 #include "dfsu_access_token_helper_mock.h"
-#include "service_callback_mock.h"
-#include "utils_log.h"
 #include "i_cloud_download_callback_mock.h"
+#include "service_callback_mock.h"
+#include "system_ability_manager_client_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -29,6 +28,7 @@ namespace Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+constexpr int32_t SA_ID = 5204;
 
 class CloudSyncServiceTest : public testing::Test {
 public:
@@ -36,28 +36,32 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_ = nullptr;
+    static inline sptr<ISystemAbilityManagerMock> saMgr_ = nullptr;
     static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
-    static inline std::shared_ptr<CloudSyncService> g_servicePtr_ = nullptr;
+    static inline sptr<CloudSyncService> servicePtr_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
 {
-    if (g_servicePtr_ == nullptr) {
-        int32_t saId = 5204;
-        g_servicePtr_ = std::make_shared<CloudSyncService>(saId);
-        ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
-    }
     std::cout << "SetUpTestCase" << std::endl;
-    g_servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
+    servicePtr_ = sptr(new CloudSyncService(SA_ID));
+    saMgr_ = sptr(new ISystemAbilityManagerMock());
+    saMgrClient_ = make_shared<SystemAbilityManagerClientMock>();
+    ISystemAbilityManagerClient::smc = saMgrClient_;
+    servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
     dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
     DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
 {
-    DfsuAccessTokenMock::dfsuAccessToken.reset();
-    g_servicePtr_ = nullptr;
+    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    ISystemAbilityManagerClient::smc = nullptr;
     dfsuAccessToken_ = nullptr;
+    saMgrClient_ = nullptr;
+    servicePtr_ = nullptr;
+    saMgr_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -82,7 +86,8 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
     try {
         std::string bundleName = "";
-        int ret = g_servicePtr_->UnRegisterCallbackInner(bundleName);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->UnRegisterCallbackInner(bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -103,7 +108,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
     try {
         std::string bundleName = "";
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        int ret = g_servicePtr_->RegisterCallbackInner(callback, bundleName);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->RegisterCallbackInner(callback, bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -124,7 +130,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.photos";
         sptr<CloudSyncCallbackMock> callback = nullptr;
-        int ret = g_servicePtr_->RegisterCallbackInner(callback, bundleName);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->RegisterCallbackInner(callback, bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -145,7 +152,8 @@ HWTEST_F(CloudSyncServiceTest, TriggerSyncInnerTest, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.photos";
         int32_t userId = 0;
-        int ret = g_servicePtr_->TriggerSyncInner(bundleName, userId);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->TriggerSyncInner(bundleName, userId);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -165,7 +173,8 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncInner Start";
     try {
         std::string bundleName = "";
-        int ret = g_servicePtr_->StopSyncInner(bundleName);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->StopSyncInner(bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -185,7 +194,8 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanCacheInner Start";
     try {
         std::string uri = "";
-        int ret = g_servicePtr_->CleanCacheInner(uri);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->CleanCacheInner(uri);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -206,7 +216,8 @@ HWTEST_F(CloudSyncServiceTest, EnableCloudTest, TestSize.Level1)
     try {
         std::string accountId = "testId";
         SwitchDataObj switchData;
-        int ret = g_servicePtr_->EnableCloud(accountId, switchData);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->EnableCloud(accountId, switchData);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -227,7 +238,8 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
     try {
         std::string accountId = "testId";
         CleanOptions cleanOptions;
-        int ret = g_servicePtr_->Clean(accountId, cleanOptions);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->Clean(accountId, cleanOptions);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -248,7 +260,8 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
     try {
         std::string path;
         bool needClean = false;
-        int ret = g_servicePtr_->StopDownloadFile(path, needClean);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->StopDownloadFile(path, needClean);
         EXPECT_EQ(E_PERMISSION_DENIED, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -268,7 +281,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallback start";
     try {
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
-        int ret = g_servicePtr_->RegisterDownloadFileCallback(downloadCallback);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->RegisterDownloadFileCallback(downloadCallback);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -287,7 +301,8 @@ HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback start";
     try {
-        int ret = g_servicePtr_->UnregisterDownloadFileCallback();
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->UnregisterDownloadFileCallback();
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -309,7 +324,8 @@ HWTEST_F(CloudSyncServiceTest, UploadAssetTest, TestSize.Level1)
         int32_t userId = 100;
         std::string request = "testReq";
         std::string result = "expRes";
-        int ret = g_servicePtr_->UploadAsset(userId, request, result);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->UploadAsset(userId, request, result);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -333,7 +349,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFileTest001, TestSize.Level1)
         std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
         AssetInfoObj assetInfoObj;
         assetInfoObj.uri = uri;
-        int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -359,7 +376,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadAssetTest001, TestSize.Level1)
         std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
         AssetInfoObj assetInfoObj;
         assetInfoObj.uri = uri;
-        int ret = g_servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -383,7 +401,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadAssetTest002, TestSize.Level1)
         std::string bundleName = "com.ohos.photos";
         std::string networkId = "edge2cloud";
         AssetInfoObj assetInfoObj;
-        int ret = g_servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -403,7 +422,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest, TestSize.Level
     GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback start";
     try {
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        int ret = g_servicePtr_->RegisterDownloadAssetCallback(callback);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->RegisterDownloadAssetCallback(callback);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -423,7 +443,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest002, TestSize.Le
     GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch start";
     try {
         sptr<CloudSyncCallbackMock> callback = nullptr;
-        int ret = g_servicePtr_->RegisterDownloadAssetCallback(callback);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->RegisterDownloadAssetCallback(callback);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -444,7 +465,8 @@ HWTEST_F(CloudSyncServiceTest, DeleteAssetTest001, TestSize.Level1)
     try {
         int32_t userId = 100;
         std::string uri = "";
-        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->DeleteAsset(userId, uri);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -465,7 +487,8 @@ HWTEST_F(CloudSyncServiceTest, DeleteAssetTest002, TestSize.Level1)
     try {
         int32_t userId = 100;
         std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
-        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        int ret = servicePtr_->DeleteAsset(userId, uri);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -486,7 +509,7 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest001, TestSize.Level1)
     try {
         std::string uri = "";
         int32_t userId = 100;
-        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
         EXPECT_EQ(ret, "");
     } catch (...) {
         EXPECT_TRUE(false);
@@ -507,7 +530,7 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest002, TestSize.Level1)
     try {
         std::string uri = "invaild_uri";
         int32_t userId = 100;
-        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
         EXPECT_EQ(ret, "");
     } catch (...) {
         EXPECT_TRUE(false);
@@ -528,7 +551,7 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
     try {
         std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1...txt";
         int32_t userId = 100;
-        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
         std::string out = "/mnt/hmdfs/100/account/device_view/local/data/com.hmos.notepad/dir/1...txt";
         EXPECT_EQ(ret, out);
     } catch (...) {
@@ -550,7 +573,7 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest004, TestSize.Level1)
     try {
         std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/../../dir/1.txt";
         int32_t userId = 100;
-        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
         EXPECT_EQ(ret, "");
     } catch (...) {
         EXPECT_TRUE(false);
@@ -569,7 +592,7 @@ HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnStop start";
     try {
-        g_servicePtr_->OnStop();
+        servicePtr_->OnStop();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStop FAILED";
@@ -589,7 +612,7 @@ HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest, TestSize.Level1)
     try {
         int32_t systemAbilityId = 100;
         std::string deviceId = "";
-        g_servicePtr_->OnAddSystemAbility(systemAbilityId, deviceId);
+        servicePtr_->OnAddSystemAbility(systemAbilityId, deviceId);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnAddSystemAbility FAILED";
@@ -598,23 +621,167 @@ HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: LoadRemoteSATest
+ * @tc.name: LoadRemoteSATest001
  * @tc.desc: Verify the LoadRemoteSA function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest, TestSize.Level1)
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "LoadRemoteSA start";
+    GTEST_LOG_(INFO) << "LoadRemoteSATest001 start";
     try {
         std::string deviceId = "";
-        int ret = g_servicePtr_->LoadRemoteSA(deviceId);
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
         EXPECT_EQ(ret, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "LoadRemoteSA FAILED";
+        GTEST_LOG_(INFO) << "LoadRemoteSATest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "LoadRemoteSA end";
+    GTEST_LOG_(INFO) << "LoadRemoteSATest001 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest002
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest002 start";
+    try {
+        std::string deviceId = "abc123";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest002 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest003
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest003 start";
+    try {
+        std::string deviceId = "abc123";
+        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
+        servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, downloadCallback));
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        servicePtr_->remoteObjectMap_.clear();
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest003 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest004
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest004 start";
+    try {
+        std::string deviceId = "abcd1234";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
+            .WillOnce(Return(downloadCallback));
+        servicePtr_->remoteObjectMap_.clear();
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest004 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest005
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest005 start";
+    try {
+        std::string deviceId = "abcde12345";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
+            .WillOnce(Return(nullptr));
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        servicePtr_->remoteObjectMap_.clear();
+        EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest005 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest006
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest006 start";
+    try {
+        std::string deviceId = "abcdef123456";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
+            .WillOnce(Return(nullptr));
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        servicePtr_->remoteObjectMap_.clear();
+        EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest006 end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest007
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSATest007 start";
+    try {
+        std::string deviceId = "abcdefg1234567";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
+        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
+            .WillOnce(Return(downloadCallback));
+        int ret = servicePtr_->LoadRemoteSA(deviceId);
+        servicePtr_->remoteObjectMap_.clear();
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSATest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSATest007 end";
 }
 
 /**
@@ -627,34 +794,14 @@ HWTEST_F(CloudSyncServiceTest, SetDeathRecipientTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetDeathRecipientTest001 start";
     try {
-        EXPECT_NE(g_servicePtr_, nullptr);
+        EXPECT_NE(servicePtr_, nullptr);
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        g_servicePtr_->SetDeathRecipient(callback);
+        servicePtr_->SetDeathRecipient(callback);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest001 failed";
     }
     GTEST_LOG_(INFO) << "SetDeathRecipientTest001 end";
-}
-
-/**
- * @tc.name: OnActiveTest001
- * @tc.desc: Verify the OnActive function.
- * @tc.type: FUNC
- * @tc.require: IB3SLT
- */
-HWTEST_F(CloudSyncServiceTest, OnActiveTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnActiveTest001 start";
-    try {
-        EXPECT_NE(g_servicePtr_, nullptr);
-        SystemAbilityOnDemandReason startReason;
-        g_servicePtr_->OnActive(startReason);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnActiveTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "OnActiveTest001 end";
 }
 
 /**
@@ -667,9 +814,10 @@ HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleStartReasonTest001 start";
     try {
-        EXPECT_NE(g_servicePtr_, nullptr);
+        EXPECT_NE(servicePtr_, nullptr);
         SystemAbilityOnDemandReason startReason;
-        g_servicePtr_->HandleStartReason(startReason);
+        startReason.reasonName_ = "load";
+        servicePtr_->HandleStartReason(startReason);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleStartReason failed";
@@ -687,8 +835,8 @@ HWTEST_F(CloudSyncServiceTest, InitTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitTest001 start";
     try {
-        EXPECT_NE(g_servicePtr_, nullptr);
-        g_servicePtr_->Init();
+        EXPECT_NE(servicePtr_, nullptr);
+        servicePtr_->Init();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitTest001 failed";
@@ -706,10 +854,10 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest001 start";
     try {
-        EXPECT_NE(g_servicePtr_, nullptr);
+        EXPECT_NE(servicePtr_, nullptr);
         BundleNameUserInfo userInfo;
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
-        int32_t ret = g_servicePtr_->GetBundleNameUserInfo(userInfo);
+        int32_t ret = servicePtr_->GetBundleNameUserInfo(userInfo);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -728,35 +876,19 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 start";
     try {
-        EXPECT_NE(g_servicePtr_, nullptr);
+        EXPECT_NE(servicePtr_, nullptr);
         std::vector<std::string> uriVec = {""};
         BundleNameUserInfo userInfo;
-        g_servicePtr_->GetBundleNameUserInfo(uriVec, userInfo);
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        servicePtr_->GetBundleNameUserInfo(uriVec, userInfo);
+        EXPECT_EQ(userInfo.userId, 100);
+        EXPECT_EQ(userInfo.pid, 101);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 failed";
     }
     GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 end";
-}
-
-/**
- * @tc.name: OnLoadSACompleteForRemoteTest001
- * @tc.desc: Verify the OnLoadSACompleteForRemote function.
- * @tc.type: FUNC
- * @tc.require: IB3SLT
- */
-HWTEST_F(CloudSyncServiceTest, OnLoadSACompleteForRemoteTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 start";
-    try {
-        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        CloudSyncService::LoadRemoteSACallback callBack;
-        callBack.OnLoadSACompleteForRemote("test", 0, callback);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync
