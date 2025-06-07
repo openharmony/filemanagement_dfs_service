@@ -22,6 +22,7 @@
 #include "i_cloud_download_callback.h"
 #include "i_cloud_optimize_callback.h"
 #include "i_cloud_sync_callback.h"
+#include "i_downgrade_dl_callback.h"
 
 namespace OHOS::FileManagement::CloudFile {
 class DataSyncManager {
@@ -87,6 +88,10 @@ public:
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);
     virtual int32_t ReportEntry(const std::string &bundleName, const int32_t userId);
     virtual int32_t ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool status);
+    virtual int32_t StartDowngrade(const std::string &bundleName,
+                                   const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback);
+    virtual int32_t StopDowngrade(const std::string &bundleName);
+    virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

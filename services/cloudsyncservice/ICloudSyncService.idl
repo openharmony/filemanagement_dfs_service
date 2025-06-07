@@ -20,6 +20,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CleanOptions;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.DentryFileInfoObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.OptimizeSpaceOptions;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CloudFileInfo;
 option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
@@ -65,4 +66,8 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void CleanCacheInner([in] String uri);
     void BatchCleanFile([in] CleanFileInfoObj[] fileInfo, [out] String[] failCloudId);
     void BatchDentryFileInsert([in] DentryFileInfoObj[] fileInfo, [out] String[] failCloudId);
+    void StartDowngrade([in] String bundleName, [in] IRemoteObject downloadCallback);
+    void StopDowngrade([in] String bundleName);
+    void GetCloudFileInfo([in] String bundleName, [out] CloudFileInfo cloudFileInfo);
+
 }

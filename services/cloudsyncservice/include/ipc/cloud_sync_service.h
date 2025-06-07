@@ -98,6 +98,9 @@ public:
                            std::vector<std::string> &failCloudId) override;
     ErrCode BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
                                   std::vector<std::string> &failCloudId) override;
+    ErrCode StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback) override;
+    ErrCode StopDowngrade(const std::string &bundleName) override;
+    ErrCode GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
@@ -113,6 +116,15 @@ private:
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
     void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
     void CovertBundleName(std::string &bundleName);
+
+    class LoadRemoteSACallback : public SystemAbilityLoadCallbackStub {
+    public:
+        void OnLoadSACompleteForRemote(const std::string &deviceId,
+                                       int32_t systemAbilityId,
+                                       const sptr<IRemoteObject> &remoteObject);
+        std::condition_variable proxyConVar_;
+        std::atomic<bool> isLoadSuccess_{false};
+    };
 
     int32_t LoadRemoteSA(const std::string &deviceId);
 

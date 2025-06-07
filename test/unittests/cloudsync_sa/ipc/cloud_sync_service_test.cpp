@@ -95,7 +95,7 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
 }
- 
+
 /**
  * @tc.name:RegisterCallbackInnerTest001
  * @tc.desc:Verify the RegisterCallbackInner function.
@@ -117,7 +117,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "RegisterCallbackInner end";
 }
- 
+
 /**
  * @tc.name:RegisterCallbackInnerTest002
  * @tc.desc:Verify the RegisterCallbackInner function.
@@ -139,7 +139,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "RegisterCallbackInner error branch end";
 }
- 
+
 /**
  * @tc.name:TriggerSyncInnerTest
  * @tc.desc:Verify the TriggerSyncInner function.
@@ -161,7 +161,7 @@ HWTEST_F(CloudSyncServiceTest, TriggerSyncInnerTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "TriggerSyncInner end";
 }
- 
+
 /**
  * @tc.name:StopSyncInnerTest
  * @tc.desc:Verify the StopSyncInner function.
@@ -182,7 +182,7 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "StopSyncInner End";
 }
- 
+
 /**
  * @tc.name:CleanCacheInnerTest
  * @tc.desc:Verify the CleanCacheInner function.
@@ -203,7 +203,7 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CleanCacheInner End";
 }
- 
+
 /**
  * @tc.name:EnableCloudTest
  * @tc.desc:Verify the EnableCloud function.
@@ -225,7 +225,7 @@ HWTEST_F(CloudSyncServiceTest, EnableCloudTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "EnableCloud end";
 }
- 
+
 /**
  * @tc.name:CleanTest
  * @tc.desc:Verify the Clean function.
@@ -247,7 +247,7 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "Clean end";
 }
- 
+
 /**
  * @tc.name:StopDownloadFileTest
  * @tc.desc:Verify the StopDownloadFile function.
@@ -269,7 +269,7 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "StopDownloadFile end";
 }
- 
+
 /**
  * @tc.name:RegisterDownloadFileCallbackTest
  * @tc.desc:Verify the RegisterDownloadFileCallback function.
@@ -290,7 +290,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallback end";
 }
- 
+
 /**
  * @tc.name:UnregisterDownloadFileCallbackTest
  * @tc.desc:Verify the UnregisterDownloadFileCallback function.
@@ -310,7 +310,7 @@ HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Leve
     }
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback end";
 }
- 
+
 /**
  * @tc.name:UploadAssetTest
  * @tc.desc:Verify the UploadAsset function.
@@ -333,7 +333,7 @@ HWTEST_F(CloudSyncServiceTest, UploadAssetTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "UploadAsset end";
 }
- 
+
 /**
  * @tc.name:DownloadFileTest001
  * @tc.desc:Verify the DownloadFile function.
@@ -358,7 +358,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFileTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DownloadFileTest001 end";
 }
- 
+
 /**
  * @tc.name:DownloadAssetTest001
  * @tc.desc:Verify the DownloadAsset function.
@@ -385,7 +385,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadAssetTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DownloadAssetTest001 end";
 }
- 
+
 /**
  * @tc.name:DownloadAssetTest002
  * @tc.desc:Verify the DownloadAsset function.
@@ -410,7 +410,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadAssetTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DownloadAssetTest002 end";
 }
- 
+
 /**
  * @tc.name:RegisterDownloadAssetCallbackTest
  * @tc.desc:Verify the RegisterDownloadAssetCallback function.
@@ -431,7 +431,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest, TestSize.Level
     }
     GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback end";
 }
- 
+
 /**
  * @tc.name:RegisterDownloadAssetCallbackTest002
  * @tc.desc:Verify theRegisterDownloadAssetCallback function.
@@ -452,7 +452,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest002, TestSize.Le
     }
     GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch end";
 }
- 
+
 /**
  * @tc.name:DeleteAssetTest001
  * @tc.desc:Verify the DeleteAsset function.
@@ -474,7 +474,7 @@ HWTEST_F(CloudSyncServiceTest, DeleteAssetTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DeleteAssetTest001 end";
 }
- 
+
 /**
  * @tc.name:DeleteAssetTest002
  * @tc.desc:Verify the DeleteAsset function.
@@ -742,8 +742,7 @@ HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest005, TestSize.Level1)
     try {
         std::string deviceId = "abcde12345";
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
-        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
-            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>())).WillOnce(Return(nullptr));
         int ret = servicePtr_->LoadRemoteSA(deviceId);
         servicePtr_->remoteObjectMap_.clear();
         EXPECT_EQ(ret, E_SA_LOAD_FAILED);
@@ -767,8 +766,7 @@ HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest006, TestSize.Level1)
         std::string deviceId = "abcdef123456";
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
         servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
-        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
-            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>())).WillOnce(Return(nullptr));
         int ret = servicePtr_->LoadRemoteSA(deviceId);
         servicePtr_->remoteObjectMap_.clear();
         EXPECT_EQ(ret, E_SA_LOAD_FAILED);
@@ -910,6 +908,119 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 failed";
     }
     GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 end";
+}
+
+/**
+ * @tc.name: StartDowngradeTest002
+ * @tc.desc: Verify the StartDowngrade function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, StartDowngradeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDowngradeTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.aaa";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        sptr<DowngradeDlCallbackMock> callback = sptr(new DowngradeDlCallbackMock());
+        auto ret = servicePtr_->StartDowngrade(bundleName, callback);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartDowngradeTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StartDowngradeTest002 end";
+}
+
+/**
+ * @tc.name: StopDowngradeTest001
+ * @tc.desc: Verify the StopDowngrade function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, StopDowngradeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDowngradeTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.aaa";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->StopDowngrade(bundleName);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopDowngradeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StopDowngradeTest001 end";
+}
+
+/**
+ * @tc.name: StopDowngradeTest002
+ * @tc.desc: Verify the StopDowngrade function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, StopDowngradeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDowngradeTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.aaa";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->StopDowngrade(bundleName);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopDowngradeTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StopDowngradeTest002 end";
+}
+
+/**
+ * @tc.name: GetCloudFileInfoTest001
+ * @tc.desc: Verify the GetCloudFileInfo function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetCloudFileInfoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCloudFileInfoTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.aaa";
+        CloudFileInfo cloudFileInfo;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->GetCloudFileInfo(bundleName, cloudFileInfo);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCloudFileInfoTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetCloudFileInfoTest001 end";
+}
+
+/**
+ * @tc.name: GetCloudFileInfoTest002
+ * @tc.desc: Verify the GetCloudFileInfo function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetCloudFileInfoTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.aaa";
+        CloudFileInfo cloudFileInfo;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->GetCloudFileInfo(bundleName, cloudFileInfo);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

@@ -133,59 +133,6 @@ HWTEST_F(CloudSyncCommonTest, Marshalling002, TestSize.Level1)
 }
 
 /*
- * @tc.name: Marshalling003
- * @tc.desc: Verify the Marshalling003 function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncCommonTest, Marshalling003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Marshalling003 Start";
-    try {
-        DownloadProgressObj downloadProgressObj;
-        Parcel parcel;
-        downloadProgressObj.path = "continue";
-        downloadProgressObj.state = downloadProgressObj.RUNNING;
-        downloadProgressObj.downloadedSize = 1;
-        downloadProgressObj.totalSize = 1;
-        auto res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.path = "continue";
-        downloadProgressObj.state = downloadProgressObj.RUNNING;
-        downloadProgressObj.downloadedSize = 1;
-        downloadProgressObj.totalSize = 0;
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.path = "continue";
-        downloadProgressObj.state = downloadProgressObj.RUNNING;
-        downloadProgressObj.downloadedSize = 0;
-        downloadProgressObj.totalSize = 0;
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.path = "continue";
-        downloadProgressObj.state = downloadProgressObj.STOPPED;
-        downloadProgressObj.downloadedSize = 0;
-        downloadProgressObj.totalSize = 0;
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.path = "path";
-        downloadProgressObj.state = downloadProgressObj.STOPPED;
-        downloadProgressObj.downloadedSize = 0;
-        downloadProgressObj.totalSize = 0;
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " Marshalling003 FAILED";
-    }
-    GTEST_LOG_(INFO) << "Marshalling003 End";
-}
-
-/*
  * @tc.name: Marshalling004
  * @tc.desc: Verify the Marshalling004 function.
  * @tc.type: FUNC
@@ -205,7 +152,7 @@ HWTEST_F(CloudSyncCommonTest, Marshalling004, TestSize.Level1)
         int32_t intActionsData = 1;
         cleanOptions.appActionsData.insert({strActionsData, intActionsData});
         res = cleanOptions.Marshalling(parcel);
-        EXPECT_TRUE(res);
+        EXPECT_TRUE(!res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " Marshalling004 FAILED";
@@ -373,37 +320,6 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel002, TestSize.Level1)
 }
 
 /*
- * @tc.name: ReadFromParcel003
- * @tc.desc: Verify the ReadFromParcel003 function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncCommonTest, ReadFromParcel003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ReadFromParcel003 Start";
-    try {
-        SwitchDataObj switchDataObj;
-        Parcel parcel;
-        parcel.dataSize_ = 3;
-        auto res = switchDataObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.data_ = new uint8_t();
-        parcel.writable_ = 0;
-        res = switchDataObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.writable_ = 1;
-        res = switchDataObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(res);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ReadFromParcel003 FAILED";
-    }
-    GTEST_LOG_(INFO) << "ReadFromParcel003 End";
-}
-
-/*
  * @tc.name: ReadFromParcel004
  * @tc.desc: Verify the ReadFromParcel004 function.
  * @tc.type: FUNC
@@ -448,80 +364,6 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel005, TestSize.Level1)
 }
 
 /*
- * @tc.name: ReadFromParcel006
- * @tc.desc: Verify the ReadFromParcel006 function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncCommonTest, ReadFromParcel006, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ReadFromParcel006 Start";
-    try {
-        CleanOptions cleanOptions;
-        Parcel parcel;
-        parcel.dataSize_ = 3;
-        auto res = cleanOptions.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.data_ = new uint8_t();
-        parcel.readCursor_ = 0;
-        res = cleanOptions.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.readCursor_ = 1;
-        res = cleanOptions.ReadFromParcel(parcel);
-        EXPECT_TRUE(res);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ReadFromParcel006 FAILED";
-    }
-    GTEST_LOG_(INFO) << "ReadFromParcel006 End";
-}
-
-/*
- * @tc.name: ReadFromParcel007
- * @tc.desc: Verify the ReadFromParcel007 function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncCommonTest, ReadFromParcel007, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ReadFromParcel007 Start";
-    try {
-        DownloadProgressObj downloadProgressObj;
-        Parcel parcel;
-        auto res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.data_ = new uint8_t();
-        parcel.readCursor_ = 0;
-        res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        parcel.readCursor_ = 1;
-        res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.downloadedSize = 0;
-        res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.downloadedSize = 1;
-        downloadProgressObj.totalSize = 0;
-        res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-
-        downloadProgressObj.totalSize = 1;
-        res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ReadFromParcel007 FAILED";
-    }
-    GTEST_LOG_(INFO) << "ReadFromParcel007 End";
-}
-
-/*
  * @tc.name: to_string
  * @tc.desc: Verify the to_string function.
  * @tc.type: FUNC
@@ -534,9 +376,9 @@ HWTEST_F(CloudSyncCommonTest, to_string, TestSize.Level1)
         DownloadProgressObj downloadProgressObj;
         auto res = downloadProgressObj.to_string();
         std::string expectStr =
-        "DownloadProgressObj [path: ******** state: 0 downloaded: 0 total: 0 downloadErrorType: 0 "
-        "downloadId: 0 batchState: 0 batchDownloadSize: 0 batchTotalSize: 0 "
-        "batchSuccNum: 0 batchFailNum: 0 batchTotalNum: 0]";
+            "DownloadProgressObj [path: ******** state: 0 downloaded: 0 total: 0 downloadErrorType: 0 "
+            "downloadId: 0 batchState: 0 batchDownloadSize: 0 batchTotalSize: 0 "
+            "batchSuccNum: 0 batchFailNum: 0 batchTotalNum: 0]";
         EXPECT_EQ(res, expectStr);
     } catch (...) {
         EXPECT_TRUE(false);

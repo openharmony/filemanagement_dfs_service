@@ -80,20 +80,23 @@ ohos_unittest("cloud_sync_manager_impl_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
+    "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "cloud_sync_manager_impl_test.cpp",
   ]
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/mock/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/system/include",
+    "${services_path}/cloudsyncservice/include/ipc",
   ]
 
-  deps = [ "${services_path}/cloudsyncservice:cloudsync_sa_static" ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",

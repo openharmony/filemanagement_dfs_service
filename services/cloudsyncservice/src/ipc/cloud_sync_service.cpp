@@ -1114,4 +1114,35 @@ int32_t CloudSyncService::CallbackExit(uint32_t code, int32_t result)
 {
     return ERR_NONE;
 }
+
+int32_t CloudSyncService::StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback)
+{
+    LOGI("Begin StartDowngrade");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    sptr<IDowngradeDlCallback> downloadCb = iface_cast<IDowngradeDlCallback>(downloadCallback);
+    int32_t ret = dataSyncManager_->StartDowngrade(bundleName, downloadCb);
+    LOGI("End StartDowngrade");
+    return ret;
+}
+
+int32_t CloudSyncService::StopDowngrade(const std::string &bundleName)
+{
+    LOGI("Begin StopDowngrade");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t ret = dataSyncManager_->StopDowngrade(bundleName);
+    LOGI("End StopDowngrade");
+    return ret;
+}
+
+int32_t CloudSyncService::GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo)
+{
+    LOGI("Begin GetCloudFileInfo");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t ret = dataSyncManager_->GetCloudFileInfo(bundleName, cloudFileInfo);
+    LOGI("End GetCloudFileInfo");
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync
