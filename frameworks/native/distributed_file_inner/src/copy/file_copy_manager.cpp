@@ -198,6 +198,10 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
+    if (srcUri == destUri) {
+        LOGE("The srcUri and destUri is same: %{public}s", GetAnonyString(srcUri).c_str());
+        return E_OK;
+    }
 
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
@@ -353,10 +357,6 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     LOGI("start ExecLocal");
     // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
     if (infos->srcUriIsFile) {
-        if (infos->srcPath == infos->destPath) {
-            LOGE("The src and dest is same");
-            return E_OK;
-        }
         int32_t ret = CheckOrCreatePath(infos->destPath);
         if (ret != E_OK) {
             LOGE("check or create fail, error code is %{public}d", ret);
