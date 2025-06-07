@@ -57,6 +57,7 @@
           "json",
           "napi",
           "preferences",
+          "memmgr",
           "netmanager_base",
           "relational_store",
           "safwk",

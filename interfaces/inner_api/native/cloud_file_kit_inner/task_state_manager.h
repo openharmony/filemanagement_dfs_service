@@ -44,9 +44,10 @@ public:
     void StartTask();
 private:
     TaskStateManager();
-    void DelayUnloadTask();
+    void DelayUnloadTask(bool needSetCritical);
     void CancelUnloadTask();
 
+    bool criticalStatus_ = true;
     std::mutex taskMapsMutex_;
     std::unordered_map<std::string, uint64_t> taskMaps_;
     ffrt::queue queue_;

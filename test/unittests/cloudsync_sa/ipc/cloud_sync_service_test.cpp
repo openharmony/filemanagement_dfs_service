@@ -621,6 +621,27 @@ HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnAddSystemAbilityTest002
+ * @tc.desc: Verify the OnAddSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 start";
+    try {
+        int32_t MEMORY_MANAGER_SA_ID = 1909;
+        int32_t systemAbilityId = MEMORY_MANAGER_SA_ID;
+        std::string deviceId = "";
+        servicePtr_->OnAddSystemAbility(systemAbilityId, deviceId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 end";
+}
+
+/**
  * @tc.name: LoadRemoteSATest001
  * @tc.desc: Verify the LoadRemoteSA function.
  * @tc.type: FUNC

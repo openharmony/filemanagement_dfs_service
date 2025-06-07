@@ -94,7 +94,6 @@ ohos_unittest("task_state_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/task_state_manager.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "task_state_manager_test.cpp",
   ]
 
@@ -120,6 +119,7 @@ ohos_unittest("task_state_manager_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "libfuse:libfuse",
+    "memmgr:memmgrclient",
     "samgr:samgr_proxy",
   ]
 
