@@ -94,7 +94,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level0)
     EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, ENOENT);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
@@ -819,5 +819,57 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0001, TestSize.Level0)
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel();
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0001 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Cancel_0002
+* @tc.desc: The execution of the cancel succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0002 Start";
+    auto infos1 = std::make_shared<FileInfos>();
+    infos1->srcUri = "srcUri1";
+    infos1->destUri = "destUri1";
+    infos1->transListener = nullptr;
+    infos1->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    std::string srcUri = "srcUri1";
+    std::string destUri = "destUri1";
+
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri, true);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0002 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Cancel_0003
+* @tc.desc: The execution of the cancel succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 Start";
+    auto infos1 = std::make_shared<FileInfos>();
+    auto infos2 = std::make_shared<FileInfos>();
+    infos1->srcUri = "srcUri1";
+    infos1->destUri = "destUri1";
+    infos1->transListener = nullptr;
+    infos1->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    infos2->srcUri = "srcUri2";
+    infos2->destUri = "destUri2";
+    infos2->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback_));
+    infos2->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos2);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(true);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 End";
 }
 }
