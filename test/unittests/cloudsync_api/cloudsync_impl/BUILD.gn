@@ -301,24 +301,22 @@ ohos_unittest("cloud_sync_common_test") {
 
   sources = [
     "cloud_sync_common_test.cpp",
-    "file_hook/parcel.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/file_hook/parcel_mock.cpp"
   ]
 
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/file_hook",
   ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
-    "c_utils:utils",
-    "dfs_service:cloudsync_kit_inner",
     "googletest:gmock_main",
     "googletest:gtest_main",
-    "ipc:ipc_single",
-    "samgr:samgr_proxy",
+    "hilog:libhilog",
   ]
 
   defines = [ "private=public" ]
@@ -489,6 +487,68 @@ ohos_unittest("download_asset_callback_stub_test") {
   use_exceptions = true
 }
 
+ohos_unittest("downgrade_dl_callback_stub_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  sources = [
+    "downgrade_dl_callback_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "dfs_service:cloudsync_kit_inner",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("downgrade_dl_callback_client_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  sources = [ "downgrade_dl_callback_client_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+
+  external_deps = [
+    "c_utils:utils",
+    "dfs_service:cloudsync_kit_inner",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_impl_test") {
   testonly = true
 
@@ -507,5 +567,7 @@ group("cloudsync_impl_test") {
     ":cloud_sync_manager_test",
     ":download_asset_callback_client_test",
     ":download_asset_callback_stub_test",
+    ":downgrade_dl_callback_client_test",
+    ":downgrade_dl_callback_stub_test",
   ]
 }

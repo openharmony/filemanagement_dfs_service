@@ -70,6 +70,35 @@ struct DownloadProgressObj : public Parcelable {
     std::string to_string();
 };
 
+struct DowngradeProgress : public Parcelable {
+    enum State : int32_t {
+        RUNNING = 0,
+        COMPLETED,
+        STOPPED,
+    };
+    enum StopReason : int32_t {
+        NO_STOP = 0,
+        NETWORK_UNAVAILABLE,
+        LOCAL_STORAGE_FULL,
+        TEMPERATURE_LIMIT,
+        USER_STOPPED,
+        APP_UNLOAD,
+        OTHER_REASON
+    };
+    State state;
+    StopReason stopReason;
+    int64_t downloadedSize;
+    int64_t totalSize;
+    int32_t successfulCount;
+    int32_t failedCount;
+    int32_t totalCount;
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static DowngradeProgress *Unmarshalling(Parcel &parcel);
+    std::string to_string() const;
+};
+
 struct SwitchDataObj : public Parcelable {
     std::map<std::string, bool> switchData;
     bool ReadFromParcel(Parcel &parcel);
@@ -178,5 +207,20 @@ struct  CleanFileInfoObj : public Parcelable {
     }
 };
 
+/*
+ * 降级下载：待下载信息
+ */
+struct CloudFileInfo : public Parcelable {
+    int32_t cloudfileCount{0};
+    int64_t cloudFileTotalSize{0};
+    int32_t localFileCount{0};
+    int64_t localFileTotalSize{0};
+    int32_t bothFileCount{0};
+    int64_t bothFileTotalSize{0};
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static CloudFileInfo *Unmarshalling(Parcel &parcel);
+};
 } // namespace OHOS::FileManagement::CloudSync
 #endif
