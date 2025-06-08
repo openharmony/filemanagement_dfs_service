@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,19 @@
  * limitations under the License.
  */
 
-#include "dfs_error.h"
+#include "downgrade_download_callback_client.h"
+#include "utils_log.h"
 
-namespace OHOS::FileManagement {
-int32_t Convert2JsErrNum(int32_t errNum)
+namespace OHOS::FileManagement::CloudSync {
+using namespace std;
+
+void DowngradeDownloadCallbackClient::OnDownloadProcess(const DowngradeProgress &progress)
 {
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
+    if (!callback_) {
+        LOGE("callback_ is null, maybe not registered");
+        return;
     }
+    callback_->OnDownloadProcess(progress);
 }
 
-int32_t Convert2ErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
-} // namespace OHOS::FileManagement
+} // namespace OHOS::FileManagement::CloudSync

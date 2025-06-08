@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,20 @@
  * limitations under the License.
  */
 
-#include "dfs_error.h"
+#ifndef OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H
+#define OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H
 
-namespace OHOS::FileManagement {
-int32_t Convert2JsErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
+#include <functional>
 
-int32_t Convert2ErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
-} // namespace OHOS::FileManagement
+#include "cloud_sync_common.h"
+
+namespace OHOS::FileManagement::CloudSync {
+
+class DowngradeDlCallback {
+public:
+    virtual ~DowngradeDlCallback() = default;
+    virtual void OnDownloadProcess(const DowngradeProgress &progress) = 0;
+};
+} // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H

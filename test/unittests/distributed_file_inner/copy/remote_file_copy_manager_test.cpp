@@ -26,6 +26,18 @@
 #include "file_copy_manager.h"
 #include "file_size_utils.h"
 #include "trans_listener.h"
+#include "sandbox_helper.h"
+
+std::string g_physicalPath = "/test/test";
+int32_t g_getPhysicalPath = 0;
+
+namespace OHOS::AppFileService {
+int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId, std::string &physicalPath)
+{
+    physicalPath = g_physicalPath;
+    return g_getPhysicalPath;
+}
+}
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace OHOS::FileManagement;
@@ -96,7 +108,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Le
     EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(localUri, dstUri, listenerCallback, userId, copyPath);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, ENOENT);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
@@ -131,7 +143,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
     close(fd);
 
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(srcUri, destUri, listenerCallback, userId, copyPath);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, ENOENT);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0002 End";
 }
@@ -225,7 +237,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
     int32_t userId = 100;
     string copyPath = "/data/storage/el2/distributedfiles/123412345/test.txt";
     int32_t ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->CreateFileInfos("", "", infos, userId, copyPath);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, ENOENT);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 End";
 }
 
