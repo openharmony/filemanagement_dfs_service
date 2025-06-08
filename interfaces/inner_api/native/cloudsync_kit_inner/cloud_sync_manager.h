@@ -22,6 +22,7 @@
 #include "cloud_optimize_callback.h"
 #include "cloud_sync_callback.h"
 #include "cloud_sync_common.h"
+#include "downgrade_dl_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManager {
@@ -132,6 +133,30 @@ public:
         std::vector<std::string> &failCloudId) = 0;
     virtual int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
          std::vector<std::string> &failCloudId) = 0;
+    /**
+     * @brief 开始降级下载
+     *
+     * @param bundleName 降级应用包名
+     * @param downloadCallback 下载进度回调函数
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StartDowngrade(const std::string &bundleName,
+                                   const std::shared_ptr<DowngradeDlCallback> downloadCallback) = 0;
+    /**
+     * @brief 停止降级下载
+     *
+     * @param bundleName 降级应用包名
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StopDowngrade(const std::string &bundleName) = 0;
+    /**
+     * @brief 获取应用文件信息
+     *
+     * @param bundleName 应用包名
+     * @param cloudFileInfo 不同位置文件总大小信息
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

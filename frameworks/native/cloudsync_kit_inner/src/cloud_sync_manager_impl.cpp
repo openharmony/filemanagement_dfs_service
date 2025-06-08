@@ -16,6 +16,7 @@
 #include "cloud_download_callback_client.h"
 #include "cloud_sync_manager_impl.h"
 #include "cloud_sync_callback_client.h"
+#include "downgrade_download_callback_client.h"
 #include "service_proxy.h"
 #include "dfs_error.h"
 #include "system_ability_definition.h"
@@ -441,6 +442,65 @@ int32_t CloudSyncManagerImpl::StopFileCache(int64_t downloadId, bool needClean, 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StopFileCache(downloadId, needClean, timeout);
     LOGI("StopFileCache ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StartDowngrade(const std::string &bundleName,
+                                             const std::shared_ptr<DowngradeDlCallback> downloadCallback)
+{
+    LOGI("StartDowngrade start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (bundleName.empty() || downloadCallback == nullptr) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
+    sptr<DowngradeDownloadCallbackClient> dlCallback =
+        sptr(new (std::nothrow) DowngradeDownloadCallbackClient(downloadCallback));
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StartDowngrade(bundleName, dlCallback);
+    LOGI("StartDowngrade ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StopDowngrade(const std::string &bundleName)
+{
+    LOGI("StartDowngrade start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (bundleName.empty()) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StopDowngrade(bundleName);
+    LOGI("StopDowngrade ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo)
+{
+    LOGI("StartDowngrade start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (bundleName.empty()) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetCloudFileInfo(bundleName, cloudFileInfo);
+    LOGI("GetCloudFileInfo ret %{public}d", ret);
     return ret;
 }
 

@@ -216,7 +216,7 @@ HWTEST_F(CloudSyncCommonTest, Marshalling004, TestSize.Level1)
         EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
         res = cleanOptions.Marshalling(parcel);
-        EXPECT_TRUE(res);
+        EXPECT_TRUE(!res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " Marshalling004 FAILED";

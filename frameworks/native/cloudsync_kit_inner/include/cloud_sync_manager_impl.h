@@ -73,6 +73,10 @@ public:
     int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo, std::vector<std::string> &failCloudId) override;
     int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId) override;
+    int32_t StartDowngrade(const std::string &bundleName,
+                           const std::shared_ptr<DowngradeDlCallback> downloadCallback) override;
+    int32_t StopDowngrade(const std::string &bundleName) override;
+    int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
