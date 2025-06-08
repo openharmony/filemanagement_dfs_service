@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,17 @@
  * limitations under the License.
  */
 
-#include "dfs_error.h"
+#ifndef OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
+#define OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
 
-namespace OHOS::FileManagement {
-int32_t Convert2JsErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
+#include "cloud_optimize_callback.h"
 
-int32_t Convert2ErrNum(int32_t errNum)
-{
-    if (errCodeTable.find(errNum) != errCodeTable.end()) {
-        return errCodeTable.at(errNum);
-    } else {
-        return errNum;
-    }
-}
-} // namespace OHOS::FileManagement
+namespace OHOS::FileManagement::CloudSync {
+class CloudOptimizeCallbackMiddle : public CloudOptimizeCallback {
+public:
+    virtual ~CloudOptimizeCallbackMiddle() = default;
+    virtual void OnOptimizeProcess(const OptimizeState state, const int32_t progress) = 0;
+};
+} // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
