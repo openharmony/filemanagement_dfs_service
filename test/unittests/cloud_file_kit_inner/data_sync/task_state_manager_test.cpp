@@ -452,13 +452,12 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_021, TestSize.Level1)
     GTEST_LOG_(INFO) << "TaskStateManagerTest_021 Start";
     try {
         TaskStateManager taskStateManager;
-        string bundleName = "testBundleName";
+        string bundleName = "testBundleName1";
         TaskType task = TaskType::SYNC_TASK;
         taskStateManager.criticalStatus_ = false;
 
-        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
         taskStateManager.StartTask(bundleName, task);
-        EXPECT_TRUE(taskStateManager.criticalStatus_);
+        EXPECT_EQ(taskStateManager.taskMaps_[bundleName], static_cast<uint64_t>(task));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "TaskStateManagerTest_021 ERROR";
