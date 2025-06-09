@@ -49,7 +49,7 @@ public:
         fileSize_ = totalFileSize;
     };
     // 定义一个空的 ProcessCallback 用于测试
-    ProcessCallback emptyCallback_ = [](uint64_t processSize, uint64_t totalFileSize) {};
+    ProcessCallback emptyCallback_;
 };
 
 void FileCopyManagerTest::SetUpTestCase(void)
@@ -327,6 +327,33 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0009, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0009 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Copy_0010
+* @tc.desc: The execution of the Copy failed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0010, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0010 Start";
+    string localUri = "/data/test/test.txt";
+    string dstUri = "/data/test/test.txt";
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
+    EXPECT_EQ(ret, ENOENT);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0010 End";
 }
 
 /**
