@@ -1618,12 +1618,14 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         fuse_reply_err(req, ENETUNREACH);
         return;
     }
-    if (!HandleCloudError(req, *error)) {
+    auto ret = HandleCloudError(req, *error);
+    if (ret == 0) {
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         fuse_reply_buf(req, buf.get(), *readSize);
     } else {
         filePtr->readSession = nullptr;
         LOGE("read fail");
+        fuse_reply_err(req, ret);
     }
     return;
 }
