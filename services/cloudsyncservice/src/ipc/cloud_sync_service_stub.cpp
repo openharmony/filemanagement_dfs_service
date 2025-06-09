@@ -17,6 +17,7 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "dfsu_memory_guard.h"
+#include "ipc_skeleton.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -102,6 +103,10 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageParcel &reply,
                                               MessageOption &option)
 {
+    if (!IPCSkeleton::IsLocalCalling()) {
+        LOGE("remote request is not allowed, cmd:%{public}u", code);
+        return E_BROKEN_IPC;
+    }
     DfsuMemoryGuard cacheGuard;
     TaskStateManager::GetInstance().StartTask();
     if (data.ReadInterfaceToken() != GetDescriptor()) {
