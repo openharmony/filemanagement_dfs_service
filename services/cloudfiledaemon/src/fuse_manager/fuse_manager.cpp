@@ -55,6 +55,7 @@
 #include "directory_ex.h"
 #include "fdsan.h"
 #include "ffrt_inner.h"
+#include "fuse_ioctl.h"
 #include "fuse_operations.h"
 #include "parameters.h"
 #ifdef HICOLLIE_ENABLE
@@ -97,7 +98,6 @@ static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 6;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
-static const unsigned int HMDFS_IOC = 0xf2;
 static const unsigned int FUSE_BUFFER_SIZE = 512 * 1024;
 static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
@@ -106,9 +106,6 @@ static const unsigned int LOOKUP_TIMEOUT_S = 1;
 static const unsigned int FORGET_TIMEOUT_S = 1;
 #endif
 
-#define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
-#define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
-#define HMDFS_IOC_RESET_READ _IO(HMDFS_IOC, 9)
 PAGE_FLAG_TYPE PG_READAHEAD = 0x00000001;
 PAGE_FLAG_TYPE PG_UPTODATE = 0x00000002;
 PAGE_FLAG_TYPE PG_REFERENCED = 0x00000004;

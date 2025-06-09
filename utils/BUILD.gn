@@ -47,6 +47,7 @@ config("compiler_configs") {
 config("utils_public_config") {
   include_dirs = [
     "inner_api",
+    "ioctl/include",
     "load/include",
     "log/include",
     "work/include",
@@ -204,6 +205,7 @@ config("utils_lite_public_config") {
     "dentry/include",
     "ffrt/include",
     "inner_api",
+    "ioctl/include",
     "load/include",
     "log/include",
     "system/include",

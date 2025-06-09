@@ -66,6 +66,7 @@ ohos_shared_library("cloudfiledaemon") {
     "${utils_path}/cloud_disk/include",
     "${utils_path}/dentry/include",
     "${utils_path}/log/include",
+    "${utils_path}/ioctl/include",
     "${utils_path}/system/include",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
     "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",

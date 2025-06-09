@@ -16,11 +16,14 @@
 #include <gtest/gtest.h>
 
 #include "cloud_file_utils.h"
+#include "parameters.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace std;
 using namespace OHOS;
 using namespace testing::ext;
+
+static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 
 class CloudFileUtilsTest : public testing::Test {
 public:
@@ -180,5 +183,37 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_014, TestSize.Level
     dfsPath = "/data/service/el1/public/cloudfile/cloud_data_statistic";
     cloudId = CloudFileUtils::GetCloudId(dfsPath);
     EXPECT_EQ((cloudId == ""), true);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_01, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "/mnt/data/100/cloud_fuse";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, true);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_02, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "./";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_03, TestSize.Level1)
+{
+    string dfsPath = "/invalid/path";
+    string cloudPath = "/mnt/data/100/cloud_fuse";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_04, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "/invalid/path";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
 }
 } // OHOS

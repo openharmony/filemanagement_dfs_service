@@ -19,11 +19,15 @@
 #include <sys/xattr.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+#include "fuse_ioctl.h"
 #include "utils_log.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
+using namespace CloudFile;
 namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
@@ -39,11 +43,6 @@ namespace {
     static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
 }
 
-constexpr unsigned HMDFS_IOC = 0xf2;
-constexpr unsigned WRITEOPEN_CMD = 0x02;
-constexpr unsigned CLOUD_ENABLE_CMD = 0x0b;
-#define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
-#define HMDFS_IOC_SET_CLOUD_GENERATION _IOR(HMDFS_IOC, CLOUD_ENABLE_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
 
 bool CloudFileUtils::IsDotDotdot(const std::string &name)
@@ -304,15 +303,14 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
     return writeOpenCnt != 0;
 }
 
-bool CloudFileUtils::ClearCache(const string &dfsPath)
+static bool ClearHmdfsCache(const string &dfsPath)
 {
-    auto resolvedPath = realpath(dfsPath.c_str(), NULL);
-    if (resolvedPath == NULL) {
+    char resolvedPath[PATH_MAX];
+    if (realpath(dfsPath.c_str(), resolvedPath) == nullptr) {
         LOGE("realpath failed");
         return false;
     }
     std::FILE *file = fopen(resolvedPath, "r");
-    free(resolvedPath);
     if (file == nullptr) {
         LOGE("fopen failed, errno:%{public}d", errno);
         return false;
@@ -334,6 +332,43 @@ bool CloudFileUtils::ClearCache(const string &dfsPath)
         LOGE("fclose failed, errno:%{public}d", errno);
         return false;
     }
+    return true;
+}
+
+static bool ClearCloudCache(const string &cloudPath)
+{
+    char resolvedPath[PATH_MAX];
+    if (realpath(cloudPath.c_str(), resolvedPath) == nullptr) {
+        LOGE("realpath failed");
+        return false;
+    }
+
+    int fd = open(resolvedPath, O_RDONLY | O_DIRECTORY);
+    if (fd == -1) {
+        LOGE("open failed %{public}d", errno);
+        return false;
+    }
+    int ret = ioctl(fd, HMDFS_IOC_CLEAN_CACHE_DAEMON);
+    if (ret < 0) {
+        LOGE("ioctl failed, errno:%{public}d", errno);
+        close(fd);
+        return false;
+    }
+
+    close(fd);
+    return true;
+}
+
+bool CloudFileUtils::ClearCache(const string &dfsPath, const string &cloudPath)
+{
+    if (!ClearHmdfsCache(dfsPath)) {
+        return false;
+    }
+
+    if (!ClearCloudCache(cloudPath)) {
+        return false;
+    }
+
     return true;
 }
 
