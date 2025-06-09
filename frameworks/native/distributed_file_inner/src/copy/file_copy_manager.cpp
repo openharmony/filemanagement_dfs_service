@@ -212,6 +212,9 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
+        if (processCallback == nullptr) {
+            return EINVAL;
+        }
         return ret;
     }
 
