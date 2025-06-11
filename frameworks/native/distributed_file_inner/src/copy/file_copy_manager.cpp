@@ -207,7 +207,10 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
-        return EINVAL;
+        if (processCallback == nullptr) {
+            return EINVAL;
+        }
+        return ret;
     }
 
     if (IsRemoteUri(infos->srcUri)) {
@@ -265,7 +268,7 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     return transListener->CopyToSandBox(infos->srcUri);
 }
 
-int32_t FileCopyManager::Cancel()
+int32_t FileCopyManager::Cancel(const bool isKeepFiles)
 {
     LOGI("Cancel all Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
@@ -276,13 +279,15 @@ int32_t FileCopyManager::Cancel()
                 GetAnonyString(item->destUri).c_str());
             item->transListener->Cancel(item->srcUri, item->destUri);
         }
-        DeleteResFile(item);
+        if (!isKeepFiles) {
+            DeleteResFile(item);
+        }
     }
     FileInfosVec_.clear();
     return E_OK;
 }
 
-int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &destUri)
+int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &destUri, const bool isKeepFiles)
 {
     LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
@@ -304,7 +309,9 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
                 GetAnonyString(destUri).c_str());
             ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
-        DeleteResFile(*item);
+        if (!isKeepFiles) {
+            DeleteResFile(*item);
+        }
         item = FileInfosVec_.erase(item);
         return ret;
     }
@@ -313,6 +320,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
 
 void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
 {
+    LOGI("start DeleteResFile");
     std::error_code errCode;
     //delete files in remote cancel
     if (infos->transListener != nullptr) {
