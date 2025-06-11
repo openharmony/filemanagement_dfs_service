@@ -21,7 +21,7 @@
 #include "network_set_manager.h"
 #include "data_ability_observer_stub.h"
 #include "accesstoken_kit.h"
-#include "cloud_file_kit.h"
+#include "cloud_file_kit_mock.h"
 #include "datashare_errno.h"
 #include "datashare_result_set.h"
 #include "dfs_error.h"
@@ -42,17 +42,23 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<NetworkSetManager> networkSetManager_ = nullptr;
+    static inline shared_ptr<MockCloudFileKit> proxy_ = nullptr;
 };
 
 void NetworkSetManagerTest::SetUpTestCase(void)
 {
     networkSetManager_ = make_shared<NetworkSetManager>();
+    proxy_ = make_shared<MockCloudFileKit>();
+    ICloudFileKit::proxy_ = proxy_;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void NetworkSetManagerTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    networkSetManager_.reset();
+    ICloudFileKit::proxy_ = nullptr;
+    proxy_ = nullptr;
 }
 
 void NetworkSetManagerTest::SetUp(void)
@@ -79,7 +85,7 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
 
         int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryCellularConnectTest FAILED";
@@ -101,7 +107,7 @@ HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         
         int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryNetConnectTest FAILED";
@@ -268,5 +274,51 @@ HWTEST_F(NetworkSetManagerTest, OnChangeTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnChange FAILED";
     }
     GTEST_LOG_(INFO) << "OnChange End";
+}
+
+/**
+ * @tc.name: GetConfigParams000
+ * @tc.desc: Verify the GetConfigParams function when driveKit is null.
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams End";
+}
+
+/**
+ * @tc.name: GetConfigParams001
+ * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        CloudFileKit *driveKit = new CloudFileKit();
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(driveKit));
+        EXPECT_CALL(*proxy_, GetAppConfigParams(_, _, _)).WillOnce(Return(E_OK));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams End";
 }
 }

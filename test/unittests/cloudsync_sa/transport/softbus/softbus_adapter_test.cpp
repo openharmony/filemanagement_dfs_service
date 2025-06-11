@@ -397,6 +397,7 @@ HWTEST_F(SoftbusAdapterTest, OnBindTest001, TestSize.Level1)
     info.name = socket2;
     adapter.OnBind(socket, info);
     EXPECT_NE(adapter.listeners_.count("socket"), 0);
+    adapter.listeners_.erase("socket");
 }
 
 HWTEST_F(SoftbusAdapterTest, OnShutdownTest, TestSize.Level1)
@@ -412,6 +413,7 @@ HWTEST_F(SoftbusAdapterTest, OnShutdownTest, TestSize.Level1)
     (adapter.listeners_)["test"] = ptr;
     adapter.OnShutdown(socket, reason);
     EXPECT_NE(adapter.listeners_.count("test"), 0);
+    adapter.listeners_.erase("test");
 }
 
 HWTEST_F(SoftbusAdapterTest, OnBytesTest, TestSize.Level1)
@@ -431,6 +433,7 @@ HWTEST_F(SoftbusAdapterTest, OnBytesTest, TestSize.Level1)
     adapter.OnBytes(socket, nullptr, dataLen);
 
     EXPECT_NE(adapter.listeners_.count("test"), 0);
+    adapter.listeners_.erase("test");
 }
 
 HWTEST_F(SoftbusAdapterTest, OnReceiveFileFinishedTest, TestSize.Level1)
@@ -451,6 +454,7 @@ HWTEST_F(SoftbusAdapterTest, OnReceiveFileFinishedTest, TestSize.Level1)
     adapter.OnReceiveFileFinished(sessionId, files, fileCnt);
 
     EXPECT_NE(adapter.listeners_.count("test1"), 0);
+    adapter.listeners_.erase("test1");
 }
 
 HWTEST_F(SoftbusAdapterTest, OpenSessionTest, TestSize.Level1)
