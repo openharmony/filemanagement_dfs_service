@@ -63,7 +63,7 @@ void CloudDaemonManagerImplTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDaemonManagerImplTest, GetInstanceTest, TestSize.Level1)
+HWTEST_F(CloudDaemonManagerImplTest, GetInstanceTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest Start";
     try {

@@ -126,7 +126,7 @@ void CloudDaemonServiceProxyTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest001, TestSize.Level1)
+HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest001 Start";
     try {

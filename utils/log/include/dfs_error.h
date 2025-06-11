@@ -143,48 +143,14 @@ enum DFSErrCode {
     ERR_ALLCONNECT,
     ERR_CHECKOUT_COUNT,
 
-    E_PERM,
-    E_NOENT,
-    E_SRCH,
-    E_INTR,
-    E_IO,
-    E_NXIO,
-    E_2BIG,
-    E_BADF,
-    E_CHILD,
-    E_AGAIN,
-    E_NOMEM,
-    E_ACCES,
-    E_FAULT,
-    E_BUSY,
-    E_EXIST,
-    E_XDEV,
-    E_NODEV,
-    E_NOTDIR,
-    E_ISDIR,
-    E_INVAL,
-    E_NFILE,
-    E_MFILE,
-    E_TXTBSY,
-    E_FBIG,
-    E_NOSPC,
-    E_SPIPE,
-    E_ROFS,
-    E_MLINK,
-    E_DEADLK,
-    E_NAMETOOLONG,
-    E_NOSYS,
-    E_NOTEMPTY,
-    E_LOOP,
-    E_WOULDBLOCK,
-    E_BADR,
-    E_UKERR,
-    E_NETUNREACH,
-    E_CONNECTION_FAIL,
-    E_CONNECTION_ABORT,
-    E_NOTASK,
-    E_UNCANCELED,
-    E_CANCELED,
+    ERR_NULLPTR,
+
+    /* dfs version */
+    ERR_DFS_VERSION_BASE = 1000,
+    ERR_DFS_VERSION_EMPTY = ERR_DFS_VERSION_BASE + 1,
+    ERR_NO_FIND_PACKAGE_NAME = ERR_DFS_VERSION_BASE + 2,
+    ERR_DFS_VERSION_PARSE_EXCEPTION = ERR_DFS_VERSION_BASE + 3,
+    ERR_GET_UDID = ERR_DFS_VERSION_BASE + 4,
 };
 
 static inline std::unordered_map<int, int> softbusErr2ErrCodeTable {
@@ -238,6 +204,7 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);
+int32_t Convert2ErrNum(int32_t errNum);
 } // namespace OHOS::FileManagement
 
 #endif // OHOS_FILEMGMT_DFS_ERROR_H

@@ -14,59 +14,18 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_unittest("cloud_sync_service_stub_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dfsu_access_token_helper_mock.cpp",
-    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
-    "cloud_sync_service_stub_test.cpp",
-  ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${services_path}/cloudsyncservice/include",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${services_path}/cloudsyncservice:cloudsync_sa_static",
-    "${utils_path}:libdistributedfileutils",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
-    "c_utils:utils",
-    "dfs_service:cloudsync_kit_inner",
-    "ffrt:libffrt",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "ipc:ipc_single",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("cloud_sync_service_test") {
-  module_out_path = "dfs_service/dfs_service"
+  module_out_path = "dfs_service/distributed_filesystem"
   public_configs =
       [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
   sources = [
+    "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dfsu_access_token_helper_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/screen_status_mock.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/database_backup_task.cpp",
@@ -87,7 +46,6 @@ ohos_unittest("cloud_sync_service_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
@@ -96,6 +54,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/transport/softbus",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
+    "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -140,6 +99,7 @@ ohos_unittest("cloud_sync_service_test") {
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "memmgr:memmgrclient",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "power_manager:powermgr_client",
@@ -167,7 +127,7 @@ ohos_unittest("cloud_sync_service_test") {
 }
 
 ohos_unittest("download_asset_callback_manager_test") {
-  module_out_path = "dfs_service/dfs_service"
+  module_out_path = "dfs_service/distributed_filesystem"
 
   sources = [
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
@@ -208,7 +168,7 @@ ohos_unittest("download_asset_callback_manager_test") {
 }
 
 ohos_unittest("download_asset_callback_proxy_test") {
-  module_out_path = "dfs_service/dfs_service"
+  module_out_path = "dfs_service/distributed_filesystem"
 
   sources = [
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",

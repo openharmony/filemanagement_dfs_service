@@ -191,6 +191,7 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
         LOGW("Fill and set accessInfo failed");
+        Shutdown(socketId);
         return FileManagement::E_CONTEXT;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
@@ -203,7 +204,6 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         return FileManagement::E_CONTEXT;
     }
     HandleAfterOpenSession(socketId, info.GetCid());
-    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(info.GetCid()).c_str());
     return FileManagement::E_OK;
 }
 
@@ -213,6 +213,7 @@ void SoftbusAgent::HandleAfterOpenSession(const int32_t socketId, const std::str
     session->DisableSessionListener();
     session->SetFromServer(false);
     AcceptSession(session, "Client");
+    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(networkId).c_str());
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)

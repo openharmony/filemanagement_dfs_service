@@ -16,11 +16,14 @@
 #include <gtest/gtest.h>
 
 #include "cloud_file_utils.h"
+#include "parameters.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace std;
 using namespace OHOS;
 using namespace testing::ext;
+
+static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 
 class CloudFileUtilsTest : public testing::Test {
 public:
@@ -44,7 +47,7 @@ void CloudFileUtilsTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require: issueNumber
  */
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_001, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_001, TestSize.Level0)
 {
     string cloudId = CloudFileUtils::GetCloudId("");
     EXPECT_EQ((cloudId == ""), true);
@@ -53,7 +56,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_001, TestSize.Level
     EXPECT_EQ((cloudId == ""), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_002, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_002, TestSize.Level0)
 {
     string cloudId;
     string bundleName;
@@ -62,7 +65,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_002, TestSi
     EXPECT_EQ((cloudId == ""), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_003, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_003, TestSize.Level0)
 {
     string cloudId = "testId";
     string bundleName = "testBundleName";
@@ -71,7 +74,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalBucketPath_003, TestSi
     EXPECT_EQ((cloudId == ""), false);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloud_004, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloud_004, TestSize.Level0)
 {
     string key;
     EXPECT_EQ(CloudFileUtils::CheckIsCloud(key), false);
@@ -80,7 +83,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloud_004, TestSize.Lev
     EXPECT_EQ(CloudFileUtils::CheckIsCloud(key), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloudLocation_005, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloudLocation_005, TestSize.Level0)
 {
     string key;
     EXPECT_EQ(CloudFileUtils::CheckIsCloudLocation(key), false);
@@ -89,7 +92,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsCloudLocation_005, Test
     EXPECT_EQ(CloudFileUtils::CheckIsCloudLocation(key), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsHmdfsPermission_006, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsHmdfsPermission_006, TestSize.Level0)
 {
     string key;
     EXPECT_EQ(CloudFileUtils::CheckIsHmdfsPermission(key), false);
@@ -98,7 +101,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_CheckIsHmdfsPermission_006, Te
     EXPECT_EQ(CloudFileUtils::CheckIsHmdfsPermission(key), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalFilePath_007, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalFilePath_007, TestSize.Level0)
 {
     string cloudId;
     string bundleName;
@@ -111,7 +114,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetLocalFilePath_007, TestSize
     EXPECT_EQ((ret == ""), false);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetPathWithoutTmp_008, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetPathWithoutTmp_008, TestSize.Level0)
 {
     string path;
     string ret = CloudFileUtils::GetPathWithoutTmp(path);
@@ -122,7 +125,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetPathWithoutTmp_008, TestSiz
     EXPECT_EQ(ret, path);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_009, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_009, TestSize.Level0)
 {
     string dfsPath;
     EXPECT_EQ(CloudFileUtils::LocalWriteOpen(dfsPath), false);
@@ -131,7 +134,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_009, TestSize.L
     EXPECT_EQ(CloudFileUtils::LocalWriteOpen(dfsPath), false);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_010, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_010, TestSize.Level0)
 {
     string fullString;
     string ending;
@@ -141,14 +144,14 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_010, TestSize.Level1)
     EXPECT_EQ(CloudFileUtils::EndsWith(fullString, ending), true);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_011, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_011, TestSize.Level0)
 {
     string fullString = "testPath";
     string ending = "test@@text##";
     EXPECT_EQ(CloudFileUtils::EndsWith(fullString, ending), false);
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_DentryHash_012, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_DentryHash_012, TestSize.Level0)
 {
     try {
         string inputStr = ".";
@@ -162,7 +165,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_DentryHash_012, TestSize.Level
     }
 }
 
-HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_013, TestSize.Level1)
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_013, TestSize.Level0)
 {
     string dfsPath = "./";
     EXPECT_EQ(CloudFileUtils::LocalWriteOpen(dfsPath), false);
@@ -180,5 +183,37 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_014, TestSize.Level
     dfsPath = "/data/service/el1/public/cloudfile/cloud_data_statistic";
     cloudId = CloudFileUtils::GetCloudId(dfsPath);
     EXPECT_EQ((cloudId == ""), true);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_01, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "/mnt/data/100/cloud_fuse";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, true);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_02, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "./";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_03, TestSize.Level1)
+{
+    string dfsPath = "/invalid/path";
+    string cloudPath = "/mnt/data/100/cloud_fuse";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_04, TestSize.Level1)
+{
+    string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
+    string cloudPath = "/invalid/path";
+    bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+    EXPECT_EQ(res, false);
 }
 } // OHOS

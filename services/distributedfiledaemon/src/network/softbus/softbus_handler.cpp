@@ -208,6 +208,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
         LOGE("Check src permission failed");
+        Shutdown(socketId);
         return false;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);

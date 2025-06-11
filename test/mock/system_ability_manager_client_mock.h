@@ -17,22 +17,19 @@
 #define TEST_SYSTEM_ABILITY_MANAGER_CLENT_MOCK_H
 
 #include <gmock/gmock.h>
+#include "if_system_ability_manager_mock.h"
 #include "iservice_registry.h"
 
-namespace OHOS::FileManagement::CloudSync {
-class DfsSystemAbilityManagerClient {
+namespace OHOS {
+class ISystemAbilityManagerClient {
 public:
-    virtual SystemAbilityManagerClient& GetInstance() = 0;
     virtual sptr<ISystemAbilityManager> GetSystemAbilityManager() = 0;
-public:
-    DfsSystemAbilityManagerClient() = default;
-    virtual ~DfsSystemAbilityManagerClient() = default;
-    static inline std::shared_ptr<DfsSystemAbilityManagerClient> smc = nullptr;
+    virtual ~ISystemAbilityManagerClient() = default;
+    static inline std::shared_ptr<ISystemAbilityManagerClient> smc = nullptr;
 };
 
-class SystemAbilityManagerClientMock : public DfsSystemAbilityManagerClient {
+class SystemAbilityManagerClientMock : public ISystemAbilityManagerClient {
 public:
-    MOCK_METHOD0(GetInstance, SystemAbilityManagerClient&());
     MOCK_METHOD0(GetSystemAbilityManager, sptr<ISystemAbilityManager>());
 };
 }

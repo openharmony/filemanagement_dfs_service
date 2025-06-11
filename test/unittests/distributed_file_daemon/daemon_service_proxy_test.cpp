@@ -76,7 +76,7 @@ void DistributedDaemonProxyTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonProxyTest, OpenP2PConnectionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonProxyTest, OpenP2PConnectionTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
@@ -91,7 +91,7 @@ HWTEST_F(DistributedDaemonProxyTest, OpenP2PConnectionTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonProxyTest, CloseP2PConnectionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonProxyTest, CloseP2PConnectionTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
@@ -106,7 +106,7 @@ HWTEST_F(DistributedDaemonProxyTest, CloseP2PConnectionTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));

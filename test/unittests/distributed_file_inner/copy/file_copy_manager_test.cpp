@@ -49,7 +49,7 @@ public:
         fileSize_ = totalFileSize;
     };
     // 定义一个空的 ProcessCallback 用于测试
-    ProcessCallback emptyCallback_ = [](uint64_t processSize, uint64_t totalFileSize) {};
+    ProcessCallback emptyCallback_;
 };
 
 void FileCopyManagerTest::SetUpTestCase(void)
@@ -78,7 +78,7 @@ void FileCopyManagerTest::TearDown(void)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 Start";
     string localUri = "/data/test/test.txt";
@@ -94,7 +94,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
     EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, ENOENT);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
@@ -114,7 +114,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0002 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
@@ -136,7 +136,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
@@ -158,7 +158,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0004 Start";
     auto infos1 = std::make_shared<FileInfos>();
@@ -196,7 +196,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 Start";
     string srcuri = "file://docs/storage/media/100/local/files/Docs/11.txt";
@@ -222,7 +222,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
 {
     //无对应子文件夹，errno返回2
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 Start";
@@ -285,12 +285,84 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level1)
 }
 
 /**
+* @tc.name: FileCopyManager_Copy_0008
+* @tc.desc: The execution of the Copy succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0008, TestSize.Level0)
+{
+    //same uri
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0008 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
+    int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0002!" << errno;
+    close(fd);
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(remove(srcPath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0008 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Copy_0009
+* @tc.desc: The execution of the Copy succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0009, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0009 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/a1.txt";
+    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
+    int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0009!" << errno;
+    close(fd);
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(remove(srcPath.c_str()), 0);
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0009 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Copy_0010
+* @tc.desc: The execution of the Copy failed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0010, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0010 Start";
+    string localUri = "/data/test/test.txt";
+    string dstUri = "/data/test/test.txt";
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
+    EXPECT_EQ(ret, ENOENT);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0010 End";
+}
+
+/**
 * @tc.name: FileCopyManager_DeleteResFile_0001
 * @tc.desc: Verify the DeleteResFile function when transListener is not null and destPath exists.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0001 Start";
 
@@ -316,7 +388,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0002 Start";
 
@@ -341,7 +413,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0003 Start";
 
@@ -380,7 +452,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0004, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0004 Start";
 
@@ -410,7 +482,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0004, TestSize.Level
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0001 Start";
 
@@ -439,7 +511,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0002 Start";
 
@@ -472,7 +544,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0003 Start";
 
@@ -498,7 +570,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_OpenSrcFile_0004 Start";
 
@@ -532,7 +604,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckPath_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckPath_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_CheckPath_0001 Start";
 
@@ -608,7 +680,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckOrCreateLPath_0001, TestSize.
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_GetModeFromFlags_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_GetModeFromFlags_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_GetModeFromFlags_0001 Start";
 
@@ -629,7 +701,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_GetModeFromFlags_0001, TestSize.Le
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_CreateFileInfos_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_CreateFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_CreateFileInfos_0001 Start";
     auto infos = std::make_shared<FileInfos>();
@@ -645,7 +717,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CreateFileInfos_0001, TestSize.Lev
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_RemoveFileInfos_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_RemoveFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_RemoveFileInfos_0001 Start";
     auto infos1 = std::make_shared<FileInfos>();
@@ -682,7 +754,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RemoveFileInfos_0001, TestSize.Lev
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_RecurCopyDir_0001 Start";
     auto infos = std::make_shared<FileInfos>();
@@ -732,7 +804,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level1
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 Start";
     auto infos = std::make_shared<FileInfos>();
@@ -765,7 +837,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
 */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_CopyDirFunc_0001 Start";
     auto infos = std::make_shared<FileInfos>();
@@ -799,7 +871,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0001, TestSize.Level1)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0001 Start";
     auto infos1 = std::make_shared<FileInfos>();
@@ -819,5 +891,57 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0001, TestSize.Level1)
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel();
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0001 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Cancel_0002
+* @tc.desc: The execution of the cancel succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0002 Start";
+    auto infos1 = std::make_shared<FileInfos>();
+    infos1->srcUri = "srcUri1";
+    infos1->destUri = "destUri1";
+    infos1->transListener = nullptr;
+    infos1->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    std::string srcUri = "srcUri1";
+    std::string destUri = "destUri1";
+
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri, true);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0002 End";
+}
+
+/**
+* @tc.name: FileCopyManager_Cancel_0003
+* @tc.desc: The execution of the cancel succeed.
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 Start";
+    auto infos1 = std::make_shared<FileInfos>();
+    auto infos2 = std::make_shared<FileInfos>();
+    infos1->srcUri = "srcUri1";
+    infos1->destUri = "destUri1";
+    infos1->transListener = nullptr;
+    infos1->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    infos2->srcUri = "srcUri2";
+    infos2->destUri = "destUri2";
+    infos2->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback_));
+    infos2->localListener = std::make_shared<FileCopyLocalListener>("",
+        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos2);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(true);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 End";
 }
 }

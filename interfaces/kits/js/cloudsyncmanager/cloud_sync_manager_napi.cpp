@@ -15,17 +15,69 @@
 
 #include "cloud_sync_manager_napi.h"
 #include "cloud_sync_manager_n_exporter.h"
-
+#include "downgrade_download_napi.h"
+#include "downgrade_progress_napi.h"
+#include "utils_log.h"
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 /***********************************************
  * Module export and register
  ***********************************************/
+void InitDownloadState(napi_env env, napi_value exports)
+{
+    const char *propertyName = "DownloadState";
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("RUNNING", NVal::CreateInt32(env, (int32_t)DowngradeProgress::RUNNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, (int32_t)DowngradeProgress::COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, (int32_t)DowngradeProgress::STOPPED).val_),
+    };
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitDownloadStopReason(napi_env env, napi_value exports)
+{
+    char propertyName[] = "DownloadStopReason";
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("NO_STOP", NVal::CreateInt32(env, (int32_t)DowngradeProgress::NO_STOP).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NETWORK_UNAVAILABLE",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeProgress::NETWORK_UNAVAILABLE).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeProgress::LOCAL_STORAGE_FULL).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("TEMPERATURE_LIMIT",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeProgress::TEMPERATURE_LIMIT).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("USER_STOPPED",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeProgress::USER_STOPPED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("APP_UNLOAD", NVal::CreateInt32(env, (int32_t)DowngradeProgress::APP_UNLOAD).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("OTHER_REASON",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeProgress::OTHER_REASON).val_),
+    };
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
 
 static napi_value Init(napi_env env, napi_value exports)
 {
     CloudSyncManagerExport(env, exports);
     InitENumACtions(env, exports);
+    InitDownloadState(env, exports);
+    InitDownloadStopReason(env, exports);
+    std::vector<std::unique_ptr<NExporter>> products;
+    products.emplace_back(std::make_unique<DowngradeDownloadNapi>(env, exports));
+    products.emplace_back(std::make_unique<DowngradeProgressNapi>(env, exports));
+    for (auto &&product : products) {
+        if (!product->Export()) {
+            LOGE("INNER BUG. Failed to export class %{public}s for module cloudSyncDownload ",
+                 product->GetClassName().c_str());
+            return nullptr;
+        } else {
+            LOGI("Class %{public}s for module cloudSyncDownload has been exported", product->GetClassName().c_str());
+        }
+    }
 
     return exports;
 }
@@ -55,15 +107,13 @@ void InitENumACtions(napi_env env, napi_value exports)
     napi_set_named_property(env, exports, propertyName, actionObj);
 }
 
-static napi_module _module = {
-    .nm_version = 1,
-    .nm_flags = 0,
-    .nm_filename = nullptr,
-    .nm_register_func = Init,
-    .nm_modname = "file.cloudSyncManager",
-    .nm_priv = ((void *)0),
-    .reserved = {0}
-};
+static napi_module _module = {.nm_version = 1,
+                              .nm_flags = 0,
+                              .nm_filename = nullptr,
+                              .nm_register_func = Init,
+                              .nm_modname = "file.cloudSyncManager",
+                              .nm_priv = ((void *)0),
+                              .reserved = {0}};
 
 extern "C" __attribute__((constructor)) void RegisterModule(void)
 {

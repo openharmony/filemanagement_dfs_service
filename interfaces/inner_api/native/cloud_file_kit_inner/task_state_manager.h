@@ -33,6 +33,7 @@ enum class TaskType : uint64_t {
     DOWNLOAD_THUMB_TASK = 1 << 6,
     DISABLE_CLOUD_TASK = 1 << 7,
     CACHE_VIDEO_TASK = 1 << 8,
+    DOWNGRADE_DOWNLOAD_TASK = 1 << 9,
 };
 class TaskStateManager : public NoCopyable {
 public:
@@ -44,9 +45,10 @@ public:
     void StartTask();
 private:
     TaskStateManager();
-    void DelayUnloadTask();
+    void DelayUnloadTask(bool needSetCritical);
     void CancelUnloadTask();
 
+    bool criticalStatus_ = true;
     std::mutex taskMapsMutex_;
     std::unordered_map<std::string, uint64_t> taskMaps_;
     ffrt::queue queue_;

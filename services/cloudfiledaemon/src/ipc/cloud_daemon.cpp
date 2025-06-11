@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,15 +16,15 @@
 #include "ipc/cloud_daemon.h"
 
 #include <exception>
-#include <stdexcept>
-#include <thread>
 #include <malloc.h>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <thread>
 
 #include "cloud_file_fault_event.h"
+#include "concurrent_queue.h"
 #include "dfs_error.h"
-#include "ffrt_inner.h"
 #include "fuse_manager/fuse_manager.h"
 #include "iremote_object.h"
 #include "parameters.h"
@@ -49,6 +49,7 @@ namespace {
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t STAT_MODE_DIR_DENTRY_CACHE = 02771;
     static const int32_t OID_DFS = 1009;
+    static const int32_t MAX_CONCURRENT_THREADS = 12;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
@@ -115,6 +116,7 @@ void CloudDaemon::OnStart()
     state_ = ServiceRunningState::STATE_RUNNING;
     /* load cloud file ext plugin */
     CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
+    ConcurrentQueue::GetInstance().Init(ffrt_qos_user_initiated, MAX_CONCURRENT_THREADS);
     LOGI("Start service successfully");
 }
 
@@ -160,6 +162,7 @@ void CloudDaemon::OnStop()
     LOGI("Begin to stop");
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
+    ConcurrentQueue::GetInstance().Deinit();
     LOGI("Stop finished successfully");
 }
 

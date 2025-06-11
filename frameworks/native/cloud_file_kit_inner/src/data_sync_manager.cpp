@@ -207,4 +207,19 @@ int32_t DataSyncManager::BatchCleanFile(const std::vector<CloudSync::CleanFileIn
     return E_OK;
 }
 
+int32_t DataSyncManager::StartDowngrade(const std::string &bundleName,
+                                        const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::StopDowngrade(const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudFile

@@ -98,6 +98,9 @@ public:
                            std::vector<std::string> &failCloudId) override;
     ErrCode BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
                                   std::vector<std::string> &failCloudId) override;
+    ErrCode StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback) override;
+    ErrCode StopDowngrade(const std::string &bundleName) override;
+    ErrCode GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

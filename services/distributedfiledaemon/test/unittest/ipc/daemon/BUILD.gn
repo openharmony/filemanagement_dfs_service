@@ -42,9 +42,11 @@ ohos_unittest("daemon_test") {
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+    "${distributedfile_path}/test/mock/",
   ]
 
   sources = [
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
@@ -104,6 +106,10 @@ ohos_unittest("daemon_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (support_same_account) {
+    defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
 }
 
 group("unittest") {

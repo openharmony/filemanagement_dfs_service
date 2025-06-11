@@ -88,7 +88,7 @@ void DistributedDaemonManagerImplTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, GetInstanceTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, GetInstanceTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest Start";
     try {
@@ -107,7 +107,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetInstanceTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
     try {
@@ -128,7 +128,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
     try {
@@ -149,7 +149,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Level0)
 {
     auto remoteReverseObj = sptr(new FileDfsListenerMock());
     GTEST_LOG_(INFO) << "OpenP2PConnectionExTest Start";
@@ -171,7 +171,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Lev
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "CloseP2PConnectionEx Start";
     try {
@@ -192,7 +192,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Le
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level0)
 {
     const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkId=xxxxx";
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
@@ -224,7 +224,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RequestSendFileTest Start";
     try {
@@ -245,7 +245,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level0)
 {
     bool isFile = false;
     bool isDir = false;
@@ -268,7 +268,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level0)
 {
     sptr<AssetObj> assetObj = nullptr;
     int32_t userId = 800;
@@ -292,7 +292,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RegisterAssetCallbackTest Start";
     try {
@@ -317,7 +317,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest Start";
     try {
@@ -343,7 +343,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "CancelTest Start";
     try {
@@ -377,7 +377,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CancelTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "CopyTest Start";
     try {
@@ -408,7 +408,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, CopyTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "IsDirectoryTest Start";
     try {
@@ -435,7 +435,7 @@ HWTEST_F(DistributedDaemonManagerImplTest, IsDirectoryTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level1)
+HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetSizeTest Start";
     try {

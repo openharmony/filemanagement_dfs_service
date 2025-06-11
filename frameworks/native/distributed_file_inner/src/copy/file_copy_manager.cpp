@@ -46,7 +46,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -198,6 +198,11 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
+    if (srcUri == destUri) {
+        LOGE("The srcUri and destUri is same: %{public}s", GetAnonyString(srcUri).c_str());
+        return E_OK;
+    }
+
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path: %{public}s or %{public}s is forbidden",
@@ -207,7 +212,10 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
     if (ret != E_OK) {
-        return EINVAL;
+        if (processCallback == nullptr) {
+            return EINVAL;
+        }
+        return ret;
     }
 
     if (IsRemoteUri(infos->srcUri)) {
@@ -265,7 +273,7 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     return transListener->CopyToSandBox(infos->srcUri);
 }
 
-int32_t FileCopyManager::Cancel()
+int32_t FileCopyManager::Cancel(const bool isKeepFiles)
 {
     LOGI("Cancel all Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
@@ -276,13 +284,15 @@ int32_t FileCopyManager::Cancel()
                 GetAnonyString(item->destUri).c_str());
             item->transListener->Cancel(item->srcUri, item->destUri);
         }
-        DeleteResFile(item);
+        if (!isKeepFiles) {
+            DeleteResFile(item);
+        }
     }
     FileInfosVec_.clear();
     return E_OK;
 }
 
-int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &destUri)
+int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &destUri, const bool isKeepFiles)
 {
     LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
@@ -304,7 +314,9 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
                 GetAnonyString(destUri).c_str());
             ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
-        DeleteResFile(*item);
+        if (!isKeepFiles) {
+            DeleteResFile(*item);
+        }
         item = FileInfosVec_.erase(item);
         return ret;
     }
@@ -313,6 +325,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
 
 void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
 {
+    LOGI("start DeleteResFile");
     std::error_code errCode;
     //delete files in remote cancel
     if (infos->transListener != nullptr) {
@@ -347,10 +360,6 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     LOGI("start ExecLocal");
     // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
     if (infos->srcUriIsFile) {
-        if (infos->srcPath == infos->destPath) {
-            LOGE("The src and dest is same");
-            return E_OK;
-        }
         int32_t ret = CheckOrCreatePath(infos->destPath);
         if (ret != E_OK) {
             LOGE("check or create fail, error code is %{public}d", ret);
@@ -399,7 +408,7 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     if (g_apiCompatibleVersion >= OPEN_TRUC_VERSION) {
         destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     } else {
-        destFd = open(dest.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
     if (destFd < 0) {
         LOGE("Error opening dest file descriptor. errno = %{public}d", errno);

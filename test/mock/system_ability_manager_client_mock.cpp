@@ -14,7 +14,6 @@
  */
 
 #include "system_ability_manager_client_mock.h"
-#include "if_system_ability_manager_mock.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -26,6 +25,9 @@ SystemAbilityManagerClient& SystemAbilityManagerClient::GetInstance()
 
 sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
 {
-    return FileManagement::CloudSync::DfsSystemAbilityManagerClient::smc->GetSystemAbilityManager();
+    if (ISystemAbilityManagerClient::smc == nullptr) {
+        return nullptr;
+    }
+    return ISystemAbilityManagerClient::smc->GetSystemAbilityManager();
 }
 }

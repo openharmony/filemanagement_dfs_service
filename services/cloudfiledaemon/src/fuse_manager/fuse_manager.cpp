@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,12 +48,14 @@
 #include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_type_const.h"
+#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "fdsan.h"
 #include "ffrt_inner.h"
+#include "fuse_ioctl.h"
 #include "fuse_operations.h"
 #include "parameters.h"
 #ifdef HICOLLIE_ENABLE
@@ -96,7 +98,6 @@ static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 6;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
-static const unsigned int HMDFS_IOC = 0xf2;
 static const unsigned int FUSE_BUFFER_SIZE = 512 * 1024;
 static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
@@ -105,9 +106,6 @@ static const unsigned int LOOKUP_TIMEOUT_S = 1;
 static const unsigned int FORGET_TIMEOUT_S = 1;
 #endif
 
-#define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
-#define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
-#define HMDFS_IOC_RESET_READ _IO(HMDFS_IOC, 9)
 PAGE_FLAG_TYPE PG_READAHEAD = 0x00000001;
 PAGE_FLAG_TYPE PG_UPTODATE = 0x00000002;
 PAGE_FLAG_TYPE PG_REFERENCED = 0x00000004;
@@ -842,7 +840,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
-    ffrt::submit([cInode, error, openFinish, cond, data] {
+    ConcurrentQueue::GetInstance().Submit([cInode, error, openFinish, cond, data] {
         if (IsVideoType(cInode->mBase->name)) {
             LoadCacheFileIndex(cInode, data);
         }
@@ -1190,6 +1188,8 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
             lock, READ_TIMEOUT_S, [&] { return (it->flags & PG_UPTODATE) || CheckReadIsCanceled(pid, cInode); });
         if (!waitStatus) {
             LOGE("CheckAndWait timeout: %{public}ld", static_cast<long>(cacheIndex));
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+                FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
             return false;
         }
     }
@@ -1229,6 +1229,16 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
 }
 
+static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
+{
+    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+    readStat.UpdateReadSizeStat(size);
+    readStat.UpdateReadTimeStat(size, readTime);
+    if (IsVideoType(name)) {
+        readStat.UpdateReadInfo(READ_SUM);
+    }
+}
+
 static void CloudReadOnCloudFile(pid_t pid,
                                  struct FuseData *data,
                                  shared_ptr<ReadArguments> readArgs,
@@ -1243,7 +1253,6 @@ static void CloudReadOnCloudFile(pid_t pid,
     bool isReading = true;
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-
     wSesLock.lock();
     if (readArgs->offset % MAX_READ_SIZE == 0 && cInode->readCacheMap.find(cacheIndex) == cInode->readCacheMap.end()) {
         auto memInfo = std::make_shared<ReadCacheInfo>();
@@ -1257,16 +1266,11 @@ static void CloudReadOnCloudFile(pid_t pid,
         LOGD("reading and need wait");
         return;
     }
-
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
-
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-    readStat.UpdateReadSizeStat(readArgs->size);
-    readStat.UpdateReadTimeStat(readArgs->size, readTime);
-
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readStatus = READ_FINISHED;
@@ -1281,7 +1285,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                 static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-            ffrt::submit(
+            ConcurrentQueue::GetInstance().Submit(
                 [data, readArgs, cInode, cacheIndex] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
         }
         wSesLock.unlock();
@@ -1322,9 +1326,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-    readStat.UpdateReadSizeStat(readArgs->size);
-    readStat.UpdateReadTimeStat(readArgs->size, readTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, startTime);
 
     cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
     wSesLock.lock();
@@ -1334,7 +1336,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
             static_cast<long>(cacheIndex));
     }
     if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-        ffrt::submit([readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
+        ConcurrentQueue::GetInstance().Submit(
+            [readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
     }
     wSesLock.unlock();
     return;
@@ -1503,6 +1506,8 @@ static bool DoReadSlice(fuse_req_t req,
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     if (IsVideoType(cInode->mBase->name) && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.UpdateReadInfo(CACHE_SUM);
         LOGI("DoReadSlice from local: %{public}ld", static_cast<long>(cacheIndex));
         *readArgs->readResult = ReadCacheFile(readArgs, cInode->path, data);
         if (*readArgs->readResult >= 0) {
@@ -1517,11 +1522,9 @@ static bool DoReadSlice(fuse_req_t req,
     LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
     if (needCheck && !CheckAndWait(pid, cInode, readArgs->offset)) {
         fuse_reply_err(req, ENETUNREACH);
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
-            FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
         return false;
     }
-    ffrt::submit([pid, readArgs, cInode, readSession, data] {
+    ConcurrentQueue::GetInstance().Submit([pid, readArgs, cInode, readSession, data] {
         CloudReadOnCloudFile(pid, data, readArgs, cInode, readSession);
     });
     return true;
@@ -1547,6 +1550,8 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         int64_t cacheIndex = static_cast<int64_t>(
             (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+            CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+            readStat.UpdateReadInfo(CACHE_SUM);
             continue;
         }
         auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, pid);
@@ -1554,7 +1559,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
             LOGE("Init readArgsCache failed");
             break;
         }
-        ffrt::submit([readArgsCache, params, data] {
+        ConcurrentQueue::GetInstance().Submit([readArgsCache, params, data] {
             CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data);
         });
     }

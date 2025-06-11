@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,12 +28,14 @@
 #include "clouddisk_rdb_transaction.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_notify.h"
+#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "ffrt_inner.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "file_operations_helper.h"
+#include "fuse_ioctl.h"
 #include "hitrace_meter.h"
 #include "securec.h"
 #include "utils_log.h"
@@ -72,9 +74,6 @@ namespace {
 }
 
 const int32_t MAX_SIZE = 4096;
-constexpr unsigned HMDFS_IOC = 0xf2;
-constexpr unsigned CLOUD_COPY_CMD = 0x0c;
-#define HMDFS_IOC_COPY_FILE _IOW(HMDFS_IOC, CLOUD_COPY_CMD, struct CloudDiskCopy)
 
 struct CloudDiskCopy {
     char destPath[MAX_SIZE];
@@ -1392,7 +1391,7 @@ void RDBUnlinkAsync(shared_ptr<CloudDiskRdbStore> rdbStore, const string& cloudI
                 "Failed to unlink DB cloudId: " + cloudId});
         }
     };
-    ffrt::thread(rdbUnlink).detach();
+    ConcurrentQueue::GetInstance().Submit(rdbUnlink);
 }
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
@@ -1617,12 +1616,14 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         fuse_reply_err(req, ENETUNREACH);
         return;
     }
-    if (!HandleCloudError(req, *error)) {
+    auto ret = HandleCloudError(req, *error);
+    if (ret == 0) {
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         fuse_reply_buf(req, buf.get(), *readSize);
     } else {
         filePtr->readSession = nullptr;
         LOGE("read fail");
+        fuse_reply_err(req, ret);
     }
     return;
 }

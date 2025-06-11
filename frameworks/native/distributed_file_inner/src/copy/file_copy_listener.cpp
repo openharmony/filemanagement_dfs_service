@@ -23,7 +23,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -67,7 +67,7 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
 
 FileCopyLocalListener::~FileCopyLocalListener()
 {
-    CloseNotifyFd();
+    CloseNotifyFdLocked();
 }
 
 std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(const std::string &srcPath,
@@ -83,6 +83,7 @@ void FileCopyLocalListener::StartListener()
         return;
     }
     notifyHandler_ = std::thread([this] {
+        LOGI("StartListener.");
         GetNotifyEvent();
     });
 }
@@ -90,10 +91,11 @@ void FileCopyLocalListener::StartListener()
 void FileCopyLocalListener::StopListener()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
+    LOGI("StopListener start.");
     if (processCallback_ != nullptr) {
         processCallback_(progressSize_, totalSize_);
     }
-    CloseNotifyFd();
+    CloseNotifyFdLocked();
     if (notifyHandler_.joinable()) {
         notifyHandler_.join();
     }
@@ -142,13 +144,35 @@ void FileCopyLocalListener::GetNotifyEvent()
                 return;
             }
             if (static_cast<unsigned short>(fds[1].revents) & POLLIN) {
-                ReadNotifyEvent();
+                ReadNotifyEventLocked();
             }
         } else if (ret < 0 && errno == EINTR) {
             continue;
         } else {
             LOGE("poll failed error : %{public}d", errno);
             errorCode_ = errno;
+            return;
+        }
+    }
+}
+
+void FileCopyLocalListener::ReadNotifyEventLocked()
+{
+    {
+        std::lock_guard<std::mutex> lock(readMutex_);
+        if (readClosed_) {
+            LOGE("read after close");
+            return;
+        }
+        readFlag_ = true;
+    }
+    ReadNotifyEvent();
+    {
+        std::lock_guard<std::mutex> lock(readMutex_);
+        readFlag_ = false;
+        if (readClosed_) {
+            LOGE("close after read");
+            CloseNotifyFd();
             return;
         }
     }
@@ -222,8 +246,20 @@ bool FileCopyLocalListener::CheckFileValid(const std::string &filePath)
     return filePaths_.count(filePath) != 0;
 }
 
+void FileCopyLocalListener::CloseNotifyFdLocked()
+{
+    std::lock_guard<std::mutex> lock(readMutex_);
+    readClosed_ = true;
+    if (readFlag_) {
+        LOGE("close while reading");
+        return;
+    }
+    CloseNotifyFd();
+}
+
 void FileCopyLocalListener::CloseNotifyFd()
 {
+    readClosed_ = false;
     if (eventFd_ != -1) {
         close(eventFd_);
         eventFd_ = -1;

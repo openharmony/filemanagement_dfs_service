@@ -17,6 +17,7 @@
 
 #include "gallery_download_file_stat.h"
 #include "iservice_registry.h"
+#include "mem_mgr_client.h"
 #include "parameters.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
@@ -43,6 +44,13 @@ void TaskStateManager::StartTask(string bundleName, TaskType task)
 {
     CancelUnloadTask();
     std::lock_guard<std::mutex> lock(taskMapsMutex_);
+    if (criticalStatus_ == false) {
+        int32_t ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(),
+            true, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+        if (ret == ERR_OK) {
+            criticalStatus_ = true;
+        }
+    }
     auto iterator = taskMaps_.find(bundleName);
     if (iterator == taskMaps_.end()) {
         taskMaps_[bundleName] = static_cast<uint64_t>(task);
@@ -65,7 +73,7 @@ void TaskStateManager::CompleteTask(string bundleName, TaskType task)
         }
     }
     if (taskMaps_.empty()) {
-        DelayUnloadTask();
+        DelayUnloadTask(true);
     }
 }
 
@@ -73,7 +81,7 @@ void TaskStateManager::StartTask()
 {
     std::lock_guard<std::mutex> lock(taskMapsMutex_);
     if (taskMaps_.empty()) {
-        DelayUnloadTask();
+        DelayUnloadTask(false);
     }
 }
 
@@ -101,7 +109,7 @@ void TaskStateManager::CancelUnloadTask()
     unloadTaskHandle_ = nullptr;
 }
 
-void TaskStateManager::DelayUnloadTask()
+void TaskStateManager::DelayUnloadTask(bool needSetCritical)
 {
     const std::string temperatureSysparamSync = "persist.kernel.cloudsync.temperature_abnormal_sync";
     const std::string temperatureSysparamThumb = "persist.kernel.cloudsync.temperature_abnormal_thumb";
@@ -111,7 +119,15 @@ void TaskStateManager::DelayUnloadTask()
     auto delayTime = DELAY_TIME;
     if (systemLoadSync == "true" || systemLoadThumb == "true") {
         LOGE("temperatureSysparam is true, unload task in 10 minutes");
+        needSetCritical = false;
         delayTime = SYSTEM_LOAD_DELAY_TIME;
+    }
+    if (needSetCritical == true && criticalStatus_ == true) {
+        int32_t ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(),
+            false, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+        if (ret == ERR_OK) {
+            criticalStatus_ = false;
+        }
     }
     auto task = [this]() {
         LOGI("do unload task");

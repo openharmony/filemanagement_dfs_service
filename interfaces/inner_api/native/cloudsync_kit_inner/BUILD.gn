@@ -61,6 +61,8 @@ ohos_shared_library("cloudsync_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
 

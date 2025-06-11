@@ -79,7 +79,7 @@ void DaemonTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: issueI7M6L1
  */
-HWTEST_F(DaemonTest, OnStopTest, TestSize.Level1)
+HWTEST_F(DaemonTest, OnStopTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "OnStop Start";
     try {
@@ -100,7 +100,7 @@ HWTEST_F(DaemonTest, OnStopTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI7SP3A
  */
-HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 start";
     try {
@@ -120,7 +120,7 @@ HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI7SP3A
  */
-HWTEST_F(DaemonTest, DaemonTest_OnStart_0100, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_OnStart_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnStart_0100 start";
     try {
@@ -140,7 +140,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnStart_0100, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI7SP3A
  */
-HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 start";
     try {
@@ -159,7 +159,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI7SP3A
  */
-HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0200 start";
     try {
@@ -179,7 +179,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI90MOB
  */
-HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 start";
     try {

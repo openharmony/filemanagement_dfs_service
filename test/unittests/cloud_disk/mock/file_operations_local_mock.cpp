@@ -106,6 +106,13 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     closedir(dir);
     return;
 }
+
+void FileOperationsLocal::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                                unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
+{
+    fuse_reply_ioctl(req, 0, NULL, 0);
+    return;
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
