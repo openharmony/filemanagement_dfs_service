@@ -70,8 +70,8 @@ public:
     using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
     static std::shared_ptr<FileCopyManager> GetInstance();
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
-    int32_t Cancel(const std::string &srcUri, const std::string &destUri);
-    int32_t Cancel();
+    int32_t Cancel(const std::string &srcUri, const std::string &destUri, const bool isKeepFiles = false);
+    int32_t Cancel(const bool isKeepFiles = false);
     // operator of local copy
     int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
 
