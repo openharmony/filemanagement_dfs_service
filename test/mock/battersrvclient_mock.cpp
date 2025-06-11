@@ -23,4 +23,14 @@ int32_t BatterySrvClient::GetCapacity()
     return FileManagement::CloudSync::DfsBatterySrvClient::dfsBatterySrvClient->GetCapacity();
 }
 
+PowerMgr::BatteryPluggedType BatterySrvClient::GetPluggedType()
+{
+    return FileManagement::CloudSync::DfsBatterySrvClient::dfsBatterySrvClient->GetPluggedType();
+}
+
+PowerMgr::BatteryChargeState BatterySrvClient::GetChargingStatus()
+{
+    return FileManagement::CloudSync::DfsBatterySrvClient::dfsBatterySrvClient->GetChargingStatus();
+}
+
 }
