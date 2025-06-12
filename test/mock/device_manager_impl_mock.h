@@ -37,10 +37,10 @@ public:
         const std::string &extra, std::shared_ptr<DeviceStateCallback> callback) = 0;
     virtual int32_t UnRegisterDevStateCallback(const std::string &pkgName) = 0;
     virtual int32_t GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info) = 0;
-    virtual bool CheckSrcAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee) = 0;
-    virtual bool CheckSinkAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee) = 0;
-    virtual bool CheckSrcIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee) = 0;
-    virtual bool CheckSinkIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee) = 0;
+    virtual bool CheckSrcAccessControl(const DmAccessCaller &caller, const DmAccessCallee &callee) = 0;
+    virtual bool CheckSinkAccessControl(const DmAccessCaller &caller, const DmAccessCallee &callee) = 0;
+    virtual bool CheckSrcIsSameAccount(const DmAccessCaller &caller, const DmAccessCallee &callee) = 0;
+    virtual bool CheckSinkIsSameAccount(const DmAccessCaller &caller, const DmAccessCallee &callee) = 0;
     #ifdef NORMAL_MOCK
     virtual int32_t GetNetworkTypeByNetworkId(const std::string &pkgName, const std::string &netWorkId,
         int32_t &netWorkType) = 0;
@@ -63,10 +63,10 @@ public:
     MOCK_METHOD1(UnRegisterDevStateCallback, int32_t(const std::string &pkgName));
     MOCK_METHOD2(GetLocalNodeDeviceInfo, int32_t(const char *pkgName, NodeBasicInfo *info));
     MOCK_METHOD2(GetLocalDeviceInfo, int32_t(const std::string &pkgName, DmDeviceInfo &info));
-    MOCK_METHOD2(CheckSrcAccessControl, bool(const DmAccessCaller &caller,const DmAccessCallee &callee));
-    MOCK_METHOD2(CheckSinkAccessControl, bool(const DmAccessCaller &caller,const DmAccessCallee &callee));
-    MOCK_METHOD2(CheckSrcIsSameAccount, bool(const DmAccessCaller &caller,const DmAccessCallee &callee));
-    MOCK_METHOD2(CheckSinkIsSameAccount, bool(const DmAccessCaller &caller,const DmAccessCallee &callee));
+    MOCK_METHOD2(CheckSrcAccessControl, bool(const DmAccessCaller &caller, const DmAccessCallee &callee));
+    MOCK_METHOD2(CheckSinkAccessControl, bool(const DmAccessCaller &caller, const DmAccessCallee &callee));
+    MOCK_METHOD2(CheckSrcIsSameAccount, bool(const DmAccessCaller &caller, const DmAccessCallee &callee));
+    MOCK_METHOD2(CheckSinkIsSameAccount, bool(const DmAccessCaller &caller, const DmAccessCallee &callee));
     #ifdef NORMAL_MOCK
     MOCK_METHOD3(GetNetworkTypeByNetworkId, int32_t(const std::string &pkgName, const std::string &netWorkId,
         int32_t &netWorkType));

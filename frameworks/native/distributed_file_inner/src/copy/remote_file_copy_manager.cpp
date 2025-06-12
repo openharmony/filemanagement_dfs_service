@@ -235,7 +235,7 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
         auto callingUid = IPCSkeleton::GetCallingUid();
         if (callingUid != (*item)->callingUid) {
             LOGE("RemoteCancel failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.",
-            callingUid, (*item)->callingUid);
+                callingUid, (*item)->callingUid);
             return EPERM;
         }
         LOGI("RemoteCancel success");
@@ -272,7 +272,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
             GetAnonyString(infos->destPath).c_str());
         return EINVAL;
     }
-    std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback = 
+    std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback =
         [&listener](uint64_t processSize, uint64_t totalSize) -> void {
         listener->OnFileReceive(totalSize, processSize);
     };
