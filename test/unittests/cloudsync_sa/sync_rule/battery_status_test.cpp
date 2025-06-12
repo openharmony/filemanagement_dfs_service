@@ -23,6 +23,8 @@ namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using ChargeState = PowerMgr::BatteryChargeState;
+using PluggedType = PowerMgr::BatteryPluggedType;
 constexpr int32_t STOP_CAPACITY_LIMIT = 10;
 constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 
@@ -232,5 +234,49 @@ HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest003 End";
+}
+
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Enable, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
+        .WillOnce(Return(ChargeState::CHARGE_STATE_ENABLE));
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
+
+    batteryStatus_->GetInitChargingStatus();
+    EXPECT_TRUE(batteryStatus_->IsCharging());
+}
+
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Full, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
+        .WillOnce(Return(ChargeState::CHARGE_STATE_FULL));
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
+
+    batteryStatus_->GetInitChargingStatus();
+    EXPECT_TRUE(batteryStatus_->IsCharging());
+}
+
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
+        .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
+
+    batteryStatus_->GetInitChargingStatus();
+    EXPECT_TRUE(batteryStatus_->IsCharging());
+}
+
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_NotCharging_NotPlugged_Battery_Low, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
+        .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_NONE));
+
+    batteryStatus_->GetInitChargingStatus();
+    EXPECT_FALSE(batteryStatus_->IsCharging());
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

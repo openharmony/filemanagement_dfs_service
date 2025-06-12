@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include "battersrvclient_mock.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_service.h"
 #include "dfsu_access_token_helper_mock.h"
@@ -28,6 +29,8 @@ namespace Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using ChargeState = PowerMgr::BatteryChargeState;
+using PluggedType = PowerMgr::BatteryPluggedType;
 constexpr int32_t SA_ID = 5204;
 
 class CloudSyncServiceTest : public testing::Test {
@@ -40,6 +43,7 @@ public:
     static inline sptr<ISystemAbilityManagerMock> saMgr_ = nullptr;
     static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
     static inline sptr<CloudSyncService> servicePtr_ = nullptr;
+    static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -52,6 +56,8 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
     dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
     DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
+    dfsBatterySrvClient_ = make_shared<BatterySrvClientMock>();
+    BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
@@ -855,6 +861,10 @@ HWTEST_F(CloudSyncServiceTest, InitTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "InitTest001 start";
     try {
         EXPECT_NE(servicePtr_, nullptr);
+        EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
+            .WillOnce(Return(ChargeState::CHARGE_STATE_FULL));
+        EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+            .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
         servicePtr_->Init();
     } catch (...) {
         EXPECT_TRUE(false);
