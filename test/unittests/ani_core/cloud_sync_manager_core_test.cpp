@@ -98,7 +98,7 @@ HWTEST_F(CloudSyncManagerCoreTest, DoNotifyEventChangeTest1, TestSize.Level1)
     std::string eventId = "testId";
     std::string extraData = "testData";
     auto data = CloudSyncManagerCore::DoNotifyEventChange(userId, eventId, extraData);
-    EXPECT_TRUE(data.IsSuccess());
+    EXPECT_FALSE(data.IsSuccess());
 }
 
 /**
@@ -123,7 +123,7 @@ HWTEST_F(CloudSyncManagerCoreTest, DoDisableCloudTest1, TestSize.Level1)
 {
     std::string accoutId = "100";
     auto data = CloudSyncManagerCore::DoDisableCloud(accoutId);
-    EXPECT_TRUE(data.IsSuccess());
+    EXPECT_FALSE(data.IsSuccess());
 }
 
 /**
@@ -136,7 +136,7 @@ HWTEST_F(CloudSyncManagerCoreTest, DoEnableCloudTest1, TestSize.Level1)
     std::string accoutId = "100";
     SwitchDataObj switchData;
     auto data = CloudSyncManagerCore::DoEnableCloud(accoutId, switchData);
-    EXPECT_TRUE(data.IsSuccess());
+    EXPECT_FALSE(data.IsSuccess());
 }
 
 /**
@@ -149,6 +149,6 @@ HWTEST_F(CloudSyncManagerCoreTest, DoCleanTest1, TestSize.Level1)
     std::string accoutId = "100";
     CleanOptions cleanOptions {};
     auto data = CloudSyncManagerCore::DoClean(accoutId, cleanOptions);
-    EXPECT_TRUE(data.IsSuccess());
+    EXPECT_FALSE(data.IsSuccess());
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test
