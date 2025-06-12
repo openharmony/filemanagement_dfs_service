@@ -89,7 +89,9 @@ ohos_unittest("cloud_daemon_manager_impl_test") {
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CLOUD_DAEMON_API\"",
   ]
-
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
   use_exceptions = true
 }
 

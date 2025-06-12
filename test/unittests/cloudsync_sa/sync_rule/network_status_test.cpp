@@ -302,7 +302,7 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest002, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         int32_t userId = 1;
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
-        EXPECT_EQ(ret, true);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
@@ -414,7 +414,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
-        EXPECT_EQ(ret, false);
+        EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";

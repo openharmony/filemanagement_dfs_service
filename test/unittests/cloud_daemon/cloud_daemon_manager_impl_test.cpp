@@ -55,6 +55,7 @@ void CloudDaemonManagerImplTest::SetUp(void)
 void CloudDaemonManagerImplTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    cloudDaemonManagerImpl_ = nullptr;
 }
 
 /**
@@ -108,12 +109,16 @@ HWTEST_F(CloudDaemonManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
     try {
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
+#if CLOUD_ADAPTER_ENABLED
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
         cloudDaemonManagerImpl_->SetDeathRecipient(remoteObject);
         EXPECT_EQ(cloudDaemonManagerImpl_->isFirstCall_.test_and_set(), false);
         EXPECT_NE(cloudDaemonManagerImpl_->deathRecipient_, nullptr);
+#else
+        EXPECT_EQ(CloudDaemonServiceProxy, nullptr);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest  ERROR";

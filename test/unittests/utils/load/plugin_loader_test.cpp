@@ -71,7 +71,7 @@ HWTEST_F(PluginLoaderTest, PluginLoaderTest_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PluginLoaderTest_004 Start";
     try {
-        PluginLoader::GetInstance().LoadCloudKitPlugin(true);
+        PluginLoader::GetInstance().LoadCloudKitPlugin(false);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
