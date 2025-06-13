@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "base_interface_lib_mock.h"
 #include "directory_ex.h"
 #include "meta_file.h"
-#include "base_interface_lib_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -34,6 +34,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+
 public:
     static inline shared_ptr<InterfaceLibMock> interfaceLibMock_ = nullptr;
 };
@@ -90,7 +91,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd002, TestSize.Level1)
     unsigned long endBlock = 0;
     uint32_t level = 64;
     int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
 }
 
 /**
@@ -106,7 +111,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd003, TestSize.Level1)
     unsigned long endBlock = 0;
     uint32_t level = 0;
     int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
 }
 
 /**
@@ -126,11 +135,19 @@ HWTEST_F(DentryMetaFileTest, MetaFileCreate001, TestSize.Level1)
     MetaBase mBase1("file1", "id1");
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
     MetaBase mBase2("file2", "id2");
     mBase2.size = TEST_ISIZE;
     ret = mFile.DoCreate(mBase2);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
     MetaFile mFile2(userId, "/a/b");
     MetaBase mBase3("file3", "id3");
     ret = mFile2.DoCreate(mBase3);
@@ -176,8 +193,12 @@ HWTEST_F(DentryMetaFileTest, MetaFileLookup, TestSize.Level1)
     MetaFile mFile(userId, "/");
     MetaBase mBase1("file1");
     int ret = mFile.DoLookup(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(mBase1.size, TEST_ISIZE);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
 }
 
 /**
@@ -207,10 +228,18 @@ HWTEST_F(DentryMetaFileTest, MetaFileUpdate, TestSize.Level1)
     MetaBase mBase1("file1", "id11");
     mBase1.size = 0;
     int ret = mFile.DoUpdate(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
     MetaBase mBase2("file1");
     ret = mFile.DoLookup(mBase2);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
     EXPECT_EQ(mBase2.size, 0);
 }
 
@@ -226,11 +255,19 @@ HWTEST_F(DentryMetaFileTest, MetaFileRename, TestSize.Level1)
     MetaFile mFile(userId, "/");
     MetaBase mBase1("file2");
     int ret = mFile.DoRename(mBase1, "file4");
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
     MetaBase mBase2("file4");
     ret = mFile.DoLookup(mBase2);
+#if defined(CLOUD_ADAPTER_ENABLED)
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(mBase2.size, TEST_ISIZE);
+#else
+    EXPECT_EQ(ret, EINVAL);
+#endif
 }
 
 /**
@@ -261,7 +298,11 @@ HWTEST_F(DentryMetaFileTest, LoadChildren001, TestSize.Level1)
         MetaFile mFile(userId, "/");
         std::vector<MetaBase> bases;
         int ret = mFile.LoadChildren(bases);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, 0);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << "LoadChildren001 ERROR";
@@ -303,7 +344,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr001, TestSize.Level1)
         uint32_t userId = 100;
         auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("file1", "file1");
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(m->DoCreate(mBase1), 0);
+#else
+        EXPECT_EQ(m->DoCreate(mBase1), EINVAL);
+#endif
         m = nullptr;
         MetaFileMgr::GetInstance().ClearAll();
     } catch (...) {
@@ -326,7 +371,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
         uint32_t userId = 100;
         auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("testLongLongfileName", "testLongLongfileName");
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(m->DoCreate(mBase1), 0);
+#else
+        EXPECT_EQ(m->DoCreate(mBase1), EINVAL);
+#endif
         m = nullptr;
         MetaFileMgr::GetInstance().ClearAll();
     } catch (...) {
@@ -465,7 +514,11 @@ HWTEST_F(DentryMetaFileTest, HandleFileByFd_001, TestSize.Level1)
         unsigned long endBlock = 0;
         uint32_t level = MAX_BUCKET_LEVEL;
         int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, 0);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " HandleFileByFd_001 ERROR";
@@ -482,7 +535,11 @@ HWTEST_F(DentryMetaFileTest, HandleFileByFd_002, TestSize.Level1)
         unsigned long endBlock = DENTRY_PER_GROUP;
         uint32_t level = MAX_BUCKET_LEVEL;
         int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, 0);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " HandleFileByFd_002 ERROR";
@@ -499,7 +556,11 @@ HWTEST_F(DentryMetaFileTest, HandleFileByFd_003, TestSize.Level1)
         unsigned long endBlock = -100;
         uint32_t level = MAX_BUCKET_LEVEL;
         int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, 0);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " HandleFileByFd_003 ERROR";
@@ -537,7 +598,11 @@ HWTEST_F(DentryMetaFileTest, GetOverallBucket_001, TestSize.Level1)
 
         EXPECT_CALL(*interfaceLibMock_, GetOverallBucket(_)).WillOnce(Return(E_SUCCESS));
         int ret = mFile.HandleFileByFd(endBlock, level);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, 0);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
         EXPECT_EQ(interfaceLibMock_->GetOverallBucket(MAX_BUCKET_LEVEL), E_SUCCESS);
     } catch (...) {
         EXPECT_FALSE(false);
@@ -560,7 +625,11 @@ HWTEST_F(DentryMetaFileTest, GetBucketaddr_001, TestSize.Level1)
         MetaBase mBase1("file1", "id1");
         mBase1.size = TEST_ISIZE;
         int ret = mFile.DoCreate(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, E_SUCCESS);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
         EXPECT_EQ(interfaceLibMock_->GetBucketaddr(MAX_BUCKET_LEVEL, MAX_BUCKET_LEVEL), E_SUCCESS);
     } catch (...) {
         EXPECT_FALSE(false);
@@ -583,7 +652,11 @@ HWTEST_F(DentryMetaFileTest, GetBucketaddr_002, TestSize.Level1)
         MetaBase mBase1("file1", "id1");
         mBase1.size = TEST_ISIZE;
         int ret = mFile.DoCreate(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, E_SUCCESS);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
         EXPECT_EQ(interfaceLibMock_->GetBucketaddr(E_SUCCESS, MAX_BUCKET_LEVEL), E_FAIL);
     } catch (...) {
         EXPECT_FALSE(false);
@@ -606,7 +679,11 @@ HWTEST_F(DentryMetaFileTest, GetBucketByLevel_001, TestSize.Level1)
         MetaBase mBase1("file1", "id1");
         mBase1.size = TEST_ISIZE;
         int ret = mFile.DoCreate(mBase1);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, E_SUCCESS);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
         EXPECT_EQ(interfaceLibMock_->GetBucketByLevel(E_SUCCESS), E_SUCCESS);
     } catch (...) {
         EXPECT_FALSE(false);
@@ -633,7 +710,11 @@ HWTEST_F(DentryMetaFileTest, RoomForFilename_001, TestSize.Level1)
         uint32_t maxSlots = DENTRY_PER_GROUP;
         uint32_t start = DENTRY_PER_GROUP;
         EXPECT_EQ(interfaceLibMock_->FindNextZeroBit(addr, maxSlots, start), DENTRY_PER_GROUP);
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, E_SUCCESS);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " RoomForFilename_001 ERROR";
@@ -659,7 +740,11 @@ HWTEST_F(DentryMetaFileTest, RoomForFilename_002, TestSize.Level1)
         uint8_t addr[] = {0};
         uint32_t maxSlots = DENTRY_PER_GROUP;
         uint32_t start = DENTRY_PER_GROUP;
+#if defined(CLOUD_ADAPTER_ENABLED)
         EXPECT_EQ(ret, E_SUCCESS);
+#else
+        EXPECT_EQ(ret, EINVAL);
+#endif
         EXPECT_EQ(interfaceLibMock_->FindNextZeroBit(addr, maxSlots, start), DENTRY_PER_GROUP);
         EXPECT_EQ(interfaceLibMock_->FindNextBit(addr, maxSlots, start), MAX_BUCKET_LEVEL);
     } catch (...) {
