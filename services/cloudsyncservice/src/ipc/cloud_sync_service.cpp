@@ -246,9 +246,14 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
         dataSyncManager_->DownloadThumb();
-    } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
+    } else if (reason == "usual.event.SCREEN_OFF") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SCREEN_OFF_TRIGGER);
+    } else if (reason == "usual.event.POWER_CONNECTED") {
+        dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
     } else if (reason == "usual.event.PACKAGE_REMOVED") {
         HandlePackageRemoved(startReason);
     }

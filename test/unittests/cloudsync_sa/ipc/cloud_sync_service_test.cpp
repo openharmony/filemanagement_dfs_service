@@ -851,6 +851,50 @@ HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleStartReasonTest002
+ * @tc.desc: Verify the HandleStartReason function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartReasonTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        SystemAbilityOnDemandReason startReason;
+        startReason.reasonName_ = "usual.event.SCREEN_OFF";
+        servicePtr_->HandleStartReason(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleStartReasonTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleStartReasonTest002 end";
+}
+
+/**
+ * @tc.name: HandleStartReasonTest003
+ * @tc.desc: Verify the HandleStartReason function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartReasonTest003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        SystemAbilityOnDemandReason startReason;
+        startReason.reasonName_ = "usual.event.POWER_CONNECTED";
+        servicePtr_->HandleStartReason(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleStartReasonTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleStartReasonTest003 end";
+}
+
+/**
  * @tc.name: InitTest001
  * @tc.desc: Verify the Init function.
  * @tc.type: FUNC

@@ -94,5 +94,6 @@ void BatteryStatusListener::OnPowerConnected()
 {
     dataSyncManager_->DownloadThumb();
     dataSyncManager_->CacheVideo();
+    dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
 }
 } // namespace OHOS::FileManagement::CloudSync

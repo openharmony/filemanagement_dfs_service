@@ -42,7 +42,7 @@ public:
     static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
     static bool IsLoadStatusUnderHot(STOPPED_TYPE process = STOPPED_IN_OTHER, int32_t level = SYSTEMLOADLEVEL_HOT);
-    static bool IsLoadStatusUnderNormal(STOPPED_TYPE process);
+    static bool IsLoadStatusUnderNormal();
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
     static inline int32_t loadstatus_ = 0;
