@@ -440,4 +440,46 @@ HWTEST_F(NetworkStatusTest, OnNetworkAvailTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnNetworkAvailTest End";
 }
+
+/**
+ * @tc.name: CheckWifiOrEthernetTest001
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckWifiOrEthernetTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+        bool ret = networkStatus.CheckWifiOrEthernet();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest End";
+}
+
+/**
+ * @tc.name: CheckWifiOrEthernetTest002
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckWifiOrEthernetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::ETHERNET_CONNECT);
+        bool ret = networkStatus.CheckWifiOrEthernet();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test

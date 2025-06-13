@@ -142,8 +142,7 @@ bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int3
         LOGI("datashare status open, CheckMobileNetwork success");
         return true;
     }
-    if (netStatus_ == WIFI_CONNECT) {
-        LOGI("datashare status close, networkdtatus:wifi");
+    if (CheckWifiOrEthernet()) {
         return true;
     }
     return false;
@@ -159,6 +158,19 @@ bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t us
         return true;
     }
     LOGI("CheckNetwork off");
+    return false;
+}
+
+bool NetworkStatus::CheckWifiOrEthernet()
+{
+    if (netStatus_ == WIFI_CONNECT) {
+        LOGI("datashare status close, network_status:wifi");
+        return true;
+    }
+    if (netStatus_ == ETHERNET_CONNECT) {
+        LOGI("datashare status close, network_status:ethernet");
+        return true;
+    }
     return false;
 }
 } // namespace OHOS::FileManagement::CloudSync
