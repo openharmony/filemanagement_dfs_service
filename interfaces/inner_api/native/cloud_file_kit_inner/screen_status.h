@@ -30,6 +30,7 @@ public:
     static bool IsScreenOn();
     static void InitScreenStatus();
     static void SetScreenState(ScreenState screenState);
+    static bool IsForceSleep();
 
 private:
     static inline ScreenState screenState_{ScreenState::SCREEN_ON};
