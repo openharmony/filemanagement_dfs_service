@@ -203,8 +203,8 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
     res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo);
     EXPECT_EQ(res, false);
 #endif
-
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))// GetLocalDeviceInfo = false
+    // GetLocalDeviceInfo = false
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
         .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
 #ifdef SUPPORT_SAME_ACCOUNT
     osAccountInfo.uid_ = "test";
