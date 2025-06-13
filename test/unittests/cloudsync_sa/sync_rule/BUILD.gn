@@ -125,7 +125,6 @@ ohos_unittest("network_status_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
     "${distributedfile_path}/test/mock/net_conn_client_mock.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_set_manager_mock.cpp",
     "network_status_test.cpp",
   ]
 
@@ -205,6 +204,10 @@ ohos_unittest("cloud_status_test") {
   ]
 
   defines = [ "private=public" ]
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
+
   use_exceptions = true
 }
 
@@ -286,8 +289,6 @@ ohos_unittest("network_set_manager_test") {
 
   module_out_path = "dfs_service/dfs_service"
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
     "network_set_manager_test.cpp",
   ]
 
