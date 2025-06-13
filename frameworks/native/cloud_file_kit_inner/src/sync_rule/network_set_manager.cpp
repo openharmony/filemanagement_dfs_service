@@ -162,6 +162,10 @@ void NetworkSetManager::GetNetConnect(const std::string &bundleName, const int32
 bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t userId)
 {
     auto driveKit = CloudFile::CloudFileKit::GetInstance();
+    if (driveKit == nullptr) {
+        LOGE("driveKit is nullptr.");
+        return false;
+    }
     std::map<std::string, std::string> param;
     auto err = driveKit->GetAppConfigParams(userId, bundleName, param);
     if (err != E_OK || param.empty()) {

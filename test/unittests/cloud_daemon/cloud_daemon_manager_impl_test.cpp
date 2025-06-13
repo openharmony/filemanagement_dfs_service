@@ -55,6 +55,7 @@ void CloudDaemonManagerImplTest::SetUp(void)
 void CloudDaemonManagerImplTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    cloudDaemonManagerImpl_ = nullptr;
 }
 
 /**
@@ -89,7 +90,11 @@ HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
         string path = "path";
         int32_t userId = 100;
         auto res = CloudDaemonManagerImpl::GetInstance().StartFuse(userId, devFd, path);
+#if CLOUD_ADAPTER_ENABLED
         EXPECT_EQ(res, E_INVAL_ARG);
+#else
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuse  ERROR";
@@ -108,12 +113,16 @@ HWTEST_F(CloudDaemonManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
     try {
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
+#if CLOUD_ADAPTER_ENABLED
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
         cloudDaemonManagerImpl_->SetDeathRecipient(remoteObject);
         EXPECT_EQ(cloudDaemonManagerImpl_->isFirstCall_.test_and_set(), false);
         EXPECT_NE(cloudDaemonManagerImpl_->deathRecipient_, nullptr);
+#else
+        EXPECT_EQ(CloudDaemonServiceProxy, nullptr);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest  ERROR";

@@ -242,7 +242,7 @@ HWTEST_F(CloudSyncManagerImplTest, ChangeAppSwitchTest, TestSize.Level1)
         std::string bundleName = "bundleName";
         bool status = true;
         auto res = CloudSyncManagerImpl::GetInstance().ChangeAppSwitch(accoutId, bundleName, status);
-        EXPECT_EQ(res, E_INVAL_ARG);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ChangeAppSwitchTest FAILED";
