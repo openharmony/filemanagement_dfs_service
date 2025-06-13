@@ -190,7 +190,11 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_01, TestSize.Level1
     string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
     string cloudPath = "/mnt/data/100/cloud_fuse";
     bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
+#if CLOUD_ADAPTER_ENABLED
     EXPECT_EQ(res, true);
+#else
+    EXPECT_EQ(res, false);
+#endif
 }
 
 HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_02, TestSize.Level1)

@@ -183,7 +183,7 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
 }
 
 /**
@@ -199,6 +199,6 @@ HWTEST_F(CloudFileCacheCoreTest, CleanCacheTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_IPCSS);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

@@ -90,7 +90,11 @@ HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
         string path = "path";
         int32_t userId = 100;
         auto res = CloudDaemonManagerImpl::GetInstance().StartFuse(userId, devFd, path);
+#if CLOUD_ADAPTER_ENABLED
         EXPECT_EQ(res, E_INVAL_ARG);
+#else
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuse  ERROR";

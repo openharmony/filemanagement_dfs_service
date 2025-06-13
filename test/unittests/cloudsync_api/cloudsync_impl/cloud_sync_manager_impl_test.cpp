@@ -286,6 +286,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -730,9 +731,9 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterDownloadFileCallbackTest, TestSize.Le
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest Start";
     try {
         shared_ptr<CloudDownloadCallback> downloadCallback = make_shared<CloudDownloadCallbackDerived>();
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().RegisterDownloadFileCallback(downloadCallback);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -740,6 +741,25 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterDownloadFileCallbackTest, TestSize.Le
         GTEST_LOG_(INFO) << " RegisterDownloadFileCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest End";
+}
+
+/*
+ * @tc.name: SetDeathRecipientTest
+ * @tc.desc: Verify the SetDeathRecipient function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
 }
 
 HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest2, TestSize.Level1)
@@ -810,10 +830,34 @@ HWTEST_F(CloudSyncManagerImplTest, BatchDentryFileInsertTest001, TestSize.Level1
 }
 
 /*
+ * @tc.name: OnAddSystemAbilityTest
+ * @tc.desc: Verify the OnAddSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncManagerImplTest, OnAddSystemAbilityTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 Start";
+    try {
+        string bundleName = "testbundleName";
+        CloudSyncManagerImpl::SystemAbilityStatusChange statusChange(bundleName);
+        int32_t systemAbilityId = 1;
+        std::string deviceId = "testDeviceId";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_NO_THROW(statusChange.OnAddSystemAbility(systemAbilityId, deviceId));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnAddSystemAbilityTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 End";
+}
+
+/*
  * @tc.name: CleanGalleryDentryFile
  * @tc.desc: Verify the CleanGalleryDentryFile function.
  * @tc.type: FUNC
- * @tc.require: I6H5MH
+ * @tc.require: ICEU6Z
  */
 HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest001, TestSize.Level1)
 {
@@ -852,6 +896,27 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest002, TestSize.Level
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest002 FAILED";
     }
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 End";
+}
+
+/*
+ * @tc.name: ResetProxyCallback
+ * @tc.desc: Verify the ResetProxyCallback function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 Start";
+    try {
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
+        bool ret = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(1, "testBundle");
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 End";
 }
 
 /*

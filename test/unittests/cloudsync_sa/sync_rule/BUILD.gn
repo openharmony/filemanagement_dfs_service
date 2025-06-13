@@ -205,6 +205,10 @@ ohos_unittest("cloud_status_test") {
   ]
 
   defines = [ "private=public" ]
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
+
   use_exceptions = true
 }
 

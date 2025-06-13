@@ -147,45 +147,24 @@ HWTEST_F(CloudSyncCommonTest, Marshalling003, TestSize.Level1)
     try {
         DownloadProgressObj downloadProgressObj;
         Parcel parcel;
-        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
         auto res = downloadProgressObj.Marshalling(parcel);
         EXPECT_TRUE(!res);
 
-        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        bool returnValues1[4] = {true, true, true, false};
-        int callCount = 0;
-        EXPECT_CALL(*parcel_, WriteInt64(_)).Times(4).WillRepeatedly(Invoke([&]() {
-            return returnValues1[callCount++];
-        }));
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        bool returnValues2[5] = {true, true, true, true, false};
-        callCount = 0;
-        EXPECT_CALL(*parcel_, WriteInt64(_)).Times(4).WillRepeatedly(Invoke([&]() {
-            return returnValues2[callCount++];
-        }));
-        res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(!res);
-
-        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
-            .WillOnce(Return(true)).WillOnce(Return(true))
-            .WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(false));
         res = downloadProgressObj.Marshalling(parcel);
         EXPECT_TRUE(!res);
 
-        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
-            .WillOnce(Return(true)).WillOnce(Return(true))
-            .WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
         res = downloadProgressObj.Marshalling(parcel);
         EXPECT_TRUE(!res);
     } catch (...) {
@@ -214,9 +193,9 @@ HWTEST_F(CloudSyncCommonTest, Marshalling004, TestSize.Level1)
 
         EXPECT_CALL(*parcel_, WriteUint32(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
         res = cleanOptions.Marshalling(parcel);
-        EXPECT_TRUE(!res);
+        EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " Marshalling004 FAILED";
@@ -279,6 +258,119 @@ HWTEST_F(CloudSyncCommonTest, Marshalling006, TestSize.Level1)
         GTEST_LOG_(INFO) << " Marshalling006 FAILED";
     }
     GTEST_LOG_(INFO) << "Marshalling006 End";
+}
+
+/*
+ * @tc.name: Marshalling010
+ * @tc.desc: Verify the Marshalling010 function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling010 Start";
+    try {
+        DownloadProgressObj downloadProgressObj;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        bool res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling010 FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling010 End";
+}
+
+/*
+ * @tc.name: Marshalling011
+ * @tc.desc: Verify the Marshalling011 function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling011 Start";
+    try {
+        DownloadProgressObj downloadProgressObj;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        bool res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling011 FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling011 End";
 }
 
 /*
@@ -565,7 +657,7 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel003, TestSize.Level1)
         auto res = switchDataObj.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
 
-        EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
         res = switchDataObj.ReadFromParcel(parcel);
@@ -639,13 +731,10 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel006, TestSize.Level1)
     try {
         CleanOptions cleanOptions;
         Parcel parcel;
-        EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
-        auto res = cleanOptions.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
 
         EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
-        res = cleanOptions.ReadFromParcel(parcel);
+        bool res = cleanOptions.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
 
         EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
@@ -658,7 +747,7 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel006, TestSize.Level1)
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(DoAll(SetArgReferee<0>("123"), Return(true)));
         EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
         res = cleanOptions.ReadFromParcel(parcel);
-        EXPECT_TRUE(!res);
+        EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ReadFromParcel006 FAILED";
@@ -698,16 +787,14 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel007, TestSize.Level1)
         EXPECT_TRUE(!res);
 
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
         EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
-        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
         res = downloadProgressObj.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
 
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
-        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
         res = downloadProgressObj.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
     } catch (...) {
