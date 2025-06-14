@@ -39,6 +39,12 @@ void ScreenStatus::SetScreenState(ScreenState screenState)
 {
     screenState_ = screenState;
 }
+
+bool ScreenStatus::IsForceSleep()
+{
+    bool isForceSleep = PowerMgr::PowerMgrClient::GetInstance().IsForceSleeping();
+    return isForceSleep;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
