@@ -65,6 +65,7 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void DeleteAsset([in] int userId, [in] String uri);
     void GetSyncTimeInner([out] long syncTime, [in] String bundleName);
     void CleanCacheInner([in] String uri);
+    void CleanFileCacheInner([in] String uri);
     void BatchCleanFile([in] CleanFileInfoObj[] fileInfo, [out] String[] failCloudId);
     void BatchDentryFileInsert([in] DentryFileInfoObj[] fileInfo, [out] String[] failCloudId);
     void StartDowngrade([in] String bundleName, [in] IRemoteObject downloadCallback);

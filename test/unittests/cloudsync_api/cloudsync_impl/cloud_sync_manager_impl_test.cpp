@@ -95,6 +95,7 @@ public:
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
     MOCK_METHOD2(GetSyncTimeInner, int32_t(int64_t &syncTime, const std::string &bundleName));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));
+    MOCK_METHOD1(CleanFileCacheInner, int32_t(const std::string &uri));
     MOCK_METHOD2(BatchCleanFile,
                  int32_t(const std::vector<CleanFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId));
     MOCK_METHOD2(BatchDentryFileInsert,
@@ -596,6 +597,71 @@ HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "CleanCacheTest FAILED";
     }
     GTEST_LOG_(INFO) << "CleanCacheTest End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest001
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest001 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest001 End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest002
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest002 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_INVAL_ARG));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest002 End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest003
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest003 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest003 End";
 }
 
 HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)

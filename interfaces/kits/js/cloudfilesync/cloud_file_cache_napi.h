@@ -39,6 +39,7 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
+    static napi_value CleanFileCache(napi_env env, napi_callback_info info);
 
 private:
     inline static std::string className_ = "CloudFileCache";

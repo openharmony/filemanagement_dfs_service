@@ -93,6 +93,7 @@ public:
     ErrCode DeleteAsset(const int32_t userId, const std::string &uri) override;
     ErrCode GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     ErrCode CleanCacheInner(const std::string &uri) override;
+    ErrCode CleanFileCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     ErrCode BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
                            std::vector<std::string> &failCloudId) override;

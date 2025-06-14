@@ -623,6 +623,24 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return E_OK;
 }
 
+int32_t CloudSyncService::CleanFileCacheInner(const std::string &uri)
+{
+    LOGI("Begin CleanFileCacheInner");
+
+    string bundleName;
+    if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
+        LOGE("Not support uri");
+        return E_ILLEGAL_URI;
+    }
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_SERVICE_INNER_ERROR;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t ret = dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
+    LOGI("End CleanFileCacheInner");
+    return ret;
+}
+
 int32_t CloudSyncService::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
                                           bool isCallbackValid,
                                           const sptr<IRemoteObject> &optimizeCallback)

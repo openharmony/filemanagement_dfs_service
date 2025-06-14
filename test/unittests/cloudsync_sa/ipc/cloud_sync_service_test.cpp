@@ -1226,6 +1226,75 @@ HWTEST_F(CloudSyncServiceTest, ClearFileConflict001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ClearFileConflict001 end";
 }
+
+/**
+ * @tc.name: CleanFileCacheInner001
+ * @tc.desc: Verify the CleanFileCacheInner001 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_ILLEGAL_URI);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner001 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner001 end";
+}
+
+/**
+ * @tc.name: CleanFileCacheInner002
+ * @tc.desc: Verify the CleanFileCacheInner002 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_ILLEGAL_URI));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_SERVICE_INNER_ERROR);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner002 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner002 end";
+}
+
+/**
+ * @tc.name: CleanFileCacheInner003
+ * @tc.desc: Verify the CleanFileCacheInner003 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner003 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner003 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
