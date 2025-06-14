@@ -37,6 +37,8 @@ enum class SyncTriggerType : int32_t {
     NETWORK_AVAIL_TRIGGER,
     TASK_TRIGGER,
     SYSTEM_LOAD_TRIGGER,
+    POWER_CONNECT_TRIGGER,
+    SCREEN_OFF_TRIGGER,
 };
 
 enum class ThumbState : int32_t {

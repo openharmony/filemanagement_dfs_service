@@ -124,12 +124,16 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_003, TestSize.Level1)
         EXPECT_CALL(mockSyncStateManager, CheckAndSetPending(true, SyncTriggerType::BATTERY_OK_TRIGGER));
         EXPECT_CALL(mockSyncStateManager, CheckAndSetPending(true, SyncTriggerType::NETWORK_AVAIL_TRIGGER));
         EXPECT_CALL(mockSyncStateManager, CheckAndSetPending(true, SyncTriggerType::SYSTEM_LOAD_TRIGGER));
+        EXPECT_CALL(mockSyncStateManager, CheckAndSetPending(true, SyncTriggerType::POWER_CONNECT_TRIGGER));
+        EXPECT_CALL(mockSyncStateManager, CheckAndSetPending(true, SyncTriggerType::SCREEN_OFF_TRIGGER));
         mockSyncStateManager.CheckAndSetPending(false, SyncTriggerType::TASK_TRIGGER);
         mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::CLOUD_TRIGGER);
         mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::PENDING_TRIGGER);
         mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::BATTERY_OK_TRIGGER);
         mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::NETWORK_AVAIL_TRIGGER);
         mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::SYSTEM_LOAD_TRIGGER);
+        mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::POWER_CONNECT_TRIGGER);
+        mockSyncStateManager.CheckAndSetPending(true, SyncTriggerType::SCREEN_OFF_TRIGGER);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SyncStateManagerTest_003 ERROR";
@@ -463,5 +467,41 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_020, TestSize.Level1)
         GTEST_LOG_(INFO) << "SyncStateManagerTest_020 ERROR";
     }
     GTEST_LOG_(INFO) << "SyncStateManagerTest_020 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_021, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_021";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+        syncStateManager.state_ = SyncState::SYNCING;
+        SyncTriggerType triggerType = SyncTriggerType::POWER_CONNECT_TRIGGER;
+
+        syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_021 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_021 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_022, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_022";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+        syncStateManager.state_ = SyncState::SYNCING;
+        SyncTriggerType triggerType = SyncTriggerType::SCREEN_OFF_TRIGGER;
+
+        syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_022 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_022 End";
 }
 }

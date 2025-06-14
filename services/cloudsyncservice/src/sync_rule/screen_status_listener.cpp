@@ -55,6 +55,7 @@ void ScreenStatusListener::ScreenOff()
 {
     dataSyncManager_->DownloadThumb();
     dataSyncManager_->CacheVideo();
+    dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SCREEN_OFF_TRIGGER);
 }
 
 void ScreenStatusListener::Start()
