@@ -194,6 +194,37 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0200, Te
 }
 
 /**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceOffline_0300
+ * @tc.desc: Verify the OnDeviceOffline function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0300 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                       NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
+        DeviceManagerAgent::GetInstance()->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
+        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase(NETWORKID_TWO);
+        DeviceManagerAgent::GetInstance()->cidNetworkType_.erase(NETWORKID_TWO);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0300 end";
+}
+
+/**
  * @tc.name: DeviceManagerAgentTest_OnDeviceChanged_0100
  * @tc.desc: Verify the OnDeviceChanged function.
  * @tc.type: FUNC

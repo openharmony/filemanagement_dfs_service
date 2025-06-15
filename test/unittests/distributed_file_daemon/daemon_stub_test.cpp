@@ -91,6 +91,11 @@ public:
                          const sptr<IAssetSendCallback> &sendCallback));
     MOCK_METHOD1(RegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
     MOCK_METHOD1(UnRegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
+    MOCK_METHOD3(GetDfsUrisDirFromLocal, int32_t(const std::vector<std::string> &uriList,
+                                                 const int32_t &userId,
+                                                 std::unordered_map<std::string,
+                                                 AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                                 &uriToDfsUriMaps));
 };
 
 class DaemonStubTest : public testing::Test {

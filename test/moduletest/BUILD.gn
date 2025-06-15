@@ -50,6 +50,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "ability_base:want",
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",

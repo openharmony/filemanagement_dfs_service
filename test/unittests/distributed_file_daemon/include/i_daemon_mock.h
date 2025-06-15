@@ -108,6 +108,14 @@ public:
     {
         return FileManagement::E_OK;
     }
+
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t &userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps)
+    {
+        return FileManagement::E_OK;
+    }
 };
 } // namespace OHOS::Storage::DistributedFile
 

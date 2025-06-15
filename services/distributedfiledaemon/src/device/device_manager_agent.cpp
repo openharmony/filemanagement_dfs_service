@@ -27,6 +27,7 @@
 #include "ipc/i_daemon.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
+#include "istorage_manager.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
@@ -237,6 +238,24 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
+
+    int32_t ret = NO_ERROR;
+    int32_t userId = GetCurrentUserId();
+    auto localNetworkId = GetLocalDeviceInfo().GetCid();
+    if (userId == INVALID_USER_ID) {
+        LOGE("DeviceManagerAgent::GetCurrentUserId Fail");
+    }
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("storageMgrProxy_ is null");
+    }
+    ret = storageMgrProxy_->UMountDisShareFile(userId, localNetworkId);
+    if (ret != NO_ERROR) {
+        LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
+    } else {
+        LOGI("UMountDisShareFile success");
+    }
+
     LOGI("OnDeviceOffline end");
 }
 
