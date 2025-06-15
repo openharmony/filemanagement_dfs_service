@@ -36,7 +36,7 @@ using namespace OHOS::Storage;
 constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
 constexpr int32_t index1 = 1;
 constexpr int32_t index2 = 2;
-constexpr int32_t index3 = 3;
+constexpr int32_t STEP = 3;
 
 static bool WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
 {
@@ -725,7 +725,7 @@ int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std
         info.uriStr = total[i+index1];
         info.fileSize = std::stoi(total[i+index2]);
         uriToDfsUriMaps[total[i]] = info;
-        i += index3;
+        i += STEP;
     }
     LOGI("proxy uriToDfsUriMaps.size(): %{public}d", static_cast<int>(uriToDfsUriMaps.size()));
 
