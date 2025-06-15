@@ -212,7 +212,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, Te
         DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
         DeviceManagerAgent::GetInstance()->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
         DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
-        DeviceManagerAgent::GetInstance()->OnDevicOffline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
         DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase(NETWORKID_TWO);
         DeviceManagerAgent::GetInstance()->cidNetworkType_.erase(NETWORKID_TWO);
     } catch (const exception &e) {
