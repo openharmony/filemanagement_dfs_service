@@ -34,8 +34,8 @@ namespace DistributedFile {
 using namespace std;
 using namespace OHOS::Storage;
 constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
-constexpr int32_t index1 = 1;
-constexpr int32_t index2 = 2;
+constexpr int32_t INDEX1 = 1;
+constexpr int32_t INDEX2 = 2;
 constexpr int32_t STEP = 3;
 
 static bool WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
@@ -722,8 +722,8 @@ int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std
 
     for (size_t i = 0; i < total.size();) {
         AppFileService::ModuleRemoteFileShare::HmdfsUriInfo info;
-        info.uriStr = total[i+index1];
-        info.fileSize = std::stoi(total[i+index2]);
+        info.uriStr = total[i+INDEX1];
+        info.fileSize = std::stoi(total[i+INDEX2]);
         uriToDfsUriMaps[total[i]] = info;
         i += STEP;
     }
