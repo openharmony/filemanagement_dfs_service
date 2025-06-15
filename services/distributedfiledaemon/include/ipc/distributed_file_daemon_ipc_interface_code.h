@@ -32,6 +32,7 @@ namespace DistributedFile {
         DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK,
         DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK,
         DISTRIBUTED_FILE_PUSH_ASSET,
+        GET_DFS_URI_IS_DIR_FROM_LOCAL,
     };
 } // namespace DistributedFile
 } // namespace Storage

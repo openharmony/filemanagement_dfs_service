@@ -21,6 +21,7 @@
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace Storage {
@@ -28,6 +29,7 @@ namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t UID = 1009;
 const int32_t DATA_UID = 3012;
+constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
 
 DaemonStub::DaemonStub()
 {
@@ -62,6 +64,8 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandleUnRegisterRecvCallback;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET)] =
         &DaemonStub::HandlePushAsset;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL)] =
+        &DaemonStub::HandleGetDfsUrisDirFromLocal;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -100,10 +104,72 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
             return HandleUnRegisterRecvCallback(data, reply);
         case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET):
             return HandlePushAsset(data, reply);
+        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL):
+            return HandleGetDfsUrisDirFromLocal(data, reply);
         default:
             LOGE("Cannot response request %d: unknown tranction", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
+}
+
+static bool GetData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        LOGE("null data");
+        return false;
+    }
+    if (size == 0 || size > MAX_IPC_RAW_DATA_SIZE) {
+        LOGE("size invalid: %{public}zu", size);
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        LOGE("malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != E_OK) {
+        free(buffer);
+        LOGE("memcpy failed");
+        return false;
+    }
+    return true;
+}
+
+static bool ReadBatchUriByRawData(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    size_t dataSize = static_cast<size_t>(data.ReadInt32());
+    if (dataSize == 0) {
+        LOGE("parcel no data");
+        return false;
+    }
+
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, data.ReadRawData(dataSize))) {
+        LOGE("read raw data failed: %{public}zu", dataSize);
+        return false;
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        LOGE("failed to parseFrom");
+        return false;
+    }
+    tempParcel.ReadStringVector(&uriVec);
+    return true;
+}
+
+int32_t ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    uint32_t size = data.ReadUint32();
+    if (size == 0) {
+        LOGE("out of range: %{public}u", size);
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!ReadBatchUriByRawData(data, uriVec)) {
+        LOGE("read uris failed");
+        return OHOS::FileManagement::E_IPC_LOAD_FAILED;
+    }
+    return E_OK;
 }
 
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
@@ -454,6 +520,48 @@ int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
         LOGE("PushAsset write res failed, res is %{public}d", res);
         return E_IPC_READ_FAILED;
     }
+    return res;
+}
+
+int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<std::string> uriList;
+    if (ReadBatchUris(data, uriList) != E_OK) {
+        LOGE("read uriList failed");
+        return E_IPC_READ_FAILED;
+    }
+
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        LOGE("read userId failed");
+        return E_IPC_READ_FAILED;
+    }
+
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
+    int32_t res = GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    std::vector<std::string> uriStr;
+    std::vector<std::string> hmdfsUriStr;
+    std::vector<std::string> hmdfsFileSize;
+    for (auto it = uriToDfsUriMaps.begin(); it != uriToDfsUriMaps.end(); ++it) {
+        uriStr.push_back(it->first);
+        hmdfsUriStr.push_back((it->second).uriStr);
+        hmdfsFileSize.push_back((it->second).fileSize);
+    }
+
+    if (!reply.WriteStringVector(uriStr)) {
+        LOGE("Failed to send user uriStr");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.WriteStringVector(hmdfsUriStr)) {
+        LOGE("Failed to send user hmdfsUriStr");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.WriteStringVector(hmdfsFileSize)) {
+        LOGE("Failed to send user hmdfsFileSize");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    reply.WriteInt32(res);
+    LOGI("HandleGetDfsUrisDirFromLocal end");
     return res;
 }
 }  // namespace DistributedFile

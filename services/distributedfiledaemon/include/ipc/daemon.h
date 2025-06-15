@@ -33,6 +33,7 @@
 #include "multiuser/os_account_observer.h"
 #include "nocopyable.h"
 #include "refbase.h"
+#include "remote_file_share.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
 
@@ -87,6 +88,10 @@ public:
     int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t &userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps) override;
     static int32_t Copy(const std::string &srcUri,
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,

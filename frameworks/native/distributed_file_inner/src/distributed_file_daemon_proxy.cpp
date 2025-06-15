@@ -33,6 +33,40 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 using namespace OHOS::Storage;
+constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
+
+static bool WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    MessageParcel tempParcel;
+    tempParcel.SetMaxCapacity(MAX_IPC_RAW_DATA_SIZE);
+    if (!tempParcel.WriteStringVector(uriVec)) {
+        LOGE("Write uris failed");
+        return false;
+    }
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!data.WriteInt32(static_cast<int32_t>(dataSize))) {
+        LOGE("Write data size failed");
+        return false;
+    }
+    if (!data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        LOGE("Write raw data failed");
+        return false;
+    }
+    return true;
+}
+
+bool WriteBatchUris(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    if (!data.WriteUint32(uriVec.size())) {
+        LOGE("Write uri size failed");
+        return false;
+    }
+    if (!WriteUriByRawData(data, uriVec)) {
+        LOGE("Write uri by raw data failed");
+        return false;
+    }
+    return true;
+}
 
 void DistributedFileDaemonProxy::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
@@ -574,6 +608,81 @@ int32_t DistributedFileDaemonProxy::UnRegisterAssetCallback(const sptr<IAssetRec
     }
     return reply.ReadInt32();
 }
+
+int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                                           const int32_t &userId,
+                                                           std::unordered_map<std::string,
+                                                           AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                                           &uriToDfsUriMaps)
+{
+    LOGI("GetDfsUrisDirFromLocal begin");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!WriteBatchUris(data, uriList)) {
+        LOGE("Failed to send uriList");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send userId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL),
+        data, reply, option);
+    if (ret != 0) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    std::vector<std::string> uriStr;
+    if (!reply.ReadStringVector(&uriStr)) {
+        LOGE("read uriStr failed");
+        return OHOS::FileManagement::E_IPC_READ_FAILED;
+    }
+    std::vector<std::string> hmdfsUriStr;
+    if (!reply.ReadStringVector(&hmdfsUriStr)) {
+        LOGE("read hmdfsUriStr failed");
+        return OHOS::FileManagement::E_IPC_READ_FAILED;
+    }
+    std::vector<std::string> hmdfsFileSize;
+    if (!reply.ReadStringVector(&hmdfsFileSize)) {
+        LOGE("read hmdfsFileSize failed");
+        return OHOS::FileManagement::E_IPC_READ_FAILED;
+    }
+    LOGI("uriStr.size(): %{public}d, hmdfsUriStr.size(): %{public}d, hmdfsFileSize.size(): %{public}d",
+         static_cast<int>(uriStr.size()), static_cast<int>(hmdfsUriStr.size()), static_cast<int>(hmdfsFileSize.size()));
+
+    if ((uriStr.size() != hmdfsUriStr.size()) || (hmdfsUriStr.size()hmdfsFileSize.size())) {
+        LOGE("vectors need to have same size");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+
+    for (int i = 0; i < uriStr.size(); ++i) {
+        AppFileService::ModuleRemoteFileShare::HmdfsUriInfo info;
+        info.uriStr = hmdfsUriStr[i];
+        info.fileSize = std::stoi(hmdfsFileSize[i]);
+        uriToDfsUriMaps[uriStr[i]] = info;
+    }
+
+    LOGI("GetDfsUrisDirFromLocal Success");
+    return reply.ReadInt32();
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

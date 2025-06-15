@@ -23,6 +23,7 @@
 #include "hmdfs_info.h"
 #include "iremote_broker.h"
 #include "i_file_dfs_listener.h"
+#include "remote_file_share.h"
 
 namespace OHOS {
 namespace Storage {
@@ -57,6 +58,10 @@ public:
     virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
     virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
 
+    virtual int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                           const int32_t &userId,
+                                           std::unordered_map<std::string,
+                                           AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps) =0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile

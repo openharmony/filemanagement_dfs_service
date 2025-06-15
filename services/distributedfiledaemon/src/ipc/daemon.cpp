@@ -46,6 +46,7 @@
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
 #include "trans_mananger.h"
@@ -69,6 +70,8 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
+const int32_t PasteboardUserId = 3816;
+const int32_t UdmfUserId = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
@@ -896,6 +899,26 @@ void Daemon::DisconnectDevice(const std::string networkId)
     LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
     ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
     LOGI("Daemon::DisconnectDevice result %{public}d", ret);
+}
+
+int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                       const int32_t &userId,
+                                       std::unordered_map<std::string,
+                                       AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    LOGE("Daemon::GetDfsUrisDirFromLocal start");
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != PasteboardUserId && callingUid != UdmfUserId) {
+        LOGE("Permission denied, caller is not pasterboard or udmf");
+        return E_PERMISSION_DENIED;
+    }
+
+    auto ret = AppFileService::ModuleRemoteFileShare::RemoteFileShare::GetDfsUrisDirFromLocal(uriList, userId,
+                                                                                              uriToDfsUriMaps);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsUrisDirFromLocal Failed, ret = %{public}d", ret);
+    }
+    return FileManagement::E_OK;
 }
 } // namespace DistributedFile
 } // namespace Storage
