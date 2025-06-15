@@ -49,6 +49,7 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   ]
 
   external_deps = [
+    "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "googletest:gmock_main",
@@ -96,6 +97,7 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "googletest:gmock_main",
@@ -288,6 +290,7 @@ ohos_unittest("file_copy_manager_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -350,6 +353,7 @@ ohos_unittest("remote_file_copy_manager_test") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -413,6 +417,7 @@ ohos_unittest("trans_listener_test") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -475,6 +480,7 @@ ohos_unittest("file_size_utils_test") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -611,6 +617,7 @@ group("distributed_file_inner") {
     ":distributed_file_daemon_proxy_test",
     ":file_copy_listener_test",
     ":file_copy_manager_test",
+    ":file_mount_manager_test",
     ":remote_file_copy_manager_test",
     ":file_size_utils_test",
     ":file_trans_listener_stub_test",
