@@ -68,6 +68,66 @@ bool WriteBatchUris(MessageParcel &data, const std::vector<std::string> &uriVec)
     return true;
 }
 
+static bool GetData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        LOGE("null data");
+        return false;
+    }
+    if (size == 0 || size > MAX_IPC_RAW_DATA_SIZE) {
+        LOGE("size invalid: %{public}zu", size);
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        LOGE("malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != E_OK) {
+        free(buffer);
+        LOGE("memcpy failed");
+        return false;
+    }
+    return true;
+}
+
+static bool ReadBatchUriByRawData(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    size_t dataSize = static_cast<size_t>(data.ReadInt32());
+    if (dataSize == 0) {
+        LOGE("parcel no data");
+        return false;
+    }
+
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, data.ReadRawData(dataSize))) {
+        LOGE("read raw data failed: %{public}zu", dataSize);
+        return false;
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        LOGE("failed to parseFrom");
+        return false;
+    }
+    tempParcel.ReadStringVector(&uriVec);
+    return true;
+}
+
+int32_t ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    uint32_t size = data.ReadUint32();
+    if (size == 0) {
+        LOGE("out of range: %{public}u", size);
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!ReadBatchUriByRawData(data, uriVec)) {
+        LOGE("read uris failed");
+        return OHOS::FileManagement::E_IPC_LOAD_FAILED;
+    }
+    return E_OK;
+}
+
 void DistributedFileDaemonProxy::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
     LOGI("dfs service death");
@@ -649,35 +709,22 @@ int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
 
-    std::vector<std::string> uriStr;
-    if (!reply.ReadStringVector(&uriStr)) {
-        LOGE("read uriStr failed");
+    std::vector<std::string> total;
+    if (ReadStringVector(reply, total) != FileManagement::E_OK) {
+        LOGE("read total failed");
         return OHOS::FileManagement::E_IPC_READ_FAILED;
-    }
-    std::vector<std::string> hmdfsUriStr;
-    if (!reply.ReadStringVector(&hmdfsUriStr)) {
-        LOGE("read hmdfsUriStr failed");
-        return OHOS::FileManagement::E_IPC_READ_FAILED;
-    }
-    std::vector<std::string> hmdfsFileSize;
-    if (!reply.ReadStringVector(&hmdfsFileSize)) {
-        LOGE("read hmdfsFileSize failed");
-        return OHOS::FileManagement::E_IPC_READ_FAILED;
-    }
-    LOGI("uriStr.size(): %{public}d, hmdfsUriStr.size(): %{public}d, hmdfsFileSize.size(): %{public}d",
-         static_cast<int>(uriStr.size()), static_cast<int>(hmdfsUriStr.size()), static_cast<int>(hmdfsFileSize.size()));
-
-    if ((uriStr.size() != hmdfsUriStr.size()) || (hmdfsUriStr.size()hmdfsFileSize.size())) {
-        LOGE("vectors need to have same size");
-        return OHOS::FileManagement::E_INVAL_ARG;
     }
 
-    for (int i = 0; i < uriStr.size(); ++i) {
+    LOGI("proxy total.size(): %{public}d", static_cast<int>(total.size()));
+
+    for (size_t i = 0; i < uriStr.size();) {
         AppFileService::ModuleRemoteFileShare::HmdfsUriInfo info;
-        info.uriStr = hmdfsUriStr[i];
-        info.fileSize = std::stoi(hmdfsFileSize[i]);
-        uriToDfsUriMaps[uriStr[i]] = info;
+        info.uriStr = total[i+1];
+        info.fileSize = std::stoi(total[i+2]);
+        uriToDfsUriMaps[total[i]] = info;
+        i = i+3;
     }
+    LOGI("proxy uriToDfsUriMaps.size(): %{public}d", static_cast<int>(uriToDfsUriMaps.size()));
 
     LOGI("GetDfsUrisDirFromLocal Success");
     return reply.ReadInt32();

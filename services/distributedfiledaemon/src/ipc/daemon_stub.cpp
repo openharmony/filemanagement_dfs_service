@@ -172,6 +172,39 @@ int32_t ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
     return E_OK;
 }
 
+static bool WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    MessageParcel tempParcel;
+    tempParcel.SetMaxCapacity(MAX_IPC_RAW_DATA_SIZE);
+    if (!tempParcel.WriteStringVector(uriVec)) {
+        LOGE("Write uris failed");
+        return false;
+    }
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!data.WriteInt32(static_cast<int32_t>(dataSize))) {
+        LOGE("Write data size failed");
+        return false;
+    }
+    if (!data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        LOGE("Write raw data failed");
+        return false;
+    }
+    return true;
+}
+
+bool WriteBatchUris(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    if (!data.WriteUint32(uriVec.size())) {
+        LOGE("Write uri size failed");
+        return false;
+    }
+    if (!WriteUriByRawData(data, uriVec)) {
+        LOGE("Write uri by raw data failed");
+        return false;
+    }
+    return true;
+}
+
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin OpenP2PConnection");
@@ -531,6 +564,7 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
         return E_IPC_READ_FAILED;
     }
 
+    LOGI("stub uriList.size(): %{public}d", static_cast<int>(uriList.size()));
     int32_t userId;
     if (!data.ReadInt32(userId)) {
         LOGE("read userId failed");
@@ -539,27 +573,20 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
 
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
     int32_t res = GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
-    std::vector<std::string> uriStr;
-    std::vector<std::string> hmdfsUriStr;
-    std::vector<std::string> hmdfsFileSize;
-    for (auto it = uriToDfsUriMaps.begin(); it != uriToDfsUriMaps.end(); ++it) {
-        uriStr.push_back(it->first);
-        hmdfsUriStr.push_back((it->second).uriStr);
-        hmdfsFileSize.push_back((it->second).fileSize);
-    }
 
-    if (!reply.WriteStringVector(uriStr)) {
+    std::vector<std::string> total;
+    for (auto it = uriToDfsUriMaps.begin(); it != uriToDfsUriMaps.end(); ++it) {
+        total.push_back(it->first);
+        total.push_back((it->second).uriStr);
+        total.push_back(std::to_string((it->second).fileSize));
+    }
+    LOGI("stub total.size(): %{public}d", static_cast<int>(total.size()));
+
+    if (!WriteStringVector(reply, total)) {
         LOGE("Failed to send user uriStr");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
-    if (!reply.WriteStringVector(hmdfsUriStr)) {
-        LOGE("Failed to send user hmdfsUriStr");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!reply.WriteStringVector(hmdfsFileSize)) {
-        LOGE("Failed to send user hmdfsFileSize");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
+
     reply.WriteInt32(res);
     LOGI("HandleGetDfsUrisDirFromLocal end");
     return res;
