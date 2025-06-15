@@ -906,7 +906,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
                                        std::unordered_map<std::string,
                                        AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
 {
-    LOGE("Daemon::GetDfsUrisDirFromLocal start");
+    LOGI("Daemon::GetDfsUrisDirFromLocal start");
     auto callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != PASTEBOARDUSERID && callingUid != UDMFUSERID) {
         LOGE("Permission denied, caller is not pasterboard or udmf");
@@ -917,6 +917,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
                                                                                               uriToDfsUriMaps);
     if (ret != FileManagement::E_OK) {
         LOGE("GetDfsUrisDirFromLocal Failed, ret = %{public}d", ret);
+        return ret;
     }
     return FileManagement::E_OK;
 }

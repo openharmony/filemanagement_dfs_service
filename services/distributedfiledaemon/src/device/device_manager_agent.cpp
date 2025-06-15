@@ -253,7 +253,7 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     if (ret != NO_ERROR) {
         LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
     } else {
-        LOGE("UMountDisShareFile success");
+        LOGI("UMountDisShareFile success");
     }
 
     LOGI("OnDeviceOffline end");
