@@ -34,6 +34,8 @@ namespace DistributedFile {
 using namespace std;
 using namespace OHOS::Storage;
 constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
+constexpr int32_t index1 = 1;
+constexpr int32_t index2 = 2;
 
 static bool WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
 {
@@ -83,7 +85,7 @@ static bool GetData(void *&buffer, size_t size, const void *data)
         LOGE("malloc buffer failed");
         return false;
     }
-    if (memcpy_s(buffer, size, data, size) != E_OK) {
+    if (memcpy_s(buffer, size, data, size) != FileManagement::E_OK) {
         free(buffer);
         LOGE("memcpy failed");
         return false;
@@ -123,9 +125,9 @@ int32_t ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
     }
     if (!ReadBatchUriByRawData(data, uriVec)) {
         LOGE("read uris failed");
-        return OHOS::FileManagement::E_IPC_LOAD_FAILED;
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    return E_OK;
+    return FileManagement::E_OK;
 }
 
 void DistributedFileDaemonProxy::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
@@ -710,19 +712,19 @@ int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std
     }
 
     std::vector<std::string> total;
-    if (ReadStringVector(reply, total) != FileManagement::E_OK) {
+    if (ReadBatchUris(reply, total) != FileManagement::E_OK) {
         LOGE("read total failed");
         return OHOS::FileManagement::E_IPC_READ_FAILED;
     }
 
     LOGI("proxy total.size(): %{public}d", static_cast<int>(total.size()));
 
-    for (size_t i = 0; i < uriStr.size();) {
+    for (size_t i = 0; i < total.size();) {
         AppFileService::ModuleRemoteFileShare::HmdfsUriInfo info;
-        info.uriStr = total[i+1];
-        info.fileSize = std::stoi(total[i+2]);
+        info.uriStr = total[i+index1];
+        info.fileSize = std::stoi(total[i+index2]);
         uriToDfsUriMaps[total[i]] = info;
-        i = i+3;
+        i += 3;
     }
     LOGI("proxy uriToDfsUriMaps.size(): %{public}d", static_cast<int>(uriToDfsUriMaps.size()));
 

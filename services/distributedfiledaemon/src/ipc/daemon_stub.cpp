@@ -167,7 +167,7 @@ int32_t ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
     }
     if (!ReadBatchUriByRawData(data, uriVec)) {
         LOGE("read uris failed");
-        return OHOS::FileManagement::E_IPC_LOAD_FAILED;
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return E_OK;
 }
@@ -582,7 +582,7 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
     }
     LOGI("stub total.size(): %{public}d", static_cast<int>(total.size()));
 
-    if (!WriteStringVector(reply, total)) {
+    if (!WriteBatchUris(reply, total)) {
         LOGE("Failed to send user uriStr");
         return OHOS::FileManagement::E_INVAL_ARG;
     }

@@ -70,8 +70,8 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
-const int32_t PasteboardUserId = 3816;
-const int32_t UdmfUserId = 3012;
+const int32_t PASTEBOARDUSERID = 3816;
+const int32_t UDMFUSERID = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
@@ -908,7 +908,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
 {
     LOGE("Daemon::GetDfsUrisDirFromLocal start");
     auto callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != PasteboardUserId && callingUid != UdmfUserId) {
+    if (callingUid != PASTEBOARDUSERID && callingUid != UDMFUSERID) {
         LOGE("Permission denied, caller is not pasterboard or udmf");
         return E_PERMISSION_DENIED;
     }
