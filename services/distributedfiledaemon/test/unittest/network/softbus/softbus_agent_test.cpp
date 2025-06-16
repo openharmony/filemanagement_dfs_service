@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -598,6 +598,32 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsContinueRetry_0100, TestSize.Level
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_OnSessionOpened_0100
+ * @tc.desc: Verify the OnSessionOpened function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    std::string sessionName = "testSession";
+    int32_t socketId = 1;
+    string cid = "notExitCid";
+    PeerSocketInfo info1 = {
+        .name = const_cast<char*>(sessionName.c_str()),
+        .networkId = const_cast<char*>(NETWORKID_ONE.c_str()),
+    };
+    agent->OnSessionOpened(socketId, info1);
+    auto ret = agent->IsContinueRetry(cid);
+    EXPECT_EQ(ret, true);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
