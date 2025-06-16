@@ -39,9 +39,6 @@ const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const int32_t INVALID_SESSION_ID = -1;
-#ifdef SUPPORT_SAME_ACCOUNT
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
-#endif
 constexpr size_t MAX_SIZE = 500;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
@@ -51,7 +48,7 @@ std::mutex SoftBusHandler::networkIdMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(info.networkId)) {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(info.name);
         if (it != serverIdMap_.end()) {
@@ -73,26 +70,6 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 
     AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::COPY_FILE, info.networkId,
         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
-}
-
-bool SoftBusHandler::IsSameAccount(const std::string &networkId)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    return false;
-#else
-    return true;
-#endif
 }
 
 std::string SoftBusHandler::GetSessionName(int32_t sessionId)
@@ -194,7 +171,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("OpenSession Enter peerDevId: %{public}s", Utils::GetAnonyString(peerDevId).c_str());
-    if (!IsSameAccount(peerDevId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(peerDevId)) {
         LOGI("The source and sink device is not same account, not support.");
         return E_OPEN_SESSION;
     }

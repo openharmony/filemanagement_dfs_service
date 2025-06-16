@@ -16,15 +16,18 @@
 #include <memory>
 #include <unistd.h>
 
+#include "device_manager_impl_mock.h"
 #include "gtest/gtest.h"
 #include "network/softbus/softbus_agent.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "utils_log.h"
 
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 using namespace std;
     namespace {
@@ -39,11 +42,26 @@ static const string SAME_ACCOUNT = "account";
 
 class SoftbusSessionDispatcherTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase(void) {};
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
     void SetUp() {};
     void TearDown() {};
+    static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
 };
+
+void SoftbusSessionDispatcherTest::SetUpTestCase(void)
+{
+    GTEST_LOG_(INFO) << "SetUpTestCase";
+    deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
+    DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
+}
+
+void SoftbusSessionDispatcherTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
+}
 
 /**
  * @tc.name: SoftbusSessionDispatcherTest_RegisterSessionListener_0100
@@ -279,6 +297,83 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_0300
+ * @tc.desc: Verify the OnSessionOpened function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0300 start";
+    bool res = true;
+    PeerSocketInfo peerSocketInfo = {
+        .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
+        .networkId = const_cast<char*>(REMOTE_DEV_ID.c_str()),
+        .pkgName = const_cast<char*>(PKG_NAME_TEST.c_str()),
+        .dataType = DATA_TYPE_BYTES
+    };
+    DistributedHardware::DmDeviceInfo deviceInfo = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = DmAuthForm::ACROSS_ACCOUNT,
+    };
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    try {
+        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, peerSocketInfo);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0300 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_0400
+ * @tc.desc: Verify the OnSessionOpened function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0400 start";
+    bool res = true;
+    PeerSocketInfo peerSocketInfo = {
+        .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
+        .networkId = const_cast<char*>(REMOTE_DEV_ID.c_str()),
+        .pkgName = const_cast<char*>(PKG_NAME_TEST.c_str()),
+        .dataType = DATA_TYPE_BYTES
+    };
+    DistributedHardware::DmDeviceInfo deviceInfo = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "f6d4c0864707aefte7a78f09473aa122ff57fc8",
+        .authForm = DmAuthForm::IDENTICAL_ACCOUNT,
+        .extraData = "{\"OS_TYPE\":10}",
+    };
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    try {
+        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, peerSocketInfo);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0400 end";
 }
 
 /**

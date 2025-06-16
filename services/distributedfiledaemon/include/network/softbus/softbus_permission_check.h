@@ -41,6 +41,7 @@ public:
         AccountInfo &callerAccountInfo, const std::string &networkId);
     static bool FillLocalInfo(SocketAccessInfo *localInfo);
     static bool SetAccessInfoToSocket(const int32_t sessionId);
+    static bool IsSameAccount(const std::string &networkId);
 private:
     static bool CheckSrcIsSameAccount(const std::string &sinkNetworkId, const AccountInfo &localAccountInfo);
     static bool CheckSinkIsSameAccount(const AccountInfo &callerAccountInfo, const AccountInfo &calleeAccountInfo);

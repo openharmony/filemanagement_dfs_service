@@ -59,7 +59,7 @@ public:
     virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
 
     virtual int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
-                                           const int32_t &userId,
+                                           const int32_t userId,
                                            std::unordered_map<std::string,
                                            AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")

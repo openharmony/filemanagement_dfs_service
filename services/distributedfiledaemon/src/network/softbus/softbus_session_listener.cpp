@@ -18,6 +18,7 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "os_account_manager.h"
 #include "sandbox_helper.h"
 #include "string"
@@ -74,7 +75,7 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened sessionId = %{public}d", sessionId);
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(info.networkId)) {
         LOGI("The source and sink device is not same account, not support.");
         Shutdown(sessionId);
         return;

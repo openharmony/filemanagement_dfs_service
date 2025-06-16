@@ -41,6 +41,7 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
     .deviceTypeId = 1,
     .networkId = "testNetWork",
     .authForm = DmAuthForm::ACROSS_ACCOUNT,
+    .extraData = "{\"OS_TYPE\":10}",
 };
 
 constexpr int32_t INVALID_USER_ID = -1;
@@ -313,45 +314,6 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0200, TestSi
 }
 
 /**
- * @tc.name: SoftBusHandlerAssetTest_IsSameAccount_0100
- * @tc.desc: Verify the IsSameAccount function.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_IsSameAccount_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_IsSameAccount_0100 start";
-    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
-    bool flag = softBusHandlerAsset.IsSameAccount("test");
-    EXPECT_EQ(flag, false);
-
-    std::vector<DmDeviceInfo> deviceList;
-    deviceList.push_back(deviceInfo);
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = softBusHandlerAsset.IsSameAccount("test");
-    EXPECT_EQ(flag, false);
-    
-    deviceList.clear();
-    deviceInfo.authForm = DmAuthForm::ACROSS_ACCOUNT;
-    deviceList.push_back(deviceInfo);
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = softBusHandlerAsset.IsSameAccount("testNetWork");
-    EXPECT_EQ(flag, false);
-
-    deviceList.clear();
-    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
-    deviceList.push_back(deviceInfo);
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = softBusHandlerAsset.IsSameAccount("testNetWork");
-    EXPECT_EQ(flag, true);
-    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_IsSameAccount_0100 end";
-}
-
-/**
  * @tc.name: SoftBusHandlerAssetTest_OnAssetRecvBind_0100
  * @tc.desc: Verify the OnAssetRecvBind function.
  * @tc.type: FUNC
@@ -372,6 +334,14 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_OnAssetRecvBind_0100, 
     EXPECT_EQ(softBusHandlerAsset.GetClientInfo(0), "");
 
     std::vector<DmDeviceInfo> deviceList;
+    deviceInfo.authForm = DmAuthForm::ACROSS_ACCOUNT;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    softBusHandlerAsset.OnAssetRecvBind(0, deviceInfo.networkId);
+    EXPECT_EQ(softBusHandlerAsset.GetClientInfo(0), "");
+
+    deviceList.clear();
     deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
     deviceList.push_back(deviceInfo);
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
@@ -477,6 +447,12 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, Te
     softBusHandlerAsset.AddAssetObj(0, assetObj);
 
     std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), ERR_BAD_VALUE);
+
+    deviceList.clear();
     deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
     deviceList.push_back(deviceInfo);
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))

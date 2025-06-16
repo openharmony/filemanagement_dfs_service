@@ -113,11 +113,6 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
     return ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_->GenerateAssetObjInfo(socketId, fileName, assetObj);
 }
 
-bool SoftBusHandlerAsset::IsSameAccount(const std::string &networkId)
-{
-    return true;
-}
-
 std::string SoftBusHandlerAsset::GetDstFile(const std::string &file,
                                             const std::string &srcBundleName,
                                             const std::string &dstBundleName,

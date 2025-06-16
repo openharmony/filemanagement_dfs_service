@@ -42,33 +42,9 @@ const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const std::string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
-#ifdef SUPPORT_SAME_ACCOUNT
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
-#endif
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
     sessionName_ = SESSION_NAME;
-}
-
-bool SoftbusAgent::IsSameAccount(const std::string &networkId)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    LOGI("The source and sink device is not same account, not support.");
-    return false;
-#else
-    return true;
-#endif
 }
 
 int32_t SoftbusAgent::JudgeNetworkTypeIsWifi(const DeviceInfo &info)

@@ -133,6 +133,7 @@ OHOS::DistributedHardware::DmDeviceInfo deviceInfo = {
     .deviceTypeId = 1,
     .networkId = "testNetWork1",
     .authForm = OHOS::DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT,
+    .extraData = "{\"OS_TYPE\":10}",
 };
 
 namespace OHOS {
@@ -675,6 +676,47 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_002, TestSize.Level1)
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_PERMISSION_DENIED);
 #endif
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_RequestSendFile_003
+ * @tc.desc: verify RequestSendFile.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_003 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    DistributedHardware::DmDeviceInfo deviceInfo1 = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = DmAuthForm::ACROSS_ACCOUNT,
+        .extraData = "{\"OS_TYPE\":10}",
+    };
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo1);
+    g_getCallingNetworkId = "testNetWork1";
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_PERMISSION_DENIED);
+
+    g_getCallingNetworkId = "testNetWork2";
+    deviceInfo1.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceList.clear();
+    deviceList.push_back(deviceInfo1);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_PERMISSION_DENIED);
+
+    g_getCallingNetworkId = "testNetWork1";
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(daemon_->RequestSendFile("/data/../test/1.txt", "", "", ""), E_ILLEGAL_URI);
+#endif
+    GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_003 end";
 }
 
 /**

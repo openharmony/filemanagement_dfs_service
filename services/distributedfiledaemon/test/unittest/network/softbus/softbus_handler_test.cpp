@@ -269,6 +269,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0200, TestSize.Level
     std::vector<DmDeviceInfo> deviceList;
     DmDeviceInfo deviceInfo;
     deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceInfo.extraData = "{\"OS_TYPE\":10}";
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID.c_str());
     if (res != 0) {
         GTEST_LOG_(INFO) << "strcpy_s failed";
@@ -418,48 +419,6 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_GetSessionName_0100, TestSize.Le
     sessionName = handler.GetSessionName(sessionId);
     EXPECT_EQ(sessionName, "");
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_GetSessionName_0100 end";
-}
-
-/**
- * @tc.name: SoftbusHandlerTest_IsSameAccount_0100
- * @tc.desc: Verify the IsSameAccount.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_IsSameAccount_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_IsSameAccount_0100 start";
-    SoftBusHandler handler;
-    bool flag = false;
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DmDeviceInfo> deviceList;
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = handler.IsSameAccount(TEST_NETWORKID_TWO);
-    EXPECT_EQ(flag, false);
-
-    DmDeviceInfo deviceInfo;
-    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
-    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID.c_str());
-    if (res != 0) {
-        GTEST_LOG_(INFO) << "strcpy_s failed";
-        return;
-    }
-    deviceList.push_back(deviceInfo);
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = handler.IsSameAccount(TEST_NETWORKID_THREE);
-    EXPECT_EQ(flag, false);
-
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = handler.IsSameAccount(TEST_NETWORKID);
-    EXPECT_EQ(flag, true);
-#else
-    flag = handler.IsSameAccount(TEST_NETWORKID);
-    EXPECT_EQ(flag, true);
-#endif
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_IsSameAccount_0100 end";
 }
 
 /**

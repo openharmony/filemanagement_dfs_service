@@ -121,49 +121,6 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_SoftbusAgent_0100, TestSize.Level1)
 }
 
 /**
- * @tc.name: SoftbusAgentTest_IsSameAccount_0100
- * @tc.desc: Verify the IsSameAccount.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsSameAccount_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool flag = false;
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DmDeviceInfo> deviceList;
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = agent->IsSameAccount(NETWORKID_TWO);
-    EXPECT_EQ(flag, false);
-
-    CreateDeviceList(deviceList);
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = agent->IsSameAccount(NETWORKID_TWO);
-    EXPECT_EQ(flag, false);
-
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = agent->IsSameAccount(NETWORKID_THREE);
-    EXPECT_EQ(flag, false);
-
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-    flag = agent->IsSameAccount(NETWORKID_ONE);
-    EXPECT_EQ(flag, true);
-#else
-    flag = agent->IsSameAccount(NETWORKID_ONE);
-    EXPECT_EQ(flag, true);
-#endif
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 end";
-}
-
-/**
  * @tc.name: SoftbusAgentTest_QuitDomain_0100
  * @tc.desc: Verify the QuitDomain.
  * @tc.type: FUNC

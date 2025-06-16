@@ -673,7 +673,7 @@ int32_t DistributedFileDaemonProxy::UnRegisterAssetCallback(const sptr<IAssetRec
 }
 
 int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
-                                                           const int32_t &userId,
+                                                           const int32_t userId,
                                                            std::unordered_map<std::string,
                                                            AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
                                                            &uriToDfsUriMaps)

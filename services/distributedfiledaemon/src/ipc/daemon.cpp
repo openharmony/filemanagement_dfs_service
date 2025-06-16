@@ -43,6 +43,7 @@
 #include "mountpoint/mount_manager.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -75,7 +76,6 @@ const int32_t UDMFUSERID = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -381,19 +381,12 @@ bool Daemon::IsCallingDeviceTrusted()
         LOGE("Get callingNetworkId failed");
         return false;
     }
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("The size of trust device list is invalid, size=%zu", deviceList.size());
+    if (!SoftBusPermissionCheck::IsSameAccount(callingNetworkId)) {
+        LOGE("The calling device is not trusted");
         return false;
     }
-    for (const auto &device : deviceList) {
-        if (std::string(device.networkId) == callingNetworkId) {
-            return (device.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
     LOGI("Daemon::IsCallingDeviceTrusted end");
-    return false;
+    return true;
 }
 
 int32_t Daemon::RequestSendFile(const std::string &srcUri,
@@ -902,7 +895,7 @@ void Daemon::DisconnectDevice(const std::string networkId)
 }
 
 int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
-                                       const int32_t &userId,
+                                       const int32_t userId,
                                        std::unordered_map<std::string,
                                        AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
 {

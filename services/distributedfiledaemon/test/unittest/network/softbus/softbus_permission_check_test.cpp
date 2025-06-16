@@ -32,6 +32,9 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+const std::string NETWORKID_ONE = "testNetWork1";
+const std::string NETWORKID_TWO = "testNetWork2";
+
 class SoftbusPermissionCheckTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -457,6 +460,157 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_CheckSinkPermiss
     EXPECT_TRUE(res == true);
 #endif
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_CheckSinkPermission_001 end";
+}
+
+/**
+ * @tc.name: SoftbusPermissionCheckTest_IsSameAccount_001
+ * @tc.desc: Verify the CheckSinkPermission function.
+ * @tc.type: FUNC
+ * @tc.require: IC987N
+ */
+HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_IsSameAccount_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_001 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    DistributedHardware::DmDeviceInfo deviceInfo = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = DmAuthForm::ACROSS_ACCOUNT,
+    };
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
+    bool res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_TWO);
+    EXPECT_EQ(res, false);
+    
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.resize(10001);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_TWO);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_TWO);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_001 end";
+}
+
+/**
+ * @tc.name: SoftbusPermissionCheckTest_IsSameAccount_002
+ * @tc.desc: Verify the CheckSinkPermission function.
+ * @tc.type: FUNC
+ * @tc.require: IC987N
+ */
+HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_IsSameAccount_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_002 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    DistributedHardware::DmDeviceInfo deviceInfo = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = DmAuthForm::ACROSS_ACCOUNT,
+    };
+    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceInfo.extraData.clear();
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    auto res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.extraData = "{\"OS_TYPE\":\"aa\"}";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.extraData = "{\"DEVICE_TYPE\":11}";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.extraData = "is_discarded";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_002 end";
+}
+
+/**
+ * @tc.name: SoftbusPermissionCheckTest_IsSameAccount_003
+ * @tc.desc: Verify the CheckSinkPermission function.
+ * @tc.type: FUNC
+ * @tc.require: IC987N
+ */
+HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_IsSameAccount_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_003 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    DistributedHardware::DmDeviceInfo deviceInfo = {
+        .deviceId = "test",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = DmAuthForm::ACROSS_ACCOUNT,
+    };
+    std::vector<DmDeviceInfo> deviceList;
+    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceInfo.extraData = "{\"OS_TYPE\":11}";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    auto res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.extraData = "{\"OS_TYPE\":11111111111111}";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, false);
+
+    deviceList.clear();
+    deviceInfo.extraData = "{\"OS_TYPE\":10}";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    res = SoftBusPermissionCheck::IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(res, true);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_IsSameAccount_003 end";
 }
 } // namespace Test
 } // namespace DistributedFile
