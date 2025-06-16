@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -205,6 +205,25 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0200, TestSi
     result = handler.CreateSessionServer(packageName, sessionName, role, "");
     EXPECT_EQ(result, ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_CreateSessionServer_0300
+ * @tc.desc: Verify the CreateSessionServer by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0300 start";
+    std::string packageName = "com.example.test";
+    std::string sessionName = "sessionName";
+    DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
+    std::string physicalPath = "/data/test";
+    
+    auto result = SoftBusHandler::GetInstance().CreateSessionServer("", sessionName, role, physicalPath);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0300 end";
 }
 
 /**

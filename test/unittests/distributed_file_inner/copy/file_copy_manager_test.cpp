@@ -944,4 +944,50 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0003, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 End";
 }
+
+/**
+ * @tc.name: FileCopyManager_MakeDir_0001
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001";
+    string srcpath = "/storage/media/100/local/files/Docs/bb/";
+    std::error_code errCode;
+    int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_IsNumeric_0001
+ * @tc.desc: test IsNumeric function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_IsNumeric_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0001";
+    string srcpath = "/storage/media/100/local/files/Docs/bb/";
+    bool ret = IsNumeric(srcpath);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_IsNumeric_0002
+ * @tc.desc: test IsNumeric function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_IsNumeric_0002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0002";
+    string srcpath = "";
+    bool ret = IsNumeric(srcpath);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0002 End";
+}
 }
