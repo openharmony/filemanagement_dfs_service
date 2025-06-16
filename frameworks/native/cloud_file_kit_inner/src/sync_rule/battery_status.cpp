@@ -30,11 +30,15 @@ void BatteryStatus::GetInitChargingStatus()
 #ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
     auto chargingStatus = batterySrvClient.GetChargingStatus();
-    auto pluggedType = batterySrvClient.GetPluggedType();
     isCharging_ = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE ||
-                   chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_FULL) ||
-                   (pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_NONE &&
-                    pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_BUTT);
+                  chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_FULL);
+    if (!isCharging_) {
+        auto pluggedType = batterySrvClient.GetPluggedType();
+        LOGI("battery not charging, pluggedType: %{public}d", pluggedType);
+        isCharging_ = pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_NONE &&
+            pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_BUTT;
+    }
+    LOGI("battery isCharging_: %{public}d", isCharging_.load());
 #endif
 }
 

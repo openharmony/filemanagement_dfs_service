@@ -40,8 +40,8 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         LOGI("Charging status changed: charging");
         BatteryStatus::SetChargingStatus(true);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING) {
-        BatteryStatus::SetChargingStatus(false);
         LOGI("Charging status changed: discharging");
+        BatteryStatus::GetInitChargingStatus();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         listener_->OnPowerConnected();
     } else {
