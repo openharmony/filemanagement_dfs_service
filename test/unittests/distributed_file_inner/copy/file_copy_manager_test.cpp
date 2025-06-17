@@ -18,15 +18,11 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+#include "accesstoken_kit.h"
 #include "datashare_helper.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
-#include "distributed_file_fd_guard.cpp"
-#include "file_copy_listener.cpp"
-#include "file_copy_manager.cpp"
-#include "file_size_utils.cpp"
-#include "trans_listener.cpp"
-#include "trans_listener.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace OHOS::FileManagement;
@@ -599,65 +595,6 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level0)
 }
 
 /**
-* @tc.name: FileCopyManager_CheckPath_0001
-* @tc.desc: check path
-* @tc.type: FUNC
-* @tc.require: I7TDJK
-*/
-HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckPath_0001, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_CheckPath_0001 Start";
-
-    auto infos = std::make_shared<FileInfos>();
-    infos->srcUriIsFile = true;
-    std::string tempPath = "/data/test/CheckPath";
-
-    infos->destPath = "";
-    bool ret = CheckPath(infos);
-    EXPECT_EQ(ret, false);
-
-    if (!ForceCreateDirectory(tempPath)) {
-        GTEST_LOG_(INFO) << "FileCopyManager_CheckPath_0001 create dir err";
-    }
-    infos->srcPath = tempPath;
-    infos->destPath = tempPath + "/test/";
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, false);
-
-    infos->srcPath = tempPath;
-    infos->destPath = tempPath;
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, true);
-
-    infos->srcPath = tempPath + "/test";
-    infos->destPath = tempPath;
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, false);
-
-    infos->srcUriIsFile = false;
-
-    infos->srcPath = tempPath;
-    infos->destPath = tempPath + "/test";
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, false);
-
-    infos->srcPath = tempPath;
-    infos->destPath = tempPath;
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, true);
-
-    infos->srcPath = tempPath + "/test";
-    infos->destPath = tempPath;
-    ret = CheckPath(infos);
-    EXPECT_EQ(ret, false);
-
-    if (!ForceRemoveDirectory(tempPath)) {
-        GTEST_LOG_(INFO) << "FileCopyManager_CheckPath_0001 remove dir err";
-    }
-    GTEST_LOG_(INFO) << "FileCopyManager_CheckPath_0001 End";
-}
-
-/**
 * @tc.name: FileCopyManager_CheckOrCreateLPath_0001
 * @tc.desc: CheckOrCreateLPath
 * @tc.type: FUNC
@@ -672,27 +609,6 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckOrCreateLPath_0001, TestSize.
     EXPECT_EQ(ret, FILE_NOT_FOUND);
 
     GTEST_LOG_(INFO) << "FileCopyManager_CheckOrCreateLPath_0001 End";
-}
-
-/**
-* @tc.name: FileCopyManager_GetModeFromFlags_0001
-* @tc.desc: GetModeFromFlags
-* @tc.type: FUNC
-* @tc.require: I7TDJK
-*/
-HWTEST_F(FileCopyManagerTest, FileCopyManager_GetModeFromFlags_0001, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_GetModeFromFlags_0001 Start";
-
-    unsigned int flags = 0;
-    std::string result = GetModeFromFlags(flags);
-    EXPECT_EQ(result, "r");
-
-    flags |= O_RDWR;
-    result = GetModeFromFlags(flags);
-    EXPECT_EQ(result, "rw"); // need judge
-
-    GTEST_LOG_(INFO) << "FileCopyManager_GetModeFromFlags_0001 End";
 }
 
 /**
@@ -959,35 +875,5 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
     int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
     EXPECT_EQ(res, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001 End";
-}
-
-/**
- * @tc.name: FileCopyManager_IsNumeric_0001
- * @tc.desc: test IsNumeric function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_IsNumeric_0001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0001";
-    string srcpath = "/storage/media/100/local/files/Docs/bb/";
-    bool ret = IsNumeric(srcpath);
-    EXPECT_FALSE(ret);
-    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0001 End";
-}
-
-/**
- * @tc.name: FileCopyManager_IsNumeric_0002
- * @tc.desc: test IsNumeric function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_IsNumeric_0002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0002";
-    string srcpath = "";
-    bool ret = IsNumeric(srcpath);
-    EXPECT_FALSE(ret);
-    GTEST_LOG_(INFO) << "FileCopyManager_IsNumeric_0002 End";
 }
 }

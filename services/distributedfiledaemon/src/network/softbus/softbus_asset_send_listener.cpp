@@ -170,7 +170,7 @@ bool SoftBusAssetSendListener::OnNegotiate2(int32_t socket, PeerSocketInfo info,
     AccountInfo callerAccountInfo;
     std::string networkId = info.networkId;
     if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
-        LOGE("extraAccessInfo is nullptr.");
+        LOGE("Trans caller info failed.");
         return false;
     }
     if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {

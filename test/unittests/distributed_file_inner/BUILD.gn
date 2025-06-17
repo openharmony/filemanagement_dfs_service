@@ -270,8 +270,6 @@ ohos_unittest("file_copy_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "copy/file_copy_manager_test.cpp",
   ]
 
@@ -285,7 +283,10 @@ ohos_unittest("file_copy_manager_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+  ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
