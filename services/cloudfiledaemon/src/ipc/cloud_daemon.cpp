@@ -46,6 +46,7 @@ namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_DENTRY_CACHE = "/hmdfs/cache/account_cache/dentry_cache/";
     static const string LOCAL_PATH_HMDFS_CACHE_CLOUD = "/hmdfs/cache/account_cache/dentry_cache/cloud";
+    static const string LOCAL_PATH_HMDFS_CACHE_CLOUDKIT = "/hmdfs/cache/cloud_cache/cloudkit";
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t STAT_MODE_DIR_DENTRY_CACHE = 02771;
     static const int32_t OID_DFS = 1009;
@@ -181,6 +182,19 @@ void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::str
         });
 }
 
+static int32_t MakeDir(int32_t xcollieId, const std::string &dirName, const std::string &dirPath)
+{
+    if (mkdir(dirPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "create " + dirName + " error:" + std::to_string(errno)});
+            return E_PATH;
+    }
+    return E_OK;
+}
+
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
 #ifdef HICOLLIE_ENABLE
@@ -193,12 +207,7 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
     string dentryPath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CACHE_CLOUD;
     if (access(dentryPath.c_str(), F_OK) != 0) {
         string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_DENTRY_CACHE;
-        if (mkdir(cachePath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
-#ifdef HICOLLIE_ENABLE
-            XCollieHelper::CancelTimer(xcollieId);
-#endif
-            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-                CloudFile::FaultType::FILE, errno, "create accout_cache path error " + std::to_string(errno)});
+        if (MakeDir(xcollieId, "accout_cache path", cachePath) != E_OK) {
             return E_PATH;
         }
         if (chmod(cachePath.c_str(), STAT_MODE_DIR_DENTRY_CACHE) != 0) {
@@ -209,17 +218,18 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
                 CloudFile::FaultType::FILE, errno, "chown cachepath error " + std::to_string(errno)});
         }
-        if (mkdir(dentryPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
-#ifdef HICOLLIE_ENABLE
-            XCollieHelper::CancelTimer(xcollieId);
-#endif
-            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-                CloudFile::FaultType::FILE, errno, "create dentrypath " + std::to_string(errno)});
+        if (MakeDir(xcollieId, "dentrypath", dentryPath) != E_OK) {
             return E_PATH;
         }
         if (chown(dentryPath.c_str(), OID_DFS, OID_DFS) != 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
                 CloudFile::FaultType::FILE, errno, "chown cachepath error " + std::to_string(errno)});
+        }
+    }
+    string cacheCloudkitPath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CACHE_CLOUDKIT;
+    if (access(cacheCloudkitPath.c_str(), F_OK) != 0) {
+        if (MakeDir(xcollieId, "cachecloudkitpath", cacheCloudkitPath) != E_OK) {
+            return E_PATH;
         }
     }
     if (path.find("cloud_fuse") != string::npos) {
