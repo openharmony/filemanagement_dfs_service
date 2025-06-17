@@ -38,9 +38,9 @@ public:
         return instance;
     }
 
-    int32_t CreateLocalLiveView(const std::string &networkId);
-    int32_t CreateNotification(const std::string &networkId);
-    int32_t CancelNotifyByNetworkId(const std::string &networkId);
+    int32_t AddLocalLiveView(const std::string &networkId);
+    int32_t AddNotification(const std::string &networkId);
+    int32_t RemoveNotifyByNetworkId(const std::string &networkId);
 
 private:
     SystemNotifier();
