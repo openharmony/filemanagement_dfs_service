@@ -41,12 +41,14 @@ public:
     int32_t CreateLocalLiveView(const std::string &networkId);
     int32_t CreateNotification(const std::string &networkId);
     int32_t CancelNotifyByNetworkId(const std::string &networkId);
-    int32_t CancelNotifyByNotificationId(int32_t notifyId);
 
 private:
     SystemNotifier();
     bool GetPixelMap(const std::string &path, std::shared_ptr<Media::PixelMap> &pixelMap);
     int32_t GenerateNextNotificationId();
+
+    int32_t CancelNotifyByNotificationId(int32_t notifyId);
+
     int32_t DisconnectByNetworkId(const std::string &networkId);
     std::string getRemoteDeviceName(const std::string &networkId);
 

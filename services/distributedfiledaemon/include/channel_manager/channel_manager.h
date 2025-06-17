@@ -43,14 +43,14 @@ public:
     void DeInit();
 
     int32_t GetVersion();
+
     int32_t CreateClientChannel(const std::string &networkId);
-    int32_t CancelClientChannel(const std::string &networkId);
+    int32_t DestroyClientChannel(const std::string &networkId);
     bool HasExistChannel(const std::string &networkId);
 
     int32_t
         SendRequest(const std::string &networkId, ControlCmd &request, ControlCmd &response, bool needResponse = false);
     int32_t SendBytes(const std::string &networkId, const std::string &data);
-    int32_t DoSendBytes(const std::int32_t socketId, const std::string &data);
 
     void OnSocketError(int32_t socketId, const int32_t errorCode);
     void OnSocketConnected(int32_t socketId, const PeerSocketInfo &info);
@@ -63,31 +63,27 @@ private:
 
     void StartEvent();
     void StartCallbackEvent();
-    int32_t PostTask(const AppExecFwk::InnerEvent::Callback &callback,
-                     const AppExecFwk::EventQueue::Priority priority,
-                     const std::string &name = "");
+    int32_t PostTask(const AppExecFwk::InnerEvent::Callback &callback, const AppExecFwk::EventQueue::Priority priority);
     int32_t PostCallbackTask(const AppExecFwk::InnerEvent::Callback &callback,
                              const AppExecFwk::EventQueue::Priority priority);
 
     int32_t CreateServerSocket();
     int32_t CreateClientSocket(const std::string &peerNetworkId);
 
+    int32_t DoSendBytes(const std::int32_t socketId, const std::string &data);
+
 private:
-    int32_t VERSION_ = 60;
+    int32_t version_ = 60;
     int32_t serverSocketId_ = -1;
-    std::string ownerName_ = "channel_manager";
-    static inline const std::string SERVICE_NAME = "ohos.storage.distributedfile.daemon";
-    static inline const std::string SESSION_NAME = "DistributedFileService_ChannelManager";
+    std::string ownerName_ = "dfs_channel_manager";
 
     // networkId -> socketId (client)
     std::shared_mutex clientMutex_;
     std::map<std::string, int32_t> clientNetworkSocketMap_;
-    std::map<std::string, std::string> clientChannelIdMap_;
 
     // networkId -> socketId (server)
     std::shared_mutex serverMutex_;
     std::map<std::string, int32_t> serverNetworkSocketMap_;
-    std::map<int32_t, std::string> serverChannelIdMap_;
 
     // for send data
     std::mutex eventMutex_;

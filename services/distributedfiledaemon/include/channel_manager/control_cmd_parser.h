@@ -32,18 +32,18 @@ static const char DETERMINE_DEVICE_TYPE_KEY[] = "persist.distributed_scene.sys_s
 enum ControlCmdType {
     CMD_UNKNOWN = 0,
     CMD_CHECK_ALLOW_CONNECT = 1,
-    CMD_RESPONSE = 2,
-    CMD_PUBLISH_NOTIFICATION = 3,
-    CMD_CANCEL_NOTIFICATION = 4,
-    CMD_DISCONNECT = 5,
+    CMD_MSG_RESPONSE = 2,
+    CMD_ADD_NOTIFICATION = 3,
+    CMD_REMOVE_NOTIFICATION = 4,
+    CMD_ACTIVE_DISCONNECT = 5,
 };
 
 struct ControlCmd {
     static std::atomic<int32_t> nextMsgId; // 声明静态成员
 
-    int32_t version = 0;
+    uint16_t version = 0;
     int32_t msgId = 0;
-    int32_t msgType = 0;
+    ControlCmdType msgType = ControlCmdType::CMD_UNKNOWN;
     std::string msgBody = "";
     std::string networkId = "";
 
