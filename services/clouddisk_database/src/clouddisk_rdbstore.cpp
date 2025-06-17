@@ -899,7 +899,13 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
         jsonObject = nlohmann::json::object();
     }
     jsonObject[SRC_PATH_KEY] = filePath;
-    string attrStr = jsonObject.dump();
+    string attrStr;
+    try {
+        attrStr = jsonObject.dump();
+    } catch (nlohmann::json::type_error& err) {
+        LOGE("failed to dump json object, reason: %{public}s", err.what());
+        return E_INVAL_ARG;
+    }
     setXattr.PutString(FileColumn::ATTRIBUTE, attrStr);
     return E_OK;
 }
