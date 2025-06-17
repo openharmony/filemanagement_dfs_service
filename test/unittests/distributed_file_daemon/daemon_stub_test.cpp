@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -311,7 +311,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest007, TestSize.Level0)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE), data,
             reply, option);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_IPC_READ_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest007 ERROR";
@@ -337,7 +337,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest008, TestSize.Level0)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO), data,
             reply, option);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_IPC_READ_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest008 ERROR";

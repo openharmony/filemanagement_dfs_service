@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -329,13 +329,9 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize
     MessageParcel data;
     MessageParcel reply;
 
-    g_getCallingUidTrue = false;
-    auto ret = daemonStub_->HandleRequestSendFile(data, reply);
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    
     g_getCallingUidTrue = true;
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
-    ret = daemonStub_->HandleRequestSendFile(data, reply);
+    auto ret = daemonStub_->HandleRequestSendFile(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
@@ -373,13 +369,10 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSi
     UID = DAEMON_UID;
     MessageParcel data;
     MessageParcel reply;
-    g_getCallingUidTrue = false;
-    auto ret = daemonStub_->HandleGetRemoteCopyInfo(data, reply);
-    EXPECT_EQ(ret, E_PERMISSION_DENIED);
     
     g_getCallingUidTrue = true;
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
-    ret = daemonStub_->HandleGetRemoteCopyInfo(data, reply);
+    auto ret = daemonStub_->HandleGetRemoteCopyInfo(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));

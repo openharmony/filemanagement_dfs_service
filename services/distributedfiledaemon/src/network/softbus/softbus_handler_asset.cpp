@@ -178,7 +178,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
         LOGE("Set access info faiLed");
         Shutdown(socketId);
-        return false;
+        return E_OPEN_SESSION;
     }
 
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_ASSET_ROLE_SEND]);

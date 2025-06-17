@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
-const int32_t UID = 1009;
 const int32_t DATA_UID = 3012;
 constexpr size_t MAX_IPC_RAW_DATA_SIZE = 128 * 1024 * 1024;
 
@@ -359,11 +358,6 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
 int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleRequestSendFile");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != UID) {
-        LOGE("Permission denied, caller is not dfs!");
-        return E_PERMISSION_DENIED;
-    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -393,11 +387,6 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
 int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleGetRemoteCopyInfo");
-    auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != UID) {
-        LOGE("Permission denied, caller is not dfs!");
-        return E_PERMISSION_DENIED;
-    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
