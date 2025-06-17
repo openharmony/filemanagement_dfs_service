@@ -73,7 +73,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
 
   deps = [
-    "dfs_prebuilt_config",
+    ":dfs_prebuilt_config",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${utils_path}:libdistributedfileutils",
   ]
