@@ -793,4 +793,48 @@ void CloudSyncManagerImpl::CleanGalleryDentryFile()
         LOGW("remove thumbs dentry dir failed, errno: %{public}d", errno);
     }
 }
+
+template <typename RemoveFn>
+void LogAndDelete(const std::string& path, RemoveFn fn, const std::string& message)
+{
+    int ret = fn(path.c_str());
+    if (ret != 0) {
+        LOGE("%{public}s, errno %{public}d", message.c_str(), errno);
+    }
+}
+
+static bool IsPhotoPath(const std::string& path)
+{
+    static const std::string prefix = "/storage/cloud/files/Photo/";
+    return path.length() >= prefix.length() && path.compare(0, prefix.length(), prefix) == 0;
+}
+
+static std::string GetThumbsPath(const std::string& path)
+{
+    const string str = "files/";
+    size_t len = str.size() - 1;
+    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(path.find(str) + len);
+    return newPath;
+}
+
+static std::string GetMediaPath(const std::string& path)
+{
+    const string str = "storage/";
+    size_t len = str.size() - 1;
+    std::string newPath = "/storage/media" + path.substr(path.find(str) + len);
+    return newPath;
+}
+
+void CloudSyncManagerImpl::CleanGalleryDentryFile(const std::string path)
+{
+    if (!IsPhotoPath(path)) {
+        LOGE("CleanGalleryDentryFile path is not photo");
+        return;
+    }
+
+    const std::string mediaDir = GetMediaPath(path);
+    LogAndDelete(mediaDir, unlink, "fail to delete path");
+    const std::string thumbsDir = GetThumbsPath(mediaDir);
+    LogAndDelete(thumbsDir, ::remove, "fail to remove thumbsDir");
+}
 } // namespace OHOS::FileManagement::CloudSync
