@@ -272,6 +272,7 @@ int32_t DeviceManagerImpl::CheckNewAPIAccessPermission()
 
 int32_t DeviceManagerImpl::GetLocalDeviceNetWorkId(const std::string &pkgName, std::string &networkId)
 {
+    networkId = "testNetworkId";
     return 0;
 }
 
