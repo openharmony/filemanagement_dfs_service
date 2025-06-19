@@ -246,6 +246,7 @@ void SystemNotifier::UpdateResourceMapByLanguage()
 template<typename... Args>
 std::string SystemNotifier::GetKeyValue(const std::string &key, Args &&...args)
 {
+    std::lock_guard<std::mutex> lock(g_resourceMapMutex);
     auto it = g_resourceMap.find(key);
     if (it == g_resourceMap.end()) {
         return "";
