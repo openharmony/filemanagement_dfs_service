@@ -34,7 +34,6 @@ public:
     ~SoftbusAgent() = default;
     void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
     void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
-    static bool IsSameAccount(const std::string &networkId);
     int32_t JudgeNetworkTypeIsWifi(const DeviceInfo &info);
     bool OnNegotiate2(int32_t socket, PeerSocketInfo info,
         SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo);

@@ -32,7 +32,6 @@ const std::string CURRENT_USER_ID_FLAG = "<currentUserId>";
 constexpr int32_t MAX_RETRY = 50;
 constexpr int32_t CHECK_SESSION_DELAY_TIME = 200000;
 constexpr int32_t NO_ERROR = 0;
-constexpr int32_t INVALID_USER_ID = -1;
 constexpr int DISMATCH = 0;
 constexpr int MATCH = 1;
 class ConnectionDetector {

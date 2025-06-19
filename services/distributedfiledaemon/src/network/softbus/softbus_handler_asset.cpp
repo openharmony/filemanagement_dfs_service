@@ -46,7 +46,6 @@ constexpr size_t BUFFER_SIZE = 512;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 const std::string RELATIVE_PATH_FLAG = "/account/device_view/local/data/";
 const std::string DST_BUNDLE_NAME_FLAG = "/";
 const std::string TEMP_DIR = "ASSET_TEMP";
@@ -153,7 +152,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         return E_OPEN_SESSION;
     }
     LOGI("AssetBind Enter.");
-    if (!IsSameAccount(dstNetworkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(dstNetworkId)) {
         LOGI("The source and sink device is not same account, not support.");
         return E_OPEN_SESSION;
     }
@@ -200,7 +199,7 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
         LOGE("get assetObj fail.");
         return ERR_BAD_VALUE;
     }
-    if (!IsSameAccount(assetObj->dstNetworkId_)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(assetObj->dstNetworkId_)) {
         LOGI("The source and sink device is not same account, not support.");
         return ERR_BAD_VALUE;
     }
@@ -242,7 +241,7 @@ void SoftBusHandlerAsset::closeAssetBind(int32_t socketId)
 void SoftBusHandlerAsset::OnAssetRecvBind(int32_t socketId, const std::string &srcNetWorkId)
 {
     std::lock_guard<std::mutex> lock(clientInfoMutex_);
-    if (!IsSameAccount(srcNetWorkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(srcNetWorkId)) {
         LOGE("The source and sink device is not same account, not support.");
         Shutdown(socketId);
         return;
@@ -379,22 +378,6 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
-}
-
-bool SoftBusHandlerAsset::IsSameAccount(const std::string &networkId)
-{
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    return false;
 }
 
 std::string SoftBusHandlerAsset::GetDstFile(const std::string &file,

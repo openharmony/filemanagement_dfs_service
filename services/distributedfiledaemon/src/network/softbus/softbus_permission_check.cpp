@@ -22,6 +22,7 @@
 #include "ohos_account_kits.h"
 #include "os_account_manager.h"
 #include "transport/socket.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -29,6 +30,11 @@ namespace Storage {
 namespace DistributedFile {
 constexpr const char *ACCOUNT_ID = "accountId";
 static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
+#ifdef SUPPORT_SAME_ACCOUNT
+constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
+constexpr uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+#endif
 using namespace DistributedHardware;
 bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
 {
@@ -268,6 +274,50 @@ bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
     }
     localInfo->userId = userId;
     localInfo->localTokenId = IPCSkeleton::GetSelfTokenID();
+    return true;
+}
+
+bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
+{
+#ifdef SUPPORT_SAME_ACCOUNT
+    LOGI("SoftBusPermissionCheck::IsSameAccount called, networkId=%{public}.5s", networkId.c_str());
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("Trust device list size is invalid, size=%zu", deviceList.size());
+        return false;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfoTemp;
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == networkId) {
+            deviceInfoTemp = deviceInfo;
+            break;
+        }
+    }
+    if (deviceInfoTemp.authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
+        LOGE("The source and sink device is not same account, not support.");
+        return false;
+    }
+    if (deviceInfoTemp.extraData.empty()) {
+        LOGE("Device extraData is empty");
+        return false;
+    }
+    nlohmann::json entraDataJson = nlohmann::json::parse(deviceInfoTemp.extraData, nullptr, false);
+    if (entraDataJson.is_discarded()) {
+        LOGE("Device entraDataJson parse failed.");
+        return false;
+    }
+    if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
+        LOGE("Device error json int32_t param.");
+        return false;
+    }
+    int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
+    if (osType != DEVICE_OS_TYPE_OH) {
+        LOGE("Device os type = %{public}d is not openharmony.", osType);
+        return false;
+    }
+    LOGI("SoftBusPermissionCheck::IsSameAccount end");
+#endif
     return true;
 }
 } // namespace DistributedFile

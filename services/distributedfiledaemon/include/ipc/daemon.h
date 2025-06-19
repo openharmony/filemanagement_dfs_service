@@ -89,7 +89,7 @@ public:
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 
     int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
-                                   const int32_t &userId,
+                                   const int32_t userId,
                                    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
                                    &uriToDfsUriMaps) override;
     static int32_t Copy(const std::string &srcUri,

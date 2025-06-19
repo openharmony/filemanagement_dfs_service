@@ -73,7 +73,6 @@ public:
 
     void RemoveFile(const std::string &path, bool isRemove = true);
 private:
-    static bool IsSameAccount(const std::string &networkId);
     std::string GetDstFile(const std::string &file,
                            const std::string &srcBundleName,
                            const std::string &dstBundleName,

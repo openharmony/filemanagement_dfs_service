@@ -87,6 +87,7 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, cons
     }
 
     DmDeviceInfo testInfo;
+    testInfo.extraData = "{\"OS_TYPE\":10}";
     (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
                    TEST_NETWORKID.c_str(), TEST_NETWORKID.size());
     testInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
@@ -295,6 +296,32 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_OnSessionOpened_
     EXPECT_EQ(SoftBusSessionPool::GetInstance().sessionMap_.find(sessionName1),
         SoftBusSessionPool::GetInstance().sessionMap_.end());
     GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusSessionListenerTest_OnSessionOpened_0200
+ * @tc.desc: test OnSessionOpened function.
+ * @tc.type: FUNC
+ * @tc.require: I9JKYU
+ */
+HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_OnSessionOpened_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0200 start";
+    PeerSocketInfo info;
+    int32_t sessionId = 1;
+    string sessionName1 = "sessionName1";
+    info.name = const_cast<char*>(sessionName1.c_str());
+    info.networkId = const_cast<char*>(TEST_NETWORKID.c_str());
+    g_mockGetTrustedDeviceList = false;
+    bool res = true;
+    try {
+        SoftBusSessionListener::OnSessionOpened(sessionId, info);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0200 end";
 }
 
 /**

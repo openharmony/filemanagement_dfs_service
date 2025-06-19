@@ -573,10 +573,13 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
 
     if (!WriteBatchUris(reply, total)) {
         LOGE("Failed to send user uriStr");
-        return OHOS::FileManagement::E_INVAL_ARG;
+        return E_IPC_WRITE_FAILED;
     }
 
-    reply.WriteInt32(res);
+    if (!reply.WriteInt32(res)) {
+        LOGE("Failed to send result");
+        return E_IPC_WRITE_FAILED;
+    }
     LOGI("HandleGetDfsUrisDirFromLocal end");
     return res;
 }

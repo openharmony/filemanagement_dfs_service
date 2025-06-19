@@ -26,7 +26,7 @@ namespace DistributedFile {
 class FileMountManager {
 public:
     static int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
-                                          const int32_t &userId,
+                                          const int32_t userId,
                                           std::unordered_map<std::string,
                                           AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps);
     static std::shared_ptr<FileMountManager> GetInstance();

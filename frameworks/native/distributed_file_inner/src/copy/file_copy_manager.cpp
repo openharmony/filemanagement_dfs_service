@@ -639,7 +639,7 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
             LOGE("Error opening src file descriptor. errno = %{public}d", errno);
             return errno;
         }
-        if ((infos->needCancel) && (srcPth.rfind(MTP_PATH_PREFIX, 0) != std::string::npos)) {
+        if ((infos->needCancel.load()) && (srcPth.rfind(MTP_PATH_PREFIX, 0) != std::string::npos)) {
             close(srcFd);
             srcFd = -1;
             LOGE("Source file copying is already canceled, path = %{public}s", GetAnonyString(srcPth).c_str());
