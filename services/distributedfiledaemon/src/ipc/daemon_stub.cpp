@@ -65,6 +65,15 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandlePushAsset;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL)] =
         &DaemonStub::HandleGetDfsUrisDirFromLocal;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS)] =
+        &DaemonStub::HandleGetDfsSwitchStatus;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS)] =
+        &DaemonStub::HandleUpdateDfsSwitchStatus;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST)] =
+        &DaemonStub::HandleGetConnectedDeviceList;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -78,37 +87,13 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
         LOGE("function is only allowed to be called locally.");
         return E_ALLOW_LOCAL_CALL_ONLY;
     }
-    switch (code) {
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION):
-            return HandleOpenP2PConnection(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION):
-            return HandleCloseP2PConnection(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX):
-            return HandleOpenP2PConnectionEx(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX):
-            return HandleCloseP2PConnectionEx(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION):
-            return HandlePrepareSession(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK):
-            return HandleCancelCopyTask(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK):
-            return HandleInnerCancelCopyTask(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE):
-            return HandleRequestSendFile(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO):
-            return HandleGetRemoteCopyInfo(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK):
-            return HandleRegisterRecvCallback(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK):
-            return HandleUnRegisterRecvCallback(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET):
-            return HandlePushAsset(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL):
-            return HandleGetDfsUrisDirFromLocal(data, reply);
-        default:
-            LOGE("Cannot response request %d: unknown tranction", code);
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto iter = opToInterfaceMap_.find(code);
+    if (iter == opToInterfaceMap_.end() || iter->second == nullptr) {
+        LOGE("Cannot response request %d: unknown tranction", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
+    auto memberFunc = iter->second;
+    return (this->*memberFunc)(data, reply);
 }
 
 static bool GetData(void *&buffer, size_t size, const void *data)
@@ -582,6 +567,87 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
     }
     LOGI("HandleGetDfsUrisDirFromLocal end");
     return res;
+}
+
+int32_t DaemonStub::HandleGetDfsSwitchStatus(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("Read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t switchStatus = -1;
+    int32_t res = GetDfsSwitchStatus(networkId, switchStatus);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleGetDfsSwitchStatus write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    if (res != E_OK) {
+        LOGE("GetDfsSwitchStatus failed, res is %{public}d", res);
+        return E_OK;
+    }
+    if (!reply.WriteInt32(switchStatus)) {
+        LOGE("HandleGetDfsSwitchStatus write switchStatus failed, switchStatus is %{public}d", switchStatus);
+        return E_IPC_WRITE_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t DaemonStub::HandleUpdateDfsSwitchStatus(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    int32_t switchStatus = 0;
+    if (!data.ReadInt32(switchStatus)) {
+        LOGE("Read switchStatus failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t res = UpdateDfsSwitchStatus(switchStatus);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleUpdateDfsSwitchStatus write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t DaemonStub::HandleGetConnectedDeviceList(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    std::vector<DfsDeviceInfo> deviceList;
+    int32_t res = GetConnectedDeviceList(deviceList);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleGetConnectedDeviceList write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    if (res != E_OK) {
+        LOGE("GetConnectedDeviceList failed, res is %{public}d", res);
+        return E_OK;
+    }
+    size_t len = deviceList.size();
+    if (!reply.WriteInt32(len)) {
+        LOGE("HandleGetConnectedDeviceList write length failed");
+        return E_IPC_WRITE_FAILED;
+    }
+    for (size_t i = 0; i < len; ++i) {
+        if (!reply.WriteString(deviceList[i].networkId_)) {
+            LOGE("Write networkId failed");
+            return E_IPC_WRITE_FAILED;
+        }
+        if (!reply.WriteString(deviceList[i].path_)) {
+            LOGE("Write path failed");
+            return E_IPC_WRITE_FAILED;
+        }
+    }
+    return E_OK;
 }
 }  // namespace DistributedFile
 }  // namespace Storage

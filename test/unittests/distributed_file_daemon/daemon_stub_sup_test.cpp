@@ -33,6 +33,7 @@ namespace {
     bool g_getCallingUidTrue = true;
     bool g_checkUriPermissionTrue = true;
     bool g_checkCallerPermissionTrue = true;
+    bool g_isLocalCalling = true;
     constexpr pid_t DATA_UID = 3012;
     constexpr pid_t DAEMON_UID = 1009;
     static pid_t UID = DAEMON_UID;
@@ -49,6 +50,11 @@ pid_t IPCSkeleton::GetCallingUid()
     }
 
     return UID;
+}
+
+bool IPCSkeleton::IsLocalCalling()
+{
+    return g_isLocalCalling;
 }
 }
 
@@ -108,6 +114,9 @@ public:
                                                  std::unordered_map<std::string,
                                                  AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
                                                  &uriToDfsUriMaps));
+    MOCK_METHOD2(GetDfsSwitchStatus, int32_t(const std::string &networkId, int32_t &switchStatus));
+    MOCK_METHOD1(UpdateDfsSwitchStatus, int32_t(int32_t switchStatus));
+    MOCK_METHOD1(GetConnectedDeviceList, int32_t(std::vector<DfsDeviceInfo> &deviceList));
 };
 
 class DaemonStubSupPTest : public testing::Test {
@@ -165,9 +174,21 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupOnRemoteRequestTest001, TestSize.Level
 
     EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
     uint32_t errCode = 65535;
+    g_isLocalCalling = false;
     ret = daemonStub_->OnRemoteRequest(errCode, data, reply, option);
-    EXPECT_EQ(ret, 305);
+    EXPECT_EQ(ret, E_ALLOW_LOCAL_CALL_ONLY);
 
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
+    code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
+    ret = daemonStub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
+    code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
+    ret = daemonStub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    g_isLocalCalling = true;
     daemonStub_->opToInterfaceMap_.insert(make_pair(errCode, nullptr));
     EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
     ret = daemonStub_->OnRemoteRequest(errCode, data, reply, option);
@@ -523,5 +544,145 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestS
     ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleGetDfsSwitchStatus
+ * @tc.desc: Verify the HandleGetDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetDfsSwitchStatus, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetDfsSwitchStatus Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("networkId"));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("networkId"));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetDfsSwitchStatus End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleUpdateDfsSwitchStatus
+ * @tc.desc: Verify the HandleUpdateDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUpdateDfsSwitchStatus, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUpdateDfsSwitchStatus Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleUpdateDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleUpdateDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, UpdateDfsSwitchStatus(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUpdateDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, UpdateDfsSwitchStatus(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUpdateDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUpdateDfsSwitchStatus End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleGetConnectedDeviceList
+ * @tc.desc: Verify the HandleGetConnectedDeviceList function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetConnectedDeviceList, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetConnectedDeviceList Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(Return(E_INVAL_ARG));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    DfsDeviceInfo testDevice;
+    testDevice.networkId_ = "networkId";
+    std::vector<DfsDeviceInfo> deviceList = {testDevice};
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
+    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetConnectedDeviceList End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

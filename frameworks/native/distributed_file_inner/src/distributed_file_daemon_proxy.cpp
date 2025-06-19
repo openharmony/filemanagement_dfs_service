@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -733,6 +733,127 @@ int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to write network id.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsSwitchStatus ipc failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsSwitchStatus failed, ret = %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadInt32(switchStatus)) {
+        LOGE("Read switchStatus failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteInt32(switchStatus)) {
+        LOGE("Failed to write the switch status");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("UpdateDfsSwitchStatus failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetConnectedDeviceList ipc failed, ret: %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read res failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetConnectedDeviceList failed, ret: %{public}d", ret);
+        return ret;
+    }
+    int32_t len = 0;
+    if (!reply.ReadInt32(len)) {
+        LOGE("Read devicelist length failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    deviceList.clear();
+    for (int32_t i = 0; i < len; ++i) {
+        DfsDeviceInfo deviceInfo;
+        if (!reply.ReadString(deviceInfo.networkId_)) {
+            LOGE("Failed to read networkId");
+            return OHOS::FileManagement::E_BROKEN_IPC;
+        }
+        if (!reply.ReadString(deviceInfo.path_)) {
+            LOGE("Failed to read path");
+            return OHOS::FileManagement::E_BROKEN_IPC;
+        }
+        deviceList.emplace_back(deviceInfo);
+    }
+    return ret;
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

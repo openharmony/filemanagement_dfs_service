@@ -150,6 +150,36 @@ int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
     return distributedFileDaemonProxy->PushAsset(userId, assetObj, sendCallback);
 }
 
+int32_t DistributedFileDaemonManagerImpl::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->GetDfsSwitchStatus(networkId, switchStatus);
+}
+
+int32_t DistributedFileDaemonManagerImpl::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->UpdateDfsSwitchStatus(switchStatus);
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->GetConnectedDeviceList(deviceList);
+}
+
 int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("DistributedFileDaemonManagerImpl registerAssetCallback enter.");
