@@ -240,8 +240,6 @@ HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Enable, TestSize.Level1)
 {
     EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
         .WillOnce(Return(ChargeState::CHARGE_STATE_ENABLE));
-    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
-        .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
 
     batteryStatus_->GetInitChargingStatus();
     EXPECT_TRUE(batteryStatus_->IsCharging());
@@ -251,8 +249,6 @@ HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Full, TestSize.Level1)
 {
     EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
         .WillOnce(Return(ChargeState::CHARGE_STATE_FULL));
-    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
-        .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
 
     batteryStatus_->GetInitChargingStatus();
     EXPECT_TRUE(batteryStatus_->IsCharging());
