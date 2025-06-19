@@ -106,8 +106,8 @@ class DfsNotificationSubscriber : public Notification::NotificationSubscriber {
     void OnDisconnected() {}
     void OnUpdate(const std::shared_ptr<Notification::NotificationSortingMap> &sortingMap) {}
     void OnDoNotDisturbDateChange(const std::shared_ptr<Notification::NotificationDoNotDisturbDate> &date) {}
-    void OnEnabledNotificationChanged
-        (const std::shared_ptr<Notification::EnabledNotificationCallbackData> &callbackData) {}
+    void OnEnabledNotificationChanged(
+        const std::shared_ptr<Notification::EnabledNotificationCallbackData> &callbackData) {}
     void OnDied() {}
     void OnCanceled(const std::shared_ptr<OHOS::Notification::Notification> &request,
                     const std::shared_ptr<Notification::NotificationSortingMap> &sortingMap,
@@ -148,8 +148,8 @@ static Notification::NotificationCapsule CreateNotificationCapsule(std::shared_p
     return capsule;
 }
 
-static Notification::NotificationLocalLiveViewButton
-    CreateNotificationLocalLiveViewButton(std::shared_ptr<Media::PixelMap> pixelMap)
+static Notification::NotificationLocalLiveViewButton CreateNotificationLocalLiveViewButton(
+    std::shared_ptr<Media::PixelMap> pixelMap)
 {
     LOGI("CreateNotificationLocalLiveViewButton start");
     Notification::NotificationLocalLiveViewButton button;
