@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,6 +51,7 @@ public:
     static int OnReceiveFileProcess(int sessionId, const char *firstFile, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnReceiveFileFinished(int sessionId, const char *files, int fileCnt);
     static const char* GetRecvPath();
+    static void UpdateFileRecvPath(const std::string &bundleName, int32_t userId);
 
     int SendBytes(int sessionId, const void *data, unsigned int dataLen);
     int SendFile(int sessionId, const std::vector<std::string> &sFileList, const std::vector<std::string> &dFileList);
@@ -78,6 +79,7 @@ private:
     std::unordered_map<int32_t, std::string> networkIdMap_;
     std::unordered_map<int32_t, std::string> sessionAndPackageMap_;
     static constexpr const int QOS_COUNT = 3;
+    static inline std::string pathDir_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

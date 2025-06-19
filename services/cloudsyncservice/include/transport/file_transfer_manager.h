@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,6 +55,7 @@ private:
         std::string relativePath;
         uint64_t taskId;
     };
+    std::string GetBundleNameForUri(const std::string &uri);
     bool IsFileExists(const std::string &filePath);
     std::tuple<std::string, std::string>
         UriToPath(const std::string &uri, const int32_t userId, bool isCheckFileExists = true);
