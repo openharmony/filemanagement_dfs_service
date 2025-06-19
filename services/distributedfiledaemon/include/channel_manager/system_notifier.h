@@ -17,9 +17,9 @@
 #define FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 
 #include "pixel_map.h"
-#include <atomic>
 #include <iostream>
 #include <mutex>
+#include <utility>
 #include <shared_mutex>
 #include <string>
 #include <unistd.h>
@@ -38,26 +38,29 @@ public:
         return instance;
     }
 
-    int32_t AddLocalLiveView(const std::string &networkId);
-    int32_t AddNotification(const std::string &networkId);
-    int32_t RemoveNotifyByNetworkId(const std::string &networkId);
+    int32_t CreateLocalLiveView(const std::string &networkId);
+    int32_t CreateNotification(const std::string &networkId);
+    int32_t DestroyNotifyByNetworkId(const std::string &networkId);
+    int32_t DestroyNotifyByNotificationId(int32_t notifyId);
 
 private:
     SystemNotifier();
     bool GetPixelMap(const std::string &path, std::shared_ptr<Media::PixelMap> &pixelMap);
     int32_t GenerateNextNotificationId();
 
-    int32_t CancelNotifyByNotificationId(int32_t notifyId);
-
     int32_t DisconnectByNetworkId(const std::string &networkId);
-    std::string getRemoteDeviceName(const std::string &networkId);
+    std::string GetRemoteDeviceName(const std::string &networkId);
+
+    void UpdateResourceMap(const std::string &resourcePath);
+    void UpdateResourceMapByLanguage();
+
+    template <typename... Args>
+    std::string GetKeyValue(const std::string &key, Args &&...args);
 
 private:
     std::shared_ptr<Media::PixelMap> capsuleIconPixelMap_{};
     std::shared_ptr<Media::PixelMap> notificationIconPixelMap_{};
     std::shared_ptr<Media::PixelMap> buttonIconPixelMap_{};
-
-    std::atomic<int32_t> notificationId_{0};
 
     // networkId -> notificationId
     std::shared_mutex mutex_;

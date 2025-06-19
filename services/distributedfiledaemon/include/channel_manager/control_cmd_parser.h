@@ -43,7 +43,7 @@ struct ControlCmd {
 
     uint16_t version = 0;
     int32_t msgId = 0;
-    ControlCmdType msgType = ControlCmdType::CMD_UNKNOWN;
+    int32_t msgType = 0;
     std::string msgBody = "";
     std::string networkId = "";
 
@@ -67,7 +67,7 @@ public:
     static void RegisterDisconnectCallback(std::function<void(std::string &)> cb);
 
 private:
-    static std::function<void(std::string &)> callback_; // 私有静态成员
+    static std::function<void(std::string &)> callback_;
 };
 
 } // namespace DistributedFile

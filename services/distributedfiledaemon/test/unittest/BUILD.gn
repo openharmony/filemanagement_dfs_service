@@ -1219,6 +1219,68 @@ ohos_unittest("softbus_permission_check_test") {
   }
 }
 
+ohos_unittest("system_notifier_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "include",
+    "include/network/softbus",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+  ]
+
+  sources = [
+    "${distributedfile_path}/services/distributedfiledaemon/src/channel_manager/system_notifier.cpp",
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
+    "${distributedfile_path}/test/mock/device_manager_mock.cpp",
+    "channel_manager/system_notifier_test.cpp"
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "cJSON:cjson_static",
+    "dataclassification:data_transit_mgr",
+    "device_manager:devicemanagersdk",
+    "distributed_notification_service:ans_innerkits",
+    "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "i18n:intl_util",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "zlib:shared_libz",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 group("unittest") {
   testonly = true
   deps = [
@@ -1241,5 +1303,6 @@ group("unittest") {
     ":softbus_session_listener_test",
     ":softbus_session_pool_test",
     ":softbus_session_test",
+    ":system_notifier_test",
   ]
 }
