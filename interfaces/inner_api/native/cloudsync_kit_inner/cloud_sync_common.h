@@ -207,6 +207,19 @@ struct  CleanFileInfoObj : public Parcelable {
     }
 };
 
+struct HistoryVersion : public Parcelable {
+    int64_t editedTime{0};
+    uint64_t fileSize{0};
+    uint64_t versionId{0};
+    std::string originalFileName;
+    std::string sha256;
+    bool resolved{false};
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static HistoryVersion *Unmarshalling(Parcel &parcel);
+};
+
 /*
  * 降级下载：待下载信息
  */

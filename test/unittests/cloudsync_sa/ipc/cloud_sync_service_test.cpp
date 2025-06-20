@@ -68,6 +68,8 @@ void CloudSyncServiceTest::TearDownTestCase(void)
     saMgrClient_ = nullptr;
     servicePtr_ = nullptr;
     saMgr_ = nullptr;
+    BatterySrvClientMock::dfsBatterySrvClient = nullptr;
+    dfsBatterySrvClient_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -1075,6 +1077,154 @@ HWTEST_F(CloudSyncServiceTest, GetCloudFileInfoTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 failed";
     }
     GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 end";
+}
+
+/**
+ * @tc.name: GetHistoryVersionList001
+ * @tc.desc: Verify the GetHistoryVersionList function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncServiceTest, GetHistoryVersionList001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHistoryVersionList001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int32_t numLimit = 0;
+        vector<HistoryVersion> historyVersionList;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_NE(ret, E_OK);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        ret = servicePtr_->GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHistoryVersionList001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHistoryVersionList001 end";
+}
+
+/**
+ * @tc.name: DownloadHistoryVersion001
+ * @tc.desc: Verify the DownloadHistoryVersion function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadHistoryVersion001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadHistoryVersion001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int64_t downloadId = 0;
+        uint64_t versionId = 0;
+        sptr<CloudDownloadCallbackMock> callback = sptr(new CloudDownloadCallbackMock());
+        string versionUri;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_NE(ret, E_OK);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        ret = servicePtr_->DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadHistoryVersion001 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadHistoryVersion001 end";
+}
+
+/**
+ * @tc.name: ReplaceFileWithHistoryVersion001
+ * @tc.desc: Verify the ReplaceFileWithHistoryVersion function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncServiceTest, ReplaceFileWithHistoryVersion001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplaceFileWithHistoryVersion001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string oriUri;
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_NE(ret, E_OK);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        ret = servicePtr_->ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplaceFileWithHistoryVersion001 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplaceFileWithHistoryVersion001 end";
+}
+
+/**
+ * @tc.name: IsFileConflict001
+ * @tc.desc: Verify the IsFileConflict function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncServiceTest, IsFileConflict001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFileConflict001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        bool isConflict;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->IsFileConflict(uri, isConflict);
+        EXPECT_NE(ret, E_OK);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        ret = servicePtr_->IsFileConflict(uri, isConflict);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsFileConflict001 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFileConflict001 end";
+}
+
+/**
+ * @tc.name: ClearFileConflict001
+ * @tc.desc: Verify the ClearFileConflict function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncServiceTest, ClearFileConflict001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearFileConflict001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->ClearFileConflict(uri);
+        EXPECT_NE(ret, E_OK);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        ret = servicePtr_->ClearFileConflict(uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ClearFileConflict001 failed";
+    }
+    GTEST_LOG_(INFO) << "ClearFileConflict001 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

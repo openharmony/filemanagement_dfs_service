@@ -157,6 +157,15 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) = 0;
+    // file version
+    virtual int32_t GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList) = 0;
+    virtual int32_t DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                           const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                           std::string &versionUri) = 0;
+    virtual int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) = 0;
+    virtual int32_t IsFileConflict(const std::string &uri, bool &isConflict) = 0;
+    virtual int32_t ClearFileConflict(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

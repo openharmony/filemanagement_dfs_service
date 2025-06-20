@@ -53,6 +53,10 @@ const std::string FileColumn::SRC_CLOUD_ID = "src_cloud_id";
 const std::string FileColumn::THM_SIZE = "thm_size";
 const std::string FileColumn::LCD_SIZE = "lcd_size";
 const std::string FileColumn::SOURCE_CLOUD_ID = "source_cloud_id";
+const std::string FileColumn::LOCAL_FLAG = "local_flag";
+
+//  description for LOCAL_FLAG shift
+const int64_t FileColumn::LOCAL_FLAG_MASK_ISCONFLICT = (1 << 0);
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
@@ -87,11 +91,15 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     SRC_CLOUD_ID + " TEXT, " +
     THM_SIZE + " INT DEFAULT 0, " +
     LCD_SIZE + " INT DEFAULT 0, " +
-    SOURCE_CLOUD_ID + " TEXT)";
+    SOURCE_CLOUD_ID + " TEXT, " +
+    LOCAL_FLAG + " BIGINT DEFAULT 0)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
     " (" + PARENT_CLOUD_ID + ")";
+
+const std::string FileColumn::ADD_LOCAL_FLAG = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + LOCAL_FLAG + " BIGINT DEFAULT 0";
 
 const std::string FileColumn::ADD_IS_FAVORITE = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + IS_FAVORITE + " INT DEFAULT 0";
@@ -162,7 +170,8 @@ const std::vector<std::string> FileColumn::DISK_CLOUD_SYNC_COLUMNS = {
     LCD_FLAG,
     ROW_ID,
     THM_SIZE,
-    LCD_SIZE
+    LCD_SIZE,
+    LOCAL_FLAG
 };
 
 //File copy requires all fields in the database, and one is added here when adding a new column ...

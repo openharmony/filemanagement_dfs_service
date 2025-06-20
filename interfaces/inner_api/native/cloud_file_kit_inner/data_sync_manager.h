@@ -92,6 +92,19 @@ public:
                                    const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback);
     virtual int32_t StopDowngrade(const std::string &bundleName);
     virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo);
+    // file version
+    virtual int32_t GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                          const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList);
+    virtual int32_t DownloadHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                           int64_t &downloadId, const uint64_t versionId,
+                                           const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+                                           std::string &versionUri);
+    virtual int32_t ReplaceFileWithHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                                  const std::string &versionUri);
+    virtual int32_t IsFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                   bool &isConflict);
+    virtual int32_t ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

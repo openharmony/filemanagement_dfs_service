@@ -101,6 +101,15 @@ public:
     ErrCode StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback) override;
     ErrCode StopDowngrade(const std::string &bundleName) override;
     ErrCode GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
+    // file version
+    ErrCode GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList) override;
+    ErrCode DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                           const sptr<IRemoteObject> &downloadCallback,
+                                           std::string &versionUri) override;
+    ErrCode ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
+    ErrCode IsFileConflict(const std::string &uri, bool &isConflict) override;
+    ErrCode ClearFileConflict(const std::string &uri) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

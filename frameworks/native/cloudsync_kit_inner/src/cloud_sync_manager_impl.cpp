@@ -504,6 +504,119 @@ int32_t CloudSyncManagerImpl::GetCloudFileInfo(const std::string &bundleName, Cl
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+    std::vector<CloudSync::HistoryVersion> &historyVersionList)
+{
+    LOGI("GetHistoryVersionList start, versionNumLimit is %{public}d", versionNumLimit);
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (uri.empty()) {
+        LOGE("Invalid argument");
+        return E_ILLEGAL_URI;
+    }
+
+    if (versionNumLimit <= 0) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetHistoryVersionList(uri, versionNumLimit, historyVersionList);
+    LOGI("GetHistoryVersionList ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::DownloadHistoryVersion(const std::string &uri, int64_t &downloadId,
+    const uint64_t versionId, const std::shared_ptr<CloudDownloadCallback> downloadCallback, std::string &versionUri)
+{
+    LOGI("DownloadHistoryVersion start, versionId is %{public}lld, Callback is null: %{public}d",
+         static_cast<long long>(versionId), (downloadCallback == nullptr));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (uri.empty()) {
+        LOGE("Invalid argument");
+        return E_ILLEGAL_URI;
+    }
+
+    if (downloadCallback == nullptr) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
+
+    sptr<CloudDownloadCallbackClient> dlCallback =
+        sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
+    if (dlCallback == nullptr) {
+        LOGE("DownloadHistoryVersion register download callback failed");
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->DownloadHistoryVersion(uri, downloadId, versionId, dlCallback, versionUri);
+    LOGI("DownloadHistoryVersion ret %{public}d, downloadId %{public}lld",
+         ret, static_cast<long long>(downloadId));
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri)
+{
+    LOGI("ReplaceFileWithHistoryVersion start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (uri.empty() || versionUri.empty()) {
+        LOGE("Invalid argument");
+        return E_ILLEGAL_URI;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->ReplaceFileWithHistoryVersion(uri, versionUri);
+    LOGI("ReplaceFileWithHistoryVersion ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::IsFileConflict(const std::string &uri, bool &isConflict)
+{
+    LOGI("IsFileConflict start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (uri.empty()) {
+        LOGE("Invalid argument");
+        return E_ILLEGAL_URI;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->IsFileConflict(uri, isConflict);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::ClearFileConflict(const std::string &uri)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (uri.empty()) {
+        LOGE("Invalid argument");
+        return E_ILLEGAL_URI;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->ClearFileConflict(uri);
+    LOGI("ClearFileConflict ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::DownloadThumb()
 {
     LOGI("DownloadThumb start");

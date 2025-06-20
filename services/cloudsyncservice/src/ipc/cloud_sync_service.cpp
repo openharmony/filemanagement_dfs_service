@@ -1150,4 +1150,88 @@ int32_t CloudSyncService::GetCloudFileInfo(const std::string &bundleName, CloudF
     LOGI("End GetCloudFileInfo");
     return ret;
 }
+
+int32_t CloudSyncService::GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+    std::vector<CloudSync::HistoryVersion> &historyVersionList)
+{
+    LOGI("Begin GetHistoryVersionList");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->GetHistoryVersionList(bundleNameUserInfo, uri, versionNumLimit, historyVersionList);
+    LOGI("End GetHistoryVersionList, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+    const sptr<IRemoteObject> &downloadCallback, std::string &versionUri)
+{
+    LOGI("Begin DownloadHistoryVersion");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    ret = dataSyncManager_->DownloadHistoryVersion(bundleNameUserInfo, uri, downloadId, versionId,
+                                                   downloadCb, versionUri);
+    LOGI("End DownloadHistoryVersion, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri)
+{
+    LOGI("Begin ReplaceFileWithHistoryVersion");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->ReplaceFileWithHistoryVersion(bundleNameUserInfo, uri, versionUri);
+    LOGI("End ReplaceFileWithHistoryVersion, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::IsFileConflict(const std::string &uri, bool &isConflict)
+{
+    LOGI("Begin IsFileConflict");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->IsFileConflict(bundleNameUserInfo, uri, isConflict);
+    LOGI("End IsFileConflict, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::ClearFileConflict(const std::string &uri)
+{
+    LOGI("Begin ClearFileConflict");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->ClearFileConflict(bundleNameUserInfo, uri);
+    LOGI("End ClearFileConflict, ret %{public}d", ret);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync

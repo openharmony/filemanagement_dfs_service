@@ -2068,6 +2068,15 @@ static void VersionAddThmSize(RdbStore &store)
     }
 }
 
+static void VersionAddLocalFlag(RdbStore &store)
+{
+    const string addLocalFlag = FileColumn::ADD_LOCAL_FLAG;
+    int32_t ret = store.ExecuteSql(addLocalFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add local_flag fail, err %{public}d", ret);
+    }
+}
+
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
@@ -2253,6 +2262,18 @@ static void VersionAddAttribute(RdbStore &store)
     }
 }
 
+int32_t CloudDiskDataCallBack::OnUpgradeExtend(RdbStore &store, int32_t oldVersion, int32_t newVersion)
+{
+    if (oldVersion < VERSION_ADD_THM_SIZE) {
+        VersionAddThmSize(store);
+    }
+    if (oldVersion < VERSION_ADD_LOCAL_FLAG) {
+        VersionAddLocalFlag(store);
+    }
+
+    return NativeRdb::E_OK;
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -2300,9 +2321,8 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     if (oldVersion < VERSION_ADD_SRC_CLOUD_ID) {
         VersionAddSrcCloudId(store);
     }
-    if (oldVersion < VERSION_ADD_THM_SIZE) {
-        VersionAddThmSize(store);
-    }
+    OnUpgradeExtend(store, oldVersion, newVersion);
+
     return NativeRdb::E_OK;
 }
 

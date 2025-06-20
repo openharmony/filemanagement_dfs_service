@@ -103,6 +103,13 @@ public:
     MOCK_METHOD1(StopDowngrade, int32_t(const std::string &bundleName));
     MOCK_METHOD2(GetCloudFileInfo, int32_t(const std::string &bundleName, CloudFileInfo &cloudFileInfo));
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
+    MOCK_METHOD3(GetHistoryVersionList,
+                 int32_t(const string &uri, const int32_t versionNumLimit, vector<HistoryVersion> &historyVersionList));
+    MOCK_METHOD5(DownloadHistoryVersion, int32_t(const string &uri, int64_t &downloadId, const uint64_t versionId,
+                 const sptr<IRemoteObject> &downloadCallback, string &versionUri));
+    MOCK_METHOD2(ReplaceFileWithHistoryVersion, int32_t(const string &uri, const string &versionUri));
+    MOCK_METHOD2(IsFileConflict, int32_t(const string &uri, bool &isConflict));
+    MOCK_METHOD1(ClearFileConflict, int32_t(const string &uri));
 
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,
@@ -1157,6 +1164,247 @@ HWTEST_F(CloudSyncManagerImplTest, GetCloudFileInfoTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << " GetCloudFileInfoTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "GetCloudFileInfoTest003 End";
+}
+
+/*
+ * @tc.name: GetHistoryVersionList
+ * @tc.desc: Verify the GetHistoryVersionList function, proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetHistoryVersionListTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHistoryVersionListTest001 Start";
+    try {
+        string uri = "";
+        int32_t numLimit = 0;
+        vector<CloudSync::HistoryVersion> historyVersionList;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        uri = "";
+        numLimit = 1;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetHistoryVersionListTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHistoryVersionListTest001 End";
+}
+
+/*
+ * @tc.name: GetHistoryVersionList
+ * @tc.desc: Verify the GetHistoryVersionList function, uri empty or limit below zero.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetHistoryVersionListTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHistoryVersionListTest002 Start";
+    try {
+        string uri = "path/file/1.txt";
+        int32_t numLimit = 0;
+        vector<CloudSync::HistoryVersion> historyVersionList;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        auto res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(res, E_INVAL_ARG);
+
+        uri = "";
+        numLimit = 0;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+
+        uri = "path/file/1.txt";
+        numLimit = 1;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetHistoryVersionList(_, _, _)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetHistoryVersionListTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHistoryVersionListTest002 End";
+}
+
+/*
+ * @tc.name: DownloadHistoryVersion
+ * @tc.desc: Verify the DownloadHistoryVersion function, proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, DownloadHistoryVersionTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadHistoryVersionTest001 Start";
+    try {
+        string uri = "";
+        int64_t downloadId = 0;
+        uint64_t versionId = 0;
+        shared_ptr<CloudDownloadCallback> callback = nullptr;
+        string versionUri;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance()
+            .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance()
+            .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+
+        uri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance()
+            .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DownloadHistoryVersionTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadHistoryVersionTest001 End";
+}
+
+/*
+ * @tc.name: DownloadHistoryVersion
+ * @tc.desc: Verify the DownloadHistoryVersion function, uri or callback empty.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, DownloadHistoryVersionTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadHistoryVersionTest002 Start";
+    try {
+        string uri = "";
+        int64_t downloadId = 0;
+        uint64_t versionId = 0;
+        shared_ptr<CloudDownloadCallback> callback = make_shared<CloudDownloadCallbackDerived>();
+        string versionUri;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        auto res = CloudSyncManagerImpl::GetInstance()
+            .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+
+        uri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, DownloadHistoryVersion(_, _, _, _, _)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance()
+            .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DownloadHistoryVersionTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadHistoryVersionTest002 End";
+}
+
+/*
+ * @tc.name: ReplaceFileWithHistoryVersion
+ * @tc.desc: Verify the ReplaceFileWithHistoryVersion function, proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, ReplaceFileWithHistoryVersionTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplaceFileWithHistoryVersionTest001 Start";
+    try {
+        string oriUri = "";
+        string uri = "";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+
+        oriUri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+
+        oriUri = "";
+        uri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+        
+        oriUri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, ReplaceFileWithHistoryVersion(_, _)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReplaceFileWithHistoryVersionTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReplaceFileWithHistoryVersionTest001 End";
+}
+
+/*
+ * @tc.name: IsFileConflict
+ * @tc.desc: Verify the IsFileConflict function, proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, IsFileConflictTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFileConflictTest001 Start";
+    try {
+        string uri = "";
+        bool isConflict;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+        
+        uri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, IsFileConflict(_, _)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " IsFileConflictTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsFileConflictTest001 End";
+}
+
+/*
+ * @tc.name: ClearFileConflict
+ * @tc.desc: Verify the ClearFileConflict function, proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, ClearFileConflictTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearFileConflictTest001 Start";
+    try {
+        string uri = "";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
+        EXPECT_EQ(res, E_ILLEGAL_URI);
+        
+        uri = "path/file/1.txt";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, ClearFileConflict(_)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ClearFileConflictTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ClearFileConflictTest001 End";
 }
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

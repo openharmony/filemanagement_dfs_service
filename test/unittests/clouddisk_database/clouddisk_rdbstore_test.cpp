@@ -4266,4 +4266,35 @@ HWTEST_F(CloudDiskRdbStoreTest, CopyFileTest4, TestSize.Level1)
                                                bundleName, userId, destPath);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: OnUpgradeExtend
+ * @tc.desc: Verify the CloudDiskRdbStore::OnUpgradeExtend function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeExtendTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeExtendTest001 start";
+    try {
+        RdbStoreMock store;
+        int32_t oldVersion = 15;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+        int32_t ret = CloudDiskDataCallBack.OnUpgradeExtend(store, oldVersion, newVersion);
+        EXPECT_EQ(ret, E_OK);
+
+        oldVersion = 16;
+        ret = CloudDiskDataCallBack.OnUpgradeExtend(store, oldVersion, newVersion);
+        EXPECT_EQ(ret, E_OK);
+
+        oldVersion = 17;
+        ret = CloudDiskDataCallBack.OnUpgradeExtend(store, oldVersion, newVersion);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUpgradeExtendTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeExtendTest001 end";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

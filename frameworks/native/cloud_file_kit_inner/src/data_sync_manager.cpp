@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License"){}
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -222,4 +222,35 @@ int32_t DataSyncManager::GetCloudFileInfo(const std::string &bundleName, CloudSy
 {
     return E_OK;
 }
+
+int32_t DataSyncManager::GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+    const int32_t versionNumLimit, std::vector<CloudSync::HistoryVersion> &historyVersionList)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::DownloadHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+    int64_t &downloadId, uint64_t versionId, const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+    std::string &versionUri)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::ReplaceFileWithHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::string &uri, const std::string &versionUri)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::IsFileConflict(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::string &uri, bool &isConflict)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri)
+{
+    return E_OK;
+}
+
 } // namespace OHOS::FileManagement::CloudFile
