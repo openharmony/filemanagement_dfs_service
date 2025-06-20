@@ -238,8 +238,10 @@ HWTEST_F(SoftbusAdapterTest, EventTest001, TestSize.Level1)
         EXPECT_EQ(result, 0);
         // OnReceiveFileFinished
         SoftbusAdapter::OnReceiveFileFinished(socketFd, "", 0);
+        SoftbusAdapter::pathDir_ = "/mnt/hmdfs/100/account/device_view/local/data/com.ohos.a";
+        std::string res = std::string(SoftbusAdapter::GetRecvPath());
         // GetRecvPath
-        EXPECT_EQ(SoftbusAdapter::GetRecvPath(), "/mnt/hmdfs/100/account/device_view/local/data/");
+        EXPECT_EQ(res, "/mnt/hmdfs/100/account/device_view/local/data/com.ohos.a");
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "EventTest001 failed";
@@ -485,6 +487,23 @@ HWTEST_F(SoftbusAdapterTest, GetPeerNetworkIdTest, TestSize.Level1)
 
     auto res = adapter.OpenSession(sessionName, peerDeviceId, groupId, dataType);
     EXPECT_EQ(res, 1);
+}
+
+/**
+ * @tc.name: UpdateFileRecvPathTest001
+ * @tc.desc: Verify the UpdateFileRecvPath function
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(SoftbusAdapterTest, UpdateFileRecvPathTest001, TestSize.Level1)
+{
+    SoftbusAdapter &adapter = SoftbusAdapter::GetInstance();
+
+    std::string bundleName = "com.ohos.a";
+    int32_t userId = 100;
+    SoftbusAdapter::UpdateFileRecvPath(bundleName, userId);
+    std::string res = "/mnt/hmdfs/100/account/device_view/local/data/com.ohos.a";
+    EXPECT_EQ(adapter.pathDir_, res);
 }
 } // namespace Test
 } // namespace CloudSync
