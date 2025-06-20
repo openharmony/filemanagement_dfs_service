@@ -160,10 +160,13 @@ HWTEST_F(CloudDaemonTest, StartFuseTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest002 start";
     try {
-        std::string path = "/cloud/test";
-        EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(-1));
+        std::string path = "/cloud_fuse/test";
+        EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, chown(_, _, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, HandleStartMove(_)).WillRepeatedly(Return());
         int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
-        EXPECT_EQ(ret, E_PATH);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuseTest002 failed";
@@ -181,11 +184,12 @@ HWTEST_F(CloudDaemonTest, StartFuseTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest003 start";
     try {
-        std::string path = "/cloud/test";
-        EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock_, chmod(_, _)).WillRepeatedly(Return(-1));
+        std::string path = "/cloud_fuse/test";
+        EXPECT_CALL(*insMock_, mkdir(_, _)).WillOnce(Return(0)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, chown(_, _, _)).WillRepeatedly(Return(0));
         int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_PATH);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuseTest003 failed";
@@ -204,15 +208,58 @@ HWTEST_F(CloudDaemonTest, StartFuseTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFuseTest004 start";
     try {
         std::string path = "/cloud/test";
+        EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(-1));
+        int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
+        EXPECT_EQ(ret, E_PATH);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuseTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "StartFuseTest004 end";
+}
+
+/**
+ * @tc.name: StartFuseTest005
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB538J
+ */
+HWTEST_F(CloudDaemonTest, StartFuseTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest005 start";
+    try {
+        std::string path = "/cloud/test";
+        EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillRepeatedly(Return(-1));
+        int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuseTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "StartFuseTest005 end";
+}
+
+/**
+ * @tc.name: StartFuseTest004
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB538J
+ */
+HWTEST_F(CloudDaemonTest, StartFuseTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest006 start";
+    try {
+        std::string path = "/cloud/test";
         EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, chown(_, _, _)).WillRepeatedly(Return(-1));
         int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartFuseTest004 failed";
+        GTEST_LOG_(INFO) << "StartFuseTest006 failed";
     }
-    GTEST_LOG_(INFO) << "StartFuseTest004 end";
+    GTEST_LOG_(INFO) << "StartFuseTest006 end";
 }
 
 /**
