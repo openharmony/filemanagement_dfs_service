@@ -537,6 +537,123 @@ ohos_unittest("meta_file_clouddisk_test") {
   use_exceptions = true
 }
 
+ohos_unittest("io_message_listener_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/io_message_listener.cpp",
+    "io_message_listener_test.cpp",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
+    "ability_runtime:app_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("appstate_observer_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/appstate_observer.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/io_message_listener.cpp",
+    "appstate_observer_test.cpp",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "ipc:ipc_single",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
+    "ability_runtime:app_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
 group("cloud_disk_test") {
   testonly = true
 
@@ -550,5 +667,7 @@ group("cloud_disk_test") {
     ":fuse_operations_test",
     ":file_range_lock_test",
     ":meta_file_clouddisk_test",
+    ":io_message_listener_test",
+    ":appstate_observer_test",
   ]
 }
