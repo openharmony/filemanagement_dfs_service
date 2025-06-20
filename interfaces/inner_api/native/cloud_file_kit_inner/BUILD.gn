@@ -176,6 +176,7 @@ ohos_shared_library("cloudfile_kit_core") {
   public_configs = [ ":cloudfile_kit_lite_public_config" ]
 
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",

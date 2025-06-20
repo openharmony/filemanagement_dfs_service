@@ -49,7 +49,6 @@
           "eventhandler",
           "ffrt",
           "file_api",
-          "filemgmt_libfs",
           "hicollie",
           "hilog",
           "hisysevent",
