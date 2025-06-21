@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,17 +28,10 @@ namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
     static const string CLOUD_FILE_CLOUD_ID_XATTR = "user.cloud.cloudid";
-    static const uint32_t CLOUD_ID_MIN_SIZE = 3;
-    static const uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
-    static const uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
     static const int64_t SECOND_TO_MILLISECOND = 1e3;
     static const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
-    static const uint64_t DELTA_DISK = 0x9E3779B9;
-    static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
 }
 
-constexpr unsigned HMDFS_IOC = 0xf2;
-constexpr unsigned WRITEOPEN_CMD = 0x02;
 #define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
 
@@ -57,7 +50,7 @@ void CloudFileUtils::TeaTransform(uint32_t buf[4], uint32_t const in[])
 
 uint32_t CloudFileUtils::DentryHash(const std::string &inputStr)
 {
-    return -1;
+    return 0;
 }
 
 uint32_t CloudFileUtils::GetBucketId(string cloudId)
@@ -67,7 +60,7 @@ uint32_t CloudFileUtils::GetBucketId(string cloudId)
 
 int64_t CloudFileUtils::Timespec2Milliseconds(const struct timespec &time)
 {
-    return 0;
+    return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
 string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int32_t userId)

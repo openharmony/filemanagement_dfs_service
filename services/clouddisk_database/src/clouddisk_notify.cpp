@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,7 +178,7 @@ static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers 
     if (paramOthers.dirtyType == static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD)) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
     }
-    if (paramOthers.fileDirty == CLOUD_DISK_FILE_WRITE) {
+    if (paramOthers.isWrite) {
         notifyData.type = NotifyType::NOTIFY_FILE_CHANGED;
     }
     notifyData.isLocalOperation = true;

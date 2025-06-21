@@ -44,6 +44,7 @@ namespace {
     static const int32_t MOCKUSERID0 = 100;
     static const int32_t MOCKUSERID1 = 1;
     static const int32_t STATSIZE = 1;
+    static const uint64_t TEST_MTIME = 1629000000000;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
@@ -159,6 +160,14 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
         ptr -> refCount = 0;
     } else if (key == MOCK4) {
         ptr = nullptr;
+    } else if (key == MOCK5) {
+        ptr->fileDirty = CLOUD_DISK_FILE_UNKNOWN;
+        ptr->isWriteOpen = true;
+        ptr->mtime = TEST_MTIME;
+    } else if (key == MOCK6) {
+        ptr->fileDirty = CLOUD_DISK_FILE_UNKNOWN;
+        ptr->isWriteOpen = true;
+        ptr->mtime = 0;
     }
     return ptr;
 }

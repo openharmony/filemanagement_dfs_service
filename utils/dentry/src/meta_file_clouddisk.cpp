@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,7 +84,7 @@ struct HmdfsDcacheHeader {
 
 void MetaHelper::SetFileType(struct HmdfsDentry *de, uint8_t fileType)
 {
-    de->flags &= 0x13;
+    de->flags &= 0xF3;
     de->flags |= (fileType << FILE_TYPE_OFFSET);
 }
 
@@ -136,9 +136,6 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
     LOGD("CloudDiskMetaFile cloudId=%{public}s, path=%{public}s", cloudId_.c_str(), GetAnonyString(cacheFile_).c_str());
     LOGD("CloudDiskMetaFile fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
-
-    HmdfsDcacheHeader header{};
-    (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
 }
 
 std::string CloudDiskMetaFile::GetDentryFilePath()
@@ -388,8 +385,13 @@ static std::unique_ptr<HmdfsDentryGroup> FindDentryPage(uint64_t index, DcacheLo
     auto dentryBlk = std::make_unique<HmdfsDentryGroup>();
 
     off_t pos = GetDentryGroupPos(index);
+    auto ret = FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_WRLCK);
+    if (ret) {
+        return nullptr;
+    }
     ssize_t size = FileUtils::ReadFile(ctx->fd, pos, DENTRYGROUP_SIZE, dentryBlk.get());
     if (size != DENTRYGROUP_SIZE) {
+        (void)FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return nullptr;
     }
     return dentryBlk;
@@ -448,6 +450,8 @@ static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx)
             ctx->page = std::move(dentryBlk);
             break;
         }
+        off_t pos = GetDentryGroupPos(bidx);
+        (void)FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_UNLCK);
     }
     ctx->bidx = bidx;
     return de;
@@ -482,7 +486,12 @@ int32_t CloudDiskMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &bitPos,
         }
         for (; bidx < endBlock; bidx++) {
             off_t pos = GetDentryGroupPos(bidx);
+            ret = FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_WRLCK);
+            if (ret) {
+                return ret;
+            }
             if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
+                (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
                 return ENOENT;
             }
             bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
@@ -490,6 +499,7 @@ int32_t CloudDiskMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &bitPos,
                 found = true;
                 break;
             }
+            (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         }
         ++level;
     }
@@ -509,22 +519,32 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
     HmdfsDentry *de = FindDentry(&ctx);
     if (de != nullptr) {
         LOGE("this name dentry is exist");
+        (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
         return EEXIST;
     }
     uint32_t bitPos = 0;
     unsigned long bidx = 0;
     HmdfsDentryGroup dentryBlk = {0};
     uint32_t namehash = 0;
-    GetCreateInfo(base, bitPos, namehash, bidx, dentryBlk);
+    auto ret = GetCreateInfo(base, bitPos, namehash, bidx, dentryBlk);
+    if (ret) {
+        return ret;
+    }
     off_t pos = GetDentryGroupPos(bidx);
     if (!UpdateDentry(dentryBlk, base, namehash, bitPos)) {
         LOGI("UpdateDentry fail, stop write.");
+        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
     }
     int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
     if (size != DENTRYGROUP_SIZE) {
         LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
+        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
+    }
+    ret = FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
+    if (ret) {
+        return ret;
     }
     return E_OK;
 }
@@ -555,9 +575,13 @@ int32_t CloudDiskMetaFile::DoRemove(const MetaBase &base)
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(HmdfsDentryGroup));
     if (size != sizeof(HmdfsDentryGroup)) {
         LOGE("WriteFile failed!, ret = %{public}zd", size);
+        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
     }
-
+    auto ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
+    if (ret) {
+        return ret;
+    }
     return E_OK;
 }
 
@@ -576,6 +600,7 @@ int32_t CloudDiskMetaFile::DoLookup(MetaBase &base)
         LOGD("find dentry failed");
         return ENOENT;
     }
+    (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
 
     base.size = de->size;
     base.atime = de->atime;
@@ -620,7 +645,12 @@ int32_t CloudDiskMetaFile::DoUpdate(const MetaBase &base)
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(struct HmdfsDentryGroup));
     if (size != sizeof(struct HmdfsDentryGroup)) {
         LOGE("write failed, ret = %{public}zd", size);
+        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
+    }
+    ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
+    if (ret) {
+        return ret;
     }
     return E_OK;
 }
@@ -688,7 +718,12 @@ int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
 
     for (uint64_t i = 1; i < groupCnt + 1; i++) {
         uint64_t off = i * sizeof(HmdfsDentryGroup);
+        ret = FileRangeLock::FilePosLock(fd_, off, DENTRYGROUP_SIZE, F_WRLCK);
+        if (ret) {
+            return ret;
+        }
         FileUtils::ReadFile(fd_, off, sizeof(HmdfsDentryGroup), &dentryGroup);
+        (void)FileRangeLock::FilePosLock(fd_, off, DENTRYGROUP_SIZE, F_UNLCK);
         DecodeDentrys(dentryGroup, bases);
     }
     return E_OK;

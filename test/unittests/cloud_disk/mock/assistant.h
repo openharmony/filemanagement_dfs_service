@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,8 +60,22 @@ public:
     {
         return 0;
     }
+    static int close(int fd)
+    {
+        return 0;
+    }
+
 public:
     virtual off_t lseek(int, off_t, int) = 0;
+    virtual int fstat(int fd, struct stat *buf) = 0;
+    virtual int fcntl(int fd, int op) = 0;
+    virtual int ftruncate(int fd, off_t length) = 0;
+
+public:
+    // file_utils
+    virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
+    virtual int64_t WriteFile(int fd, const void *data, off_t offset, size_t size) = 0;
+    virtual int FilePosLock(int fd, off_t offset, size_t size, int type) = 0;
 };
 
 class AssistantMock : public Assistant {
@@ -84,8 +98,18 @@ public:
     MOCK_METHOD2(fuse_opt_add_arg, int(struct fuse_args *args, const char *arg));
     MOCK_METHOD4(fuse_session_new, struct fuse_session*(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
         size_t opSize, void *userData));
+
 public:
     MOCK_METHOD3(lseek, off_t(int, off_t, int));
+    MOCK_METHOD2(fstat, int(int, struct stat *));
+    MOCK_METHOD2(fcntl, int(int, int));
+    MOCK_METHOD2(ftruncate, int(int, off_t));
+
+public:
+    // file_utils
+    MOCK_METHOD4(ReadFile, int64_t(int fd, off_t offset, size_t size, void *data));
+    MOCK_METHOD4(WriteFile, int64_t(int fd, const void *data, off_t offset, size_t size));
+    MOCK_METHOD4(FilePosLock, int(int fd, off_t offset, size_t size, int type));
 };
 } // namespace OHOS::FileManagement::CloudDisk
 #endif // TEST_UNITTESTS_CLOUD_DISK_ASSISTANT_H
