@@ -331,7 +331,7 @@ HWTEST_F(FileTransferManagerTest, UriToPathTest002, TestSize.Level1)
         auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
         std::string uri = "file://com.ohos.a/data/storage/el2/distributedfiles/1.txt";
         std::string relativePath = "/1.txt";
-        auto [first, second] = fileTransferManager->UriToPath("data/test", 100, false);
+        auto [first, second] = fileTransferManager->UriToPath(uri, 100, false);
         EXPECT_EQ(second, relativePath);
     } catch (...) {
         EXPECT_TRUE(false);
