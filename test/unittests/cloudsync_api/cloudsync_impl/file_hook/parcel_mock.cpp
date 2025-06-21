@@ -42,9 +42,19 @@ bool Parcel::WriteInt64(int64_t value)
     return IParcel::parcel_->WriteInt64(value);
 }
 
+bool Parcel::WriteUint64(uint64_t value)
+{
+    return IParcel::parcel_->WriteUint64(value);
+}
+
 bool Parcel::ReadInt64(int64_t &value)
 {
     return IParcel::parcel_->ReadInt64(value);
+}
+
+bool Parcel::ReadUint64(uint64_t &value)
+{
+    return IParcel::parcel_->ReadUint64(value);
 }
 
 bool Parcel::WriteUint32(uint32_t value)

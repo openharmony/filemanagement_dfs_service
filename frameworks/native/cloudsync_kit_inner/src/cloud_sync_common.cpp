@@ -169,6 +169,36 @@ bool CloudFileInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool HistoryVersion::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt64(editedTime)) {
+        LOGE("failed to write editedTime");
+        return false;
+    }
+    if (!parcel.WriteUint64(fileSize)) {
+        LOGE("failed to write fileSize");
+        return false;
+    }
+    if (!parcel.WriteUint64(versionId)) {
+        LOGE("failed to write versionId");
+        return false;
+    }
+    if (!parcel.WriteString(originalFileName)) {
+        LOGE("failed to write originalFileName");
+        return false;
+    }
+    if (!parcel.WriteString(sha256)) {
+        LOGE("failed to write sha256");
+        return false;
+    }
+    if (!parcel.WriteBool(resolved)) {
+        LOGE("failed to write resolved");
+        return false;
+    }
+
+    return true;
+}
+
 bool CleanOptions::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteUint32(appActionsData.size())) {
@@ -224,6 +254,17 @@ DowngradeProgress *DowngradeProgress::Unmarshalling(Parcel &parcel)
 CloudFileInfo *CloudFileInfo::Unmarshalling(Parcel &parcel)
 {
     CloudFileInfo *info = new (std::nothrow) CloudFileInfo();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+HistoryVersion *HistoryVersion::Unmarshalling(Parcel &parcel)
+{
+    HistoryVersion *info = new (std::nothrow) HistoryVersion();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;
@@ -466,6 +507,36 @@ bool CloudFileInfo::ReadFromParcel(Parcel &parcel)
     }
     if (!parcel.ReadInt64(bothFileTotalSize)) {
         LOGE("failed to read bothFileTotalSize");
+        return false;
+    }
+
+    return true;
+}
+
+bool HistoryVersion::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadInt64(editedTime)) {
+        LOGE("failed to read editedTime");
+        return false;
+    }
+    if (!parcel.ReadUint64(fileSize)) {
+        LOGE("failed to read fileSize");
+        return false;
+    }
+    if (!parcel.ReadUint64(versionId)) {
+        LOGE("failed to read versionId");
+        return false;
+    }
+    if (!parcel.ReadString(originalFileName)) {
+        LOGE("failed to read originalFileName");
+        return false;
+    }
+    if (!parcel.ReadString(sha256)) {
+        LOGE("failed to read sha256");
+        return false;
+    }
+    if (!parcel.ReadBool(resolved)) {
+        LOGE("failed to read resolved");
         return false;
     }
 

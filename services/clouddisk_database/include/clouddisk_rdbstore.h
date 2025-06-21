@@ -126,6 +126,7 @@ private:
 class CloudDiskDataCallBack : public NativeRdb::RdbOpenCallback {
 public:
     int32_t OnCreate(NativeRdb::RdbStore &rdbStore) override;
+    int32_t OnUpgradeExtend(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion);
     int32_t OnUpgrade(NativeRdb::RdbStore &rdbStore, int32_t oldVersion, int32_t newVersion) override;
 };
 

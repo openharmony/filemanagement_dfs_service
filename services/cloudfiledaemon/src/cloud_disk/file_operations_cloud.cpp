@@ -1344,7 +1344,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     }
     string fileName = name;
     bool noNeedUpload;
-    if (fileName == ".cloudthumbnails" && parentInode->cloudId == ROOT_CLOUD_ID) {
+    if ((fileName == ".cloudthumbnails" || fileName == ".conflict") && parentInode->cloudId == ROOT_CLOUD_ID) {
         noNeedUpload = true;
     } else if (parentInode->cloudId != ROOT_CLOUD_ID) {
         int32_t err = GetParentUpload(parentInode, data, noNeedUpload);

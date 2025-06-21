@@ -1107,5 +1107,210 @@ HWTEST_F(CloudSyncCommonTest, UnmarshallingTest2, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "UnmarshallingTest2 End";
 }
+
+/*
+ * @tc.name: Marshalling
+ * @tc.desc: Verify the HistoryVersion::Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, MarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MarshallingTest001 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        auto res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(false));
+        res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
+        res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " MarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "MarshallingTest001 End";
+}
+
+/*
+ * @tc.name: Marshalling
+ * @tc.desc: Verify the HistoryVersion::Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, MarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MarshallingTest002 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(false));
+        res = version->Marshalling(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(true));
+        res = version->Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " MarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "MarshallingTest002 End";
+}
+
+/*
+ * @tc.name: Unmarshalling
+ * @tc.desc: Verify the HistoryVersion::Unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, UnmarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnmarshallingTest001 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        auto res = version->Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnmarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnmarshallingTest001 End";
+}
+
+/*
+ * @tc.name: Unmarshalling
+ * @tc.desc: Verify the HistoryVersion::Unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require: 待补充 ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, UnmarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnmarshallingTest002 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(true));
+        auto res = version->Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnmarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnmarshallingTest002 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel
+ * @tc.desc: Verify the HistoryVersion::ReadFromParcel function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcelTest001 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        auto res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(false));
+        res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel
+ * @tc.desc: Verify the HistoryVersion::ReadFromParcel function.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcelTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcelTest002 Start";
+    try {
+        auto version = make_shared<HistoryVersion>();
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
+        res = version->ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(true));
+        res = version->ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcelTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcelTest002 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

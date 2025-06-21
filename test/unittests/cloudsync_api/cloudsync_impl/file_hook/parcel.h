@@ -29,7 +29,9 @@ public:
     virtual bool WriteInt32(int32_t value) = 0;
     virtual bool ReadInt32(int32_t &value) = 0;
     virtual bool WriteInt64(int64_t value) = 0;
+    virtual bool WriteUint64(uint64_t value) = 0;
     virtual bool ReadInt64(int64_t &value) = 0;
+    virtual bool ReadUint64(uint64_t &value) = 0;
     virtual bool WriteUint32(uint32_t value) = 0;
     virtual bool ReadUint32(uint32_t &value) = 0;
     virtual bool WriteString(const std::string &value) = 0;
@@ -47,7 +49,9 @@ public:
     MOCK_METHOD1(WriteInt32, bool(int32_t value));
     MOCK_METHOD1(ReadInt32, bool(int32_t &value));
     MOCK_METHOD1(WriteInt64, bool(int64_t value));
+    MOCK_METHOD1(WriteUint64, bool(uint64_t value));
     MOCK_METHOD1(ReadInt64, bool(int64_t &value));
+    MOCK_METHOD1(ReadUint64, bool(uint64_t &value));
     MOCK_METHOD1(WriteUint32, bool(uint32_t value));
     MOCK_METHOD1(ReadUint32, bool(uint32_t &value));
     MOCK_METHOD1(WriteString, bool(const std::string &value));
@@ -65,7 +69,9 @@ public:
     bool WriteInt32(int32_t value);
     bool ReadInt32(int32_t &value);
     bool WriteInt64(int64_t value);
+    bool WriteUint64(uint64_t value);
     bool ReadInt64(int64_t &value);
+    bool ReadUint64(uint64_t &value);
     bool WriteUint32(uint32_t value);
     bool ReadUint32(uint32_t &value);
     bool WriteString(const std::string &value);

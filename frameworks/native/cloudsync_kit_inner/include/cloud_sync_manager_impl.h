@@ -77,6 +77,15 @@ public:
                            const std::shared_ptr<DowngradeDlCallback> downloadCallback) override;
     int32_t StopDowngrade(const std::string &bundleName) override;
     int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
+    // file version
+    int32_t GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                  std::vector<CloudSync::HistoryVersion> &historyVersionList) override;
+    int32_t DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                   const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                   std::string &versionUri) override;
+    int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
+    int32_t IsFileConflict(const std::string &uri, bool &isConflict) override;
+    int32_t ClearFileConflict(const std::string &uri) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:

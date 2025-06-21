@@ -107,6 +107,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     /* dfs daemon */
     E_ALLOW_LOCAL_CALL_ONLY,
 
+    E_INNER_RDB,
+
     E_SOURCE_BASIC = 10000,
 
     E_THM_SOURCE_BASIC = E_SOURCE_BASIC + 1000,
@@ -200,7 +202,8 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
     { E_SA_LOAD_FAILED, E_IPCSS },
     { E_SYSTEM_LOAD_OVER, E_IPCSS },
     { E_SERVICE_INNER_ERROR, E_INNER_FAILED },
-    { E_VERSION_FILE_NOT_EXIST, E_VERSION_FILE_NO_EXIST }
+    { E_VERSION_FILE_NOT_EXIST, E_VERSION_FILE_NO_EXIST },
+    { E_INNER_RDB, E_INNER_FAILED }
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);

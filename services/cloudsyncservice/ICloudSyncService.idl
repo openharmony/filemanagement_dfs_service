@@ -21,6 +21,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.DentryFileInfoObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.OptimizeSpaceOptions;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CloudFileInfo;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.HistoryVersion;
 option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
@@ -69,5 +70,13 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void StartDowngrade([in] String bundleName, [in] IRemoteObject downloadCallback);
     void StopDowngrade([in] String bundleName);
     void GetCloudFileInfo([in] String bundleName, [out] CloudFileInfo cloudFileInfo);
-
+    // file version
+    void GetHistoryVersionList([in] String uri, [in] int versionNumLimit,
+                               [out] HistoryVersion[] historyVersionList);
+    void DownloadHistoryVersion([in] String uri, [out] long downloadId, [in] unsigned long versionId,
+                                [in] IRemoteObject downloadCallback,
+                                [out]String versionUri);
+    void ReplaceFileWithHistoryVersion([in] String uri, [in] String versionUri);
+    void IsFileConflict([in] String uri, [out] boolean isConflict);
+    void ClearFileConflict([in] String uri);
 }

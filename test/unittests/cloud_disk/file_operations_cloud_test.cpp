@@ -1642,6 +1642,33 @@ HWTEST_F(FileOperationsCloudTest, MkDirTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MkDirTest005
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = ".conflict";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest005 End";
+}
+
+/**
  * @tc.name: RmDirTest001
  * @tc.desc: Verify the RmDir function
  * @tc.type: FUNC
