@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -570,9 +570,53 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyTest023, TestSize.Level1)
  * @tc.name: TryNotifyTest024
  * @tc.desc: Verify the TryNotify function.
  * @tc.type: FUNC
- * @tc.require: I6H5MH
  */
 HWTEST_F(CloudDiskNotifyTest, TryNotifyTest024, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_WRITE;
+    ParamDiskOthers paramOthers;
+    paramOthers.isWrite = false;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest025
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest025, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_WRITE;
+    ParamDiskOthers paramOthers;
+    paramOthers.isWrite = true;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest026
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest026, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TryNotify Start";
     CloudDiskNotify CloudDiskNotify;

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -271,7 +271,6 @@ ohos_unittest("fuse_operations_test") {
     "mock/clouddisk_rdbstore_mock.cpp",
     "mock/file_operations_local_mock.cpp",
     "mock/libfuse_mock.cpp",
-    "mock/system_function_mock.cpp",
   ]
 
   deps = [
@@ -338,7 +337,6 @@ ohos_unittest("file_operations_local_test") {
     "file_operations_local_test.cpp",
     "mock/clouddisk_rdbstore_mock.cpp",
     "mock/libfuse_mock.cpp",
-    "mock/system_function_mock.cpp",
   ]
 
   deps = [
@@ -448,6 +446,97 @@ ohos_unittest("file_operations_helper_test") {
   use_exceptions = true
 }
 
+ohos_unittest("file_range_lock_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "mock/system_function_mock.cpp",
+    "file_range_lock_test.cpp",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("meta_file_clouddisk_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/system/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/utils/dentry/src/meta_file.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "mock/file_utils_mock.cpp",
+    "mock/system_function_mock.cpp",
+    "meta_file_clouddisk_test.cpp",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
 group("cloud_disk_test") {
   testonly = true
 
@@ -459,5 +548,7 @@ group("cloud_disk_test") {
     ":file_operations_helper_test",
     ":file_operations_local_test",
     ":fuse_operations_test",
+    ":file_range_lock_test",
+    ":meta_file_clouddisk_test",
   ]
 }

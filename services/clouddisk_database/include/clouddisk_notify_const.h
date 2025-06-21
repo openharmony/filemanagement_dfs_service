@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,7 +58,7 @@ struct NotifyParamDisk {
 struct ParamDiskOthers {
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD);
     bool isDir = false;
-    int fileDirty = CLOUD_DISK_FILE_UNKNOWN;
+    bool isWrite = false;
 };
 
 struct NotifyParamService {

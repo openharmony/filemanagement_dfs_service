@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,14 @@ public:
 
     static int64_t ReadFile(int fd, off_t offset, size_t size, void *data);
     static int64_t WriteFile(int fd, const void *data, off_t offset, size_t size);
+};
+
+class FileRangeLock {
+public:
+    FileRangeLock() = delete;
+    ~FileRangeLock() = delete;
+
+    static int FilePosLock(int fd, off_t offset, size_t size, int type);
 };
 } // namespace FileManagement
 } // namespace OHOS

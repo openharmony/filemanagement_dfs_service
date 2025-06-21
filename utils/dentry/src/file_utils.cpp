@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,6 +78,20 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
     }
 
     return writeLen;
+}
+
+int FileRangeLock::FilePosLock(int fd, off_t offset, size_t size, int type)
+{
+    struct flock fl;
+    fl.l_type = static_cast<decltype(fl.l_type)>(type);
+    fl.l_whence = SEEK_SET;
+    fl.l_start = offset;
+    fl.l_len = static_cast<decltype(fl.l_len)>(size);
+    if (fcntl(fd, F_SETLKW, &fl) < 0) {
+        LOGE("fcntl set type %{public}d failed: %{public}d", type, errno);
+        return errno;
+    }
+    return 0;
 }
 } // namespace FileManagement
 } // namespace OHOS
