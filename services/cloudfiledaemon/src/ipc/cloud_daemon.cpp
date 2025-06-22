@@ -22,6 +22,7 @@
 #include <sys/utsname.h>
 #include <thread>
 
+#include "appstate_observer.h"
 #include "cloud_file_fault_event.h"
 #include "concurrent_queue.h"
 #include "dfs_error.h"
@@ -118,6 +119,12 @@ void CloudDaemon::OnStart()
     /* load cloud file ext plugin */
     CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
     ConcurrentQueue::GetInstance().Init(ffrt_qos_user_initiated, MAX_CONCURRENT_THREADS);
+    
+    std::thread listenThread([&] {
+        vector<string> bundleNameList = {};
+        CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
+    });
+    listenThread.detach();
     LOGI("Start service successfully");
 }
 
@@ -164,6 +171,7 @@ void CloudDaemon::OnStop()
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
     ConcurrentQueue::GetInstance().Deinit();
+    CloudDisk::AppStateObserverManager::GetInstance().UnSubscribeAppState();
     LOGI("Stop finished successfully");
 }
 

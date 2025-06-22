@@ -178,6 +178,8 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status_listener.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/appstate_observer.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/io_message_listener.cpp",
   ]
 
   sources += cloud_disk
@@ -230,6 +232,7 @@ ohos_unittest("cloud_daemon_test") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "ability_runtime:app_manager",
   ]
 
   defines = [
