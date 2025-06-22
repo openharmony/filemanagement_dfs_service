@@ -37,6 +37,7 @@ public:
     static napi_value ClearFileConflict(napi_env env, napi_callback_info info);
 
 protected:
+    static inline std::mutex mtx_;
     static inline std::string className_ = "FileVersion";
 };
 

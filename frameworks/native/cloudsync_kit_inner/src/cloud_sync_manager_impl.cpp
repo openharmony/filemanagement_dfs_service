@@ -553,6 +553,7 @@ int32_t CloudSyncManagerImpl::DownloadHistoryVersion(const std::string &uri, int
         sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
     if (dlCallback == nullptr) {
         LOGE("DownloadHistoryVersion register download callback failed");
+        return E_SERVICE_INNER_ERROR;
     }
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
@@ -577,7 +578,6 @@ int32_t CloudSyncManagerImpl::ReplaceFileWithHistoryVersion(const std::string &u
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->ReplaceFileWithHistoryVersion(uri, versionUri);
-    LOGI("ReplaceFileWithHistoryVersion ret %{public}d", ret);
     return ret;
 }
 
@@ -613,7 +613,6 @@ int32_t CloudSyncManagerImpl::ClearFileConflict(const std::string &uri)
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->ClearFileConflict(uri);
-    LOGI("ClearFileConflict ret %{public}d", ret);
     return ret;
 }
 

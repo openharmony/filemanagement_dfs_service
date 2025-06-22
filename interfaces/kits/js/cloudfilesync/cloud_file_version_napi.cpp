@@ -28,6 +28,7 @@ using namespace FileManagement::LibN;
 using namespace std;
 
 static const int64_t PERCENT = 100;
+static const int32_t TOP_NUM = 10000;
 const int32_t ARGS_ONE = 1;
 
 struct VersionParams {
@@ -97,7 +98,7 @@ static tuple<bool, string, int32_t> GetHistoryVersionListParam(const napi_env &e
         return {false, "", 0};
     }
 
-    return make_tuple(true, move(uri), numLimit);
+    return make_tuple(true, move(uri), numLimit >= TOP_NUM ? TOP_NUM : numLimit);
 }
 
 napi_value FileVersionNapi::GetHistoryVersionList(napi_env env, napi_callback_info info)
@@ -153,6 +154,11 @@ static tuple<bool, string, string, NVal> GetDownloadVersionParam(const napi_env 
         LOGE("unavailable version id.");
         return {false, "", "", res};
     }
+    bool isDigit = std::all_of(versionId.begin(), versionId.end(), ::isdigit);
+    if (!isDigit) {
+        LOGE("unavailable version id.");
+        return {false, "", "", res};
+    }
 
     NVal callbackVal(env, funcArg[NARG_POS::THIRD]);
     if (!callbackVal.TypeIs(napi_function)) {
@@ -183,8 +189,11 @@ napi_value FileVersionNapi::DownloadHistoryVersion(napi_env env, napi_callback_i
         NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
         return nullptr;
     }
-    if (fileVersionEntity->callbackImpl == nullptr) {
-        fileVersionEntity->callbackImpl = make_shared<VersionDownloadCallbackImpl>(env, callbackRef.val_);
+    {
+        lock_guard<mutex> lock(mtx_);
+        if (fileVersionEntity->callbackImpl == nullptr) {
+            fileVersionEntity->callbackImpl = make_shared<VersionDownloadCallbackImpl>(env, callbackRef.val_);
+        }
     }
     auto param = make_shared<VersionParams>();
     auto cbExec = [uri{uriNVal}, id{stoull(idNVal)}, callback{fileVersionEntity->callbackImpl}, param]() -> NError {
