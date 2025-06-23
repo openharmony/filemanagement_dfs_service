@@ -25,7 +25,7 @@
 #include "application_state_observer_stub.h"
 #include "dfs_error.h"
 #include "io_message_listener.h"
-#include "singleton.h"
+#include "singleton_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
