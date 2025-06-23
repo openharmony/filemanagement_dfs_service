@@ -33,13 +33,13 @@ enum ControlCmdType {
     CMD_UNKNOWN = 0,
     CMD_CHECK_ALLOW_CONNECT = 1,
     CMD_MSG_RESPONSE = 2,
-    CMD_ADD_NOTIFICATION = 3,
-    CMD_REMOVE_NOTIFICATION = 4,
+    CMD_PUBLISH_NOTIFICATION = 3,
+    CMD_CANCEL_NOTIFICATION = 4,
     CMD_ACTIVE_DISCONNECT = 5,
 };
 
 struct ControlCmd {
-    static std::atomic<int32_t> nextMsgId; // 声明静态成员
+    static std::atomic<int32_t> nextMsgId;
 
     uint16_t version = 0;
     int32_t msgId = 0;
@@ -57,17 +57,17 @@ public:
     static bool ParseFromJson(const std::string &jsonStr, ControlCmd &outCmd);
     static bool SerializeToJson(const ControlCmd &cmd, std::string &outJsonStr);
 
-    static bool HandleRequest(ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool HandleRequest(const ControlCmd &inCmd, ControlCmd &outCmd);
 
-    static bool CheckAllowConnect(ControlCmd &inCmd, ControlCmd &outCmd);
-    static bool PublishNotification(ControlCmd &inCmd, ControlCmd &outCmd);
-    static bool CancelNotification(ControlCmd &inCmd, ControlCmd &outCmd);
-    static bool DisconnectByRemote(ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool PublishNotification(const ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool CancelNotification(const ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool DisconnectByRemote(const ControlCmd &inCmd, ControlCmd &outCmd);
 
-    static void RegisterDisconnectCallback(std::function<void(std::string &)> cb);
+    static void RegisterDisconnectCallback(std::function<void(std::string)> cb);
 
 private:
-    static std::function<void(std::string &)> callback_;
+    static std::function<void(std::string)> disconnectCallback_;
 };
 
 } // namespace DistributedFile
