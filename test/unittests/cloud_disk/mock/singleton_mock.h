@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CLOUD_DISK_SINGLETON_TEST_H
-#define CLOUD_DISK_SINGLETON_TEST_H
+#ifndef CLOUD_DISK_SINGLETON_MOCK_TEST_H
+#define CLOUD_DISK_SINGLETON_MOCK_TEST_H
 
 #include <memory>
 
@@ -33,4 +33,4 @@ public:
 };
 } // namespace OHOS
 
-#endif // CLOUD_DISK_SINGLETON_TEST_H
+#endif // CLOUD_DISK_SINGLETON_MOCK_TEST_H
