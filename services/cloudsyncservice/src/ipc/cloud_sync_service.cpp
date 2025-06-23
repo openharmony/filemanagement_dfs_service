@@ -82,6 +82,7 @@ void CloudSyncService::PreInit()
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
     packageStatusListener_ = make_shared<PackageStatusListener>(dataSyncManager_);
+    LOGI("PreInit finished successfully");
 }
 
 void CloudSyncService::Init()
@@ -176,6 +177,7 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
+    LOGI("CloudSync_SA OnStart begin");
     PreInit();
     try {
         PublishSA();
