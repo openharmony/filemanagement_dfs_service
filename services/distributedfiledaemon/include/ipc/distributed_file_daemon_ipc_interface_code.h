@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,9 @@ namespace DistributedFile {
         DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK,
         DISTRIBUTED_FILE_PUSH_ASSET,
         GET_DFS_URI_IS_DIR_FROM_LOCAL,
+        DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS,
+        DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS,
+        DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST
     };
 } // namespace DistributedFile
 } // namespace Storage

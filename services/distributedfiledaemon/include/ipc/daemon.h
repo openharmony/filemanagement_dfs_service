@@ -96,6 +96,9 @@ public:
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,
                         const std::string &sessionName);
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
 
 private:
     Daemon();

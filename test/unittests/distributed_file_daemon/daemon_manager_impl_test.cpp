@@ -27,12 +27,18 @@
 #include "i_daemon_mock.h"
 #include "file_dfs_listener_mock.h"
 #include "utils_log.h"
-
+namespace {
+    bool g_isNullptr = false;
+}
 namespace OHOS::Storage::DistributedFile {
 sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 {
-    daemonProxy_ = iface_cast<IDaemon>(sptr(new DaemonServiceMock()));
-    return daemonProxy_;
+    if (!g_isNullptr) {
+        daemonProxy_ = iface_cast<IDaemon>(sptr(new DaemonServiceMock()));
+        return daemonProxy_;
+    } else {
+        return nullptr;
+    }
 }
 namespace Test {
 using namespace OHOS::FileManagement;
@@ -61,6 +67,7 @@ public:
 void DistributedDaemonManagerImplTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    g_isNullptr = false;
 }
 
 void DistributedDaemonManagerImplTest::TearDownTestCase(void)
@@ -455,6 +462,88 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetSizeTest, TestSize.Level0)
         GTEST_LOG_(INFO) << "GetSizeTest ERROR";
     }
     GTEST_LOG_(INFO) << "GetSizeTest End";
+}
+
+/**
+ * @tc.name: GetDfsSwitchStatusTest
+ * @tc.desc: Verify the GetDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, GetDfsSwitchStatusTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDfsSwitchStatusTest Start";
+    try {
+        g_isNullptr = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        int32_t switchStatus = 0;
+        std::string networkId = "test";
+        auto res = distributedDaemonManagerImpl_->GetDfsSwitchStatus(networkId, switchStatus);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->GetDfsSwitchStatus(networkId, switchStatus);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDfsSwitchStatusTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDfsSwitchStatusTest End";
+}
+
+/**
+ * @tc.name: UpdateDfsSwitchStatusTest
+ * @tc.desc: Verify the UpdateDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, UpdateDfsSwitchStatusTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateDfsSwitchStatusTest Start";
+    try {
+        g_isNullptr = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        int32_t switchStatus = 0;
+        auto res = distributedDaemonManagerImpl_->UpdateDfsSwitchStatus(switchStatus);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->UpdateDfsSwitchStatus(switchStatus);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateDfsSwitchStatusTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateDfsSwitchStatusTest End";
+}
+
+/**
+ * @tc.name: GetConnectedDeviceListTest
+ * @tc.desc: Verify the GetConnectedDeviceList function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, GetConnectedDeviceListTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConnectedDeviceListTest Start";
+    try {
+        g_isNullptr = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        std::vector<DfsDeviceInfo> deviceList;
+        auto res = distributedDaemonManagerImpl_->GetConnectedDeviceList(deviceList);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->GetConnectedDeviceList(deviceList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConnectedDeviceListTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConnectedDeviceListTest End";
 }
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

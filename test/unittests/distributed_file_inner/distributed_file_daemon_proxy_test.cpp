@@ -855,4 +855,178 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFrom
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsUrisDirFromLocal_0100 End";
 }
+
+/**
+ * @tc.name: DistributedFileDaemon_GetDfsSwitchStatus
+ * @tc.desc: Verify GetDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsSwitchStatus, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsSwitchStatus Start";
+    int32_t switchStatus = 0;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    auto tmpProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = tmpProxy->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_INVAL_ARG), Return(true)));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(Return(false));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+    ret = proxy_->GetDfsSwitchStatus("networkId", switchStatus);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(switchStatus, 1);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsSwitchStatus End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_UpdateDfsSwitchStatus
+ * @tc.desc: Verify UpdateDfsSwitchStatus function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UpdateDfsSwitchStatus, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UpdateDfsSwitchStatus Start";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = proxy_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    auto tmpProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = tmpProxy->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    ret = proxy_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UpdateDfsSwitchStatus End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_GetConnectedDeviceList
+ * @tc.desc: Verify GetConnectedDeviceList function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetConnectedDeviceList, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList Start";
+    std::vector<DfsDeviceInfo> deviceList;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_INVAL_ARG), Return(true)));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(Return(false));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList End";
+}
 }
