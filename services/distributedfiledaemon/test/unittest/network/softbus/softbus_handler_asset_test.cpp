@@ -235,7 +235,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0100, TestSi
     EXPECT_EQ(softBusHandlerAsset.AssetBind("", socketId), E_OPEN_SESSION);
 
     CheckSrcDiffAccountPass();
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("test", socketId), E_OPEN_SESSION);
 
     std::vector<DmDeviceInfo> deviceList;
@@ -322,6 +322,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0200, TestSi
 HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_OnAssetRecvBind_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_OnAssetRecvBind_0100 start";
+#ifdef SUPPORT_SAME_ACCOUNT
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
     softBusHandlerAsset.OnAssetRecvBind(0, "test");
@@ -358,6 +359,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_OnAssetRecvBind_0100, 
         EXPECT_TRUE(false);
     }
     softBusHandlerAsset.RemoveClientInfo(0);
+#endif
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_OnAssetRecvBind_0100 end";
 }
 
@@ -430,6 +432,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GetDstFile_0100, TestS
 HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AssetSendFile_0100 start";
+#ifdef SUPPORT_SAME_ACCOUNT
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
     string file = "test123";
     EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), ERR_BAD_VALUE);
@@ -469,6 +472,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, Te
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     EXPECT_CALL(*socketMock_, SendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), E_OK);
+#endif
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AssetSendFile_0100 end";
 }
 

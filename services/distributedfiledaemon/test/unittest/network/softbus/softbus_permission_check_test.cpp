@@ -32,8 +32,10 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+#ifdef SUPPORT_SAME_ACCOUNT
 const std::string NETWORKID_ONE = "testNetWork1";
 const std::string NETWORKID_TWO = "testNetWork2";
+#endif
 
 class SoftbusPermissionCheckTest : public testing::Test {
 public:

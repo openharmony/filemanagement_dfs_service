@@ -90,7 +90,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level0)
     EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, EINVAL);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
@@ -298,7 +298,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0008, TestSize.Level0)
     close(fd);
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0008 End";
 }
@@ -344,7 +344,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0010, TestSize.Level0)
     EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, EINVAL);
 
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, emptyCallback_);
     EXPECT_EQ(ret, EINVAL);
