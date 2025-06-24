@@ -785,13 +785,13 @@ int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bun
     return 0;
 }
 
-int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,
-    const std::string &parentCloudId, int64_t rowId)
+int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
+    const struct RestoreInfo &restoreInfo)
 {
-    MetaBase metaBase(name);
-    auto srcMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
+    MetaBase metaBase(restoreInfo.oldName);
+    auto srcMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, restoreInfo.parentCloudId);
     auto dstMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
-    std::string uniqueName = name + "_" + std::to_string(rowId);
+    std::string uniqueName = restoreInfo.newName + "_" + std::to_string(restoreInfo.rowId);
     int32_t ret = srcMetaFile->DoLookup(metaBase);
     if (ret != E_OK) {
         LOGE("lookup src metafile failed, ret = %{public}d", ret);
@@ -800,10 +800,10 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
     metaBase.name = uniqueName;
     ret = dstMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
-        LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
+        LOGE("DoCreate dst metafile failed, ret = %{public}d", ret);
         return ret;
     }
-    metaBase.name = name;
+    metaBase.name = restoreInfo.oldName;
     ret = srcMetaFile->DoLookupAndRemove(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
@@ -829,7 +829,7 @@ int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::str
     metaBase.name = restoreInfo.newName;
     ret = dstMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
-        LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
+        LOGE("DoCreate dst metafile failed, ret = %{public}d", ret);
         return ret;
     }
     metaBase.name = uniqueName;

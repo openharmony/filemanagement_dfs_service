@@ -1066,7 +1066,8 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
         LOGE("set xAttr location fail, ret %{public}d", ret);
         return E_RDB;
     }
-    ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, name, parentCloudId, rowId);
+    struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
+    ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, restoreInfo);
     if (ret != E_OK) {
         LOGE("recycle set dentryfile failed, ret = %{public}d", ret);
         return ret;
