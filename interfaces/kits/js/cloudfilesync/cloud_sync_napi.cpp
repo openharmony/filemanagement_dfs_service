@@ -31,6 +31,7 @@ using namespace FileManagement::LibN;
 using namespace std;
 const int32_t PARAM0 = 0;
 static const unsigned int READ_SIZE = 1024;
+static const unsigned int MAX_CHANGE_DATA_SIZE = 200 * 1024;
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
@@ -1029,35 +1030,33 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
 
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
 {
+    if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE ||
+        listener.changeInfo.uris_.empty() || listener.changeInfo.size_ > MAX_CHANGE_DATA_SIZE) {
+        LOGD("notify data is invalid: %{public}d %{public}zu %{public}d",
+             static_cast<int>(listener.changeInfo.changeType_), listener.changeInfo.uris_.size(),
+             listener.changeInfo.size_);
+        return;
+    }
+
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbRef, listener.changeInfo, listener.strUri);
     if (msg == nullptr) {
         LOGE("Failed to create uv message object");
         return;
     }
-
-    if (!listener.changeInfo.uris_.empty()) {
-        if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
-            LOGE("changeInfo.changeType_ is other");
-            delete msg;
-            return;
-        }
-        if (msg->changeInfo_.size_ > 0) {
-            msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
-            if (msg->data_ == nullptr) {
-                LOGE("new msg->data failed");
-                delete msg;
-                return;
-            }
-            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_,
-                msg->changeInfo_.data_, msg->changeInfo_.size_);
-            if (copyRet != 0) {
-                LOGE("Parcel data copy failed, err = %{public}d", copyRet);
-                free(msg->data_);
-                delete msg;
-                return;
-            }
-        }
+    msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
+    if (msg->data_ == nullptr) {
+        LOGE("new msg->data failed");
+        delete msg;
+        return;
     }
+    int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+        free(msg->data_);
+        delete msg;
+        return;
+    }
+
     auto ret = SendEvent(msg);
     if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
@@ -1181,30 +1180,36 @@ napi_value ChangeListenerNapi::SolveOnChange(napi_env env, UvChangeMsg *msg)
     }
     napi_create_object(env, &result);
     SetValueArray(env, "uris", msg->changeInfo_.uris_, result);
-    if (msg->data_ != nullptr && msg->changeInfo_.size_ > 0) {
-        uint8_t *parcelData = (uint8_t *)malloc(msg->changeInfo_.size_);
-        if (parcelData == nullptr) {
-            LOGE("new parcelData failed");
-            return nullptr;
-        }
-        int copyRet = memcpy_s(parcelData, msg->changeInfo_.size_, msg->data_, msg->changeInfo_.size_);
-        if (copyRet != 0) {
-            LOGE("Parcel data copy failed, err = %{public}d", copyRet);
-            free(parcelData);
-            return nullptr;
-        }
-        shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
-        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), msg->changeInfo_.size_)) {
-            napi_status status = SetIsDir(env, parcel, result);
-            if (status != napi_ok) {
-                LOGE("Set subArray named property error! field: subUris");
-                return nullptr;
-            }
-        } else {
-            free(parcelData);
-        }
-    }
     SetValueInt32(env, "type", (int)msg->changeInfo_.changeType_, result);
+
+    if (msg->changeInfo_.size_ > MAX_CHANGE_DATA_SIZE || msg->data_ == nullptr) {
+        LOGE("change info is invalid");
+        return nullptr;
+    }
+    uint8_t *parcelData = (uint8_t *)malloc(msg->changeInfo_.size_);
+    if (parcelData == nullptr) {
+        LOGE("new parcelData failed");
+        return nullptr;
+    }
+    int copyRet = memcpy_s(parcelData, msg->changeInfo_.size_, msg->data_, msg->changeInfo_.size_);
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+        free(parcelData);
+        return nullptr;
+    }
+
+    shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
+    if (!parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), msg->changeInfo_.size_)) {
+        LOGE("parcel parse failed");
+        free(parcelData);
+        return nullptr;
+    }
+    napi_status status = SetIsDir(env, parcel, result);
+    if (status != napi_ok) {
+        LOGE("Set subArray named property error! field: subUris");
+        return nullptr;
+    }
+
     return result;
 }
 
