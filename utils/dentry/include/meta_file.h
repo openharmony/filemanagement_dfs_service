@@ -145,7 +145,7 @@ public:
     void Clear(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
     int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
-        const std::string &name, const std::string &parentCloudId, int64_t rowId);
+        const struct RestoreInfo &restoreInfo);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const struct RestoreInfo &restoreinfo);
     int32_t GetNewName(std::shared_ptr<CloudDiskMetaFile> metaFile,
