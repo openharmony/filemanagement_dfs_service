@@ -242,7 +242,6 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
 
     LOGI("start to bind socket, id:%{public}d", socketId);
     int32_t ret = Bind(socketId, g_low_qosInfo, g_lowQosTvParamIndex, &channelManagerListener);
-
     if (ret != ERR_OK) {
         LOGE("client bind failed, ret: %{public}d", ret);
         return ERR_BIND_SOCKET_FAILED;
