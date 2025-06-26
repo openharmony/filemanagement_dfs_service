@@ -31,6 +31,7 @@ using namespace FileManagement::LibN;
 using namespace std;
 const int32_t PARAM0 = 0;
 static const unsigned int READ_SIZE = 1024;
+// same as ipc
 static const unsigned int MAX_CHANGE_DATA_SIZE = 200 * 1024;
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
