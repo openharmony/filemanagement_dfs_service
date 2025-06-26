@@ -52,3 +52,8 @@ int32_t SetAccessInfo(int32_t socket, SocketAccessInfo accessInfo)
 {
     return DfsSocket::dfsSocket->SetAccessInfo(socket, accessInfo);
 }
+
+int32_t SendBytes(int32_t socket, const void *data, uint32_t len)
+{
+    return DfsSocket::dfsSocket->SendBytes(socket, data, len);
+}

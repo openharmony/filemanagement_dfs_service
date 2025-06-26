@@ -17,6 +17,7 @@
 #define FILEMANAGEMENT_DFS_SERVICE_CHANNEL_MANAGER_H
 
 #include "control_cmd_parser.h"
+#include "dfs_error.h"
 #include "event_handler.h"
 #include "single_instance.h"
 #include "socket.h"
@@ -48,14 +49,15 @@ public:
     int32_t DestroyClientChannel(const std::string &networkId);
     bool HasExistChannel(const std::string &networkId);
 
-    int32_t
-        SendRequest(const std::string &networkId, ControlCmd &request, ControlCmd &response, bool needResponse = false);
+    int32_t SendRequest(
+        const std::string &networkId, ControlCmd &request, ControlCmd &response, bool needResponse = false);
     int32_t SendBytes(const std::string &networkId, const std::string &data);
 
     void OnSocketError(int32_t socketId, const int32_t errorCode);
     void OnSocketConnected(int32_t socketId, const PeerSocketInfo &info);
     void OnSocketClosed(int32_t socketId, const ShutdownReason &reason);
     void OnBytesReceived(int32_t socketId, const void *data, const uint32_t dataLen);
+    bool OnNegotiate2(int32_t socket, PeerSocketInfo info, SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo);
 
 private:
     explicit ChannelManager() = default;
@@ -74,6 +76,7 @@ private:
 
 private:
     int32_t version_ = 60;
+    std::mutex initMutex_;
     int32_t serverSocketId_ = -1;
     std::string ownerName_ = "dfs_channel_manager";
 
@@ -104,7 +107,7 @@ private:
         bool received = false;
     };
 
-    // for control cmd
+    // for control cmd, msgId -> ResponseWaiter
     std::mutex mtx_;
     std::condition_variable cmdEventCon_;
     std::unordered_map<int32_t, std::shared_ptr<ResponseWaiter>> pendingResponses_;
