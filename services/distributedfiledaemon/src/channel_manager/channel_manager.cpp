@@ -38,6 +38,9 @@ namespace {
 static inline const std::string SERVICE_NAME = "ohos.storage.distributedfile.daemon";
 static inline const std::string SESSION_NAME = "DistributedFileService_ChannelManager";
 
+static const uint32_t DSCHED_MAX_BUFFER_SIZE = 4 * 1024 * 1024;
+static const int32_t MAX_WAIT_TIME_MS = 2000;
+
 static constexpr int32_t DFS_LOW_QOS_TYPE_MIN_BW = 4 * 1024 * 1024;
 static constexpr int32_t DFS_LOW_QOS_TYPE_MAX_LATENCY = 10000;
 static constexpr int32_t DFS_LOW_QOS_TYPE_MIN_LATENCY = 2000;
@@ -136,7 +139,7 @@ int32_t ChannelManager::Init()
 
 void ChannelManager::DeInit()
 {
-    LOGI("start deinit channel manager");
+    LOGI("start deInit channel manager");
     // stop send task
     if (eventHandler_ != nullptr) {
         eventHandler_->GetEventRunner()->Stop();
@@ -176,7 +179,7 @@ void ChannelManager::DeInit()
 
     Shutdown(serverSocketId_);
     serverSocketId_ = -1;
-    LOGI("end deinit");
+    LOGI("end deInit");
 }
 
 void ChannelManager::StartEvent()
@@ -195,7 +198,7 @@ void ChannelManager::StartEvent()
 
 void ChannelManager::StartCallbackEvent()
 {
-    LOGI("Start callback event start");
+    LOGI("StartCallbackEvent start");
     std::string callbackName = ownerName_ + "callback";
     prctl(PR_SET_NAME, callbackName.c_str());
     auto runner = AppExecFwk::EventRunner::Create(false);
@@ -205,7 +208,35 @@ void ChannelManager::StartCallbackEvent()
     }
     callbackEventCon_.notify_one();
     runner->Run();
-    LOGI("callback event end");
+    LOGI("StartCallbackEvent end");
+}
+
+int32_t ChannelManager::PostTask(const AppExecFwk::InnerEvent::Callback &callback,
+                                 const AppExecFwk::EventQueue::Priority priority)
+{
+    if (eventHandler_ == nullptr) {
+        LOGE("event handler empty");
+        return ERR_NULL_EVENT_HANDLER;
+    }
+    if (eventHandler_->PostTask(callback, priority)) {
+        return ERR_OK;
+    }
+    LOGE("add task failed");
+    return ERR_POST_TASK_FAILED;
+}
+
+int32_t ChannelManager::PostCallbackTask(const AppExecFwk::InnerEvent::Callback &callback,
+                                         const AppExecFwk::EventQueue::Priority priority)
+{
+    if (callbackEventHandler_ == nullptr) {
+        LOGE("callback event handler empty");
+        return ERR_NULL_EVENT_HANDLER;
+    }
+    if (callbackEventHandler_->PostTask(callback, priority)) {
+        return ERR_OK;
+    }
+    LOGE("add callback task failed");
+    return ERR_POST_TASK_FAILED;
 }
 
 int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
@@ -242,6 +273,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
 
     LOGI("start to bind socket, id:%{public}d", socketId);
     int32_t ret = Bind(socketId, g_low_qosInfo, g_lowQosTvParamIndex, &channelManagerListener);
+
     if (ret != ERR_OK) {
         LOGE("client bind failed, ret: %{public}d", ret);
         return ERR_BIND_SOCKET_FAILED;
@@ -312,14 +344,46 @@ int32_t ChannelManager::CreateClientSocket(const std::string &peerNetworkId)
     return socketId;
 }
 
+int32_t ChannelManager::SendBytes(const std::string &networkId, const std::string &data)
+{
+    LOGI("start send bytes. networkId: %{public}.6s, data size: %{public}zu", networkId.c_str(), data.length());
+    int32_t targetSocketId = -1;
+    {
+        std::shared_lock<std::shared_mutex> readLock(clientMutex_);
+        auto channelIt = clientNetworkSocketMap_.find(networkId);
+        if (channelIt == clientNetworkSocketMap_.end()) {
+            LOGE("has not connect to this network");
+            return ERR_BAD_VALUE;
+        } else {
+            targetSocketId = channelIt->second;
+        }
+    }
+
+    int32_t ret = DoSendBytes(targetSocketId, data);
+    LOGI("finish, send bytes ret: %{public}d", ret);
+    return ret;
+}
+
+int32_t ChannelManager::DoSendBytes(const std::int32_t socketId, const std::string &data)
+{
+    LOGI("DoSendBytes start, dataLen: %{public}zu", data.length());
+    int32_t ret = ::SendBytes(socketId, data.c_str(), data.length());
+    if (ret != SOFTBUS_OK) {
+        LOGE("Send data buffer failed. ret: %{public}d", ret);
+        return ERR_SEND_DATA_BY_SOFTBUS_FAILED;
+    }
+    LOGI("DoSendBytes end");
+    return ERR_OK;
+}
+
 void ChannelManager::OnSocketConnected(int32_t socketId, const PeerSocketInfo &info)
 {
-    LOGI("socket %{public}d binded", socketId);
+    LOGI("socket %{public}d bind now", socketId);
     if (socketId <= 0) {
         LOGE("invalid socket id, %{public}d", socketId);
         return;
     }
-    string clientNetworkId = info.networkId;
+    std::string clientNetworkId = info.networkId;
 
     std::lock_guard<std::shared_mutex> writeLock(serverMutex_);
     serverNetworkSocketMap_[clientNetworkId] = socketId;
@@ -339,12 +403,13 @@ void ChannelManager::OnSocketClosed(int32_t socketId, const ShutdownReason &reas
         LOGE("invalid socket id, %{public}d", socketId);
         return;
     }
+
     {
         std::unique_lock<std::shared_mutex> writeLock(clientMutex_);
         for (auto it = clientNetworkSocketMap_.begin(); it != clientNetworkSocketMap_.end();) {
             if (it->second == socketId) {
-                it = clientNetworkSocketMap_.erase(it);
                 LOGI("Removed socketId %{public}d from clientNetworkSocketMap_", socketId);
+                it = clientNetworkSocketMap_.erase(it);
             } else {
                 ++it;
             }
@@ -355,8 +420,8 @@ void ChannelManager::OnSocketClosed(int32_t socketId, const ShutdownReason &reas
         std::unique_lock<std::shared_mutex> writeLock(serverMutex_);
         for (auto it = serverNetworkSocketMap_.begin(); it != serverNetworkSocketMap_.end();) {
             if (it->second == socketId) {
-                it = serverNetworkSocketMap_.erase(it);
                 LOGI("Removed socketId %{public}d from serverNetworkSocketMap_", socketId);
+                it = serverNetworkSocketMap_.erase(it);
             } else {
                 ++it;
             }
@@ -386,8 +451,75 @@ bool ChannelManager::OnNegotiate2(int32_t socket,
     return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
 
+void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socketId)
+{
+    ControlCmd inCmd;
+    if (!ControlCmdParser::ParseFromJson(jsonStr, inCmd)) {
+        LOGE("Invalid json format");
+        return;
+    }
+
+    if (inCmd.msgType == ControlCmdType::CMD_MSG_RESPONSE) {
+        LOGI("remote bytes type is response.");
+        std::unique_lock<std::mutex> lock(mtx_);
+        int32_t msgId = inCmd.msgId;
+
+        auto it = pendingResponses_.find(msgId);
+        if (it != pendingResponses_.end()) {
+            std::unique_lock<std::mutex> waiterLock(it->second->mutex);
+            it->second->response = inCmd;
+            it->second->received = true;
+            it->second->cv.notify_one();
+        }
+        return;
+    }
+
+    ControlCmd outCmd;
+    if (!ControlCmdParser::HandleRequest(inCmd, outCmd)) {
+        LOGE("HandleRequest failed, msgType: %{public}d", inCmd.msgType);
+        return;
+    }
+
+    std::string outJsonStr;
+    if (outCmd.msgType != ControlCmdType::CMD_UNKNOWN && ControlCmdParser::SerializeToJson(outCmd, outJsonStr)) {
+        LOGI("Send response: %{public}s", outJsonStr.c_str());
+        DoSendBytes(socketId, outJsonStr);
+        return;
+    }
+}
+
+void ChannelManager::DoSendBytesAsync(const ControlCmd &request, const std::string &networkId)
+{
+    std::string data;
+    if (!ControlCmdParser::SerializeToJson(request, data)) {
+        LOGE("SerializeToJson failed, requestId is %{public}d", request.msgId);
+        return;
+    }
+    SendBytes(networkId, data);
+    return;
+}
+
 void ChannelManager::OnBytesReceived(int32_t socketId, const void *data, const uint32_t dataLen)
-{}
+{
+    LOGI("socket %{public}d receive data, len=%{public}d", socketId, dataLen);
+    if (socketId <= 0) {
+        LOGE("invalid socket id, %{public}d", socketId);
+        return;
+    }
+
+    if (data == nullptr || dataLen == 0 || dataLen > DSCHED_MAX_BUFFER_SIZE) {
+        LOGE("Invalid data: null/empty/too long");
+        return;
+    }
+
+    const char *charData = static_cast<const char *>(data);
+    std::string jsonStr(charData, dataLen);
+
+    auto func = [this, jsonStr, socketId]() {
+        HandleRemoteBytes(jsonStr, socketId);
+    };
+    PostCallbackTask(func, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+}
 
 int32_t ChannelManager::SendRequest(const std::string &networkId,
                                     ControlCmd &request,
@@ -395,9 +527,52 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
                                     bool needResponse)
 {
     LOGI("start sendRequest, networkId: %{public}.6s", networkId.c_str());
+    {
+        std::shared_lock<std::shared_mutex> readLock(clientMutex_);
+        if (clientNetworkSocketMap_.count(networkId) == 0) {
+            LOGE("networkId not found");
+            return ERR_NO_EXIST_CHANNEL;
+        }
+    }
+    int32_t msgId = request.msgId;
+    std::shared_ptr<ResponseWaiter> waiter;
+    if (needResponse) {
+        waiter = std::make_shared<ResponseWaiter>();
+        std::unique_lock<std::mutex> lock(mtx_);
+        pendingResponses_.emplace(msgId, waiter);
+    }
 
-    // implement later, now for temp ut test
-    return ERR_OK;
+    // Serialize and send the request (async operation)
+    auto sendFunc = [this, request, networkId]() {
+        DoSendBytesAsync(request, networkId);
+    };
+
+    auto ret = PostTask(sendFunc, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    if (ret != E_OK) {
+        LOGE("failed to add send bytes task, ret=%{public}d", ret);
+        if (waiter) {
+            std::unique_lock<std::mutex> lock(mtx_);
+            pendingResponses_.erase(msgId);
+        }
+        return ret;
+    }
+    if (needResponse && waiter) {
+        std::unique_lock<std::mutex> waiterLock(waiter->mutex);
+        bool received = waiter->cv.wait_for(waiterLock, std::chrono::milliseconds(MAX_WAIT_TIME_MS),
+                                            [waiter] { return waiter->received; });
+        if (received) {
+            response = waiter->response;
+            std::string responseStr;
+            ControlCmdParser::SerializeToJson(response, responseStr);
+            LOGI("response is %{public}s", responseStr.c_str());
+        } else {
+            LOGE("Timeout waiting for response");
+            ret = E_TIMEOUT;
+        }
+        std::lock_guard<std::mutex> lock(mtx_);
+        pendingResponses_.erase(msgId);
+    }
+    return ret;
 }
 
 } // namespace DistributedFile

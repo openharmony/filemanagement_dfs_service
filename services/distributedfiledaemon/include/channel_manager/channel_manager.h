@@ -74,6 +74,9 @@ private:
 
     int32_t DoSendBytes(const std::int32_t socketId, const std::string &data);
 
+    void HandleRemoteBytes(const std::string &jsonStr, int32_t socketId);
+    void DoSendBytesAsync(const ControlCmd &request, const std::string &networkId);
+
 private:
     int32_t version_ = 60;
     std::mutex initMutex_;
