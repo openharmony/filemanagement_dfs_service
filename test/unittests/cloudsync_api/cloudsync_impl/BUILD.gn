@@ -94,9 +94,13 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/system/include",
     "${services_path}/cloudsyncservice/include/ipc",
+    "${utils_path}/dentry/include/",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ 
+  "${utils_path}:libdistributedfileutils",
+  "${utils_path}:libdistributedfiledentry",
+  ]
 
   external_deps = [
     "c_utils:utils",

@@ -14,6 +14,7 @@
  */
 
 #include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <memory>
 #include <sys/stat.h>
@@ -23,6 +24,7 @@
 #include "dfs_error.h"
 #include "icloud_sync_service.h"
 #include "iservice_registry.h"
+#include "meta_file.h"
 #include "service_callback_mock.h"
 #include "service_proxy.h"
 #include "system_ability_manager_client_mock.h"
@@ -903,6 +905,64 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest002, TestSize.Level
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest002 FAILED";
     }
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest002 End";
+}
+
+/*
+ * @tc.name: CleanGalleryDentryFile
+ * @tc.desc: Verify the CleanGalleryDentryFile function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest003 Start";
+    try {
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
+        MetaBase mBase("666666.jpg", "666666");
+        mBase.size = 1;
+        mBase.mtime = 0;
+        mBase.fileType = 1;
+        mFile->DoCreate(mBase);
+        std::string testDir = "/storage/cloud/files/Photo/1/666666.jpg";
+        CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
+        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        EXPECT_TRUE(isExists);
+    } catch (...) {
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest003 End";
+}
+
+/*
+ * @tc.name: CleanGalleryDentryFile
+ * @tc.desc: Verify the CleanGalleryDentryFile function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest004 Start";
+    try {
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
+        MetaBase mBase("666666.jpg", "666666");
+        mBase.size = 1;
+        mBase.mtime = 0;
+        mBase.fileType = 1;
+        mFile->DoCreate(mBase);
+        std::string testDir = "/storage/6666666.jpg";
+        CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
+        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        EXPECT_FALSE(isExists);
+    } catch (...) {
+        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest004 End";
 }
 
 /*
