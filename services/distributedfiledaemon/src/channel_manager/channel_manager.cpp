@@ -225,7 +225,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
         std::shared_lock<std::shared_mutex> readLock(clientMutex_);
         auto channelIt = clientNetworkSocketMap_.find(networkId);
         if (channelIt != clientNetworkSocketMap_.end()) {
-            LOGW("has connnect to this network");
+            LOGW("has connect to this network");
             return ERR_OK;
         }
     }
@@ -263,7 +263,7 @@ int32_t ChannelManager::DestroyClientChannel(const std::string &networkId)
         std::unique_lock<std::shared_mutex> writeLock(clientMutex_);
         auto channelIt = clientNetworkSocketMap_.find(networkId);
         if (channelIt == clientNetworkSocketMap_.end()) {
-            LOGE("has not connnect to this network");
+            LOGE("has not connect to this network");
             return ERR_BAD_VALUE;
         } else {
             socketId = channelIt->second;
