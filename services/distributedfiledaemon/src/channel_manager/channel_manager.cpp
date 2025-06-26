@@ -382,7 +382,7 @@ bool ChannelManager::OnNegotiate2(int32_t socket,
     }
     if (!SoftBusPermissionCheck::IsSameAccount(networkId)) {
         LOGE("The calling device is not trusted");
-        return ERR_CHECK_PERMISSION_FAILED;
+        return false;
     }
     return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
