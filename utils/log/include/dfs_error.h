@@ -160,6 +160,9 @@ enum DFSErrCode {
     ERR_SEND_DATA_BY_SOFTBUS_FAILED,
     ERR_TIMEOUT,
     ERR_CHECK_PERMISSION_FAILED,
+    ERR_NULL_EVENT_HANDLER,
+    ERR_POST_TASK_FAILED,
+    ERR_NO_EXIST_CHANNEL,
 };
 
 static inline std::unordered_map<int, int> softbusErr2ErrCodeTable {

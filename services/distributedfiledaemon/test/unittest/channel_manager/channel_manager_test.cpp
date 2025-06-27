@@ -423,6 +423,337 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnSocketClosed_001, TestSize.Lev
     GTEST_LOG_(INFO) << "ChannelManagerTest_OnSocketClosed_001 end";
 }
 
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_001
+ * @tc.desc: Verify rejection of null/empty/oversized data
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_001 start";
+
+    // Test invalid socket ID (<= 0)
+    const char *testData = "dummy";
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(-1, testData, strlen(testData)));
+
+    // Test null data
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(1, nullptr, 10));
+
+    // Test zero length
+    const char *emptyData = "";
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(1, emptyData, 0));
+
+    // Test oversized data
+    std::vector<char> bigData(80 * 1024 * 1024 + 1, 'A');
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(1, bigData.data(), bigData.size()));
+
+    // Verify ParseFromJson failure logs
+    const char *invalidJson = "{invalid: json}";
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(1, invalidJson, strlen(invalidJson)));
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_002
+ * @tc.desc: Verify RESPONSE message handling
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 start";
+
+    // Init
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_EQ(ChannelManager::GetInstance().Init(), ERR_OK);
+
+    // Setup test response
+    nlohmann::json responseJson = {{"msgId", 123}, {"msgType", ControlCmdType::CMD_MSG_RESPONSE}, {"msgBody", "test"}};
+    std::string jsonStr = responseJson.dump();
+
+    // Register mock waiter
+    auto waiter = std::make_shared<ChannelManager::ResponseWaiter>();
+    {
+        std::lock_guard<std::mutex> lock(ChannelManager::GetInstance().mtx_);
+        ChannelManager::GetInstance().pendingResponses_[123] = waiter;
+    }
+
+    // Trigger response
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+
+    // Wait for async task to complete (关键修改点)
+    std::unique_lock<std::mutex> lock(waiter->mutex);
+    waiter->cv.wait(lock, [&waiter] { return waiter->received; });
+
+    // Verify
+    EXPECT_TRUE(waiter->received);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_004
+ * @tc.desc: Verify REQUEST message handling with successful response
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 start";
+
+    // init
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_EQ(ChannelManager::GetInstance().Init(), ERR_OK);
+
+    // Mock a valid request
+    nlohmann::json requestJson = {{"msgId", 456},
+                                  {"msgType", OHOS::Storage::DistributedFile::ControlCmdType::CMD_CHECK_ALLOW_CONNECT},
+                                  {"msgBody", "query"}};
+    std::string jsonStr = requestJson.dump();
+
+    // Setup mock for successful handling
+
+    // Expect DoSendBytes to be called
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).WillOnce(Return(ERR_OK));
+
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_004
+ * @tc.desc: Verify REQUEST message handling with failed processing
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 start";
+
+    nlohmann::json requestJson = {{"msgId", 789}, {"msgType", -1}, {"msgBody", "invalid"}};
+    std::string jsonStr = requestJson.dump();
+
+    // Verify no SendBytes is called for invalid requests
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).Times(0);
+
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+    // Verify error logging
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_005
+ * @tc.desc: Verify unknown message type handling
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 start";
+
+    nlohmann::json unknownJson = {{"msgId", 999}, {"msgType", ControlCmdType::CMD_UNKNOWN}, {"msgBody", "unknown"}};
+    std::string jsonStr = unknownJson.dump();
+
+    // Expect no response sent
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).Times(0);
+
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_001
+ * @tc.desc: Verify SendRequest returns ERR_NO_EXIST_CHANNEL when networkId not found
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_001 start";
+
+    ControlCmd request, response;
+    request.msgId = 1;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Mock empty client map
+    EXPECT_CALL(*socketMock_, Socket(_)).Times(0); // Ensure no socket operation
+
+    // Call with non-existent networkId
+    int32_t ret = ChannelManager::GetInstance().SendRequest("invalid_network", request, response, false);
+    EXPECT_EQ(ret, ERR_NO_EXIST_CHANNEL);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_002
+ * @tc.desc: Verify SendRequest handles serialization failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_002 start";
+
+    // init
+    InitChannelManager();
+
+    ControlCmd request, response;
+    request.msgId = 2;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, false);
+    EXPECT_EQ(ret, E_OK);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_EQ(g_callSerializeToJsonTimes, 1);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_002 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_003
+ * @tc.desc: Verify SendRequest handles task post failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_003 start";
+
+    ControlCmd request, response;
+    request.msgId = 3;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId and mock serialization
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock task post failure
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, true);
+    EXPECT_EQ(ret, ERR_NULL_EVENT_HANDLER);
+
+    // Verify pendingResponses_ is cleaned up
+    std::lock_guard<std::mutex> lock(ChannelManager::GetInstance().mtx_);
+    EXPECT_EQ(ChannelManager::GetInstance().pendingResponses_.count(3), 0);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_003 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_004
+ * @tc.desc: Verify successful SendRequest without response
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_004 start";
+
+    // init
+    InitChannelManager();
+
+    ControlCmd request, response;
+    request.msgId = 4;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).Times(1).WillOnce(Return(ERR_OK));
+
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, false);
+    EXPECT_EQ(ret, E_OK);
+
+    // wait for SendBytes to be called
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    // Verify no pending response added
+    std::lock_guard<std::mutex> lock(ChannelManager::GetInstance().mtx_);
+    EXPECT_EQ(ChannelManager::GetInstance().pendingResponses_.count(4), 0);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_004 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_005
+ * @tc.desc: Verify SendRequest timeout when waiting for response
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_005 start";
+
+    // init
+    InitChannelManager();
+
+    ControlCmd request, response;
+    request.msgId = 5;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock successful task post but no response
+
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, true);
+    EXPECT_EQ(ret, E_TIMEOUT);
+
+    // Verify pending response is cleaned up
+    std::lock_guard<std::mutex> lock(ChannelManager::GetInstance().mtx_);
+    EXPECT_EQ(ChannelManager::GetInstance().pendingResponses_.count(5), 0);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_005 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_006
+ * @tc.desc: Verify successful SendRequest with response
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_006 start";
+
+    // init
+    InitChannelManager();
+
+    ControlCmd request, response;
+    request.msgId = 6;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock successful path with simulated response
+    nlohmann::json responseJson = {{"msgId", 6}, {"msgType", ControlCmdType::CMD_MSG_RESPONSE}, {"msgBody", "test"}};
+    std::string jsonStr = responseJson.dump();
+
+    // Start a thread to simulate delayed response
+    std::thread responseThread([&jsonStr]() {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.c_str(), jsonStr.size());
+    });
+    responseThread.detach(); // Detach the thread to run independently
+
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, true);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(response.msgId, 6); // Verify response content
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_006 end";
+}
+
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
