@@ -424,14 +424,14 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnSocketClosed_001, TestSize.Lev
 }
 
 /**
- * @tc.name: ChannelManagerTest_OnBytesReceived_002
+ * @tc.name: ChannelManagerTest_OnBytesReceived_001
  * @tc.desc: Verify rejection of null/empty/oversized data
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_002, TestSize.Level1)
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 start";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_001 start";
 
     // Test invalid socket ID (<= 0)
     const char *testData = "dummy";
@@ -452,18 +452,18 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_002, TestSize.Le
     const char *invalidJson = "{invalid: json}";
     EXPECT_NO_THROW(ChannelManager::GetInstance().OnBytesReceived(1, invalidJson, strlen(invalidJson)));
 
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 end";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_001 end";
 }
 
 /**
- * @tc.name: ChannelManagerTest_OnBytesReceived_003
+ * @tc.name: ChannelManagerTest_OnBytesReceived_002
  * @tc.desc: Verify RESPONSE message handling
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_003, TestSize.Level1)
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 start";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 start";
 
     // Init
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
@@ -491,7 +491,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_003, TestSize.Le
     // Verify
     EXPECT_TRUE(waiter->received);
 
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 end";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_002 end";
 }
 
 /**
@@ -500,9 +500,9 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_003, TestSize.Le
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_004, TestSize.Level1)
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 start";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 start";
 
     // init
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
@@ -522,18 +522,18 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_004, TestSize.Le
 
     ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
 
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 end";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_003 end";
 }
 
 /**
- * @tc.name: ChannelManagerTest_OnBytesReceived_005
+ * @tc.name: ChannelManagerTest_OnBytesReceived_004
  * @tc.desc: Verify REQUEST message handling with failed processing
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_005, TestSize.Level1)
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 start";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 start";
 
     nlohmann::json requestJson = {{"msgId", 789}, {"msgType", -1}, {"msgBody", "invalid"}};
     std::string jsonStr = requestJson.dump();
@@ -544,18 +544,18 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_005, TestSize.Le
     ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
     // Verify error logging
 
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 end";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_004 end";
 }
 
 /**
- * @tc.name: ChannelManagerTest_OnBytesReceived_006
+ * @tc.name: ChannelManagerTest_OnBytesReceived_005
  * @tc.desc: Verify unknown message type handling
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_006, TestSize.Level1)
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_006 start";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 start";
 
     nlohmann::json unknownJson = {{"msgId", 999}, {"msgType", ControlCmdType::CMD_UNKNOWN}, {"msgBody", "unknown"}};
     std::string jsonStr = unknownJson.dump();
@@ -565,7 +565,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_006, TestSize.Le
 
     ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
 
-    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_006 end";
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_005 end";
 }
 
 /**

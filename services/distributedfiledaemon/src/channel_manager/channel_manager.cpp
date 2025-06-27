@@ -469,6 +469,7 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
             it->second->received = true;
             it->second->cv.notify_one();
         }
+        LOGE("msgId not found in pendingResponses_ %{public}d", msgId);
         return;
     }
 
@@ -506,7 +507,7 @@ void ChannelManager::OnBytesReceived(int32_t socketId, const void *data, const u
     }
 
     if (data == nullptr || dataLen == 0 || dataLen > DSCHED_MAX_BUFFER_SIZE) {
-        LOGE("Invalid data: null/empty/too long");
+        LOGE("Invalid data, data len = %{public}u", dataLen);
         return;
     }
 
