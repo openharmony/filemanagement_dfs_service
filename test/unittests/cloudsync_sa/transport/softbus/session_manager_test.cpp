@@ -23,6 +23,7 @@
 #include "softbus_session_mock.h"
 #include "session_manager.h"
 #include "socket_mock.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -50,6 +51,7 @@ void SessionManagerTest::SetUpTestCase(void)
 
 void SessionManagerTest::TearDownTestCase(void)
 {
+    TaskStateManager::GetInstance().CancelUnloadTask();
     std::cout << "TearDownTestCase" << std::endl;
 }
 
