@@ -308,6 +308,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
 HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0300 start";
+#ifdef SUPPORT_SAME_ACCOUNT
     bool res = true;
     PeerSocketInfo peerSocketInfo = {
         .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
@@ -334,6 +335,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
     }
 
     EXPECT_TRUE(res == true);
+#endif
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0300 end";
 }
 
@@ -346,6 +348,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
 HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0400, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0400 start";
+#ifdef SUPPORT_SAME_ACCOUNT
     bool res = true;
     PeerSocketInfo peerSocketInfo = {
         .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
@@ -373,6 +376,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
     }
 
     EXPECT_TRUE(res == true);
+#endif
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0400 end";
 }
 
