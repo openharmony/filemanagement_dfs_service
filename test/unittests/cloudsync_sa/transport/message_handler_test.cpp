@@ -20,6 +20,7 @@
 #include "dfs_error.h"
 #include "message_handler.h"
 #include "socket_mock.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -44,6 +45,7 @@ void MessageHandlerTest::SetUpTestCase(void)
 
 void MessageHandlerTest::TearDownTestCase(void)
 {
+    TaskStateManager::GetInstance().CancelUnloadTask();
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -114,9 +116,15 @@ HWTEST_F(MessageHandlerTest, PackDataTest001, TestSize.Level1)
         EXPECT_TRUE(messageHandler);
         cout << "messageHandler->GetDataSize():" << messageHandler->GetDataSize() << endl;
         auto dataSubPtr = std::make_unique<uint8_t[]>(messageHandler->GetDataSize());
+        EXPECT_FALSE(messageHandler->PackData(nullptr, messageHandler->GetDataSize()));
+        EXPECT_FALSE(messageHandler->PackData(dataSubPtr.get(), 0));
+        EXPECT_FALSE(messageHandler->PackData(nullptr, 0));
         EXPECT_TRUE(messageHandler->PackData(dataSubPtr.get(), messageHandler->GetDataSize()));
 
         MessageHandler msgHandleSub;
+        EXPECT_FALSE(msgHandleSub.UnPackData(nullptr, messageHandler->GetDataSize()));
+        EXPECT_FALSE(msgHandleSub.UnPackData(dataSubPtr.get(), 0));
+        EXPECT_FALSE(msgHandleSub.UnPackData(nullptr, 0));
         EXPECT_TRUE(msgHandleSub.UnPackData(dataSubPtr.get(), messageHandler->GetDataSize()));
     } catch (...) {
         EXPECT_TRUE(false);
