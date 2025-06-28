@@ -714,7 +714,10 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
-
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return -EINVAL;
+    }
     string cloudId;
     int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
