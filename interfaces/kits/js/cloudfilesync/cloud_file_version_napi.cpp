@@ -29,6 +29,7 @@ using namespace std;
 
 static const int64_t PERCENT = 100;
 static const int32_t TOP_NUM = 10000;
+static const int DEC = 10;
 const int32_t ARGS_ONE = 1;
 
 struct VersionParams {
@@ -87,8 +88,12 @@ static NVal AsyncComplete(const napi_env &env, const vector<HistoryVersion> &lis
 static tuple<bool, string, int32_t> GetHistoryVersionListParam(const napi_env &env, const NFuncArg &funcArg)
 {
     auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("unavailable uri.");
+        return {false, "", 0};
+    }
     string uri = uriNVal.get();
-    if (!succ || uri.empty()) {
+    if (uri.empty()) {
         LOGE("unavailable uri.");
         return {false, "", 0};
     }
@@ -139,34 +144,61 @@ napi_value FileVersionNapi::GetHistoryVersionList(napi_env env, napi_callback_in
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
-static tuple<bool, string, string, NVal> GetDownloadVersionParam(const napi_env &env, const NFuncArg &funcArg)
+static bool SafeStringToUInt(const string &str, uint64_t &value)
+{
+    char *endPtr = nullptr;
+    errno = 0;
+
+    value = strtoull(str.c_str(), &endPtr, DEC);
+    if (str.c_str() == endPtr || *endPtr != '\0' || errno == ERANGE) {
+        LOGE("string to uint64 failed.");
+        return false;
+    }
+
+    return true;
+}
+
+static tuple<bool, string, uint64_t, NVal> GetDownloadVersionParam(const napi_env &env, const NFuncArg &funcArg)
 {
     NVal res;
     auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
-    string uri = uriNVal.get();
-    if (!succ || uri.empty()) {
+    if (!succ) {
         LOGE("unavailable uri.");
-        return {false, "", "", res};
+        return {false, "", 0, res};
+    }
+    string uri = uriNVal.get();
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
+        return {false, "", 0, res};
     }
     auto [succId, versionNVal, ignoreId] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
-    string versionId = versionNVal.get();
-    if (!succId || versionId.empty()) {
+    if (!succId) {
         LOGE("unavailable version id.");
-        return {false, "", "", res};
+        return {false, "", 0, res};
+    }
+    string versionId = versionNVal.get();
+    if (versionId.empty()) {
+        LOGE("unavailable version id.");
+        return {false, "", 0, res};
     }
     bool isDigit = std::all_of(versionId.begin(), versionId.end(), ::isdigit);
     if (!isDigit) {
         LOGE("unavailable version id.");
-        return {false, "", "", res};
+        return {false, "", 0, res};
+    }
+    uint64_t value = 0;
+    if (!SafeStringToUInt(versionId, value)) {
+        LOGE("unavailable version id.");
+        return {false, "", 0, res};
     }
 
     NVal callbackVal(env, funcArg[NARG_POS::THIRD]);
     if (!callbackVal.TypeIs(napi_function)) {
         LOGE("download version argument type mismatch");
-        return {false, "", "", res};
+        return {false, "", 0, res};
     }
 
-    return make_tuple(true, move(uri), move(versionId), move(callbackVal));
+    return make_tuple(true, move(uri), value, move(callbackVal));
 }
 
 napi_value FileVersionNapi::DownloadHistoryVersion(napi_env env, napi_callback_info info)
@@ -196,7 +228,7 @@ napi_value FileVersionNapi::DownloadHistoryVersion(napi_env env, napi_callback_i
         }
     }
     auto param = make_shared<VersionParams>();
-    auto cbExec = [uri{uriNVal}, id{stoull(idNVal)}, callback{fileVersionEntity->callbackImpl}, param]() -> NError {
+    auto cbExec = [uri{uriNVal}, id{idNVal}, callback{fileVersionEntity->callbackImpl}, param]() -> NError {
         if (!callback) {
             LOGE("download history version callback is null.");
             return NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR));
@@ -223,15 +255,23 @@ napi_value FileVersionNapi::DownloadHistoryVersion(napi_env env, napi_callback_i
 static tuple<bool, string, string> GetReplaceVersionListParam(const napi_env &env, const NFuncArg &funcArg)
 {
     auto [succOri, uriOriNVal, ignoreOri] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succOri) {
+        LOGE("unavailable origin uri.");
+        return {false, "", ""};
+    }
     string uriOri = uriOriNVal.get();
-    if (!succOri || uriOri.empty()) {
+    if (uriOri.empty()) {
         LOGE("unavailable origin uri.");
         return {false, "", ""};
     }
     auto [succUri, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
+    if (!succUri) {
+        LOGE("unavailable uri.");
+        return {false, "", ""};
+    }
     string uri = uriNVal.get();
-    if (!succUri || uri.empty()) {
-        LOGE("unavailable version uri.");
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
         return {false, "", ""};
     }
 
@@ -285,8 +325,13 @@ napi_value FileVersionNapi::IsConflict(napi_env env, napi_callback_info info)
     }
 
     auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("unavailable uri.");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
     string uri = uriNVal.get();
-    if (!succ || uri.empty()) {
+    if (uri.empty()) {
         LOGE("unavailable uri.");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
@@ -324,8 +369,13 @@ napi_value FileVersionNapi::ClearFileConflict(napi_env env, napi_callback_info i
     }
 
     auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("unavailable uri.");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
     string uri = uriNVal.get();
-    if (!succ || uri.empty()) {
+    if (uri.empty()) {
         LOGE("unavailable uri.");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
