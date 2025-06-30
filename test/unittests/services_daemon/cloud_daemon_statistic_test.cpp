@@ -182,4 +182,20 @@ HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_009, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_009 End";
 }
+
+HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_010 Start";
+    CloudDaemonStatistic cds;
+    cds.videoReadInfo_[CACHE_SUM] = UINT32_MAX;
+
+    try {
+        cds.UpdateReadInfo(CACHE_SUM);
+        EXPECT_EQ(cds.videoReadInfo_[CACHE_SUM], UINT32_MAX);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_010 End";
+}
 }
