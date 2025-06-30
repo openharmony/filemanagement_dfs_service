@@ -135,12 +135,12 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndRemoveTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: CloudDiskDentryFileCreateTest
+ * @tc.name: CloudDiskDentryFileCreateTest001
  * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Level1)
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest001, TestSize.Level1)
 {
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
@@ -152,6 +152,51 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Le
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: CloudDiskDentryFileCreateTest002
+ * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
+ * @tc.type: FUNC
+ * @tc.require: ICIGLL
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest002, TestSize.Level0)
+{
+    std::string cacheDir =
+        "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+    ForceRemoveDirectory(cacheDir);
+
+    string CloudId = "";
+    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    uint64_t maxNameLen = 416;
+    string name(maxNameLen, '0');
+    MetaBase mBase1(name, "id1");
+    mBase1.size = TEST_ISIZE;
+    int ret = mFile.DoCreate(mBase1);
+    EXPECT_EQ(ret, 0);
+    mFile.DoRemove(mBase1);
+}
+
+/**
+ * @tc.name: CloudDiskDentryFileCreateTest003
+ * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
+ * @tc.type: FUNC
+ * @tc.require: ICIGLL
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest003, TestSize.Level0)
+{
+    std::string cacheDir =
+        "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+    ForceRemoveDirectory(cacheDir);
+
+    string CloudId = "";
+    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    uint64_t maxNameLen = 416;
+    string name(maxNameLen + 1, '0');
+    MetaBase mBase1(name, "id1");
+    mBase1.size = TEST_ISIZE;
+    int ret = mFile.DoCreate(mBase1);
+    EXPECT_EQ(ret, ENAMETOOLONG);
 }
 
 /**

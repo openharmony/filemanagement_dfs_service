@@ -513,6 +513,13 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
         return EINVAL;
     }
 
+    // validate the length of name, maximum length is 52*8 byte
+    uint32_t slots = GetDentrySlots(base.name.length());
+    if (slots > DENTRY_PER_GROUP) {
+        LOGE("name is too long");
+        return ENAMETOOLONG;
+    }
+
     std::unique_lock<std::mutex> lock(mtx_);
     DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
