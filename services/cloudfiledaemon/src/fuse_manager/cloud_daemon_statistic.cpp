@@ -66,6 +66,17 @@ static void CheckOverflow(uint64_t &data, uint64_t addValue)
     }
 }
 
+static void CheckOverflow(uint32_t &data, uint32_t addValue)
+{
+    if (data > UINT32_MAX - addValue) {
+        LOGE("update fail, overflow, data = %{public}d, addValue = %{public}d",
+            data, addValue);
+        data = UINT32_MAX;
+    } else {
+        data += addValue;
+    }
+}
+
 void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
 {
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, OPEN_SIZE_RANGE_VECTOR);

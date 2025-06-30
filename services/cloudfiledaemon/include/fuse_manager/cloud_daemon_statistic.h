@@ -63,7 +63,7 @@ private:
     vector<uint64_t> readSizeStat_ = vector<uint64_t>(READ_SIZE_MAX, 0);
     vector<vector<uint64_t>> readTimeStat_ =
         vector<vector<uint64_t>>(READ_SIZE_MAX, vector<uint64_t>(READ_TIME_MAX, 0));
-    vector<uint64_t> videoReadInfo_ = vector<uint64_t>(VIDEO_READ_INFO, 0);
+    vector<uint32_t> videoReadInfo_ = vector<uint32_t>(VIDEO_READ_INFO, 0);
 };
 } // namespace CloudFile
 } // namespace FileManagement
