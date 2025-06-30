@@ -41,6 +41,7 @@ ohos_unittest("fuse_manager_test") {
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
     "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/fuse_manager",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${clouddisk_database_path}/include",
     "${distributedfile_path}/test/unittests/services_daemon/mock",
@@ -294,6 +295,79 @@ ohos_unittest("cloud_daemon_stub_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("fuse_manager_static_test") {
+  module_out_path = "dfs_service/distributed_filesystem"
+
+  sources = [
+    "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
+    "fuse_manager_static_test.cpp",
+    "mock/libfuse_mock.cpp",
+  ]
+  cloud_disk = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
+  ]
+
+  sources += cloud_disk
+
+  include_dirs = [
+    "${distributedfile_path}/services/cloudfiledaemon/include",
+    "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
+    "${distributedfile_path}/utils/ioctl/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/fuse_manager",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${clouddisk_database_path}/include",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+    "strdup=StrdupMock",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("services_daemon_test") {
   testonly = true
 
@@ -302,5 +376,6 @@ group("services_daemon_test") {
     ":cloud_daemon_stub_test",
     ":cloud_daemon_test",
     ":fuse_manager_test",
+    ":fuse_manager_static_test",
   ]
 }
