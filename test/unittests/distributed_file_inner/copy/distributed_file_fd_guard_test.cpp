@@ -68,7 +68,7 @@ HWTEST_F(DistributedFileFdGuardTest, DistributedFileFdGuard_GetFD_0001, TestSize
     GTEST_LOG_(INFO) << "DistributedFileFdGuard_GetFD_0001 Start";
 
     int fd = 10;
-    bool autoClose = true;
+    bool autoClose = false;
     FDGuard dfsuFDGuard(fd, autoClose);
     dfsuFDGuard.SetFD(fd, autoClose);
     int32_t ret = dfsuFDGuard.GetFD();
@@ -88,7 +88,7 @@ HWTEST_F(DistributedFileFdGuardTest, DistributedFileFdGuard_GetFD_0002, TestSize
     GTEST_LOG_(INFO) << "DistributedFileFdGuard_GetFD_0002 Start";
 
     int fd = 5;
-    bool autoClose = true;
+    bool autoClose = false;
     FDGuard dfsuFDGuard(fd, autoClose);
     dfsuFDGuard.SetFD(fd, autoClose);
     int32_t ret = dfsuFDGuard.GetFD();
@@ -108,7 +108,7 @@ HWTEST_F(DistributedFileFdGuardTest, DistributedFileFdGuard_ClearFD_0001, TestSi
     GTEST_LOG_(INFO) << "DistributedFileFdGuard_ClearFD_0001 Start";
 
     int fd = 4;
-    bool autoClose = true;
+    bool autoClose = false;
     FDGuard dfsuFDGuard(fd, autoClose);
     dfsuFDGuard.SetFD(fd, autoClose);
     dfsuFDGuard.ClearFD();

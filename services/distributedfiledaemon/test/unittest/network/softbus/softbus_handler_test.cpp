@@ -139,6 +139,8 @@ void SoftbusHandlerTest::SetUp(void)
 
 void SoftbusHandlerTest::TearDown(void)
 {
+    SoftBusHandler::GetInstance().clientSessNameMap_.clear();
+    SoftBusHandler::GetInstance().serverIdMap_.clear();
     GTEST_LOG_(INFO) << "TearDown";
 }
 
