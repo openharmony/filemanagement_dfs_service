@@ -94,16 +94,9 @@ void CloudDownloadCallbackAniImpl::OnDownloadProcess(const DownloadProgressObj &
             LOGE("crete local scope failed. ret = %{public}d", ret);
             return;
         }
-        ani_namespace ns {};
-        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-        if (ret != ANI_OK) {
-            LOGE("find namespace failed. ret = %{public}d", ret);
-            return;
-        }
-        Type clsName = Builder::BuildClass("DownloadProgressInner");
+        Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.DownloadProgressInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+        ret = tmpEnv->FindClass(clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
             return;
