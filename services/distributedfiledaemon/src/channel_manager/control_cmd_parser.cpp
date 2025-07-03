@@ -14,6 +14,7 @@
  */
 
 #include <cstring>
+#include <nlohmann/json.hpp>
 
 #include "control_cmd_parser.h"
 #include "dfs_error.h"
@@ -25,6 +26,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
+using json = nlohmann::json;
 
 std::function<void(std::string)> ControlCmdParser::disconnectCallback_;
 

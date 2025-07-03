@@ -468,6 +468,7 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
             it->second->response = inCmd;
             it->second->received = true;
             it->second->cv.notify_one();
+            return;
         }
         LOGE("msgId not found in pendingResponses_ %{public}d", msgId);
         return;
