@@ -30,6 +30,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 constexpr int32_t FILE_NOT_FOUND = 2;
+constexpr int32_t FILE_CAN_NOT_CREATE = 30;
 class FileCopyManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -143,7 +144,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level0)
     close(fd);
 
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, FILE_CAN_NOT_CREATE);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
 }
@@ -875,5 +876,43 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
     int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
     EXPECT_EQ(res, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001 End";
+}
+
+/**
+* @tc.name: FileCopyManager_ExecLocal_0001
+* @tc.desc: ExecLocal
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0001 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/11.txt";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/aa/";
+    string srcpath = "/storage/media/100/local/files/Docs/11.txt";
+    string destpath = "/storage/media/100/local/files/Docs/aa/";
+    int fd = open(srcpath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_ExecLocal_0001!" << errno;
+    close(fd);
+
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(destpath);
+        ASSERT_EQ(res, E_OK);
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->localListener = std::make_shared<FileCopyLocalListener>("",
+            true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    infos->srcUri = srcuri;
+    infos->destUri = desturi;
+    infos->srcPath = srcpath;
+    infos->destPath = destpath;
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(std::filesystem::exists("/storage/media/100/local/files/Docs/aa/11.txt"));
+    ASSERT_EQ(remove(srcpath.c_str()), 0);
+    EXPECT_TRUE(ForceRemoveDirectory(destpath));
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0001 End";
 }
 }
