@@ -54,6 +54,15 @@ ErrCode NotificationHelper::CancelNotification(int32_t notificationId, const std
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+
+int32_t ChannelManager::SendRequest(const std::string &networkId,
+                                    ControlCmd &request,
+                                    ControlCmd &response,
+                                    bool needResponse)
+{
+    return OHOS::FileManagement::ERR_OK;
+}
+
 namespace Test {
 using namespace testing;
 using namespace testing::ext;
