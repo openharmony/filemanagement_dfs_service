@@ -1247,13 +1247,13 @@ ohos_unittest("system_notifier_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
-    "${distributedfile_path}/utils/system/include",
   ]
 
   sources = [
     "${distributedfile_path}/services/distributedfiledaemon/src/channel_manager/system_notifier.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
+    "channel_manager/system_notifier_test.cpp",
   ]
 
   configs = [
