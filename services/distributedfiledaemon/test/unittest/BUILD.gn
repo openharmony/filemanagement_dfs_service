@@ -1247,6 +1247,7 @@ ohos_unittest("system_notifier_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/utils/system/include",
   ]
 
   sources = [
@@ -1309,6 +1310,7 @@ ohos_unittest("control_cmd_parser_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/utils/system/include",
   ]
 
   sources = [
@@ -1368,6 +1370,7 @@ ohos_unittest("channel_manager_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/utils/system/include",
   ]
 
   sources = [
