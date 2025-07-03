@@ -18,14 +18,11 @@
 
 #include <atomic>
 #include <functional>
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
-using json = nlohmann::json;
 
 static const char DETERMINE_DEVICE_TYPE_KEY[] = "persist.distributed_scene.sys_settings_data_sync";
 

@@ -1253,7 +1253,7 @@ ohos_unittest("system_notifier_test") {
     "${distributedfile_path}/services/distributedfiledaemon/src/channel_manager/system_notifier.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
-    "channel_manager/system_notifier_test.cpp"
+    "channel_manager/system_notifier_test.cpp",
   ]
 
   configs = [
@@ -1285,6 +1285,7 @@ ohos_unittest("system_notifier_test") {
     "i18n:intl_util",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
     "zlib:shared_libz",
   ]
 
@@ -1344,6 +1345,7 @@ ohos_unittest("control_cmd_parser_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
     "zlib:shared_libz",
   ]
 

@@ -754,6 +754,46 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_006, TestSize.Level1
     GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_006 end";
 }
 
+/**
+ * @tc.name: ChannelManagerTest_PostTask_001
+ * @tc.desc: Verify PostTask failed with null func callback
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_PostTask_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_PostTask_001 start";
+
+    // init
+    InitChannelManager();
+
+    // test nullptr
+    int32_t ret = ChannelManager::GetInstance().PostTask(nullptr, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    EXPECT_EQ(ret, ERR_POST_TASK_FAILED);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_PostTask_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_PostCallbackTask_001
+ * @tc.desc: Verify PostCallbackTask failed with null func callback
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_PostCallbackTask_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_PostCallbackTask_001 start";
+
+    // init
+    InitChannelManager();
+
+    // test nullptr
+    int32_t ret = ChannelManager::GetInstance().PostCallbackTask(nullptr, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    EXPECT_EQ(ret, ERR_POST_TASK_FAILED);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_PostCallbackTask_001 end";
+}
+
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
