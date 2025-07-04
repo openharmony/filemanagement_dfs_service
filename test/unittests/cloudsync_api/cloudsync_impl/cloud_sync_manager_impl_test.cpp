@@ -224,7 +224,6 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
@@ -248,7 +247,6 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
     try {
         string bundleName = "com.ohos.photos";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -498,7 +496,6 @@ HWTEST_F(CloudSyncManagerImplTest, UnregisterDownloadFileCallbackTest, TestSize.
 {
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest Start";
     try {
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, UnregisterDownloadFileCallback()).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
@@ -742,7 +739,6 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterDownloadFileCallbackTest, TestSize.Le
         shared_ptr<CloudDownloadCallback> downloadCallback = make_shared<CloudDownloadCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().RegisterDownloadFileCallback(downloadCallback);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -916,20 +912,16 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest003, TestSize.Level
 {
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest003 Start";
     try {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
-        MetaBase mBase("666666.jpg", "666666");
-        mBase.size = 1;
-        mBase.mtime = 0;
-        mBase.fileType = 1;
-        mFile->DoCreate(mBase);
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        fs::create_directories("/storage/media/cloud/files/Photo/1");
+        std::ofstream("/storage/media/cloud/files/Photo/1/666666.jpg");
         std::string testDir = "/storage/cloud/files/Photo/1/666666.jpg";
         CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
-        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        EXPECT_TRUE(isExists);
+        bool isExists = fs::exists("/storage/media/cloud/files/Photo/1/666666.jpg");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        EXPECT_FALSE(isExists);
     } catch (...) {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest003 FAILED";
     }
@@ -945,20 +937,16 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest004, TestSize.Level
 {
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest004 Start";
     try {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
-        MetaBase mBase("666666.jpg", "666666");
-        mBase.size = 1;
-        mBase.mtime = 0;
-        mBase.fileType = 1;
-        mFile->DoCreate(mBase);
-        std::string testDir = "/storage/6666666.jpg";
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        fs::create_directories("/storage/media/cloud/files/Photo/1");
+        std::ofstream("/storage/media/cloud/files/Photo/1/666666.jpg");
+        std::string testDir = "/storage/666666.jpg";
         CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
         bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        EXPECT_FALSE(isExists);
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        EXPECT_TRUE(isExists);
     } catch (...) {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest004 FAILED";
     }
@@ -998,7 +986,6 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
     try {
         CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);

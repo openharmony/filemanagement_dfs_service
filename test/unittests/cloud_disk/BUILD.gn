@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("account_status_listener_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
@@ -72,7 +72,7 @@ ohos_unittest("account_status_listener_test") {
 }
 
 ohos_unittest("file_operations_cloud_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -140,7 +140,7 @@ ohos_unittest("file_operations_cloud_test") {
 }
 
 ohos_unittest("database_manager_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
@@ -202,7 +202,7 @@ ohos_unittest("database_manager_test") {
 }
 
 ohos_unittest("file_operations_base_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
@@ -249,7 +249,7 @@ ohos_unittest("file_operations_base_test") {
 }
 
 ohos_unittest("fuse_operations_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
@@ -315,7 +315,7 @@ ohos_unittest("fuse_operations_test") {
 }
 
 ohos_unittest("file_operations_local_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
@@ -381,7 +381,7 @@ ohos_unittest("file_operations_local_test") {
 }
 
 ohos_unittest("file_operations_helper_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
@@ -447,7 +447,7 @@ ohos_unittest("file_operations_helper_test") {
 }
 
 ohos_unittest("file_range_lock_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/dentry/include",
@@ -490,7 +490,7 @@ ohos_unittest("file_range_lock_test") {
 }
 
 ohos_unittest("meta_file_clouddisk_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/utils/dentry/include",
@@ -538,7 +538,7 @@ ohos_unittest("meta_file_clouddisk_test") {
 }
 
 ohos_unittest("io_message_listener_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -595,7 +595,7 @@ ohos_unittest("io_message_listener_test") {
 }
 
 ohos_unittest("appstate_observer_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
     "${distributedfile_path}/adapter/cloud_adapter_example/include",

@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("cloud_sync_service_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   public_configs =
       [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
   sources = [
@@ -132,7 +132,7 @@ ohos_unittest("cloud_sync_service_test") {
 }
 
 ohos_unittest("download_asset_callback_manager_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
@@ -173,7 +173,7 @@ ohos_unittest("download_asset_callback_manager_test") {
 }
 
 ohos_unittest("download_asset_callback_proxy_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
