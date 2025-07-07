@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("cloud_sync_core_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",

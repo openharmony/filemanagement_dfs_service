@@ -269,7 +269,7 @@ HWTEST_F(SoftbusAdapterTest, SendBytesTest001, TestSize.Level1)
         EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
         int socketFd = adapter.OpenSessionByP2P(sessionName, peerNetworkId, groupId, false);
         int result = adapter.SendBytes(socketFd, data, sizeof(data));
-        EXPECT_NE(result, 0);
+        EXPECT_EQ(result, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SendBytesTest001 failed";

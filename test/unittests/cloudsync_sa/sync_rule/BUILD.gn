@@ -24,7 +24,7 @@ ohos_unittest("battery_status_listener_test") {
     debug = true
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
@@ -84,7 +84,7 @@ ohos_unittest("battery_status_listener_test") {
 }
 
 ohos_unittest("net_conn_callback_observer_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "net_conn_callback_observer_test.cpp",
@@ -128,7 +128,7 @@ ohos_unittest("net_conn_callback_observer_test") {
 }
 
 ohos_unittest("network_status_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
@@ -181,7 +181,7 @@ ohos_unittest("network_status_test") {
 }
 
 ohos_unittest("cloud_status_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
     "${distributedfile_path}/test/mock/cloud_file_kit_mock.cpp",
@@ -230,7 +230,7 @@ ohos_unittest("battery_status_test") {
     debug = true
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
     "${distributedfile_path}/test/mock/battersrvclient_mock.cpp",
@@ -296,7 +296,7 @@ ohos_unittest("network_set_manager_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [ "network_set_manager_test.cpp" ]
 
   include_dirs = [
@@ -337,7 +337,7 @@ ohos_unittest("network_set_manager_test") {
 }
 
 ohos_unittest("system_load_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/system_load.cpp",
     "system_load_test.cpp",
@@ -393,7 +393,7 @@ ohos_unittest("screen_status_listener_test") {
     debug = true
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
     "screen_status_listener_test.cpp",
@@ -451,7 +451,7 @@ ohos_unittest("user_status_listener_test") {
     debug = true
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "user_status_listener_test.cpp",
@@ -512,7 +512,7 @@ ohos_unittest("package_status_listener_test") {
     debug = true
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/package_status_listener.cpp",
     "package_status_listener_test.cpp",
