@@ -78,7 +78,7 @@ public:
 
 private:
     void GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg);
-    ani_env *env_;
+    ani_vm *vm_ = nullptr;
     ani_ref cbOnRef_ = nullptr;
 };
 
