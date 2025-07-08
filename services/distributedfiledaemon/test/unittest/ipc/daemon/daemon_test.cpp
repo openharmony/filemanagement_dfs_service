@@ -21,12 +21,14 @@
 #include "asset_callback_manager.h"
 #include "asset_recv_callback_mock.h"
 #include "asset_send_callback_mock.h"
+#include "channel_manager_mock.h"
 #include "common_event_manager.h"
 #include "connect_count/connect_count.h"
 #include "connection_detector_mock.h"
 #include "daemon.h"
 #include "daemon_execute.h"
 #include "daemon_mock.h"
+#include "device/device_profile_adapter.h"
 #include "device_manager_agent_mock.h"
 #include "device_manager_impl.h"
 #include "device_manager_impl_mock.h"
@@ -58,6 +60,8 @@ std::string g_getCallingNetworkId;
 bool g_publish;
 bool g_subscribeCommonEvent;
 bool g_unSubscribeCommonEvent;
+int32_t g_getDfsVersionFromNetworkId = 0;
+OHOS::Storage::DistributedFile::DfsVersion g_dfsVersion;
 } // namespace
 
 namespace {
@@ -70,6 +74,16 @@ const int32_t E_UNMOUNT = 13600004;
 const std::string NETWORKID_ONE = "testNetWork1";
 const std::string NETWORKID_TWO = "testNetWork2";
 } // namespace
+
+namespace OHOS::Storage::DistributedFile {
+int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(const std::string &networkId,
+                                                         DfsVersion &dfsVersion,
+                                                         VersionPackageName packageName)
+{
+    dfsVersion = g_dfsVersion;
+    return g_getDfsVersionFromNetworkId;
+}
+} // namespace OHOS::Storage::DistributedFile
 
 namespace OHOS::FileManagement {
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
@@ -179,6 +193,7 @@ using namespace OHOS::FileManagement;
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace OHOS::Storage::DistributedFile;
 
 class DaemonTest : public testing::Test {
 public:
@@ -196,6 +211,7 @@ public:
     static inline std::shared_ptr<SoftBusHandlerAssetMock> softBusHandlerAssetMock_ = nullptr;
     static inline std::shared_ptr<SoftBusHandlerMock> softBusHandlerMock_ = nullptr;
     static inline std::shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
+    static inline std::shared_ptr<ChannelManagerMock> channelManagerMock_ = nullptr;
 };
 
 class FileTransListenerMock : public IRemoteStub<IFileTransListener> {
@@ -227,6 +243,8 @@ void DaemonTest::SetUpTestCase(void)
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
     deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
+    channelManagerMock_ = std::make_shared<ChannelManagerMock>();
+    IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
@@ -239,6 +257,8 @@ void DaemonTest::SetUpTestCase(void)
     }
     std::ofstream file(path + "/docs/1.txt");
     std::ofstream file1(path + "/docs/1@.txt");
+    g_getDfsVersionFromNetworkId = 0;
+    g_dfsVersion = {0, 0, 0};
 }
 
 void DaemonTest::TearDownTestCase(void)
@@ -256,6 +276,8 @@ void DaemonTest::TearDownTestCase(void)
     softBusHandlerAssetMock_ = nullptr;
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
     softBusHandlerMock_ = nullptr;
+    channelManagerMock_ = nullptr;
+    IChannelManagerMock::iChannelManagerMock = nullptr;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
@@ -1152,5 +1174,207 @@ HWTEST_F(DaemonTest, DaemonTest_StartEventHandler_001, TestSize.Level1)
     daemon_->StartEventHandler();
     GTEST_LOG_(INFO) << "DaemonTest_StartEventHandler_001 end";
 }
+
+/**
+ * @tc.name: DaemonTest_DisconnectByRemote_001
+ * @tc.desc: verify DisconnectByRemote with invalid networkId
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_001 begin";
+
+    // Test empty networkId
+    EXPECT_NO_THROW(daemon_->DisconnectByRemote(""));
+
+    // Test invalid networkId length
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN + 1, 'a');
+    EXPECT_NO_THROW(daemon_->DisconnectByRemote(longNetworkId));
+
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_DisconnectByRemote_002
+ * @tc.desc: verify DisconnectByRemote with UMountDfsDocs failed
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_002 begin";
+
+    // Test normal case with mock
+    EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
+
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_DisconnectByRemote_003
+ * @tc.desc: verify DisconnectByRemote with UMountDfsDocs success
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 begin";
+
+    // Test normal case with mock
+    EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(NO_ERROR));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(NO_ERROR));
+    EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
+
+    GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_CreateControlLink_001
+ * @tc.desc: verify CreatControlLink and CancelConrolLink
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_CreateControlLink_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_CreateControlLink_001 begin";
+
+    // Test exist channel now
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_EQ(daemon_->CreatControlLink("networkId"), FileManagement::ERR_OK);
+
+    // Test no exist channel and not support with return ok
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_EQ(daemon_->CreatControlLink("networkId"), FileManagement::ERR_OK);
+
+    // Test no exist channel and support create but renturn failed
+    g_dfsVersion = {6, 0, 0};
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CreatControlLink("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test no exist channel and support create but renturn success
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->CreatControlLink("networkId"), FileManagement::ERR_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_CreateControlLink_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_DestroyControlLink_001
+ * @tc.desc: verify CreatControlLink and CancelConrolLink
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_DestroyControlLink_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_DestroyControlLink_001 begin";
+
+    // Test not existing channel
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_EQ(daemon_->CancelControlLink("networkId"), FileManagement::ERR_OK);
+
+    // Test existing channel and destroy failed
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, DestroyClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CancelControlLink("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test existing channel and destroy success
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, DestroyClientChannel(_)).WillOnce(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->CancelControlLink("networkId"), FileManagement::ERR_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_DestroyControlLink_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_CheckRemoteAllowConnect_001
+ * @tc.desc: verify CheckRemoteAllowConnect and notification functions
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_CheckRemoteAllowConnect_001";
+
+    // Test CreatControlLink failed
+    g_dfsVersion = {6, 0, 0};
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test SendRequest failed
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test CheckRemoteAllowConnect success
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_CheckRemoteAllowConnect_001";
+}
+
+/**
+ * @tc.name: DaemonTest_NotifyRemotePublishNotification_001
+ * @tc.desc: verify NotifyRemotePublishNotification
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_NotifyRemotePublishNotification_001";
+
+    // Test CreatControlLink failed
+    g_dfsVersion = {6, 0, 0};
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test SendRequest failed
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test CheckRemoteAllowConnect success
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_NotifyRemotePublishNotification_001";
+}
+
+/**
+ * @tc.name: DaemonTest_NotifyRemoteCancelNotification_001
+ * @tc.desc: verify NotifyRemoteCancelNotification and notification functions
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
+
+    // Test CreatControlLink failed
+    g_dfsVersion = {6, 0, 0};
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->NotifyRemoteCancelNotification("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test SendRequest failed
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->NotifyRemoteCancelNotification("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test CheckRemoteAllowConnect success
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->NotifyRemoteCancelNotification("networkId"), FileManagement::ERR_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
+}
+
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

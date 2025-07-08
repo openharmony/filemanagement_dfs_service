@@ -26,13 +26,16 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "channel_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "connection_detector.h"
 #include "connect_count/connect_count.h"
+#include "connection_detector.h"
+#include "control_cmd_parser.h"
 #include "copy/file_size_utils.h"
 #include "copy/remote_file_copy_manager.h"
 #include "device/device_manager_agent.h"
+#include "device/device_profile_adapter.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -41,8 +44,8 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
@@ -50,6 +53,7 @@
 #include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
+#include "system_notifier.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -76,7 +80,8 @@ const int32_t UDMFUSERID = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
-}
+constexpr int32_t VALID_MOUNT_NETWORKID_LEN = 16;
+} // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
@@ -915,25 +920,134 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
     return FileManagement::E_OK;
 }
 
-int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+void Daemon::DisconnectByRemote(const string &networkId)
 {
-    LOGI("GetDfsSwitchStatus enter. networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
-    LOGI("GetDfsSwitchStatus end, switchStatus %{public}d", switchStatus);
-    return E_OK;
+    LOGI("start DisconnectByRemote");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::DisconnectByRemote networkId length is invalid. len: %{public}zu", networkId.length());
+        return;
+    }
+    string subnetworkId = networkId.substr(0, VALID_MOUNT_NETWORKID_LEN);
+    int32_t res = DeviceManagerAgent::GetInstance()->UMountDfsDocs(networkId, subnetworkId, true);
+    if (res != NO_ERROR) {
+        LOGE("[UMountDfsDocs] failed");
+        return;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo{};
+    res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (res != NO_ERROR) {
+        LOGE("strcpy failed, res = %{public}d", res);
+        return;
+    }
+    ConnectCount::GetInstance()->RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
+    int32_t ret = CleanUp(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("DisconnectByRemote disconnection failed.");
+        return;
+    }
 }
 
-int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
+int32_t Daemon::CreatControlLink(const std::string &networkId)
 {
-    LOGI("UpdateDfsSwitchStatus enter, switch status: %{public}d", switchStatus);
-    return E_OK;
+    LOGI("start CreatControlLink");
+    if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("exist channel, networkId: %{public}s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+
+    DfsVersion remoteDfsVersion;
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
+    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
+        LOGW("old version ,not need CreatControlLink");
+        return FileManagement::ERR_OK;
+    }
+
+    if (ChannelManager::GetInstance().CreateClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
 }
 
-int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+int32_t Daemon::CancelControlLink(const std::string &networkId)
 {
-    LOGI("GetConnectedDeviceList enter.");
-    (void)deviceList;
-    return E_OK;
+    if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("exist channel, networkId: %{public}s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
 }
+
+int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
+{
+    LOGI("start CheckRemoteAllowConnect");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+
+    return response.msgBody == "true" ? FileManagement::ERR_BAD_VALUE : FileManagement::E_OK;
+}
+
+int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemotePublishNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemotePublishNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_PUBLISH_NOTIFICATION;
+
+    std::string srcNetworkId;
+    DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetworkId);
+    request.networkId = srcNetworkId;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
+int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemoteCancelNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CANCEL_NOTIFICATION;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
