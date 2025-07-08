@@ -905,7 +905,12 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         LOGE("Permission denied, caller is not pasterboard or udmf");
         return E_PERMISSION_DENIED;
     }
-
+    for (const auto &uri : uriList) {
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
+            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            return OHOS::FileManagement::E_ILLEGAL_URI;
+        }
+    }
     auto ret = AppFileService::ModuleRemoteFileShare::RemoteFileShare::GetDfsUrisDirFromLocal(uriList, userId,
                                                                                               uriToDfsUriMaps);
     if (ret != FileManagement::E_OK) {

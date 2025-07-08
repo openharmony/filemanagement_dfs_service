@@ -141,4 +141,40 @@ bool Parcel::WriteStringVector(const std::vector<std::string> &val)
 {
     return DfsMessageParcel::messageParcel->WriteStringVector(val);
 }
+
+bool Parcel::WriteUint32(uint32_t value)
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->WriteUint32(value);
+    }
+    std::cout << "WriteUint32 mock failed, messageParcel is nullptr" << std::endl;
+    return false;
+}
+
+bool MessageParcel::WriteRawData(const void *data, size_t size)
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->WriteRawData(data, size);
+    }
+    std::cout << "WriteRawData mock failed, messageParcel is nullptr" << std::endl;
+    return false;
+}
+
+const void *MessageParcel::ReadRawData(size_t size)
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->ReadRawData(size);
+    }
+    std::cout << "ReadRawData mock failed, messageParcel is nullptr" << std::endl;
+    return nullptr;
+}
+
+uint32_t Parcel::ReadUint32()
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->ReadUint32();
+    }
+    std::cout << "ReadUint32 mock failed, messageParcel is nullptr" << std::endl;
+    return 1; // 1: default value
+}
 } // namespace OHOS

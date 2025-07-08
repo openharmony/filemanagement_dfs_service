@@ -50,6 +50,10 @@ public:
     virtual bool WriteUint16(uint16_t value) = 0;
     virtual bool ReadUint64(uint64_t &value) = 0;
     virtual bool WriteStringVector(const std::vector<std::string> &val) = 0;
+    virtual bool WriteUint32(uint32_t value) = 0;
+    virtual bool WriteRawData(const void *data, size_t size) = 0;
+    virtual const void *ReadRawData(size_t size) = 0;
+    virtual uint32_t ReadUint32() = 0;
 public:
     static inline std::shared_ptr<DfsMessageParcel> messageParcel = nullptr;
 };
@@ -79,6 +83,10 @@ public:
     MOCK_METHOD1(WriteUint16, bool(uint16_t value));
     MOCK_METHOD1(ReadUint64, bool(uint64_t &value));
     MOCK_METHOD1(WriteStringVector, bool(const std::vector<std::string> &val));
+    MOCK_METHOD1(WriteUint32, bool(uint32_t value));
+    MOCK_METHOD2(WriteRawData, bool(const void *data, size_t size));
+    MOCK_METHOD1(ReadRawData, const void*(size_t size));
+    MOCK_METHOD0(ReadUint32, uint32_t());
 };
 }
 #endif
