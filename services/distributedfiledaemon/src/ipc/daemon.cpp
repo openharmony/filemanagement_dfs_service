@@ -951,7 +951,7 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
 {
     LOGI("start CreatControlLink");
     if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
-        LOGI("exist channel, networkId: %{public}s", networkId.c_str());
+        LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_OK;
     }
 
@@ -964,7 +964,7 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
     }
 
     if (ChannelManager::GetInstance().CreateClientChannel(networkId) != FileManagement::ERR_OK) {
-        LOGE("create channel failed, networkId: %{public}s", networkId.c_str());
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
@@ -973,11 +973,11 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
 int32_t Daemon::CancelControlLink(const std::string &networkId)
 {
     if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
-        LOGI("exist channel, networkId: %{public}s", networkId.c_str());
+        LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_OK;
     }
     if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
-        LOGE("create channel failed, networkId: %{public}s", networkId.c_str());
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;

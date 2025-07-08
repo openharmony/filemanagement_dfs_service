@@ -276,6 +276,8 @@ void DaemonTest::TearDownTestCase(void)
     softBusHandlerAssetMock_ = nullptr;
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
     softBusHandlerMock_ = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
     channelManagerMock_ = nullptr;
     IChannelManagerMock::iChannelManagerMock = nullptr;
 

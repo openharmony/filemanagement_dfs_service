@@ -127,7 +127,7 @@ bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &ou
 
 bool ControlCmdParser::PublishNotification(const ControlCmd &inCmd, ControlCmd &outCmd)
 {
-    LOGI("publishNotification socketId = %{public}s", inCmd.networkId.c_str());
+    LOGI("publishNotification networkId = %{public}.6s", inCmd.networkId.c_str());
     auto ret = SystemNotifier::GetInstance().CreateLocalLiveView(inCmd.networkId);
     if (ret != E_OK) {
         LOGE("Failed to publish notification. ret: %{public}d", ret);
@@ -138,7 +138,7 @@ bool ControlCmdParser::PublishNotification(const ControlCmd &inCmd, ControlCmd &
 
 bool ControlCmdParser::CancelNotification(const ControlCmd &inCmd, ControlCmd &outCmd)
 {
-    LOGI("cancelNotification socketId = %{public}s", inCmd.networkId.c_str());
+    LOGI("cancelNotification networkId = %{public}.6s", inCmd.networkId.c_str());
     auto ret = SystemNotifier::GetInstance().DestroyNotifyByNetworkId(inCmd.networkId);
     if (ret != E_OK) {
         LOGE("Failed to cancel notification. ret: %{public}d", ret);
@@ -149,7 +149,7 @@ bool ControlCmdParser::CancelNotification(const ControlCmd &inCmd, ControlCmd &o
 
 bool ControlCmdParser::DisconnectByRemote(const ControlCmd &inCmd, ControlCmd &outCmd)
 {
-    LOGI("DisconncetByRemote socketId = %{public}s", inCmd.networkId.c_str());
+    LOGI("DisconnectByRemote networkId = %{public}.6s", inCmd.networkId.c_str());
     if (disconnectCallback_ == nullptr) {
         LOGE("callback is null");
         return false;

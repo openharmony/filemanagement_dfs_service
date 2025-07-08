@@ -482,7 +482,7 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
 
     std::string outJsonStr;
     if (outCmd.msgType != ControlCmdType::CMD_UNKNOWN && ControlCmdParser::SerializeToJson(outCmd, outJsonStr)) {
-        LOGI("Send response: %{public}s", outJsonStr.c_str());
+        LOGI("Send response: %{public}zu", outJsonStr.length());
         DoSendBytes(socketId, outJsonStr);
         return;
     }
