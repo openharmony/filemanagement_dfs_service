@@ -18,8 +18,8 @@
 
 #include "control_cmd_parser.h"
 #include "dfs_error.h"
-#include "system_notifier.h"
 #include "parameter.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -163,6 +163,6 @@ void ControlCmdParser::RegisterDisconnectCallback(std::function<void(std::string
     LOGI("start RegisterDisconnectCallback function.");
     disconnectCallback_ = cb;
 }
-}  // namespace DistributedFile
-}  // namespace Storage
-}  // namespace OHOS
+} // namespace DistributedFile
+} // namespace Storage
+} // namespace OHOS
