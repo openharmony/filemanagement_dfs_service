@@ -920,6 +920,26 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
     return FileManagement::E_OK;
 }
 
+int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    LOGI("GetDfsSwitchStatus enter. networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    LOGI("GetDfsSwitchStatus end, switchStatus %{public}d", switchStatus);
+    return E_OK;
+}
+
+int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    LOGI("UpdateDfsSwitchStatus enter, switch status: %{public}d", switchStatus);
+    return E_OK;
+}
+
+int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    LOGI("GetConnectedDeviceList enter.");
+    (void)deviceList;
+    return E_OK;
+}
+
 void Daemon::DisconnectByRemote(const string &networkId)
 {
     LOGI("start DisconnectByRemote");
