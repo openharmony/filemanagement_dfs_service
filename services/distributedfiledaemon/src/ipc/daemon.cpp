@@ -979,7 +979,7 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
     auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
     LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
     if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
-        LOGW("old version ,not need CreatControlLink");
+        LOGW("old version, not need CreatControlLink");
         return FileManagement::ERR_OK;
     }
 
@@ -993,7 +993,7 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
 int32_t Daemon::CancelControlLink(const std::string &networkId)
 {
     if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
-        LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
+        LOGI("not exist channel, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_OK;
     }
     if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
