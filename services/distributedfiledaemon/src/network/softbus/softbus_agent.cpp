@@ -228,7 +228,7 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
 void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDeviceId)
 {
     LOGI("OnSessionClosed Enter.");
-    Shutdown(sessionId);
+    CloseSessionForOneDevice(peerDeviceId);
 }
 
 bool SoftbusAgent::OnNegotiate2(int32_t socket, PeerSocketInfo info,

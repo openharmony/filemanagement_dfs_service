@@ -15,6 +15,7 @@
 #include "network/softbus/softbus_agent.h"
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include <memory>
 #include <unistd.h>
 
@@ -26,6 +27,7 @@
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session.h"
 #include "utils_log.h"
+#include "connect_count/connect_count.h"
 
 using namespace std;
 
@@ -172,6 +174,42 @@ HWTEST_F(SoftbusAgentSupTest, SoftbusAgentSupTest_ConnectOnlineDevices_0200, Tes
     }
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentSupTest_ConnectOnlineDevices_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentSupTest_GetSessionProcessInner_0100
+ * @tc.desc: Verify the GetSessionProcessInner function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentSupTest, SoftbusAgentSupTest_GetSessionProcessInner_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_GetSessionProcessInner_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+
+    NotifyParam param {.fd = 1, .remoteCid = "testNetworkId"};
+    agent->sessionPool_.ReleaseAllSession();
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    param.fd = -1;
+    auto session = make_shared<SoftbusSession>(1, "testNetworkId");
+    session->SetFromServer(false);
+    agent->sessionPool_.AddSessionToPool(session);
+    ConnectCount::GetInstance()->RemoveAllConnect();
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    sptr<IFileDfsListener> listener = nullptr;
+    agent->sessionPool_.AddSessionToPool(session);
+    ConnectCount::GetInstance()->AddConnect(1, "testNetworkId", listener);
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_GetSessionProcessInner_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
