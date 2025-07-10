@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
@@ -169,6 +170,13 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     }
     for (int32_t i = 0; i < fileCnt; i++) {
         std::string filePath(path_ + fileList[i]);
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
+            LOGE("path is forbidden");
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
+                FileManagement::ERR_BAD_VALUE);
+            SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+            return;
+        }
         if (JudgeSingleFile(filePath)) {
             ret = HandleSingleFile(socketId, filePath, assetObj);
         } else {

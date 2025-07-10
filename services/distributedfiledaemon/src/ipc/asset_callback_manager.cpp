@@ -35,6 +35,10 @@ void AssetCallbackManager::AddRecvCallback(const sptr<IAssetRecvCallback> &recvC
     }
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (const auto &callback : recvCallbackList_) {
+        if (callback == nullptr) {
+            LOGE("callback is nullptr");
+            continue;
+        }
         if (recvCallback->AsObject() == callback->AsObject()) {
             LOGI("recvCallback registered!");
             return;
@@ -111,8 +115,11 @@ void AssetCallbackManager::NotifyAssetRecvProgress(const std::string &srcNetwork
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (const auto &callback : recvCallbackList_) {
         if (callback == nullptr) {
-            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
-                 assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            LOGE("IAssetRecvCallback is empty");
+            if (assetObj != nullptr) {
+                LOGE("SessionId is %{public}s, dstBundleName is %{public}s",
+                    assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            }
             continue;
         }
         callback->OnRecvProgress(srcNetworkId, assetObj, total, processed);
@@ -127,8 +134,11 @@ void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetwork
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (const auto &callback : recvCallbackList_) {
         if (callback == nullptr) {
-            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
-                 assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            LOGE("IAssetRecvCallback is empty");
+            if (assetObj != nullptr) {
+                LOGE("SessionId is %{public}s, dstBundleName is %{public}s",
+                    assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            }
         } else {
             callback->OnFinished(srcNetworkId, assetObj, result);
         }
