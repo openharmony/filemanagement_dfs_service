@@ -482,7 +482,7 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
 
     std::string outJsonStr;
     if (outCmd.msgType != ControlCmdType::CMD_UNKNOWN && ControlCmdParser::SerializeToJson(outCmd, outJsonStr)) {
-        LOGI("Send response: %{public}s", outJsonStr.c_str());
+        LOGI("Send response: %{public}zu", outJsonStr.length());
         DoSendBytes(socketId, outJsonStr);
         return;
     }
@@ -515,9 +515,7 @@ void ChannelManager::OnBytesReceived(int32_t socketId, const void *data, const u
     const char *charData = static_cast<const char *>(data);
     std::string jsonStr(charData, dataLen);
 
-    auto func = [this, jsonStr, socketId]() {
-        HandleRemoteBytes(jsonStr, socketId);
-    };
+    auto func = [this, jsonStr, socketId]() { HandleRemoteBytes(jsonStr, socketId); };
     PostCallbackTask(func, AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
@@ -543,9 +541,7 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
     }
 
     // Serialize and send the request (async operation)
-    auto sendFunc = [this, request, networkId]() {
-        DoSendBytesAsync(request, networkId);
-    };
+    auto sendFunc = [this, request, networkId]() { DoSendBytesAsync(request, networkId); };
 
     auto ret = PostTask(sendFunc, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     if (ret != E_OK) {

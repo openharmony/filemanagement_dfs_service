@@ -136,6 +136,13 @@ private:
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
+
+    void DisconnectByRemote(const std::string &networkId);
+    int32_t CreatControlLink(const std::string &networkId);
+    int32_t CancelControlLink(const std::string &networkId);
+    int32_t CheckRemoteAllowConnect(const std::string &networkId);
+    int32_t NotifyRemotePublishNotification(const std::string &networkId);
+    int32_t NotifyRemoteCancelNotification(const std::string &networkId);
 private:
     std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;
