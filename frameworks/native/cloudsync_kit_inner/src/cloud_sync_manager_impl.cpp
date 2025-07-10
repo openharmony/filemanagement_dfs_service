@@ -792,6 +792,18 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
     return CloudSyncServiceProxy->CleanCacheInner(uri);
 }
 
+int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
+{
+    LOGI("CleanFileCache Start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->CleanFileCacheInner(uri);
+}
+
 int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
     std::vector<std::string> &failCloudId)
 {

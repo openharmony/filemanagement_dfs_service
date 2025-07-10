@@ -128,6 +128,7 @@ public:
     virtual int32_t UnregisterFileCacheCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
+    virtual int32_t CleanFileCache(const std::string &uri) = 0;
     virtual void CleanGalleryDentryFile() = 0;
     virtual void CleanGalleryDentryFile(const std::string path) = 0;
     virtual int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo,

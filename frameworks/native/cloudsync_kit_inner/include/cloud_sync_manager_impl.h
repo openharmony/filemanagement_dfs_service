@@ -69,6 +69,7 @@ public:
     int32_t UnregisterFileCacheCallback() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
+    int32_t CleanFileCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
     void CleanGalleryDentryFile(const std::string path) override;
     int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo, std::vector<std::string> &failCloudId) override;

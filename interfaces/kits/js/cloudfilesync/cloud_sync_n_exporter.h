@@ -21,6 +21,7 @@
 namespace OHOS::FileManagement::CloudSync {
 void InitCloudSyncState(napi_env env, napi_value exports);
 void InitFileSyncState(napi_env env, napi_value exports);
+void InitFileState(napi_env env, napi_value exports);
 void InitErrorType(napi_env env, napi_value exports);
 void InitCloudSyncApi(napi_env env, napi_value exports);
 void InitDownloadErrorType(napi_env env, napi_value exports);
