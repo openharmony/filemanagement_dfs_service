@@ -230,6 +230,7 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
+            LOGI("NOTIFY_OFFLINE, cid:%{public}.5s", cidStr.c_str());
             CloseSessionCallback_(cidStr);
             break;
         default:

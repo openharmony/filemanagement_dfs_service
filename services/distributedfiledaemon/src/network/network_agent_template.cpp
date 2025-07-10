@@ -120,7 +120,14 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
-    LOGI("NOTIFY_OFFLINE, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, std::string>>(
+        &NetworkAgentTemplate::CloseSessionForOneDeviceInner, cid);
+    cmd->UpdateOption({.tryTimes_ = 1});
+    Recv(move(cmd));
+}
+
+void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
+{
     sessionPool_.ReleaseSession(cid, true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
     ConnectCount::GetInstance()->RemoveConnect(cid);
@@ -153,7 +160,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
     bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
     sessionPool_.ReleaseSession(fd);
-    if (ifGetSession) {
+    if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
         GetSession(cidStr);
     } else {
         sessionPool_.SinkOffline(cidStr);
