@@ -34,6 +34,10 @@ constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 
 void NetworkAgentTemplate::Start()
 {
+    if (kernerlTalker_ == nullptr) {
+        LOGE("kernerlTalker_ is nullptr.");
+        return;
+    }
     LOGI("Start Enter");
     JoinDomain();
     kernerlTalker_->CreatePollThread();
@@ -42,6 +46,10 @@ void NetworkAgentTemplate::Start()
 
 void NetworkAgentTemplate::Stop()
 {
+    if (kernerlTalker_ == nullptr) {
+        LOGE("kernerlTalker_ is nullptr.");
+        return;
+    }
     LOGI("Stop Enter");
     StopTopHalf();
     StopBottomHalf();
@@ -135,6 +143,10 @@ void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
+    if (session == nullptr) {
+        LOGE("session is nullptr.");
+        return;
+    }
     auto cid = session->GetCid();
     LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);

@@ -29,6 +29,9 @@ int32_t GetLocalNodeDeviceInfo(const char *pkgName, NodeBasicInfo *info)
         .deviceTypeId = 1};
     (void)pkgName;
     *info = nodeBasicInfo;
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        return -1;
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetLocalNodeDeviceInfo(pkgName, info);
 }
 

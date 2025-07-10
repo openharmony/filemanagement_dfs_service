@@ -117,7 +117,10 @@ void DevslDispatcher::DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t
         levelInfo = DATA_SEC_LEVEL1;
         LOGE("devsl dispatcher dsl get callback result : %{public}d", result);
     }
-
+    if (queryParams == nullptr) {
+        LOGE("queryParams is nullptr.");
+        return;
+    }
     std::string udid(reinterpret_cast<char *>(queryParams->udid), queryParams->udidLen);
     std::thread callbackThread =
         std::thread([udid, levelInfo]() { DevslGottonCallbackAsync(udid, levelInfo); });
@@ -166,8 +169,8 @@ bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, co
             return false;
         }
         if (remoteDevsl < securityLabel) {
-            LOGE("remoteDevsl=%{public}d, securityLabel=%{public}d, path=%{public}s}",
-                 remoteDevsl, securityLabel, Utils::GetAnonyString(path).c_str());
+            LOGE("remoteDevsl=%{public}d, securityLabel=%{public}d",
+                 remoteDevsl, securityLabel);
             return false;
         }
     }
