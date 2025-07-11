@@ -951,7 +951,7 @@ static std::string GetMediaPath(const std::string& path)
 
 void CloudSyncManagerImpl::CleanGalleryDentryFile(const std::string path)
 {
-    if (!IsPhotoPath(path)) {
+    if (!IsPhotoPath(path) || OHOS::Storage::DistributedFile::Utils::HasInvalidChars(path)) {
         LOGE("CleanGalleryDentryFile path is not photo");
         return;
     }

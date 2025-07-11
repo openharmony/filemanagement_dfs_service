@@ -22,6 +22,7 @@
 #include <system_error>
 #include <unistd.h>
 
+#include "cloud_file_fault_event.h"
 #include "directory_ex.h"
 
 namespace OHOS {
@@ -349,6 +350,141 @@ HWTEST_F(UtilsDirectoryTest, SysEventWriteTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << " SysEventWriteTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "SysEventWriteTest001 End";
+}
+
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest001 Start";
+    try {
+        string path = "/storage/media/cloud/files/../Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest001 End";
+}
+ 
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest002 Start";
+    try {
+        string path = "/storage/media/cloud/files/./Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest002 End";
+}
+ 
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest003 Start";
+    try {
+        std::string path = "/storage/media/cloud/";
+        path += '\0';
+        path += "/files/Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest003 End";
+}
+ 
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest004 Start";
+    try {
+        string path = "./storage/media/cloud/files/Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest004 End";
+}
+ 
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest005 Start";
+    try {
+        string path = "../storage/media/cloud/files/Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest005 End";
+}
+
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest006 Start";
+    try {
+        string path = "";
+        bool ret = HasInvalidChars(path);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest006 End";
+}
+
+/*
+ * @tc.name: HasInvalidChars
+ * @tc.desc: Verify the HasInvalidChars function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilsDirectoryTest, HasInvalidCharsTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest007 Start";
+    try {
+        string path = "/storage/media/cloud/files/Photo";
+        bool ret = HasInvalidChars(path);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HasInvalidCharsTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "HasInvalidCharsTest007 End";
 }
 } // namespace Utils
 } // namespace DistributedFile
