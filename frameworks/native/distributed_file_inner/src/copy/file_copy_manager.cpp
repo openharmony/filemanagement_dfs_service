@@ -108,7 +108,7 @@ void SetQueryMap(Uri* uri, std::unordered_map<std::string,
     while (getline(queryStream, pairString, '&')) {
         size_t splitIndex = pairString.find('=');
         if (splitIndex == std::string::npos || splitIndex == (pairString.length() - 1)) {
-            LOGE("failed to parse query, query field is %{private}s!", pairString.c_str());
+            LOGE("failed to parse query!");
             continue;
         }
         queryMap[pairString.substr(0, splitIndex)] = pairString.substr(splitIndex + 1);
@@ -193,20 +193,18 @@ std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
 {
-    LOGE("FileCopyManager Copy start, srcUri %{public}s, destUri %{public}s", GetAnonyString(srcUri).c_str(),
-        GetAnonyString(destUri).c_str());
+    LOGE("FileCopyManager Copy start");
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
     if (srcUri == destUri) {
-        LOGE("The srcUri and destUri is same: %{public}s", GetAnonyString(srcUri).c_str());
+        LOGE("The srcUri and destUri is same");
         return EINVAL;
     }
 
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        LOGE("path is forbidden");
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();
@@ -225,8 +223,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
 
     if (!CheckPath(infos)) {
-        LOGE("invalid srcPath : %{private}s, destPath: %{private}s", GetAnonyString(infos->srcPath).c_str(),
-            GetAnonyString(infos->destPath).c_str());
+        LOGE("invalid srcPath or destPath");
         return EINVAL;
     }
 
@@ -280,8 +277,7 @@ int32_t FileCopyManager::Cancel(const bool isKeepFiles)
     for (auto &item : FileInfosVec_) {
         item->needCancel.store(true);
         if (item->transListener != nullptr) {
-            LOGE("Cancel, srcUri %{public}s, destUri %{public}s.", GetAnonyString(item->srcUri).c_str(),
-                GetAnonyString(item->destUri).c_str());
+            LOGE("Cancel.");
             item->transListener->Cancel(item->srcUri, item->destUri);
         }
         if (!isKeepFiles) {
@@ -299,8 +295,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     int32_t ret = 0;
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        LOGE("path is forbidden");
         return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -310,8 +305,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
         }
         (*item)->needCancel.store(true);
         if ((*item)->transListener != nullptr) {
-            LOGE("Cancel, srcUri %{public}s, destUri %{public}s.", GetAnonyString(srcUri).c_str(),
-                GetAnonyString(destUri).c_str());
+            LOGE("Cancel");
             ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
         if (!isKeepFiles) {
@@ -336,6 +330,10 @@ void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
     }
 
     //delete files&dirs in local cancel
+    if (infos->localListener == nullptr) {
+        LOGE("local listener is nullptr");
+        return;
+    }
     auto filePaths = infos->localListener->GetFilePath();
     for (auto path : filePaths) {
         if (!std::filesystem::exists(path, errCode)) {
@@ -358,12 +356,20 @@ void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
 int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
 {
     LOGI("start ExecLocal");
+    if (infos == nullptr) {
+        LOGE("infos is nullptr");
+        return EINVAL;
+    }
     // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
     if (infos->srcUriIsFile) {
         int32_t ret = CheckOrCreatePath(infos->destPath);
         if (ret != E_OK) {
             LOGE("check or create fail, error code is %{public}d", ret);
             return ret;
+        }
+        if (infos->localListener == nullptr) {
+            LOGE("local listener is nullptr");
+            return EINVAL;
         }
         infos->localListener->AddListenerFile(infos->destPath, IN_MODIFY);
         return CopyFile(infos->srcPath, infos->destPath, infos);
@@ -372,7 +378,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     bool destIsDirectory;
     auto ret = FileSizeUtils::IsDirectory(infos->destUri, false, destIsDirectory);
     if (ret != E_OK) {
-        LOGE("destPath: %{public}s not find, error=%{public}d", infos->destPath.c_str(), ret);
+        LOGE("destPath not find, error=%{public}d", ret);
         return ret;
     }
     if (destIsDirectory) {
@@ -391,7 +397,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("src = %{private}s, dest = %{private}s", src.c_str(), dest.c_str());
+    LOGI("CopyFile start");
     infos->localListener->AddFile(dest);
     int32_t srcFd = -1;
     int32_t ret = OpenSrcFile(src, infos, srcFd);
@@ -482,7 +488,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
 
 int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("CopyDirFunc in, src = %{private}s, dest = %{private}s", src.c_str(), dest.c_str());
+    LOGI("CopyDirFunc in");
     size_t found = dest.find(src);
     if (found != std::string::npos && found == 0) {
         LOGE("not support copy src to dest");
@@ -518,6 +524,10 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
     {
         std::lock_guard<std::mutex> lock(infos->subDirsMutex);
         infos->subDirs.insert(destPath);
+    }
+    if (infos->localListener == nullptr) {
+        LOGE("local listener is nullptr");
+        return EINVAL;
     }
     infos->localListener->AddListenerFile(destPath, IN_MODIFY);
     return RecurCopyDir(srcPath, destPath, infos);
@@ -578,7 +588,7 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
     bool isDirectory;
     auto ret = FileSizeUtils::IsDirectory(infos->srcUri, true, isDirectory);
     if (ret != E_OK) {
-        LOGE("srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), ret);
+        LOGE("srcPath not find, err=%{public}d", ret);
         return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
@@ -642,7 +652,7 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
         if ((infos->needCancel.load()) && (srcPth.rfind(MTP_PATH_PREFIX, 0) != std::string::npos)) {
             close(srcFd);
             srcFd = -1;
-            LOGE("Source file copying is already canceled, path = %{public}s", GetAnonyString(srcPth).c_str());
+            LOGE("Source file copying is already canceled");
             return FileManagement::E_DFS_CANCEL_SUCCESS;
         }
     }

@@ -115,7 +115,7 @@ bool RemoteFileCopyManager::IsMediaUri(const std::string &uriPath)
 static int32_t IsDirectory(const std::string &path, bool &isDirectory)
 {
     if (!FileSizeUtils::IsFilePathValid(path)) {
-        LOGE("path: %{public}s is forbidden", GetAnonyString(path).c_str());
+        LOGE("path is forbidden");
         return EINVAL;
     }
 
@@ -170,12 +170,12 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
     infos->destUri = destUri;
     std::string srcPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(userId), srcPhysicalPath)) {
-        LOGE("Get src path failed, invalid uri, physicalPath = %{public}s", GetAnonyString(srcPhysicalPath).c_str());
+        LOGE("Get src path failed, invalid uri");
         return EINVAL;
     }
     std::string dstPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(destUri, std::to_string(userId), dstPhysicalPath)) {
-        LOGE("Get dst path failed, invalid uri, physicalPath = %{public}s", GetAnonyString(dstPhysicalPath).c_str());
+        LOGE("Get dst path failed, invalid uri");
         return EINVAL;
     }
     Uri uri(destUri);
@@ -189,12 +189,11 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
     }
     infos->srcPath = srcPhysicalPath;
     infos->destPath = dstPhysicalPath;
-    LOGI("Remote copy srcPath: %{public}s, destPath: %{public}s", GetAnonyString(srcPhysicalPath).c_str(),
-        GetAnonyString(dstPhysicalPath).c_str());
+    LOGI("Remote copy srcPath: , destPath: ");
     bool isDirectory;
     auto ret = IsDirectory(infos->srcPath, isDirectory);
     if (ret != E_OK) {
-        LOGE("srcPath: %{public}s not find, err=%{public}d", GetAnonyString(infos->srcPath).c_str(), ret);
+        LOGE("srcPath not find, err=%{public}d", ret);
         return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
@@ -217,14 +216,12 @@ void RemoteFileCopyManager::RemoveFileInfos(std::shared_ptr<FileInfos> infos)
 
 int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std::string &destUri)
 {
-    LOGI("RemoteCancel, srcUri %{public}s, destUri %{public}s", GetAnonyString(srcUri).c_str(),
-        GetAnonyString(destUri).c_str());
+    LOGI("RemoteCancel");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        LOGE("path is forbidden");
         return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -249,15 +246,13 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
 int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::string &destUri,
     const sptr<IFileTransListener> &listener, const int32_t userId, const std::string &copyPath)
 {
-    LOGI("RemoteCopy start, srcUri %{public}s, destUri %{public}s", GetAnonyString(srcUri).c_str(),
-        GetAnonyString(destUri).c_str());
+    LOGI("RemoteCopy start");
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(destUri).c_str());
+        LOGE("path is forbidden");
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();
@@ -268,8 +263,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
     }
 
     if (!CheckPath(infos)) {
-        LOGE("invalid srcPath : %{public}s, destPath: %{public}s", GetAnonyString(infos->srcPath).c_str(),
-            GetAnonyString(infos->destPath).c_str());
+        LOGE("invalid srcPath or destPath");
         return EINVAL;
     }
     std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback = 

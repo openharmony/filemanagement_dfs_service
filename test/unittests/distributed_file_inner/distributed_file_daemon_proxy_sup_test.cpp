@@ -54,6 +54,7 @@ void DistributedFileDaemonProxyTest::TearDownTestCase(void)
 
 void DistributedFileDaemonProxyTest::SetUp(void)
 {
+    ASSERT_TRUE(mock_ != nullptr);
     GTEST_LOG_(INFO) << "SetUp";
 }
 

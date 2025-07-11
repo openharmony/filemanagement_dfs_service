@@ -94,9 +94,7 @@ bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
         LOGE("Get local networkid failed");
         return false;
     }
-    LOGI("Get local accountinfo success, accountId %{public}s, userId %{public}s, networkId %{public}s.",
-        GetAnonyString(localAccountInfo.accountId_).c_str(), GetAnonyInt32(localAccountInfo.userId_).c_str(),
-        GetAnonyString(localAccountInfo.networkId_).c_str());
+    LOGI("Get local accountinfo success");
     return true;
 }
 
@@ -281,7 +279,7 @@ bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
 bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
 {
 #ifdef SUPPORT_SAME_ACCOUNT
-    LOGI("SoftBusPermissionCheck::IsSameAccount called, networkId=%{public}.5s", networkId.c_str());
+    LOGI("SoftBusPermissionCheck::IsSameAccount called");
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
