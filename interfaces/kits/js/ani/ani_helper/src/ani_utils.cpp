@@ -15,11 +15,12 @@
 
 #include "ani_utils.h"
 
+#include <ani_signature_builder.h>
 #include "fs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-
+using namespace arkts::ani_signature;
 ani_status ANIUtils::AniString2String(ani_env *env, ani_string str, std::string &res)
 {
     ani_size strSize;
@@ -41,6 +42,72 @@ ani_status ANIUtils::AniString2String(ani_env *env, ani_string str, std::string 
     return ANI_OK;
 }
 
+std::tuple<bool, ani_string> ANIUtils::ToAniString(ani_env *env, const std::string &str)
+{
+    ani_string result;
+    bool succ = (ANI_OK == env->String_NewUTF8(str.c_str(), str.size(), &result));
+    return {succ, std::move(result)};
+}
+
+std::tuple<bool, int32_t> ANIUtils::EnumToInt32(ani_env *env, ani_enum_item enumItem)
+{
+    ani_int result;
+    bool succ = (ANI_OK == env->EnumItem_GetValue_Int(enumItem, &result));
+    return {succ, result};
+}
+
+std::tuple<bool, std::vector<std::string>> ANIUtils::AniToStringArray(ani_env *env, ani_array_ref strArray)
+{
+    ani_size arraySize;
+    ani_status ret;
+    if ((ret = env->Array_GetLength(strArray, &arraySize)) != ANI_OK) {
+        LOGE("Failed to get array size, %{public}d", ret);
+        return {false, {}};
+    }
+    std::vector<std::string> res;
+    for (ani_size i = 0; i < arraySize; ++i) {
+        ani_ref strRef;
+        if ((ret = env->Array_Get_Ref(strArray, i, &strRef)) != ANI_OK) {
+            LOGE("Failed to get string item, %{public}d", ret);
+            return {false, {}};
+        }
+        std::string strItem;
+        if ((ret = ANIUtils::AniString2String(env, static_cast<ani_string>(strRef), strItem)) != ANI_OK) {
+            LOGE("Failed to get string item, %{public}d", ret);
+            return {false, {}};
+        }
+        res.emplace_back(strItem);
+    }
+    return {true, res};
+}
+
+std::tuple<bool, ani_array_ref> ANIUtils::ToAniStringArray(ani_env *env, const std::vector<std::string> &strList)
+{
+    size_t length = strList.size();
+    const std::string *strArray = strList.data();
+    std::string classDesc = Builder::BuildClass("std.core.String").Descriptor();
+    ani_class cls = nullptr;
+    if (env->FindClass(classDesc.c_str(), &cls) != ANI_OK) {
+        return {false, nullptr};
+    }
+    ani_array_ref result = nullptr;
+    if (env->Array_New_Ref(cls, length, nullptr, &result) != ANI_OK) {
+        return {false, nullptr};
+    }
+    for (size_t i = 0; i < length; ++i) {
+        auto [succ, item] = ANIUtils::ToAniString(env, strArray[i]);
+        if (!succ) {
+            LOGE("Failed to conver to ani string");
+            return {false, nullptr};
+        }
+        if (env->Array_Set_Ref(result, i, item) != ANI_OK) {
+            LOGE("Failed to set element for array");
+            return {false, nullptr};
+        }
+    }
+    return {true, result};
+}
+
 bool ANIUtils::SendEventToMainThread(const std::function<void()> func)
 {
     if (func == nullptr) {
@@ -59,4 +126,4 @@ bool ANIUtils::SendEventToMainThread(const std::function<void()> func)
     mainHandler->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::HIGH, {});
     return true;
 }
-}
+} // namespace OHOS::FileManagement::CloudSync
