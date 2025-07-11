@@ -1008,7 +1008,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest004, TestSize.Level
         std::ofstream("/storage/media/cloud/files/Photo/1/666666.jpg");
         std::string testDir = "/storage/666666.jpg";
         CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
-        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
+        bool isExists = fs::exists("/storage/media/cloud/files/Photo/1/666666.jpg");
         system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
         EXPECT_TRUE(isExists);
     } catch (...) {
