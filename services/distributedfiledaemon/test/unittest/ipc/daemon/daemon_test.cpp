@@ -293,6 +293,7 @@ void DaemonTest::SetUp(void)
     int32_t saID = FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID;
     bool runOnCreate = true;
     daemon_ = new (std::nothrow) Daemon(saID, runOnCreate);
+    ASSERT_TRUE(daemon_ != nullptr) << "daemon_ assert failed!";
 }
 
 void DaemonTest::TearDown(void)
@@ -756,12 +757,15 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     EXPECT_EQ(daemon_->PrepareSession("", "", "", nullptr, hmdfsInfo), E_NULLPTR);
 
     sptr<IRemoteObject> listener = new (std::nothrow) FileTransListenerMock();
+    ASSERT_TRUE(listener != nullptr) << "listener assert failed!";
     sptr<ISystemAbilityManagerMock> sysAbilityManager = new (std::nothrow) ISystemAbilityManagerMock();
+    ASSERT_TRUE(sysAbilityManager != nullptr) << "sysAbilityManager assert failed!";
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(nullptr));
     EXPECT_EQ(daemon_->PrepareSession("", "", "", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
@@ -803,6 +807,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
 
     EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon), E_ILLEGAL_URI);
 
@@ -1016,6 +1021,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_FALSE(daemon_->GetRemoteSA("") == nullptr);
@@ -1042,6 +1048,7 @@ HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
         .WillOnce(Return(E_OK));
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->Copy("", "", daemon, ""), E_SA_LOAD_FAILED);
 
@@ -1086,7 +1093,9 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 begin";
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
+    ASSERT_TRUE(assetSendCallback != nullptr) << "assetSendCallback assert failed!";
     EXPECT_EQ(daemon_->PushAsset(userId, nullptr, nullptr), E_NULLPTR);
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, nullptr), E_NULLPTR);
     EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_NULLPTR);
@@ -1110,12 +1119,14 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     daemon_->StartEventHandler();
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     assetObj->dstNetworkId_ = "test";
     DevslDispatcher::devslMap_.clear();
     DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
+    ASSERT_TRUE(assetSendCallback != nullptr) << "assetSendCallback assert failed!";
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
     g_isFolder = false;
@@ -1142,6 +1153,7 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
     EXPECT_EQ(daemon_->RegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
+    ASSERT_TRUE(assetRecvCallback != nullptr) << "assetRecvCallback assert failed!";
     EXPECT_EQ(daemon_->RegisterAssetCallback(assetRecvCallback), E_OK);
     AssetCallbackManager::GetInstance().RemoveRecvCallback(assetRecvCallback);
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 end";
@@ -1159,6 +1171,7 @@ HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
+    ASSERT_TRUE(assetRecvCallback != nullptr) << "assetRecvCallback assert failed!";
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(assetRecvCallback), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 end";
 }

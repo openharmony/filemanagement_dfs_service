@@ -24,6 +24,22 @@
 #include "network/softbus/softbus_handler_asset.h"
 #include "utils_log.h"
 
+namespace {
+    int32_t g_generateAssetObjInfo = OHOS::FileManagement::ERR_OK;
+}
+namespace OHOS {
+namespace Storage {
+namespace DistributedFile {
+int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
+                                                  const std::string &fileName,
+                                                  const sptr<AssetObj> &assetObj)
+{
+    return g_generateAssetObjInfo;
+}
+}
+}
+}
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -32,7 +48,6 @@ using namespace testing::ext;
 using namespace std;
 using namespace OHOS::FileManagement;
 const string testPath = "/data/test";
-
 class SoftbusAssetRecvListenerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -110,12 +125,25 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_OnFile_0200,
         int32_t socket = 1;
         SoftbusAssetRecvListener::OnFile(socket, &event);
 
-        event.fileCnt = 1;
+        event.fileCnt = 2; // 2: file count
+        const char* fileList[2] = {"/test/test/", "/test/../test/"};
+        event.files = reinterpret_cast<const char**>(fileList);
+        SoftBusHandlerAsset::GetInstance().clientInfoMap_.insert(std::make_pair(socket, ""));
         SoftbusAssetRecvListener::OnFile(socket, &event);
+
+        g_generateAssetObjInfo = FileManagement::ERR_BAD_VALUE;
+        SoftBusHandlerAsset::GetInstance().clientInfoMap_[socket] = "test";
+        SoftbusAssetRecvListener::OnFile(socket, &event);
+
+        g_generateAssetObjInfo = FileManagement::E_OK;
+        SoftbusAssetRecvListener::OnFile(socket, &event);
+
+        event.fileCnt = 1; // 1: file count
+        const char* fileList1[1] = {"/test/../test/"}; // 1: file count
+        event.files = reinterpret_cast<const char**>(fileList1);
         SoftBusHandlerAsset::GetInstance().clientInfoMap_.insert(std::make_pair(socket, "test"));
-        const char *filePath = "test";
-        event.files = &filePath;
         SoftbusAssetRecvListener::OnFile(socket, &event);
+
         SoftBusHandlerAsset::GetInstance().clientInfoMap_.erase(socket);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -263,6 +291,7 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_HandleSingle
     GTEST_LOG_(INFO) << "SoftbusAssetRecvListenerTest_HandleSingleFile_0100 start";
     string fileName = "demoA/ASSET_TEMP/test.asset_single?";
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     assetObj->dstBundleName_ = "demoB";
     EXPECT_EQ(SoftbusAssetRecvListener::HandleSingleFile(2, fileName, assetObj), ERR_BAD_VALUE);
 
@@ -282,6 +311,7 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_HandleZipFil
     GTEST_LOG_(INFO) << "SoftbusAssetRecvListenerTest_HandleZipFile_0100 start";
     string fileName = "test";
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     assetObj->dstBundleName_ = "demoB";
     EXPECT_EQ(SoftbusAssetRecvListener::HandleZipFile(2, fileName, assetObj), ERR_BAD_VALUE);
 

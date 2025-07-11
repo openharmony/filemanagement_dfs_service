@@ -161,6 +161,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     daemonExecute_->ExecutePushAsset(event);
 
     assetObj = new (std::nothrow) AssetObj();
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     assetObj->dstNetworkId_ = "test";
     DevslDispatcher::devslMap_.clear();
     DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
@@ -190,6 +191,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 begin";
     int32_t userId = 100;
     sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     assetObj->dstNetworkId_ = "test";
     DevslDispatcher::devslMap_.clear();
     DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
@@ -352,6 +354,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_HandleZip_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonExecute_HandleZip_001 begin";
     std::vector<std::string> fileList;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     std::string sendFileName;
     bool isSingleFile;
 
@@ -385,6 +388,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_001, TestSize.Leve
     std::string physicalPath;
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     HmdfsInfo info;
 
     // Test case 1: CreateSessionServer fails
@@ -432,6 +436,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
     std::string physicalPath;
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     HmdfsInfo info;
 
     // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
@@ -455,6 +460,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Leve
     std::string physicalPath;
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     HmdfsInfo info;
     info.authority = FILE_MANAGER_AUTHORITY;
 
@@ -543,6 +549,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Le
     // Test case 4: All parameters are valid
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     HmdfsInfo info;
 
     // Initialize PrepareSessionData
@@ -573,6 +580,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Le
     // Test case 5: PrepareSessionInner returns failure
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
     HmdfsInfo info;
 
     // Initialize PrepareSessionData
