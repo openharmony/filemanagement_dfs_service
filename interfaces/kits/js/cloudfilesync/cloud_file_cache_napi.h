@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,10 @@
 
 #include <mutex>
 #include <unordered_set>
+
 #include "cloud_file_napi.h"
+#include "download_callback_middle_napi.h"
+#include "download_progress_napi.h"
 
 namespace OHOS::FileManagement::CloudSync {
 const std::string PROGRESS = "progress";
@@ -67,6 +70,15 @@ public:
 private:
     std::mutex registerMutex_;
     std::unordered_set<std::shared_ptr<RegisterInfoArg>> registerInfo_;
+};
+
+class CloudFileCacheCallbackImplNapi : public CloudDlCallbackMiddleNapi {
+public:
+    explicit CloudFileCacheCallbackImplNapi(napi_env env) : CloudDlCallbackMiddleNapi(env) {}
+    int32_t StartDownloadInner(const std::string &uri, int32_t fieldKey);
+    int32_t StartDownloadInner(const std::vector<std::string> &uriList, int64_t &downloadId, int32_t fieldKey);
+    int32_t StopDownloadInner(const std::string &uri, bool needClean);
+    int32_t StopDownloadInner(int64_t downloadId, bool needClean);
 };
 
 struct FileCacheEntity {
