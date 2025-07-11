@@ -38,17 +38,9 @@ static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
 
 void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, static_cast<int32_t>(ret));
-        return;
-    }
-    Type clsName = Builder::BuildClass("Download");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.Download");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, static_cast<int32_t>(ret));
