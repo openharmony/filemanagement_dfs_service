@@ -87,6 +87,26 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkSessionTokernel_0100, TestSize.L
 }
 
 /**
+ * @tc.name: KernelTalkerTest_SinkSessionTokernel_0101
+ * @tc.desc: Verify the SinkSessionTokernel function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkSessionTokernel_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_SinkSessionTokernel_0101 start";
+    bool res = true;
+    try {
+        g_talker->SinkSessionTokernel(nullptr, "Server");
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_SinkSessionTokernel_0101 end";
+}
+
+/**
  * @tc.name: KernelTalkerTest_SinkDevslTokernel_0100
  * @tc.desc: Verify the SinkDevslTokernel function.
  * @tc.type: FUNC

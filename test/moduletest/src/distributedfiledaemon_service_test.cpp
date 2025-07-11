@@ -101,7 +101,10 @@ HWTEST_F(DistributedFileDaemonServiceTest, mount_umount_test_001, TestSize.Level
         Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
-
+    if (smp == nullptr) {
+        LOGE("smp is nullptr");
+        FAIL();
+    }
     try {
         smp->Mount();
         smp->Umount();

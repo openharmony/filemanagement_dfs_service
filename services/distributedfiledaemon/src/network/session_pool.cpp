@@ -26,6 +26,10 @@ using namespace std;
 
 void SessionPool::HoldSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
+    if (talker_ == nullptr) {
+        LOGE("talker_ is nullptr.");
+        return;
+    }
     lock_guard lock(sessionPoolLock_);
     talker_->SinkSessionTokernel(session, backStage);
     AddSessionToPool(session);
@@ -63,7 +67,7 @@ bool SessionPool::CheckIfGetSession(const int32_t fd)
 void SessionPool::SinkOffline(const std::string &cid)
 {
     lock_guard lock(sessionPoolLock_);
-    if (!FindCid(cid)) {
+    if (!FindCid(cid) && talker_ != nullptr) {
         talker_->SinkOfflineCmdToKernel(cid);
     }
 }
@@ -96,6 +100,10 @@ void SessionPool::ReleaseSession(const std::string &cid, bool isReleaseAll)
         session->Release();
     }
 
+    if (talker_ == nullptr) {
+        LOGE("talker_ is nullptr.");
+        return;
+    }
     if (!FindCid(cid)) {
         talker_->SinkOfflineCmdToKernel(cid);
     }
@@ -113,6 +121,10 @@ bool SessionPool::FindCid(const std::string &cid)
 
 void SessionPool::ReleaseAllSession()
 {
+    if (talker_ == nullptr) {
+        LOGE("talker_ is nullptr.");
+        return;
+    }
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
         talker_->SinkOfflineCmdToKernel((*iter)->GetCid());

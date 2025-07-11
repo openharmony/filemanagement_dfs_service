@@ -482,6 +482,30 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_AcceptSession_0100, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SoftbusAgentTest_AcceptSession_0101
+ * @tc.desc: Verify the AcceptSession function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_AcceptSession_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_AcceptSession_0101 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    try {
+        agent->AcceptSession(nullptr, "Server");
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_AcceptSession_0101 end";
+}
+
+/**
  * @tc.name: SoftbusAgentTest_GetMountPoint_0100
  * @tc.desc: Verify the GetMountPoint function.
  * @tc.type: FUNC
