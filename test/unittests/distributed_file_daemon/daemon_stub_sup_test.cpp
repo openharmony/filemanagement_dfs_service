@@ -20,6 +20,7 @@
 #include "ipc_skeleton.h"
 
 #include "asset_recv_callback_mock.h"
+#include "copy/ipc_wrapper.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "file_dfs_listener_mock.h"
@@ -37,7 +38,41 @@ namespace {
     constexpr pid_t DATA_UID = 3012;
     constexpr pid_t DAEMON_UID = 1009;
     static pid_t UID = DAEMON_UID;
+    bool g_writeBatchUrisTrue = true;
+    int32_t g_readBatchUris = true;
 }
+
+namespace OHOS::Storage::DistributedFile {
+bool IpcWrapper::WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    return true;
+}
+
+bool IpcWrapper::GetData(void *&buffer, size_t size, const void *data)
+{
+    return true;
+}
+
+bool IpcWrapper::ReadBatchUriByRawData(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    return true;
+}
+
+bool IpcWrapper::WriteBatchUris(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    return g_writeBatchUrisTrue;
+}
+
+int32_t IpcWrapper::ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    if (g_readBatchUris == FileManagement::E_OK) {
+        uriVec.emplace_back("key");
+        uriVec.emplace_back("uri");
+        uriVec.emplace_back("1");
+    }
+    return g_readBatchUris;
+}
+};
 
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -544,6 +579,60 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestS
     ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleGetDfsUrisDirFromLocalTest
+ * @tc.desc: Verify URI list read failure in HandleGetDfsUrisDirFromLocal
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetDfsUrisDirFromLocalTest, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetDfsUrisDirFromLocalTest Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_readBatchUris = E_IPC_READ_FAILED;
+    auto ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    g_readBatchUris = E_OK;
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
+    uriToDfsUriMaps.emplace("key", AppFileService::ModuleRemoteFileShare::HmdfsUriInfo{"uri", 1}); // 1: test size
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsUrisDirFromLocal(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(uriToDfsUriMaps), Return(E_OK)));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsUrisDirFromLocal(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(uriToDfsUriMaps), Return(E_IPC_WRITE_FAILED)));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsUrisDirFromLocal(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(uriToDfsUriMaps), Return(E_OK)));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    g_writeBatchUrisTrue = false;
+    ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetDfsUrisDirFromLocal(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(uriToDfsUriMaps), Return(E_OK)));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    g_writeBatchUrisTrue = true;
+    ret = daemonStub_->HandleGetDfsUrisDirFromLocal(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetDfsUrisDirFromLocalTest End";
 }
 
 /**
