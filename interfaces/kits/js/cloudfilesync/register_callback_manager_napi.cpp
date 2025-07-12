@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "register_callback_manager.h"
+#include "register_callback_manager_napi.h"
+
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+using namespace FileManagement::LibN;
 using namespace std;
-napi_status RegisterCallbackManager::RegisterCallback(napi_value callback)
+napi_status RegisterCallbackManagerNapi::RegisterCallback(napi_value callback)
 {
     if (callback == nullptr) {
         return napi_invalid_arg;
@@ -39,7 +41,7 @@ napi_status RegisterCallbackManager::RegisterCallback(napi_value callback)
     return napi_ok;
 }
 
-napi_status RegisterCallbackManager::UnregisterCallback(napi_value callback)
+napi_status RegisterCallbackManagerNapi::UnregisterCallback(napi_value callback)
 {
     if (validRefNum_ == 0) {
         return napi_ok;
@@ -78,7 +80,7 @@ napi_status RegisterCallbackManager::UnregisterCallback(napi_value callback)
 }
 
 // No need to lock
-bool RegisterCallbackManager::IsExisted(napi_value callback)
+bool RegisterCallbackManagerNapi::IsExisted(napi_value callback)
 {
     bool isExisted = false;
     napi_value val = nullptr;
@@ -102,7 +104,7 @@ bool RegisterCallbackManager::IsExisted(napi_value callback)
 }
 
 // Running in JS thread
-void RegisterCallbackManager::OnJsCallback(napi_value *value, uint32_t argc)
+void RegisterCallbackManagerNapi::OnJsCallback(napi_value *value, uint32_t argc)
 {
     std::lock_guard<std::recursive_mutex> lock(callbackMtx_);
     for (auto iter = callbackList_.begin(); iter != callbackList_.end();) {

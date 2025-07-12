@@ -44,11 +44,12 @@ ohos_shared_library("cloudsync") {
     "cloud_file_version_napi.cpp",
     "cloud_sync_n_exporter.cpp",
     "cloud_sync_napi.cpp",
+    "download_callback_middle_napi.cpp",
     "download_progress_napi.cpp",
     "file_sync_napi.cpp",
     "gallery_sync_napi.cpp",
     "multi_download_progress_napi.cpp",
-    "register_callback_manager.cpp",
+    "register_callback_manager_napi.cpp",
   ]
   deps = [
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,11 @@
 #ifndef OHOS_FILEMGMT_CLOUD_FILE_NAPI_H
 #define OHOS_FILEMGMT_CLOUD_FILE_NAPI_H
 
+#include <memory>
+
 #include "cloud_download_callback.h"
+#include "download_callback_middle_napi.h"
+#include "download_progress_napi.h"
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -70,6 +74,13 @@ private:
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
     bool isBatch_;
+};
+
+class CloudDownloadCallbackImplNapi : public CloudDlCallbackMiddleNapi {
+public:
+    explicit CloudDownloadCallbackImplNapi(napi_env env) : CloudDlCallbackMiddleNapi(env) {}
+    int32_t StartDownloadInner(const std::string &uri);
+    int32_t StopDownloadInner(const std::string &uri);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_NAPI_H

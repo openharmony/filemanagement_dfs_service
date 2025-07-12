@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,38 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 const int32_t ARGS_ONE = 1;
+int32_t CloudDownloadCallbackImplNapi::StartDownloadInner(const std::string &uri)
+{
+    int64_t downloadId = 0;
+    std::lock_guard<std::mutex> lock(downloadInfoMtx_);
+    int32_t ret = 0;
+    if (ret != E_OK) {
+        LOGE("Start batch download failed! ret = %{public}d", ret);
+        return ret;
+    }
+
+    downloadInfos_.insert(std::make_pair(downloadId, std::make_shared<SingleProgressNapi>(downloadId)));
+    return ret;
+}
+
+int32_t CloudDownloadCallbackImplNapi::StopDownloadInner(const std::string &uri)
+{
+    auto downloadIdList = GetDownloadIdsByUri(uri);
+    int32_t ret = E_OK;
+    int32_t resErr = E_OK;
+    LOGI("Stop Download downloadId list size: %{public}zu", downloadIdList.size());
+    for (auto taskId : downloadIdList) {
+        LOGI("Stop Download downloadId: %{public}lld", static_cast<long long>(taskId));
+        if (resErr != E_OK) {
+            ret = resErr;
+            continue;
+        }
+    }
+    if (ret != E_OK) {
+        LOGE("Stop Download failed! ret = %{public}d", ret);
+    }
+    return ret;
+}
 
 napi_value CloudFileNapi::Constructor(napi_env env, napi_callback_info info)
 {

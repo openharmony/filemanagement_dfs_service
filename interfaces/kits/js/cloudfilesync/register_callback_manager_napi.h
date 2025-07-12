@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_H
-#define OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_H
+#ifndef OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_NAPI_H
+#define OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_NAPI_H
 
 #include <list>
 #include <mutex>
 
+#include "filemgmt_libn.h"
 #include "n_napi.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class RegisterCallbackManager {
+class RegisterCallbackManagerNapi {
 public:
-    explicit RegisterCallbackManager(napi_env env) : env_(env) {}
+    explicit RegisterCallbackManagerNapi(napi_env env) : env_(env) {}
     bool IsExisted(napi_value callback);
     napi_status RegisterCallback(napi_value callback);
     napi_status UnregisterCallback(napi_value callback);
@@ -37,4 +38,4 @@ protected:
     std::list<std::pair<bool, napi_ref>> callbackList_;
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_H
+#endif // OHOS_FILEMGMT_REGISTER_CALLBACK_MANAGER_NAPI_H
