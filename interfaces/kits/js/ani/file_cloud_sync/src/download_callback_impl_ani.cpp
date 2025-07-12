@@ -23,7 +23,7 @@ int32_t CloudDownloadCallbackImplAni::StartDownloadInner(const std::string &uri)
 {
     int64_t downloadId = 0;
     std::lock_guard<std::mutex> lock(downloadInfoMtx_);
-    int32_t ret = CloudSyncManager::GetInstance().StartDownloadFile(uri, shared_from_this(), downloadId);
+    int32_t ret = 0;
     if (ret != E_OK) {
         LOGE("Start batch download failed! ret = %{public}d", ret);
         return ret;
@@ -40,7 +40,7 @@ int32_t CloudDownloadCallbackImplAni::StopDownloadInner(const std::string &uri)
     int32_t resErr = E_OK;
     LOGI("Stop Download downloadId list size: %{public}zu", downloadIdList.size());
     for (auto taskId : downloadIdList) {
-        resErr = CloudSyncManager::GetInstance().StopDownloadFile(taskId, true);
+        LOGI("Stop Download downloadId: %{public}lld", static_cast<int64_t>(taskId));
         if (resErr != E_OK) {
             ret = resErr;
             continue;
