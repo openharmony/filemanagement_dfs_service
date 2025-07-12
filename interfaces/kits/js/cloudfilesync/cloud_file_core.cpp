@@ -15,6 +15,7 @@
 
 #include "cloud_file_core.h"
 
+#include <memory>
 #include <sys/types.h>
 
 #include "cloud_sync_manager.h"
@@ -23,27 +24,28 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
-const int32_t E_PARAMS = 401;
 
 FsResult<CloudFileCore *> CloudFileCore::Constructor()
 {
-    CloudFileCore *cloudfile = new CloudFileCore();
-    if (cloudfile == nullptr) {
-        LOGE("Failed to create CloudFileCore object on heap.");
-        return FsResult<CloudFileCore *>::Error(ENOMEM);
-    }
-
-    return FsResult<CloudFileCore *>::Success(move(cloudfile));
+    std::unique_ptr<CloudFileCore> cloudfile = std::make_unique<CloudFileCore>();
+    return FsResult<CloudFileCore *>::Success(cloudfile.release());
 }
 
-CloudFileCore::CloudFileCore() {}
+std::shared_ptr<CloudDownloadCallbackImplAni> CloudFileCore::GetCallbackImpl(bool isInit)
+{
+    if (callback_ == nullptr && isInit) {
+        callback_ = std::make_shared<CloudDownloadCallbackImplAni>();
+    }
+    return callback_;
+}
 
 FsResult<void> CloudFileCore::DoStart(const string &uri)
 {
     LOGI("Start begin");
-    int32_t ret = CloudSyncManager::GetInstance().StartDownloadFile(uri);
+    auto callbackImpl = GetCallbackImpl(true);
+    int32_t ret = callbackImpl->StartDownloadInner(uri);
     if (ret != E_OK) {
-        LOGE("Start Download failed! ret = %{public}d", ret);
+        LOGE("Stop Download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 
@@ -51,58 +53,26 @@ FsResult<void> CloudFileCore::DoStart(const string &uri)
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCore::DoOn(const string &event, const shared_ptr<CloudDownloadCallbackMiddle> callback)
+FsResult<void> CloudFileCore::DoOn(const string &event, const shared_ptr<CloudDownloadCallbackImplAni> callback)
 {
-    LOGI("On begin");
-    if (event != "progress") {
-        LOGE("On get progress failed!");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    if (callback_ != nullptr) {
-        LOGI("callback already exist");
-        return FsResult<void>::Success();
-    }
-
-    callback_ = callback;
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback_);
-    if (ret != E_OK) {
-        LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
-    }
-
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCore::DoOff(
-    const string &event, const optional<shared_ptr<CloudDownloadCallbackMiddle>> &callback)
+FsResult<void> CloudFileCore::DoOff(const string &event,
+                                    const optional<shared_ptr<CloudDownloadCallbackImplAni>> &callback)
 {
-    LOGI("Off begin");
-    if (event != "progress") {
-        LOGE("Off get progress failed!");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    /* callback_ may be nullptr */
-    int32_t ret = CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
-    if (ret != E_OK) {
-        LOGE("UnregisterDownloadFileCallback error, ret: %{public}d", ret);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
-    }
-
-    if (callback_ != nullptr) {
-        /* delete callback */
-        callback_->DeleteReference();
-        callback_ = nullptr;
-    }
-
     return FsResult<void>::Success();
 }
 
 FsResult<void> CloudFileCore::DoStop(const string &uri, bool needClean)
 {
     LOGI("Stop begin");
-    int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
+    auto callbackImpl = GetCallbackImpl(false);
+    if (callbackImpl == nullptr) {
+        LOGE("Failed to stop download, callback is null!");
+        return FsResult<void>::Error(E_INVAL_ARG);
+    }
+    int32_t ret = callbackImpl->StopDownloadInner(uri);
     if (ret != E_OK) {
         LOGE("Stop Download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));

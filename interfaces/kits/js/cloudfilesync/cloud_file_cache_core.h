@@ -20,59 +20,32 @@
 #include <optional>
 #include <unordered_set>
 
-#include "cloud_download_callback_ani.h"
+#include "download_callback_impl_ani.h"
 #include "filemgmt_libfs.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace ModuleFileIO;
-using namespace std;
 const std::string PROGRESS = "progress";
-const std::string MULTI_PROGRESS = "multiProgress";
-
-struct RegisterInfoArg {
-    std::string eventType;
-    std::shared_ptr<CloudDownloadCallbackMiddle> callback;
-    ~RegisterInfoArg()
-    {
-        if (callback != nullptr) {
-            callback->DeleteReference();
-            callback = nullptr;
-        }
-    }
-};
-
-class RegisterManager {
+const std::string MULTI_PROGRESS = "batchDownload";
+class CloudFileCacheCore {
 public:
-    RegisterManager() = default;
-    ~RegisterManager() = default;
-    bool AddRegisterInfo(std::shared_ptr<RegisterInfoArg> info);
-    bool RemoveRegisterInfo(const std::string &eventType);
-    bool HasEvent(const std::string &eventType);
+    CloudFileCacheCore() = default;
+    ~CloudFileCacheCore() = default;
+
+    static ModuleFileIO::FsResult<CloudFileCacheCore *> Constructor();
+    ModuleFileIO::FsResult<void> DoOn(const std::string &event,
+                                      const std::shared_ptr<CloudFileCacheCallbackImplAni> callback);
+    ModuleFileIO::FsResult<void> DoOff(const std::string &event,
+        const std::optional<std::shared_ptr<CloudFileCacheCallbackImplAni>> &callback = std::nullopt);
+    ModuleFileIO::FsResult<void> DoStart(const std::string &uri);
+    ModuleFileIO::FsResult<int64_t> DoStart(const std::vector<std::string> &uriList, int32_t fieldKey);
+    ModuleFileIO::FsResult<void> DoStop(const std::string &uri, bool needClean = false);
+    ModuleFileIO::FsResult<void> DoStop(int64_t downloadId, bool needClean = false);
+    ModuleFileIO::FsResult<void> CleanCache(const std::string &uri);
+    std::shared_ptr<CloudFileCacheCallbackImplAni> GetCallbackImpl(const std::string &eventType, bool isInit);
 
 private:
     std::mutex registerMutex_;
-    std::unordered_set<std::shared_ptr<RegisterInfoArg>> registerInfo_;
-};
-
-struct FileCacheEntity {
-    RegisterManager registerMgr;
-};
-
-class CloudFileCacheCore {
-public:
-    CloudFileCacheCore();
-    ~CloudFileCacheCore() = default;
-
-    static FsResult<CloudFileCacheCore *> Constructor();
-    FsResult<void> DoOn(const std::string &event, const std::shared_ptr<CloudDownloadCallbackMiddle> callback);
-    FsResult<void> DoOff(const string &event,
-        const std::optional<std::shared_ptr<CloudDownloadCallbackMiddle>> &callback = std::nullopt);
-    FsResult<void> DoStart(const string &uri);
-    FsResult<void> DoStop(const string &uri, bool needClean = false);
-    FsResult<void> CleanCache(const string &uri);
-
-private:
-    std::unique_ptr<FileCacheEntity> fileCacheEntity;
+    std::unordered_map<std::string, std::shared_ptr<CloudFileCacheCallbackImplAni>> registerMap_;
 };
 
 } // namespace OHOS::FileManagement::CloudSync

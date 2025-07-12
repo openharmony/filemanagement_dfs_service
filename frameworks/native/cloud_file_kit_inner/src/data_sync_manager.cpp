@@ -93,27 +93,9 @@ int32_t DataSyncManager::StartDownloadFile(const BundleNameUserInfo &bundleNameU
 }
 
 int32_t DataSyncManager::StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                          const std::string &path,
-                                          bool needClean)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
-                                       int64_t downloadId,
-                                       bool needClean,
-                                       int32_t timeout)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
-                                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo)
+                                          int64_t downloadId,
+                                          bool needClean,
+                                          int32_t timeout)
 {
     return E_OK;
 }

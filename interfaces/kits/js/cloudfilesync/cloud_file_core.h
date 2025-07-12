@@ -18,7 +18,7 @@
 
 #include <optional>
 
-#include "cloud_download_callback_ani.h"
+#include "download_callback_impl_ani.h"
 #include "filemgmt_libfs.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -26,18 +26,19 @@ using namespace ModuleFileIO;
 
 class CloudFileCore {
 public:
-    CloudFileCore();
+    CloudFileCore() = default;
     ~CloudFileCore() = default;
 
     static FsResult<CloudFileCore *> Constructor();
     FsResult<void> DoStart(const std::string &uri);
-    FsResult<void> DoOn(const std::string &event, const std::shared_ptr<CloudDownloadCallbackMiddle> callback);
+    FsResult<void> DoOn(const std::string &event, const std::shared_ptr<CloudDownloadCallbackImplAni> callback);
     FsResult<void> DoOff(const std::string &event,
-        const std::optional<std::shared_ptr<CloudDownloadCallbackMiddle>> &callback = std::nullopt);
+                         const std::optional<std::shared_ptr<CloudDownloadCallbackImplAni>> &callback = std::nullopt);
     FsResult<void> DoStop(const std::string &uri, bool needClean = false);
+    std::shared_ptr<CloudDownloadCallbackImplAni> GetCallbackImpl(bool isInit);
 
 private:
-    std::shared_ptr<CloudDownloadCallbackMiddle> callback_;
+    std::shared_ptr<CloudDownloadCallbackImplAni> callback_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CORE_H

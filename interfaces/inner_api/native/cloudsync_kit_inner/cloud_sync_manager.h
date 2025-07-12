@@ -113,19 +113,17 @@ public:
     virtual int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
         const std::shared_ptr<CloudOptimizeCallback> optimizeCallback = nullptr) = 0;
     virtual int32_t StopOptimizeStorage() = 0;
-    virtual int32_t StartDownloadFile(const std::string &path) = 0;
-    virtual int32_t StartFileCache(const std::string &path) = 0;
-    virtual int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                                   int32_t fieldkey = FIELDKEY_CONTENT,
+    virtual int32_t StartDownloadFile(const std::string &uri,
+                                      const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                      int64_t &downloadId) = 0;
+    virtual int32_t StartFileCache(const std::vector<std::string> &uriVec,
+                                   int64_t &downloadId,
+                                   int32_t fieldkey = FieldKey::FIELDKEY_CONTENT,
                                    const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr,
                                    int32_t timeout = -1) = 0;
-    virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
+    virtual int32_t StopDownloadFile(int64_t downloadId, bool needClean = false) = 0;
     virtual int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) = 0;
     virtual int32_t DownloadThumb() = 0;
-    virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
-    virtual int32_t RegisterFileCacheCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
-    virtual int32_t UnregisterDownloadFileCallback() = 0;
-    virtual int32_t UnregisterFileCacheCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
     virtual int32_t CleanFileCache(const std::string &uri) = 0;
