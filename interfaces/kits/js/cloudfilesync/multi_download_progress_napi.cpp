@@ -28,10 +28,6 @@ napi_value MultiDlProgressNapi::Constructor(napi_env env, napi_callback_info inf
     NFuncArg funcArg(env, info);
     funcArg.InitArgs(NARG_CNT::ZERO);
     auto progressEntity = make_unique<MultiDlProgressEntity>();
-    if (progressEntity == nullptr) {
-        LOGE("Failed to request heap memory.");
-        return nullptr;
-    }
     if (!NClass::SetEntityFor<MultiDlProgressEntity>(env, funcArg.GetThisVar(), move(progressEntity))) {
         LOGE("Failed to set progressEntity.");
         return nullptr;

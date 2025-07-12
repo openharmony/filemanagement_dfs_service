@@ -29,7 +29,7 @@ int32_t CloudDownloadCallbackImplAni::StartDownloadInner(const std::string &uri)
         return ret;
     }
 
-    downloadInfos_.insert(std::make_pair(downloadId, std::make_shared<SingleProgressAni>(downloadId)));
+    downloadInfos_[downloadId] = std::make_shared<SingleProgressAni>(downloadId);
     return ret;
 }
 
@@ -61,7 +61,7 @@ int32_t CloudFileCacheCallbackImplAni::StartDownloadInner(const std::string &uri
         LOGE("Start single download failed! ret = %{public}d", ret);
         return ret;
     }
-    downloadInfos_.insert(std::make_pair(downloadId, std::make_shared<SingleProgressAni>(downloadId)));
+    downloadInfos_[downloadId] = std::make_shared<SingleProgressAni>(downloadId);
     return ret;
 }
 
@@ -94,7 +94,7 @@ int32_t CloudFileCacheCallbackImplAni::StartDownloadInner(const std::vector<std:
         LOGE("Start batch download failed! ret = %{public}d", ret);
         return ret;
     }
-    downloadInfos_.insert(std::make_pair(downloadId, std::make_shared<BatchProgressAni>(downloadId)));
+    downloadInfos_[downloadId] = std::make_shared<BatchProgressAni>(downloadId);
     return ret;
 }
 

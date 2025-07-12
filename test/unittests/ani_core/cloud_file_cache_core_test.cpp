@@ -22,6 +22,7 @@
 
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
+#include "download_callback_impl_ani.h"
 #include "uri.h"
 #include "utils_log.h"
 
@@ -78,48 +79,13 @@ HWTEST_F(CloudFileCacheCoreTest, ConstructorTest1, TestSize.Level1)
 HWTEST_F(CloudFileCacheCoreTest, DoOnTest1, TestSize.Level1)
 {
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(nullptr, nullptr);
+    auto callback = std::make_shared<CloudFileCacheCallbackImplAni>();
     std::string event = "progress";
     auto ret = cloudFileCache->DoOn(event, callback);
     EXPECT_TRUE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
     EXPECT_EQ(errorCode, 0);
-}
-
-/**
- * @tc.name: DoOn
- * @tc.desc: Verify the CloudFileCacheCore::DoOn function
- * @tc.type: FUNC
- */
-HWTEST_F(CloudFileCacheCoreTest, DoOnTest2, TestSize.Level1)
-{
-    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(nullptr, nullptr);
-    std::string event = "";
-    auto ret = cloudFileCache->DoOn(event, callback);
-    EXPECT_FALSE(ret.IsSuccess());
-    const auto &err = ret.GetError();
-    int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, E_PARAMS);
-}
-
-/**
- * @tc.name: DoOn
- * @tc.desc: Verify the CloudFileCacheCore::DoOn function
- * @tc.type: FUNC
- */
-HWTEST_F(CloudFileCacheCoreTest, DoOnTest3, TestSize.Level1)
-{
-    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(nullptr, nullptr);
-    std::string event = "progress";
-    auto ret = cloudFileCache->DoOn(event, callback);
-    ret = cloudFileCache->DoOn(event, callback);
-    EXPECT_FALSE(ret.IsSuccess());
-    const auto &err = ret.GetError();
-    int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, E_PARAMS);
 }
 
 /**
@@ -132,26 +98,10 @@ HWTEST_F(CloudFileCacheCoreTest, DoOffTest1, TestSize.Level1)
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string event = "progress";
     auto ret = cloudFileCache->DoOff(event);
-    EXPECT_FALSE(ret.IsSuccess());
+    EXPECT_TRUE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, E_PARAMS);
-}
-
-/**
- * @tc.name: DoOff
- * @tc.desc: Verify the CloudFileCacheCore::DoOff function
- * @tc.type: FUNC
- */
-HWTEST_F(CloudFileCacheCoreTest, DoOffTest2, TestSize.Level1)
-{
-    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
-    std::string event = "";
-    auto ret = cloudFileCache->DoOff(event);
-    EXPECT_FALSE(ret.IsSuccess());
-    const auto &err = ret.GetError();
-    int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, E_PARAMS);
+    EXPECT_EQ(errorCode, 0);
 }
 
 /**
@@ -171,6 +121,23 @@ HWTEST_F(CloudFileCacheCoreTest, DoStartTest1, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DoStart
+ * @tc.desc: Verify the CloudFileCacheCore::DoStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, DoStartTest2, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::string uri = "testuri";
+    int32_t fieldKey = 0;
+    auto ret = cloudFileCache->DoStart({uri}, fieldKey);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
  * @tc.name: DoStop
  * @tc.desc: Verify the CloudFileCacheCore::DoStop function
  * @tc.type: FUNC
@@ -179,11 +146,29 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest1, TestSize.Level1)
 {
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string uri = "testuri";
-    auto ret = cloudFileCache->DoStop(uri);
+    bool needClean = false;
+    auto ret = cloudFileCache->DoStop(uri, needClean);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: DoStop
+ * @tc.desc: Verify the CloudFileCacheCore::DoStop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, DoStopTest2, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    int64_t downloadId = 0;
+    bool needClean = false;
+    auto ret = cloudFileCache->DoStop(downloadId, needClean);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + ModuleFileIo::E_INVAL);
 }
 
 /**

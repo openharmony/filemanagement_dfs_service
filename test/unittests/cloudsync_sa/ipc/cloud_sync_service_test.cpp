@@ -266,57 +266,16 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile start";
     try {
-        std::string path;
+        int64_t downloadId = 0;
         bool needClean = false;
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->StopDownloadFile(path, needClean);
+        int ret = servicePtr_->StopDownloadFile(downloadId, needClean);
         EXPECT_EQ(E_PERMISSION_DENIED, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDownloadFile FAILED";
     }
     GTEST_LOG_(INFO) << "StopDownloadFile end";
-}
-
-/**
- * @tc.name:RegisterDownloadFileCallbackTest
- * @tc.desc:Verify the RegisterDownloadFileCallback function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback start";
-    try {
-        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->RegisterDownloadFileCallback(downloadCallback);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RegisterDownloadFileCallback FAILED";
-    }
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback end";
-}
-
-/**
- * @tc.name:UnregisterDownloadFileCallbackTest
- * @tc.desc:Verify the UnregisterDownloadFileCallback function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback start";
-    try {
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->UnregisterDownloadFileCallback();
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback FAILED";
-    }
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback end";
 }
 
 /**

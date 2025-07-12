@@ -17,15 +17,16 @@
 #define OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
 
 #include <mutex>
-#include <unordered_set>
+#include <string>
+#include <unordered_map>
 
-#include "cloud_file_napi.h"
 #include "download_callback_middle_napi.h"
 #include "download_progress_napi.h"
+#include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
 const std::string PROGRESS = "progress";
-const std::string MULTI_PROGRESS = "multiProgress";
+const std::string MULTI_PROGRESS = "batchDownload";
 class CloudFileCacheNapi final : public LibN::NExporter {
 public:
     CloudFileCacheNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
@@ -47,30 +48,6 @@ public:
 private:
     inline static std::string className_ = "CloudFileCache";
 };
-struct RegisterInfoArg {
-    std::string eventType;
-    std::shared_ptr<CloudDownloadCallbackImpl> callback;
-    ~RegisterInfoArg()
-    {
-        if (callback != nullptr) {
-            callback->DeleteReference();
-            callback = nullptr;
-        }
-    }
-};
-
-class RegisterManager {
-public:
-    RegisterManager() = default;
-    ~RegisterManager() = default;
-    bool AddRegisterInfo(std::shared_ptr<RegisterInfoArg> info);
-    bool RemoveRegisterInfo(const std::string &eventType);
-    bool HasEvent(const std::string &eventType);
-
-private:
-    std::mutex registerMutex_;
-    std::unordered_set<std::shared_ptr<RegisterInfoArg>> registerInfo_;
-};
 
 class CloudFileCacheCallbackImplNapi : public CloudDlCallbackMiddleNapi {
 public:
@@ -82,7 +59,7 @@ public:
 };
 
 struct FileCacheEntity {
-    RegisterManager registerMgr;
+    std::unordered_map<std::string, std::shared_ptr<CloudFileCacheCallbackImplNapi>> registerMap;
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
+#endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
