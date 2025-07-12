@@ -183,6 +183,30 @@ export default namespace cloudSync {
         error: DownloadErrorType;
     };
 
+    export class MultiDownloadProgress {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
+        state: State;
+        taskId: number;
+        successfulCount: number;
+        failedCount: number;
+        totalCount: number;
+        downloadedSize: number;
+        totalSize: number;
+        errType: DownloadErrorType;
+
+        private nativePtr: long = 0;
+
+        constructor(ptr: long) {
+            if (this.nativePtr === 0) {
+                this.nativePtr = ptr;
+            }
+        }
+        native getFailedFiles(): Array<FailedFileInfo>;
+        native getSuccessfulFiles(): Array<string>;
+    };
+
     export type DownloadcCallback = (pg: DownloadProgress) => void;
 
     export class Download {
@@ -286,6 +310,29 @@ export default namespace cloudSync {
         UPLOAD_FAILURE = 6,
     }
 
+    export enum DownloadFileType {
+        CONTENT = 0,
+        THUMBNAIL = 1,
+        LCD = 2
+    }
+
+    export interface FailedFileInfo {
+        uri: string;
+        error: DownloadErrorType;
+    }
+
+    export class FailedFileInfoInner implements FailedFileInfo {
+        constructor(
+            uri: string,
+            error: DownloadErrorType
+        ) {
+            this.uri = uri;
+            this.error = error;
+        }
+        uri: string;
+        error: DownloadErrorType;
+    };
+
     export class ChangeDataInner implements ChangeData {
         constructor(
             type: NotifyType,
@@ -301,7 +348,7 @@ export default namespace cloudSync {
         uris: Array<string>;
     };
 
-    export class FileSync{
+    export class FileSync {
         static {
             loadLibrary("cloud_sync_ani");
         }
@@ -447,6 +494,23 @@ export default namespace cloudSync {
             });
         }
 
+        startBatch(uris: Array<string>, fileType?: DownloadFileType): Promise<number> {
+            let fieldKey: DownloadFileType = DownloadFileType.CONTENT;
+            if (fileType !== undefined) {
+                fieldKey = fileType;
+            }
+            return new Promise<number>((resolve: (result: number) => void,
+                reject: (e: BusinessError) => void): number => {
+                let promise = taskpool.execute((uris: Array<string>, fieldKey: DownloadFileType): number =>
+                    this.CloudFileCacheStartBatch(uris, fieldKey), uris, fieldKey);
+                promise.then<number>((ret: number): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
         stop(uri: string, needClean?: boolean): Promise<void> {
             let clean: boolean = false;
             if (needClean !== undefined) {
@@ -479,8 +543,28 @@ export default namespace cloudSync {
             });
         }
 
+        stopBatch(downloadId: number, needClean?: boolean): Promise<void> {
+            let clean: boolean = false;
+            if (needClean !== undefined) {
+                clean = needClean;
+            }
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((downloadId: number, clean: boolean): number => {
+                    return this.StopBatchInner(downloadId, clean);
+                }, downloadId, clean);
+                promise.then<void>((): void => {
+                    resolve(undefined);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
         native CloudFileCacheStart(uri: string): void;
         native CloudFileCacheStop(uri: string, clean: boolean): void;
+        native CloudFileCacheStartBatch(uris: Array<string>, fieldKey: DownloadFileType): number;
+        native CloudFileCacheStopBatch(downloadId: number, clean: boolean): void;
         native cleanCache(uri: string): void;
 
         StartInner(uri: string): int {
@@ -489,6 +573,10 @@ export default namespace cloudSync {
         }
         StopInner(uri: string, clean: boolean): int {
             this.CloudFileCacheStop(uri, clean);
+            return 0;
+        }
+        StopBatchInner(downloadId: number, clean: boolean): int {
+            this.CloudFileCacheStopBatch(downloadId, clean);
             return 0;
         }
     };
@@ -563,7 +651,7 @@ export default namespace cloudSync {
 
     export function getFileSyncState(uri: Array<string>): Promise<Array<FileSyncState>> {
         let promise = new Promise<Array<FileSyncState>>((resolve, reject) => {
-            let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+            let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
             Promise.all(promises).then<void, void>((re: Array<int>): void => {
                 let res: Array<FileSyncState> = re.map((result: int) => {
                     return result as FileSyncState;
@@ -577,7 +665,7 @@ export default namespace cloudSync {
     }
 
     export function getFileSyncState(uri: Array<string>, callback: AsyncCallback<Array<FileSyncState>>): void {
-        let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+        let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
         Promise.all(promises).then<void, void>((re: Array<int>): void => {
             let res: Array<FileSyncState> = re.map((result: int) => {
                 return result as FileSyncState;
@@ -620,7 +708,7 @@ export default namespace cloudSync {
     }
 
     export function startOptimizeSpace(para: OptimizeSpaceParam, cb?: Callback<OptimizeSpaceProgress>): Promise<void> {
-        let callback: Callback<OptimizeSpaceProgress> = (data: OptimizeSpaceProgress) => {};
+        let callback: Callback<OptimizeSpaceProgress> = (data: OptimizeSpaceProgress) => { };
         if (cb !== undefined) {
             callback = cb;
         }
