@@ -98,11 +98,11 @@ public:
     {
         return failedFiles_.size();
     }
-    std::unordered_set<std::string> GetDownloadedFiles() const
+    const std::unordered_set<std::string>& GetDownloadedFiles() const
     {
         return downloadedFiles_;
     }
-    std::unordered_map<std::string, int32_t> GetFailedFiles() const
+    const std::unordered_map<std::string, int32_t>& GetFailedFiles() const
     {
         return failedFiles_;
     }

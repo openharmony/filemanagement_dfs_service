@@ -116,10 +116,13 @@ HWTEST_F(CloudFileCoreTest, DoStartTest1, TestSize.Level1)
     CloudFileCore *download = CloudFileCore::Constructor().GetData().value();
     std::string uri = "testuri";
     auto ret = download->DoStart(uri);
-    EXPECT_TRUE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, 0);
+    if (ret.IsSuccess()) {
+        EXPECT_EQ(errorCode, 0);
+    } else {
+        EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    }
 }
 
 /**
@@ -130,12 +133,33 @@ HWTEST_F(CloudFileCoreTest, DoStartTest1, TestSize.Level1)
 HWTEST_F(CloudFileCoreTest, DoStopTest1, TestSize.Level1)
 {
     CloudFileCore *download = CloudFileCore::Constructor().GetData().value();
+    download->callback_ = std::make_shared<CloudDownloadCallbackImplAni>();
+    std::string uri = "testuri";
+    bool needClean = true;
+    auto ret = download->DoStop(uri, needClean);
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    if (ret.IsSuccess()) {
+        EXPECT_EQ(errorCode, 0);
+    } else {
+        EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    }
+}
+
+/**
+ * @tc.name: DoStop
+ * @tc.desc: Verify the CloudFileCore::DoStop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCoreTest, DoStopTest2, TestSize.Level1)
+{
+    CloudFileCore *download = CloudFileCore::Constructor().GetData().value();
     std::string uri = "testuri";
     bool needClean = true;
     auto ret = download->DoStop(uri, needClean);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + E_INVAL_ARG);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

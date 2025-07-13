@@ -129,7 +129,7 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
     if (event == "multiProgress") {
         event = MULTI_PROGRESS;
     }
-    if (event != PROGRESS && event == MULTI_PROGRESS) {
+    if (event != PROGRESS && event != MULTI_PROGRESS) {
         LOGE("Invalid argument for event type.");
         ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;

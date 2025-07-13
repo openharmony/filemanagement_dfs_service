@@ -15,23 +15,19 @@
 
 #include "multi_download_progress_core.h"
 
+#include <memory>
+
 #include "cloud_sync_common.h"
 #include "dfs_error.h"
 #include "utils_log.h"
-#include <memory>
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace ModuleFileIO;
 using namespace std;
 FsResult<MultiDlProgressCore *> MultiDlProgressCore::Constructor()
 {
-    MultiDlProgressCore *dlProgress = new MultiDlProgressCore();
-    if (dlProgress == nullptr) {
-        LOGE("Failed to create MultiDlProgressCore object on heap.");
-        return FsResult<MultiDlProgressCore *>::Error(Convert2ErrNum(E_SERVICE_INNER_ERROR));
-    }
-
-    return FsResult<MultiDlProgressCore *>::Success(move(dlProgress));
+    std::unique_ptr<MultiDlProgressCore> dlProgress = std::make_unique<MultiDlProgressCore>();
+    return FsResult<MultiDlProgressCore *>::Success(dlProgress.release());
 }
 
 int32_t MultiDlProgressCore::GetStatus()

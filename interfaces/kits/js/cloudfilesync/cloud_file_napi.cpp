@@ -201,7 +201,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
     }
     int32_t ret = CheckPermissions(PERM_CLOUD_SYNC, true);
     if (ret != E_OK) {
-        LOGE("On get progress failed!");
+        LOGE("Off get progress failed!");
         NError(ret).ThrowErr(env);
         return nullptr;
     }

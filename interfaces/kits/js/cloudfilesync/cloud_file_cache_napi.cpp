@@ -282,7 +282,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
 
 static tuple<int32_t, bool, bool> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
 {
-    bool succ = false;
+    bool succ = true;
     bool needClean = false;
     size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
     if (funcArg.GetArgc() >= NARG_CNT::TWO) {
@@ -304,7 +304,7 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Stop Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     auto [res, uri] = ParseUriFromParam(env, funcArg);
@@ -476,7 +476,7 @@ static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncA
 {
     auto [succProgress, progress, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!succProgress || size == 0) {
-        LOGE("Off get progress failed!");
+        LOGE("Parase event from parameter failed");
         NError(EINVAL).ThrowErr(env);
         return {EINVAL, ""};
     }
@@ -485,7 +485,7 @@ static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncA
         eventType = MULTI_PROGRESS;
     }
     if ((eventType != PROGRESS && eventType != MULTI_PROGRESS)) {
-        LOGE("Off get progress failed!");
+        LOGE("Invalid event type!");
         return {EINVAL, ""};
     }
     return {E_OK, eventType};

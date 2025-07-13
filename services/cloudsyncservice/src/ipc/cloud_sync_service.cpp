@@ -820,6 +820,11 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
     }
 
     sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    if (downloadCb == nullptr) {
+        LOGE("Invalid downloadCallback, not a valid ICloudDownloadCallback.");
+        // Common error code for single and batch download task.
+        return E_BROKEN_IPC;
+    }
     ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
     LOGI("End StartFileCache, ret: %{public}d", ret);
     return ret;
@@ -838,6 +843,10 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &uri,
         return ret;
     }
     sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    if (downloadCb == nullptr) {
+        LOGE("Invalid downloadCallback, not a valid ICloudDownloadCallback.");
+        return E_INVAL_ARG;
+    }
     ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, {uri}, downloadId, FieldKey::FIELDKEY_CONTENT,
                                               downloadCb);
     LOGI("End StartDownloadFile");

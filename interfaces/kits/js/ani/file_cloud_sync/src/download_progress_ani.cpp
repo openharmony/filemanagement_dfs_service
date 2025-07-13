@@ -90,7 +90,6 @@ void BatchProgressAni::Update(const DownloadProgressObj &progress)
         return;
     }
     state_ = static_cast<int32_t>(progress.batchState);
-    taskId_ = progress.downloadId;
     downloadedSize_ = progress.batchDownloadSize;
     totalSize_ = progress.batchTotalSize;
     totalNum_ = progress.batchTotalNum;
