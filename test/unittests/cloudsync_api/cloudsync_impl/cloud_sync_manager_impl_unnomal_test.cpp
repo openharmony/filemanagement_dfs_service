@@ -190,8 +190,9 @@ HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string uri = "uri";
+        int64_t downloadId = 0;
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-        auto res = managePtr_->StartDownloadFile(uri);
+        auto res = managePtr_->StartDownloadFile(uri, nullptr, downloadId);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -210,35 +211,15 @@ HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
-        std::string uri = "uri";
+        int64_t downloadId = 0;
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-        auto res = managePtr_->StopDownloadFile(uri);
+        auto res = managePtr_->StopDownloadFile(downloadId, true);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StopDownloadFileTest FAILED";
     }
     GTEST_LOG_(INFO) << "StopDownloadFileTest End";
-}
-
-/*
- * @tc.name: RegisterDownloadFileCallbackTest
- * @tc.desc: Verify the UnregisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
-    try {
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-        auto res = managePtr_->UnregisterDownloadFileCallback();
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " RegisterDownloadFileCallbackTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest End";
 }
 
 /*

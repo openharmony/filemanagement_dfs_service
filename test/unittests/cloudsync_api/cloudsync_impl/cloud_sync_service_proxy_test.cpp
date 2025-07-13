@@ -613,7 +613,8 @@ HWTEST_F(CloudSyncServiceProxyTest, StartDownloadFile001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartDownloadFile Start";
     string uri = "file://media";
-    int result = proxy_->StartDownloadFile(uri);
+    int64_t downloadId = 0;
+    int result = proxy_->StartDownloadFile(uri, remote_, downloadId);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "StartDownloadFile End";
 }
@@ -628,7 +629,8 @@ HWTEST_F(CloudSyncServiceProxyTest, StartDownloadFile002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartDownloadFile Start";
     string uri = "";
-    int result = proxy_->StartDownloadFile(uri);
+    int64_t downloadId = 0;
+    int result = proxy_->StartDownloadFile(uri, remote_, downloadId);
     EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "StartDownloadFile End";
 }
@@ -678,10 +680,10 @@ HWTEST_F(CloudSyncServiceProxyTest, StartFileCache002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile Start";
-    string uri = "file://media";
+    int64_t downloadId = 0;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
 
-    int result = proxy_->StopDownloadFile(uri);
+    int result = proxy_->StopDownloadFile(downloadId, true);
     EXPECT_EQ(result, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "StopDownloadFile End";
 }
@@ -695,10 +697,10 @@ HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile Start";
-    string uri = "file://media";
+    int64_t downloadId = 0;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
 
-    int result = proxy_->StopDownloadFile(uri);
+    int result = proxy_->StopDownloadFile(downloadId, true);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "StopDownloadFile End";
 }
@@ -712,9 +714,9 @@ HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, StopDownloadFile003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile Start";
-    string uri = "";
+    int64_t downloadId = 0;
 
-    int result = proxy_->StopDownloadFile(uri);
+    int result = proxy_->StopDownloadFile(downloadId, true);
     EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "StopDownloadFile End";
 }
@@ -971,86 +973,6 @@ HWTEST_F(CloudSyncServiceProxyTest, DeleteAsset002, TestSize.Level1)
     int ret = proxy_->DeleteAsset(userId, uri);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DeleteAsset002 End";
-}
-
-/**
- * @tc.name: RegisterDownloadFileCallback001
- * @tc.desc: Verify the RegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: issueI7UYAL
- */
-HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback Start";
-    string bundleName = "com.ohos.photos";
-
-    int result = proxy_->RegisterDownloadFileCallback(nullptr);
-    EXPECT_EQ(result, E_INVAL_ARG);
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
-}
-
-/**
- * @tc.name: RegisterDownloadFileCallback002
- * @tc.desc: Verify the RegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback Start";
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
-
-    int result = proxy_->RegisterDownloadFileCallback(remote_);
-    EXPECT_EQ(result, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
-}
-
-/**
- * @tc.name: RegisterDownloadFileCallback003
- * @tc.desc: Verify the RegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback Start";
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-
-    int result = proxy_->RegisterDownloadFileCallback(remote_);
-    EXPECT_EQ(result, E_OK);
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
-}
-
-/**
- * @tc.name: UnregisterDownloadFileCallback001
- * @tc.desc: Verify the UnegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: issueI7UYAL
- */
-HWTEST_F(CloudSyncServiceProxyTest, UnregisterDownloadFileCallback001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback Start";
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
-    int result = proxy_->UnregisterDownloadFileCallback();
-
-    EXPECT_EQ(result, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback End";
-}
-
-/**
- * @tc.name: UnregisterDownloadFileCallback002
- * @tc.desc: Verify the UnegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: issueI7UYAL
- */
-HWTEST_F(CloudSyncServiceProxyTest, UnregisterDownloadFileCallback002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback Start";
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-    int result = proxy_->UnregisterDownloadFileCallback();
-
-    EXPECT_EQ(result, E_OK);
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback End";
 }
 
 /**

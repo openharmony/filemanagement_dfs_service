@@ -14,151 +14,100 @@
  */
 
 #include "cloud_file_cache_core.h"
+
+#include <memory>
+
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-const int32_t E_PARAMS = 401;
-
-bool RegisterManager::HasEvent(const string &eventType)
-{
-    unique_lock<mutex> registerMutex_;
-    bool hasEvent = false;
-    for (auto &iter : registerInfo_) {
-        if (iter->eventType == eventType) {
-            hasEvent = true;
-            break;
-        }
-    }
-    return hasEvent;
-}
-
-bool RegisterManager::AddRegisterInfo(shared_ptr<RegisterInfoArg> info)
-{
-    if (HasEvent(info->eventType)) {
-        return false;
-    }
-    {
-        unique_lock<mutex> registerMutex_;
-        registerInfo_.insert(info);
-    }
-    return true;
-}
-
-bool RegisterManager::RemoveRegisterInfo(const string &eventType)
-{
-    unique_lock<mutex> registerMutex_;
-    bool isFound = false;
-    for (auto iter = registerInfo_.begin(); iter != registerInfo_.end();) {
-        if ((*iter)->eventType == eventType) {
-            isFound = true;
-            iter = registerInfo_.erase(iter);
-        } else {
-            iter++;
-        }
-    }
-    return isFound;
-}
-
+using namespace ModuleFileIO;
 FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor()
 {
-    CloudFileCacheCore *cloudFileCachePtr = new CloudFileCacheCore();
-    if (cloudFileCachePtr == nullptr) {
-        LOGE("Failed to create CloudFileCacheCore object on heap.");
-        return FsResult<CloudFileCacheCore *>::Error(ENOMEM);
-    }
-
-    return FsResult<CloudFileCacheCore *>::Success(move(cloudFileCachePtr));
+    std::unique_ptr<CloudFileCacheCore> cloudFileCachePtr = std::make_unique<CloudFileCacheCore>();
+    return FsResult<CloudFileCacheCore *>::Success(cloudFileCachePtr.release());
 }
 
-CloudFileCacheCore::CloudFileCacheCore()
+FsResult<void> CloudFileCacheCore::DoOn(const string &event, const shared_ptr<CloudFileCacheCallbackImplAni> callback)
 {
-    LOGI("Create fileCacheEntity");
-    fileCacheEntity = make_unique<FileCacheEntity>();
-}
-
-FsResult<void> CloudFileCacheCore::DoOn(const string &event, const shared_ptr<CloudDownloadCallbackMiddle> callback)
-{
-    LOGI("On begin");
-    if (event != PROGRESS && event != MULTI_PROGRESS) {
-        LOGE("On get progress failed!");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    if (!fileCacheEntity) {
-        LOGE("Failed to get file cache entity.");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    auto arg = make_shared<RegisterInfoArg>();
-    arg->eventType = event;
-    arg->callback = callback;
-    if (!fileCacheEntity->registerMgr.AddRegisterInfo(arg)) {
-        LOGE("Batch-On register callback fail, callback already exist");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    int32_t ret = CloudSyncManager::GetInstance().RegisterFileCacheCallback(arg->callback);
-    if (ret != E_OK) {
-        LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
-        (void)fileCacheEntity->registerMgr.RemoveRegisterInfo(event);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
-    }
-
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCacheCore::DoOff(
-    const string &event, const optional<shared_ptr<CloudDownloadCallbackMiddle>> &callback)
+FsResult<void> CloudFileCacheCore::DoOff(const string &event,
+                                         const optional<shared_ptr<CloudFileCacheCallbackImplAni>> &callback)
 {
-    LOGI("Off begin");
-    if (event != PROGRESS && event != MULTI_PROGRESS) {
-        LOGE("Off get progress failed!");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    if (!fileCacheEntity) {
-        LOGE("Failed to get file cache entity.");
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    if (!fileCacheEntity->registerMgr.HasEvent(event)) {
-        LOGE("Batch-Off no callback is registered for this event type: %{public}s.", event.c_str());
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
-    int32_t ret = CloudSyncManager::GetInstance().UnregisterFileCacheCallback();
-    if (ret != E_OK) {
-        LOGE("Failed to unregister callback, error: %{public}d", ret);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
-    }
-
-    if (!fileCacheEntity->registerMgr.RemoveRegisterInfo(event)) {
-        LOGE("Batch-Off remove callback is failed, event type: %{public}s.", event.c_str());
-        return FsResult<void>::Error(E_PARAMS);
-    }
-
     return FsResult<void>::Success();
+}
+
+std::shared_ptr<CloudFileCacheCallbackImplAni> CloudFileCacheCore::GetCallbackImpl(const std::string &eventType,
+                                                                                   bool isInit)
+{
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = nullptr;
+    std::lock_guard<std::mutex> lock(registerMutex_);
+    auto iter = registerMap_.find(eventType);
+    if (iter == registerMap_.end() || iter->second == nullptr) {
+        if (isInit) {
+            callbackImpl = std::make_shared<CloudFileCacheCallbackImplAni>();
+            registerMap_.insert(make_pair(eventType, callbackImpl));
+        }
+    } else {
+        callbackImpl = iter->second;
+    }
+    return callbackImpl;
 }
 
 FsResult<void> CloudFileCacheCore::DoStart(const string &uri)
 {
-    int32_t ret = CloudSyncManager::GetInstance().StartFileCache(uri);
+    auto callbackImpl = GetCallbackImpl(PROGRESS, true);
+    int32_t ret = callbackImpl->StartDownloadInner(uri, FieldKey::FIELDKEY_CONTENT);
     if (ret != E_OK) {
-        LOGE("Start Download failed with errormessage: ret = %{public}d", ret);
+        LOGE("Stop Download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
-    LOGI("Start Download successfully!");
 
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCacheCore::DoStop(const string &uri, const bool needClean)
+FsResult<int64_t> CloudFileCacheCore::DoStart(const std::vector<std::string> &uriList, int32_t fieldKey)
 {
-    int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
+    auto callbackImpl = GetCallbackImpl(MULTI_PROGRESS, true);
+    int64_t downloadId = 0;
+    int32_t ret = callbackImpl->StartDownloadInner(uriList, downloadId, fieldKey);
     if (ret != E_OK) {
         LOGE("Stop Download failed! ret = %{public}d", ret);
+        return FsResult<int64_t>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<int64_t>::Success(downloadId);
+}
+
+FsResult<void> CloudFileCacheCore::DoStop(const string &uri, bool needClean)
+{
+    auto callbackImpl = GetCallbackImpl(PROGRESS, false);
+    if (callbackImpl == nullptr) {
+        LOGE("Failed to stop download, callback is null!");
+        return FsResult<void>::Error(E_INVAL_ARG);
+    }
+    int32_t ret = callbackImpl->StopDownloadInner(uri, needClean);
+    if (ret != E_OK) {
+        LOGE("Stop Download failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
+
+FsResult<void> CloudFileCacheCore::DoStop(int64_t downloadId, bool needClean)
+{
+    auto callbackImpl = GetCallbackImpl(MULTI_PROGRESS, false);
+    if (callbackImpl == nullptr) {
+        LOGE("Failed to stop batch download, callback is null!");
+        return FsResult<void>::Error(EINVAL);
+    }
+    int32_t ret = callbackImpl->StopDownloadInner(downloadId, needClean);
+    if (ret != E_OK) {
+        LOGE("Stop batch download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 

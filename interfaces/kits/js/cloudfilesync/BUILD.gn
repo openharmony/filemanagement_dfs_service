@@ -39,7 +39,6 @@ ohos_shared_library("cloudsync") {
   }
   sources = [
     "cloud_file_cache_napi.cpp",
-    "cloud_file_download_napi.cpp",
     "cloud_file_napi.cpp",
     "cloud_file_version_napi.cpp",
     "cloud_sync_n_exporter.cpp",

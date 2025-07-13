@@ -16,14 +16,13 @@
 #include "cloud_file_cache_ani.h"
 
 #include "ani_utils.h"
+#include "dfs_error.h"
 #include "error_handler.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
 using namespace arkts::ani_signature;
-
-const int32_t E_IPCSS = 13600001;
 
 static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
 {
@@ -88,89 +87,72 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
     std::string event;
     ani_status ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
-    ani_ref cbOnRef;
-    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
+    if (event == "multiProgress") {
+        event = MULTI_PROGRESS;
     }
-    std::shared_ptr<CloudDownloadCallbackAniImpl> callback = nullptr;
-    if (event == "progress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
-    } else if (event == "multiProgress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef, true);
+    if (event != PROGRESS && event != MULTI_PROGRESS) {
+        LOGE("Invalid argument for event type.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto data = cloudFileCache->DoOn(event, callback);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloudFileCache do on failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(event, true);
+    callbackImpl->InitVm(env);
+    auto status = callbackImpl->RegisterCallback(env, fun);
+    if (status != ANI_OK) {
+        LOGE("Failed to register callback, status: %{public}d.", status);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
     }
 }
 
 void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    ani_ref cbOnRef;
-    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    std::string event;
+    ani_status ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+    if (event == "multiProgress") {
+        event = MULTI_PROGRESS;
+    }
+    if (event != PROGRESS && event == MULTI_PROGRESS) {
+        LOGE("Invalid argument for event type.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto data = cloudFileCache->DoOff(event, callback);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloudFileCache do off failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(event, false);
+    if (callbackImpl == nullptr || callbackImpl->UnregisterCallback(env, fun) != ANI_OK) {
+        LOGE("Failed to unregister callback.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
     }
 }
 
 void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
-    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
-    if (cloudFileCache == nullptr) {
-        LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-    auto data = cloudFileCache->DoOff(event);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloudFileCache do off failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
-    }
+    CloudFileCacheOff0(env, object, evt, nullptr);
 }
 
 void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri)
@@ -178,14 +160,14 @@ void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
     auto data = cloudFileCache->DoStart(uriInput);
@@ -196,19 +178,56 @@ void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani
     }
 }
 
+ani_double CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env,
+                                                       ani_object object,
+                                                       ani_array_ref uriList,
+                                                       ani_enum_item fileType)
+{
+    ani_double errResult = 0;
+    auto [ret, urisInput] = ANIUtils::AniToStringArray(env, uriList);
+    if (!ret) {
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return errResult;
+    }
+
+    int32_t fieldKey = static_cast<int32_t>(FieldKey::FIELDKEY_CONTENT);
+    tie(ret, fieldKey) = ANIUtils::EnumToInt32(env, fileType);
+    if (!ret) {
+        LOGE("cloudFileCache get fileType failed");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return errResult;
+    }
+
+    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
+    if (cloudFileCache == nullptr) {
+        LOGE("Cannot wrap cloudFileCache.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return errResult;
+    }
+    auto data = cloudFileCache->DoStart(urisInput, fieldKey);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloudFileCache do start failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+        return errResult;
+    }
+
+    return static_cast<ani_double>(data.GetData().value());
+}
+
 void CloudFileCacheAni::CloudFileCacheStop(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean)
 {
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
@@ -222,19 +241,41 @@ void CloudFileCacheAni::CloudFileCacheStop(ani_env *env, ani_object object, ani_
     }
 }
 
+void CloudFileCacheAni::CloudFileCacheStopBatch(ani_env *env,
+                                                ani_object object,
+                                                ani_double taskId,
+                                                ani_boolean needClean)
+{
+    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
+    if (cloudFileCache == nullptr) {
+        LOGE("Cannot wrap cloudFileCache.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+
+    bool needCleanInput = needClean;
+
+    auto data = cloudFileCache->DoStop(static_cast<int64_t>(taskId), needCleanInput);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloudFileCache do stop failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
 void CloudFileCacheAni::CloudFileCacheCleanCache(ani_env *env, ani_object object, ani_string uri)
 {
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
     auto data = cloudFileCache->CleanCache(uriInput);

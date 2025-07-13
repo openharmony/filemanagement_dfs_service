@@ -800,7 +800,6 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
                                          int64_t &downloadId,
                                          int32_t fieldkey,
-                                         bool isCallbackValid,
                                          const sptr<IRemoteObject> &downloadCallback,
                                          int32_t timeout)
 {
@@ -820,16 +819,15 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         return ret;
     }
 
-    sptr<ICloudDownloadCallback> downloadCb = nullptr;
-    if (isCallbackValid) {
-        downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    }
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
     ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
     LOGI("End StartFileCache, ret: %{public}d", ret);
     return ret;
 }
 
-int32_t CloudSyncService::StartDownloadFile(const std::string &path)
+int32_t CloudSyncService::StartDownloadFile(const std::string &uri,
+                                            const sptr<IRemoteObject> &downloadCallback,
+                                            int64_t &downloadId)
 {
     LOGI("Begin StartDownloadFile");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -839,16 +837,14 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     if (ret != E_OK) {
         return ret;
     }
-    std::vector<std::string> pathVec;
-    pathVec.push_back(path);
-    int64_t downloadId = 0;
-    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, pathVec, downloadId, CloudSync::FIELDKEY_CONTENT,
-                                              nullptr);
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, {uri}, downloadId, FieldKey::FIELDKEY_CONTENT,
+                                              downloadCb);
     LOGI("End StartDownloadFile");
     return ret;
 }
 
-int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
+int32_t CloudSyncService::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("Begin StopDownloadFile");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -859,7 +855,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needCle
         return ret;
     }
 
-    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, path, needClean);
+    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, downloadId, needClean);
     LOGI("End StopDownloadFile");
     return ret;
 }
@@ -875,7 +871,7 @@ int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int3
         return ret;
     }
 
-    ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
+    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, downloadId, needClean, timeout);
     LOGI("End StopFileCache, ret: %{public}d", ret);
     return ret;
 }
@@ -887,66 +883,6 @@ int32_t CloudSyncService::DownloadThumb()
 
     int32_t ret = dataSyncManager_->TriggerDownloadThumb();
     LOGI("End DownloadThumb");
-    return ret;
-}
-
-int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    LOGI("Begin RegisterDownloadFileCallback");
-    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
-
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    ret = dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
-    LOGI("End RegisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    LOGI("Begin RegisterDownloadFileCallback");
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    ret = dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
-    LOGI("End RegisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::UnregisterDownloadFileCallback()
-{
-    LOGI("Begin UnregisterDownloadFileCallback");
-    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
-
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    ret = dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
-    LOGI("End UnregisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::UnregisterFileCacheCallback()
-{
-    LOGI("Begin UnregisterFileCacheCallback");
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    ret = dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
-    LOGI("End UnregisterFileCacheCallback");
     return ret;
 }
 

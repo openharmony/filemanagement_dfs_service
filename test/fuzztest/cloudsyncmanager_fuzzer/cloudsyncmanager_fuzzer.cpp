@@ -27,6 +27,7 @@
 
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t U64_AT_SIZE = 8;
 constexpr size_t BOOL_AT_SIZE = 1;
 
 using namespace OHOS::FileManagement::CloudSync;
@@ -122,30 +123,18 @@ void NotifyDataChangeFuzzTest(FuzzData &fuzzData, size_t size)
 void StartDownloadFileFuzzTest(FuzzData &fuzzData, size_t size)
 {
     fuzzData.ResetData(size);
+    int64_t downloadId = 0;
     string uri = fuzzData.GetStringFromData(static_cast<int>(size));
-    CloudSyncManager::GetInstance().StartDownloadFile(uri);
-}
-
-void StartFileCacheFuzzTest(FuzzData &fuzzData, size_t size)
-{
-    fuzzData.ResetData(size);
-    string uri = fuzzData.GetStringFromData(static_cast<int>(size));
-    CloudSyncManager::GetInstance().StartFileCache(uri);
+    auto downloadCallback = make_shared<ICloudDownloadCallbackTest>();
+    CloudSyncManager::GetInstance().StartDownloadFile(uri, downloadCallback, downloadId);
 }
 
 void StopDownloadFileFuzzTest(FuzzData &fuzzData, size_t size)
 {
     fuzzData.ResetData(size);
     bool needClean = fuzzData.GetData<bool>();
-    string uri = fuzzData.GetStringFromData(static_cast<int>(size - BOOL_AT_SIZE));
-    CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
-}
-
-void RegisterDownloadFileCallbackFuzzTest(FuzzData &fuzzData, size_t size)
-{
-    auto downloadCallback = make_shared<ICloudDownloadCallbackTest>();
-    CloudSyncManager::GetInstance().RegisterDownloadFileCallback(downloadCallback);
-    CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
+    int64_t downloadId = fuzzData.GetData<int64_t>();
+    CloudSyncManager::GetInstance().StopDownloadFile(downloadId, needClean);
 }
 
 void EnableCloudFuzzTest(FuzzData &fuzzData, size_t size)
@@ -209,9 +198,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ChangeAppSwitchFuzzTest(fuzzData, size);
     OHOS::NotifyDataChangeFuzzTest(fuzzData, size);
     OHOS::StartDownloadFileFuzzTest(fuzzData, size);
-    OHOS::StartFileCacheFuzzTest(fuzzData, size);
     OHOS::StopDownloadFileFuzzTest(fuzzData, size);
-    OHOS::RegisterDownloadFileCallbackFuzzTest(fuzzData, size);
     OHOS::EnableCloudFuzzTest(fuzzData, size);
     OHOS::DisableCloudFuzzTest(fuzzData, size);
     OHOS::CleanFuzzTest(fuzzData, size);

@@ -243,7 +243,9 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri,
+                                                 const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                                 int64_t &downloadId)
 {
     return E_OK;
 }
@@ -251,7 +253,6 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
                                                          int32_t &fieldkey,
-                                                         bool isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback,
                                                          int32_t timeout)
 {
@@ -259,15 +260,15 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
 }
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
-                                              int64_t &downloadId, int32_t fieldkey,
-                                              bool isCallbackValid,
+                                              int64_t &downloadId,
+                                              int32_t fieldkey,
                                               const sptr<IRemoteObject> &downloadCallback,
                                               int32_t timeout)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool needClean)
+int32_t CloudSyncServiceProxy::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     return E_OK;
 }
@@ -278,26 +279,6 @@ int32_t CloudSyncServiceProxy::StopFileCache(int64_t downloadId, bool needClean,
 }
 
 int32_t CloudSyncServiceProxy::DownloadThumb()
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::UnregisterFileCacheCallback()
 {
     return E_OK;
 }
