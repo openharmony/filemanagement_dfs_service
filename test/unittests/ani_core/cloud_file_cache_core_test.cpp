@@ -168,7 +168,7 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest2, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + ModuleFileIo::E_INVAL);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + ModuleFileIO::E_INVAL);
 }
 
 /**
