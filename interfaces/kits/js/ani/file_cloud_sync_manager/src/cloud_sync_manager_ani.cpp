@@ -259,9 +259,8 @@ void CloudSyncManagerAni::Clean(ani_env *env, ani_class clazz, ani_string accout
     }
 }
 
-void CloudSyncManagerAni::NotifyEventChange(ani_env *env, ani_class clazz, ani_double userId, ani_object extraData)
+void CloudSyncManagerAni::NotifyEventChange(ani_env *env, ani_class clazz, ani_int userId, ani_object extraData)
 {
-    int32_t userIdInput = static_cast<int32_t>(userId);
     ani_ref eventId;
     ani_ref extraDataRef;
     ani_status ret = env->Object_GetPropertyByName_Ref(extraData, "eventId", &eventId);
@@ -291,7 +290,7 @@ void CloudSyncManagerAni::NotifyEventChange(ani_env *env, ani_class clazz, ani_d
         return;
     }
 
-    auto data = CloudSyncManagerCore::DoNotifyEventChange(userIdInput, eventIdStr, extraDataStr);
+    auto data = CloudSyncManagerCore::DoNotifyEventChange(userId, eventIdStr, extraDataStr);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync manager notify Event change failed, ret = %{public}d", err.GetErrNo());

@@ -420,14 +420,14 @@ ani_status CloudOptimizeCallbackAniImpl::GetOptimProgress(
 
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
-    std::string ctSign = Builder::BuildSignatureDescriptor({optimizeStateSign, Builder::BuildDouble()});
+    std::string ctSign = Builder::BuildSignatureDescriptor({optimizeStateSign, Builder::BuildInt()});
     ret = env->Class_FindMethod(cls, ct.c_str(), ctSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return ret;
     }
 
-    ret = env->Object_New(cls, ctor, &data, optimizeStateTypeEnumItem, static_cast<double>(progress));
+    ret = env->Object_New(cls, ctor, &data, optimizeStateTypeEnumItem, progress);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
         return ret;

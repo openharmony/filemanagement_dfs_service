@@ -48,7 +48,7 @@ export default namespace cloudSyncManager  {
         static native enableCloudInner(accountId: string, switches: Record<string, boolean>): void;
         static native disableCloudInner(accountId: string): void;
         static native cleanInner(accountId: string, appActions: Record<string, Action>): void;
-        static native notifyEventChangeInner(userId: number, extraData: ExtraData): void;
+        static native notifyEventChangeInner(userId: int, extraData: ExtraData): void;
     };
 
     export function changeAppCloudSwitch(accountId: string, bundleName: string, status: boolean): Promise<void> {
@@ -231,11 +231,11 @@ export default namespace cloudSyncManager  {
         });
     }
 
-    export function notifyDataChange(userId: number, extraData: ExtraData): Promise<void> {
+    export function notifyDataChange(userId: int, extraData: ExtraData): Promise<void> {
         return new Promise<void>((resolve: (result: undefined) => void,
             reject: (e: BusinessError) => void): void => {
             let promise = taskpool.execute((
-                userId: number,
+                userId: int,
                 extraData: ExtraData
             ): int => {
                 StaticFunction.notifyEventChangeInner(userId, extraData);
@@ -249,9 +249,9 @@ export default namespace cloudSyncManager  {
         });
     }
 
-    export function notifyDataChange(userId: number, extraData: ExtraData, callback: AsyncCallback<void>): void {
+    export function notifyDataChange(userId: int, extraData: ExtraData, callback: AsyncCallback<void>): void {
         let promise = taskpool.execute((
-            userId: number,
+            userId: int,
             extraData: ExtraData
         ): int => {
             StaticFunction.notifyEventChangeInner(userId, extraData);

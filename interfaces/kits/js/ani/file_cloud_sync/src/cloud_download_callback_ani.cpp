@@ -38,8 +38,8 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
     std::string argSign = Builder::BuildSignatureDescriptor({
-        Builder::BuildDouble(), Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"),
-        Builder::BuildDouble(), Builder::BuildDouble(), Builder::BuildClass("std.core.String"),
+        Builder::BuildLong(), Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"),
+        Builder::BuildLong(), Builder::BuildLong(), Builder::BuildClass("std.core.String"),
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadErrorType")
     });
     ani_status ret = env_->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
@@ -67,9 +67,8 @@ void CloudDownloadCallbackAniImpl::GetDownloadProgress(
 
     if (!isBatch_) {
         env_->Enum_GetEnumItemByIndex(stateEnum, progress.state, &stateEnumItem);
-        ret = env_->Object_New(cls, ctor, &pg, static_cast<double>(progress.downloadId), stateEnumItem,
-            static_cast<double>(progress.downloadedSize), static_cast<double>(progress.totalSize), uri,
-            downloadErrorEnumItem);
+        ret = env_->Object_New(cls, ctor, &pg, progress.downloadId, stateEnumItem,
+            progress.downloadedSize, progress.totalSize, uri, downloadErrorEnumItem);
     } else {
         env_->Enum_GetEnumItemByIndex(stateEnum, progress.batchState, &stateEnumItem);
         ret = env_->Object_New(cls, ctor, &pg, static_cast<double>(progress.downloadId), stateEnumItem,

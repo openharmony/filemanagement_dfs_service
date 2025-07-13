@@ -223,25 +223,24 @@ void CloudSyncAni::OptimizeStorage(ani_env *env, ani_class clazz)
 void CloudSyncAni::StartOptimizeStorage(ani_env *env, ani_class clazz, ani_object optim, ani_object fun)
 {
     OptimizeSpaceOptions optimizeOptions {};
-    ani_double totalSize;
-    ani_status ret = env->Object_GetPropertyByName_Double(optim, "totalSize", &totalSize);
+    ani_long totalSize;
+    ani_status ret = env->Object_GetPropertyByName_Long(optim, "totalSize", &totalSize);
     if (ret != ANI_OK) {
         LOGE("get totalSize failed. ret = %{public}d", ret);
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    ani_double agingDays;
-    ret = env->Object_GetPropertyByName_Double(optim, "agingDays", &agingDays);
+    ani_int agingDays;
+    ret = env->Object_GetPropertyByName_Int(optim, "agingDays", &agingDays);
     if (ret != ANI_OK) {
         LOGE("get agingDays failed. ret = %{public}d", ret);
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
 
-    LOGI("totalSize: %{public}lld, agingDays:%{public}d",
-        static_cast<long long>(totalSize), static_cast<int32_t>(agingDays));
-    optimizeOptions.totalSize = static_cast<int64_t>(totalSize);
-    optimizeOptions.agingDays = static_cast<int32_t>(agingDays);
+    LOGI("totalSize: %{public}lld, agingDays:%{public}d", static_cast<long long>(totalSize), agingDays);
+    optimizeOptions.totalSize = totalSize;
+    optimizeOptions.agingDays = agingDays;
 
     ani_ref cbOnRef;
     ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
