@@ -148,6 +148,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     std::shared_ptr<PushAssetData> pushData1 = nullptr;
     auto eventptr = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData1, 0);
     eventptr.reset(nullptr);
+    ASSERT_NE(daemonExecute_, nullptr);
     daemonExecute_->ExecutePushAsset(eventptr);
 
     std::shared_ptr<PushAssetData> pushData = nullptr;
@@ -189,6 +190,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 begin";
     int32_t userId = 100;
+    ASSERT_NE(daemonExecute_, nullptr);
     sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
     assetObj->dstNetworkId_ = "test";
     DevslDispatcher::devslMap_.clear();
@@ -230,6 +232,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecuteRequestSendFile_001, TestSize.L
     std::shared_ptr<RequestSendFileData> requestSendFileData1 = nullptr;
     auto eventptr = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_REQUEST_SEND_FILE, requestSendFileData1, 0);
     eventptr.reset(nullptr);
+    ASSERT_NE(daemonExecute_, nullptr);
     daemonExecute_->ExecuteRequestSendFile(eventptr);
 
     std::shared_ptr<RequestSendFileData> requestSendFileData = nullptr;
@@ -277,6 +280,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_RequestSendFileInner_001, TestSize.Lev
     std::string dstPath;
     std::string dstDeviceId;
     std::string sessionName;
+    ASSERT_NE(daemonExecute_, nullptr);
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(-1));
     EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName), ERR_APPLY_RESULT);
 
@@ -305,6 +309,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_RequestSendFileInner_001, TestSize.Lev
 HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_GetFileList_001 begin";
+    ASSERT_NE(daemonExecute_, nullptr);
     std::vector<std::string> uris;
     int32_t userId = 100;
     std::string srcBundleName;
@@ -354,7 +359,8 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_HandleZip_001, TestSize.Level1)
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     std::string sendFileName;
     bool isSingleFile;
-
+    ASSERT_NE(daemonExecute_, nullptr);
+    ASSERT_NE(assetObj, nullptr);
     fileList.emplace_back("/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt");
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_OK);
 
@@ -386,7 +392,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_001, TestSize.Leve
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     HmdfsInfo info;
-
+    ASSERT_NE(daemonExecute_, nullptr);
     // Test case 1: CreateSessionServer fails
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info),
@@ -410,7 +416,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_002, TestSize.Leve
     std::string sessionName;
     sptr<DaemonMock> daemon = nullptr;
     HmdfsInfo info;
-
+    ASSERT_NE(daemonExecute_, nullptr);
     // Test case 2: CreateSessionServer success but daemon is nullptr
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
     EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_INVAL_ARG_NAPI);
@@ -433,7 +439,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
     std::string sessionName;
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     HmdfsInfo info;
-
+    ASSERT_NE(daemonExecute_, nullptr);
     // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
     EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
@@ -450,7 +456,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
 HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_004 begin";
-
+    ASSERT_NE(daemonExecute_, nullptr);
     std::string srcUri;
     std::string physicalPath;
     std::string sessionName;
@@ -474,7 +480,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Leve
 HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_001 begin";
-
+    ASSERT_NE(daemonExecute_, nullptr);
     // Test case 1: event is nullptr
     AppExecFwk::InnerEvent::Pointer pointer2 = AppExecFwk::InnerEvent::Get(); // 获取空事件
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(pointer2));
@@ -491,7 +497,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_001, TestSize.Le
 HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_002 begin";
-
+    ASSERT_NE(daemonExecute_, nullptr);
     // Test case 2: prepareSessionData is nullptr
     std::shared_ptr<PrepareSessionData> prepareSessionData = nullptr;
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
@@ -525,6 +531,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_003, TestSize.Le
     // Initialize InnerEvent
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData);
 
+    ASSERT_NE(daemonExecute_, nullptr);
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
 
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_003 end";
@@ -554,6 +561,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Le
     // Mock PrepareSessionInner to return success
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
 
+    ASSERT_NE(daemonExecute_, nullptr);
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
     EXPECT_EQ(prepareSessionBlock->GetValue(), E_OK);
 
@@ -584,6 +592,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Le
     // Mock PrepareSessionInner to return failure
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
 
+    ASSERT_NE(daemonExecute_, nullptr);
     EXPECT_NO_THROW(daemonExecute_->ExecutePrepareSession(event));
     EXPECT_EQ(prepareSessionBlock->GetValue(), E_SOFTBUS_SESSION_FAILED);
 

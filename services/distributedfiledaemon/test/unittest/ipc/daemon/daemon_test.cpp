@@ -310,7 +310,7 @@ void DaemonTest::TearDown(void)
 HWTEST_F(DaemonTest, DaemonTest_PublishSA_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PublishSA_001 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     daemon_->registerToService_ = true;
     try {
         daemon_->PublishSA();
@@ -337,6 +337,7 @@ HWTEST_F(DaemonTest, DaemonTest_PublishSA_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_PublishSA_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PublishSA_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     daemon_->registerToService_ = false;
     g_publish = false;
     try {
@@ -357,6 +358,7 @@ HWTEST_F(DaemonTest, DaemonTest_PublishSA_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_RegisterOsAccount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RegisterOsAccount_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_subscribeCommonEvent = true;
     try {
         daemon_->RegisterOsAccount();
@@ -384,6 +386,7 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterOsAccount_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnStart_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnStart_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     daemon_->state_ = ServiceRunningState::STATE_RUNNING;
     try {
         daemon_->OnStart();
@@ -411,6 +414,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnStart_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnStop_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnStop_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_unSubscribeCommonEvent = false;
     try {
         daemon_->OnStop();
@@ -438,6 +442,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnStop_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnAddSystemAbility_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_subscribeCommonEvent = false;
     try {
         daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
@@ -469,6 +474,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnAddSystemAbility_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     try {
         daemon_->OnAddSystemAbility(COMMON_EVENT_SERVICE_ID, "");
         daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
@@ -508,6 +514,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
@@ -528,6 +535,7 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
@@ -548,6 +556,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
     ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
@@ -569,6 +578,7 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo = {.networkId = "test"};
     sptr<IFileDfsListener> remoteReverseObj = nullptr;
     ConnectCount::GetInstance()->RemoveAllConnect();
@@ -603,6 +613,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_checkCallerPermissionDatasync = false;
     EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION_DENIED_NAPI);
 
@@ -624,6 +635,7 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_checkCallerPermissionDatasync = false;
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION_DENIED_NAPI);
 
@@ -650,6 +662,7 @@ HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_getCallingNetworkId = "testNetWork1";
     std::vector<DmDeviceInfo> deviceList;
     deviceList.push_back(deviceInfo);
@@ -683,6 +696,7 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_002 begin";
 #ifdef SUPPORT_SAME_ACCOUNT
+    ASSERT_NE(daemon_, nullptr);
     g_getCallingNetworkId.clear();
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_PERMISSION_DENIED);
 
@@ -725,6 +739,7 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_003, TestSize.Level1)
     g_getCallingNetworkId = "testNetWork1";
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    ASSERT_NE(daemon_, nullptr);
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_PERMISSION_DENIED);
 
     g_getCallingNetworkId = "testNetWork2";
@@ -752,6 +767,7 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_003, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     HmdfsInfo hmdfsInfo;
     EXPECT_EQ(daemon_->PrepareSession("", "", "", nullptr, hmdfsInfo), E_NULLPTR);
 
@@ -798,6 +814,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRealPath_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     std::string physicalPath;
     HmdfsInfo info;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
@@ -844,6 +861,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     std::string physicalPath;
     HapTokenInfo hapTokenInfo;
     HmdfsInfo info;
@@ -892,6 +910,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_002 begin";
+    ASSERT_NE(daemon_, nullptr);
     std::string physicalPath;
     HapTokenInfo hapTokenInfo;
     HmdfsInfo info;
@@ -948,6 +967,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfo_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     g_getCallingNetworkId = "testNetWork1";
     std::vector<DmDeviceInfo> deviceList;
     (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
@@ -977,6 +997,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfo_002 begin";
 #ifdef SUPPORT_SAME_ACCOUNT
+    ASSERT_NE(daemon_, nullptr);
     g_getCallingNetworkId.clear();
     bool isSrcFile = false;
     bool srcIsDir = false;
@@ -1007,6 +1028,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteSA_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
@@ -1031,6 +1053,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
         .WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->Copy("", "", nullptr, ""), E_GET_DEVICE_ID);
@@ -1049,6 +1072,20 @@ HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
         .WillOnce(Return(E_OK));
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->Copy("", "", daemon, ""), E_OK);
+
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt";
+    string destPath = "/storage/media/100/local/files/Docs/aa1/";
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+
+    srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt?networkid=123456";
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+
+    srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    destPath = "/storage/media/100/local/files/Docs/../aa1/";
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+
+    destPath = "/storage/media/100/local/files/Docs/../aa1/?networkid=123456";
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 end";
 }
 
@@ -1061,6 +1098,7 @@ HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CancelCopyTask_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CancelCopyTask_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo("test");
     EXPECT_EQ(daemon_->CancelCopyTask("test"), E_INVAL_ARG);
 
@@ -1084,6 +1122,7 @@ HWTEST_F(DaemonTest, DaemonTest_CancelCopyTask_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
@@ -1092,6 +1131,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
     EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_NULLPTR);
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_NULLPTR);
 
+    ASSERT_NE(assetObj, nullptr);
     assetObj->srcBundleName_ = "test";
     daemon_->eventHandler_ = nullptr;
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_EVENT_HANDLER);
@@ -1107,6 +1147,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 begin";
+    ASSERT_NE(daemon_, nullptr);
     daemon_->StartEventHandler();
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
@@ -1139,6 +1180,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     EXPECT_EQ(daemon_->RegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
@@ -1156,6 +1198,7 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(nullptr), E_NULLPTR);
 
     sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
@@ -1172,9 +1215,36 @@ HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_StartEventHandler_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_StartEventHandler_001 begin";
+    ASSERT_NE(daemon_, nullptr);
     daemon_->daemonExecute_ = std::make_shared<DaemonExecute>();
     daemon_->StartEventHandler();
     GTEST_LOG_(INFO) << "DaemonTest_StartEventHandler_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_InnerCopy_001
+ * @tc.desc: verify InnerCopy.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_InnerCopy_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_InnerCopy_001 begin";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/dest1.txt";
+    HmdfsInfo hmdfsInfo;
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+
+    srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt?networkid=123456";
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+
+    srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    destUri = "file://docs/storage/media/100/local/files/Docs/../A/dest1.txt";
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+
+    destUri = "file://docs/storage/media/100/local/files/Docs/../A/dest1.txt?networkid=123456";
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "DaemonTest_InnerCopy_001 end";
 }
 
 /**
@@ -1186,7 +1256,7 @@ HWTEST_F(DaemonTest, DaemonTest_StartEventHandler_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_001 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test empty networkId
     EXPECT_NO_THROW(daemon_->DisconnectByRemote(""));
 
@@ -1206,7 +1276,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_002 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test normal case with mock
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
@@ -1223,7 +1293,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_002, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test normal case with mock
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(NO_ERROR));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(NO_ERROR));
@@ -1241,7 +1311,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CreateControlLink_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CreateControlLink_001 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test exist channel now
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
     EXPECT_EQ(daemon_->CreatControlLink("networkId"), FileManagement::ERR_OK);
@@ -1273,7 +1343,7 @@ HWTEST_F(DaemonTest, DaemonTest_CreateControlLink_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_DestroyControlLink_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_DestroyControlLink_001 begin";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test not existing channel
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
     EXPECT_EQ(daemon_->CancelControlLink("networkId"), FileManagement::ERR_OK);
@@ -1300,7 +1370,7 @@ HWTEST_F(DaemonTest, DaemonTest_DestroyControlLink_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CheckRemoteAllowConnect_001";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test CreatControlLink failed
     g_dfsVersion = {6, 0, 0};
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
@@ -1329,7 +1399,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemotePublishNotification_001";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test CreatControlLink failed
     g_dfsVersion = {6, 0, 0};
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
@@ -1358,7 +1428,7 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Le
 HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
-
+    ASSERT_NE(daemon_, nullptr);
     // Test CreatControlLink failed
     g_dfsVersion = {6, 0, 0};
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
@@ -1377,6 +1447,5 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Lev
 
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
 }
-
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

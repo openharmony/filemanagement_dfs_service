@@ -119,6 +119,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnStart_0200, TestSi
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true))
         .WillOnce(Return(true)).WillOnce(Return(true));
     auto testProxy = make_shared<AssetRecvCallbackProxy>(nullptr);
+    ASSERT_NE(testProxy, nullptr);
     auto ret = testProxy->OnStart("srcNetworkId", "dstNetworkId", "sessionId", "bundleName");
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
@@ -215,6 +216,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnRecvProgress_0200,
     EXPECT_CALL(*messageParcelMock_, WriteUint64(_)).Times(2)
                                                     .WillRepeatedly(Return(true));
     auto testProxy = make_shared<AssetRecvCallbackProxy>(nullptr);
+    ASSERT_NE(testProxy, nullptr);
     auto ret = testProxy->OnRecvProgress("srcNetworkId", assetObj, 1024, 256);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
@@ -304,6 +306,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0200, Tes
     EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     auto testProxy = make_shared<AssetRecvCallbackProxy>(nullptr);
+    ASSERT_NE(testProxy, nullptr);
     auto ret = testProxy->OnFinished("srcNetworkId", assetObj, 0);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 

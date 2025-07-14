@@ -87,11 +87,17 @@ public:
 
 ErrCode AccountSA::OsAccountManager::QueryActiveOsAccountIds(std::vector<int32_t>& ids)
 {
+    if (DfsDeviceOtherMethod::otherMethod == nullptr) {
+        return 0;
+    }
     return DfsDeviceOtherMethod::otherMethod->QueryActiveOsAccountIds(ids);
 }
 
 ErrCode AccountSA::OhosAccountKitsImpl::GetOhosAccountInfo(AccountSA::OhosAccountInfo &accountInfo)
 {
+    if (DfsDeviceOtherMethod::otherMethod == nullptr) {
+        return 0;
+    }
     return DfsDeviceOtherMethod::otherMethod->GetOhosAccountInfo(accountInfo);
 }
 } // namespace OHOS
