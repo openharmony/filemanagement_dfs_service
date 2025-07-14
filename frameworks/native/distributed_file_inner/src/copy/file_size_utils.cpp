@@ -44,7 +44,7 @@ static constexpr char NETWORK_ID[] = "?networkid=";
 int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
     if (!IsFilePathValid(GetRealUri(uri))) {
-        LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
+        LOGE("path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto path = GetPathFromUri(uri, isSrcUri);
@@ -67,7 +67,7 @@ int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &
 int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
     if (!IsFilePathValid(GetRealUri(uri))) {
-        LOGE("path: %{public}s is forbidden", GetAnonyString(uri).c_str());
+        LOGE("path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto path = GetPathFromUri(uri, isSrcUri);
@@ -105,7 +105,9 @@ int FileSizeUtils::FilterFunc(const struct dirent *filename)
 void FileSizeUtils::Deleter(struct NameList *arg)
 {
     for (int i = 0; i < arg->direntNum; i++) {
-        free((arg->namelist)[i]);
+        if ((arg->namelist)[i]) {
+            free((arg->namelist)[i]);
+        }
         (arg->namelist)[i] = nullptr;
     }
     free(arg->namelist);
@@ -148,6 +150,9 @@ int32_t FileSizeUtils::GetDirSize(const std::string &path, uint64_t &size)
     }
     size = 0;
     for (int i = 0; i < pNameList->direntNum; i++) {
+        if ((pNameList->namelist[i]) == nullptr) {
+            continue;
+        }
         std::string dest = path + '/' + std::string((pNameList->namelist[i])->d_name);
         if ((pNameList->namelist[i])->d_type == DT_LNK) {
             continue;
@@ -156,7 +161,7 @@ int32_t FileSizeUtils::GetDirSize(const std::string &path, uint64_t &size)
             uint64_t subSize = 0;
             auto err = GetDirSize(dest, subSize);
             if (err != E_OK) {
-                LOGE("GetDirSize failed, path is %{public}s", dest.c_str());
+                LOGE("GetDirSize failed");
                 return err;
             }
             size += subSize;
@@ -236,14 +241,14 @@ bool FileSizeUtils::IsFilePathValid(const std::string &filePath)
     size_t pos = filePath.find(PATH_INVALID_FLAG1);
     while (pos != std::string::npos) {
         if (pos == 0 || filePath[pos - 1] == FILE_SEPARATOR_CHAR) {
-            LOGE("Relative path is not allowed, path contain ../, path = %{private}s", filePath.c_str());
+            LOGE("Relative path is not allowed, path contain ../");
             return false;
         }
         pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
     }
     pos = filePath.rfind(PATH_INVALID_FLAG2);
     if ((pos != std::string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
-        LOGE("Relative path is not allowed, path tail is /.., path = %{private}s", filePath.c_str());
+        LOGE("Relative path is not allowed, path tail is /..");
         return false;
     }
     return true;

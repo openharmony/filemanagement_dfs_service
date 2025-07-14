@@ -202,11 +202,14 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level0)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0005!" << errno;
     close(fd);
 
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(nullptr);
+    EXPECT_EQ(ret, EINVAL);
+
     auto infos = std::make_shared<FileInfos>();
     infos->srcUri = srcuri;
     infos->destUri = desturi;
     infos->srcPath = srcpath;
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
     EXPECT_EQ(ret, 2);
     ASSERT_EQ(remove(srcpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 End";
@@ -243,6 +246,21 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
     infos->destPath = destpath;
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
     EXPECT_EQ(ret, 2);
+
+    ProcessCallback processCallback = [](uint64_t processSize, uint64_t totalSize) -> void {};
+    infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
+        infos->srcUriIsFile, processCallback);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, 2);
+
+    infos->srcUriIsFile = true;
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, 21);
+
+    infos->localListener = nullptr;
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    EXPECT_EQ(ret, 21);
+
     ASSERT_EQ(remove(srcpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
 }
@@ -439,6 +457,11 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level
     EXPECT_FALSE(std::filesystem::exists("/data/test/file1.txt"));
     EXPECT_FALSE(std::filesystem::exists("/data/test/file2.txt"));
     EXPECT_FALSE(std::filesystem::exists("/data/test/subdir"));
+
+    // 调用 DeleteResFile
+    infos->localListener = nullptr;
+    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0003 End";
 }
 
