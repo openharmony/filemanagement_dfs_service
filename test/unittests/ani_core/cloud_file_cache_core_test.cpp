@@ -172,6 +172,47 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest2, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DoStop
+ * @tc.desc: Verify the CloudFileCacheCore::DoStop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, DoStopTest3, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    cloudFileCache->registerMap_.insert(
+        std::make_pair("batchDownload", std::make_shared<CloudFileCacheCallbackImplAni>()));
+    int64_t downloadId = 0;
+    bool needClean = false;
+    auto ret = cloudFileCache->DoStop(downloadId, needClean);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoStop
+ * @tc.desc: Verify the CloudFileCacheCore::DoStop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, DoStopTest4, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    cloudFileCache->registerMap_.insert(
+        std::make_pair("batchDownload", std::make_shared<CloudFileCacheCallbackImplAni>()));
+    std::string uri = "testuri";
+    bool needClean = false;
+    auto ret = cloudFileCache->DoStop(uri, needClean);
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    if (ret.IsSuccess()) {
+        EXPECT_EQ(errorCode, 0);
+    } else {
+        EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + E_INVAL_ARG);
+    }
+}
+
+/**
  * @tc.name: CleanCache
  * @tc.desc: Verify the CloudFileCacheCore::CleanCache function
  * @tc.type: FUNC

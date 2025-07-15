@@ -45,7 +45,7 @@ FsResult<void> CloudFileCore::DoStart(const string &uri)
     auto callbackImpl = GetCallbackImpl(true);
     int32_t ret = callbackImpl->StartDownloadInner(uri);
     if (ret != E_OK) {
-        LOGE("Stop Download failed! ret = %{public}d", ret);
+        LOGE("Start Download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 

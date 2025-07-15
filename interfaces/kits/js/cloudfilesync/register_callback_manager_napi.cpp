@@ -18,7 +18,6 @@
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace FileManagement::LibN;
 using namespace std;
 napi_status RegisterCallbackManagerNapi::RegisterCallback(napi_value callback)
 {

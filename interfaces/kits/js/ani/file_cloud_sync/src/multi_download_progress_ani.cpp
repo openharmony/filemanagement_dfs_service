@@ -105,7 +105,7 @@ static ani_status SetProperties(ani_env *env, const ani_class &cls, ani_object &
             return ret;
         }
         if ((ret = env->Object_CallMethod_Void(pg, setter, iter.second)) != ANI_OK) {
-            LOGE("Class_FindMethod Fail %{public}s, err: %{public}d", key, ret);
+            LOGE("Object_CallMethod_Void Fail %{public}s, err: %{public}d", key, ret);
             return ret;
         }
     }

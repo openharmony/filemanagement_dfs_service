@@ -269,7 +269,13 @@ bool MultiDlProgressNapi::Export()
         return false;
     }
 
-    return exports_.AddProp(className, classValue);
+    if (!exports_.AddProp(className, classValue)) {
+        LOGE("Add property exceptions");
+        NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(exports_.env_);
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace OHOS::FileManagement::CloudSync

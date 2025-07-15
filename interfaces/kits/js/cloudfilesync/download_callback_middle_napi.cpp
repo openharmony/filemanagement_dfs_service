@@ -67,7 +67,6 @@ void CloudDlCallbackMiddleNapi::OnDownloadProcess(const DownloadProgressObj &pro
             napi_status status = napi_open_handle_scope(tmpEnv, &scope);
             if (status != napi_ok) {
                 LOGE("Failed to open handle scope, status: %{public}d", status);
-                napi_close_handle_scope(tmpEnv, scope);
                 return;
             }
             napi_value jsProgress = fileCacheInfo->ConvertToValue(tmpEnv);

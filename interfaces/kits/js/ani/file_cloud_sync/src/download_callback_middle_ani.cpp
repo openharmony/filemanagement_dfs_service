@@ -62,7 +62,7 @@ void CloudDlCallbackMiddleAni::OnDownloadProcess(const DownloadProgressObj &prog
             LOGE("Failed to callback, is callbackImpl null: %{public}d", (callbackImpl == nullptr));
             return;
         }
-        LOGI("CloudDownloadCallbackAniImpl OnDownloadProcess");
+        LOGI("CloudDlCallbackMiddleAni OnDownloadProcess for JS");
         ani_env *tmpEnv = callbackImpl->GetEnv();
         if (tmpEnv == nullptr) {
             LOGE("Failed to get env from vm");
