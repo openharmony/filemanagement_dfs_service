@@ -145,10 +145,10 @@ bool SoftBusPermissionCheck::CheckSrcAccessControl(const std::string &sinkNetwor
 {
     DmAccessCaller caller = {
         .accountId = localAccountInfo.accountId_,
+        .pkgName = SERVICE_NAME,
         .networkId = localAccountInfo.networkId_,
         .userId = localAccountInfo.userId_,
         .tokenId = localAccountInfo.tokenId_,
-        .pkgName = SERVICE_NAME,
     };
     DmAccessCallee callee = {
         .networkId = sinkNetworkId,
@@ -165,17 +165,17 @@ bool SoftBusPermissionCheck::CheckSinkAccessControl(const AccountInfo &callerAcc
 {
     DmAccessCaller caller = {
         .accountId = callerAccountInfo.accountId_,
+        .pkgName = SERVICE_NAME,
         .networkId = callerAccountInfo.networkId_,
         .userId = callerAccountInfo.userId_,
         .tokenId = callerAccountInfo.tokenId_,
-        .pkgName = SERVICE_NAME,
     };
     DmAccessCallee callee = {
         .accountId = calleeAccountInfo.accountId_,
         .networkId = calleeAccountInfo.networkId_,
+        .pkgName = SERVICE_NAME,
         .userId = calleeAccountInfo.userId_,
         .tokenId = calleeAccountInfo.tokenId_,
-        .pkgName = SERVICE_NAME,
     };
     if (!DeviceManager::GetInstance().CheckSinkAccessControl(caller, callee)) {
         LOGE("Check sink acl failed");
