@@ -101,6 +101,7 @@ HWTEST_F(AssetSendCallbackProxyTest, AssetSendCallbackProxyTest_OnSendResult_010
     EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     auto testProxy = make_shared<AssetSendCallbackProxy>(nullptr);
+    ASSERT_NE(testProxy, nullptr);
     ret = testProxy->OnSendResult(assetObj, 0);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
@@ -129,6 +130,7 @@ HWTEST_F(AssetSendCallbackProxyTest, AssetSendCallbackProxyTest_OnSendResult_020
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
+    ASSERT_NE(proxy_, nullptr);
     auto ret = proxy_->OnSendResult(assetObj, 0);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "AssetSendCallbackProxyTest_OnSendResult_0200 End";

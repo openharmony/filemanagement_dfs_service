@@ -92,6 +92,10 @@ private:
     std::mutex readMutex_;
     bool readFlag_ = false;
     bool readClosed_ = false;
+    std::atomic<bool> notifyRun_ {true};
+
+    std::condition_variable notifyCv_;
+    std::mutex cvLock_;
 };
 } // namespace DistributedFile
 } // namespace Storage
