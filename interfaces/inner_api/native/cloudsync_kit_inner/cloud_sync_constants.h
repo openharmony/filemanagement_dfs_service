@@ -63,6 +63,7 @@ enum ErrorType {
     DEVICE_TEMPERATURE_TOO_HIGH,
     BUSINESS_MODE_CHANGED,
     PERMISSION_NOT_ALLOW,
+    INNER_ERROR,
 };
 
 enum State {
