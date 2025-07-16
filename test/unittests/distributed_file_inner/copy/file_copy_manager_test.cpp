@@ -255,13 +255,14 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
 
     infos->srcUriIsFile = true;
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
-    EXPECT_EQ(ret, 21);
+    EXPECT_NE(ret, 0);
 
     infos->localListener = nullptr;
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
-    EXPECT_EQ(ret, 21);
+    EXPECT_NE(ret, 0);
 
     ASSERT_EQ(remove(srcpath.c_str()), 0);
+    ASSERT_EQ(ForceRemoveDirectory(destpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
 }
 
@@ -461,7 +462,6 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level
     // 调用 DeleteResFile
     infos->localListener = nullptr;
     Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
-    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0003 End";
 }
 

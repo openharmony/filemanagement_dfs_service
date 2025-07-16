@@ -292,7 +292,6 @@ HWTEST_F(FileSizeUtilsTest, Deleter_0001, TestSize.Level1)
     arg->namelist[1] = nullptr;
     arg->direntNum = 2;
     FileSizeUtils::Deleter(arg);
-    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "Deleter_0001 End";
 }
 }
