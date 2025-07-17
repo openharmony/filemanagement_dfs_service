@@ -33,6 +33,7 @@
 namespace OHOS {
 constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
+const pid_t PASTEBOARDUSERID = 3816;
 static pid_t UID = DAEMON_UID;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
@@ -308,6 +309,23 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
+void HandleGetDfsUrisDirFromLocalFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                          const uint8_t *data,
+                                          size_t size)
+{
+    OHOS::UID = PASTEBOARDUSERID;
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -359,5 +377,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandlePushAssetFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
