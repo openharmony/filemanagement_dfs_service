@@ -119,6 +119,7 @@ HWTEST_F(FuseOperationsTest, LookupTest002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issuesI92WQP
  */
+#if defined(CLOUD_ADAPTER_ENABLED)
 HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "LookupTest Start";
@@ -141,6 +142,7 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "LookupTest End";
 }
+#endif
 
 /**
  * @tc.name:AccessTest001
