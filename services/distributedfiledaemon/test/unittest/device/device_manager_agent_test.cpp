@@ -205,6 +205,9 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, Te
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0))
+            .WillOnce(Return(0));
+        DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         auto agent1 = make_shared<SoftbusAgent>(smp);
         (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
