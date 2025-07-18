@@ -326,6 +326,23 @@ void HandleGetDfsUrisDirFromLocalFuzzTest(std::shared_ptr<DaemonStub> daemonStub
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
+void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
+{
+    OHOS::UID = DATA_UID;
+    uint32_t code =
+    static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    int len = size >> 1;
+    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
+    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -378,5 +395,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
