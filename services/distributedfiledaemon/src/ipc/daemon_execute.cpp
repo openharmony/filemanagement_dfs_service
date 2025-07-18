@@ -266,7 +266,6 @@ std::string DaemonExecute::GetZipName(const std::string &relativePath)
         random = std::to_string(rd());
         zipName = value + "_" + random + ".zip";
     }
-    LOGI("zipName is %{public}s", zipName.c_str());
     return zipName;
 }
 
@@ -289,7 +288,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             return {};
         }
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
-            LOGE("invalid path : %{public}s", GetAnonyString(physicalPath).c_str());
+            LOGE("invalid path");
             return {};
         }
         if (OHOS::Storage::DistributedFile::Utils::IsFolder(physicalPath)) {

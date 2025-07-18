@@ -64,21 +64,19 @@ public:
     MOCK_METHOD3(NotifyEventChange, int32_t(int32_t userId, const std::string &eventId, const std::string &extraData));
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
-    MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &uri));
-    MOCK_METHOD6(StartFileCache,
+    MOCK_METHOD3(StartDownloadFile,
+                 int32_t(const std::string &uri,
+                         const sptr<IRemoteObject> &downloadCallback,
+                         int64_t &downloadId));
+    MOCK_METHOD5(StartFileCache,
                  int32_t(const std::vector<std::string> &uriVec,
                          int64_t &downloadId,
                          int32_t fieldkey,
-                         bool isCallbackValid,
                          const sptr<IRemoteObject> &downloadCallback,
                          int32_t timeout));
-    MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &uri, bool needClean));
+    MOCK_METHOD2(StopDownloadFile, int32_t(int64_t downloadId, bool needClean));
     MOCK_METHOD3(StopFileCache, int32_t(int64_t downloadId, bool needClean, int32_t timeout));
     MOCK_METHOD0(DownloadThumb, int32_t());
-    MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
-    MOCK_METHOD1(RegisterFileCacheCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
-    MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
-    MOCK_METHOD0(UnregisterFileCacheCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, const AssetInfoObj &assetInfoObj));
@@ -97,6 +95,7 @@ public:
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
     MOCK_METHOD2(GetSyncTimeInner, int32_t(int64_t &syncTime, const std::string &bundleName));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));
+    MOCK_METHOD1(CleanFileCacheInner, int32_t(const std::string &uri));
     MOCK_METHOD2(BatchCleanFile,
                  int32_t(const std::vector<CleanFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId));
     MOCK_METHOD2(BatchDentryFileInsert,
@@ -224,7 +223,6 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
@@ -248,7 +246,6 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
     try {
         string bundleName = "com.ohos.photos";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -423,25 +420,49 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyEventChangeTest, TestSize.Level1)
 }
 
 /*
- * @tc.name: StartDownloadFileTest
+ * @tc.name: StartDownloadFileTest001
  * @tc.desc: Verify the StartDownloadFile function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string uri = "uri";
+        int64_t downloadId = 0;
+        shared_ptr<CloudDownloadCallback> callback = make_shared<CloudDownloadCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, StartDownloadFile(_)).WillOnce(Return(E_PERMISSION_DENIED));
-        auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri);
+        EXPECT_CALL(*serviceProxy_, StartDownloadFile).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri, callback, downloadId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " StartDownloadFileTest FAILED";
+        GTEST_LOG_(INFO) << " StartDownloadFileTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "StartDownloadFileTest End";
+    GTEST_LOG_(INFO) << "StartDownloadFileTest001 End";
+}
+
+/*
+ * @tc.name: StartDownloadFileTest002
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string uri = "uri";
+        int64_t downloadId = 0;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri, nullptr, downloadId);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StartDownloadFileTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFileTest002 End";
 }
 
 /*
@@ -455,9 +476,10 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFileCacheTest Start";
     try {
         std::string uri = "uri";
+        int64_t downloadId = 0;
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, StartFileCache(_, _, _, _, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
-        auto res = CloudSyncManagerImpl::GetInstance().StartFileCache(uri);
+        EXPECT_CALL(*serviceProxy_, StartFileCache).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().StartFileCache({uri}, downloadId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -476,38 +498,16 @@ HWTEST_F(CloudSyncManagerImplTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
-        std::string uri = "uri";
+        int64_t downloadId = 1;
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopDownloadFile(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
-        auto res = CloudSyncManagerImpl::GetInstance().StopDownloadFile(uri);
+        auto res = CloudSyncManagerImpl::GetInstance().StopDownloadFile(downloadId, true);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StopDownloadFileTest FAILED";
     }
     GTEST_LOG_(INFO) << "StopDownloadFileTest End";
-}
-
-/*
- * @tc.name: UnregisterDownloadFileCallbackTest
- * @tc.desc: Verify the UnregisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerImplTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest Start";
-    try {
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, UnregisterDownloadFileCallback()).WillOnce(Return(E_PERMISSION_DENIED));
-        auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " UnregisterDownloadFileCallbackTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest End";
 }
 
 /*
@@ -598,6 +598,71 @@ HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "CleanCacheTest FAILED";
     }
     GTEST_LOG_(INFO) << "CleanCacheTest End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest001
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest001 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest001 End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest002
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest002 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_INVAL_ARG));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest002 End";
+}
+
+/*
+ * @tc.name: CleanFileCacheTest003
+ * @tc.desc: Verify the CleanFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheTest003 Start";
+    try {
+        string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanFileCacheTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheTest003 End";
 }
 
 HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)
@@ -727,29 +792,6 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyDataChangeTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " NotifyDataChangeTest FAILED";
     }
     GTEST_LOG_(INFO) << "NotifyDataChangeTest End";
-}
-
-/*
- * @tc.name: RegisterDownloadFileCallbackTest
- * @tc.desc: Verify the UnregisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerImplTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest Start";
-    try {
-        shared_ptr<CloudDownloadCallback> downloadCallback = make_shared<CloudDownloadCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
-        auto res = CloudSyncManagerImpl::GetInstance().RegisterDownloadFileCallback(downloadCallback);
-        EXPECT_EQ(res, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " RegisterDownloadFileCallbackTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest End";
 }
 
 /*
@@ -916,20 +958,16 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest003, TestSize.Level
 {
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest003 Start";
     try {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
-        MetaBase mBase("666666.jpg", "666666");
-        mBase.size = 1;
-        mBase.mtime = 0;
-        mBase.fileType = 1;
-        mFile->DoCreate(mBase);
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        fs::create_directories("/storage/media/cloud/files/Photo/1");
+        std::ofstream("/storage/media/cloud/files/Photo/1/666666.jpg");
         std::string testDir = "/storage/cloud/files/Photo/1/666666.jpg";
         CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
-        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        EXPECT_TRUE(isExists);
+        bool isExists = fs::exists("/storage/media/cloud/files/Photo/1/666666.jpg");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        EXPECT_FALSE(isExists);
     } catch (...) {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest003 FAILED";
     }
@@ -945,45 +983,20 @@ HWTEST_F(CloudSyncManagerImplTest, CleanGalleryDentryFileTest004, TestSize.Level
 {
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest004 Start";
     try {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(100, "/files/Photo/1");
-        MetaBase mBase("666666.jpg", "666666");
-        mBase.size = 1;
-        mBase.mtime = 0;
-        mBase.fileType = 1;
-        mFile->DoCreate(mBase);
-        std::string testDir = "/storage/6666666.jpg";
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        fs::create_directories("/storage/media/cloud/files/Photo/1");
+        std::ofstream("/storage/media/cloud/files/Photo/1/666666.jpg");
+        std::string testDir = "/storage/666666.jpg";
         CloudSyncManagerImpl::GetInstance().CleanGalleryDentryFile(testDir);
-        bool isExists = fs::exists("/storage/media/100/cloud/files/Photo/1/666666.jpg");
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
-        EXPECT_FALSE(isExists);
+        bool isExists = fs::exists("/storage/media/cloud/files/Photo/1/666666.jpg");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
+        EXPECT_TRUE(isExists);
     } catch (...) {
-        system("rm -rf /storage/media/100/cloud/files/Photo/1/*");
+        system("rm -rf /storage/media/cloud/files/Photo/1/666666.jpg");
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanGalleryDentryFileTest004 FAILED";
     }
     GTEST_LOG_(INFO) << "CleanGalleryDentryFileTest004 End";
-}
-
-/*
- * @tc.name: ResetProxyCallback
- * @tc.desc: Verify the ResetProxyCallback function.
- * @tc.type: FUNC
- * @tc.require: ICEU6Z
- */
-HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest2, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 Start";
-    try {
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
-        bool ret = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(1, "testBundle");
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ResetProxyCallbackTest2 FAILED";
-    }
-    GTEST_LOG_(INFO) << "ResetProxyCallbackTest2 End";
 }
 
 /*
@@ -998,7 +1011,6 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
     try {
         CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);

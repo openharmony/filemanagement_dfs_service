@@ -14,7 +14,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("cloud_pref_impl_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
@@ -55,7 +55,7 @@ ohos_unittest("utils_directory_test") {
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "./system/utils_directory_test.cpp" ]
 
@@ -71,6 +71,7 @@ ohos_unittest("utils_directory_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "image_framework:image_native",
     "json:nlohmann_json_static",
   ]
@@ -84,7 +85,7 @@ ohos_unittest("utils_directory_test") {
 }
 
 ohos_unittest("cloud_file_utils_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "./cloud_disk/cloud_file_utils_test.cpp" ]
 
@@ -119,7 +120,7 @@ ohos_unittest("cloud_file_utils_test") {
 }
 
 ohos_unittest("plugin_loader_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "./load/plugin_loader_test.cpp" ]
 
@@ -150,7 +151,7 @@ ohos_unittest("plugin_loader_test") {
 }
 
 ohos_unittest("async_work_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "./work/async_work_test.cpp" ]
 

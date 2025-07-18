@@ -16,14 +16,13 @@
 #include "cloud_download_ani.h"
 
 #include "ani_utils.h"
+#include "dfsu_access_token_helper.h"
+#include "dfs_error.h"
 #include "error_handler.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-
 using namespace arkts::ani_signature;
-
-const int32_t E_IPCSS = 13600001;
 
 static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
 {
@@ -36,6 +35,19 @@ static CloudFileCore *CloudDownloadUnwrap(ani_env *env, ani_object object)
     std::uintptr_t ptrValue = static_cast<std::uintptr_t>(nativePtr);
     CloudFileCore *cloudDownload = reinterpret_cast<CloudFileCore *>(ptrValue);
     return cloudDownload;
+}
+
+static int32_t CheckPermissions(const string &permission, bool isSystemApp)
+{
+    if (!permission.empty() && !DfsuAccessTokenHelper::CheckCallerPermission(permission)) {
+        LOGE("permission denied");
+        return JsErrCode::E_PERMISSION;
+    }
+    if (isSystemApp && !DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return JsErrCode::E_PERMISSION_SYS;
+    }
+    return E_OK;
 }
 
 void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
@@ -85,87 +97,81 @@ void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
 
 void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    ani_ref cbOnRef;
-    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    std::string event;
+    ani_status ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
+    if (event != "progress") {
+        LOGE("Invalid argument for event type.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+    int32_t res = CheckPermissions(PERM_CLOUD_SYNC, true);
+    if (res != E_OK) {
+        LOGE("On get progress failed!");
+        ErrorHandler::Throw(env, res);
         return;
     }
 
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto data = cloudDownload->DoOn(event, callback);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloud download do on failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+
+    std::shared_ptr<CloudDownloadCallbackImplAni> callbackImpl = cloudDownload->GetCallbackImpl(true);
+    callbackImpl->InitVm(env);
+    auto status = callbackImpl->RegisterCallback(env, fun);
+    if (status != ANI_OK) {
+        LOGE("Failed to register callback, status: %{public}d.", status);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
     }
 }
 
 void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
 {
-    ani_ref cbOnRef;
-    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    std::string event;
+    ani_status ret = ANIUtils::AniString2String(env, evt, event);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
+    if (event != "progress") {
+        LOGE("Invalid argument for event type.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+    int32_t res = CheckPermissions(PERM_CLOUD_SYNC, true);
+    if (res != E_OK) {
+        LOGE("On get progress failed!");
+        ErrorHandler::Throw(env, res);
         return;
     }
 
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
-    auto data = cloudDownload->DoOff(event, callback);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloud download do off failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+
+    std::shared_ptr<CloudDownloadCallbackImplAni> callbackImpl = cloudDownload->GetCallbackImpl(false);
+    if (callbackImpl == nullptr || callbackImpl->UnregisterCallback(env, fun) != ANI_OK) {
+        LOGE("Failed to unregister callback");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
     }
 }
 
 void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object, ani_string evt)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
-    auto cloudDownload = CloudDownloadUnwrap(env, object);
-    if (cloudDownload == nullptr) {
-        LOGE("Cannot wrap cloudDownload.");
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-    auto data = cloudDownload->DoOff(event);
-    if (!data.IsSuccess()) {
-        const auto &err = data.GetError();
-        LOGE("cloud download do off failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
-    }
+    DownloadOff0(env, object, evt, nullptr);
 }
 
 void CloudDownloadAni::DownloadStart(ani_env *env, ani_object object, ani_string uri)
@@ -173,16 +179,18 @@ void CloudDownloadAni::DownloadStart(ani_env *env, ani_object object, ani_string
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_PERMISSION);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
-        ErrorHandler::Throw(env, E_PERMISSION);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
+    std::shared_ptr<CloudDownloadCallbackImplAni> callbackImpl = cloudDownload->GetCallbackImpl(true);
+    callbackImpl->InitVm(env);
     auto data = cloudDownload->DoStart(uriInput);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
@@ -196,16 +204,23 @@ void CloudDownloadAni::DownloadStop(ani_env *env, ani_object object, ani_string 
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_PERMISSION);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
 
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
-        ErrorHandler::Throw(env, E_PERMISSION);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
+    std::shared_ptr<CloudDownloadCallbackImplAni> callbackImpl = cloudDownload->GetCallbackImpl(false);
+    if (callbackImpl == nullptr) {
+        LOGE("Cannot get callbackImpl before stop.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+
     auto data = cloudDownload->DoStop(uriInput);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
@@ -213,4 +228,4 @@ void CloudDownloadAni::DownloadStop(ani_env *env, ani_object object, ani_string 
         ErrorHandler::Throw(env, err);
     }
 }
-}
+} // namespace OHOS::FileManagement::CloudSync

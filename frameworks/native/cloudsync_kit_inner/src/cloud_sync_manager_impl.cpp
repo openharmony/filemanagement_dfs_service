@@ -320,7 +320,9 @@ int32_t CloudSyncManagerImpl::NotifyEventChange(
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
+int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri,
+                                                const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                                int64_t &downloadId)
 {
     LOGI("StartDownloadFile start");
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
@@ -328,8 +330,13 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    if (downloadCallback == nullptr) {
+        LOGE("The callback is null");
+        return E_INVAL_ARG;
+    }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
+    auto dlCallback = sptr<CloudDownloadCallbackClient>::MakeSptr(downloadCallback);
+    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri, dlCallback, downloadId);
     LOGI("StartDownloadFile ret %{public}d", ret);
     return ret;
 }
@@ -357,40 +364,19 @@ int32_t CloudSyncManagerImpl::BatchCleanFile(const std::vector<CleanFileInfo> &f
     return CloudSyncServiceProxy->BatchCleanFile(fileInfoObj, failCloudId);
 }
 
-int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
-{
-    LOGI("StartFileCache start");
-    int64_t downloadId = 0;
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    std::vector<std::string> uriVec;
-    uriVec.push_back(uri);
-    bool isCallbackValid = false;
-    int32_t timeout = -1;
-    sptr<CloudDownloadCallbackClient> dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(nullptr));
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, FIELDKEY_CONTENT, isCallbackValid,
-                                                        dlCallback, timeout);
-    LOGI("StartFileCache ret %{public}d", ret);
-    return ret;
-}
-
 int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec,
-                                             int64_t &downloadId, int32_t fieldkey,
+                                             int64_t &downloadId,
+                                             int32_t fieldkey,
                                              const std::shared_ptr<CloudDownloadCallback> downloadCallback,
                                              int32_t timeout)
 {
-    LOGI("StartFileCache batch start, uriVec size: %{public}zu, fieldKey: %{public}d, Callback is null: %{public}d",
-         uriVec.size(), fieldkey, (downloadCallback == nullptr));
+    LOGI("StartFileCache start, uriVec size: %{public}zu, fieldKey: %{public}d", uriVec.size(), fieldkey);
     if (uriVec.empty()) {
-        LOGE("StartFileCache, uri list is empty");
+        LOGE("The uri list is empty");
         return E_INVAL_ARG;
     }
     if (uriVec.size() > MAX_FILE_CACHE_NUM) {
-        LOGE("StartFileCache, the size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
+        LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
         return E_EXCEED_MAX_SIZE;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
@@ -400,24 +386,16 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
 
-    bool isCallbackValid = false;
-    sptr<CloudDownloadCallbackClient> dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(nullptr));
-    if (downloadCallback != nullptr) {
-        dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
-        isCallbackValid = true;
-        if (dlCallback == nullptr) {
-            LOGE("register download callback failed");
-            isCallbackValid = false;
-        }
+    if (downloadCallback == nullptr) {
+        LOGW("The callback is null, download progress may not be received");
     }
-
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey,
-        isCallbackValid, dlCallback, timeout);
-    LOGI("StartFileCache batch ret %{public}d", ret);
+    auto dlCallback = sptr<CloudDownloadCallbackClient>::MakeSptr(downloadCallback);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey, dlCallback, timeout);
+    LOGI("StartFileCache end, ret %{public}d", ret);
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri, bool needClean)
+int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("StopDownloadFile start");
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
@@ -426,8 +404,8 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri, bool need
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri, needClean);
-    LOGI("StopDownloadFile ret %{public}d", ret);
+    int32_t ret = CloudSyncServiceProxy->StopDownloadFile(downloadId, needClean);
+    LOGI("StopDownloadFile end, ret %{public}d", ret);
     return ret;
 }
 
@@ -441,7 +419,7 @@ int32_t CloudSyncManagerImpl::StopFileCache(int64_t downloadId, bool needClean, 
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StopFileCache(downloadId, needClean, timeout);
-    LOGI("StopFileCache ret %{public}d", ret);
+    LOGI("StopFileCache end, ret %{public}d", ret);
     return ret;
 }
 
@@ -630,98 +608,6 @@ int32_t CloudSyncManagerImpl::DownloadThumb()
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
-    const std::shared_ptr<CloudDownloadCallback> downloadCallback)
-{
-    LOGI("RegisterDownloadFileCallback start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    {
-        unique_lock<mutex> lock(downloadMutex_);
-        auto dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
-        if (dlCallback == nullptr ||
-            CloudSyncServiceProxy->RegisterDownloadFileCallback(dlCallback) != E_OK) {
-            LOGE("register download callback failed");
-        } else {
-            downloadCallback_ = downloadCallback;
-        }
-    }
-    SubscribeListener();
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return E_OK;
-}
-
-int32_t CloudSyncManagerImpl::RegisterFileCacheCallback(
-    const std::shared_ptr<CloudDownloadCallback> downloadCallback)
-{
-    LOGI("RegisterFileCacheCallback start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    {
-        unique_lock<mutex> lock(downloadMutex_);
-        auto dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
-        if (dlCallback == nullptr ||
-            CloudSyncServiceProxy->RegisterFileCacheCallback(dlCallback) != E_OK) {
-            LOGE("register download callback failed");
-        } else {
-            downloadCallback_ = downloadCallback;
-        }
-    }
-    SubscribeListener();
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return E_OK;
-}
-
-int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
-{
-    LOGI("UnregisterDownloadFileCallback start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    int32_t ret = E_OK;
-    {
-        unique_lock<mutex> lock(downloadMutex_);
-        ret = CloudSyncServiceProxy->UnregisterDownloadFileCallback();
-        LOGI("UnregisterDownloadFileCallback ret %{public}d", ret);
-        if (ret == E_OK) {
-            downloadCallback_ = nullptr;
-        }
-    }
-    SubscribeListener();
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return ret;
-}
-
-int32_t CloudSyncManagerImpl::UnregisterFileCacheCallback()
-{
-    LOGI("UnregisterFileCacheCallback start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    int32_t ret = E_OK;
-    {
-        unique_lock<mutex> lock(downloadMutex_);
-        ret = CloudSyncServiceProxy->UnregisterFileCacheCallback();
-        LOGI("UnregisterFileCacheCallback ret %{public}d", ret);
-        if (ret == E_OK) {
-            downloadCallback_ = nullptr;
-        }
-    }
-    SubscribeListener();
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return ret;
-}
-
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     if (!isFirstCall_.test_and_set()) {
@@ -792,6 +678,18 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
     return CloudSyncServiceProxy->CleanCacheInner(uri);
 }
 
+int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
+{
+    LOGI("CleanFileCache Start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->CleanFileCacheInner(uri);
+}
+
 int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
     std::vector<std::string> &failCloudId)
 {
@@ -827,7 +725,7 @@ void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
         auto ret = samgr->UnSubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("unsubscribed to systemAbility ret %{public}d", ret);
     }
-    if (callback_ != nullptr || downloadCallback_ != nullptr) {
+    if (callback_ != nullptr) {
         listener_ = new SystemAbilityStatusChange(bundleName);
         auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("subscribed to systemAbility ret %{public}d", ret);
@@ -844,18 +742,6 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string 
         return false;
     }
     bool hasCallback = false;
-    {
-        unique_lock<mutex> downloadLock(downloadMutex_);
-        if (downloadCallback_ != nullptr) {
-            auto dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_));
-            if (dlCallback == nullptr ||
-                cloudSyncServiceProxy->RegisterDownloadFileCallback(dlCallback) != E_OK) {
-                LOGW("register download callback failed, try time is %{public}d", retryCount);
-            } else {
-                hasCallback = true;
-            }
-        }
-    }
     if (callback_ != nullptr) {
         auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callback_));
         if (callback == nullptr ||
@@ -939,7 +825,7 @@ static std::string GetMediaPath(const std::string& path)
 
 void CloudSyncManagerImpl::CleanGalleryDentryFile(const std::string path)
 {
-    if (!IsPhotoPath(path)) {
+    if (!IsPhotoPath(path) || OHOS::Storage::DistributedFile::Utils::HasInvalidChars(path)) {
         LOGE("CleanGalleryDentryFile path is not photo");
         return;
     }

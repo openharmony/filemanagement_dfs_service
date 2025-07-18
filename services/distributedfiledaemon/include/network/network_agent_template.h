@@ -74,7 +74,7 @@ protected:
     virtual void StopBottomHalf() = 0;
     virtual int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
-
+    void CloseSessionForOneDevice(const std::string &cid);
     std::weak_ptr<MountPoint> mountPoint_;
 
 private:
@@ -82,7 +82,8 @@ private:
     void NotifyHandler(NotifyParam &param);
     void GetSessionProcess(NotifyParam &param);
     void GetSession(const std::string &cid);
-    void CloseSessionForOneDevice(const std::string &cid);
+    
+    void CloseSessionForOneDeviceInner(std::string cid);
     void GetSessionProcessInner(NotifyParam param);
 
     std::mutex taskMut_;

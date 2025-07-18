@@ -21,6 +21,7 @@
 #include "parameters.h"
 #include "utils_log.h"
 #include "res_sched_client.h"
+#include "task_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -57,6 +58,7 @@ void SytemLoadTest::SetUp(void)
 void SytemLoadTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    TaskStateManager::GetInstance().CancelUnloadTask();
     SystemLoadStatus_ = nullptr;
     SystemLoadListener_ = nullptr;
 }

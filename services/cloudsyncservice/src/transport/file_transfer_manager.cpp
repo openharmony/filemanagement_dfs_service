@@ -115,9 +115,8 @@ void FileTransferManager::HandleDownloadFileResponse(MessageHandler &msgHandler)
 {
     LOGD("recviceve response msg");
     auto errorCode = msgHandler.GetErrorCode();
-    if (errorCode == E_OK) {
-        LOGD("callback after file recv finished");
-        return;
+    if (errorCode != E_OK) {
+        LOGI("callback after file recv failed, errorCode:%{public}d", errorCode);
     }
     auto uri = msgHandler.GetUri();
     auto taskId = msgHandler.GetTaskId();

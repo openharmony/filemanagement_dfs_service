@@ -276,4 +276,22 @@ HWTEST_F(FileSizeUtilsTest, IsFilePathValid001, TestSize.Level0)
     }
     GTEST_LOG_(INFO) << "IsFilePathValid001 End";
 }
+
+/**
+ * @tc.name: Deleter_0001
+ * @tc.desc: Deleter
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileSizeUtilsTest, Deleter_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Deleter_0001 Start";
+    NameList* arg = new NameList();
+    arg->namelist = new struct dirent*[2];
+    arg->namelist[0] = new struct dirent();
+    arg->namelist[1] = nullptr;
+    arg->direntNum = 2;
+    FileSizeUtils::Deleter(arg);
+    GTEST_LOG_(INFO) << "Deleter_0001 End";
+}
 }

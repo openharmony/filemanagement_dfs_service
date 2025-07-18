@@ -15,12 +15,12 @@
 #include "cloud_sync_n_exporter.h"
 
 #include "cloud_file_cache_napi.h"
-#include "cloud_file_download_napi.h"
 #include "cloud_file_napi.h"
 #include "cloud_file_version_napi.h"
 #include "cloud_sync_napi.h"
 #include "file_sync_napi.h"
 #include "gallery_sync_napi.h"
+#include "multi_download_progress_napi.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -56,12 +56,15 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitDownloadErrorType(env, exports);
     InitState(env, exports);
     InitFileSyncState(env, exports);
+    InitFileState(env, exports);
     InitCloudSyncApi(env, exports);
     InitNotifyType(env, exports);
     InitCloudSyncFuncs(env, exports);
     InitOptimizeState(env, exports);
+    InitDownloadFileType(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
+    products.emplace_back(std::make_unique<MultiDlProgressNapi>(env, exports));
     products.emplace_back(std::make_unique<CloudFileCacheNapi>(env, exports));
     products.emplace_back(std::make_unique<CloudFileDownloadNapi>(env, exports));
     products.emplace_back(std::make_unique<GallerySyncNapi>(env, exports));
@@ -129,6 +132,24 @@ void InitFileSyncState(napi_env env, napi_value exports)
     napi_set_named_property(env, exports, propertyName, obj);
 }
 
+void InitFileState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "FileState";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("INITIAL_AFTER_DOWNLOAD",
+            NVal::CreateInt32(env, FILESTATE_INITIAL_AFTER_DOWNLOAD).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOADING", NVal::CreateInt32(env, FILESTATE_UPLOADING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, FILESTATE_STOPPED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("TO_BE_UPLOADED", NVal::CreateInt32(env, FILESTATE_TO_BE_UPLOADED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOAD_SUCCESS", NVal::CreateInt32(env, FILESTATE_UPLOAD_SUCCESS).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOAD_FAILURE", NVal::CreateInt32(env, FILESTATE_UPLOAD_FAILURE).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
 void InitErrorType(napi_env env, napi_value exports)
 {
     char propertyName[] = "ErrorType";
@@ -175,6 +196,7 @@ void InitCloudSyncApi(napi_env env, napi_value exports)
 {
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getFileSyncState", CloudSyncNapi::GetFileSyncState),
+        DECLARE_NAPI_FUNCTION("getCoreFileSyncState", CloudSyncNapi::GetCoreFileSyncState),
         DECLARE_NAPI_FUNCTION("optimizeStorage", CloudSyncNapi::OptimizeStorage),
         DECLARE_NAPI_FUNCTION("startOptimizeSpace", CloudSyncNapi::StartOptimizeStorage),
         DECLARE_NAPI_FUNCTION("stopOptimizeSpace", CloudSyncNapi::StopOptimizeStorage),
@@ -204,6 +226,20 @@ void InitCloudSyncFuncs(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("unregisterChange", CloudSyncNapi::UnregisterChange),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
+}
+
+void InitDownloadFileType(napi_env env, napi_value exports)
+{
+    char propertyName[] = "DownloadFileType";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("CONTENT", NVal::CreateInt32(env, FieldKey::FIELDKEY_CONTENT).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("THUMBNAIL", NVal::CreateInt32(env, FieldKey::FIELDKEY_THUMB).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("LCD", NVal::CreateInt32(env, FieldKey::FIELDKEY_LCD).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
 }
 
 static napi_module _module = {

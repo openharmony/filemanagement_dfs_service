@@ -79,7 +79,7 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
         LOGI("SetRecvPath physicalPath is empty.");
         return;
     }
-    LOGI("SetRecvPath physicalPath: %{public}s", GetAnonyString(physicalPath).c_str());
+    LOGI("SetRecvPath physicalPath");
     if (!AppFileService::SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("invalid path.");
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,

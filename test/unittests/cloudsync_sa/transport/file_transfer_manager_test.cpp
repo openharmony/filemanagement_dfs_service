@@ -238,6 +238,39 @@ HWTEST_F(FileTransferManagerTest, HandleDownloadFileRequestTest001, TestSize.Lev
         msgInputInfo.userId = 100;
         msgInputInfo.taskId = 100;
         msgInputInfo.uri = "data/test";
+        msgInputInfo.errorCode = E_OK;
+        MessageHandler msgHandle(msgInputInfo);
+        fileTransferManager->HandleDownloadFileRequest(msgHandle, peerNetworkId, 0);
+        fileTransferManager->HandleDownloadFileResponse(msgHandle);
+        fileTransferManager->HandleRecvFileFinished();
+        EXPECT_NE(fileTransferManager->sessionManager_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 end";
+}
+
+/**
+ * @tc.name: HandleDownloadFileRequestTest001
+ * @tc.desc: Verify the HandleDownloadFileRequest function have errorCode
+ * @tc.type: FUNC
+ * @tc.require: IB3T5H
+ */
+HWTEST_F(FileTransferManagerTest, HandleDownloadFileRequestTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        char data[] = "test data";
+        string peerNetworkId = "test peerNetworkId";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+
+        MessageInputInfo msgInputInfo = {};
+        msgInputInfo.userId = 100;
+        msgInputInfo.taskId = 100;
+        msgInputInfo.uri = "data/test";
+        msgInputInfo.errorCode = 1;
         MessageHandler msgHandle(msgInputInfo);
         fileTransferManager->HandleDownloadFileRequest(msgHandle, peerNetworkId, 0);
         fileTransferManager->HandleDownloadFileResponse(msgHandle);

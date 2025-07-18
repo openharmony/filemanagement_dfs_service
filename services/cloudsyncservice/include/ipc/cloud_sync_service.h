@@ -63,20 +63,17 @@ public:
     ErrCode NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
     ErrCode EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     ErrCode DisableCloud(const std::string &accoutId) override;
-    ErrCode StartDownloadFile(const std::string &path) override;
+    ErrCode StartDownloadFile(const std::string &uri,
+                              const sptr<IRemoteObject> &downloadCallback,
+                              int64_t &downloadId) override;
     ErrCode StartFileCache(const std::vector<std::string> &uriVec,
                            int64_t &downloadId,
                            int32_t fieldkey,
-                           bool isCallbackValid,
                            const sptr<IRemoteObject> &downloadCallback,
                            int32_t timeout = -1) override;
-    ErrCode StopDownloadFile(const std::string &path, bool needClean = false) override;
+    ErrCode StopDownloadFile(int64_t downloadId, bool needClean = false) override;
     ErrCode StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
     ErrCode DownloadThumb() override;
-    ErrCode RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    ErrCode RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    ErrCode UnregisterDownloadFileCallback() override;
-    ErrCode UnregisterFileCacheCallback() override;
     ErrCode UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
     ErrCode DownloadFile(const int32_t userId, const std::string &bundleName,
                          const AssetInfoObj &assetInfoObj) override;
@@ -93,6 +90,7 @@ public:
     ErrCode DeleteAsset(const int32_t userId, const std::string &uri) override;
     ErrCode GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     ErrCode CleanCacheInner(const std::string &uri) override;
+    ErrCode CleanFileCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     ErrCode BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
                            std::vector<std::string> &failCloudId) override;

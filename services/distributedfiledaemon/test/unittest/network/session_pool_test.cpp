@@ -145,6 +145,36 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SessionPoolTest_HoldSession_0101
+ * @tc.desc: Verify the HoldSession function.
+ * @tc.type: FUNC
+ * @tc.require: IA4TFG
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0101 start";
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    bool res = true;
+    try {
+        auto size = pool->usrSpaceSessionPool_.size();
+        pool->talker_ = nullptr;
+        pool->HoldSession(session, "Server");
+        EXPECT_EQ(pool->usrSpaceSessionPool_.size(), size + 1);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0101 end";
+}
+
+/**
  * @tc.name: SessionPoolTest_ReleaseSession_Fd_0100
  * @tc.desc: Verify the ReleaseSession by Fd function.
  * @tc.type: FUNC
@@ -210,6 +240,9 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
     ifReleaseService = true;
     pool->ReleaseSession(peerDeviceId, ifReleaseService);
     EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0); // 1: remove one
+    pool->talker_ = nullptr;
+    pool->ReleaseSession(peerDeviceId, ifReleaseService);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0);
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 end";
 }
 
@@ -314,6 +347,28 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_SinkOffLine_0100, TestSize.Level1)
     pool->SinkOffline(peerDeviceId);
     pool->SinkOffline("test");
     GTEST_LOG_(INFO) << "SessionPoolTest_SinkOffLine_0100 end";
+}
+
+/**
+ * @tc.name: SessionPoolTest_SinkOffLine_0101
+ * @tc.desc: Verify the SinkOffLine function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_SinkOffLine_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_SinkOffLine_0101 start";
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(session);
+    pool->talker_ = nullptr;
+    pool->SinkOffline(peerDeviceId);
+    pool->SinkOffline("test");
+    GTEST_LOG_(INFO) << "SessionPoolTest_SinkOffLine_0101 end";
 }
 
 /**

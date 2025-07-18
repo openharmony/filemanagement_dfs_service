@@ -20,6 +20,7 @@
 #include "cloud_file_cache_ani.h"
 #include "cloud_sync_ani.h"
 #include "file_sync_ani.h"
+#include "multi_download_progress_ani.h"
 #include "utils_log.h"
 
 using namespace OHOS;
@@ -56,6 +57,42 @@ static ani_status BindContextOnGallery(ani_env *env)
         ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1)},
         ani_native_function{"GallerySyncStart", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart)},
         ani_native_function{"GallerySyncStop", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop)},
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+
+    return ANI_OK;
+}
+
+static ani_status BindContextOnMultiDlProgress(ani_env *env)
+{
+    ani_namespace ns{};
+    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
+    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
+    if (ret != ANI_OK) {
+        LOGE("find namespace failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    Type clsName = Builder::BuildClass("MultiDownloadProgress");
+    ani_class cls;
+    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+    std::string ct = Builder::BuildConstructorName();
+    std::string succSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("escompat.Array"));
+    std::string failSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("escompat.Array"));
+    std::array methods = {
+        ani_native_function{"getFailedFiles", succSign.c_str(),
+                            reinterpret_cast<void *>(MultiDlProgressAni::GetFailedFileList)},
+        ani_native_function{"getSuccessfulFiles", failSign.c_str(),
+                            reinterpret_cast<void *>(MultiDlProgressAni::GetDownloadedFileList)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -258,6 +295,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     auto status = BindContextOnGallery(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+    status = BindContextOnMultiDlProgress(env);
     if (status != ANI_OK) {
         return status;
     }

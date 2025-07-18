@@ -23,6 +23,44 @@
 #include "file_dfs_listener_mock.h"
 #include "message_parcel_mock.h"
 #include "i_daemon_mock.h"
+#include "copy/ipc_wrapper.h"
+
+namespace {
+    bool g_writeBatchUrisTrue = true;
+    int32_t g_readBatchUris = OHOS::FileManagement::E_OK;
+    std::string g_context = "1";
+}
+namespace OHOS::Storage::DistributedFile {
+bool IpcWrapper::WriteUriByRawData(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    return true;
+}
+
+bool IpcWrapper::GetData(void *&buffer, size_t size, const void *data)
+{
+    return true;
+}
+
+bool IpcWrapper::ReadBatchUriByRawData(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    return true;
+}
+
+bool IpcWrapper::WriteBatchUris(MessageParcel &data, const std::vector<std::string> &uriVec)
+{
+    return g_writeBatchUrisTrue;
+}
+
+int32_t IpcWrapper::ReadBatchUris(MessageParcel &data, std::vector<std::string> &uriVec)
+{
+    if (g_readBatchUris == FileManagement::E_OK) {
+        uriVec.emplace_back("key");
+        uriVec.emplace_back("uri");
+        uriVec.emplace_back(g_context);
+    }
+    return g_readBatchUris;
+}
+};
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace OHOS::FileManagement;
@@ -56,12 +94,13 @@ void DistributedFileDaemonProxyTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
     mock_ = nullptr;
     proxy_ = nullptr;
-    MessageParcelMock::messageParcel = nullptr;
     messageParcelMock_ = nullptr;
+    MessageParcelMock::messageParcel = nullptr;
 }
 
 void DistributedFileDaemonProxyTest::SetUp(void)
 {
+    ASSERT_TRUE(mock_ != nullptr);
     GTEST_LOG_(INFO) << "SetUp";
 }
 
@@ -810,7 +849,7 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UnRegisterAssetCa
 
 /**
  * @tc.name: DistributedFileDaemon_GetDfsUrisDirFromLocal_0100
- * @tc.desc: The execution of the GetDfsUrisDirFromLocal failed.
+ * @tc.desc: The execution of the GetDfsUrisDirFromLocal failed and success.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
@@ -819,41 +858,91 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFrom
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsUrisDirFromLocal_0100 Start";
     std::vector<std::string> uriList = {""};
     int32_t userId = 101;
-    std::string str = "test";
-    AppFileService::ModuleRemoteFileShare::HmdfsUriInfo uriInfo;
-    uriInfo.uriStr = "test";
-    uriInfo.fileSize = 2;
+    AppFileService::ModuleRemoteFileShare::HmdfsUriInfo uriInfo{"test", 2};
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
-    uriToDfsUriMaps.insert({str, uriInfo});
-
+    uriToDfsUriMaps.insert({"test", uriInfo});
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
     auto ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(false));
+    g_writeBatchUrisTrue = false;
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
+    g_writeBatchUrisTrue = true;
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = testProxy->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_INVAL_ARG), Return(true)));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
-    EXPECT_EQ(ret, E_INVAL_ARG);
-
-    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteUint16(_)).WillOnce(Return(false));
-    ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsUrisDirFromLocal_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_GetDfsUrisDirFromLocal_0200
+ * @tc.desc: The execution of the GetDfsUrisDirFromLocal failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFromLocal_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsUrisDirFromLocal_0200 Start";
+    std::vector<std::string> uriList = {""};
+    int32_t userId = 101;
+    AppFileService::ModuleRemoteFileShare::HmdfsUriInfo uriInfo{"test", 2};
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
+    uriToDfsUriMaps.insert({"test", uriInfo});
+
+    g_context = "aa";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    auto ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    g_context = "1";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    g_readBatchUris = E_INVAL_ARG;
+    ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetDfsUrisDirFromLocal_0200 End";
 }
 
 /**

@@ -118,39 +118,24 @@ public:
     {
         return E_OK;
     }
-    int32_t StartDownloadFile(const std::string &path)
+    int32_t StartDownloadFile(const std::string &uri,
+                              const sptr<IRemoteObject> &downloadCallback,
+                              int64_t &downloadId)
     {
         return E_OK;
     }
     int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
                            int32_t fieldkey,
-                           bool isCallbackValid,
                            const sptr<IRemoteObject> &downloadCallback,
                            int32_t timeout = -1)
     {
         return E_OK;
     }
-    int32_t StopDownloadFile(const std::string &path, bool needClean = false)
+    int32_t StopDownloadFile(int64_t downloadId, bool needClean = false)
     {
         return E_OK;
     }
     int32_t StopFileCache(int64_t downloadId,  bool needClean = false, int32_t timeout = -1)
-    {
-        return E_OK;
-    }
-    int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
-    {
-        return E_OK;
-    }
-    int32_t RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
-    {
-        return E_OK;
-    }
-    int32_t UnregisterDownloadFileCallback()
-    {
-        return E_OK;
-    }
-    int32_t UnregisterFileCacheCallback()
     {
         return E_OK;
     }

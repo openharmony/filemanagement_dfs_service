@@ -34,6 +34,10 @@ constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 
 void NetworkAgentTemplate::Start()
 {
+    if (kernerlTalker_ == nullptr) {
+        LOGE("kernerlTalker_ is nullptr.");
+        return;
+    }
     LOGI("Start Enter");
     JoinDomain();
     kernerlTalker_->CreatePollThread();
@@ -42,6 +46,10 @@ void NetworkAgentTemplate::Start()
 
 void NetworkAgentTemplate::Stop()
 {
+    if (kernerlTalker_ == nullptr) {
+        LOGE("kernerlTalker_ is nullptr.");
+        return;
+    }
     LOGI("Stop Enter");
     StopTopHalf();
     StopBottomHalf();
@@ -120,7 +128,14 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
-    LOGI("NOTIFY_OFFLINE, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, std::string>>(
+        &NetworkAgentTemplate::CloseSessionForOneDeviceInner, cid);
+    cmd->UpdateOption({.tryTimes_ = 1});
+    Recv(move(cmd));
+}
+
+void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
+{
     sessionPool_.ReleaseSession(cid, true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
     ConnectCount::GetInstance()->RemoveConnect(cid);
@@ -128,6 +143,10 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
+    if (session == nullptr) {
+        LOGE("session is nullptr.");
+        return;
+    }
     auto cid = session->GetCid();
     LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);
@@ -153,7 +172,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
     bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
     sessionPool_.ReleaseSession(fd);
-    if (ifGetSession) {
+    if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
         GetSession(cidStr);
     } else {
         sessionPool_.SinkOffline(cidStr);

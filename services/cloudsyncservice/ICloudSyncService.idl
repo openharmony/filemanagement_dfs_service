@@ -45,16 +45,12 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void NotifyEventChange([in] int userId, [in] String eventId, [in] String extraData);
     void EnableCloud([in] String accoutId, [in] SwitchDataObj switchData);
     void DisableCloud([in] String accoutId);
-    void StartDownloadFile([in] String path);
-    void StartFileCache([in] String[] pathVec, [out] long downloadId, [in] int fieldkey, [in] boolean isCallbackValid,
+    void StartDownloadFile([in] String uri, [in] IRemoteObject downloadCallback, [out] long downloadId);
+    void StartFileCache([in] String[] uriVec, [out] long downloadId, [in] int fieldkey,
                         [in] IRemoteObject downloadCallback, [in] int timeout);
-    void StopDownloadFile([in] String path, [in] boolean needClean);
+    void StopDownloadFile([in] long downloadId, [in] boolean needClean);
     void StopFileCache([in] long downloadId, [in] boolean needClean, [in] int timeout);
     void DownloadThumb();
-    void RegisterDownloadFileCallback([in] IRemoteObject downloadCallback);
-    void RegisterFileCacheCallback([in] IRemoteObject downloadCallback);
-    void UnregisterDownloadFileCallback();
-    void UnregisterFileCacheCallback();
     void UploadAsset([in] int userId, [in] String request, [out] String resultStr);
     void DownloadFile([in] int userId, [in] String bundleName, [in] AssetInfoObj assetInfoObj);
     void DownloadFiles([in] int userId, [in] String bundleName, [in] AssetInfoObj[] assetInfoObj,
@@ -65,6 +61,7 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void DeleteAsset([in] int userId, [in] String uri);
     void GetSyncTimeInner([out] long syncTime, [in] String bundleName);
     void CleanCacheInner([in] String uri);
+    void CleanFileCacheInner([in] String uri);
     void BatchCleanFile([in] CleanFileInfoObj[] fileInfo, [out] String[] failCloudId);
     void BatchDentryFileInsert([in] DentryFileInfoObj[] fileInfo, [out] String[] failCloudId);
     void StartDowngrade([in] String bundleName, [in] IRemoteObject downloadCallback);

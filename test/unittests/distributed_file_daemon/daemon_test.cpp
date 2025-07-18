@@ -20,9 +20,52 @@
 #include "i_daemon_mock.h"
 #include "i_file_trans_listener.h"
 #include "ipc/daemon.h"
+#include "ipc_skeleton.h"
 #include "iremote_object.h"
+#include "remote_file_share.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+
+namespace {
+    bool g_getCallingUidTrue = true;
+    int32_t g_uidMode = 0;
+    int32_t g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+    constexpr pid_t PASTE_BOARD_UID = 3816;
+    constexpr pid_t UDMF_UID = 3012;
+    constexpr pid_t DAEMON_UID = 1009;
+    static pid_t UID = DAEMON_UID;
+}
+
+namespace OHOS {
+#ifdef CONFIG_IPC_SINGLE
+using namespace IPC_SINGLE;
+#endif
+pid_t IPCSkeleton::GetCallingUid()
+{
+    if (!g_getCallingUidTrue) {
+        return -1;
+    }
+    switch (g_uidMode) {
+        case 0:
+            UID = PASTE_BOARD_UID;
+            break;
+        case 1:
+            UID = UDMF_UID;
+            break;
+        default:
+            UID = -1;
+    }
+    return UID;
+}
+}
+
+namespace OHOS::AppFileService::ModuleRemoteFileShare {
+    int32_t RemoteFileShare::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
+        std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
+    {
+        return g_getDfsUrisDirFromLocal;
+    }
+}
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace testing;
@@ -201,5 +244,60 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level0)
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsUrisDirFromLocal_0100
+ * @tc.desc: Verify the GetDfsUrisDirFromLocal function.
+ * @tc.type: FUNC
+ * @tc.require: issueI90MOB
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsUrisDirFromLocal_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsUrisDirFromLocal_0100 start";
+    try {
+        std::vector<std::string> uriList;
+        int32_t userId = 100;
+        std::string normalUri = "file://docs/data/storage/el2/cloud";
+        std::string errUri = "file://docs/data/storage/../el2/cloud";
+        std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
+        g_getCallingUidTrue = false;
+        auto ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
+
+        g_getCallingUidTrue = true;
+        uriList.emplace_back(normalUri);
+        uriList.emplace_back(errUri);
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, FileManagement::E_ILLEGAL_URI);
+
+        g_getCallingUidTrue = true;
+        uriList.erase(uriList.begin() + 1); // 1: errUri
+        g_getDfsUrisDirFromLocal = FileManagement::E_INVAL_ARG;
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, FileManagement::E_INVAL_ARG);
+
+        g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, OHOS::FileManagement::E_OK);
+
+        g_uidMode = 1; // 1: UDMF_UID
+        uriList.emplace_back(errUri);
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, FileManagement::E_ILLEGAL_URI);
+
+        uriList.erase(uriList.begin() + 1); // 1: errUri
+        g_getDfsUrisDirFromLocal = FileManagement::E_INVAL_ARG;
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, FileManagement::E_INVAL_ARG);
+
+        g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+        ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, OHOS::FileManagement::E_OK);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsUrisDirFromLocal_0100 end";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

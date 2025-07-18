@@ -67,7 +67,7 @@ public:
      *   |-----------------------bit 63 ~ 1 -------------|---bit 0----|
      *   |--------------------------reserved-------------|-isConflict-|
     */
-    static const int64_t LOCAL_FLAG_MASK_ISCONFLICT;
+    static const uint64_t LOCAL_FLAG_MASK_ISCONFLICT;
 
     // table name
     static const std::string FILES_TABLE;

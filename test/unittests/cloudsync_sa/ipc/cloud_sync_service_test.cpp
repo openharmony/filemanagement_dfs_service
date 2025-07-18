@@ -256,6 +256,33 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "Clean end";
 }
 
+
+/**
+ * @tc.name:StopDownloadFileTest002
+ * @tc.desc:Verify the StopDownloadFile function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDownloadFile start";
+    try {
+        int64_t downloadId = 0;
+        bool needClean = false;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        int ret = servicePtr_->StopDownloadFile(downloadId, needClean);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopDownloadFileTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopDownloadFileTest002 end";
+}
+
 /**
  * @tc.name:StopDownloadFileTest
  * @tc.desc:Verify the StopDownloadFile function.
@@ -266,57 +293,16 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile start";
     try {
-        std::string path;
+        int64_t downloadId = 0;
         bool needClean = false;
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->StopDownloadFile(path, needClean);
+        int ret = servicePtr_->StopDownloadFile(downloadId, needClean);
         EXPECT_EQ(E_PERMISSION_DENIED, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDownloadFile FAILED";
     }
     GTEST_LOG_(INFO) << "StopDownloadFile end";
-}
-
-/**
- * @tc.name:RegisterDownloadFileCallbackTest
- * @tc.desc:Verify the RegisterDownloadFileCallback function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback start";
-    try {
-        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->RegisterDownloadFileCallback(downloadCallback);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RegisterDownloadFileCallback FAILED";
-    }
-    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback end";
-}
-
-/**
- * @tc.name:UnregisterDownloadFileCallbackTest
- * @tc.desc:Verify the UnregisterDownloadFileCallback function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback start";
-    try {
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->UnregisterDownloadFileCallback();
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback FAILED";
-    }
-    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback end";
 }
 
 /**
@@ -979,9 +965,10 @@ HWTEST_F(CloudSyncServiceTest, StartDowngradeTest002, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.aaa";
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         sptr<DowngradeDlCallbackMock> callback = sptr(new DowngradeDlCallbackMock());
         auto ret = servicePtr_->StartDowngrade(bundleName, callback);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartDowngradeTest002 failed";
@@ -1024,8 +1011,9 @@ HWTEST_F(CloudSyncServiceTest, StopDowngradeTest002, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.aaa";
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         auto ret = servicePtr_->StopDowngrade(bundleName);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDowngradeTest002 failed";
@@ -1070,8 +1058,9 @@ HWTEST_F(CloudSyncServiceTest, GetCloudFileInfoTest002, TestSize.Level1)
         std::string bundleName = "com.ohos.aaa";
         CloudFileInfo cloudFileInfo;
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         auto ret = servicePtr_->GetCloudFileInfo(bundleName, cloudFileInfo);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetCloudFileInfoTest002 failed";
@@ -1225,6 +1214,216 @@ HWTEST_F(CloudSyncServiceTest, ClearFileConflict001, TestSize.Level1)
         GTEST_LOG_(INFO) << "ClearFileConflict001 failed";
     }
     GTEST_LOG_(INFO) << "ClearFileConflict001 end";
+}
+
+/**
+ * @tc.name: CleanFileCacheInner001
+ * @tc.desc: Verify the CleanFileCacheInner001 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_ILLEGAL_URI);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner001 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner001 end";
+}
+
+/**
+ * @tc.name: CleanFileCacheInner002
+ * @tc.desc: Verify the CleanFileCacheInner002 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_ILLEGAL_URI));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_SERVICE_INNER_ERROR);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner002 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner002 end";
+}
+
+/**
+ * @tc.name: CleanFileCacheInner003
+ * @tc.desc: Verify the CleanFileCacheInner003 function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, CleanFileCacheInner003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileCacheInner003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        EXPECT_CALL(*dfsuAccessToken_, CheckUriPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        auto ret = servicePtr_->CleanFileCacheInner(uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "CleanFileCacheInner003 failed";
+    }
+    GTEST_LOG_(INFO) << "CleanFileCacheInner003 end";
+}
+
+/**
+ * @tc.name: StartFileCacheTest001
+ * @tc.desc: Verify the StartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, StartFileCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileCacheTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int64_t downloadId = 0;
+        int32_t fieldkey = 0;
+        int32_t timeout = -1;
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        auto ret = servicePtr_->StartFileCache({uri}, downloadId, fieldkey, callback, timeout);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StartFileCacheTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StartFileCacheTest001 end";
+}
+
+/**
+ * @tc.name: StartFileCacheTest002
+ * @tc.desc: Verify the StartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, StartFileCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileCacheTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int64_t downloadId = 0;
+        int32_t fieldkey = 0;
+        int32_t timeout = -1;
+        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        auto ret = servicePtr_->StartFileCache({uri}, downloadId, fieldkey, downloadCallback, timeout);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StartFileCacheTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StartFileCacheTest002 end";
+}
+
+/**
+ * @tc.name: StartDownloadFileTest001
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDownloadFileTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int64_t downloadId = 0;
+        sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        auto ret = servicePtr_->StartDownloadFile(uri, downloadCallback, downloadId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StartDownloadFileTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFileTest001 end";
+}
+
+/**
+ * @tc.name: StartDownloadFileTest002
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDownloadFileTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        string uri;
+        int64_t downloadId = 0;
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        auto ret = servicePtr_->StartDownloadFile(uri, callback, downloadId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StartDownloadFileTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFileTest002 end";
+}
+
+/**
+ * @tc.name: StopFileCacheTest001
+ * @tc.desc: Verify the StopFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: ICK6VD
+ */
+HWTEST_F(CloudSyncServiceTest, StopFileCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopFileCacheTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        int64_t downloadId = 0;
+        bool needClean = false;
+        int32_t timeout = -1;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        auto ret = servicePtr_->StopFileCache(downloadId, needClean, timeout);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StopFileCacheTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StopFileCacheTest001 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

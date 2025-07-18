@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
@@ -169,6 +170,13 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     }
     for (int32_t i = 0; i < fileCnt; i++) {
         std::string filePath(path_ + fileList[i]);
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
+            LOGE("path is forbidden");
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
+                FileManagement::ERR_BAD_VALUE);
+            SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+            return;
+        }
         if (JudgeSingleFile(filePath)) {
             ret = HandleSingleFile(socketId, filePath, assetObj);
         } else {
@@ -237,13 +245,13 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset temp dir fail");
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
         pos = newPath.find(ASSET_FLAG_SINGLE);
         if (pos == std::string::npos) {
-            LOGE("get asset flag fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset flag fail");
             return false;
         }
         newPath.resize(pos);
@@ -261,7 +269,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset temp dir fail");
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
@@ -280,13 +288,13 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
 {
     size_t pos = file.find(TEMP_DIR);
     if (pos == std::string::npos) {
-        LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(file).c_str());
+        LOGE("get asset temp dir fail");
         return false;
     }
     std::string removePath = file.substr(0, pos + TEMP_DIR.length() - 1);
     bool ret = std::filesystem::remove_all(removePath.c_str());
     if (!ret) {
-        LOGE("remove file fail, remove path is %{public}s", GetAnonyString(removePath).c_str());
+        LOGE("remove file fail");
         return false;
     }
     return true;
@@ -321,7 +329,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     LOGI("HandleZipFile begin.");
     size_t pos = filePath.find(ASSET_FLAG_ZIP);
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
+        LOGE("filePath is not a zip file");
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string zipfilePath = filePath.substr(0, pos);
@@ -333,7 +341,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     }
     pos = zipfilePath.rfind("/");
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
+        LOGE("filePath is not a zip file");
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativePath = zipfilePath.substr(0, pos + 1);

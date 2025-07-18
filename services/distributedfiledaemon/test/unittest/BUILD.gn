@@ -375,62 +375,6 @@ ohos_unittest("kernel_talker_test") {
   }
 }
 
-ohos_unittest("network_agent_template_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  module_out_path = module_output_path
-
-  sources = [ "network/network_agent_template_test.cpp" ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:sandbox_helper_native",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
-    "eventhandler:libeventhandler",
-    "file_api:securitylabel",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "init:libbegetutil",
-    "ipc:ipc_single",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-    "zlib:shared_libz",
-  ]
-
-  defines = [ "private=public" ]
-
-  if (support_same_account) {
-    defines += [ "SUPPORT_SAME_ACCOUNT" ]
-  }
-}
-
 ohos_unittest("session_pool_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -1253,7 +1197,7 @@ ohos_unittest("system_notifier_test") {
     "${distributedfile_path}/services/distributedfiledaemon/src/channel_manager/system_notifier.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
-    "channel_manager/system_notifier_test.cpp"
+    "channel_manager/system_notifier_test.cpp",
   ]
 
   configs = [
@@ -1285,6 +1229,7 @@ ohos_unittest("system_notifier_test") {
     "i18n:intl_util",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
     "zlib:shared_libz",
   ]
 
@@ -1344,6 +1289,7 @@ ohos_unittest("control_cmd_parser_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
     "zlib:shared_libz",
   ]
 

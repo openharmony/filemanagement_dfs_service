@@ -69,6 +69,7 @@ public:
     static std::tuple<int32_t, int32_t> GetFileSyncStateForBatch(const std::string &uri);
     static napi_value GetBatchFileSyncState(const napi_env &env, const LibN::NFuncArg &funcArg);
     static napi_value GetFileSyncState(napi_env env, napi_callback_info info);
+    static napi_value GetCoreFileSyncState(napi_env env, napi_callback_info info);
     static napi_value RegisterChange(napi_env env, napi_callback_info info);
     static napi_value UnregisterChange(napi_env env, napi_callback_info info);
     static napi_value OptimizeStorage(napi_env env, napi_callback_info info);

@@ -26,13 +26,16 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "channel_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "connection_detector.h"
 #include "connect_count/connect_count.h"
+#include "connection_detector.h"
+#include "control_cmd_parser.h"
 #include "copy/file_size_utils.h"
 #include "copy/remote_file_copy_manager.h"
 #include "device/device_manager_agent.h"
+#include "device/device_profile_adapter.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -41,8 +44,8 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
@@ -50,6 +53,7 @@
 #include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
+#include "system_notifier.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -76,7 +80,8 @@ const int32_t UDMFUSERID = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
-}
+constexpr int32_t VALID_MOUNT_NETWORKID_LEN = 16;
+} // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
@@ -301,7 +306,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     }
     if (dfsListenerDeathRecipient_ == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
-        dfsListenerDeathRecipient_ = new (std::nothrow) DfsListenerDeathRecipient();
+        dfsListenerDeathRecipient_ = sptr(new (std::nothrow) DfsListenerDeathRecipient());
     }
     if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
@@ -403,8 +408,7 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
 #endif
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstPath).c_str());
+        LOGE("Path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
@@ -432,6 +436,11 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
 int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
+        LOGE("Path is forbidden");
+        return ERR_BAD_VALUE;
+    }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
     if (res != 0) {
@@ -524,8 +533,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstUri).c_str());
+        LOGE("Path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
@@ -553,8 +561,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGI("physicalPath %{public}s, userId %{public}s", GetAnonyString(physicalPath).c_str(),
-         std::to_string(hapTokenInfo.userID).c_str());
+    LOGI("GetRealPath userId %{public}s", std::to_string(hapTokenInfo.userID).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {
@@ -582,7 +589,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
     std::error_code errCode;
     if (!std::filesystem::exists(physicalPath, errCode) && info.dirExistFlag) {
-        LOGI("Not CheckValidPath, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+        LOGI("Not CheckValidPath");
     } else {
         auto pos = checkPath.rfind('/');
         if (pos == std::string::npos) {
@@ -612,7 +619,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
         if (!std::filesystem::exists(physicalPath, errCode) && std::regex_match(physicalPath.c_str(), pathRegex)) {
             std::filesystem::create_directory(physicalPath, errCode);
             if (errCode.value() != 0) {
-                LOGE("Create directory failed, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+                LOGE("Create directory failed, errCode %{public}d", errCode.value());
                 return E_GET_PHYSICAL_PATH_FAILED;
             }
         }
@@ -670,6 +677,11 @@ int32_t Daemon::Copy(const std::string &srcUri,
                      const sptr<IDaemon> &daemon,
                      const std::string &sessionName)
 {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
+        LOGE("Path is forbidden");
+        return E_INVAL_ARG;
+    }
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
@@ -781,7 +793,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     const auto &uriVec = assetObj->uris_;
     for (const auto &uri : uriVec) {
         if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
-            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            LOGE("Path is forbidden");
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
     }
@@ -905,7 +917,12 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         LOGE("Permission denied, caller is not pasterboard or udmf");
         return E_PERMISSION_DENIED;
     }
-
+    for (const auto &uri : uriList) {
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
+            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            return OHOS::FileManagement::E_ILLEGAL_URI;
+        }
+    }
     auto ret = AppFileService::ModuleRemoteFileShare::RemoteFileShare::GetDfsUrisDirFromLocal(uriList, userId,
                                                                                               uriToDfsUriMaps);
     if (ret != FileManagement::E_OK) {
@@ -934,6 +951,135 @@ int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
     (void)deviceList;
     return E_OK;
 }
+
+void Daemon::DisconnectByRemote(const string &networkId)
+{
+    LOGI("start DisconnectByRemote");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::DisconnectByRemote networkId length is invalid. len: %{public}zu", networkId.length());
+        return;
+    }
+    string subnetworkId = networkId.substr(0, VALID_MOUNT_NETWORKID_LEN);
+    int32_t res = DeviceManagerAgent::GetInstance()->UMountDfsDocs(networkId, subnetworkId, true);
+    if (res != NO_ERROR) {
+        LOGE("[UMountDfsDocs] failed");
+        return;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo{};
+    res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (res != NO_ERROR) {
+        LOGE("strcpy failed, res = %{public}d", res);
+        return;
+    }
+    ConnectCount::GetInstance()->RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
+    int32_t ret = CleanUp(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("DisconnectByRemote disconnection failed.");
+        return;
+    }
+}
+
+int32_t Daemon::CreatControlLink(const std::string &networkId)
+{
+    LOGI("start CreatControlLink");
+    if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+
+    DfsVersion remoteDfsVersion;
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
+    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
+        LOGW("old version, not need CreatControlLink");
+        return FileManagement::ERR_OK;
+    }
+
+    if (ChannelManager::GetInstance().CreateClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
+}
+
+int32_t Daemon::CancelControlLink(const std::string &networkId)
+{
+    if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("not exist channel, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
+}
+
+int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
+{
+    LOGI("start CheckRemoteAllowConnect");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+
+    return response.msgBody == "true" ? FileManagement::ERR_BAD_VALUE : FileManagement::E_OK;
+}
+
+int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemotePublishNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemotePublishNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_PUBLISH_NOTIFICATION;
+
+    std::string srcNetworkId;
+    DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetworkId);
+    request.networkId = srcNetworkId;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
+int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemoteCancelNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CANCEL_NOTIFICATION;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

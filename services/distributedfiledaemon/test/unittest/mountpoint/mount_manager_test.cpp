@@ -46,6 +46,7 @@ public:
 HWTEST_F(MountManagerTest, MountManagerTest_MountManager_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "MountManagerTest_MountManager_0100 start";
+    ASSERT_NE(MountManager::GetInstance(), nullptr);
     MountManager::GetInstance()->Umount("test");
     Utils::MountArgument mountArg{.userId_ = 100,
                                   .relativePath_ = "data/test",

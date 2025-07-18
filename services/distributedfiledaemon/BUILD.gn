@@ -34,6 +34,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/remote_file_copy_manager.cpp",
     "src/all_connect/all_connect_manager.cpp",
     "src/channel_manager/channel_manager.cpp",
@@ -180,6 +181,7 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
