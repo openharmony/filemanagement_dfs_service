@@ -180,6 +180,10 @@ napi_value CloudFileDownloadNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto callbackImpl = GetCallbackImpl(env, funcArg, true);
+    if (callbackImpl == nullptr) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
     ret = callbackImpl->RegisterCallback(funcArg[NARG_POS::SECOND]);
     if (ret != napi_ok) {
         LOGE("On register callback fail, ret: %{public}d", ret);
