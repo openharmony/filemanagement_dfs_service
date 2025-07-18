@@ -69,6 +69,7 @@ namespace {
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const string LOCAL_PATH_DATA_STORAGE = "/data/storage/el2/cloud/";
     static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
+    static const unsigned int CATCH_TIMEOUT_S = 4;
     static const std::chrono::seconds READ_TIMEOUT_S = 16s;
     static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 }
@@ -456,16 +457,27 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
 }
 
 static void DoSessionInit(shared_ptr<CloudDiskFile> filePtr, shared_ptr<CloudError> error,
-    shared_ptr<bool> openFinish, shared_ptr<ffrt::condition_variable> cond)
+    shared_ptr<bool> openFinish, shared_ptr<ffrt::condition_variable> cond, CloudOpenParams cloudOpenParams)
 {
-    ffrt::submit([filePtr, error, openFinish, cond] {
+    ffrt::submit([filePtr, error, openFinish, cond, cloudOpenParams] {
         HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
         auto session = filePtr->readSession;
         if (!session) {
             LOGE("readSession is nullptr");
+            {
+                unique_lock lck(filePtr->openLock);
+                *openFinish = true;
+            }
+            cond->notify_one();
+            *error = CloudError::CK_LOCAL_ERROR;
             return;
         }
         *error = session->InitSession();
+        if (*error == CloudError::CK_NO_ERROR) {
+            if (cloudOpenParams.metaBase.fileType != FILE_TYPE_CONTENT) {
+                session->Catch(*error, CATCH_TIMEOUT_S);
+            }
+        }
         {
             unique_lock lck(filePtr->openLock);
             *openFinish = true;
@@ -483,7 +495,7 @@ static int32_t DoCloudOpen(fuse_req_t req, struct fuse_file_info *fi,
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
     auto filePtr = cloudOpenParams.filePtr;
-    DoSessionInit(filePtr, error, openFinish, cond);
+    DoSessionInit(filePtr, error, openFinish, cond, cloudOpenParams);
     unique_lock lck(filePtr->openLock);
     auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
         return *openFinish;

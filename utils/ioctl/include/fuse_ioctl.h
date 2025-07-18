@@ -28,6 +28,7 @@ static const unsigned int HMDFS_DAEMON_IOC_MASK = 0x80;
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 0x06, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 0x08)
 #define HMDFS_IOC_RESET_READ _IO(HMDFS_IOC, 0x09)
+#define HMDFS_IOC_SAVE_APPID _IOW(HMDFS_IOC, 0x0a, struct HmdfsSaveAppId)
 #define HMDFS_IOC_SET_CLOUD_GENERATION _IOR(HMDFS_IOC, 0x0b, uint32_t)
 #define HMDFS_IOC_COPY_FILE _IOW(HMDFS_IOC, 0x0c, struct CloudDiskCopy)
 
