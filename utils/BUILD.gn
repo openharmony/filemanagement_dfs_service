@@ -46,7 +46,6 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
-    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "inner_api",
     "ioctl/include",
     "load/include",
@@ -80,8 +79,6 @@ ohos_shared_library("libdistributedfileutils") {
     debug = false
   }
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
     "cloud_disk/src/cloud_file_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
@@ -148,7 +145,6 @@ ohos_shared_library("libdistributedfileutils") {
 
 config("dentry_public_config") {
   include_dirs = [
-    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "dentry/include",
     "inner_api",
     "system/include",
@@ -168,8 +164,6 @@ ohos_shared_library("libdistributedfiledentry") {
   }
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",
@@ -208,7 +202,6 @@ ohos_shared_library("libdistributedfiledentry") {
 
 config("utils_lite_public_config") {
   include_dirs = [
-    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "dentry/include",
     "ffrt/include",
     "inner_api",
@@ -232,8 +225,6 @@ ohos_shared_library("libdistributedfileutils_lite") {
   }
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
     "cloud_disk/src/cloud_file_utils.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",

@@ -497,7 +497,6 @@ ohos_unittest("meta_file_clouddisk_test") {
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/inner_api",
     "${distributedfile_path}/utils/system/include",
-    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "mock",
   ]
