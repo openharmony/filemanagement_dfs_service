@@ -34,11 +34,11 @@ namespace DistributedFile {
 class FileIoToken : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.fileio.open");
- 
+
     FileIoToken() = default;
     virtual ~FileIoToken() noexcept = default;
 };
- 
+
 struct FileInfos {
     std::string srcUri;
     std::string destUri;
@@ -79,7 +79,7 @@ private:
     static std::shared_ptr<FileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
- 
+
 private:
     int32_t CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos);
     int32_t SendFileCore(std::shared_ptr<FDGuard> srcFdg, std::shared_ptr<FDGuard> destFdg,
@@ -105,5 +105,5 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
- 
+
 #endif // DISTRIBUTED_FILE_COPY_MANAGER_H

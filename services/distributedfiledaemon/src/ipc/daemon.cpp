@@ -615,7 +615,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
             return E_GET_PHYSICAL_PATH_FAILED;
         }
     } else {
-        std::regex pathRegex("^[a-zA-Z0-9_\\-/\\\\]*$");
+        std::regex pathRegex("^[a-zA-Z0-9_\\-/\\\\\u4E00-\u9FA5]*$");
         if (!std::filesystem::exists(physicalPath, errCode) && std::regex_match(physicalPath.c_str(), pathRegex)) {
             std::filesystem::create_directory(physicalPath, errCode);
             if (errCode.value() != 0) {

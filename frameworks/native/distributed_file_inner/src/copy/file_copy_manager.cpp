@@ -67,22 +67,6 @@ const uint32_t API_VERSION_MOD = 1000;
 std::shared_ptr<FileCopyManager> FileCopyManager::instance_ = nullptr;
 uint32_t g_apiCompatibleVersion = 0;
 
-static bool CheckPath(const std::shared_ptr<FileInfos> &infos)
-{
-    std::string destPath = infos->destPath;
-    if (infos->srcUriIsFile) {
-        auto pos = destPath.rfind("/");
-        if (pos == std::string::npos) {
-            return false;
-        }
-        destPath.resize(pos);
-    }
-    if (!(SandboxHelper::CheckValidPath(infos->srcPath) && SandboxHelper::CheckValidPath(destPath))) {
-        return false;
-    }
-    return true;
-}
-
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
 bool IsNumeric(const std::string &str)
 {
@@ -222,18 +206,13 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
         return ret;
     }
 
-    if (!CheckPath(infos)) {
-        LOGE("invalid srcPath or destPath");
-        return EINVAL;
-    }
-
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
     infos->localListener->StartListener();
     auto result = ExecLocal(infos);
     RemoveFileInfos(infos);
     infos->localListener->StopListener();
-    
+
     if (result != E_OK) {
         return result;
     }
@@ -362,10 +341,20 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     }
     // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
     if (infos->srcUriIsFile) {
+        if (infos->srcPath == infos->destPath) {
+            LOGE("The src and dest is same");
+            return EINVAL;
+        }
         int32_t ret = CheckOrCreatePath(infos->destPath);
         if (ret != E_OK) {
             LOGE("check or create fail, error code is %{public}d", ret);
             return ret;
+        }
+        bool isFile = false;
+        ret = FileSizeUtils::IsFile(infos->destPath, isFile);
+        if (ret != E_OK || !isFile) {
+            LOGE("IsFile fail or dest is not file");
+            return EINVAL;
         }
         if (infos->localListener == nullptr) {
             LOGE("local listener is nullptr");
@@ -374,13 +363,14 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         infos->localListener->AddListenerFile(infos->destPath, IN_MODIFY);
         return CopyFile(infos->srcPath, infos->destPath, infos);
     }
-    
+
     bool destIsDirectory;
     auto ret = FileSizeUtils::IsDirectory(infos->destUri, false, destIsDirectory);
     if (ret != E_OK) {
         LOGE("destPath not find, error=%{public}d", ret);
         return ret;
     }
+
     if (destIsDirectory) {
         if (infos->srcPath.back() != '/') {
             infos->srcPath += '/';
@@ -471,7 +461,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
             LOGE("need cancel");
             return FileManagement::E_DFS_CANCEL_SUCCESS; // 204
         }
-        
+
         offset += static_cast<int64_t>(ret);
         size -= static_cast<int64_t>(ret);
         if (ret == 0) {
@@ -494,7 +484,7 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
         LOGE("not support copy src to dest");
         return EINVAL;
     }
-    
+
     // 获取src目录的目录名称
     std::filesystem::path srcPath = std::filesystem::u8path(src);
     std::string dirName;
@@ -595,7 +585,7 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
     AddFileInfos(infos);
     return E_OK;
 }
- 
+
 std::string GetModeFromFlags(unsigned int flags)
 {
     const std::string readMode = "r";
@@ -611,11 +601,11 @@ std::string GetModeFromFlags(unsigned int flags)
     }
     return mode;
 }
- 
+
 int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<FileInfos> infos, int32_t &srcFd)
 {
     Uri uri(infos->srcUri);
-    
+
     if (uri.GetAuthority() == MEDIA) {
         std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
         sptr<FileIoToken> remote = new (std::nothrow) IRemoteStub<FileIoToken>();
@@ -658,7 +648,7 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
     }
     return 0;
 }
- 
+
 int FileCopyManager::MakeDir(const std::string &path)
 {
     std::filesystem::path destDir(path);
@@ -669,7 +659,7 @@ int FileCopyManager::MakeDir(const std::string &path)
     }
     return E_OK;
 }
- 
+
 bool FileCopyManager::IsRemoteUri(const std::string &uri)
 {
     // NETWORK_PARA
@@ -682,7 +672,7 @@ bool FileCopyManager::IsMediaUri(const std::string &uriPath)
     std::string bundleName = uri.GetAuthority();
     return bundleName == MEDIA;
 }
- 
+
 int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
 {
     std::error_code errCode;
