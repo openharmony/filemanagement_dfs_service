@@ -151,20 +151,20 @@ export default namespace cloudSync {
     };
 
     export interface DownloadProgress {
-        taskId: number;
+        taskId: long;
         state: State;
-        processed: number;
-        size: number;
+        processed: long;
+        size: long;
         uri: string;
         error: DownloadErrorType;
     }
 
     export class DownloadProgressInner implements DownloadProgress {
         constructor(
-            taskId: number,
+            taskId: long,
             state: State,
-            processed: number,
-            size: number,
+            processed: long,
+            size: long,
             uri: string,
             error: DownloadErrorType
         ) {
@@ -175,10 +175,10 @@ export default namespace cloudSync {
             this.uri = uri;
             this.error = error;
         }
-        taskId: number;
+        taskId: long;
         public state: State;
-        processed: number;
-        size: number;
+        processed: long;
+        size: long;
         uri: string;
         error: DownloadErrorType;
     };
@@ -367,33 +367,33 @@ export default namespace cloudSync {
             });
         }
 
-        getLastSyncTime(): Promise<number> {
-            return new Promise<number>((resolve: (result: number) => void,
+        getLastSyncTime(): Promise<long> {
+            return new Promise<long>((resolve: (result: long) => void,
                 reject: (e: BusinessError<void>) => void): void => {
-                let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+                let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
                 promise.then<void, void>((ret: NullishType): void => {
-                    resolve(ret as Number);
+                    resolve(ret as long);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
                 });
             });
         }
 
-        getLastSyncTime(callback: AsyncCallback<number>): void {
-            let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+        getLastSyncTime(callback: AsyncCallback<long>): void {
+            let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
             promise.then<void, void>((ret: NullishType): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
-                callback(e, ret as Number);
+                callback(e, ret as long);
             }, (e: Error): void => {
-                let num: number = 0;
+                let num: long = 0;
                 callback(e as BusinessError<void>, num);
             });
         }
 
         native FileSyncStart(): void;
         native FileSyncStop(): void;
-        native GallerySyncGetLastSyncTime(): number;
+        native GallerySyncGetLastSyncTime(): long;
 
         StartInner(): int {
             this.FileSyncStart();
@@ -502,36 +502,36 @@ export default namespace cloudSync {
 
     export interface OptimizeSpaceProgress {
         state: OptimizeState;
-        progress: number;
+        progress: int;
     }
 
     export class OptimizeSpaceProgressInner implements OptimizeSpaceProgress {
         constructor(
             state: OptimizeState,
-            progress: number
+            progress: int
         ) {
             this.state = state;
             this.progress = progress;
         }
         state: OptimizeState;
-        progress: number;
+        progress: int;
     }
 
     export interface OptimizeSpaceParam {
-        totalSize: number;
-        agingDays: number;
+        totalSize: long;
+        agingDays: int;
     }
 
     export class OptimizeSpaceParamInner implements OptimizeSpaceParam {
         constructor(
-            totalSize: number,
-            agingDays: number
+            totalSize: long,
+            agingDays: int
         ) {
             this.totalSize = totalSize;
             this.agingDays = agingDays;
         }
-        totalSize: number;
-        agingDays: number;
+        totalSize: long;
+        agingDays: int;
     }
 
     class StaticFunction {

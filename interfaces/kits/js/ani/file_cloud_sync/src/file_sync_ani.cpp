@@ -257,7 +257,7 @@ void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
     }
 }
 
-ani_double FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
+ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
 {
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
@@ -275,6 +275,6 @@ ani_double FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
     }
 
     const int64_t lastSyncTime = data.GetData().value();
-    return static_cast<ani_double>(lastSyncTime);
+    return lastSyncTime;
 }
 } // namespace OHOS::FileManagement::CloudSync
