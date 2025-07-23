@@ -26,6 +26,8 @@
 #include "utils_log.h"
 #include "assistant.h"
 
+#define FUSE_ROOT_TWO 2
+
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -119,7 +121,6 @@ HWTEST_F(FuseOperationsTest, LookupTest002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issuesI92WQP
  */
-#if defined(CLOUD_ADAPTER_ENABLED)
 HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "LookupTest Start";
@@ -130,8 +131,8 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
                                                    .WillOnce(Return(reinterpret_cast<void*>(&data)));
         fuse_req_t req = nullptr;
-        const char *name = "";
-        fuse_ino_t parent = 0;
+        const char *name = "test";
+        fuse_ino_t parent = FUSE_ROOT_TWO;
 
         fuseoperations_->Lookup(req, parent, name);
         EXPECT_NE(parent, FUSE_ROOT_ID);
@@ -142,7 +143,6 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "LookupTest End";
 }
-#endif
 
 /**
  * @tc.name:AccessTest001

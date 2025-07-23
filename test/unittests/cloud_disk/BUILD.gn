@@ -311,10 +311,6 @@ ohos_unittest("fuse_operations_test") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (dfs_service_feature_enable_cloud_adapter) {
-    defines += [ "CLOUD_ADAPTER_ENABLED" ]
-}
-
   use_exceptions = true
 }
 
