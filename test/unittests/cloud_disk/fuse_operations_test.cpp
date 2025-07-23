@@ -32,6 +32,7 @@ namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+static const string RECYCLE_NAME = ".trash";
 
 class FuseOperationsTest : public testing::Test {
 public:
@@ -131,7 +132,7 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
                                                    .WillOnce(Return(reinterpret_cast<void*>(&data)));
         fuse_req_t req = nullptr;
-        const char *name = "test";
+        const char *name = RECYCLE_NAME.c_str();
         fuse_ino_t parent = FUSE_ROOT_TWO;
 
         fuseoperations_->Lookup(req, parent, name);
