@@ -31,7 +31,6 @@ public:
     virtual void Update(const DownloadProgressObj &progress) = 0;
     virtual ani_object ConvertToObject(ani_env *env) = 0;
 
-    // Use default inline
     int64_t GetTaskId() const
     {
         return taskId_;

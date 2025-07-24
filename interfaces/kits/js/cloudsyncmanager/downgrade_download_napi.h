@@ -68,4 +68,4 @@ struct DowngradeEntity {
     std::shared_ptr<DowngradeDlCallbackImpl> callbackImpl{nullptr};
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
+#endif // OHOS_FILEMGMT_DOWNGRADE_DOWNLOAD_NAPI_H
