@@ -309,7 +309,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     }
     if (dfsListenerDeathRecipient_ == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx, dfsListenerDeathRecipient is nullptr");
-        return E_INAVL_ARG_NAPI;
+        return E_INVAL_ARG_NAPI;
     }
     if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
@@ -466,7 +466,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
         LOGE("ListenerCallback is nullptr");
         return E_NULLPTR;
     }
-    dfsVersion remoteDfsVersion;
+    DfsVersion remoteDfsVersion;
     auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(srcDeviceId, remoteDfsVersion);
     LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
     if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0)) {
