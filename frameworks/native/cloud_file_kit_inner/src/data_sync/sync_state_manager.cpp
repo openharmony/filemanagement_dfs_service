@@ -65,9 +65,7 @@ bool SyncStateManager::CheckMediaLibCleaning()
 
 bool SyncStateManager::CheckCleaningFlag()
 {
-    auto ret = syncSignal.test(static_cast<uint32_t>(SignalPos::CLEANING));
-    LOGI("CleaningFlag %{public}d", ret);
-    return ret;
+    return syncSignal.test(static_cast<uint32_t>(SignalPos::CLEANING));
 }
 
 void SyncStateManager::SetCleaningFlag()
@@ -86,9 +84,7 @@ Action SyncStateManager::ClearCleaningFlag()
 
 bool SyncStateManager::CheckDisableCloudFlag()
 {
-    auto ret = syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
-    LOGI("DisableCloudFlag %{public}d", ret);
-    return ret;
+    return syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
 }
 
 void SyncStateManager::SetDisableCloudFlag()
