@@ -32,7 +32,7 @@ int32_t CloudAssetsDownloader::DownloadAssets(DownloadAssetInfo &assetsToDownloa
 }
 
 int32_t CloudAssetsDownloader::DownloadAssets(const std::vector<DownloadAssetInfo> &assetsToDownload,
-                                              std::vector<bool> &assetResultMap)
+                                              std::vector<bool> &assetResultMap, int32_t connectTime)
 {
     return E_OK;
 }

@@ -64,7 +64,8 @@ public:
                  int32_t(const int32_t userId,
                          const std::string &bundleName,
                          const std::vector<AssetInfoObj> &assetInfoObj,
-                         std::vector<bool> &assetResultMap));
+                         std::vector<bool> &assetResultMap,
+                         int32_t connectTime));
     MOCK_METHOD5(DownloadAsset,
                  int32_t(const uint64_t taskId,
                          const int32_t userId,
