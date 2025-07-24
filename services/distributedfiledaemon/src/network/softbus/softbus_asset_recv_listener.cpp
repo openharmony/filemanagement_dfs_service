@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_asset_recv_listener.h"
 
+#include <cinttypes>
 #include <filesystem>
 #include <memory>
 
@@ -28,7 +29,6 @@
 #include "os_account_manager.h"
 #include "refbase.h"
 #include "utils_log.h"
-#include "inttypes.h"
 
 namespace OHOS {
 namespace Storage {

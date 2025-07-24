@@ -25,8 +25,8 @@
 #include "file_copy_listener.h"
 #include "file_copy_manager.h"
 #include "file_size_utils.h"
-#include "trans_listener.h"
 #include "sandbox_helper.h"
+#include "trans_listener.h"
 
 std::string g_physicalPath = "/test/test";
 int32_t g_getPhysicalPath = 0;
@@ -37,7 +37,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
     physicalPath = g_physicalPath;
     return g_getPhysicalPath;
 }
-}
+} // namespace OHOS::AppFileService
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace OHOS::FileManagement;

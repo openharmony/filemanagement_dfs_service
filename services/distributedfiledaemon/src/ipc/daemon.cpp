@@ -222,7 +222,6 @@ int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &devi
 
 int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Connection Count networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     auto st_dev = ConnectionDetector::MocklispHash(path);
@@ -307,6 +306,10 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     if (dfsListenerDeathRecipient_ == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
         dfsListenerDeathRecipient_ = sptr(new (std::nothrow) DfsListenerDeathRecipient());
+    }
+    if (dfsListenerDeathRecipient_ == nullptr) {
+        LOGE("Daemon::OpenP2PConnectionEx, dfsListenerDeathRecipient is nullptr");
+        return E_INAVL_ARG_NAPI;
     }
     if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
@@ -463,6 +466,13 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
         LOGE("ListenerCallback is nullptr");
         return E_NULLPTR;
     }
+    dfsVersion remoteDfsVersion;
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(srcDeviceId, remoteDfsVersion);
+    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0)) {
+        return InnerCopy(srcUri, dstUri, srcDeviceId, listenerCallback, info);
+    }
+
     auto daemon = GetRemoteSA(srcDeviceId);
     if (daemon == nullptr) {
         LOGE("Daemon is nullptr");
@@ -470,7 +480,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
