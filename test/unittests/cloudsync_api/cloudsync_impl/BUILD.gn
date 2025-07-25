@@ -180,32 +180,6 @@ ohos_unittest("cloud_sync_manager_test") {
   use_exceptions = true
 }
 
-ohos_unittest("cloud_sync_service_proxy_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [ "cloud_sync_service_proxy_test.cpp" ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "dfs_service:cloudsync_kit_inner",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("cloud_download_callback_client_test") {
   module_out_path = "dfs_service/dfs_service"
 
