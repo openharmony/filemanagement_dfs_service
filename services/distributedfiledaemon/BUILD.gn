@@ -125,9 +125,12 @@ ohos_shared_library("libdistributedfiledaemon") {
   }
 
   if (support_device_profile) {
-    sources += [ "src/device/dfs_static_capability.cpp" ]
+    sources += [ 
+      "src/device/dfs_static_capability.cpp" 
+    ]
 
     external_deps += [
+      "app_file_service:remote_file_share_native",
       "device_info_manager:distributed_device_profile_common",
       "device_info_manager:distributed_device_profile_sdk",
     ]
