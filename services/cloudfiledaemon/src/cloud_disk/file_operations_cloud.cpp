@@ -95,6 +95,10 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return;
+    }
     childInode->stat = parentInode->stat;
     childInode->stat.st_ino = static_cast<uint64_t>(inodeId);
     childInode->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
@@ -436,7 +440,8 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
                     auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
                     rdbstore->UpdateTHMStatus(metaFile, metaBase, CloudSync::DOWNLOADED_THM);
                 } else {
-                    LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d", tmpPath.c_str(), errno);
+                    LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d",
+                        GetAnonyString(tmpPath).c_str(), errno);
                     return errno;
                 }
             }
@@ -1949,6 +1954,11 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
     }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
         auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);

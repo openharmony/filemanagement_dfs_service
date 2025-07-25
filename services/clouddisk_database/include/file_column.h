@@ -96,6 +96,7 @@ public:
     // set attribute
     static const std::string ADD_ATTRIBUTE;
 
+    // set thm
     static const std::string ADD_THM_FLAG;
 
     static const std::string ADD_LCD_FLAG;
