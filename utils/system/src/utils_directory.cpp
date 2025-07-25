@@ -21,7 +21,6 @@
 #include <system_error>
 #include <unistd.h>
 
-#include "cloud_file_fault_event.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "hisysevent.h"
@@ -32,7 +31,6 @@ namespace Storage {
 namespace DistributedFile {
 namespace Utils {
 using namespace std;
-using namespace OHOS::FileManagement;
 
 namespace {
     static const uint32_t STAT_MODE_DIR = 0771;
@@ -72,7 +70,7 @@ void SysEventWrite(string &uid)
         HiviewDFX::HiSysEvent::EventType::SECURITY,
         "CALLER_UID", uid,
         "PERMISSION_NAME", "account");
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("report PERMISSION_EXCEPTION error %{public}d", ret);
     }
 }
@@ -82,14 +80,14 @@ void SysEventFileParse(int64_t maxTime)
     int32_t ret = DEMO_SYNC_SYS_EVENT("INDEX_FILE_PARSE",
         HiviewDFX::HiSysEvent::EventType::STATISTIC,
         "MAX_TIME", maxTime);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("report INDEX_FILE_PARSE error %{public}d", ret);
     }
 }
 
 void RadarDotsReportOpenSession(struct RadarInfo &info)
 {
-    int32_t res = FileManagement::ERR_OK;
+    int32_t res = ERR_OK;
     if (info.state == StageRes::STAGE_SUCCESS) {
         res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
             HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
@@ -116,7 +114,7 @@ void RadarDotsReportOpenSession(struct RadarInfo &info)
             "PEER_SESS_NAME", info.peerSessionName,
             "ERROR_CODE", std::abs(info.errCode));
     }
-    if (res != FileManagement::ERR_OK) {
+    if (res != ERR_OK) {
         LOGE("report RadarDotsReportOpenSession error %{public}d", res);
     }
 }
@@ -136,7 +134,7 @@ void RadarDotsOpenSession(const std::string funcName, const std::string &session
 
 void RadarDotsReportSendFile(struct RadarInfo &info)
 {
-    int32_t res = FileManagement::ERR_OK;
+    int32_t res = ERR_OK;
     if (info.state == StageRes::STAGE_SUCCESS) {
         res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
             HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
@@ -163,7 +161,7 @@ void RadarDotsReportSendFile(struct RadarInfo &info)
             "PEER_SESS_NAME", info.peerSessionName,
             "ERROR_CODE", std::abs(info.errCode));
     }
-    if (res != FileManagement::ERR_OK) {
+    if (res != ERR_OK) {
         LOGE("report RadarDotsReportSendFile error %{public}d", res);
     }
 }
@@ -372,38 +370,6 @@ bool IsInt32(const nlohmann::json &jsonObj, const std::string &key)
         LOGE("the key %{public}s in jsonObj is invalid.", key.c_str());
     }
     return res;
-}
-
-bool HasInvalidChars(const std::string &str)
-{
-    if (str.empty()) {
-        CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_CHECK_SYNC,
-            CloudFile::FaultType::FILE, errno, "path is empty"});
-        return true;
-    }
-    if (str.find('\0') != std::string::npos ||
-               str.find("/../") != std::string::npos ||
-               str.find("/./") != std::string::npos) {
-        std::string errMsg = std::string("path has invalid chars, path is") + GetAnonyString(str).c_str();
-        CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_CHECK_SYNC,
-            CloudFile::FaultType::FILE, errno, errMsg});
-        return true;
-    }
-
-    const std::string prefix1 = "../";
-    const std::string prefix2 = "./";
-    if (str.length() >= prefix1.length() && str.compare(0, prefix1.length(), prefix1) == 0) {
-        std::string errMsg = std::string("path starts with invalid chars, path is") + GetAnonyString(str).c_str();
-        CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_CHECK_SYNC,
-            CloudFile::FaultType::FILE, errno, errMsg});
-        return true;
-    } else if (str.length() >= prefix2.length() && str.compare(0, prefix2.length(), prefix2) == 0) {
-        std::string errMsg = std::string("path starts with invalid chars, path is") + GetAnonyString(str).c_str();
-        CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_CHECK_SYNC,
-            CloudFile::FaultType::FILE, errno, errMsg});
-        return true;
-    }
-    return false;
 }
 } // namespace Utils
 } // namespace DistributedFile
