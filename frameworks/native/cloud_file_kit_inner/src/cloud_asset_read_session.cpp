@@ -33,7 +33,11 @@ CloudError CloudAssetReadSession::InitSession()
     return CloudError::CK_NO_ERROR;
 }
 
-int64_t CloudAssetReadSession::PRead(int64_t offset, int64_t size, char *buffer, CloudError &error)
+int64_t CloudAssetReadSession::PRead(int64_t offset,
+                                     int64_t size,
+                                     char *buffer,
+                                     CloudError &error,
+                                     const std::string appId)
 {
     return E_OK;
 }
@@ -43,14 +47,14 @@ bool CloudAssetReadSession::Close(bool needRemain)
     return true;
 }
 
-bool CloudAssetReadSession::HasCache(int64_t offset, int64_t readSize)
-{
-    return true;
-}
-
 void CloudAssetReadSession::SentPrepareTraceId(std::string prepareTraceId)
 {
     return;
+}
+
+bool CloudAssetReadSession::Catch(CloudError &error, uint32_t catchTimeOutPara)
+{
+    return true;
 }
 
 void CloudAssetReadSession::SetPrepareTraceId(std::string prepareTraceId)

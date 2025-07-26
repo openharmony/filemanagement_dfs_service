@@ -29,10 +29,14 @@ public:
     virtual ~CloudAssetReadSession() = default;
 
     virtual CloudError InitSession();
-    virtual int64_t PRead(int64_t offset, int64_t size, char *buffer, CloudError &error);
+    virtual int64_t PRead(int64_t offset,
+                          int64_t size,
+                          char *buffer,
+                          CloudError &error,
+                          const std::string appId = "");
     virtual bool Close(bool needRemain = false);
-    virtual bool HasCache(int64_t offset, int64_t readSize);
     virtual void SentPrepareTraceId(std::string prepareTraceId);
+    virtual bool Catch(CloudError &error, uint32_t catchTimeOutPara);
     void SetPrepareTraceId(std::string prepareTraceId);
     std::string GetPrepareTraceId();
 

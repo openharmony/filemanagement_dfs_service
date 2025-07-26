@@ -367,6 +367,7 @@ ohos_unittest("fuse_manager_static_test") {
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/libfuse_mock.cpp",
     "fuse_manager_static_test.cpp",
     "mock/libfuse_mock.cpp",
   ]
@@ -383,6 +384,7 @@ ohos_unittest("fuse_manager_static_test") {
   sources += cloud_disk
 
   include_dirs = [
+    "${distributedfile_path}/test/unittests/cloud_disk/mock",
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
     "${distributedfile_path}/utils/ioctl/include",
