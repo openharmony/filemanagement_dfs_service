@@ -101,15 +101,16 @@ static int64_t UTCTimeMilliSeconds()
     return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
-int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundleName, SyncState syncState)
+int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundleName,
+    CloudSyncState cloudSyncState, ErrorType errorType)
 {
-    LOGI("update syncstate %{public}d", syncState);
     int updateRows;
     NativeRdb::ValuesBucket values;
-    values.PutInt(SYNC_STATE, static_cast<int32_t>(syncState));
-    if (syncState == SyncState::SYNC_SUCCEED) {
+    values.PutInt(SYNC_STATE, static_cast<int32_t>(cloudSyncState));
+    if (cloudSyncState == CloudSyncState::COMPLETED && errorType == ErrorType::NO_ERROR) {
         values.PutLong(LAST_SYNC_TIME, UTCTimeMilliSeconds());
     }
+    values.PutInt(SYNC_ERROR_TYPE, static_cast<int32_t>(errorType));
     string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
     vector<string> whereArgs = { to_string(userId), bundleName };
     if (rdb_ == nullptr) {
@@ -121,7 +122,11 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     int32_t ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("update sync state failed: %{public}d", ret);
-        return E_OK;
+        return E_RDB;
+    }
+    if (updateRows <= 0) {
+        LOGE("update sync state with no lines changed");
+        return E_RDB;
     }
     return E_OK;
 }
@@ -136,8 +141,8 @@ static int32_t GetLong(const string &key, int64_t &val, NativeRdb::ResultSet &re
     }
 
     err = resultSet.GetLong(index, val);
-    if (err != 0) {
-        LOGE("result set get int err %{public}d", err);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get long err %{public}d", err);
         return E_RDB;
     }
 
@@ -162,6 +167,61 @@ int32_t DataSyncerRdbStore::GetLastSyncTime(int32_t userId, const string &bundle
     if (ret != E_OK) {
         LOGE("get last sync time failed");
         return ret;
+    }
+    return E_OK;
+}
+
+static int32_t GetInt(const string &key, int32_t &val, NativeRdb::ResultSet &resultSet)
+{
+    int32_t index;
+    int32_t err = resultSet.GetColumnIndex(key, index);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get  %{public}s column index err %{public}d", key.c_str(), err);
+        return E_RDB;
+    }
+
+    err = resultSet.GetInt(index, val);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get int err %{public}d", err);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
+int32_t DataSyncerRdbStore::GetSyncStateAndErrorType(int32_t userId, const std::string &bundleName,
+    CloudSyncState &cloudSyncState, ErrorType &errorType)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
+    predicates.EqualTo(USER_ID, userId)->EqualTo(BUNDLE_NAME, bundleName);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
+
+    auto queryRet = Query(predicates, resultSet);
+    if (queryRet != E_OK) {
+        LOGE("get sync state query failed");
+        return queryRet;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get sync state no more rows");
+        return E_INVAL_ARG;
+    }
+
+    int32_t syncState = static_cast<int32_t>(CloudSyncState::COMPLETED);
+    int32_t ret = GetInt(SYNC_STATE, syncState, *resultSet);
+    if (ret != E_OK) {
+        LOGE("get sync state failed");
+        return ret;
+    } else {
+        cloudSyncState = static_cast<CloudSyncState>(syncState);
+    }
+
+    int32_t err = static_cast<int32_t>(ErrorType::NO_ERROR);
+    ret = GetInt(SYNC_ERROR_TYPE, err, *resultSet);
+    if (ret != E_OK) {
+        LOGE("get error type failed");
+        return ret;
+    } else {
+        errorType = static_cast<ErrorType>(err);
     }
     return E_OK;
 }
@@ -235,11 +295,26 @@ static void VersionAddDataSyncerUniqueIndex(NativeRdb::RdbStore &store)
     }
 }
 
+static void VersionAddDataSyncerErrorType(NativeRdb::RdbStore &store)
+{
+    const string addDataSyncerErrorType = CREATE_DATA_SYNCER_ERROR_TYPE;
+    if (store.ExecuteSql(addDataSyncerErrorType) != NativeRdb::E_OK) {
+        LOGE("upgrade fail add errorType");
+    }
+    const string updateCloudSyncState = UPDATE_CLOUD_SYNC_STATE;
+    if (store.ExecuteSql(updateCloudSyncState) != NativeRdb::E_OK) {
+        LOGE("upgrade fail sync state -> cloud sync state");
+    }
+}
+
 int32_t DataSyncerRdbCallBack::OnUpgrade(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
     if (oldVersion < VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX) {
         VersionAddDataSyncerUniqueIndex(store);
+    }
+    if (oldVersion < VERSION_ADD_ERROR_TYPE) {
+        VersionAddDataSyncerErrorType(store);
     }
     return E_OK;
 }

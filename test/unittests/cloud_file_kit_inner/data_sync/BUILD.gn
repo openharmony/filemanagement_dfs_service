@@ -49,6 +49,46 @@ ohos_unittest("data_syncer_rdb_store_test") {
 
   defines = [
     "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"cloud_file_kit_inner_test\"",
+  ]
+  use_exceptions = true
+}
+
+ohos_unittest("data_syncer_rdb_store_static_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "data_syncer_rdb_store_static_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+  ]
+
+  defines = [
+    "private=public",
     "LOG_TAG=\"cloud_file_kit_inner_test\"",
   ]
   use_exceptions = true
@@ -135,6 +175,7 @@ group("data_sync_test") {
   testonly = true
   deps = [
     ":data_syncer_rdb_store_test",
+    ":data_syncer_rdb_store_static_test",
     ":sync_state_manager_test",
     ":task_state_manager_test",
   ]

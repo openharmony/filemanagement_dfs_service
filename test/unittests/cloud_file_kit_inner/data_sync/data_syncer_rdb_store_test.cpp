@@ -29,7 +29,8 @@ using namespace std;
 class MockDataSyncerRdbStore : public DataSyncerRdbStore {
 public:
     MOCK_METHOD2(Insert, int32_t(int32_t userId, const string &bundleName));
-    MOCK_METHOD3(UpdateSyncState, int32_t(int32_t userId, const string &bundleName, SyncState syncState));
+    MOCK_METHOD4(UpdateSyncState, int32_t(int32_t userId, const string &bundleName,
+        CloudSyncState cloudSyncState, ErrorType errorType));
     MOCK_METHOD3(GetLastSyncTime, int32_t(int32_t userId, const string &bundleName, int64_t &time));
     MOCK_METHOD2(QueryDataSyncer, int32_t(int32_t userId, shared_ptr<NativeRdb::ResultSet> &resultSet));
     MOCK_METHOD2(Query, int32_t(NativeRdb::AbsRdbPredicates predicates, shared_ptr<NativeRdb::ResultSet> &resultSet));
@@ -127,13 +128,17 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_004, TestSize.Level1)
         MockDataSyncerRdbStore mockDataSyncerRdbStore;
         int32_t userId = 1;
         string bundleName = "testbundleName";
-        EXPECT_CALL(mockDataSyncerRdbStore, UpdateSyncState(userId, bundleName, SyncState::INIT))
+        EXPECT_CALL(mockDataSyncerRdbStore,
+            UpdateSyncState(userId, bundleName, CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR))
             .WillOnce(Return(E_OK));
-        EXPECT_CALL(mockDataSyncerRdbStore, UpdateSyncState(userId, bundleName, SyncState::SYNC_SUCCEED))
+        EXPECT_CALL(mockDataSyncerRdbStore,
+            UpdateSyncState(userId, bundleName, CloudSyncState::COMPLETED, ErrorType::NO_ERROR))
             .WillOnce(Return(E_OK));
 
-        EXPECT_EQ(mockDataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::INIT), E_OK);
-        EXPECT_EQ(mockDataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::SYNC_SUCCEED), E_OK);
+        EXPECT_EQ(mockDataSyncerRdbStore
+            .UpdateSyncState(userId, bundleName, CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR), E_OK);
+        EXPECT_EQ(mockDataSyncerRdbStore
+            .UpdateSyncState(userId, bundleName, CloudSyncState::COMPLETED, ErrorType::NO_ERROR), E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_004 ERROR";
@@ -237,7 +242,7 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_009, TestSize.Level1)
         string bundleName = "testBundleName";
         int32_t ret = dataSyncerRdbStore.Insert(userId, bundleName);
         EXPECT_EQ(ret, E_OK);
-        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::SYNC_SUCCEED);
+        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -255,7 +260,7 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_010, TestSize.Level1)
         string bundleName = "testBundleName";
         int32_t ret = dataSyncerRdbStore.Insert(userId, bundleName);
         EXPECT_EQ(ret, E_OK);
-        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::INIT);
+        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -306,34 +311,405 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_012, TestSize.Level1)
     GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 End";
 }
 
-
-HWTEST_F(DataSyncerRdbStoreTest, OnUpgradeTest, TestSize.Level1)
+/**
+ * @tc.name: GetSyncStateAndErrorTypeTest01
+ * @tc.desc: Verify the GetSyncStateAndErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, GetSyncStateAndErrorTypeTest01, TestSize.Level1)
 {
-    CloudDisk::RdbStoreMock store;
-    DataSyncerRdbCallBack callback;
-    int32_t oldVersion = 1;
-    int32_t newVersion = 2;
-    int32_t result = callback.OnUpgrade(store, oldVersion, newVersion);
-    EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest01 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "test.bundle.name";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> columns;
+
+        EXPECT_CALL(*rdb, QueryByStep(_, columns, true)).WillOnce(Return(nullptr));
+
+        auto ret = dataSyncerRdbStore
+            .GetSyncStateAndErrorType(userId, bundleName, cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest01 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest01 End";
 }
 
+/**
+ * @tc.name: GetSyncStateAndErrorTypeTest02
+ * @tc.desc: Verify the GetSyncStateAndErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, GetSyncStateAndErrorTypeTest02, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest02 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "test.bundle.name";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> columns;
+        auto resultSet = make_shared<CloudDisk::AbsSharedResultSetMock>();
+
+        EXPECT_CALL(*rdb, QueryByStep(_, columns, true)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_INVAL_ARG));
+
+        auto ret = dataSyncerRdbStore
+            .GetSyncStateAndErrorType(userId, bundleName, cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest02 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest02 End";
+}
+
+/**
+ * @tc.name: GetSyncStateAndErrorTypeTest03
+ * @tc.desc: Verify the GetSyncStateAndErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, GetSyncStateAndErrorTypeTest03, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest03 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "test.bundle.name";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> columns;
+        auto resultSet = make_shared<CloudDisk::AbsSharedResultSetMock>();
+
+        EXPECT_CALL(*rdb, QueryByStep(_, columns, true)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
+
+        auto ret = dataSyncerRdbStore
+            .GetSyncStateAndErrorType(userId, bundleName, cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest03 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest03 End";
+}
+
+/**
+ * @tc.name: GetSyncStateAndErrorTypeTest04
+ * @tc.desc: Verify the GetSyncStateAndErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, GetSyncStateAndErrorTypeTest04, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest04 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "test.bundle.name";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> columns;
+        auto resultSet = make_shared<CloudDisk::AbsSharedResultSetMock>();
+
+        EXPECT_CALL(*rdb, QueryByStep(_, columns, true)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSet, GetInt(_, _)).WillOnce(Return(E_OK));
+
+        auto ret = dataSyncerRdbStore
+            .GetSyncStateAndErrorType(userId, bundleName, cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest04 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest04 End";
+}
+
+/**
+ * @tc.name: GetSyncStateAndErrorTypeTest05
+ * @tc.desc: Verify the GetSyncStateAndErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, GetSyncStateAndErrorTypeTest05, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest05 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "test.bundle.name";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> columns;
+        auto resultSet = make_shared<CloudDisk::AbsSharedResultSetMock>();
+
+        EXPECT_CALL(*rdb, QueryByStep(_, columns, true)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSet, GetInt(_, _))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_OK));
+
+        auto ret = dataSyncerRdbStore
+            .GetSyncStateAndErrorType(userId, bundleName, cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest05 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSyncStateAndErrorTypeTest05 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest01
+ * @tc.desc: Verify the OnUpgrade function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, OnUpgradeTest01, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest01 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+        DataSyncerRdbCallBack callback;
+        int32_t oldVersion = 1;
+        int32_t newVersion = 2;
+        int32_t result = callback.OnUpgrade(store, oldVersion, newVersion);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUpgradeTest01 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest01 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest02
+ * @tc.desc: Verify the OnUpgrade function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, OnUpgradeTest02, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest02 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+        DataSyncerRdbCallBack callback;
+        int32_t oldVersion = 2;
+        int32_t newVersion = 3;
+        int32_t result = callback.OnUpgrade(store, oldVersion, newVersion);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUpgradeTest02 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest02 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest03
+ * @tc.desc: Verify the OnUpgrade function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, OnUpgradeTest03, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest03 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+        DataSyncerRdbCallBack callback;
+        int32_t oldVersion = 3;
+        int32_t newVersion = 3;
+        int32_t result = callback.OnUpgrade(store, oldVersion, newVersion);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUpgradeTest03 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest03 End";
+}
+
+/**
+ * @tc.name: OnCreateTest01
+ * @tc.desc: Verify the OnCreate function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
 HWTEST_F(DataSyncerRdbStoreTest, OnCreateTest01, TestSize.Level1)
 {
-    CloudDisk::RdbStoreMock store;
-    DataSyncerRdbCallBack callback;
-    EXPECT_CALL(store, ExecuteSql(_, _)).WillOnce(Return(E_RDB));
-    int32_t result = callback.OnCreate(store);
-    EXPECT_EQ(result, E_RDB);
+    GTEST_LOG_(INFO) << "OnCreateTest01 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+        DataSyncerRdbCallBack callback;
+        EXPECT_CALL(store, ExecuteSql(_, _)).WillOnce(Return(E_RDB));
+        int32_t result = callback.OnCreate(store);
+        EXPECT_EQ(result, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnCreateTest01 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnCreateTest01 End";
 }
 
+/**
+ * @tc.name: OnCreateTest02
+ * @tc.desc: Verify the OnCreate function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
 HWTEST_F(DataSyncerRdbStoreTest, OnCreateTest02, TestSize.Level1)
 {
-    CloudDisk::RdbStoreMock store;
-    DataSyncerRdbCallBack callback;
-    EXPECT_CALL(store, ExecuteSql(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
-    int32_t result = callback.OnCreate(store);
-    EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "OnCreateTest02 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+        DataSyncerRdbCallBack callback;
+        EXPECT_CALL(store, ExecuteSql(_, _))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_OK));
+        int32_t result = callback.OnCreate(store);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnCreateTest02 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnCreateTest02 End";
+}
+
+/**
+ * @tc.name: UpdateSyncStateTest01
+ * @tc.desc: Verify the UpdateSyncState function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, UpdateSyncStateTest01, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest01 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "bundleName";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> whereArgs = {"1", "bundleName"};
+
+        EXPECT_CALL(*rdb, Update(_, _, _, _, whereArgs)).WillOnce(Return(E_RDB));
+
+        auto ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName,
+            cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateSyncStateTest01 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest01 End";
+}
+
+/**
+ * @tc.name: UpdateSyncStateTest02
+ * @tc.desc: Verify the UpdateSyncState function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, UpdateSyncStateTest02, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest02 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "bundleName";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> whereArgs = {"1", "bundleName"};
+        int rows = 0;
+
+        EXPECT_CALL(*rdb, Update(rows, _, _, _, whereArgs))
+            .WillOnce(DoAll(SetArgReferee<0>(1), Return(E_OK)));
+
+        auto ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName,
+            cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateSyncStateTest02 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest02 End";
+}
+
+/**
+ * @tc.name: UpdateSyncStateTest03
+ * @tc.desc: Verify the UpdateSyncState function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreTest, UpdateSyncStateTest03, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest03 Start";
+    try {
+        int32_t userId = 1;
+        string bundleName = "bundleName";
+        CloudSyncState cloudSyncState = CloudSyncState::COMPLETED;
+        ErrorType errorType = ErrorType::NO_ERROR;
+
+        auto rdb = make_shared<CloudDisk::RdbStoreMock>();
+        DataSyncerRdbStore dataSyncerRdbStore;
+        dataSyncerRdbStore.rdb_ = rdb;
+        vector<string> whereArgs = {"1", "bundleName"};
+        int rows = 0;
+
+        EXPECT_CALL(*rdb, Update(rows, _, _, _, whereArgs))
+            .WillOnce(DoAll(SetArgReferee<0>(0), Return(E_OK)));
+
+        auto ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName,
+            cloudSyncState, errorType);
+        
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateSyncStateTest03 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateSyncStateTest03 End";
 }
 }
