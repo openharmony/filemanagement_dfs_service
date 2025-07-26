@@ -46,13 +46,13 @@ void CloudSyncManagerTest::SetUpTestCase(void)
 {
     std::cout << "SetUpTestCase" << std::endl;
     proxy_ = std::make_shared<MockServiceProxy>();
-    IServiceProxy::proxy_ = proxy_;
+    IserviceProxy::proxy_ = proxy_;
 }
 
 void CloudSyncManagerTest::TearDownTestCase(void)
 {
     std::cout << "TearDownTestCase" << std::endl;
-    IServiceProxy::proxy_.reset();
+    IserviceProxy::proxy_.reset();
     proxy_ = nullptr;
 }
 

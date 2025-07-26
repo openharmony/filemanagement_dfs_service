@@ -15,6 +15,7 @@
 
 #include "cloud_sync_asset_manager_impl.h"
 #include "service_proxy.h"
+#include "service_proxy_mock.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -23,7 +24,6 @@
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
-namespace Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
@@ -34,15 +34,24 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline std::shared_ptr<MockServiceProxy> proxy_ = nullptr;
+    static inline sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
 };
 
 void CloudSyncAssetManagerImplTest::SetUpTestCase(void)
 {
+    proxy_ = std::make_shared<MockServiceProxy>();
+    IserviceProxy::proxy_ = proxy_;
+    serviceProxy_ = sptr(new CloudSyncServiceMock());
+    CloudSyncAssetManagerImpl::GetInstance().isFirstCall_.test_and_set();
     std::cout << "SetUpTestCase" << std::endl;
 }
 
 void CloudSyncAssetManagerImplTest::TearDownTestCase(void)
 {
+    IserviceProxy::proxy_ = nullptr;
+    proxy_ = nullptr;
+    serviceProxy_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -64,10 +73,9 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
  */
 HWTEST_F(CloudSyncAssetManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
     try {
-        auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
-        CloudSyncAssetManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+        CloudSyncAssetManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -89,8 +97,10 @@ HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
         int32_t userId = 100;
         std::string request = "";
         std::string result = "";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().UploadAsset(userId, request, result);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UploadAsseteTest FAILED";
@@ -111,8 +121,10 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
         int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
         AssetInfo assetInfo;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(userId, bundleName, assetInfo);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DownloadFileTest FAILED";
@@ -121,29 +133,59 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
 }
 
 /*
- * @tc.name: DownloadFilesTest
+ * @tc.name: DownloadFilesTest001
  * @tc.desc: Verify the DownloadFiles function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest, TestSize.Level1)
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DownloadFilesTest Start";
+    GTEST_LOG_(INFO) << "DownloadFilesTest001 Start";
     try {
         int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
         std::vector<AssetInfo> assetInfo;
         std::vector<bool> assetResultMap;
+        int32_t connectTime = 1;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFiles(userId,
-                                                    bundleName, assetInfo, assetResultMap);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+                                                    bundleName, assetInfo, assetResultMap, connectTime);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "DownloadFilesTest FAILED";
+        GTEST_LOG_(INFO) << "DownloadFilesTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "DownloadFilesTest End";
+    GTEST_LOG_(INFO) << "DownloadFilesTest001 End";
 }
- 
+
+/*
+ * @tc.name: DownloadFilesTest002
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest002 Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::vector<AssetInfo> assetInfo;
+        std::vector<bool> assetResultMap;
+        int32_t connectTime = 1;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFiles(userId,
+                                                    bundleName, assetInfo, assetResultMap, connectTime);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFilesTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest002 End";
+}
+
 /*
  * @tc.name: DeleteAssetTest
  * @tc.desc: Verify the DeleteAsset function.
@@ -156,8 +198,10 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DeleteAssetTest, TestSize.Level1)
     try {
         int32_t userId = 100;
         std::string uri = "uri";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DeleteAsset(userId, uri);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DeleteAssetTest FAILED";
@@ -165,6 +209,5 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DeleteAssetTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "DeleteAssetTest End";
 }
 
-} // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

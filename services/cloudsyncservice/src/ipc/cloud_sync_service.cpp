@@ -954,7 +954,8 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId,
 int32_t CloudSyncService::DownloadFiles(const int32_t userId,
                                         const std::string &bundleName,
                                         const std::vector<AssetInfoObj> &assetInfoObj,
-                                        std::vector<bool> &assetResultMap)
+                                        std::vector<bool> &assetResultMap,
+                                        int32_t connectTime)
 {
     LOGI("Begin DownloadFiles");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -985,7 +986,7 @@ int32_t CloudSyncService::DownloadFiles(const int32_t userId,
     }
 
     TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
-    auto ret = assetsDownloader->DownloadAssets(assetsToDownload, assetResultMap);
+    auto ret = assetsDownloader->DownloadAssets(assetsToDownload, assetResultMap, connectTime);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
     LOGI("End DownloadFiles");
     return ret;

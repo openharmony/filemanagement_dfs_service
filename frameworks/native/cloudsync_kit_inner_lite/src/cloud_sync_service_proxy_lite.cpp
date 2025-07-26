@@ -298,7 +298,8 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
 int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
                                              const std::string &bundleName,
                                              const std::vector<AssetInfoObj> &assetInfoObj,
-                                             std::vector<bool> &assetResultMap)
+                                             std::vector<bool> &assetResultMap,
+                                             int32_t connectTime)
 {
     return E_OK;
 }

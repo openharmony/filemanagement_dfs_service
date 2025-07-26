@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "battersrvclient_mock.h"
+#include "cloud_file_kit.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_service.h"
 #include "dfsu_access_token_helper_mock.h"
@@ -29,9 +30,20 @@ namespace Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace CloudFile;
 using ChargeState = PowerMgr::BatteryChargeState;
 using PluggedType = PowerMgr::BatteryPluggedType;
 constexpr int32_t SA_ID = 5204;
+
+class CloudFileKitMock : public CloudFile::CloudFileKit {
+public:
+    MOCK_METHOD2(GetCloudUserInfo, int32_t(const int32_t userId, CloudFile::CloudUserInfo &userInfo));
+    MOCK_METHOD3(GetAppSwitchStatus, int32_t(const std::string &bundleName, const int32_t userId, bool &switchStatus));
+    MOCK_METHOD3(GetAppConfigParams, int32_t(const int32_t userId,
+                const std::string &bundleName, std::map<std::string, std::string> &param));
+    MOCK_METHOD2(GetCloudAssetsDownloader, std::shared_ptr<CloudAssetsDownloader>(const int32_t userId,
+                const std::string &bundleName));
+};
 
 class CloudSyncServiceTest : public testing::Test {
 public:
@@ -782,7 +794,7 @@ HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest007, TestSize.Level1)
     GTEST_LOG_(INFO) << "LoadRemoteSATest007 start";
     try {
         std::string deviceId = "abcdefg1234567";
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_)).WillOnce(Return(saMgr_));
         servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
         EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))
@@ -893,10 +905,6 @@ HWTEST_F(CloudSyncServiceTest, InitTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "InitTest001 start";
     try {
         EXPECT_NE(servicePtr_, nullptr);
-        EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-            .WillOnce(Return(ChargeState::CHARGE_STATE_FULL));
-        EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
-            .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
         servicePtr_->Init();
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1424,6 +1432,156 @@ HWTEST_F(CloudSyncServiceTest, StopFileCacheTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "StopFileCacheTest001 failed";
     }
     GTEST_LOG_(INFO) << "StopFileCacheTest001 end";
+}
+
+/**
+ * @tc.name: DownloadFilesTest001
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadFilesTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        int32_t userId = 100;
+        const std::string bundleName = "com.ohos.test";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        std::vector<AssetInfoObj> assetInfoObjs;
+        assetInfoObjs.push_back(assetInfoObj);
+        std::vector<bool> assetResultMap;
+        assetResultMap.push_back(true);
+        int32_t connectTime = 1;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+
+        CloudFile::CloudFileKit::instance_ = nullptr;
+
+        auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
+        EXPECT_EQ(ret, E_NULLPTR);
+        CloudFile::CloudFileKit::instance_ = new (std::nothrow) CloudFileKit();
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "DownloadFilesTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest001 end";
+}
+
+/**
+ * @tc.name: DownloadFilesTest002
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        int32_t userId = 100;
+        const std::string bundleName = "com.ohos.test";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        std::vector<AssetInfoObj> assetInfoObjs;
+        assetInfoObjs.push_back(assetInfoObj);
+        std::vector<bool> assetResultMap;
+        assetResultMap.push_back(true);
+        int32_t connectTime = 1;
+        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*cloudFileKitMock, GetCloudAssetsDownloader(_, _)).WillOnce(Return(nullptr));
+
+        auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
+        EXPECT_EQ(ret, E_NULLPTR);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "DownloadFilesTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest002 end";
+}
+
+/**
+ * @tc.name: DownloadFilesTest003
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        int32_t userId = 100;
+        const std::string bundleName = "com.ohos.test";
+        std::string uri = "";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        std::vector<AssetInfoObj> assetInfoObjs;
+        assetInfoObjs.push_back(assetInfoObj);
+        std::vector<bool> assetResultMap;
+        assetResultMap.push_back(true);
+        int32_t connectTime = 1;
+        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*cloudFileKitMock, GetCloudAssetsDownloader(_, _)).WillOnce(
+                        Return(make_shared<CloudAssetsDownloader>(userId, bundleName)));
+
+        auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest003 end";
+}
+
+/**
+ * @tc.name: DownloadFilesTest004
+ * @tc.desc: Verify the DownloadFiles function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadFilesTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFilesTest004 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        int32_t userId = 100;
+        const std::string bundleName = "com.ohos.test";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        std::vector<AssetInfoObj> assetInfoObjs;
+        assetInfoObjs.push_back(assetInfoObj);
+        std::vector<bool> assetResultMap;
+        assetResultMap.push_back(true);
+        int32_t connectTime = 1;
+        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*cloudFileKitMock, GetCloudAssetsDownloader(_, _)).WillOnce(
+                        Return(make_shared<CloudAssetsDownloader>(userId, bundleName)));
+
+        auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "DownloadFilesTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadFilesTest004 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

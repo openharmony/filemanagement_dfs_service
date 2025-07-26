@@ -28,7 +28,8 @@ public:
     virtual ~CloudAssetsDownloader() = default;
     virtual int32_t DownloadAssets(DownloadAssetInfo &assetsToDownload);
     virtual int32_t DownloadAssets(const std::vector<DownloadAssetInfo> &assetsToDownload,
-                                   std::vector<bool> &assetResultMap);
+                                   std::vector<bool> &assetResultMap,
+                                   int32_t connectTime);
 
 protected:
     int32_t userId_;

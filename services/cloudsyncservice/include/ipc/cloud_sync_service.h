@@ -80,7 +80,8 @@ public:
     ErrCode DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
                           const std::vector<AssetInfoObj> &assetInfoObj,
-                          std::vector<bool> &assetResultMap) override;
+                          std::vector<bool> &assetResultMap,
+                          int32_t connectTime) override;
     ErrCode DownloadAsset(const uint64_t taskId,
                           const int32_t userId,
                           const std::string &bundleName,

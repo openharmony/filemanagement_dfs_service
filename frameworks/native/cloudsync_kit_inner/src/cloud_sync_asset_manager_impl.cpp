@@ -65,7 +65,8 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
 int32_t CloudSyncAssetManagerImpl::DownloadFiles(const int32_t userId,
                                                  const std::string &bundleName,
                                                  const std::vector<AssetInfo> &assetInfo,
-                                                 std::vector<bool> &assetResultMap)
+                                                 std::vector<bool> &assetResultMap,
+                                                 int32_t connectTime)
 {
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -79,7 +80,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFiles(const int32_t userId,
         AssetInfoObj obj(info);
         assetInfoObj.emplace_back(obj);
     }
-    int32_t ret = CloudSyncServiceProxy->DownloadFiles(userId, bundleName, assetInfoObj, assetResultMap);
+    int32_t ret = CloudSyncServiceProxy->DownloadFiles(userId, bundleName, assetInfoObj, assetResultMap, connectTime);
     LOGI("DownloadFile ret %{public}d", ret);
     return ret;
 }

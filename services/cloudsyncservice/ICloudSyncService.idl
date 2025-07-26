@@ -54,7 +54,7 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void UploadAsset([in] int userId, [in] String request, [out] String resultStr);
     void DownloadFile([in] int userId, [in] String bundleName, [in] AssetInfoObj assetInfoObj);
     void DownloadFiles([in] int userId, [in] String bundleName, [in] AssetInfoObj[] assetInfoObj,
-                       [out] boolean[] assetResultMap);
+                       [out] boolean[] assetResultMap, [in] int connectTime);
     void DownloadAsset([in] unsigned long taskId, [in] int userId, [in] String bundleName, [in] String networkId,
                        [in] AssetInfoObj assetInfoObj);
     void RegisterDownloadAssetCallback([in] IRemoteObject remoteObject);
