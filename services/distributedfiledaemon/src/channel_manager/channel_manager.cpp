@@ -15,7 +15,6 @@
 
 #include "channel_manager.h"
 #include "network/softbus/softbus_permission_check.h"
-#include "nlohmann/json.hpp"
 #include "securec.h"
 #include "softbus_error_code.h"
 #include "utils_log.h"
@@ -37,6 +36,7 @@ using FileManagement::ERR_OK;
 namespace {
 static inline const std::string SERVICE_NAME = "ohos.storage.distributedfile.daemon";
 static inline const std::string SESSION_NAME = "DistributedFileService_ChannelManager";
+static inline const int32_t DFS_VERSION = 60;
 
 static const uint32_t DSCHED_MAX_BUFFER_SIZE = 4 * 1024 * 1024;
 static const int32_t MAX_WAIT_TIME_MS = 2000;
@@ -99,7 +99,7 @@ ChannelManager::~ChannelManager()
 
 int32_t ChannelManager::GetVersion()
 {
-    return version_;
+    return DFS_VERSION;
 }
 
 int32_t ChannelManager::Init()

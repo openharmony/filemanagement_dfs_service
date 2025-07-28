@@ -78,7 +78,6 @@ private:
     void DoSendBytesAsync(const ControlCmd &request, const std::string &networkId);
 
 private:
-    int32_t version_ = 60;
     std::mutex initMutex_;
     int32_t serverSocketId_ = -1;
     std::string ownerName_ = "dfs_channel_manager";
