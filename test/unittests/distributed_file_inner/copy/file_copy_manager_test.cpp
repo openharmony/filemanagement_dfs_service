@@ -373,6 +373,29 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0010, TestSize.Level0)
 }
 
 /**
+ * @tc.name: FileCopyManager_Copy_0011
+ * @tc.desc: The execution of the Copy failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0011, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0011 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/a1.txt";
+    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
+
+    EXPECT_TRUE(OHOS::RemoveFile(srcPath));
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    EXPECT_EQ(ret, ENOENT);
+
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0011 End";
+}
+
+/**
 * @tc.name: FileCopyManager_DeleteResFile_0001
 * @tc.desc: Verify the DeleteResFile function when transListener is not null and destPath exists.
 * @tc.type: FUNC
