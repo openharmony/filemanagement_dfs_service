@@ -25,6 +25,7 @@
 #include "network_set_manager.h"
 #include "net_conn_callback_observer.h"
 #include "utils_log.h"
+#include "settings_data_manager.h"
 
 using namespace OHOS::NetManagerStandard;
 
@@ -135,26 +136,35 @@ NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 
 bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
 {
-    if (bundleName != "com.ohos.photos") {
+    if (bundleName == GALLERY_BUNDLE_NAME) {
+        if (NetworkSetManager::IsAllowCellularConnect(bundleName, userId)) {
+            LOGI("datashare status open, CheckMobileNetwork success");
+            return true;
+        }
+    } else if (bundleName == HDC_BUNDLE_NAME) {
+        if (SettingsDataManager::GetMobileDataStatus() == "on") {
+            LOGI("ailife is setting mobie data sync");
+            return true;
+        }
+    } else {
         return true;
     }
-    if (NetworkSetManager::IsAllowCellularConnect(bundleName, userId)) {
-        LOGI("datashare status open, CheckMobileNetwork success");
-        return true;
-    }
-    if (CheckWifiOrEthernet()) {
-        return true;
-    }
-    return false;
+    return CheckWifiOrEthernet();
 }
 
 bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t userId)
 {
-    if (bundleName != "com.ohos.photos") {
-        return true;
-    }
-    if (NetworkSetManager::IsAllowNetConnect(bundleName, userId)) {
-        LOGI("CheckNetwork on");
+    if (bundleName == GALLERY_BUNDLE_NAME) {
+        if (NetworkSetManager::IsAllowNetConnect(bundleName, userId)) {
+            LOGI("CheckNetwork on");
+            return true;
+        }
+    } else if (bundleName == HDC_BUNDLE_NAME) {
+        if (SettingsDataManager::GetNetworkConnectionStatus() == "on") {
+            LOGI("ailife is setting network connection status");
+            return true;
+        }
+    } else {
         return true;
     }
     LOGI("CheckNetwork off");
@@ -171,6 +181,7 @@ bool NetworkStatus::CheckWifiOrEthernet()
         LOGI("datashare status close, network_status:ethernet");
         return true;
     }
+    LOGI("CheckWifiOrEthernet off");
     return false;
 }
 } // namespace OHOS::FileManagement::CloudSync

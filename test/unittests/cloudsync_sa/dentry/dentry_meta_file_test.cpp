@@ -454,6 +454,69 @@ HWTEST_F(DentryMetaFileTest, RecordIdToCloudId002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CloudIdToRecordId001
+ * @tc.desc: Verify the CloudIdToRecordId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, CloudIdToRecordId001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudIdToRecordId001 Start";
+    try {
+        std::string hexStr = "123456789";
+        string cloudId = MetaFileMgr::GetInstance().RecordIdToCloudId(hexStr, true);
+        string reocrdId = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId, true);
+        EXPECT_EQ(reocrdId, hexStr);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "CloudIdToRecordId001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloudIdToRecordId001 End";
+}
+
+/**
+ * @tc.name:CloudIdToRecordId002
+ * @tc.desc: Verify the CloudIdToRecordId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, CloudIdToRecordId002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudIdToRecordId002 Start";
+    try {
+        std::string hexStr = "1234567890";
+        string cloudId = MetaFileMgr::GetInstance().RecordIdToCloudId(hexStr, true);
+        string reocrdId = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId, true);
+        EXPECT_EQ(reocrdId, hexStr);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "CloudIdToRecordId002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloudIdToRecordId002 End";
+}
+
+/**
+ * @tc.name:CloudIdToRecordId003
+ * @tc.desc: Verify the CloudIdToRecordId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, CloudIdToRecordId003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudIdToRecordId003 Start";
+    try {
+        std::string hexStr = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        string cloudId = MetaFileMgr::GetInstance().RecordIdToCloudId(hexStr);
+        string reocrdId = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId, true);
+        EXPECT_EQ(reocrdId, hexStr);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "CloudIdToRecordId003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloudIdToRecordId003 End";
+}
+
+/**
  * @tc.name: GetParentDir001
  * @tc.desc: Verify the GetParentDir
  * @tc.type: FUNC

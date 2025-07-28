@@ -26,6 +26,8 @@
 #include "utils_log.h"
 #include "net_conn_client_mock.h"
 #include "net_handle.h"
+#include "settings_data_manager.h"
+#include "network_set_manager.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -357,6 +359,128 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CheckMobileNetworkTest005
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest005 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.ailife";
+        int32_t userId = 100;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "on");
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest005 End";
+}
+
+/**
+ * @tc.name: CheckMobileNetworkTest006
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest006 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        std::string key = std::to_string(userId) + "/" + bundleName;
+        NetworkSetManager::cellularNetMap_.EnsureInsert(key, true);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest006 End";
+}
+
+/**
+ * @tc.name: CheckMobileNetworkTest007
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest007 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        std::string key = std::to_string(userId) + "/" + bundleName;
+        networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+        NetworkSetManager::cellularNetMap_.EnsureInsert(key, false);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest007 End";
+}
+
+/**
+ * @tc.name: CheckMobileNetworkTest008
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest008 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        std::string key = std::to_string(userId) + "/" + bundleName;
+        networkStatus.SetNetConnStatus(NetworkStatus::NO_NETWORK);
+        NetworkSetManager::cellularNetMap_.EnsureInsert(key, false);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest008 End";
+}
+
+/**
+ * @tc.name: CheckMobileNetworkTest009
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest009 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "xxxxxxxxx";
+        int32_t userId = 100;
+        std::string key = std::to_string(userId) + "/" + bundleName;
+        networkStatus.SetNetConnStatus(NetworkStatus::NO_NETWORK);
+        NetworkSetManager::cellularNetMap_.EnsureInsert(key, false);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest009 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest009 End";
+}
+
+/**
  * @tc.name: CheckNetworkTest001
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
@@ -420,6 +544,52 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
     }
     GTEST_LOG_(INFO) << "CheckNetworkTest End";
+}
+
+/**
+ * @tc.name: CheckNetworkTest004
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckNetworkTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNetworkTest004 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.ailife";
+        int32_t userId = 100;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_network_connection_status", "on");
+        bool ret = networkStatus.CheckNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNetworkTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckNetworkTest004 End";
+}
+
+/**
+ * @tc.name: CheckNetworkTest005
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckNetworkTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNetworkTest005 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.ailife";
+        int32_t userId = 100;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_network_connection_status", "false");
+        bool ret = networkStatus.CheckNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNetworkTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckNetworkTest005 End";
 }
 
 /**

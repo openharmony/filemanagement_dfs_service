@@ -35,6 +35,8 @@ public:
     static bool IsSystemApp();
     static int32_t GetUserId();
     static int32_t GetPid();
+    static int32_t GetAccountId(int32_t &userId);
+    static bool IsUserVerifyed(const int32_t userId);
 };
 } // namespace OHOS::FileManagement
 

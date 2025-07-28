@@ -21,6 +21,7 @@
 #include "fuse_manager/fuse_manager.h"
 #include "ipc/cloud_daemon.h"
 #include "iremote_object.h"
+#include "setting_data_helper.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -255,5 +256,25 @@ HWTEST_F(CloudDaemonTest, OnAddSystemAbility001, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 failed";
     }
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 end";
+}
+
+/**
+ * @tc.name: OnAddSystemAbilityTest002
+ * @tc.desc: Verify the OnAddSystemAbility function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnAddSystemAbilityTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 start";
+    try {
+        const int32_t systemAbilityId = DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID;
+        const std::string deviceId = "device_test";
+        SettingDataHelper::GetInstance().isBundleInited_ = true;
+        cloudDaemon_->OnAddSystemAbility(systemAbilityId, deviceId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 end";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

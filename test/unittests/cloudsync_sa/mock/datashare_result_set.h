@@ -16,40 +16,21 @@
 #ifndef DATASHARE_RESULT_SET_H
 #define DATASHARE_RESULT_SET_H
 
+#include <cstdint>
+#include <string>
+
 namespace OHOS {
 namespace DataShare {
 class DataShareResultSet {
 public:
-    static int GetColumnIndex(const std::string &columnName, int &columnIndex)
-    {
-        return 0;
-    }
-    static int GetString(int columnIndex, std::string &value)
-    {
-        return 0;
-    }
-    static int GetLong(int columnIndex, int64_t &value)
-    {
-        return 0;
-    }
-    static int GetInt(int columnIndex, int &value)
-    {
-        return 0;
-    }
-    static int GoToFirstRow()
-    {
-        return 0;
-    }
-    static int GoToNextRow()
-    {
-        return 0;
-    }
-    static int Close()
-    {
-        return 0;
-    }
+    static int32_t GetColumnIndex(const std::string &columnName, int32_t &columnIndex);
+    static int32_t GetString(int32_t columnIndex, std::string &value);
+    static int32_t GetLong(int32_t columnIndex, int64_t &value);
+    static int32_t GetInt(int32_t columnIndex, int32_t &value);
+    static int32_t GoToFirstRow();
+    static int32_t GoToNextRow();
+    static int32_t Close();
 };
-
 }
 }
 #endif  // DATASHARE_RESULT_SET_H

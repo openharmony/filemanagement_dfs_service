@@ -130,6 +130,7 @@ ohos_shared_library("libdistributedfileutils") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "napi:ace_napi",
+    "os_account:os_account_innerkits",
     "preferences:native_preferences",
   ]
 

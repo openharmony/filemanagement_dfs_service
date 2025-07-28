@@ -45,6 +45,9 @@ constexpr uint32_t BUCKET_BLOCKS = 2;
 constexpr uint32_t BITS_PER_BYTE = 8;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint32_t DIR_SIZE = 4096;
+constexpr uint32_t EVEN_NUM_FLAG = 2;
+const char HDC_ID_START = '0';
+const std::string HDC_ID_END = "ff";
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -704,18 +707,26 @@ void MetaFileMgr::ClearAll()
     metaFileList_.clear();
 }
 
-std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
+std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr, bool isHdc)
 {
+    std::string srcStr = hexStr;
+    if (isHdc) {
+        if (srcStr.size() % EVEN_NUM_FLAG != 0) {
+            srcStr = HDC_ID_START + srcStr + HDC_ID_END;
+        } else {
+            srcStr = srcStr + HDC_ID_END;
+        }
+    }
     std::string result;
     constexpr std::size_t offset = 2;
     constexpr int changeBase = 16;
-    for (std::size_t i = 0; i < hexStr.length(); i += offset) {
-        std::string hexByte = hexStr.substr(i, offset);
+    for (std::size_t i = 0; i < srcStr.length(); i += offset) {
+        std::string hexByte = srcStr.substr(i, offset);
         char *endPtr;
         unsigned long hexValue = std::strtoul(hexByte.c_str(), &endPtr, changeBase);
 
         if (endPtr != hexByte.c_str() + hexByte.length()) {
-            LOGE("Invalid hexadecimal string: %{public}s", hexStr.c_str());
+            LOGE("Invalid hexadecimal string: %{public}s", srcStr.c_str());
             return "";
         }
         result += static_cast<char>(hexValue);
@@ -728,7 +739,7 @@ std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
     return result;
 }
 
-std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId)
+std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId, bool isHdc)
 {
     std::stringstream result;
     constexpr int width = 2;
@@ -736,7 +747,18 @@ std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId)
         uint8_t u8Byte = cloudId[i];
         result << std::setw(width) << std::setfill('0') << std::hex << static_cast<int>(u8Byte);
     }
-    return result.str();
+    if (!isHdc) {
+        return result.str();
+    }
+    std::string recordId = result.str();
+    if (recordId.at(0) == HDC_ID_START) {
+        recordId = recordId.substr(1);
+    }
+    auto pos = recordId.find(HDC_ID_END);
+    if (pos == std::string::npos) {
+        return recordId;
+    }
+    return recordId.substr(0, pos);
 }
 
 } // namespace FileManagement

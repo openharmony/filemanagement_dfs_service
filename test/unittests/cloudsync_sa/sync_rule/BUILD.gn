@@ -185,6 +185,7 @@ ohos_unittest("cloud_status_test") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
     "${distributedfile_path}/test/mock/cloud_file_kit_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
     "${distributedfile_path}/utils/log/src/dfs_error.cpp",
     "cloud_status_test.cpp",
   ]
@@ -194,6 +195,7 @@ ohos_unittest("cloud_status_test") {
     "${services_path}/cloudsyncservice/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
   ]
 
   deps = [
@@ -561,6 +563,51 @@ ohos_unittest("package_status_listener_test") {
   use_exceptions = true
 }
 
+ohos_unittest("settings_data_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service"
+  sources = [
+    "settings_data_manager_test.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_ability_observer_stub.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_result_set.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${utils_path}/log/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+  ]
+
+  defines = [ "private=public" ]
+  use_exceptions = true
+}
+
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
@@ -572,6 +619,7 @@ group("cloudsync_sa_sync_rule_test") {
     ":network_status_test",
     ":package_status_listener_test",
     ":screen_status_listener_test",
+    ":settings_data_manager_test",
     ":system_load_test",
     ":user_status_listener_test",
   ]

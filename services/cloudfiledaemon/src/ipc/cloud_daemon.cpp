@@ -30,6 +30,7 @@
 #include "iremote_object.h"
 #include "parameters.h"
 #include "plugin_loader.h"
+#include "setting_data_helper.h"
 #include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -107,6 +108,7 @@ void CloudDaemon::OnStart()
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+        AddSystemAbilityListener(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
         mode_t mode = 002;
         umask(mode);
         ModSysParam();
@@ -178,6 +180,11 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     accountStatusListener_->Start();
+    // get setting data when sa load
+    if (systemAbilityId == DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
+        bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
+        LOGI("SERVICE LOAD: Init active bundle, ret: %{public}d", ret);
+    }
 }
 
 void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)

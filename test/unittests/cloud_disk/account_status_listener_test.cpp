@@ -19,11 +19,13 @@
 #include "account_status_listener.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "setting_data_helper.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace OHOS::FileManagement::CloudFile;
 using Want = OHOS::AAFwk::Want;
 
 constexpr int32_t USER_ID = 101;
@@ -46,6 +48,7 @@ void AccountStatusListenerTest::SetUpTestCase(void)
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGIN);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     subscribeInfo_ = make_shared<EventFwk::CommonEventSubscribeInfo>(matchingSkills);
     accountStatusSubscriber_ = make_shared<AccountStatusSubscriber>(*subscribeInfo_);
     accountStatusListener_ = make_shared<AccountStatusListener>();
@@ -133,6 +136,30 @@ HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnReceiveEventTest003  ERROR";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest003 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest004
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest004 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+        string data(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+        EventFwk::CommonEventData eventData(want, USER_ID, data);
+        
+        SettingDataHelper::GetInstance().isBundleInited_ = true;
+        accountStatusSubscriber_->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest004  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
 }
 
 /**

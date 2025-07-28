@@ -12,14 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sync_state_manager.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "sync_state_manager.h"
+#include "system_mock.h"
+#include "data_sync_const.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace system;
 
 class MockSyncStateManager : public SyncStateManager {
 public:
@@ -503,5 +506,144 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_022, TestSize.Level1)
         GTEST_LOG_(INFO) << "SyncStateManagerTest_022 ERROR";
     }
     GTEST_LOG_(INFO) << "SyncStateManagerTest_022 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_001 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return(""));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_001 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_002 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("0"));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_002 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_003 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("xxx"));
+        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillOnce(Return(true));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_003 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_004 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("123456789123456789"));
+        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillOnce(Return(true));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_004 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_005 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("1"));
+        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillOnce(Return(true));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_005 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_006 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        uint64_t curTime = GetCurrentTimeStamp() - TWELVE_HOURS_MICROSECOND;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return(std::to_string(curTime)));
+        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillOnce(Return(true));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, false);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_006 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_007 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        uint64_t curTime = GetCurrentTimeStamp() - 10;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return(std::to_string(curTime)));
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, true);
+
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_007 End";
 }
 }

@@ -135,8 +135,8 @@ class MetaFileMgr {
 public:
     static MetaFileMgr& GetInstance();
     /* recordId is hex string of 256 bits, convert to u8 cloudId[32] to kernel */
-    static std::string RecordIdToCloudId(const std::string hexStr);
-    static std::string CloudIdToRecordId(const std::string cloudId);
+    static std::string RecordIdToCloudId(const std::string hexStr, bool isHdc = false);
+    static std::string CloudIdToRecordId(const std::string cloudId, bool isHdc = false);
     std::shared_ptr<MetaFile> GetMetaFile(uint32_t userId, const std::string &path);
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);

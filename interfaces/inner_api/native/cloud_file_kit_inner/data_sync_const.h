@@ -80,6 +80,8 @@ const int32_t DIRECTORY = 1;
 const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
 const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
+const uint64_t TWELVE_HOURS_MICROSECOND = 12 * 60 * 60 * MILLISECOND_TO_NANOSECOND;
+const int32_t MICROSECOND_TIME_LENGTH_LIMIT = 16;
 
 const int32_t NOT_IN_TRASH = 0;
 const int32_t NOT_IN_PENDING = 0;
@@ -87,6 +89,7 @@ const int32_t NOT_HIDDEN = 0;
 const int32_t NOT_TEMP_FILE = 0;
 const int32_t IS_BURST_COVER = 1;
 
+const std::string HDC_BUNDLE_NAME = "com.ohos.ailife";
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 
@@ -98,6 +101,8 @@ static const std::string CLOUDSYNC_STATUS_FULL_SYNC = "3";
 static const std::string CLOUDSYNC_STATUS_FINISH = "4";
 static const std::string CLOUDSYNC_STATUS_SWITCHOFF = "5";
 static const std::string CLOUDSYNC_STATUS_CLEANING = "6";
+
+static const std::string CLOUDSYNC_SWITCH_STATUS = "persist.kernel.cloudsync.switch_status";
 
 static inline uint64_t GetCurrentTimeStamp()
 {

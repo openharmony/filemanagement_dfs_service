@@ -83,6 +83,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
     "hisysevent:libhisysevent",
     "image_framework:image_native",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "preferences:native_preferences",
   ]
 
