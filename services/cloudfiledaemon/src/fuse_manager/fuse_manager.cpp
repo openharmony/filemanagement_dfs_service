@@ -1323,6 +1323,12 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         return;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("Failed to get fd, err: %{public}d", errno);
         return;
@@ -1584,6 +1590,12 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         return -1;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("get fd faild, errno: %{public}d", errno);
         return fd;
