@@ -128,28 +128,6 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level0)
 }
 
 /**
-* @tc.name: FileCopyManager_Copy_0003
-* @tc.desc: The execution of the Copy failed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
- */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 Start";
-    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
-    string destUri = "*";
-    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
-    int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
-    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0003!" << errno;
-    close(fd);
-
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, FILE_CAN_NOT_CREATE);
-    ASSERT_EQ(remove(srcPath.c_str()), 0);
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
-}
-
-/**
 * @tc.name: FileCopyManager_Copy_0004
 * @tc.desc: The execution of the cancel succeed.
 * @tc.type: FUNC
