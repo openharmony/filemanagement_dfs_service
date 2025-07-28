@@ -12,9 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "system_mock.h"
 #include "task_state_manager.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "refbase.h"
 
@@ -26,7 +28,7 @@ using namespace std;
 class MockTaskStateManager : public TaskStateManager {
 public:
     MOCK_METHOD0(GetInstance, TaskStateManager&());
-    MOCK_METHOD0(DelayUnloadTask, void());
+    MOCK_METHOD1(DelayUnloadTask, void(bool needSetCritical));
     MOCK_METHOD0(CancelUnloadTask, void());
     MOCK_METHOD0(StartTask, void());
     MOCK_METHOD2(StartTask, void(string bundleName, TaskType task));
@@ -40,11 +42,14 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline std::shared_ptr<system::SystemMock> systemPtr{nullptr};
 };
 
 void TaskStateManagerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    systemPtr = make_shared<system::SystemMock>();
+    system::ISystem::system_ = systemPtr;
 }
 
 void TaskStateManagerTest::TearDownTestCase(void)
@@ -62,7 +67,7 @@ void TaskStateManagerTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_001, TestSize.Level1)
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "TaskStateManagerTest_001 Start";
     try {
@@ -122,8 +127,8 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_005, TestSize.Level1)
     GTEST_LOG_(INFO) << "TaskStateManagerTest_005 Start";
     try {
         MockTaskStateManager mockTaskStateManager;
-        EXPECT_CALL(mockTaskStateManager, DelayUnloadTask());
-        mockTaskStateManager.DelayUnloadTask();
+        EXPECT_CALL(mockTaskStateManager, DelayUnloadTask(true));
+        mockTaskStateManager.DelayUnloadTask(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "TaskStateManagerTest_005 ERROR";
@@ -387,5 +392,146 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_017, TestSize.Level1)
         GTEST_LOG_(INFO) << "TaskStateManagerTest_017 ERROR";
     }
     GTEST_LOG_(INFO) << "TaskStateManagerTest_017 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_018, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_018 Start";
+    try {
+        auto taskStateManager_ = make_shared<TaskStateManager>();
+        taskStateManager_->criticalStatus_ = true;
+        
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager_->DelayUnloadTask(true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_018 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_018 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_019, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_019 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::SYNC_TASK;
+        taskStateManager.taskMaps_.clear();
+        
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        EXPECT_TRUE(taskStateManager.taskMaps_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_019 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_019 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_020, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_020 Start";
+    try {
+        TaskStateManager taskStateManager;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.StartTask();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_020 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_020 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_021, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_021 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName1";
+        TaskType task = TaskType::SYNC_TASK;
+        taskStateManager.criticalStatus_ = false;
+
+        taskStateManager.StartTask(bundleName, task);
+        EXPECT_EQ(taskStateManager.taskMaps_[bundleName], static_cast<uint64_t>(task));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_021 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_021 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_022, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_022 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::SYNC_TASK;
+        taskStateManager.criticalStatus_ = true;
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.StartTask(bundleName, task);
+        EXPECT_TRUE(taskStateManager.criticalStatus_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_022 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_022 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_023, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_023 Start";
+    try {
+        auto taskStateManager_ = make_shared<TaskStateManager>();
+        taskStateManager_->criticalStatus_ = true;
+        
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager_->DelayUnloadTask(false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_023 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_023 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_024, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_024 Start";
+    try {
+        auto taskStateManager_ = make_shared<TaskStateManager>();
+        taskStateManager_->criticalStatus_ = false;
+        
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager_->DelayUnloadTask(true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_024 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_024 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_025, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_025 Start";
+    try {
+        auto taskStateManager_ = make_shared<TaskStateManager>();
+        taskStateManager_->criticalStatus_ = false;
+        
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager_->DelayUnloadTask(false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_025 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_025 End";
 }
 }

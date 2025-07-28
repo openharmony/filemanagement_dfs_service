@@ -42,12 +42,12 @@ public:
     static std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> GetDirNameList(const std::string &path);
     static std::string GetRealUri(const std::string &uri);
     static bool IsFilePathValid(const std::string &filePath);
+    static int32_t IsFile(const std::string &path, bool &result);
+    static int32_t IsDirectory(const std::string &path, bool &result);
 
 private:
     static int FilterFunc(const struct dirent *filename);
     static std::string GetRealPath(const std::string &path);
-    static int32_t IsFile(const std::string &path, bool &result);
-    static int32_t IsDirectory(const std::string &path, bool &result);
 };
 } // namespace DistributedFile
 } // namespace Storage

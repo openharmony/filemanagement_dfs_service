@@ -27,8 +27,10 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
+#include "ipc_skeleton.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
+#include "mem_mgr_client.h"
 #include "net_conn_callback_observer.h"
 #include "network_status.h"
 #include "parameters.h"
@@ -141,7 +143,7 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
     const std::string DATA_DIR = "/account/device_view/local/data/";
     const std::string FILE_DIR = "data/storage/el2/distributedfiles/";
     const std::string URI_PREFIX = "://";
-    if (uri.empty() || uri.find("..") != std::string::npos) {
+    if (uri.empty() || uri.find("/../") != std::string::npos) {
         return "";
     }
 
@@ -181,6 +183,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
         AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
         AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
+        AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -192,6 +195,16 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
+        int32_t userId = 0;
+        if (dataSyncManager_->GetUserId(userId) != E_OK) {
+            return;
+        }
+        string oldPath = "/data/service/el2/" + to_string(userId) + "/hmdfs/cache/cloud_cache/pread_cache";
+        if (access(oldPath.c_str(), F_OK) == 0) {
+            if (!ForceRemoveDirectory(oldPath)) {
+                LOGE("rm old video cache path fail, err: %{public}d", errno);
+            }
+        }
     });
 }
 
@@ -207,6 +220,7 @@ void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 
 void CloudSyncService::OnStop()
 {
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 0, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     LOGI("Stop finished successfully");
 }
 
@@ -232,9 +246,14 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
         dataSyncManager_->DownloadThumb();
-    } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
+    } else if (reason == "usual.event.SCREEN_OFF") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SCREEN_OFF_TRIGGER);
+    } else if (reason == "usual.event.POWER_CONNECTED") {
+        dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
     } else if (reason == "usual.event.PACKAGE_REMOVED") {
         HandlePackageRemoved(startReason);
     }
@@ -290,25 +309,13 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         SystemLoadStatus::InitSystemload(dataSyncManager_);
     } else if (systemAbilityId == COMM_NET_CONN_MANAGER_SYS_ABILITY_ID) {
         NetworkStatus::InitNetwork(dataSyncManager_);
+    } else if (systemAbilityId == MEMORY_MANAGER_SA_ID) {
+        pid_t pid = getpid();
+        Memory::MemMgrClient::GetInstance().NotifyProcessStatus(pid, 1, 1, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+        Memory::MemMgrClient::GetInstance().SetCritical(pid, true, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     } else {
         LOGE("unexpected");
     }
-}
-
-void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std::string &deviceId,
-                                                                       int32_t systemAbilityId,
-                                                                       const sptr<IRemoteObject> &remoteObject)
-{
-    LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", systemAbilityId,
-         (remoteObject == nullptr ? "false" : "true"));
-    unique_lock<mutex> lock(loadRemoteSAMutex_);
-    if (remoteObject == nullptr) {
-        isLoadSuccess_.store(false);
-    } else {
-        isLoadSuccess_.store(true);
-        remoteObjectMap_[deviceId] = remoteObject;
-    }
-    proxyConVar_.notify_one();
 }
 
 void CloudSyncService::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
@@ -331,36 +338,30 @@ void CloudSyncService::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject
 
 int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
 {
+    LOGI("Load remote CloudSync SA start");
+    if (deviceId.empty()) {
+        LOGE("Failed to load remote SA, deviceId is empty");
+        return E_SA_LOAD_FAILED;
+    }
     unique_lock<mutex> lock(loadRemoteSAMutex_);
     auto iter = remoteObjectMap_.find(deviceId);
-    if (iter != remoteObjectMap_.end()) {
+    if (iter != remoteObjectMap_.end() && iter->second != nullptr) {
         return E_OK;
     }
+
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         LOGE("Samgr is nullptr");
         return E_SA_LOAD_FAILED;
     }
-    sptr<LoadRemoteSACallback> cloudSyncLoadCallback = new LoadRemoteSACallback();
-    if (cloudSyncLoadCallback == nullptr) {
-        LOGE("cloudSyncLoadCallback is nullptr");
+    auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId);
+    if (object == nullptr) {
+        LOGE("Failed to Load systemAbility, object is nullptr");
         return E_SA_LOAD_FAILED;
     }
-    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId, cloudSyncLoadCallback);
-    if (ret != E_OK) {
-        LOGE("Failed to Load systemAbility, systemAbilityId:%{public}d, ret code:%{public}d",
-             FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
-        return E_SA_LOAD_FAILED;
-    }
-
-    auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-        [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
-    if (!waitStatus) {
-        LOGE("Load CloudSynd SA timeout");
-        return E_SA_LOAD_FAILED;
-    }
+    remoteObjectMap_[deviceId] = object;
     SetDeathRecipient(remoteObjectMap_[deviceId]);
+    LOGI("Load remote CloudSync SA end");
     return E_OK;
 }
 
@@ -622,6 +623,24 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return E_OK;
 }
 
+int32_t CloudSyncService::CleanFileCacheInner(const std::string &uri)
+{
+    LOGI("Begin CleanFileCacheInner");
+
+    string bundleName;
+    if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
+        LOGE("Not support uri");
+        return E_ILLEGAL_URI;
+    }
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_SERVICE_INNER_ERROR;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t ret = dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
+    LOGI("End CleanFileCacheInner");
+    return ret;
+}
+
 int32_t CloudSyncService::OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
                                           bool isCallbackValid,
                                           const sptr<IRemoteObject> &optimizeCallback)
@@ -682,13 +701,16 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     }
     if (status) {
         ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        if (ret != E_OK) {
+            LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
+            return ret;
+        }
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
-        ret = dataSyncManager_->TriggerStopSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
-    }
-    if (ret != E_OK) {
-        LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
-        return ret;
+        ret = dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        if (ret != E_OK) {
+            LOGE("StopSyncSynced failed, ret: %{public}d", ret);
+        }
     }
 
     ret = dataSyncManager_->ChangeAppSwitch(bundleName, callerUserId, status);
@@ -740,10 +762,9 @@ int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
 
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_LOGOUT);
     int32_t ret = dataSyncManager_->DisableCloud(callerUserId);
     LOGI("End DisableCloud");
-    return E_OK;
+    return ret;
 }
 
 int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
@@ -777,7 +798,6 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
                                          int64_t &downloadId,
                                          int32_t fieldkey,
-                                         bool isCallbackValid,
                                          const sptr<IRemoteObject> &downloadCallback,
                                          int32_t timeout)
 {
@@ -797,19 +817,20 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         return ret;
     }
 
-    sptr<ICloudDownloadCallback> downloadCb = nullptr;
-    if (isCallbackValid) {
-        downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    if (downloadCb == nullptr) {
+        LOGE("Invalid downloadCallback, not a valid ICloudDownloadCallback.");
+        // Common error code for single and batch download task.
+        return E_BROKEN_IPC;
     }
     ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
-    if (ret != E_OK && ret != E_INVAL_ARG) {
-        ret = E_BROKEN_IPC;
-    }
-    LOGI("End StartFileCache");
+    LOGI("End StartFileCache, ret: %{public}d", ret);
     return ret;
 }
 
-int32_t CloudSyncService::StartDownloadFile(const std::string &path)
+int32_t CloudSyncService::StartDownloadFile(const std::string &uri,
+                                            const sptr<IRemoteObject> &downloadCallback,
+                                            int64_t &downloadId)
 {
     LOGI("Begin StartDownloadFile");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -819,16 +840,18 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     if (ret != E_OK) {
         return ret;
     }
-    std::vector<std::string> pathVec;
-    pathVec.push_back(path);
-    int64_t downloadId = 0;
-    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, pathVec, downloadId, CloudSync::FIELDKEY_CONTENT,
-                                              nullptr);
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    if (downloadCb == nullptr) {
+        LOGE("Invalid downloadCallback, not a valid ICloudDownloadCallback.");
+        return E_INVAL_ARG;
+    }
+    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, {uri}, downloadId, FieldKey::FIELDKEY_CONTENT,
+                                              downloadCb);
     LOGI("End StartDownloadFile");
     return ret;
 }
 
-int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
+int32_t CloudSyncService::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("Begin StopDownloadFile");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -839,7 +862,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needCle
         return ret;
     }
 
-    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, path, needClean);
+    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, downloadId, needClean);
     LOGI("End StopDownloadFile");
     return ret;
 }
@@ -855,11 +878,8 @@ int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int3
         return ret;
     }
 
-    ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
-    if (ret != E_OK && ret != E_INVAL_ARG) {
-        ret = E_BROKEN_IPC;
-    }
-    LOGI("End StopFileCache");
+    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, downloadId, needClean, timeout);
+    LOGI("End StopFileCache, ret: %{public}d", ret);
     return ret;
 }
 
@@ -870,66 +890,6 @@ int32_t CloudSyncService::DownloadThumb()
 
     int32_t ret = dataSyncManager_->TriggerDownloadThumb();
     LOGI("End DownloadThumb");
-    return ret;
-}
-
-int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    LOGI("Begin RegisterDownloadFileCallback");
-    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
-
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    ret = dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
-    LOGI("End RegisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    LOGI("Begin RegisterDownloadFileCallback");
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    ret = dataSyncManager_->RegisterDownloadFileCallback(bundleNameUserInfo, downloadCb);
-    LOGI("End RegisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::UnregisterDownloadFileCallback()
-{
-    LOGI("Begin UnregisterDownloadFileCallback");
-    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
-
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    ret = dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
-    LOGI("End UnregisterDownloadFileCallback");
-    return ret;
-}
-
-int32_t CloudSyncService::UnregisterFileCacheCallback()
-{
-    LOGI("Begin UnregisterFileCacheCallback");
-    BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    ret = dataSyncManager_->UnregisterDownloadFileCallback(bundleNameUserInfo);
-    LOGI("End UnregisterFileCacheCallback");
     return ret;
 }
 
@@ -992,7 +952,8 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId,
 int32_t CloudSyncService::DownloadFiles(const int32_t userId,
                                         const std::string &bundleName,
                                         const std::vector<AssetInfoObj> &assetInfoObj,
-                                        std::vector<bool> &assetResultMap)
+                                        std::vector<bool> &assetResultMap,
+                                        int32_t connectTime)
 {
     LOGI("Begin DownloadFiles");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -1023,7 +984,7 @@ int32_t CloudSyncService::DownloadFiles(const int32_t userId,
     }
 
     TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
-    auto ret = assetsDownloader->DownloadAssets(assetsToDownload, assetResultMap);
+    auto ret = assetsDownloader->DownloadAssets(assetsToDownload, assetResultMap, connectTime);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
     LOGI("End DownloadFiles");
     return ret;
@@ -1108,4 +1069,133 @@ int32_t CloudSyncService::BatchCleanFile(const std::vector<CleanFileInfoObj> &fi
     return ret;
 }
 
+int32_t CloudSyncService::CallbackEnter(uint32_t code)
+{
+    if (!IPCSkeleton::IsLocalCalling()) {
+        LOGE("remote requeset is not allowed, cmd:%{public}u", code);
+        return ERR_TRANSACTION_FAILED;
+    }
+
+    return ERR_NONE;
+}
+
+int32_t CloudSyncService::CallbackExit(uint32_t code, int32_t result)
+{
+    return ERR_NONE;
+}
+
+int32_t CloudSyncService::StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback)
+{
+    LOGI("Begin StartDowngrade");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    sptr<IDowngradeDlCallback> downloadCb = iface_cast<IDowngradeDlCallback>(downloadCallback);
+    int32_t ret = dataSyncManager_->StartDowngrade(bundleName, downloadCb);
+    LOGI("End StartDowngrade");
+    return ret;
+}
+
+int32_t CloudSyncService::StopDowngrade(const std::string &bundleName)
+{
+    LOGI("Begin StopDowngrade");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t ret = dataSyncManager_->StopDowngrade(bundleName);
+    LOGI("End StopDowngrade");
+    return ret;
+}
+
+int32_t CloudSyncService::GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo)
+{
+    LOGI("Begin GetCloudFileInfo");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t ret = dataSyncManager_->GetCloudFileInfo(bundleName, cloudFileInfo);
+    LOGI("End GetCloudFileInfo");
+    return ret;
+}
+
+int32_t CloudSyncService::GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+    std::vector<CloudSync::HistoryVersion> &historyVersionList)
+{
+    LOGI("Begin GetHistoryVersionList");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->GetHistoryVersionList(bundleNameUserInfo, uri, versionNumLimit, historyVersionList);
+    LOGI("End GetHistoryVersionList, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+    const sptr<IRemoteObject> &downloadCallback, std::string &versionUri)
+{
+    LOGI("Begin DownloadHistoryVersion");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    sptr<ICloudDownloadCallback> downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    ret = dataSyncManager_->DownloadHistoryVersion(bundleNameUserInfo, uri, downloadId, versionId,
+                                                   downloadCb, versionUri);
+    LOGI("End DownloadHistoryVersion, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri)
+{
+    LOGI("Begin ReplaceFileWithHistoryVersion");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->ReplaceFileWithHistoryVersion(bundleNameUserInfo, uri, versionUri);
+    LOGI("End ReplaceFileWithHistoryVersion, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::IsFileConflict(const std::string &uri, bool &isConflict)
+{
+    LOGI("Begin IsFileConflict");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->IsFileConflict(bundleNameUserInfo, uri, isConflict);
+    LOGI("End IsFileConflict, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::ClearFileConflict(const std::string &uri)
+{
+    LOGI("Begin ClearFileConflict");
+
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+
+    ret = dataSyncManager_->ClearFileConflict(bundleNameUserInfo, uri);
+    LOGI("End ClearFileConflict, ret %{public}d", ret);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync

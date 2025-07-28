@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "concurrent_queue.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -683,7 +684,8 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UpdateTHMStatus(MetaBase &metaBase, int32_t status)
+int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFile,
+    MetaBase &metaBase, int32_t status)
 {
     ValuesBucket fileInfo;
     if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
@@ -692,16 +694,38 @@ int32_t CloudDiskRdbStore::UpdateTHMStatus(MetaBase &metaBase, int32_t status)
         fileInfo.PutInt(FileColumn::LCD_FLAG, status);
     }
     string srcCloudId;
-    GetSrcCloudId(metaBase.cloudId, srcCloudId);
+    auto res = GetSrcCloudId(metaBase.cloudId, srcCloudId);
+    if (res != E_OK) {
+        return res;
+    }
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
     int32_t changedRows = -1;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, srcCloudId);
     std::tie(ret, changedRows) = transaction->Update(fileInfo, predicates);
-    if (ret !=E_OK) {
+    if (ret != E_OK) {
         LOGE("set thm_flag failed, ret = %{public}d", ret);
         return E_RDB;
+    }
+    ValuesBucket thmFileInfo;
+    thmFileInfo.PutInt(FileColumn::POSITION, static_cast<int32_t>(ThumbPosition::THM_IN_LOCAL));
+    NativeRdb::AbsRdbPredicates thmPredicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    thmPredicates.EqualTo(FileColumn::CLOUD_ID, metaBase.cloudId);
+    std::tie(ret, changedRows) = transaction->Update(thmFileInfo, thmPredicates);
+    if (ret != E_OK) {
+        LOGE("database update thumbnail file info failed, ret = %{public}d", ret);
+    }
+    auto callback = [&metaBase] (MetaBase &m) {
+        m.position = static_cast<uint8_t>(ThumbPosition::THM_IN_LOCAL);
+    };
+    ret = metaFile->DoChildUpdate(metaBase.name, callback);
+    if (ret != E_OK) {
+        LOGE("update dentry failed");
     }
     rdbTransaction.Finish();
     return E_OK;
@@ -875,7 +899,13 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
         jsonObject = nlohmann::json::object();
     }
     jsonObject[SRC_PATH_KEY] = filePath;
-    string attrStr = jsonObject.dump();
+    string attrStr;
+    try {
+        attrStr = jsonObject.dump();
+    } catch (nlohmann::json::type_error& err) {
+        LOGE("failed to dump json object, reason: %{public}s", err.what());
+        return E_INVAL_ARG;
+    }
     setXattr.PutString(FileColumn::ATTRIBUTE, attrStr);
     return E_OK;
 }
@@ -1036,7 +1066,8 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
         LOGE("set xAttr location fail, ret %{public}d", ret);
         return E_RDB;
     }
-    ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, name, parentCloudId, rowId);
+    struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
+    ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, restoreInfo);
     if (ret != E_OK) {
         LOGE("recycle set dentryfile failed, ret = %{public}d", ret);
         return ret;
@@ -1508,7 +1539,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         }
         CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     };
-    ffrt::thread(rdbUpdate).detach();
+    ConcurrentQueue::GetInstance().Submit(rdbUpdate);
     return E_OK;
 }
 
@@ -1608,7 +1639,7 @@ int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string
     RDBPTR_IS_NULLPTR(rdbStore_);
     AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
-    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::SRC_CLOUD_ID});
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::SOURCE_CLOUD_ID});
     if (resultSet == nullptr) {
         LOGE("get null result");
         return E_RDB;
@@ -1618,7 +1649,7 @@ int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string
         return E_RDB;
     }
     
-    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::SRC_CLOUD_ID, srcCloudId, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::SOURCE_CLOUD_ID, srcCloudId, resultSet);
     if (ret != E_OK) {
         LOGE("get file src_cloudid failed, ret = %{public}d", ret);
         return ret;
@@ -2031,6 +2062,20 @@ static void VersionAddThmSize(RdbStore &store)
     if (ret != NativeRdb::E_OK) {
         LOGE("add lcd_size fail, err %{public}d", ret);
     }
+    const string addSourceCloudId = FileColumn::ADD_SOURCE_CLOUD_ID;
+    ret = store.ExecuteSql(addSourceCloudId);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add source_cloud_id fail, err %{public}d", ret);
+    }
+}
+
+static void VersionAddLocalFlag(RdbStore &store)
+{
+    const string addLocalFlag = FileColumn::ADD_LOCAL_FLAG;
+    int32_t ret = store.ExecuteSql(addLocalFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add local_flag fail, err %{public}d", ret);
+    }
 }
 
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
@@ -2218,6 +2263,18 @@ static void VersionAddAttribute(RdbStore &store)
     }
 }
 
+int32_t CloudDiskDataCallBack::OnUpgradeExtend(RdbStore &store, int32_t oldVersion, int32_t newVersion)
+{
+    if (oldVersion < VERSION_ADD_THM_SIZE) {
+        VersionAddThmSize(store);
+    }
+    if (oldVersion < VERSION_ADD_LOCAL_FLAG) {
+        VersionAddLocalFlag(store);
+    }
+
+    return NativeRdb::E_OK;
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -2265,9 +2322,8 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     if (oldVersion < VERSION_ADD_SRC_CLOUD_ID) {
         VersionAddSrcCloudId(store);
     }
-    if (oldVersion < VERSION_ADD_THM_SIZE) {
-        VersionAddThmSize(store);
-    }
+    OnUpgradeExtend(store, oldVersion, newVersion);
+
     return NativeRdb::E_OK;
 }
 

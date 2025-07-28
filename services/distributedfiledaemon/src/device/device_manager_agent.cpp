@@ -27,6 +27,7 @@
 #include "ipc/i_daemon.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
+#include "istorage_manager.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
@@ -46,7 +47,6 @@ constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
 const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
-const int32_t INVALID_USER_ID = -1;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_account_test";
 } // namespace
@@ -238,6 +238,24 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
+
+    int32_t ret = NO_ERROR;
+    int32_t userId = GetCurrentUserId();
+    auto localNetworkId = GetLocalDeviceInfo().GetCid();
+    if (userId == INVALID_USER_ID) {
+        LOGE("DeviceManagerAgent::GetCurrentUserId Fail");
+    }
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("storageMgrProxy_ is null");
+    }
+    ret = storageMgrProxy_->UMountDisShareFile(userId, localNetworkId);
+    if (ret != NO_ERROR) {
+        LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
+    } else {
+        LOGI("UMountDisShareFile success");
+    }
+
     LOGI("OnDeviceOffline end");
 }
 

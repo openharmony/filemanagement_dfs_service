@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,8 @@ constexpr int MIN_BW = 1024 * 1024 * 40;
 constexpr int MAX_WAIT_TIMEOUT = 10000;
 constexpr int MIN_LATENCY = 1000;
 const string SERVICE_NAME = "OHOS.Filemanagement.Dfs.ICloudSyncService";
-
+const std::string HMDFS_PERV_PATH = "/mnt/hmdfs/";
+const std::string DATA_DIR_PATH = "/account/device_view/local/data/";
 SoftbusAdapter &SoftbusAdapter::GetInstance()
 {
     static SoftbusAdapter instance;
@@ -194,7 +195,8 @@ void SoftbusAdapter::OnReceiveFileFinished(int sessionId, const char *files, int
 
 const char* SoftbusAdapter::GetRecvPath()
 {
-    return "/mnt/hmdfs/100/account/device_view/local/data/";
+    const char *path = pathDir_.c_str();
+    return path;
 }
 
 void SoftbusAdapter::OnFile(int32_t socket, FileEvent *event)
@@ -391,5 +393,11 @@ void SoftbusAdapter::RemoveSesion(int sessionId)
     if (networkIdMap != networkIdMap_.end()) {
         networkIdMap_.erase(networkIdMap);
     }
+}
+
+void SoftbusAdapter::UpdateFileRecvPath(const std::string &bundleName, int32_t userId)
+{
+    pathDir_ = HMDFS_PERV_PATH + std::to_string(userId) + DATA_DIR_PATH + bundleName;
+    LOGI("recv path: %{public}s", GetAnonyString(pathDir_).c_str());
 }
 } // namespace OHOS::FileManagement::CloudSync

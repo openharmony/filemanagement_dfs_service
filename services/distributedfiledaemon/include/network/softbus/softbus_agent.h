@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 
 #include "inner_socket.h"
 #include "network/network_agent_template.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "transport/socket.h"
 #include "transport/trans_type.h"
 
@@ -33,8 +34,9 @@ public:
     ~SoftbusAgent() = default;
     void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
     void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
-    static bool IsSameAccount(const std::string &networkId);
     int32_t JudgeNetworkTypeIsWifi(const DeviceInfo &info);
+    bool OnNegotiate2(int32_t socket, PeerSocketInfo info,
+        SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo);
 protected:
     void JoinDomain() override;
     void QuitDomain() override;
@@ -42,6 +44,7 @@ protected:
     void StopBottomHalf() override;
     int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
+    void HandleAfterOpenSession(const int32_t socketId, const std::string &networkId);
 
 private:
     std::mutex serverIdMapMutex_;

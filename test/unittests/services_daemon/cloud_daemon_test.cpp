@@ -216,14 +216,14 @@ HWTEST_F(CloudDaemonTest, StartFuseTest004, TestSize.Level1)
 }
 
 /**
- * @tc.name: StartFuseTest007
+ * @tc.name: StartFuseTest005
  * @tc.desc: Verify the StartFuse function
  * @tc.type: FUNC
  * @tc.require: issuesIB538J
  */
-HWTEST_F(CloudDaemonTest, StartFuseTest007, TestSize.Level1)
+HWTEST_F(CloudDaemonTest, StartFuseTest005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "StartFuseTest007 start";
+    GTEST_LOG_(INFO) << "StartFuseTest005 start";
     try {
         std::string path = "/cloud_fuse/test";
         EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
@@ -232,9 +232,9 @@ HWTEST_F(CloudDaemonTest, StartFuseTest007, TestSize.Level1)
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartFuseTest007 failed";
+        GTEST_LOG_(INFO) << "StartFuseTest005 failed";
     }
-    GTEST_LOG_(INFO) << "StartFuseTest007 end";
+    GTEST_LOG_(INFO) << "StartFuseTest005 end";
 }
 
 /**

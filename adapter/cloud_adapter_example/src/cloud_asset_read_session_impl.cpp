@@ -18,11 +18,12 @@
 namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 
-CloudAssetReadSessionImpl::CloudAssetReadSessionImpl(std::string recordType,
+CloudAssetReadSessionImpl::CloudAssetReadSessionImpl(const int32_t userId,
+                                                     std::string recordType,
                                                      std::string recordId,
                                                      std::string assetKey,
                                                      std::string assetPath)
-    : CloudAssetReadSession(recordType, recordId, assetKey, assetPath)
+    : CloudAssetReadSession(userId, recordType, recordId, assetKey, assetPath)
 {
 }
 } // namespace OHOS::FileManagement::CloudFile

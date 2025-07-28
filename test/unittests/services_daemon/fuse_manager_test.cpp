@@ -239,7 +239,6 @@ HWTEST_F(FuseManagerTest, StartFuseTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest007 start";
     try {
-        EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/invalid/data/100/cloud_fuse";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);
@@ -262,7 +261,6 @@ HWTEST_F(FuseManagerTest, StartFuseTest008, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest008 start";
     try {
-        EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/other/100/cloud_fuse";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);
@@ -285,7 +283,6 @@ HWTEST_F(FuseManagerTest, StartFuseTest009, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest009 start";
     try {
-        EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/abcd/cloud_fuse";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);
@@ -308,7 +305,6 @@ HWTEST_F(FuseManagerTest, StartFuseTest010, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest010 start";
     try {
-        EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/100/invalid_suffix";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);
@@ -331,7 +327,6 @@ HWTEST_F(FuseManagerTest, StartFuseTest011, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest011 start";
     try {
-        EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "\0";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);

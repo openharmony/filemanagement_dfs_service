@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -21,12 +21,14 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"
 #include "refbase.h"
 #include "utils_log.h"
+#include "inttypes.h"
 
 namespace OHOS {
 namespace Storage {
@@ -48,6 +50,9 @@ void SoftbusAssetRecvListener::OnFile(int32_t socket, FileEvent *event)
             break;
         case FILE_EVENT_RECV_START:
             OnRecvAssetStart(socket, event->files, event->fileCnt);
+            break;
+        case FILE_EVENT_RECV_PROCESS:
+            OnRecvAssetProgress(socket, event->files, event->bytesTotal, event->bytesProcessed);
             break;
         case FILE_EVENT_RECV_FINISH:
             OnRecvAssetFinished(socket, event->files, event->fileCnt);
@@ -107,6 +112,38 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
                                                              assetObj->dstBundleName_);
 }
 
+void SoftbusAssetRecvListener::OnRecvAssetProgress(int32_t socketId, const char **fileList,
+                                                   uint64_t bytesTotal, uint64_t bytesUpload)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    LOGD("OnRecvAssetProgress, socketId = %{public}d, bytesUpload = %{public}" PRIu64 ", bytesTotal = %{public}" PRIu64,
+        socketId, bytesUpload, bytesTotal);
+    if (fileList == nullptr) {
+        LOGE("OnRecvAssetProgress: fileList is nullptr");
+        return;
+    }
+    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
+    if (srcNetworkId.empty()) {
+        LOGE("get srcNetworkId fail");
+        return;
+    }
+    std::string filePath(path_ + fileList[0]);
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    if (assetObj == nullptr) {
+        LOGE("new assetObj failed!");
+        return;
+    }
+    int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("Generate assetObjInfo fail");
+        return;
+    }
+    AssetCallbackManager::GetInstance().NotifyAssetRecvProgress(srcNetworkId,
+                                                                assetObj,
+                                                                bytesTotal,
+                                                                bytesUpload);
+}
+
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
     std::lock_guard<std::mutex> lock(mtx_);
@@ -133,6 +170,13 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     }
     for (int32_t i = 0; i < fileCnt; i++) {
         std::string filePath(path_ + fileList[i]);
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
+            LOGE("path is forbidden");
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
+                FileManagement::ERR_BAD_VALUE);
+            SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+            return;
+        }
         if (JudgeSingleFile(filePath)) {
             ret = HandleSingleFile(socketId, filePath, assetObj);
         } else {
@@ -201,13 +245,13 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset temp dir fail");
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
         pos = newPath.find(ASSET_FLAG_SINGLE);
         if (pos == std::string::npos) {
-            LOGE("get asset flag fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset flag fail");
             return false;
         }
         newPath.resize(pos);
@@ -225,7 +269,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
+            LOGE("get asset temp dir fail");
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
@@ -244,13 +288,13 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
 {
     size_t pos = file.find(TEMP_DIR);
     if (pos == std::string::npos) {
-        LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(file).c_str());
+        LOGE("get asset temp dir fail");
         return false;
     }
     std::string removePath = file.substr(0, pos + TEMP_DIR.length() - 1);
     bool ret = std::filesystem::remove_all(removePath.c_str());
     if (!ret) {
-        LOGE("remove file fail, remove path is %{public}s", GetAnonyString(removePath).c_str());
+        LOGE("remove file fail");
         return false;
     }
     return true;
@@ -285,7 +329,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     LOGI("HandleZipFile begin.");
     size_t pos = filePath.find(ASSET_FLAG_ZIP);
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
+        LOGE("filePath is not a zip file");
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string zipfilePath = filePath.substr(0, pos);
@@ -297,7 +341,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     }
     pos = zipfilePath.rfind("/");
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
+        LOGE("filePath is not a zip file");
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativePath = zipfilePath.substr(0, pos + 1);
@@ -354,9 +398,15 @@ void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason 
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+    auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(sessionId);
+    if (srcNetworkId.empty()) {
+        LOGW("get srcNetworkId fail");
+        return;
+    }
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(sessionId);
     if (assetObj == nullptr) {
         LOGW("get assetObj is nullptr");
+        SoftBusHandlerAsset::GetInstance().RemoveClientInfo(sessionId);
         return;
     }
     AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(

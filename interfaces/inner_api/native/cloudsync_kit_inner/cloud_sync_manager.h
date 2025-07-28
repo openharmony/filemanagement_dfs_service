@@ -22,6 +22,7 @@
 #include "cloud_optimize_callback.h"
 #include "cloud_sync_callback.h"
 #include "cloud_sync_common.h"
+#include "downgrade_dl_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManager {
@@ -112,26 +113,59 @@ public:
     virtual int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
         const std::shared_ptr<CloudOptimizeCallback> optimizeCallback = nullptr) = 0;
     virtual int32_t StopOptimizeStorage() = 0;
-    virtual int32_t StartDownloadFile(const std::string &path) = 0;
-    virtual int32_t StartFileCache(const std::string &path) = 0;
-    virtual int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                                   int32_t fieldkey = FIELDKEY_CONTENT,
+    virtual int32_t StartDownloadFile(const std::string &uri,
+                                      const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                      int64_t &downloadId) = 0;
+    virtual int32_t StartFileCache(const std::vector<std::string> &uriVec,
+                                   int64_t &downloadId,
+                                   int32_t fieldkey = FieldKey::FIELDKEY_CONTENT,
                                    const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr,
                                    int32_t timeout = -1) = 0;
-    virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
+    virtual int32_t StopDownloadFile(int64_t downloadId, bool needClean = false) = 0;
     virtual int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) = 0;
     virtual int32_t DownloadThumb() = 0;
-    virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
-    virtual int32_t RegisterFileCacheCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
-    virtual int32_t UnregisterDownloadFileCallback() = 0;
-    virtual int32_t UnregisterFileCacheCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
+    virtual int32_t CleanFileCache(const std::string &uri) = 0;
     virtual void CleanGalleryDentryFile() = 0;
+    virtual void CleanGalleryDentryFile(const std::string path) = 0;
     virtual int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId) = 0;
     virtual int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
          std::vector<std::string> &failCloudId) = 0;
+    /**
+     * @brief 开始降级下载
+     *
+     * @param bundleName 降级应用包名
+     * @param downloadCallback 下载进度回调函数
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StartDowngrade(const std::string &bundleName,
+                                   const std::shared_ptr<DowngradeDlCallback> downloadCallback) = 0;
+    /**
+     * @brief 停止降级下载
+     *
+     * @param bundleName 降级应用包名
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StopDowngrade(const std::string &bundleName) = 0;
+    /**
+     * @brief 获取应用文件信息
+     *
+     * @param bundleName 应用包名
+     * @param cloudFileInfo 不同位置文件总大小信息
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) = 0;
+    // file version
+    virtual int32_t GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList) = 0;
+    virtual int32_t DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                           const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                           std::string &versionUri) = 0;
+    virtual int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) = 0;
+    virtual int32_t IsFileConflict(const std::string &uri, bool &isConflict) = 0;
+    virtual int32_t ClearFileConflict(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

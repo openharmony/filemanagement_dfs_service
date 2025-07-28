@@ -21,14 +21,14 @@
 #include "file_trans_listener_stub.h"
 #include "hmdfs_info.h"
 
-constexpr int NONE = 0;
-constexpr int SUCCESS = 1;
-constexpr int FAILED = 2;
+constexpr int DFS_NONE = 0;
+constexpr int DFS_SUCCESS = 1;
+constexpr int DFS_FAILED = 2;
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 struct CopyEvent {
-    int copyResult = NONE;
+    int copyResult = DFS_NONE;
     int32_t errorCode = 0;
 };
 
@@ -45,7 +45,7 @@ public:
     int32_t WaitForCopyResult();
     int32_t CopyToSandBox(const std::string &srcUri);
     std::string GetNetworkIdFromUri(const std::string &uri);
-    int32_t Cancel();
+    int32_t Cancel(const std::string &srcUri, const std::string &destUri);
     int32_t GetErrCode() { return copyEvent_.errorCode; };
 public:
     HmdfsInfo hmdfsInfo_{};

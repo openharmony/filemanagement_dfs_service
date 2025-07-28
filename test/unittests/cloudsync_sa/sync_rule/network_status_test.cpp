@@ -302,7 +302,7 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest002, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         int32_t userId = 1;
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
-        EXPECT_EQ(ret, true);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
@@ -414,7 +414,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
-        EXPECT_EQ(ret, false);
+        EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
@@ -439,5 +439,47 @@ HWTEST_F(NetworkStatusTest, OnNetworkAvailTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnNetworkAvailTest FAILED";
     }
     GTEST_LOG_(INFO) << "OnNetworkAvailTest End";
+}
+
+/**
+ * @tc.name: CheckWifiOrEthernetTest001
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckWifiOrEthernetTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+        bool ret = networkStatus.CheckWifiOrEthernet();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest End";
+}
+
+/**
+ * @tc.name: CheckWifiOrEthernetTest002
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckWifiOrEthernetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::ETHERNET_CONNECT);
+        bool ret = networkStatus.CheckWifiOrEthernet();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

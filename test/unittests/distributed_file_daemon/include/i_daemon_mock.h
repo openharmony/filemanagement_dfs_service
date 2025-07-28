@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,11 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t PushAsset(int32_t userId,
                       const sptr<AssetObj> &assetObj,
                       const sptr<IAssetSendCallback> &sendCallback)
@@ -100,6 +105,29 @@ public:
     }
 
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
     {
         return FileManagement::E_OK;
     }

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
-#define OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
+#ifndef OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
+#define OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H
 
-#include "cloud_file_napi.h"
+#include "cloud_optimize_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudFileDownloadNapi final : public CloudFileNapi {
+class CloudOptimizeCallbackMiddle : public CloudOptimizeCallback {
 public:
-    CloudFileDownloadNapi(napi_env env, napi_value exports) : CloudFileNapi(env, exports) {}
-    ~CloudFileDownloadNapi() = default;
-
-    bool Export() override;
+    virtual ~CloudOptimizeCallbackMiddle() = default;
+    virtual void OnOptimizeProcess(const OptimizeState state, const int32_t progress) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
+
+#endif // OHOS_FILEMGMT_CLOUD_OPTIMIZE_CALLBACK_MIDDLE_H

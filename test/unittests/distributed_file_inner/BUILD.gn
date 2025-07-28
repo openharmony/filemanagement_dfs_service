@@ -49,6 +49,7 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   ]
 
   external_deps = [
+    "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "googletest:gmock_main",
@@ -80,6 +81,7 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
   module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "distributed_file_daemon_proxy_sup_test.cpp",
   ]
@@ -96,12 +98,14 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -267,8 +271,6 @@ ohos_unittest("file_copy_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "copy/file_copy_manager_test.cpp",
   ]
 
@@ -282,11 +284,82 @@ ohos_unittest("file_copy_manager_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+  ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "data_share:datashare_consumer",
+    "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "libuv:uv",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("remote_file_copy_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
+    "copy/remote_file_copy_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon"
+  ]
+
+  external_deps = [
+    "access_token:libtokenid_sdk",
+    "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
+    "app_file_service:sandbox_helper_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
     "device_manager:devicemanagersdk",
@@ -325,6 +398,7 @@ ohos_unittest("trans_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
@@ -335,6 +409,7 @@ ohos_unittest("trans_listener_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
@@ -344,8 +419,12 @@ ohos_unittest("trans_listener_test") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
     "device_manager:devicemanagersdk",
@@ -384,6 +463,7 @@ ohos_unittest("file_size_utils_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
@@ -403,8 +483,215 @@ ohos_unittest("file_size_utils_test") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "data_share:datashare_consumer",
+    "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "libuv:uv",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("file_copy_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "copy/file_copy_listener_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "app_file_service:fileuri_native",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("file_mount_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_mount_manager.cpp",
+    "file_mount_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "app_file_service:remote_file_share_native",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("distributed_file_fd_guard_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
+    "copy/distributed_file_fd_guard_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("ipc_wrapper_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "copy/ipc_wrapper_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+
+  external_deps = [
+    "access_token:libtokenid_sdk",
+    "app_file_service:fileuri_native",
+    "app_file_service:remote_file_share_native",
+    "app_file_service:sandbox_helper_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
     "device_manager:devicemanagersdk",
@@ -434,9 +721,14 @@ group("distributed_file_inner") {
     ":asset_send_callback_stub_test",
     ":distributed_file_daemon_proxy_sup_test",
     ":distributed_file_daemon_proxy_test",
+    ":distributed_file_fd_guard_test",
+    ":file_copy_listener_test",
     ":file_copy_manager_test",
+    ":file_mount_manager_test",
     ":file_size_utils_test",
     ":file_trans_listener_stub_test",
+    ":ipc_wrapper_test",
+    ":remote_file_copy_manager_test",
     ":trans_listener_test",
   ]
 }

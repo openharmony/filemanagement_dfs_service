@@ -34,17 +34,18 @@ namespace DistributedFile {
 class FileIoToken : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.fileio.open");
- 
+
     FileIoToken() = default;
     virtual ~FileIoToken() noexcept = default;
 };
- 
+
 struct FileInfos {
     std::string srcUri;
     std::string destUri;
     std::string srcPath;
     std::string destPath;
     bool srcUriIsFile = false;
+    int callingUid {};
     std::shared_ptr<FileCopyLocalListener> localListener = nullptr;
     sptr<TransListener> transListener = nullptr;
     std::atomic_bool needCancel{ false };
@@ -63,23 +64,23 @@ struct FileInfos {
         return srcUri < infos.srcUri;
     }
 };
- 
+
 class FileCopyManager final {
 public:
     using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
     static std::shared_ptr<FileCopyManager> GetInstance();
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
-    int32_t Cancel(const std::string &srcUri, const std::string &destUri);
-    int32_t Cancel();
-    
+    int32_t Cancel(const std::string &srcUri, const std::string &destUri, const bool isKeepFiles = false);
+    int32_t Cancel(const bool isKeepFiles = false);
+    // operator of local copy
+    int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
+
 private:
     static std::shared_ptr<FileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
- 
+
 private:
-    // operator of local copy
-    int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
     int32_t CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos);
     int32_t SendFileCore(std::shared_ptr<FDGuard> srcFdg, std::shared_ptr<FDGuard> destFdg,
         std::shared_ptr<FileInfos> infos);
@@ -104,5 +105,5 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
- 
+
 #endif // DISTRIBUTED_FILE_COPY_MANAGER_H

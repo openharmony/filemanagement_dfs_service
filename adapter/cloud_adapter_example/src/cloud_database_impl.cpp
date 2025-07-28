@@ -25,11 +25,12 @@ CloudDatabaseImpl::CloudDatabaseImpl(const int32_t userId, const string &bundleN
 {
 }
 
-std::shared_ptr<CloudAssetReadSession> CloudDatabaseImpl::NewAssetReadSession(std::string recordType,
+std::shared_ptr<CloudAssetReadSession> CloudDatabaseImpl::NewAssetReadSession(const int32_t userId,
+                                                                              std::string recordType,
                                                                               std::string recordId,
                                                                               std::string assetKey,
                                                                               std::string assetPath)
 {
-    return std::make_shared<CloudAssetReadSessionImpl>(recordType, recordId, assetKey, assetPath);
+    return std::make_shared<CloudAssetReadSessionImpl>(userId, recordType, recordId, assetKey, assetPath);
 }
 } // namespace OHOS::FileManagement::CloudFile

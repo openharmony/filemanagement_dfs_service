@@ -17,53 +17,21 @@
 #include <gtest/gtest.h>
 
 #include "cloud_pref_impl.h"
-#include <sys/stat.h>
-#include <unistd.h>
 #include "utils_log.h"
 
-#define USERID 100
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace NativePreferences;
-
-class PreferencesMock : public Preferences {
-public:
-    MOCK_METHOD2(Get, PreferencesValue(const std::string &key, const PreferencesValue &defValue));
-    MOCK_METHOD2(Put, int(const std::string &key, const PreferencesValue &value));
-    MOCK_METHOD2(GetInt, int(const std::string &key, const int &defValue));
-    MOCK_METHOD2(GetString, std::string(const std::string &key, const std::string &defValue));
-    MOCK_METHOD2(GetBool, bool(const std::string &key, const bool &defValue));
-    MOCK_METHOD2(GetFloat, float(const std::string &key, const float &defValue));
-    MOCK_METHOD2(GetDouble, double(const std::string &key, const double &defValue));
-    MOCK_METHOD2(GetLong, int64_t(const std::string &key, const int64_t &defValue));
-    MOCK_METHOD0(GetAll, std::map<std::string, PreferencesValue>());
-    MOCK_METHOD1(HasKey, bool(const std::string &key));
-    MOCK_METHOD2(PutInt, int(const std::string &key, int value));
-    MOCK_METHOD2(PutString, int(const std::string &key, const std::string &value));
-    MOCK_METHOD2(PutBool, int(const std::string &key, bool value));
-    MOCK_METHOD2(PutLong, int(const std::string &key, int64_t value));
-    MOCK_METHOD2(PutFloat, int(const std::string &key, float value));
-    MOCK_METHOD2(PutDouble, int(const std::string &key, double value));
-    MOCK_METHOD1(Delete, int(const std::string &key));
-    MOCK_METHOD0(Clear, int());
-    MOCK_METHOD0(Flush, void());
-    MOCK_METHOD0(FlushSync, int());
-    MOCK_METHOD2(RegisterObserver, int(std::shared_ptr<PreferencesObserver> preferencesObserver, RegisterMode mode));
-    MOCK_METHOD2(UnRegisterObserver, int(std::shared_ptr<PreferencesObserver> preferencesObserver, RegisterMode mode));
-};
-
+constexpr int32_t CURRENT_USER = 100;
 class CloudPrefImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    int32_t userId_;
-    std::string fileName_;
-    std::shared_ptr<CloudPrefImpl> cloudPtr_;
-    static inline std::shared_ptr<PreferencesMock> preferencesMock_;
+    static inline std::shared_ptr<CloudPrefImpl> cloudPtr_{nullptr};
 };
 
 void CloudPrefImplTest::SetUpTestCase(void)
@@ -78,29 +46,25 @@ void CloudPrefImplTest::TearDownTestCase(void)
 
 void CloudPrefImplTest::SetUp(void)
 {
-    userId_ = USERID;
-    fileName_ = "test";
-    cloudPtr_ = std::make_shared<CloudPrefImpl>(fileName_);
+    auto preference = std::make_shared<Preferences>();
+    auto preferencesHelper = NativePreferences::PreferencesHelper::GetInstance();
+    EXPECT_CALL(*preferencesHelper, GetPreferences(_, _)).WillOnce(Return(preference));
+    std::string fileName = "test";
+    cloudPtr_ = std::make_shared<CloudPrefImpl>(fileName);
     if (cloudPtr_ == nullptr) {
         GTEST_LOG_(INFO) << "cloudPtr_ == nullptr";
     }
-
-    preferencesMock_ = std::make_shared<PreferencesMock>();
-    if (preferencesMock_ == nullptr) {
-        GTEST_LOG_(INFO) << "preferencesMock_ == nullptr";
+    if (cloudPtr_->pref_ == nullptr) {
+        GTEST_LOG_(INFO) << "cloudPtr_->pref == nullptr";
     }
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void CloudPrefImplTest::TearDown(void)
 {
-    if (cloudPtr_ != nullptr) {
-        cloudPtr_ = nullptr;
-    }
-
-    if (preferencesMock_ != nullptr) {
-        preferencesMock_ = nullptr;
-    }
+    NativePreferences::PreferencesHelper::DeleteInstance();
+    cloudPtr_.reset();
+    cloudPtr_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -114,6 +78,7 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpTest001 Start";
     try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
         CloudPrefImpl cloudPreImpl("");
         EXPECT_EQ(cloudPreImpl.pref_, nullptr);
     } catch (...) {
@@ -133,7 +98,12 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImpTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImpTest002 Start";
     try {
-        CloudPrefImpl cloudPreImpl(fileName_);
+        auto preferences = std::make_shared<Preferences>();
+        auto preferencesHelper = NativePreferences::PreferencesHelper::GetInstance();
+        EXPECT_CALL(*preferencesHelper, GetPreferences(_, _)).WillOnce(Return(preferences));
+        const std::string bundleName = "";
+        std::string tableName = "testTable";
+        CloudPrefImpl cloudPreImpl(CURRENT_USER, bundleName, tableName);
         EXPECT_NE(cloudPreImpl.pref_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -152,597 +122,16 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImplTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CloudPrefImplTest003 Start";
     try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
         const std::string bundleName = "";
-        std::string fileDir = "/data/service/el1/public/cloudfile/";
         std::string tableName = "testTable";
-        EXPECT_EQ(access(fileDir.c_str(), F_OK), 0);
-        CloudPrefImpl cloudPreImpl(userId_, bundleName, tableName);
-        EXPECT_NE(cloudPreImpl.pref_, nullptr);
+        CloudPrefImpl cloudPrefImpl(CURRENT_USER, bundleName, tableName);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CloudPrefImplTest003 ERROR";
     }
     GTEST_LOG_(INFO) << "CloudPrefImplTest003 End";
-}
-
-/**
- * @tc.name: SetStringTest
- * @tc.desc: Verify the SetString function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, SetStringTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetStringTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        std::string key;
-        std::string value;
-        cloudPtr_->SetString(key, value);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetStringTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetStringTest End";
-}
-
-/**
- * @tc.name: GetStringTest
- * @tc.desc: Verify the GetString function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, GetStringTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetStringTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        std::string key;
-        std::string value;
-        cloudPtr_->GetString(key, value);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetStringTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetStringTest End";
-}
-
-/**
- * @tc.name: SetIntTest
- * @tc.desc: Verify the SetInt function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, SetIntTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetIntTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        std::string key;
-        int value = 0;
-        cloudPtr_->SetInt(key, value);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetIntTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetIntTest End";
-}
-
-/**
- * @tc.name: GetIntTest
- * @tc.desc: Verify the GetInt function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, GetIntTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetIntTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        std::string key;
-        int32_t value = 0;
-        cloudPtr_->GetInt(key, value);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetIntTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetIntTest End";
-}
-
-/**
- * @tc.name: ClearTest
- * @tc.desc: Verify the Clear function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, ClearTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ClearTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        cloudPtr_->Clear();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ClearTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "ClearTest End";
-}
-
-/**
- * @tc.name: DeleteTest
- * @tc.desc: Verify the Delete function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, DeleteTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeleteTest Start";
-    try {
-        EXPECT_NE(cloudPtr_->pref_, nullptr);
-        std::string key;
-        cloudPtr_->Delete(key);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " DeleteTest ERROR";
-    }
-    GTEST_LOG_(INFO) << "DeleteTest End";
-}
-
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CloudPrefImpl_001 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "testBundle";
-        string tableName = "testTable";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-        EXPECT_NE(cloudPrefImpl.pref_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CloudPrefImpl_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CloudPrefImpl_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CloudPrefImpl_002 Start";
-    try {
-        int32_t userId = -1;
-        string bundleName = "testBundle";
-        string tableName = "testTable";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-        EXPECT_NE(cloudPrefImpl.pref_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CloudPrefImpl_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CloudPrefImpl_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CloudPrefImpl_003 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "testTable";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-        EXPECT_NE(cloudPrefImpl.pref_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CloudPrefImpl_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CloudPrefImpl_003 End";
-}
-
-HWTEST_F(CloudPrefImplTest, CloudPrefImpl_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CloudPrefImpl_004 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CloudPrefImpl_004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CloudPrefImpl_004 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetString_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetString_001 Start";
-    try {
-        PreferencesMock preferencesMock;
-        string key = "";
-        string value = "test_value";
-        EXPECT_CALL(preferencesMock, PutString(_, _)).WillOnce(Return(X_OK));
-        EXPECT_CALL(preferencesMock, FlushSync()).WillOnce(Return(X_OK));
-
-        EXPECT_EQ(preferencesMock.PutString(key, value), X_OK);
-        EXPECT_EQ(preferencesMock.FlushSync(), X_OK);
-        cloudPtr_->SetString(key, value);
-        cloudPtr_->GetString(key, value);
-        EXPECT_EQ(key, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetString_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetString_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetString_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetString_002 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        string value = "";
-        cloudPrefImpl.SetString(key, value);
-        cloudPrefImpl.GetString(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetString_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetString_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetString_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetString_003 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        string value = "test_value";
-        cloudPrefImpl.SetString(key, value);
-        cloudPrefImpl.GetString(key, value);
-        EXPECT_EQ(value, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetString_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetString_003 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetString_004, TestSize.Level1)
-{
-    string key = "";
-    string value = "test_value";
-
-    EXPECT_CALL(*preferencesMock_, PutString(_, _)).WillOnce(Return(X_OK));
-    EXPECT_CALL(*preferencesMock_, FlushSync()).WillOnce(Return(X_OK));
-
-    cloudPtr_->SetString(key, value);
-    EXPECT_EQ(key, "");
-    EXPECT_EQ(preferencesMock_->PutString(key, value), X_OK);
-    EXPECT_EQ(preferencesMock_->FlushSync(), X_OK);
-}
-
-HWTEST_F(CloudPrefImplTest, SetLong_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetLong_001 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        int64_t value = -1;;
-        cloudPrefImpl.SetLong(key, value);
-        cloudPrefImpl.GetLong(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetLong_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetLong_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetLong_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetLong_002 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        int64_t value = 89;
-        cloudPrefImpl.SetLong(key, value);
-        cloudPrefImpl.GetLong(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetLong_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetLong_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetLong_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetLong_003 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "";
-        int64_t value = -1;
-        cloudPrefImpl.SetLong(key, value);
-        cloudPrefImpl.GetLong(key, value);
-        EXPECT_EQ(key, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetLong_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetLong_003 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetLong_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetLong_004 Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "test_key";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "";
-        int64_t value = 89;
-        cloudPrefImpl.SetLong(key, value);
-        cloudPrefImpl.GetLong(key, value);
-        EXPECT_EQ(key, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetLong_004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetLong_004 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetInt_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetInt_001 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        int value = 1;
-        cloudPrefImpl.SetInt(key, value);
-        cloudPrefImpl.GetInt(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetInt_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetInt_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetInt_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetInt_002 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "";
-        int value = 0;
-        cloudPrefImpl.SetInt(key, value);
-        cloudPrefImpl.GetInt(key, value);
-        EXPECT_EQ(key, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetInt_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetInt_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetInt_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetInt_003 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        int value = 0x7fffffff;
-        cloudPrefImpl.SetInt(key, value);
-        cloudPrefImpl.GetInt(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetInt_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetInt_003 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetInt_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetInt_004 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        int value = 0xffffffff;
-        cloudPrefImpl.SetInt(key, value);
-        cloudPrefImpl.GetInt(key, value);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetInt_004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetInt_004 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetBool_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetBool_001 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        bool value = true;
-        cloudPrefImpl.SetBool(key, value);
-        cloudPrefImpl.GetBool(key, value);
-        EXPECT_FALSE(value);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetBool_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetBool_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetBool_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetBool_002 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        bool value = false;
-        cloudPrefImpl.SetBool(key, value);
-        cloudPrefImpl.GetBool(key, value);
-        EXPECT_FALSE(value);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetBool_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetBool_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetBool_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetBool_003 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        bool value = true;
-        cloudPrefImpl.SetBool(key, value);
-        cloudPrefImpl.GetBool(key, value);
-        EXPECT_FALSE(value);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetBool_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetBool_003 End";
-}
-
-HWTEST_F(CloudPrefImplTest, SetBool_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetBool_004 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        bool value = false;
-        cloudPrefImpl.SetBool(key, value);
-        cloudPrefImpl.GetBool(key, value);
-        EXPECT_FALSE(value);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetBool_004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetBool_004 End";
-}
-
-HWTEST_F(CloudPrefImplTest, Delete_001, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "Delete_001 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "test_key";
-        cloudPrefImpl.Delete(key);
-        EXPECT_EQ(key, "test_key");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " Delete_001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "Delete_001 End";
-}
-
-HWTEST_F(CloudPrefImplTest, Delete_002, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "Delete_001 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "";
-        cloudPrefImpl.Delete(key);
-        EXPECT_EQ(key, "");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " Delete_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "Delete_002 End";
-}
-
-HWTEST_F(CloudPrefImplTest, Delete_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Delete_003 Start";
-    try {
-        int32_t userId = 123;
-        string bundleName = "";
-        string tableName = "";
-        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
-
-        string key = "/";
-        cloudPrefImpl.Delete(key);
-        EXPECT_EQ(key, "/");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " Delete_003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "Delete_003 End";
 }
 
 /**
@@ -754,13 +143,41 @@ HWTEST_F(CloudPrefImplTest, Delete_003, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, SetStringTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetStringTest001 Start";
-    std::string key;
-    std::string value;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->SetString(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_CALL(*(cloudPtr_->pref_), PutString(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*(cloudPtr_->pref_), FlushSync()).WillOnce(Return(-1));
+        std::string key;
+        std::string value;
+        cloudPtr_->SetString(key, value);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetStringTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "SetStringTest001 End";
+}
+
+/**
+ * @tc.name: SetStringTest002
+ * @tc.desc: Verify the SetString function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetStringTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetStringTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        std::string key;
+        std::string value;
+        cloudPrefImpl.SetString(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetStringTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetStringTest002 End";
 }
 
 /**
@@ -772,49 +189,42 @@ HWTEST_F(CloudPrefImplTest, SetStringTest001, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, GetStringTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetStringTest001 Start";
-    std::string key;
-    std::string value;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->GetString(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        std::string key;
+        std::string value = "value";
+        std::string ret;
+        EXPECT_CALL(*(cloudPtr_->pref_), GetString(_, _)).WillOnce(Return(value));
+        cloudPtr_->GetString(key, ret);
+        EXPECT_EQ(value, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetStringTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "GetStringTest001 End";
 }
 
 /**
- * @tc.name: SetLongTest001
- * @tc.desc: Verify the SetLong function
+ * @tc.name: GetStringTest002
+ * @tc.desc: Verify the GetString function
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudPrefImplTest, SetLongTest001, TestSize.Level1)
+HWTEST_F(CloudPrefImplTest, GetStringTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetLongTest001 Start";
-    std::string key;
-    int64_t value = 0;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->SetLong(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
-    GTEST_LOG_(INFO) << "SetLongTest001 End";
-}
-
-/**
- * @tc.name: GetLongTest001
- * @tc.desc: Verify the GetLong function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, GetLongTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetLongTest001 Start";
-    std::string key;
-    int64_t value = 0;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->GetLong(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
-    GTEST_LOG_(INFO) << "GetLongTest001 End";
+    GTEST_LOG_(INFO) << "GetStringTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        std::string key;
+        std::string value = "value";
+        cloudPrefImpl.GetString(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetStringTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetStringTest002 End";
 }
 
 /**
@@ -826,13 +236,42 @@ HWTEST_F(CloudPrefImplTest, GetLongTest001, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, SetIntTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetIntTest001 Start";
-    std::string key;
-    int value = 0;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->SetInt(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        EXPECT_CALL(*(cloudPtr_->pref_), PutInt(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*(cloudPtr_->pref_), FlushSync()).WillOnce(Return(-1));
+        std::string key;
+        int value = 0;
+        cloudPtr_->SetInt(key, value);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetIntTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "SetIntTest001 End";
+}
+
+/**
+ * @tc.name: SetIntTest002
+ * @tc.desc: Verify the SetInt function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetIntTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetIntTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        std::string key;
+        int value = 0;
+        cloudPrefImpl.SetInt(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetIntTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetIntTest002 End";
 }
 
 /**
@@ -844,49 +283,42 @@ HWTEST_F(CloudPrefImplTest, SetIntTest001, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, GetIntTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetIntTest001 Start";
-    std::string key;
-    int32_t value = 0;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->GetInt(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        std::string key;
+        int32_t value = 0;
+        int32_t ret = -1;
+        EXPECT_CALL(*(cloudPtr_->pref_), GetInt(_, _)).WillOnce(Return(value));
+        cloudPtr_->GetInt(key, ret);
+        EXPECT_EQ(value, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetIntTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "GetIntTest001 End";
 }
 
 /**
- * @tc.name: SetBoolTest001
- * @tc.desc: Verify the SetBool function
+ * @tc.name: GetIntTest002
+ * @tc.desc: Verify the GetInt function
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudPrefImplTest, SetBoolTest001, TestSize.Level1)
+HWTEST_F(CloudPrefImplTest, GetIntTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetBoolTest001 Start";
-    std::string key;
-    bool value = true;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->SetBool(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
-    GTEST_LOG_(INFO) << "SetBoolTest001 End";
-}
-
-/**
- * @tc.name: GetBoolTest001
- * @tc.desc: Verify the GetBool function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudPrefImplTest, GetBoolTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetBoolTest001 Start";
-    std::string key;
-    bool value = true;
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->GetBool(key, value);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
-    GTEST_LOG_(INFO) << "GetBoolTest001 End";
+    GTEST_LOG_(INFO) << "GetIntTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        std::string key;
+        int32_t value = 0;
+        cloudPrefImpl.GetInt(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetIntTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetIntTest002 End";
 }
 
 /**
@@ -898,11 +330,39 @@ HWTEST_F(CloudPrefImplTest, GetBoolTest001, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, ClearTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ClearTest001 Start";
-    cloudPtr_->pref_ = nullptr;
-    cloudPtr_->Clear();
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        auto preferencesHelper = NativePreferences::PreferencesHelper::GetInstance();
+        EXPECT_CALL(*preferencesHelper, DeletePreferences(_)).WillOnce(Return());
+        EXPECT_CALL(*(cloudPtr_->pref_), Clear()).WillOnce(Return(0));
+        cloudPtr_->Clear();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ClearTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "ClearTest001 End";
+}
+
+/**
+ * @tc.name: ClearTest002
+ * @tc.desc: Verify the Clear function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, ClearTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        cloudPrefImpl.Clear();
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ClearTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ClearTest002 End";
 }
 
 /**
@@ -914,11 +374,222 @@ HWTEST_F(CloudPrefImplTest, ClearTest001, TestSize.Level1)
 HWTEST_F(CloudPrefImplTest, DeleteTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeleteTest001 Start";
-    cloudPtr_->pref_ = nullptr;
-    std::string key;
-    cloudPtr_->Delete(key);
-    EXPECT_EQ(cloudPtr_->pref_, nullptr);
-    
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        EXPECT_CALL(*(cloudPtr_->pref_), Delete(_)).WillOnce(Return(0));
+        EXPECT_CALL(*(cloudPtr_->pref_), FlushSync()).WillOnce(Return(-1));
+        std::string key;
+        cloudPtr_->Delete(key);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteTest001 ERROR";
+    }
     GTEST_LOG_(INFO) << "DeleteTest001 End";
+}
+
+/**
+ * @tc.name: DeleteTest002
+ * @tc.desc: Verify the Delete function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, DeleteTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteTest002 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        std::string key;
+        cloudPrefImpl.Delete(key);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DeleteTest002 End";
+}
+
+/**
+ * @tc.name: SetLongTest
+ * @tc.desc: Verify the SetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetLong_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "SetLong_001 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        CloudPrefImpl cloudPrefImpl("");
+        string key = "test_key";
+        int64_t value = -1;
+        ;
+        cloudPrefImpl.SetLong(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetLong_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetLong_001 End";
+}
+
+/**
+ * @tc.name: SetLongTest
+ * @tc.desc: Verify the SetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetLong_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "SetLong_002 Start";
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        EXPECT_CALL(*(cloudPtr_->pref_), PutLong(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*(cloudPtr_->pref_), FlushSync()).WillOnce(Return(-1));
+        string key = "test_key";
+        int64_t value = 89;
+        cloudPtr_->SetLong(key, value);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetLong_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetLong_002 End";
+}
+
+/**
+ * @tc.name: GetLongTest001
+ * @tc.desc: Verify the GetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetLongTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLongTest001 Start";
+    NativePreferences::PreferencesHelper::DeleteInstance();
+    CloudPrefImpl cloudPrefImpl("");
+    std::string key;
+    int64_t value = 0;
+    cloudPrefImpl.GetLong(key, value);
+    EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    GTEST_LOG_(INFO) << "GetLongTest001 End";
+}
+
+/**
+ * @tc.name: GetLongTest002
+ * @tc.desc: Verify the GetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetLongTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLongTest002 Start";
+    EXPECT_NE(cloudPtr_->pref_, nullptr);
+    std::string key;
+    int64_t value = 0;
+    int64_t ret = -1;
+    EXPECT_CALL(*(cloudPtr_->pref_), GetLong(_, _)).WillOnce(Return(value));
+    cloudPtr_->GetLong(key, ret);
+    EXPECT_EQ(value, ret);
+    GTEST_LOG_(INFO) << "GetLongTest002 End";
+}
+
+/**
+ * @tc.name: SetBoolTest
+ * @tc.desc: Verify the SetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetBool_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "SetBool_001 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        int32_t userId = 123;
+        string bundleName = "";
+        string tableName = "";
+        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
+
+        string key = "test_key";
+        bool value = true;
+        cloudPrefImpl.SetBool(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetBool_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetBool_001 End";
+}
+
+/**
+ * @tc.name: SetBoolTest
+ * @tc.desc: Verify the SetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetBool_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "SetBool_002 Start";
+    try {
+        EXPECT_NE(cloudPtr_->pref_, nullptr);
+        EXPECT_CALL(*(cloudPtr_->pref_), PutBool(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*(cloudPtr_->pref_), FlushSync()).WillOnce(Return(-1));
+        string key = "test_key1";
+        bool value = false;
+        cloudPtr_->SetBool(key, value);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetBool_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetBool_002 End";
+}
+
+/**
+ * @tc.name: GetBoolTest
+ * @tc.desc: Verify the GetBool function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetBoolTest001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "GetBoolTest001 Start";
+    try {
+        NativePreferences::PreferencesHelper::DeleteInstance();
+        int32_t userId = 123;
+        string bundleName = "";
+        string tableName = "";
+        CloudPrefImpl cloudPrefImpl(userId, bundleName, tableName);
+
+        string key = "test_key";
+        bool value = true;
+        cloudPrefImpl.GetBool(key, value);
+        EXPECT_EQ(cloudPrefImpl.pref_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetBoolTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetBoolTest001 End";
+}
+
+/**
+ * @tc.name: GetBoolTest002
+ * @tc.desc: Verify the GetBool function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetBoolTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBoolTest002 Start";
+    EXPECT_NE(cloudPtr_->pref_, nullptr);
+    std::string key;
+    bool value = true;
+    bool ret = false;
+    EXPECT_CALL(*(cloudPtr_->pref_), GetBool(_, _)).WillOnce(Return(value));
+    cloudPtr_->GetBool(key, ret);
+    EXPECT_EQ(value, ret);
+
+    GTEST_LOG_(INFO) << "GetBoolTest002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

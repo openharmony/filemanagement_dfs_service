@@ -41,6 +41,14 @@ bool Parcel::WriteInt64(int64_t value)
         return true;
 }
 
+bool Parcel::WriteUint64(uint64_t value)
+{
+    if (value == 0) {
+        return false;
+    }
+        return true;
+}
+
 bool Parcel::WriteString(const std::string &value)
 {
     if (value == "continue") {
@@ -81,6 +89,14 @@ bool Parcel::ReadUint32(uint32_t &value)
 }
 
 bool Parcel::ReadInt64(int64_t &value)
+{
+    if (value == 0) {
+        return false;
+    }
+    return true;
+}
+
+bool Parcel::ReadUint64(uint64_t &value)
 {
     if (value == 0) {
         return false;

@@ -22,6 +22,7 @@
 #include "file_operations_helper.h"
 #include "file_operations_local.h"
 #include "file_operations_base.h"
+#include "fuse_ioctl.h"
 #include "parameters.h"
 #include "utils_log.h"
 #include "assistant.h"
@@ -30,6 +31,7 @@ namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace CloudFile;
 
 class FileOperationsLocalTest : public testing::Test {
 public:
@@ -423,5 +425,69 @@ HWTEST_F(FileOperationsLocalTest, ReadDirTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "ReadDirTest005 ERROR";
     }
     GTEST_LOG_(INFO) << "ReadDirTest005 End";
+}
+
+/**
+ * @tc.name: IoctlTest001
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: nullptr
+ */
+HWTEST_F(FileOperationsLocalTest, IoctlTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        data.userId = 1;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = FUSE_ROOT_ID;
+        int cmd = 0;
+        void *arg = nullptr;
+        struct fuse_file_info fi;
+        unsigned flags = 0;
+        void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(0));
+
+        fileoperationslocal_->Ioctl(req, ino, cmd, arg, &fi, flags, inBuf, inBufsz, outBufsz);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest001 End";
+}
+
+/**
+ * @tc.name: IoctlTest002
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ * @tc.require: nullptr
+ */
+HWTEST_F(FileOperationsLocalTest, IoctlTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        data.userId = 1;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = FUSE_ROOT_ID;
+        int cmd = HMDFS_IOC_CLEAN_CACHE_DAEMON;
+        void *arg = nullptr;
+        struct fuse_file_info fi;
+        unsigned flags = 0;
+        void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+        EXPECT_CALL(*insMock, fuse_reply_ioctl(_, _, _, _)).WillOnce(Return(0));
+
+        fileoperationslocal_->Ioctl(req, ino, cmd, arg, &fi, flags, inBuf, inBufsz, outBufsz);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest002 End";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

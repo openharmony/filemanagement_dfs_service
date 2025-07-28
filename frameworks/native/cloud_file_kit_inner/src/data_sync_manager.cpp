@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License"){}
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,14 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
                                          const int32_t userId,
                                          bool forceFlag,
                                          SyncTriggerType triggerType)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::StopSyncSynced(const std::string &bundleName,
+                                        const int32_t userId,
+                                        bool forceFlag,
+                                        SyncTriggerType triggerType)
 {
     return E_OK;
 }
@@ -85,27 +93,9 @@ int32_t DataSyncManager::StartDownloadFile(const BundleNameUserInfo &bundleNameU
 }
 
 int32_t DataSyncManager::StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                          const std::string &path,
-                                          bool needClean)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
-                                       int64_t downloadId,
-                                       bool needClean,
-                                       int32_t timeout)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
-                                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t DataSyncManager::UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo)
+                                          int64_t downloadId,
+                                          bool needClean,
+                                          int32_t timeout)
 {
     return E_OK;
 }
@@ -195,6 +185,52 @@ int32_t DataSyncManager::ReportEntry(const std::string &bundleName, const int32_
 
 int32_t DataSyncManager::BatchCleanFile(const std::vector<CloudSync::CleanFileInfo> &fileInfo,
     std::vector<std::string> &failCloudId)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::StartDowngrade(const std::string &bundleName,
+                                        const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::StopDowngrade(const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+    const int32_t versionNumLimit, std::vector<CloudSync::HistoryVersion> &historyVersionList)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::DownloadHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+    int64_t &downloadId, uint64_t versionId, const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+    std::string &versionUri)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::ReplaceFileWithHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::string &uri, const std::string &versionUri)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::IsFileConflict(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::string &uri, bool &isConflict)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri)
 {
     return E_OK;
 }

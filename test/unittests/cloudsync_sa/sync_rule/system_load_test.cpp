@@ -21,6 +21,7 @@
 #include "parameters.h"
 #include "utils_log.h"
 #include "res_sched_client.h"
+#include "task_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -57,6 +58,7 @@ void SytemLoadTest::SetUp(void)
 void SytemLoadTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    TaskStateManager::GetInstance().CancelUnloadTask();
     SystemLoadStatus_ = nullptr;
     SystemLoadListener_ = nullptr;
 }
@@ -259,15 +261,22 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest005, TestSize.Level1)
 HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest001, TestSize.Level1)
 {
     SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL);
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal(STOPPED_TYPE::STOPPED_IN_SYNC);
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
     EXPECT_TRUE(ret);
 }
 
 HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest002, TestSize.Level1)
 {
     SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL + 1);
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal(STOPPED_TYPE::STOPPED_IN_SYNC);
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
     EXPECT_FALSE(ret);
+}
+
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest003, TestSize.Level1)
+{
+    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL - 1);
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
+    EXPECT_TRUE(ret);
 }
 
 } // namespace OHOS::FileManagement::CloudSync::Test

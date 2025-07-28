@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,6 +56,11 @@ void FileTransferManager::DownloadFileFromRemoteDevice(const std::string &networ
     auto data = make_unique<uint8_t[]>(dataLen);
     msgHandler.PackData(data.get(), dataLen);
     LOGI("send data, dataLen:%{public}d, taskId: %{public}" PRIu64 "", dataLen, taskId);
+    std::string bundleName = GetBundleNameForUri(uri);
+    if (bundleName.empty()) {
+        return;
+    }
+    sessionManager_->SetFileRecvPath(bundleName, userId);
     auto ret = sessionManager_->SendData(networkId, data.get(), dataLen);
     if (ret != E_OK) {
         LOGE("download file failed, uri:%{public}s, ret:%{public}d", GetAnonyString(uri).c_str(), ret);
@@ -110,9 +115,8 @@ void FileTransferManager::HandleDownloadFileResponse(MessageHandler &msgHandler)
 {
     LOGD("recviceve response msg");
     auto errorCode = msgHandler.GetErrorCode();
-    if (errorCode == E_OK) {
-        LOGD("callback after file recv finished");
-        return;
+    if (errorCode != E_OK) {
+        LOGI("callback after file recv failed, errorCode:%{public}d", errorCode);
     }
     auto uri = msgHandler.GetUri();
     auto taskId = msgHandler.GetTaskId();
@@ -185,6 +189,25 @@ bool FileTransferManager::IsFileExists(const std::string &filePath)
     return true;
 }
 
+std::string FileTransferManager::GetBundleNameForUri(const std::string &uri)
+{
+    static std::string uriHead = "file://";
+    auto pos = uri.find(uriHead);
+    if (pos != 0) {
+        LOGE("Invalid uri: %{public}s", GetAnonyString(uri).c_str());
+        return "";
+    }
+    auto length = uriHead.length();
+    pos = uri.find('/', length);
+    if (pos == std::string::npos) {
+        LOGE("Failed to get bundleName from uri: %{public}s", GetAnonyString(uri).c_str());
+        return "";
+    }
+    std::string path = uri.substr(length);
+    std::string bundleName = path.substr(0, pos - length);
+    return bundleName;
+}
+
 std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::string &uri,
                                                                     const int32_t userId,
                                                                     bool isCheckFileExists)
@@ -203,16 +226,19 @@ std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::s
     }
 
     const string HMDFS_DIR = "/mnt/hmdfs/";
-    const string DATA_DIR = HMDFS_DIR + to_string(userId) + "/account/device_view/local/data";
-
-    std::string relativePath;
+    const string DATA_DIR = HMDFS_DIR + to_string(userId) + "/account/device_view/local/data/";
     size_t fileDirPos = physicalPath.find(DATA_DIR);
-    if (fileDirPos == std::string::npos) {
+    if (fileDirPos != 0) {
+        LOGE("Invalid physical path: %{public}s", GetAnonyString(physicalPath).c_str());
         return {"", ""};
     }
-    fileDirPos += DATA_DIR.length();
-    relativePath = physicalPath.substr(fileDirPos);
+    fileDirPos = physicalPath.find('/', DATA_DIR.length());
+    if (fileDirPos == std::string::npos) {
+        LOGE("Failed to get relative path, physical path: %{public}s", GetAnonyString(physicalPath).c_str());
+        return {"", ""};
+    }
 
+    std::string relativePath = physicalPath.substr(fileDirPos);
     return {physicalPath, relativePath};
 }
 

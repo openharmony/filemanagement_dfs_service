@@ -75,7 +75,9 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
     LOGI("getinstance");
     unique_lock<mutex> lock(proxyMutex_);
     if (serviceProxy_ != nullptr) {
-        return serviceProxy_;
+        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
+            return serviceProxy_;
+        }
     }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

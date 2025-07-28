@@ -33,11 +33,8 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/test/unittests/cloud_disk_database/include",
     "include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/utils/log/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
   deps = [
@@ -46,9 +43,6 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -63,8 +57,12 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -118,10 +116,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/transaction_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "clouddisk_rdbstore_test.cpp",
   ]
 
@@ -144,12 +139,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/frameworks/services/media_thumbnail/include",
-    "${media_library_path}/frameworks/utils/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
     "${utils_path}/log/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock",
@@ -161,9 +150,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -177,8 +163,12 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -248,7 +238,6 @@ ohos_unittest("clouddisk_notify_test") {
     "include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/utils/log/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
   deps = [
@@ -258,9 +247,6 @@ ohos_unittest("clouddisk_notify_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -275,8 +261,12 @@ ohos_unittest("clouddisk_notify_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -319,11 +309,8 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/test/unittests/cloud_disk_database/include",
     "include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/utils/log/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
   deps = [
@@ -332,9 +319,6 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -349,8 +333,12 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -399,11 +387,8 @@ ohos_unittest("clouddisk_sync_helper_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/test/unittests/cloud_disk_database/include",
     "include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/utils/log/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
   deps = [
@@ -413,9 +398,6 @@ ohos_unittest("clouddisk_sync_helper_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -430,8 +412,12 @@ ohos_unittest("clouddisk_sync_helper_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -491,7 +477,6 @@ ohos_unittest("clouddisk_notify_utils_test") {
     "include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/utils/log/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
   deps = [
@@ -501,9 +486,6 @@ ohos_unittest("clouddisk_notify_utils_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/e2fsprogs:libext2_uuid",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -518,8 +500,12 @@ ohos_unittest("clouddisk_notify_utils_test") {
     "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

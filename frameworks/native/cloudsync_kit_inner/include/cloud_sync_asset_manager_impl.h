@@ -40,7 +40,8 @@ public:
     int32_t DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
                           const std::vector<AssetInfo> &assetInfo,
-                          std::vector<bool> &assetResultMap) override;
+                          std::vector<bool> &assetResultMap,
+                          int32_t connectTime) override;
 
 private:
     CloudSyncAssetManagerImpl() = default;

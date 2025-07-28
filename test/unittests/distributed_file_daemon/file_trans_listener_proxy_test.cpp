@@ -72,7 +72,7 @@ void FileTransListenerProxyTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0100, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFileReceive_0100 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
@@ -103,7 +103,7 @@ HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0100, TestS
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0200, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFileReceive_0200 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
@@ -127,7 +127,7 @@ HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFileReceive_0200, TestS
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0100, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFailed_0100 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
@@ -161,7 +161,7 @@ HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0100, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0200, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFailed_0200 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
@@ -187,7 +187,7 @@ HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFailed_0200, TestSize.L
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFinished_0100, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFinished_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFinished_0100 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
@@ -214,7 +214,7 @@ HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFinished_0100, TestSize
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFinished_0200, TestSize.Level1)
+HWTEST_F(FileTransListenerProxyTest, FileTransListener_OnFinished_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnFinished_0200 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));

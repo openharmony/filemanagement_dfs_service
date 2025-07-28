@@ -57,10 +57,6 @@ public:
                                          int32_t timeout));
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
     MOCK_METHOD3(StopFileCache, int32_t(int64_t downloadId, bool needClean, int32_t timeout));
-    MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
-    MOCK_METHOD1(RegisterFileCacheCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
-    MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
-    MOCK_METHOD0(UnregisterFileCacheCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
@@ -68,7 +64,8 @@ public:
                  int32_t(const int32_t userId,
                          const std::string &bundleName,
                          const std::vector<AssetInfoObj> &assetInfoObj,
-                         std::vector<bool> &assetResultMap));
+                         std::vector<bool> &assetResultMap,
+                         int32_t connectTime));
     MOCK_METHOD5(DownloadAsset,
                  int32_t(const uint64_t taskId,
                          const int32_t userId,
@@ -684,7 +681,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleStartDownloadFile Start";
     try {
         MockService service;
-        EXPECT_CALL(service, StartDownloadFile(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, StartDownloadFile(_, _, _)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -729,64 +726,6 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " HandleStopDownloadFile ERROR";
     }
     GTEST_LOG_(INFO) << "HandleStopDownloadFile End";
-}
-
-/**
- * @tc.name: HandleRegisterDownloadFileCallbackTest
- * @tc.desc: Verify the HandleRegisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleRegisterDownloadFileCallback Start";
-    try {
-        MockService service;
-        EXPECT_CALL(service, RegisterDownloadFileCallback(_)).WillOnce(Return(E_OK));
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
-                            static_cast<uint32_t>(
-                                CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK),
-                            data, reply, option));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleRegisterDownloadFileCallback ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleRegisterDownloadFileCallback End";
-}
-
-/**
- * @tc.name: HandleUnregisterDownloadFileCallbackTest
- * @tc.desc: Verify the HandleUnregisterDownloadFileCallback function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceStubTest, HandleUnregisterDownloadFileCallbackTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleUnregisterDownloadFileCallback Start";
-    try {
-        MockService service;
-        EXPECT_CALL(service, UnregisterDownloadFileCallback()).WillOnce(Return(E_OK));
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
-                            static_cast<uint32_t>(
-                                CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK),
-                            data, reply, option));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleUnregisterDownloadFileCallback ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleUnregisterDownloadFileCallback End";
 }
 
 /**
@@ -1405,28 +1344,6 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopFileCacheTest003, TestSize.Level1)
     int32_t ret = service.HandleStopFileCache(data, reply);
 
     EXPECT_EQ(ret, E_OK);
-}
-
-HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadFileCallbackTest002, TestSize.Level1)
-{
-    MockService service;
-    MessageParcel data;
-    MessageParcel reply;
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
-    int32_t ret = service.HandleRegisterDownloadFileCallback(data, reply);
-
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
-}
-
-HWTEST_F(CloudSyncServiceStubTest, HandleUnregisterDownloadFileCallbackTest002, TestSize.Level1)
-{
-    MockService service;
-    MessageParcel data;
-    MessageParcel reply;
-    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
-    int32_t ret = service.HandleUnregisterDownloadFileCallback(data, reply);
-
-    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleUploadAssetTest001, TestSize.Level1)

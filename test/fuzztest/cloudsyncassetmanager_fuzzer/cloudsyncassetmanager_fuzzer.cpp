@@ -62,6 +62,7 @@ void DownloadFilesFuzzTest(FuzzData &fuzzData, size_t size)
 {
     fuzzData.ResetData(size);
     int32_t userId = fuzzData.GetData<int32_t>();
+    int32_t connectTime = fuzzData.GetData<int32_t>();
     int len = static_cast<int>((size - U32_AT_SIZE) / SPLITE_SIZE);
     if (len <= 0) {
         return;
@@ -77,7 +78,7 @@ void DownloadFilesFuzzTest(FuzzData &fuzzData, size_t size)
     assetInfos.emplace_back(assetInfo);
     std::string bundleName = fuzzData.GetStringFromData(len);
     vector<bool> assetResultMap;
-    CloudSyncAssetManager::GetInstance().DownloadFiles(userId, bundleName, assetInfos, assetResultMap);
+    CloudSyncAssetManager::GetInstance().DownloadFiles(userId, bundleName, assetInfos, assetResultMap, connectTime);
 }
 
 void DownloadFileCallbackFuzzTest(FuzzData &fuzzData, size_t size)

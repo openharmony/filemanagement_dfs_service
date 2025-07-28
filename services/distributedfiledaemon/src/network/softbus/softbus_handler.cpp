@@ -15,7 +15,6 @@
 
 #include "network/softbus/softbus_handler.h"
 
-#include <sys/stat.h>
 #include <utility>
 
 #include "all_connect/all_connect_manager.h"
@@ -25,15 +24,12 @@
 #include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 #include "network/devsl_dispatcher.h"
-#ifdef SUPPORT_SAME_ACCOUNT
-#include "inner_socket.h"
-#include "trans_type_enhanced.h"
-#endif
 
 namespace OHOS {
 namespace Storage {
@@ -43,9 +39,6 @@ const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const int32_t INVALID_SESSION_ID = -1;
-#ifdef SUPPORT_SAME_ACCOUNT
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
-#endif
 constexpr size_t MAX_SIZE = 500;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
@@ -55,7 +48,7 @@ std::mutex SoftBusHandler::networkIdMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(info.networkId)) {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(info.name);
         if (it != serverIdMap_.end()) {
@@ -77,26 +70,6 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 
     AllConnectManager::GetInstance().PublishServiceState(DfsConnectCode::COPY_FILE, info.networkId,
         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
-}
-
-bool SoftBusHandler::IsSameAccount(const std::string &networkId)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    return false;
-#else
-    return true;
-#endif
 }
 
 std::string SoftBusHandler::GetSessionName(int32_t sessionId)
@@ -127,6 +100,7 @@ SoftBusHandler::SoftBusHandler()
     fileReceiveListener.OnBind = DistributedFile::SoftBusFileReceiveListener::OnCopyReceiveBind;
     fileReceiveListener.OnShutdown = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileShutdown;
     fileReceiveListener.OnFile = DistributedFile::SoftBusFileReceiveListener::OnFile;
+    fileReceiveListener.OnNegotiate2 = DistributedFile::SoftBusFileReceiveListener::OnNegotiate2;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
     fileReceiveListener.OnQos = nullptr;
@@ -188,12 +162,16 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
     const std::string &peerDevId, int32_t &socketId)
 {
+    if (!SoftBusPermissionCheck::CheckSrcPermission(peerDevId)) {
+        LOGE("Check src permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("OpenSession Enter peerDevId: %{public}s", Utils::GetAnonyString(peerDevId).c_str());
-    if (!IsSameAccount(peerDevId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(peerDevId)) {
         LOGI("The source and sink device is not same account, not support.");
         return E_OPEN_SESSION;
     }
@@ -204,6 +182,11 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     };
     if (!CreatSocketId(mySessionName, peerSessionName, peerDevId, socketId)) {
         return FileManagement::ERR_BAD_VALUE;
+    }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGE("SetAccessInfoToSocket failed");
+        Shutdown(socketId);
+        return E_OPEN_SESSION;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);
     if (ret != E_OK) {
@@ -244,27 +227,6 @@ bool SoftBusHandler::CreatSocketId(const std::string &mySessionName, const std::
     return true;
 }
 
-void SoftBusHandler::SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    uint64_t totalSize = 0;
-    for (uint32_t i = 0; i < srcLen; ++i) {
-        const char *file = src[i];
-        struct stat buf {};
-        if (stat(file, &buf) == -1) {
-            return;
-        }
-        totalSize += static_cast<uint64_t>(buf.st_size);
-    }
-
-    TransFlowInfo flowInfo;
-    flowInfo.sessionType = SHORT_DURATION_SESSION;
-    flowInfo.flowQosType = HIGH_THROUGHPUT;
-    flowInfo.flowSize = totalSize;
-    ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
-#endif
-}
-
 int32_t SoftBusHandler::CopySendFile(int32_t socketId,
                                      const std::string &peerNetworkId,
                                      const std::string &srcUri,
@@ -279,7 +241,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
     }
     auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
     if (fileList.empty()) {
-        LOGE("GetFilePath failed or file is empty, path %{public}s", physicalPath.c_str());
+        LOGE("GetFilePath failed or file is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
     if (!DevslDispatcher::CompareDevslWithLocal(peerNetworkId, fileList)) {
@@ -293,7 +255,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
 
     auto fileNameList = SoftBusSessionListener::GetFileName(fileList, physicalPath, dstPath);
     if (fileNameList.empty()) {
-        LOGE("GetFileName failed, path %{public}s %{public}s", physicalPath.c_str(), dstPath.c_str());
+        LOGE("GetFileName failed");
         return FileManagement::ERR_BAD_VALUE;
     }
     const char *dst[MAX_SIZE] = {};
@@ -302,7 +264,6 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
     }
 
     LOGI("Enter SendFile.");
-    SetSocketOpt(socketId, src, static_cast<uint32_t>(fileList.size()));
     auto ret = ::SendFile(socketId, src, dst, static_cast<uint32_t>(fileList.size()));
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", socketId);

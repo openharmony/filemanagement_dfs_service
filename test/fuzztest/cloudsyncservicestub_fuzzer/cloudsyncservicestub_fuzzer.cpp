@@ -292,30 +292,6 @@ void HandleRegisterCallbackInnerFuzzTest(std::shared_ptr<CloudSyncServiceStub> c
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleRegisterDownloadFileCallbackFuzzTest(std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
-                                                FuzzData &fuzzData,
-                                                size_t size)
-{
-    fuzzData.ResetData(size);
-    MessageParcel datas;
-    if (!WriteInterfaceToken(datas)) {
-        return;
-    }
-    sptr<ICloudDownloadCallbackTest> callback = new (std::nothrow) ICloudDownloadCallbackTest();
-    if (callback == nullptr) {
-        return;
-    }
-    datas.WriteRemoteObject(callback->AsObject().GetRefPtr());
-    datas.RewindRead(0);
-    // SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK
-    uint32_t code =
-        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK);
-    MessageParcel reply;
-    MessageOption option;
-
-    cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-}
-
 void HandleStartDownloadFileFuzzTest(std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
                                      FuzzData &fuzzData,
                                      size_t size)
@@ -325,8 +301,13 @@ void HandleStartDownloadFileFuzzTest(std::shared_ptr<CloudSyncServiceStub> cloud
     if (!WriteInterfaceToken(datas)) {
         return;
     }
-    string path = fuzzData.GetStringFromData(static_cast<int>(size));
+    int64_t downloadId = fuzzData.GetData<int64_t>();
+    int len = static_cast<int>(size - U64_AT_SIZE);
+    string path = fuzzData.GetStringFromData(len);
     datas.WriteString(path);
+    sptr<ICloudDownloadCallbackTest> callback = new (std::nothrow) ICloudDownloadCallbackTest();
+    datas.WriteRemoteObject(callback->AsObject().GetRefPtr());
+    datas.WriteInt64(downloadId);
     datas.RewindRead(0);
     // SERVICE_CMD_START_DOWNLOAD_FILE
     uint32_t code = static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE);
@@ -367,8 +348,11 @@ void HandleStopDownloadFileFuzzTest(std::shared_ptr<CloudSyncServiceStub> cloudS
     if (!WriteInterfaceToken(datas)) {
         return;
     }
-    string path = fuzzData.GetStringFromData(static_cast<int>(size));
-    datas.WriteString(path);
+    int64_t downloadId = fuzzData.GetData<int64_t>();
+    int len = static_cast<int>(size - U64_AT_SIZE);
+    bool needClean = fuzzData.GetData<bool>();
+    datas.WriteInt64(downloadId);
+    datas.WriteBool(needClean);
     datas.RewindRead(0);
     // SERVICE_CMD_STOP_DOWNLOAD_FILE
     uint32_t code = static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE);
@@ -410,25 +394,6 @@ void HandleUnRegisterCallbackInnerFuzzTest(std::shared_ptr<CloudSyncServiceStub>
     datas.RewindRead(0);
     // SERVICE_CMD_UNREGISTER_CALLBACK
     uint32_t code = static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK);
-    MessageParcel reply;
-    MessageOption option;
-
-    cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleUnRegisterDownloadFileCallbackFuzzTest(std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
-                                                  const uint8_t *data,
-                                                  size_t size)
-{
-    MessageParcel datas;
-    if (!WriteInterfaceToken(datas)) {
-        return;
-    }
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    // SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK
-    uint32_t code =
-        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK);
     MessageParcel reply;
     MessageOption option;
 
@@ -697,13 +662,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandleEnableCloudFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleNotifyDataChangeFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleRegisterCallbackInnerFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
-    OHOS::HandleRegisterDownloadFileCallbackFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleStartDownloadFileFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleStartSyncInnerFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleStopDownloadFileFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleStopSyncInnerFuzzTest(cloudSyncServiceStubStr, data, size);
     OHOS::HandleUnRegisterCallbackInnerFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
-    OHOS::HandleUnRegisterDownloadFileCallbackFuzzTest(cloudSyncServiceStubStr, data, size);
     OHOS::HandleUploadAssetFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleTriggerSyncInnerFuzzTest(cloudSyncServiceStubStr, fuzzData, size);
     OHOS::HandleNotifyEventChangeFuzzTest(cloudSyncServiceStubStr, fuzzData, size);

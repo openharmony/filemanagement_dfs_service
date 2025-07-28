@@ -16,17 +16,19 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "base_interface_lib_mock.h"
+#include "dfs_error.h"
 #include "directory_ex.h"
 #include "meta_file.h"
-#include "dfs_error.h"
-#include "base_interface_lib_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
 constexpr uint32_t TEST_USER_ID = 201;
+#if defined(CLOUD_ADAPTER_ENABLED)
 constexpr uint64_t TEST_ISIZE = 1024;
+#endif
 
 class CloudDiskDentryMetaFileTest : public testing::Test {
 public:
@@ -102,6 +104,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileHandleFileByFd003, TestSi
     EXPECT_EQ(ret, 0);
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 /**
  * @tc.name: CloudDiskMetaFileDoChildUpdateTest
  * @tc.desc: Verify the CloudDiskMetaFile::DoChildUpdate function
@@ -114,7 +117,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileDoChildUpdateTest, TestSi
     string name = "";
     CloudDiskMetaFile::CloudDiskMetaFileCallBack callback;
     int ret = mFile.DoChildUpdate(name, callback);
-    EXPECT_EQ(ret, 2);
+    EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
@@ -132,12 +135,12 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndRemoveTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: CloudDiskDentryFileCreateTest
+ * @tc.name: CloudDiskDentryFileCreateTest001
  * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Level1)
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest001, TestSize.Level1)
 {
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
@@ -149,6 +152,51 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Le
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: CloudDiskDentryFileCreateTest002
+ * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
+ * @tc.type: FUNC
+ * @tc.require: ICIGLL
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest002, TestSize.Level0)
+{
+    std::string cacheDir =
+        "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+    ForceRemoveDirectory(cacheDir);
+
+    string CloudId = "";
+    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    uint64_t maxNameLen = 416;
+    string name(maxNameLen, '0');
+    MetaBase mBase1(name, "id1");
+    mBase1.size = TEST_ISIZE;
+    int ret = mFile.DoCreate(mBase1);
+    EXPECT_EQ(ret, 0);
+    mFile.DoRemove(mBase1);
+}
+
+/**
+ * @tc.name: CloudDiskDentryFileCreateTest003
+ * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
+ * @tc.type: FUNC
+ * @tc.require: ICIGLL
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest003, TestSize.Level0)
+{
+    std::string cacheDir =
+        "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+    ForceRemoveDirectory(cacheDir);
+
+    string CloudId = "";
+    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    uint64_t maxNameLen = 416;
+    string name(maxNameLen + 1, '0');
+    MetaBase mBase1(name, "id1");
+    mBase1.size = TEST_ISIZE;
+    int ret = mFile.DoCreate(mBase1);
+    EXPECT_EQ(ret, ENAMETOOLONG);
 }
 
 /**
@@ -204,6 +252,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileRemoveTest, TestSize.Leve
     ret = mFile.DoLookup(mBase2);
     EXPECT_EQ(ret, ENOENT);
 }
+#endif
 
 /**
  * @tc.name:LoadChildrenTest
@@ -242,6 +291,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest001, TestSize.Leve
     GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest001 End";
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 /**
  * @tc.name: CreateRecycleDentryTest001
  * @tc.desc: Verify the CreateRecycleDentry
@@ -279,8 +329,9 @@ HWTEST_F(CloudDiskDentryMetaFileTest, MoveIntoRecycleDentryfileTest001, TestSize
         string name = ".trash";
         string parentCloudId = "rootId";
         int64_t rowId = 0;
+        struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
         int32_t ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId, bundleName,
-                                                                           name, parentCloudId, rowId);
+                                                                           restoreInfo);
         EXPECT_EQ(ret, 0);
         MetaFileMgr::GetInstance().CloudDiskClearAll();
     } catch (...) {
@@ -315,7 +366,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSi
     }
     GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 End";
 }
-
+#endif
 
 HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_GetDentryFilePath_001, TestSize.Level1)
 {
@@ -331,6 +382,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_GetDentryFilePath_001, TestSize
     GTEST_LOG_(INFO) << "DfsService_GetDentryFilePath_001 End";
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndUpdate_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 Start";
@@ -386,6 +438,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndRemove_001, TestSize
     }
     GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 End";
 }
+#endif
 
 HWTEST_F(CloudDiskDentryMetaFileTest, DoCreate_001, TestSize.Level1)
 {
@@ -464,6 +517,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, LoadChildren_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "LoadChildren_001 End";
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 Start";
@@ -479,13 +533,14 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_002, TestSize.Level1)
 
         auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(100, "/o/p/q/r/s/t", "id1");
         int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
-        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 ERROR";
     }
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 End";
 }
+#endif
 
 HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_003, TestSize.Level1)
 {
@@ -510,6 +565,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 End";
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 Start";
@@ -552,6 +608,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DoRename_001 End";
 }
+#endif
 
 HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_002, TestSize.Level1)
 {
@@ -575,6 +632,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoRename_002 End";
 }
 
+#if defined(CLOUD_ADAPTER_ENABLED)
 /**
  * @tc.name: RemoveFromRecycleDentryfileTest001
  * @tc.desc: Verify the DoLookupAndCreate
@@ -593,7 +651,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndCreate_001, TestSize
         auto callback = [&metaBase] (MetaBase &m) {
             m.size = metaBase.size;
         };
- 
+
         auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
         int32_t ret = metaFile->DoLookupAndCreate(fileName, callback);
         EXPECT_EQ(ret, E_OK);
@@ -603,6 +661,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndCreate_001, TestSize
     }
     GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 End";
 }
+#endif
 
 /**
  * @tc.name: GetNewNameTest

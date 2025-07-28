@@ -26,12 +26,16 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "channel_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "connection_detector.h"
 #include "connect_count/connect_count.h"
+#include "connection_detector.h"
+#include "control_cmd_parser.h"
 #include "copy/file_size_utils.h"
+#include "copy/remote_file_copy_manager.h"
 #include "device/device_manager_agent.h"
+#include "device/device_profile_adapter.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -40,13 +44,16 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_handler_asset.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
+#include "system_notifier.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -68,11 +75,26 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
+const int32_t PASTEBOARDUSERID = 3816;
+const int32_t UDMFUSERID = 3012;
 constexpr mode_t DEFAULT_UMASK = 0002;
-constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 8 * 1000;
-}
+constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
+constexpr int32_t DEFAULT_USER_ID = 100;
+constexpr int32_t VALID_MOUNT_NETWORKID_LEN = 16;
+} // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
+
+static int32_t QueryActiveUserId()
+{
+    std::vector<int32_t> ids;
+    ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (errCode != NO_ERROR || ids.empty()) {
+        LOGE("Query active userid failed, errCode: %{public}d, ", errCode);
+        return DEFAULT_USER_ID;
+    }
+    return ids[0];
+}
 
 void Daemon::PublishSA()
 {
@@ -172,6 +194,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
+    RemoveDfsDelayTask(deviceInfo.networkId);
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     sptr<IFileDfsListener> listener = nullptr;
     auto ret = ConnectionCount(deviceInfo);
@@ -237,8 +260,8 @@ int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo)
     LOGI("CleanUp start");
     auto networkId = std::string(deviceInfo.networkId);
     if (!ConnectCount::GetInstance()->CheckCount(networkId)) {
-        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
-        LOGI("Close P2P Connection result %{public}d", ret);
+        auto ret = SendDfsDelayTask(networkId);
+        LOGI("Close P2P Connection");
         return ret;
     }
     return E_OK;
@@ -283,7 +306,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     }
     if (dfsListenerDeathRecipient_ == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
-        dfsListenerDeathRecipient_ = new (std::nothrow) DfsListenerDeathRecipient();
+        dfsListenerDeathRecipient_ = sptr(new (std::nothrow) DfsListenerDeathRecipient());
     }
     if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
@@ -302,6 +325,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         return E_INVAL_ARG_NAPI;
     }
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
+    RemoveDfsDelayTask(networkId);
     int32_t ret = ConnectionAndMount(deviceInfo, networkId, callingTokenId, remoteReverseObj);
     if (ret != NO_ERROR) {
         CleanUp(deviceInfo);
@@ -322,7 +346,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     auto deviceManager = DeviceManagerAgent::GetInstance();
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
-        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid.");
+        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu",  networkId.length());
         return E_INVAL_ARG_NAPI;
     }
     std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
@@ -333,7 +357,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGE("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
         int32_t ret_umount = deviceManager->UMountDfsDocs(networkId, deviceId, false);
-        if (ret_umount != E_OK) {
+        if (ret_umount != NO_ERROR) {
             LOGE("[UMountDfsDocs] failed");
             return E_UNMOUNT;
         }
@@ -354,16 +378,37 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     return 0;
 }
 
+bool Daemon::IsCallingDeviceTrusted()
+{
+    std::string callingNetworkId = IPCSkeleton::GetCallingDeviceID();
+    LOGI("Daemon::IsCallingDeviceTrusted called, callingNetworkId=%{public}.5s", callingNetworkId.c_str());
+    if (callingNetworkId.empty()) {
+        LOGE("Get callingNetworkId failed");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::IsSameAccount(callingNetworkId)) {
+        LOGE("The calling device is not trusted");
+        return false;
+    }
+    LOGI("Daemon::IsCallingDeviceTrusted end");
+    return true;
+}
+
 int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstPath,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
+#ifdef SUPPORT_SAME_ACCOUNT
+    if (!IsCallingDeviceTrusted()) {
+        LOGE("Check calling device permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
+#endif
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstPath).c_str());
+        LOGE("Path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
@@ -388,19 +433,36 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
     return ret;
 }
 
-int32_t Daemon::PrepareSession(const std::string &srcUri,
-                               const std::string &dstUri,
-                               const std::string &srcDeviceId,
-                               const sptr<IRemoteObject> &listener,
-                               HmdfsInfo &info)
+int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
+    const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
-    LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
+        LOGE("Path is forbidden");
+        return ERR_BAD_VALUE;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
+    if (res != 0) {
+        LOGE("strcpy failed, res = %{public}d", res);
+        return ERR_BAD_VALUE;
+    }
+    OpenP2PConnection(deviceInfo);
+    auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(srcUri, dstUri,
+        listener, QueryActiveUserId(), info.copyPath);
+    CloseP2PConnection(deviceInfo);
+    LOGI("InnerCopy end, ret = %{public}d", ret);
+    return ret;
+}
+
+int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &srcDeviceId,
+    const sptr<IRemoteObject> &listener, HmdfsInfo &info)
+{
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
         return E_NULLPTR;
     }
-
     auto daemon = GetRemoteSA(srcDeviceId);
     if (daemon == nullptr) {
         LOGE("Daemon is nullptr");
@@ -413,19 +475,14 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
     }
-
-    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
-    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
-    if (sessionName.empty()) {
+    if (StoreSessionAndListener(physicalPath, info.sessionName, listenerCallback) != E_OK) {
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-    info.sessionName = sessionName;
-    StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto prepareSessionData = std::make_shared<PrepareSessionData>(
-        srcUri, physicalPath, sessionName, daemon, info, prepareSessionBlock);
+        srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -441,15 +498,25 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     ret = prepareSessionBlock->GetValue();
+    if (ret != E_OK) {
+        DeleteSessionAndListener(info.sessionName);
+    }
     LOGI("PrepareSession end, ret is %{public}d", ret);
     return ret;
 }
 
-void Daemon::StoreSessionAndListener(const std::string &physicalPath,
-                                     const std::string &sessionName,
-                                     const sptr<IFileTransListener> &listener)
+int32_t Daemon::StoreSessionAndListener(const std::string &physicalPath,
+                                        std::string &sessionName,
+                                        const sptr<IFileTransListener> &listener)
 {
+    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
+    if (sessionName.empty()) {
+        LOGE("SessionServer exceed max");
+        return E_SOFTBUS_SESSION_FAILED;
+    }
     TransManager::GetInstance().AddTransTask(sessionName, listener);
+    return E_OK;
 }
 
 int32_t Daemon::GetRealPath(const std::string &srcUri,
@@ -466,8 +533,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
-        LOGE("path: %{public}s or %{public}s is forbidden",
-            GetAnonyString(srcUri).c_str(), GetAnonyString(dstUri).c_str());
+        LOGE("Path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
@@ -495,8 +561,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGI("physicalPath %{public}s, userId %{public}s", GetAnonyString(physicalPath).c_str(),
-         std::to_string(hapTokenInfo.userID).c_str());
+    LOGI("GetRealPath userId %{public}s", std::to_string(hapTokenInfo.userID).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {
@@ -524,7 +589,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
     std::error_code errCode;
     if (!std::filesystem::exists(physicalPath, errCode) && info.dirExistFlag) {
-        LOGI("Not CheckValidPath, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+        LOGI("Not CheckValidPath");
     } else {
         auto pos = checkPath.rfind('/');
         if (pos == std::string::npos) {
@@ -550,11 +615,11 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
             return E_GET_PHYSICAL_PATH_FAILED;
         }
     } else {
-        std::regex pathRegex("^[a-zA-Z0-9_\\-/\\\\]*$");
+        std::regex pathRegex("^[a-zA-Z0-9_\\-/\\\\\u4E00-\u9FA5]*$");
         if (!std::filesystem::exists(physicalPath, errCode) && std::regex_match(physicalPath.c_str(), pathRegex)) {
             std::filesystem::create_directory(physicalPath, errCode);
             if (errCode.value() != 0) {
-                LOGE("Create directory failed, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+                LOGE("Create directory failed, errCode %{public}d", errCode.value());
                 return E_GET_PHYSICAL_PATH_FAILED;
             }
         }
@@ -565,6 +630,12 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
     LOGI("GetRemoteCopyInfo begin.");
+#ifdef SUPPORT_SAME_ACCOUNT
+    if (!IsCallingDeviceTrusted()) {
+        LOGE("Check calling device permission failed");
+        return FileManagement::E_PERMISSION_DENIED;
+    }
+#endif
     auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
     if (physicalPath.empty()) {
         LOGE("GetRemoteCopyInfo GetRealPath failed.");
@@ -606,6 +677,11 @@ int32_t Daemon::Copy(const std::string &srcUri,
                      const sptr<IDaemon> &daemon,
                      const std::string &sessionName)
 {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
+        LOGE("Path is forbidden");
+        return E_INVAL_ARG;
+    }
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
     int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
@@ -648,11 +724,16 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     return E_OK;
 }
 
-void Daemon::DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId)
+int32_t Daemon::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, dstUri);
+    return E_OK;
+}
+
+void Daemon::DeleteSessionAndListener(const std::string &sessionName)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
 }
 
 void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
@@ -712,7 +793,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     const auto &uriVec = assetObj->uris_;
     for (const auto &uri : uriVec) {
         if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
-            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            LOGE("Path is forbidden");
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
     }
@@ -773,6 +854,232 @@ void Daemon::StartEventHandler()
     auto runer = AppExecFwk::EventRunner::Create(IDaemon::SERVICE_NAME.c_str());
     eventHandler_ = std::make_shared<DaemonEventHandler>(runer, daemonExecute_);
 }
+
+int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
+{
+    LOGI("Daemon::SendDfsDelayTask enter.");
+    constexpr int32_t DEFAULT_DELAY_INTERVAL = 120 * 1000; // 120s
+    if (networkId.empty()) {
+        LOGE("networkId is empty.");
+        return E_NULLPTR;
+    }
+    LOGI("SendDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    if (eventHandler_ == nullptr) {
+        LOGE("eventHandler has not find.");
+        return E_EVENT_HANDLER;
+    }
+
+    auto executeFunc = [this, networkId] { DisconnectDevice(networkId); };
+    bool isSucc = eventHandler_->PostTask(executeFunc, networkId, DEFAULT_DELAY_INTERVAL,
+        AppExecFwk::EventHandler::Priority::IMMEDIATE);
+    if (!isSucc) {
+        LOGE("Daemon event handler post delay disconnect device event fail.");
+        return E_EVENT_HANDLER;
+    }
+    return E_OK;
+}
+
+void Daemon::RemoveDfsDelayTask(const std::string &networkId)
+{
+    LOGI("Daemon::RemoveDfsDelayTask enter.");
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    if (eventHandler_ == nullptr) {
+        LOGE("eventHandler has not find.");
+        return;
+    }
+    LOGI("RemoveDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
+    eventHandler_->RemoveTask(networkId);
+}
+
+void Daemon::DisconnectDevice(const std::string networkId)
+{
+    LOGI("Daemon::DisconnectDevice enter.");
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    auto ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (ret != 0) {
+        LOGE("strcpy for network id failed, ret is %{public}d", ret);
+        return;
+    }
+    LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
+    ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+    LOGI("Daemon::DisconnectDevice result %{public}d", ret);
+}
+
+int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                       const int32_t userId,
+                                       std::unordered_map<std::string,
+                                       AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    LOGI("Daemon::GetDfsUrisDirFromLocal start");
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != PASTEBOARDUSERID && callingUid != UDMFUSERID) {
+        LOGE("Permission denied, caller is not pasterboard or udmf");
+        return E_PERMISSION_DENIED;
+    }
+    for (const auto &uri : uriList) {
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
+            LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
+            return OHOS::FileManagement::E_ILLEGAL_URI;
+        }
+    }
+    auto ret = AppFileService::ModuleRemoteFileShare::RemoteFileShare::GetDfsUrisDirFromLocal(uriList, userId,
+                                                                                              uriToDfsUriMaps);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsUrisDirFromLocal Failed, ret = %{public}d", ret);
+        return ret;
+    }
+    return FileManagement::E_OK;
+}
+
+int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    LOGI("GetDfsSwitchStatus enter. networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    LOGI("GetDfsSwitchStatus end, switchStatus %{public}d", switchStatus);
+    return E_OK;
+}
+
+int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    LOGI("UpdateDfsSwitchStatus enter, switch status: %{public}d", switchStatus);
+    return E_OK;
+}
+
+int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    LOGI("GetConnectedDeviceList enter.");
+    (void)deviceList;
+    return E_OK;
+}
+
+void Daemon::DisconnectByRemote(const string &networkId)
+{
+    LOGI("start DisconnectByRemote");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::DisconnectByRemote networkId length is invalid. len: %{public}zu", networkId.length());
+        return;
+    }
+    string subnetworkId = networkId.substr(0, VALID_MOUNT_NETWORKID_LEN);
+    int32_t res = DeviceManagerAgent::GetInstance()->UMountDfsDocs(networkId, subnetworkId, true);
+    if (res != NO_ERROR) {
+        LOGE("[UMountDfsDocs] failed");
+        return;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo{};
+    res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (res != NO_ERROR) {
+        LOGE("strcpy failed, res = %{public}d", res);
+        return;
+    }
+    ConnectCount::GetInstance()->RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
+    int32_t ret = CleanUp(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("DisconnectByRemote disconnection failed.");
+        return;
+    }
+}
+
+int32_t Daemon::CreatControlLink(const std::string &networkId)
+{
+    LOGI("start CreatControlLink");
+    if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+
+    DfsVersion remoteDfsVersion;
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
+    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
+        LOGW("old version, not need CreatControlLink");
+        return FileManagement::ERR_OK;
+    }
+
+    if (ChannelManager::GetInstance().CreateClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
+}
+
+int32_t Daemon::CancelControlLink(const std::string &networkId)
+{
+    if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
+        LOGI("not exist channel, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_OK;
+    }
+    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
+        LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
+}
+
+int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
+{
+    LOGI("start CheckRemoteAllowConnect");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+
+    return response.msgBody == "true" ? FileManagement::ERR_BAD_VALUE : FileManagement::E_OK;
+}
+
+int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemotePublishNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemotePublishNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_PUBLISH_NOTIFICATION;
+
+    std::string srcNetworkId;
+    DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetworkId);
+    request.networkId = srcNetworkId;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
+int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
+{
+    LOGI("start NotifyRemoteCancelNotification");
+    int32_t ret = CreatControlLink(networkId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
+        return ret;
+    }
+    ControlCmd request;
+    request.msgType = ControlCmdType::CMD_CANCEL_NOTIFICATION;
+
+    ControlCmd response;
+    ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("SendRequest ret = %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

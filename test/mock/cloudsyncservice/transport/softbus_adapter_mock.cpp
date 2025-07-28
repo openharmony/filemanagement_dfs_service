@@ -127,4 +127,9 @@ bool SoftbusAdapter::IsSessionOpened(int sessionId)
 {
     return false;
 }
+
+void SoftbusAdapter::UpdateFileRecvPath(const std::string &bundleName, int32_t userId)
+{
+    return;
+}
 }

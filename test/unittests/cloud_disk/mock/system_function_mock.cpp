@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@
 
 #include "assistant.h"
 
+constexpr int32_t TEST_ERR = 2;
+
 using namespace OHOS::FileManagement::CloudDisk;
 int access(const char *name, int type)
 {
@@ -32,7 +34,29 @@ int open(const char *file, int oflag)
     return Assistant::ins->open(file, oflag);
 }
 
+int close(int fd)
+{
+    return Assistant::ins->close(fd);
+}
+
 off_t lseek(int fd, off_t offset, int whence)
 {
     return Assistant::ins->lseek(fd, offset, whence);
+}
+
+int fstat(int fd, struct stat *buf)
+{
+    errno = TEST_ERR;
+    return Assistant::ins->fstat(fd, buf);
+}
+
+int fcntl(int fd, int op, ...)
+{
+    errno = TEST_ERR;
+    return Assistant::ins->fcntl(fd, op);
+}
+
+int ftruncate(int fd, off_t length)
+{
+    return Assistant::ins->ftruncate(fd, length);
 }

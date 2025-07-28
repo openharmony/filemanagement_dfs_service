@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,9 @@ static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notify
         ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
             paramDisk.ino, notifyData);
     }
+    if (ret != E_OK) {
+        LOGI("GetNotifyData Not E_OK when GetDataInner ret = %{public}d", ret);
+    }
     return ret;
 }
 
@@ -109,6 +112,9 @@ static int32_t GetDataInnerWithName(const NotifyParamDisk &paramDisk, NotifyData
     } else {
         ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
             paramDisk.ino, paramDisk.name, notifyData);
+    }
+    if (ret != E_OK) {
+        LOGI("GetNotifyData Not E_OK when GetDataInnerWithName ret = %{public}d", ret);
     }
     return ret;
 }
@@ -172,7 +178,7 @@ static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers 
     if (paramOthers.dirtyType == static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD)) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
     }
-    if (paramOthers.fileDirty == CLOUD_DISK_FILE_WRITE) {
+    if (paramOthers.isWrite) {
         notifyData.type = NotifyType::NOTIFY_FILE_CHANGED;
     }
     notifyData.isLocalOperation = true;
@@ -279,6 +285,8 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
     if (ret == E_OK) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
+    } else {
+        LOGI("HandleInsert failed. ret = %{public}d", ret);
     }
 }
 

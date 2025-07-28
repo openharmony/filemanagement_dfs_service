@@ -26,7 +26,8 @@ class CloudDatabase {
 public:
     CloudDatabase(const int32_t userId, const std::string &bundleName);
     virtual ~CloudDatabase() = default;
-    virtual std::shared_ptr<CloudAssetReadSession> NewAssetReadSession(std::string recordType,
+    virtual std::shared_ptr<CloudAssetReadSession> NewAssetReadSession(const int32_t userId,
+                                                                       std::string recordType,
                                                                        std::string recordId,
                                                                        std::string assetKey,
                                                                        std::string assetPath);

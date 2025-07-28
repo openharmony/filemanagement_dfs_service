@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "clouddisk_notify_utils_mock.h"
 
 #include "clouddisk_notify_utils.h"
 #include "clouddisk_rdb_utils.h"
@@ -141,6 +142,7 @@ int32_t CloudDiskNotifyUtils::GetUriFromCache(const string &bundleName,
     if (uri == "mock") {
         return E_RDB;
     }
+    uri = ICloudDiskNotifyUtils::ins == nullptr ? uri : ICloudDiskNotifyUtils::ins->GetUriFromCache();
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudDisk

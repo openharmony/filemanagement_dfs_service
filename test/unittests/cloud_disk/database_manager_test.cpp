@@ -81,7 +81,7 @@ HWTEST_F(DatabaseManagerTest, GetRdbStoreTest001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issuesIB4SSZ
  */
-HWTEST_F(DatabaseManagerTest, GetInstanceTest001, TestSize.Level1)
+HWTEST_F(DatabaseManagerTest, GetInstanceTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest001 start";
     try{

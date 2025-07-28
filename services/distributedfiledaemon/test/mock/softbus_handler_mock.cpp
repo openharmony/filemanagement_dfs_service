@@ -32,11 +32,6 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
     return;
 }
 
-bool SoftBusHandler::IsSameAccount(const std::string &networkId)
-{
-    return true;
-}
-
 std::string SoftBusHandler::GetSessionName(int32_t sessionId)
 {
     return "test";

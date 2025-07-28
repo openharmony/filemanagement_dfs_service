@@ -22,6 +22,7 @@
 #include "i_cloud_download_callback.h"
 #include "i_cloud_optimize_callback.h"
 #include "i_cloud_sync_callback.h"
+#include "i_downgrade_dl_callback.h"
 
 namespace OHOS::FileManagement::CloudFile {
 class DataSyncManager {
@@ -38,6 +39,8 @@ public:
                                      std::string prepareTraceId = "");
     virtual int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId,
                                     bool forceFlag, SyncTriggerType triggerType);
+    virtual int32_t StopSyncSynced(const std::string &bundleName, const int32_t userId,
+                                        bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     virtual int32_t StopUploadTask(const std::string &bundleName, const int32_t userId);
     virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId);
@@ -48,21 +51,15 @@ public:
     virtual void UnRegisterCloudSyncCallback(const std::string &bundleName, const std::string &callerBundleName);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
     virtual int32_t StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                      const std::vector<std::string> &pathVec,
+                                      const std::vector<std::string> &uriVec,
                                       int64_t &downloadId,
                                       int32_t fieldkey,
                                       const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
                                       int32_t timeout = -1);
     virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                     const std::string &path,
-                                     bool needClean = false);
-    virtual int32_t StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
-                                  int64_t downloadId,
-                                  bool needClean,
-                                  int32_t timeout = -1);
-    virtual int32_t RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
-                                                 const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
-    virtual int32_t UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo);
+                                     int64_t downloadId,
+                                     bool needClean,
+                                     int32_t timeout = -1);
     virtual int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
     virtual int32_t CleanRemainFile(const std::string &bundleName, const int32_t userId);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
@@ -85,7 +82,24 @@ public:
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);
     virtual int32_t ReportEntry(const std::string &bundleName, const int32_t userId);
     virtual int32_t ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool status);
+    virtual int32_t StartDowngrade(const std::string &bundleName,
+                                   const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback);
+    virtual int32_t StopDowngrade(const std::string &bundleName);
+    virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo);
+    // file version
+    virtual int32_t GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                          const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList);
+    virtual int32_t DownloadHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                           int64_t &downloadId, const uint64_t versionId,
+                                           const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+                                           std::string &versionUri);
+    virtual int32_t ReplaceFileWithHistoryVersion(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                                  const std::string &versionUri);
+    virtual int32_t IsFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
+                                   bool &isConflict);
+    virtual int32_t ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
 };
-} // namespace OHOS::FileManagement::CloudSync
+} // namespace OHOS::FileManagement::CloudFile
 
 #endif // OHOS_CLOUD_FILE_DATA_SYNC_MANAGER_H

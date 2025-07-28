@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "sandbox_helper.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
@@ -31,7 +32,9 @@ namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
-static const int32_t SLEEP_TIME_MS = 10;
+std::shared_mutex SoftBusFileReceiveListener::rwMtx_;
+std::condition_variable_any SoftBusFileReceiveListener::cv_;
+const static int32_t WAIT_TIME_MS = 10 * 1000;
 void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -76,7 +79,7 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
         LOGI("SetRecvPath physicalPath is empty.");
         return;
     }
-    LOGI("SetRecvPath physicalPath: %{public}s", GetAnonyString(physicalPath).c_str());
+    LOGI("SetRecvPath physicalPath");
     if (!AppFileService::SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("invalid path.");
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
@@ -93,7 +96,9 @@ void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketI
     LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
     bindSuccess.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
+    std::unique_lock<std::shared_mutex> lock(rwMtx_);
     bindSuccess.store(true);
+    cv_.notify_all();
 }
 
 std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
@@ -112,9 +117,9 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
 {
     LOGI("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
-    while (!bindSuccess.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
-    }
+    std::shared_lock<std::shared_mutex> lock(rwMtx_);
+    cv_.wait_for(lock, std::chrono::milliseconds(WAIT_TIME_MS),
+        [] { return SoftBusFileReceiveListener::bindSuccess.load(); });
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
@@ -175,6 +180,22 @@ void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, Shutdo
     TransManager::GetInstance().NotifyFileFailed(sessionName, E_SOFTBUS_SESSION_FAILED);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+}
+
+bool SoftBusFileReceiveListener::OnNegotiate2(int32_t socket, PeerSocketInfo info,
+    SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    AccountInfo callerAccountInfo;
+    std::string networkId = info.networkId;
+    if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
+        LOGE("Trans caller info failed.");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {
+        LOGE("FillLocalInfo failed.");
+        return false;
+    }
+    return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
 } // namespace DistributedFile
 } // namespace Storage

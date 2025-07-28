@@ -72,6 +72,10 @@ enum Notify {
 
 void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const std::string backStage)
 {
+    if (session == nullptr) {
+        LOGE("session is nullptr.");
+        return;
+    }
     int socketFd = session->GetHandle();
     auto masterkey = session->GetKey();
     auto cid = session->GetCid();
@@ -168,16 +172,16 @@ void KernelTalker::PollRun()
         return;
     }
     string ctrlPath = spt->GetMountArgument().GetCtrlPath();
-    LOGI("Open node file ctrl path %{public}s", GetAnonyString(ctrlPath).c_str());
+    LOGI("Open node file ctrl path");
     char resolvedPath[PATH_MAX] = {'\0'};
     char *realPath = realpath(ctrlPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
-        LOGE("realpath fail: %{public}s", ctrlPath.c_str());
+        LOGE("realpath fail");
         return;
     }
     cmdFd = open(realPath, O_RDWR);
     if (cmdFd < 0) {
-        LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, GetAnonyString(ctrlPath).c_str());
+        LOGE("Open node file error %{public}d", errno);
         return;
     }
 
@@ -230,6 +234,7 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
+            LOGI("NOTIFY_OFFLINE, cid:%{public}.5s", cidStr.c_str());
             CloseSessionCallback_(cidStr);
             break;
         default:

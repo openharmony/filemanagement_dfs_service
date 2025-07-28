@@ -54,25 +54,38 @@ public:
     int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t StartDownloadFile(const std::string &uri) override;
-    int32_t StartFileCache(const std::string &uri) override;
-    int32_t StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId,
-                           int32_t fieldkey = FIELDKEY_CONTENT,
+    int32_t StartDownloadFile(const std::string &uri,
+                              const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                              int64_t &downloadId) override;
+    int32_t StartFileCache(const std::vector<std::string> &uriVec,
+                           int64_t &downloadId,
+                           int32_t fieldkey = FieldKey::FIELDKEY_CONTENT,
                            const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr,
                            int32_t timeout = -1) override;
-    int32_t StopDownloadFile(const std::string &uri, bool needClean = false) override;
+    int32_t StopDownloadFile(int64_t downloadId, bool needClean = false) override;
     int32_t StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
     int32_t DownloadThumb() override;
-    int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
-    int32_t RegisterFileCacheCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
-    int32_t UnregisterDownloadFileCallback() override;
-    int32_t UnregisterFileCacheCallback() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
+    int32_t CleanFileCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
+    void CleanGalleryDentryFile(const std::string path) override;
     int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo, std::vector<std::string> &failCloudId) override;
     int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId) override;
+    int32_t StartDowngrade(const std::string &bundleName,
+                           const std::shared_ptr<DowngradeDlCallback> downloadCallback) override;
+    int32_t StopDowngrade(const std::string &bundleName) override;
+    int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
+    // file version
+    int32_t GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                  std::vector<CloudSync::HistoryVersion> &historyVersionList) override;
+    int32_t DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                   const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                   std::string &versionUri) override;
+    int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
+    int32_t IsFileConflict(const std::string &uri, bool &isConflict) override;
+    int32_t ClearFileConflict(const std::string &uri) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
@@ -90,10 +103,8 @@ private:
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
     std::shared_ptr<CloudSyncCallback> callback_;
-    std::shared_ptr<CloudDownloadCallback> downloadCallback_;
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
-    std::mutex downloadMutex_;
     std::mutex callbackMutex_;
     void SubscribeListener(std::string bundleName = "");
 };

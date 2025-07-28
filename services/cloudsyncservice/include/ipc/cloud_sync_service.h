@@ -40,6 +40,8 @@ class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub
 public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudSyncService() = default;
+    int32_t CallbackEnter(uint32_t code) override;
+    int32_t CallbackExit(uint32_t code, int32_t result) override;
     ErrCode UnRegisterCallbackInner(const std::string &bundleName = "") override;
     ErrCode UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
     ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
@@ -61,27 +63,25 @@ public:
     ErrCode NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
     ErrCode EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     ErrCode DisableCloud(const std::string &accoutId) override;
-    ErrCode StartDownloadFile(const std::string &path) override;
+    ErrCode StartDownloadFile(const std::string &uri,
+                              const sptr<IRemoteObject> &downloadCallback,
+                              int64_t &downloadId) override;
     ErrCode StartFileCache(const std::vector<std::string> &uriVec,
                            int64_t &downloadId,
                            int32_t fieldkey,
-                           bool isCallbackValid,
                            const sptr<IRemoteObject> &downloadCallback,
                            int32_t timeout = -1) override;
-    ErrCode StopDownloadFile(const std::string &path, bool needClean = false) override;
+    ErrCode StopDownloadFile(int64_t downloadId, bool needClean = false) override;
     ErrCode StopFileCache(int64_t downloadId, bool needClean = false, int32_t timeout = -1) override;
     ErrCode DownloadThumb() override;
-    ErrCode RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    ErrCode RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback) override;
-    ErrCode UnregisterDownloadFileCallback() override;
-    ErrCode UnregisterFileCacheCallback() override;
     ErrCode UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
     ErrCode DownloadFile(const int32_t userId, const std::string &bundleName,
                          const AssetInfoObj &assetInfoObj) override;
     ErrCode DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
                           const std::vector<AssetInfoObj> &assetInfoObj,
-                          std::vector<bool> &assetResultMap) override;
+                          std::vector<bool> &assetResultMap,
+                          int32_t connectTime) override;
     ErrCode DownloadAsset(const uint64_t taskId,
                           const int32_t userId,
                           const std::string &bundleName,
@@ -91,11 +91,24 @@ public:
     ErrCode DeleteAsset(const int32_t userId, const std::string &uri) override;
     ErrCode GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     ErrCode CleanCacheInner(const std::string &uri) override;
+    ErrCode CleanFileCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     ErrCode BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
                            std::vector<std::string> &failCloudId) override;
     ErrCode BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
                                   std::vector<std::string> &failCloudId) override;
+    ErrCode StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback) override;
+    ErrCode StopDowngrade(const std::string &bundleName) override;
+    ErrCode GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
+    // file version
+    ErrCode GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,
+                                          std::vector<CloudSync::HistoryVersion> &historyVersionList) override;
+    ErrCode DownloadHistoryVersion(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                                           const sptr<IRemoteObject> &downloadCallback,
+                                           std::string &versionUri) override;
+    ErrCode ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
+    ErrCode IsFileConflict(const std::string &uri, bool &isConflict) override;
+    ErrCode ClearFileConflict(const std::string &uri) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

@@ -73,6 +73,11 @@ enum class TrashOptType : int32_t {
     RECYCLE,
 };
 
+enum ThumbPosition {
+    THM_IN_LOCAL = 1,
+    THM_IN_CLOUD,
+};
+
 constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
 constexpr int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 constexpr int32_t LOCAL = 1;

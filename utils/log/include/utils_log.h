@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@
 
 namespace OHOS {
 #ifndef LOG_DOMAIN
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #endif
 
 #ifndef LOG_TAG
@@ -44,5 +44,6 @@ std::string GetFileNameFromFullPath(const char *str);
                             GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
 
 std::string GetAnonyString(const std::string &value);
+std::string GetAnonyInt32(const int32_t value);
 } // namespace OHOS
 #endif // UTILS_LOG_H

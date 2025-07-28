@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "utils_log.h"
+#include "dfs_error.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -60,6 +61,17 @@ static void CheckOverflow(uint64_t &data, uint64_t addValue)
             static_cast<unsigned long long>(data),
             static_cast<unsigned long long>(addValue));
         data = 0;
+    } else {
+        data += addValue;
+    }
+}
+
+static void CheckOverflow(uint32_t &data, uint32_t addValue)
+{
+    if (data > UINT32_MAX - addValue) {
+        LOGE("update fail, overflow, data = %{public}d, addValue = %{public}d",
+            data, addValue);
+        data = UINT32_MAX;
     } else {
         data += addValue;
     }
@@ -107,6 +119,14 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
     CheckOverflow(readTimeStat_[indexSize][indexTime], 1);
 }
 
+void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
+{
+    if (index >= VIDEO_READ_INFO) {
+        return;
+    }
+    CheckOverflow(videoReadInfo_[index], 1);
+}
+
 void CloudDaemonStatistic::AddFileData()
 {
     /* file not exist means first time, no former data, normal case */
@@ -142,18 +162,20 @@ void CloudDaemonStatistic::AddFileData()
             CheckOverflow(readTimeStat_[i][j], tmpData);
         }
     }
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        statDataFile >> tmpData;
+        CheckOverflow(videoReadInfo_[i], tmpData);
+    }
     statDataFile.close();
 }
 
-void CloudDaemonStatistic::OutputToFile()
+int32_t CloudDaemonStatistic::CheckFileStat()
 {
-    string tmpStr = "";
-
     if (access(STAT_DATA_DIR_NAME.c_str(), F_OK) != 0) {
         auto ret = mkdir(STAT_DATA_DIR_NAME.c_str(), CLOUD_FILE_DIR_MOD);
         if (ret != 0) {
             LOGE("mkdir cloud_data_statistic fail, ret = %{public}d.", ret);
-            return;
+            return ret;
         }
     }
     string statFilePath = STAT_DATA_DIR_NAME + "/" + STAT_DATA_FILE_NAME;
@@ -161,23 +183,32 @@ void CloudDaemonStatistic::OutputToFile()
         auto fd = creat(statFilePath.c_str(), CLOUD_FILE_MOD);
         if (fd < 0) {
             LOGE("create file cloud_sync_read_file_stat fail.");
-            return;
+            return E_NO_SUCH_FILE;
         }
         close(fd);
     }
-    
+    return E_OK;
+}
+
+void CloudDaemonStatistic::OutputToFile()
+{
+    string tmpStr = "";
+
+    int32_t ret = CheckFileStat();
+    if (ret != E_OK) {
+        return;
+    }
+    string statFilePath = STAT_DATA_DIR_NAME + "/" + STAT_DATA_FILE_NAME;
     std::ofstream statDataFile(statFilePath);
     if (!statDataFile) {
         LOGE("open out stream file cloud_sync_read_file_stat fail.");
         return;
     }
-
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
         tmpStr += (to_string(openSizeStat_[i]) + " ");
     }
     statDataFile << tmpStr << endl << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
         for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
             tmpStr += (to_string(openTimeStat_[i][j]) + " ");
@@ -186,18 +217,21 @@ void CloudDaemonStatistic::OutputToFile()
     }
     statDataFile << tmpStr << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         tmpStr += (to_string(readSizeStat_[i]) + " ");
     }
     statDataFile << tmpStr << endl << endl;
     tmpStr = "";
-
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             tmpStr += (to_string(readTimeStat_[i][j]) + " ");
         }
         tmpStr += "\n";
+    }
+    statDataFile << tmpStr << endl;
+    tmpStr = "";
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        tmpStr += (to_string(videoReadInfo_[i]) + " ");
     }
     statDataFile << tmpStr << endl;
     statDataFile.close();
@@ -220,6 +254,9 @@ void CloudDaemonStatistic::ClearStat()
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             readTimeStat_[i][j] = 0;
         }
+    }
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        videoReadInfo_[i] = 0;
     }
 }
 

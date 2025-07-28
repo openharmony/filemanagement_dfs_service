@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
+#include "dfs_device_info.h"
 #include "dm_device_info.h"
 #include "hmdfs_info.h"
 #include "i_file_dfs_listener.h"
@@ -46,6 +47,7 @@ public:
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
     virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
+    virtual int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) = 0;
 
     virtual int32_t PushAsset(int32_t userId,
                               const sptr<AssetObj> &assetObj,
@@ -58,6 +60,9 @@ public:
     virtual int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback processCallback) = 0;
     virtual int32_t Cancel(const std::string &srcUri, const std::string &destUri) = 0;
     virtual int32_t Cancel() = 0;
+    virtual int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) = 0;
+    virtual int32_t UpdateDfsSwitchStatus(int32_t switchStatus) = 0;
+    virtual int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

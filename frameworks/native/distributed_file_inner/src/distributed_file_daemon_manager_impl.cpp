@@ -24,7 +24,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -127,6 +127,16 @@ int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &sess
     return distributedFileDaemonProxy->CancelCopyTask(sessionName);
 }
 
+int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->CancelCopyTask(srcUri, dstUri);
+}
+
 int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
                                                     const sptr<AssetObj> &assetObj,
                                                     const sptr<IAssetSendCallback> &sendCallback)
@@ -138,6 +148,36 @@ int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->PushAsset(userId, assetObj, sendCallback);
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->GetDfsSwitchStatus(networkId, switchStatus);
+}
+
+int32_t DistributedFileDaemonManagerImpl::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->UpdateDfsSwitchStatus(switchStatus);
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->GetConnectedDeviceList(deviceList);
 }
 
 int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)

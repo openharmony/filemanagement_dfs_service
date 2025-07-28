@@ -24,4 +24,13 @@ int32_t Convert2JsErrNum(int32_t errNum)
         return errNum;
     }
 }
+
+int32_t Convert2ErrNum(int32_t errNum)
+{
+    if (errCodeTable.find(errNum) != errCodeTable.end()) {
+        return errCodeTable.at(errNum);
+    } else {
+        return errNum;
+    }
+}
 } // namespace OHOS::FileManagement

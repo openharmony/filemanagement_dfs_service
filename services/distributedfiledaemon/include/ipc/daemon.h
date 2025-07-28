@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@
 #include "multiuser/os_account_observer.h"
 #include "nocopyable.h"
 #include "refbase.h"
+#include "remote_file_share.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
 
@@ -66,12 +67,15 @@ public:
     int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
         const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t InnerCopy(const std::string &srcUri, const std::string &dstUri,
+        const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
                            HmdfsInfo &info) override;
     int32_t CancelCopyTask(const std::string &sessionName) override;
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
@@ -84,11 +88,17 @@ public:
     int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps) override;
     static int32_t Copy(const std::string &srcUri,
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,
                         const std::string &sessionName);
-    static void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
 
 private:
     Daemon();
@@ -100,9 +110,10 @@ private:
     void PublishSA();
     void RegisterOsAccount();
     sptr<IDaemon> GetRemoteSA(const std::string &remoteDeviceId);
-    void StoreSessionAndListener(const std::string &physicalPath,
-                                 const std::string &sessionName,
-                                 const sptr<IFileTransListener> &listener);
+    int32_t StoreSessionAndListener(const std::string &physicalPath,
+                                    std::string &sessionName,
+                                    const sptr<IFileTransListener> &listener);
+    void DeleteSessionAndListener(const std::string &sessionName);
     int32_t GetRealPath(const std::string &srcUri,
                         const std::string &dstUri,
                         std::string &physicalPath,
@@ -113,6 +124,10 @@ private:
                           HapTokenInfo &hapTokenInfo,
                           const bool &isSrcFile,
                           HmdfsInfo &info);
+    int32_t SendDfsDelayTask(const std::string &networkId);
+    void RemoveDfsDelayTask(const std::string &networkId);
+    void DisconnectDevice(const std::string networkId);
+    bool IsCallingDeviceTrusted();
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -121,6 +136,13 @@ private:
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
+
+    void DisconnectByRemote(const std::string &networkId);
+    int32_t CreatControlLink(const std::string &networkId);
+    int32_t CancelControlLink(const std::string &networkId);
+    int32_t CheckRemoteAllowConnect(const std::string &networkId);
+    int32_t NotifyRemotePublishNotification(const std::string &networkId);
+    int32_t NotifyRemoteCancelNotification(const std::string &networkId);
 private:
     std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;

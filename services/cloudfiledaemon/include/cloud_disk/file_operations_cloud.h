@@ -15,11 +15,20 @@
 #ifndef CLOUD_FILE_DAEMON_FILE_OPERATIONS_CLOUD_H
 #define CLOUD_FILE_DAEMON_FILE_OPERATIONS_CLOUD_H
 
+#include "cloud_disk_inode.h"
 #include "file_operations_base.h"
+#include "meta_file.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+
+struct CloudOpenParams {
+    MetaBase metaBase;
+    std::shared_ptr<CloudDiskMetaFile> metaFile;
+    std::shared_ptr<CloudDiskFile> filePtr;
+};
+    
 class FileOperationsCloud final : public FileOperationsBase {
 public:
     void Lookup(fuse_req_t req, fuse_ino_t parent, const char *name) override;

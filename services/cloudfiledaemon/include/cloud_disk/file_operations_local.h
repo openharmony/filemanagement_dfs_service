@@ -27,6 +27,8 @@ public:
     void GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) override;
     void ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                  struct fuse_file_info *fi) override;
+    void Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+               unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz) override;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

@@ -19,8 +19,93 @@
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
 
+namespace AccountSA {
+/**
+ * Interfaces for ohos account subsystem.
+ */
+class OhosAccountKitsImpl : public OhosAccountKits {
+public:
+    std::pair<bool, OhosAccountInfo> QueryOhosAccountInfo()
+    {
+        return {};
+    }
+
+    ErrCode GetOhosAccountInfo(OhosAccountInfo &accountInfo);
+
+    ErrCode GetOsAccountDistributedInfo(int32_t localId, OhosAccountInfo &accountInfo)
+    {
+        return 0;
+    }
+
+    std::pair<bool, OhosAccountInfo> QueryOsAccountDistributedInfo(std::int32_t localId)
+    {
+        return {};
+    }
+
+    ErrCode UpdateOhosAccountInfo(const std::string& accountName, const std::string& uid,
+        const std::string& eventStr)
+    {
+        return 0;
+    }
+
+    ErrCode SetOhosAccountInfo(const OhosAccountInfo &ohosAccountInfo,
+        const std::string &eventStr)
+    {
+        return 0;
+    }
+
+    ErrCode SetOsAccountDistributedInfo(
+        const int32_t localId, const OhosAccountInfo& ohosAccountInfo, const std::string& eventStr)
+    {
+        return 0;
+    }
+
+    ErrCode QueryDeviceAccountId(std::int32_t& accountId)
+    {
+        return 0;
+    }
+
+    std::int32_t GetDeviceAccountIdByUID(std::int32_t& uid)
+    {
+        return 0;
+    }
+
+    ErrCode SubscribeDistributedAccountEvent(const DISTRIBUTED_ACCOUNT_SUBSCRIBE_TYPE type,
+        const std::shared_ptr<DistributedAccountSubscribeCallback> &callback)
+    {
+        return 0;
+    }
+
+    ErrCode UnsubscribeDistributedAccountEvent(const DISTRIBUTED_ACCOUNT_SUBSCRIBE_TYPE type,
+        const std::shared_ptr<DistributedAccountSubscribeCallback> &callback)
+    {
+        return 0;
+    }
+};
+} // namespace AccountSA
+
+
 ErrCode AccountSA::OsAccountManager::QueryActiveOsAccountIds(std::vector<int32_t>& ids)
 {
+    if (DfsDeviceOtherMethod::otherMethod == nullptr) {
+        return 0;
+    }
     return DfsDeviceOtherMethod::otherMethod->QueryActiveOsAccountIds(ids);
+}
+
+ErrCode AccountSA::OhosAccountKitsImpl::GetOhosAccountInfo(AccountSA::OhosAccountInfo &accountInfo)
+{
+    if (DfsDeviceOtherMethod::otherMethod == nullptr) {
+        return 0;
+    }
+    return DfsDeviceOtherMethod::otherMethod->GetOhosAccountInfo(accountInfo);
+}
+} // namespace OHOS
+
+namespace OHOS::AccountSA {
+OhosAccountKits &OhosAccountKits::GetInstance()
+{
+    static OhosAccountKitsImpl test;
+    return test;
 }
 }

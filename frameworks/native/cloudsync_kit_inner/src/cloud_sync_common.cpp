@@ -105,6 +105,100 @@ bool DownloadProgressObj::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool DowngradeProgress::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt32(state)) {
+        LOGE("failed to write download state");
+        return false;
+    }
+    if (!parcel.WriteInt32(stopReason)) {
+        LOGE("failed to write stopReason");
+        return false;
+    }
+    if (!parcel.WriteInt64(downloadedSize)) {
+        LOGE("failed to write downloadedSize");
+        return false;
+    }
+    if (!parcel.WriteInt64(totalSize)) {
+        LOGE("failed to write totalSize");
+        return false;
+    }
+    if (!parcel.WriteInt32(successfulCount)) {
+        LOGE("failed to write successfulCount");
+        return false;
+    }
+    if (!parcel.WriteInt32(failedCount)) {
+        LOGE("failed to write failedCount");
+        return false;
+    }
+    if (!parcel.WriteInt32(totalCount)) {
+        LOGE("failed to write totalCount");
+        return false;
+    }
+
+    return true;
+}
+
+bool CloudFileInfo::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt32(cloudfileCount)) {
+        LOGE("failed to write cloudfileCount");
+        return false;
+    }
+    if (!parcel.WriteInt64(cloudFileTotalSize)) {
+        LOGE("failed to write cloudFileTotalSize");
+        return false;
+    }
+    if (!parcel.WriteInt32(localFileCount)) {
+        LOGE("failed to write localFileCount");
+        return false;
+    }
+    if (!parcel.WriteInt64(localFileTotalSize)) {
+        LOGE("failed to write localFileTotalSize");
+        return false;
+    }
+    if (!parcel.WriteInt32(bothFileCount)) {
+        LOGE("failed to write bothFileCount");
+        return false;
+    }
+    if (!parcel.WriteInt64(bothFileTotalSize)) {
+        LOGE("failed to write bothFileTotalSize");
+        return false;
+    }
+
+    return true;
+}
+
+bool HistoryVersion::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt64(editedTime)) {
+        LOGE("failed to write editedTime");
+        return false;
+    }
+    if (!parcel.WriteUint64(fileSize)) {
+        LOGE("failed to write fileSize");
+        return false;
+    }
+    if (!parcel.WriteUint64(versionId)) {
+        LOGE("failed to write versionId");
+        return false;
+    }
+    if (!parcel.WriteString(originalFileName)) {
+        LOGE("failed to write originalFileName");
+        return false;
+    }
+    if (!parcel.WriteString(sha256)) {
+        LOGE("failed to write sha256");
+        return false;
+    }
+    if (!parcel.WriteBool(resolved)) {
+        LOGE("failed to write resolved");
+        return false;
+    }
+
+    return true;
+}
+
 bool CleanOptions::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteUint32(appActionsData.size())) {
@@ -138,6 +232,39 @@ SwitchDataObj *SwitchDataObj::Unmarshalling(Parcel &parcel)
 DownloadProgressObj *DownloadProgressObj::Unmarshalling(Parcel &parcel)
 {
     DownloadProgressObj *info = new (std::nothrow) DownloadProgressObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+DowngradeProgress *DowngradeProgress::Unmarshalling(Parcel &parcel)
+{
+    DowngradeProgress *info = new (std::nothrow) DowngradeProgress();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+CloudFileInfo *CloudFileInfo::Unmarshalling(Parcel &parcel)
+{
+    CloudFileInfo *info = new (std::nothrow) CloudFileInfo();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+HistoryVersion *HistoryVersion::Unmarshalling(Parcel &parcel)
+{
+    HistoryVersion *info = new (std::nothrow) HistoryVersion();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;
@@ -319,6 +446,103 @@ bool DownloadProgressObj::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
+bool DowngradeProgress::ReadFromParcel(Parcel &parcel)
+{
+    int32_t temp = 0;
+    if (!parcel.ReadInt32(temp)) {
+        LOGE("failed to read download state");
+        return false;
+    }
+    state = static_cast<State>(temp);
+    if (!parcel.ReadInt32(temp)) {
+        LOGE("failed to read stopReason");
+        return false;
+    }
+    stopReason = static_cast<StopReason>(temp);
+    if (!parcel.ReadInt64(downloadedSize)) {
+        LOGE("failed to read downloadedSize");
+        return false;
+    }
+    if (!parcel.ReadInt64(totalSize)) {
+        LOGE("failed to read totalSize");
+        return false;
+    }
+    if (!parcel.ReadInt32(successfulCount)) {
+        LOGE("failed to read successfulCount");
+        return false;
+    }
+    if (!parcel.ReadInt32(failedCount)) {
+        LOGE("failed to read failedCount");
+        return false;
+    }
+    if (!parcel.ReadInt32(totalCount)) {
+        LOGE("failed to read totalCount");
+        return false;
+    }
+
+    return true;
+}
+
+bool CloudFileInfo::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadInt32(cloudfileCount)) {
+        LOGE("failed to read cloudfileCount");
+        return false;
+    }
+    if (!parcel.ReadInt64(cloudFileTotalSize)) {
+        LOGE("failed to read cloudFileTotalSize");
+        return false;
+    }
+    if (!parcel.ReadInt32(localFileCount)) {
+        LOGE("failed to read localFileCount");
+        return false;
+    }
+    if (!parcel.ReadInt64(localFileTotalSize)) {
+        LOGE("failed to read localFileTotalSize");
+        return false;
+    }
+    if (!parcel.ReadInt32(bothFileCount)) {
+        LOGE("failed to read bothFileCount");
+        return false;
+    }
+    if (!parcel.ReadInt64(bothFileTotalSize)) {
+        LOGE("failed to read bothFileTotalSize");
+        return false;
+    }
+
+    return true;
+}
+
+bool HistoryVersion::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadInt64(editedTime)) {
+        LOGE("failed to read editedTime");
+        return false;
+    }
+    if (!parcel.ReadUint64(fileSize)) {
+        LOGE("failed to read fileSize");
+        return false;
+    }
+    if (!parcel.ReadUint64(versionId)) {
+        LOGE("failed to read versionId");
+        return false;
+    }
+    if (!parcel.ReadString(originalFileName)) {
+        LOGE("failed to read originalFileName");
+        return false;
+    }
+    if (!parcel.ReadString(sha256)) {
+        LOGE("failed to read sha256");
+        return false;
+    }
+    if (!parcel.ReadBool(resolved)) {
+        LOGE("failed to read resolved");
+        return false;
+    }
+
+    return true;
+}
+
 std::string DownloadProgressObj::to_string()
 {
     std::stringstream ss;
@@ -336,6 +560,19 @@ std::string DownloadProgressObj::to_string()
     ss << " batchSuccNum: " << batchSuccNum;
     ss << " batchFailNum: " << batchFailNum;
     ss << " batchTotalNum: " << batchTotalNum << "]";
+    return ss.str();
+}
+
+std::string DowngradeProgress::to_string() const
+{
+    std::stringstream ss;
+    ss << "DowngradeProgress [DownloadState: " << state;
+    ss << " downloadStopReason: " << stopReason;
+    ss << " downloadedSize: " << downloadedSize;
+    ss << " totalSize: " << totalSize;
+    ss << " successfulCount: " << successfulCount;
+    ss << " failedCount: " << failedCount;
+    ss << " totalCount: " << totalCount << "]";
     return ss.str();
 }
 

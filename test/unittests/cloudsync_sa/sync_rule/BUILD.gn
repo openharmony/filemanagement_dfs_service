@@ -26,7 +26,9 @@ ohos_unittest("battery_status_listener_test") {
   }
   module_out_path = "dfs_service/dfs_service"
   sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
+    "${distributedfile_path}/test/mock/battersrvclient_mock.cpp",
     "battery_status_listener_test.cpp",
   ]
 
@@ -35,27 +37,26 @@ ohos_unittest("battery_status_listener_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/test/mock",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -69,9 +70,15 @@ ohos_unittest("battery_status_listener_test") {
     "LOG_DOMAIN=0xD004310",
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
+
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]
     defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+
+  if (cloudsync_service_power) {
+    external_deps += [ "battery_manager:batterysrv_client" ]
+    defines += [ "SUPPORT_POWER" ]
   }
   use_exceptions = true
 }
@@ -79,7 +86,7 @@ ohos_unittest("battery_status_listener_test") {
 ohos_unittest("net_conn_callback_observer_test") {
   module_out_path = "dfs_service/dfs_service"
   sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "net_conn_callback_observer_test.cpp",
   ]
 
@@ -87,7 +94,7 @@ ohos_unittest("net_conn_callback_observer_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
+    "${innerkits_native_path}/cloud_file_kit_inner",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
@@ -96,16 +103,17 @@ ohos_unittest("net_conn_callback_observer_test") {
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -126,7 +134,6 @@ ohos_unittest("network_status_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
     "${distributedfile_path}/test/mock/net_conn_client_mock.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_set_manager_mock.cpp",
     "network_status_test.cpp",
   ]
 
@@ -137,18 +144,13 @@ ohos_unittest("network_status_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -158,8 +160,11 @@ ohos_unittest("network_status_test") {
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
     "dfs_service:cloudsync_kit_inner",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -187,7 +192,6 @@ ohos_unittest("cloud_status_test") {
   include_dirs = [
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
-    "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/test/mock",
   ]
@@ -197,17 +201,21 @@ ohos_unittest("cloud_status_test") {
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_core",
   ]
 
   defines = [ "private=public" ]
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
 
   use_exceptions = true
 }
@@ -236,25 +244,23 @@ ohos_unittest("battery_status_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/test/mock",
   ]
 
   deps = [
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -291,11 +297,7 @@ ohos_unittest("network_set_manager_test") {
   }
 
   module_out_path = "dfs_service/dfs_service"
-  sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
-    "network_set_manager_test.cpp",
-  ]
+  sources = [ "network_set_manager_test.cpp" ]
 
   include_dirs = [
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
@@ -305,17 +307,12 @@ ohos_unittest("network_set_manager_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -323,16 +320,19 @@ ohos_unittest("network_set_manager_test") {
     "ability_runtime:dataobs_manager",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
-
   use_exceptions = true
 }
 
@@ -349,18 +349,13 @@ ohos_unittest("system_load_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -371,8 +366,11 @@ ohos_unittest("system_load_test") {
     "data_share:datashare_consumer",
     "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -382,7 +380,6 @@ ohos_unittest("system_load_test") {
   ]
 
   defines = [ "private=public" ]
-
   use_exceptions = true
 }
 
@@ -570,6 +567,7 @@ group("cloudsync_sa_sync_rule_test") {
     ":battery_status_listener_test",
     ":battery_status_test",
     ":cloud_status_test",
+    ":net_conn_callback_observer_test",
     ":network_set_manager_test",
     ":network_status_test",
     ":package_status_listener_test",

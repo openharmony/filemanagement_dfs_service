@@ -62,6 +62,7 @@ public:
     static bool CheckFileStatus(const std::string &key);
     static bool CheckIsTimeRecycled(const std::string &key);
     static bool CheckIsRecyclePath(const std::string &key);
+    static std::string GetLocalBaseDir(std::string bundleName, int32_t userId);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
     static std::string GetLocalDKCachePath(std::string cloudId, std::string bundleName, int32_t userId);
@@ -73,7 +74,7 @@ public:
     static uint32_t GetBucketId(std::string cloudId);
     static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);
-    static bool ClearCache(const std::string &dfsPath);
+    static bool ClearCache(const std::string &dfsPath, const std::string &cloudPath);
     static uint32_t DentryHash(const std::string &cloudId);
     static void TeaTransform(uint32_t buf[4], uint32_t const in[]);
     static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num);

@@ -553,10 +553,10 @@ int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bun
     return E_OK;
 }
 
-int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,
-    const std::string &parentCloudId, int64_t rowId)
+int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
+    const struct RestoreInfo &restoreInfo)
 {
-    if (parentCloudId == "mock") {
+    if (restoreInfo.parentCloudId == "mock") {
         return E_RDB;
     }
     return E_OK;

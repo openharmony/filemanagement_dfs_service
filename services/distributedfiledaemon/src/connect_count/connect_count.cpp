@@ -30,7 +30,6 @@ std::shared_ptr<ConnectCount> ConnectCount::GetInstance()
     std::call_once(once, [&]() {
         instance_ = std::make_shared<ConnectCount>();
     });
-
     return instance_;
 }
 
@@ -50,7 +49,7 @@ void ConnectCount::AddConnect(uint32_t callingTokenId, const std::string &networ
 bool ConnectCount::CheckCount(const std::string &networkId)
 {
     std::lock_guard lock(connectMutex_);
-    for (auto &connect : connectList_) {
+    for (const auto &connect : connectList_) {
         if (connect->networkId == networkId) {
             return true;
         }
@@ -61,7 +60,7 @@ bool ConnectCount::CheckCount(const std::string &networkId)
 void ConnectCount::RemoveAllConnect()
 {
     std::lock_guard lock(connectMutex_);
-    for (auto &connect : connectList_) {
+    for (const auto &connect : connectList_) {
         if (connect->listener != nullptr) {
             connect->listener->OnStatus(connect->networkId, ON_STATUS_OFFLINE);
         }
@@ -111,7 +110,7 @@ std::vector<std::string> ConnectCount::GetNetworkIds(uint32_t callingTokenId)
 {
     std::lock_guard lock(connectMutex_);
     std::vector<std::string> networkIds;
-    for (auto &connect : connectList_) {
+    for (const auto &connect : connectList_) {
         if (connect->callingTokenId == callingTokenId) {
             networkIds.push_back(connect->networkId);
         }
@@ -122,7 +121,7 @@ std::vector<std::string> ConnectCount::GetNetworkIds(uint32_t callingTokenId)
 void ConnectCount::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
 {
     std::lock_guard lock(connectMutex_);
-    for (auto &connect : connectList_) {
+    for (const auto &connect : connectList_) {
         if (connect->networkId == networkId && connect->listener != nullptr) {
             connect->listener->OnStatus(networkId, status);
             LOGI("NotifyRemoteReverseObj, networkId: %{public}s, callingTokenId: %{public}u",
@@ -134,7 +133,7 @@ void ConnectCount::NotifyRemoteReverseObj(const std::string &networkId, int32_t 
 int32_t ConnectCount::FindCallingTokenIdForListerner(const sptr<IRemoteObject> &listener, uint32_t &callingTokenId)
 {
     std::lock_guard lock(connectMutex_);
-    for (auto &connect : connectList_) {
+    for (const auto &connect : connectList_) {
         if (connect->listener != nullptr && (connect->listener)->AsObject() == listener) {
             callingTokenId =  connect->callingTokenId;
             return FileManagement::E_OK;

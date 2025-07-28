@@ -23,6 +23,7 @@
 #include "softbus_session_mock.h"
 #include "session_manager.h"
 #include "socket_mock.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -47,6 +48,7 @@ void FileTransferManagerTest::SetUpTestCase(void)
 
 void FileTransferManagerTest::TearDownTestCase(void)
 {
+    TaskStateManager::GetInstance().CancelUnloadTask();
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -66,7 +68,7 @@ void FileTransferManagerTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: IB3T5H
  */
-HWTEST_F(FileTransferManagerTest, InitTest001, TestSize.Level1)
+HWTEST_F(FileTransferManagerTest, InitTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "InitTest001 start";
     try {
@@ -105,6 +107,95 @@ HWTEST_F(FileTransferManagerTest, DownloadFileFromRemoteDeviceTest001, TestSize.
     GTEST_LOG_(INFO) << "DownloadFileFromRemoteDeviceTest001 end";
 }
 
+/**
+ * @tc.name: DownloadFileFromRemoteDeviceTest002
+ * @tc.desc: bundleName is not empty
+ * @tc.type: FUNC
+ * @tc.require: IB3T5H
+ */
+HWTEST_F(FileTransferManagerTest, DownloadFileFromRemoteDeviceTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFileFromRemoteDeviceTest002 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        char data[] = "test data";
+        string peerNetworkId = "test peerNetworkId";
+        std::string uri = "file://com.ohos.a/data/storage/el2/distrubutedfiles/1.txt";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        fileTransferManager->DownloadFileFromRemoteDevice(peerNetworkId, 0, 0, uri);
+        EXPECT_NE(fileTransferManager->sessionManager_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFileFromRemoteDeviceTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DownloadFileFromRemoteDeviceTest002 end";
+}
+
+/**
+ * @tc.name: GetBundleNameForUriTest001
+ * @tc.desc: bundleName is not empty
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(FileTransferManagerTest, GetBundleNameForUriTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest001 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        std::string uri = "file://com.ohos.a/data/storage/el2/distrubutedfiles/1.txt";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        auto bundleName = fileTransferManager->GetBundleNameForUri(uri);
+        EXPECT_EQ(bundleName, "com.ohos.a");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameForUriTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest001 end";
+}
+
+/**
+ * @tc.name: GetBundleNameForUriTest002
+ * @tc.desc: bundleName is empty
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(FileTransferManagerTest, GetBundleNameForUriTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest002 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        std::string uri = "data/";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        auto bundleName = fileTransferManager->GetBundleNameForUri(uri);
+        EXPECT_TRUE(bundleName.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameForUriTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest002 end";
+}
+
+/**
+ * @tc.name: GetBundleNameForUriTest003
+ * @tc.desc: bundleName is empty
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(FileTransferManagerTest, GetBundleNameForUriTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest003 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        std::string uri = "file://com.ohos.a";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        auto bundleName = fileTransferManager->GetBundleNameForUri(uri);
+        EXPECT_TRUE(bundleName.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameForUriTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameForUriTest003 end";
+}
 /**
  * @tc.name: OnMessageHandleTest001
  * @tc.desc: Verify the OnMessageHandle function
@@ -147,6 +238,39 @@ HWTEST_F(FileTransferManagerTest, HandleDownloadFileRequestTest001, TestSize.Lev
         msgInputInfo.userId = 100;
         msgInputInfo.taskId = 100;
         msgInputInfo.uri = "data/test";
+        msgInputInfo.errorCode = E_OK;
+        MessageHandler msgHandle(msgInputInfo);
+        fileTransferManager->HandleDownloadFileRequest(msgHandle, peerNetworkId, 0);
+        fileTransferManager->HandleDownloadFileResponse(msgHandle);
+        fileTransferManager->HandleRecvFileFinished();
+        EXPECT_NE(fileTransferManager->sessionManager_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 end";
+}
+
+/**
+ * @tc.name: HandleDownloadFileRequestTest001
+ * @tc.desc: Verify the HandleDownloadFileRequest function have errorCode
+ * @tc.type: FUNC
+ * @tc.require: IB3T5H
+ */
+HWTEST_F(FileTransferManagerTest, HandleDownloadFileRequestTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadFileRequestTest001 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        char data[] = "test data";
+        string peerNetworkId = "test peerNetworkId";
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+
+        MessageInputInfo msgInputInfo = {};
+        msgInputInfo.userId = 100;
+        msgInputInfo.taskId = 100;
+        msgInputInfo.uri = "data/test";
+        msgInputInfo.errorCode = 1;
         MessageHandler msgHandle(msgInputInfo);
         fileTransferManager->HandleDownloadFileRequest(msgHandle, peerNetworkId, 0);
         fileTransferManager->HandleDownloadFileResponse(msgHandle);
@@ -204,6 +328,51 @@ HWTEST_F(FileTransferManagerTest, AddTransTaskTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "AddTransTaskTest001 failed";
     }
     GTEST_LOG_(INFO) << "AddTransTaskTest001 end";
+}
+
+/**
+ * @tc.name: UriToPathTest001
+ * @tc.desc: Invalid uri
+ * @tc.type: FUNC
+ * @tc.require: IB3T5H
+ */
+HWTEST_F(FileTransferManagerTest, UriToPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UriToPathTest001 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        auto [first, second] = fileTransferManager->UriToPath("data/test", 100, false);
+        EXPECT_TRUE(first.empty());
+        EXPECT_TRUE(second.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UriToPathTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UriToPathTest001 end";
+}
+
+/**
+ * @tc.name: UriToPathTest002
+ * @tc.desc: Verify the UriToPath function
+ * @tc.type: FUNC
+ * @tc.require: IB3T5H
+ */
+HWTEST_F(FileTransferManagerTest, UriToPathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UriToPathTest002 start";
+    try {
+        auto sessionManager = make_shared<SessionManager>();
+        auto fileTransferManager = make_shared<FileTransferManager>(sessionManager);
+        std::string uri = "file://com.ohos.a/data/storage/el2/distributedfiles/1.txt";
+        std::string relativePath = "/1.txt";
+        auto [first, second] = fileTransferManager->UriToPath(uri, 100, false);
+        EXPECT_EQ(second, relativePath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UriToPathTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UriToPathTest002 end";
 }
 } // namespace Test
 } // namespace CloudSync

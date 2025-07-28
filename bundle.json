@@ -36,12 +36,16 @@
           "app_file_service",
           "battery_manager",
           "c_utils",
+          "cJSON",
           "common_event_service",
           "dataclassification",
           "data_share",
           "device_auth",
+          "device_info_manager",
           "device_manager",
+          "distributed_notification_service",
           "dsoftbus",
+          "e2fsprogs",
           "eventhandler",
           "ffrt",
           "file_api",
@@ -49,26 +53,27 @@
           "hilog",
           "hisysevent",
           "hitrace",
+          "i18n",
           "init",
           "ipc",
           "json",
           "napi",
           "preferences",
-          "media_library",
+          "memmgr",
           "netmanager_base",
           "relational_store",
+          "runtime_core",
           "safwk",
           "storage_service",
           "samgr",
+          "selinux_adapter",
           "os_account",
           "power_manager",
           "resource_schedule_service",
           "libfuse",
           "zlib"
         ],
-        "third_party": [
-          "e2fsprogs"
-        ]
+        "third_party": []
       },
       "build": {
         "group_type": {
@@ -81,6 +86,7 @@
             "//foundation/filemanagement/dfs_service:cloud_file_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
             "//foundation/filemanagement/dfs_service:distributed_file_daemon_kit_inner_target",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/js/ani:ani_package",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync",
             "//foundation/filemanagement/dfs_service/adapter/cloud_adapter_example:cloud_adapter_example_target"

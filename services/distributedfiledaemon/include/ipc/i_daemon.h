@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,12 @@
 #include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
+#include "dfs_device_info.h"
 #include "dm_device_info.h"
 #include "hmdfs_info.h"
 #include "iremote_broker.h"
 #include "i_file_dfs_listener.h"
+#include "remote_file_share.h"
 
 namespace OHOS {
 namespace Storage {
@@ -43,6 +45,7 @@ public:
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
     virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
+    virtual int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) = 0;
     virtual int32_t RequestSendFile(const std::string &srcUri,
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,
@@ -54,8 +57,15 @@ public:
                               const sptr<AssetObj> &assetObj,
                               const sptr<IAssetSendCallback> &sendCallback) = 0;
     virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
-    virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
+    virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
 
+    virtual int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                           const int32_t userId,
+                                           std::unordered_map<std::string,
+                                           AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps) = 0;
+    virtual int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) = 0;
+    virtual int32_t UpdateDfsSwitchStatus(int32_t switchStatus) = 0;
+    virtual int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile

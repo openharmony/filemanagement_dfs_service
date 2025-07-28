@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_napi.h"
-
+#include <set>
 #include <sys/types.h>
 #include <sys/xattr.h>
 
 #include "async_work.h"
 #include "cloud_sync_manager.h"
+#include "cloud_sync_napi.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "securec.h"
@@ -31,6 +31,8 @@ using namespace FileManagement::LibN;
 using namespace std;
 const int32_t PARAM0 = 0;
 static const unsigned int READ_SIZE = 1024;
+// The data size is consistent with IPC
+static const unsigned int MAX_CHANGE_DATA_SIZE = 200 * 1024;
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
@@ -369,7 +371,9 @@ napi_value CloudSyncNapi::Start(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        LOGE("Failed to init args");
         NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
     }
 
     string bundleName = GetBundleName(env, funcArg);
@@ -680,6 +684,7 @@ bool CloudSyncNapi::Export()
         NVal::DeclareNapiFunction("off", OffCallback),
         NVal::DeclareNapiFunction("start", Start),
         NVal::DeclareNapiFunction("stop", Stop),
+        NVal::DeclareNapiFunction("getCoreFileSyncState", GetCoreFileSyncState),
         NVal::DeclareNapiFunction("getFileSyncState", GetFileSyncState),
         NVal::DeclareNapiFunction("optimizeStorage", OptimizeStorage),
         NVal::DeclareNapiFunction("startOptimizeSpace", StartOptimizeStorage),
@@ -790,8 +795,10 @@ napi_value CloudSyncNapi::StopOptimizeStorage(napi_env env, napi_callback_info i
 napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Failed to init args");
         NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
     }
 
     OptimizeSpaceOptions optimizeOptions {};
@@ -827,34 +834,54 @@ static bool IsGetSingleFileStatus(const napi_env &env, const NFuncArg &funcArg)
     return true;
 }
 
-tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path)
+static tuple<int32_t, int32_t> GetxattrErr()
 {
-    Uri uri(path);
+    LOGE("getxattr failed, errno : %{public}d", errno);
+    std::set<int32_t> errForSingleFileSync = { ENOENT, EACCES, EAGAIN, EINTR, ENOSYS };
+    if (errForSingleFileSync.find(errno) != errForSingleFileSync.end()) {
+        return { errno, -1 };
+    }
+    return { E_UNKNOWN_ERR, -1 };
+}
+
+tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
+{
+    Uri fileUri(uri);
     char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
+
+    if (!CheckIsValidUri(fileUri)) {
+        LOGE("Path illegally crossess");
+        return { E_ILLEGAL_URI, -1 };
+    }
+
+    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
+
     std::string sandBoxPath(resolvedPath);
     std::string xattrKey = "user.cloud.filestatus";
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
     if (xattrValueSize < 0) {
-        return { E_UNKNOWN_ERR, -1 };
+        return GetxattrErr();
     }
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         return { E_UNKNOWN_ERR, -1 };
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
-        return { E_UNKNOWN_ERR, -1 };
+        return GetxattrErr();
     }
+
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
     bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
     if (!isValid) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }
+
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
@@ -866,34 +893,47 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &path
     return { E_OK, val };
 }
 
-tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &path)
+tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &uri)
 {
-    Uri uri(path);
+    Uri fileUri(uri);
     char resolvedPath[PATH_MAX] = {'\0'};
-    if (realpath(uri.GetPath().c_str(), resolvedPath) == nullptr) {
+
+    if (!CheckIsValidUri(fileUri)) {
+        LOGE("Path illegally crossess");
+        return { E_ILLEGAL_URI, -1 };
+    }
+
+    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
+
     std::string sandBoxPath(resolvedPath);
+
     std::string xattrKey = "user.cloud.filestatus";
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
     if (xattrValueSize < 0) {
+        LOGE("getxattr failed, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
+        LOGE("getxattr failed, errno : %{public}d", errno);
         return { LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS, -1 };
     }
+
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
     bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
     if (!isValid) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }
+
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
@@ -908,11 +948,13 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &pa
 static NVal AsyncComplete(const napi_env &env, std::shared_ptr<BatchContext> ctx)
 {
     napi_value results = nullptr;
+
     napi_status status = napi_create_array(env, &results);
     if (status != napi_ok) {
         LOGE("Failed to create array");
         return { env, NError(LibN::STORAGE_SERVICE_SYS_CAP_TAG + LibN::E_IPCSS).GetNapiErr(env) };
     }
+
     int32_t index = 0;
     for (auto result : ctx->resultList) {
         status = napi_set_element(env, results, index, NVal::CreateInt32(env, result).val_);
@@ -933,6 +975,7 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+
     auto [succ, uris, ignore] = arrayVal.ToStringArray();
     auto ctx = std::make_shared<BatchContext>();
     ctx->uriList.swap(uris);
@@ -945,10 +988,10 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
     auto cbExec = [env, ctx]() ->NError {
         int32_t result = 0;
         int32_t fileStatus = 0;
-        for (auto &path : ctx->uriList) {
-            tie(result, fileStatus) = GetFileSyncStateForBatch(path);
+        for (auto &uri : ctx->uriList) {
+            tie(result, fileStatus) = GetFileSyncStateForBatch(uri);
             if (result != E_OK) {
-                return NError(result);
+                return NError(Convert2JsErrNum(result));
             }
             ctx->resultList.push_back(fileStatus);
         }
@@ -967,29 +1010,50 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
+static int32_t CheckPermissions(const string &permission, bool isSystemApp)
+{
+    if (!permission.empty() && !DfsuAccessTokenHelper::CheckCallerPermission(permission)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (isSystemApp && !DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    return E_OK;
+}
+
 napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     int32_t result = 0;
     int32_t fileStatus = 0;
 
+    int ret = CheckPermissions(PERM_CLOUD_SYNC, true);
+    if (ret != 0) {
+        LOGE("Permission denied");
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Number of arguments unmatched");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+
     if (IsGetSingleFileStatus(env, funcArg)) {
-        std::unique_ptr<char []> path;
+        std::unique_ptr<char []> uri;
         bool succ = false;
-        tie(succ, path, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
+        tie(succ, uri, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
         if (!succ) {
-            LOGE("Invalid path");
+            LOGE("Invalid uri");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        tie(result, fileStatus) = GetSingleFileSyncState(string(path.get()));
+        tie(result, fileStatus) = GetSingleFileSyncState(string(uri.get()));
         if (result != E_OK) {
-            NError(result).ThrowErr(env);
+            NError(Convert2JsErrNum(result)).ThrowErr(env);
             return nullptr;
         }
         return NVal::CreateInt32(env, fileStatus).val_;
@@ -997,37 +1061,127 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
     return GetBatchFileSyncState(env, funcArg);
 }
 
+static tuple<int32_t, int32_t> GetxattrErrForPublic()
+{
+    LOGE("getxattr failed, errno : %{public}d", errno);
+    std::set<int32_t> errForSingleFileSync = { ENOENT, EACCES, EAGAIN, EINTR, ENOSYS };
+    if (errForSingleFileSync.find(errno) != errForSingleFileSync.end()) {
+        return { errno, -1 };
+    }
+    return { E_SERVICE_INNER_ERROR, -1 };
+}
+
+static tuple<int32_t, int32_t> DoGetCoreFileSyncState(const char *resolvedPath)
+{
+    std::string sandBoxPath(resolvedPath);
+    std::string xattrKey = "user.cloud.filestatus";
+
+    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
+    if (xattrValueSize < 0) {
+        return GetxattrErrForPublic();
+    }
+    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
+    if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
+        return { E_SERVICE_INNER_ERROR, -1 };
+    }
+    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
+    if (xattrValueSize <= 0) {
+        return GetxattrErrForPublic();
+    }
+
+    std::string xattrValueStr(xattrValue.get(), xattrValueSize);
+    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
+    if (!isValid) {
+        LOGE("invalid xattrValue");
+        return { E_SERVICE_INNER_ERROR, -1 };
+    }
+
+    int32_t fileStatus = std::stoi(xattrValue.get());
+    int32_t val;
+    if (fileStatus >= 0 && fileStatus < publicStatusMap.size()) {
+        val = publicStatusMap[fileStatus];
+    } else {
+        LOGE("invalid value");
+        return { E_SERVICE_INNER_ERROR, -1 };
+    }
+    return { E_OK, val };
+}
+
+napi_value CloudSyncNapi::GetCoreFileSyncState(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    int32_t result = 0;
+    int32_t fileStatus = 0;
+
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    std::unique_ptr<char []> uri;
+    bool succ = false;
+    tie(succ, uri, std::ignore) = NVal(env, funcArg[static_cast<int>(NARG_POS::FIRST)]).ToUTF8String();
+    if (!succ) {
+        LOGE("GetCoreFileSyncState get uri parameter failed!");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    Uri fileUri(string(uri.get()));
+
+    if (!CheckIsValidUri(fileUri)) {
+        LOGE("Path illegally crossess");
+        NError(Convert2JsErrNum(E_ILLEGAL_URI)).ThrowErr(env);
+        return nullptr;
+    }
+
+    char resolvedPath[PATH_MAX] = {'\0'};
+
+    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
+        LOGE("get realPath failed");
+        NError(Convert2JsErrNum(E_INVALID_URI)).ThrowErr(env);
+        return nullptr;
+    }
+
+    tie(result, fileStatus) = DoGetCoreFileSyncState(resolvedPath);
+    if (result != E_OK) {
+        NError(Convert2JsErrNum(result)).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateInt32(env, fileStatus).val_;
+}
+
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
 {
+    if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE ||
+        listener.changeInfo.uris_.empty() || listener.changeInfo.size_ > MAX_CHANGE_DATA_SIZE) {
+        LOGD("notify data is invalid: %{public}d %{public}zu %{public}d",
+             static_cast<int>(listener.changeInfo.changeType_), listener.changeInfo.uris_.size(),
+             listener.changeInfo.size_);
+        return;
+    }
+
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbRef, listener.changeInfo, listener.strUri);
     if (msg == nullptr) {
         LOGE("Failed to create uv message object");
         return;
     }
-
-    if (!listener.changeInfo.uris_.empty()) {
-        if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
-            LOGE("changeInfo.changeType_ is other");
-            delete msg;
-            return;
-        }
-        if (msg->changeInfo_.size_ > 0) {
-            msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
-            if (msg->data_ == nullptr) {
-                LOGE("new msg->data failed");
-                delete msg;
-                return;
-            }
-            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_,
-                msg->changeInfo_.data_, msg->changeInfo_.size_);
-            if (copyRet != 0) {
-                LOGE("Parcel data copy failed, err = %{public}d", copyRet);
-                free(msg->data_);
-                delete msg;
-                return;
-            }
-        }
+    msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
+    if (msg->data_ == nullptr) {
+        LOGE("new msg->data failed");
+        delete msg;
+        return;
     }
+    int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+        free(msg->data_);
+        delete msg;
+        return;
+    }
+
     auto ret = SendEvent(msg);
     if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
@@ -1151,30 +1305,36 @@ napi_value ChangeListenerNapi::SolveOnChange(napi_env env, UvChangeMsg *msg)
     }
     napi_create_object(env, &result);
     SetValueArray(env, "uris", msg->changeInfo_.uris_, result);
-    if (msg->data_ != nullptr && msg->changeInfo_.size_ > 0) {
-        uint8_t *parcelData = (uint8_t *)malloc(msg->changeInfo_.size_);
-        if (parcelData == nullptr) {
-            LOGE("new parcelData failed");
-            return nullptr;
-        }
-        int copyRet = memcpy_s(parcelData, msg->changeInfo_.size_, msg->data_, msg->changeInfo_.size_);
-        if (copyRet != 0) {
-            LOGE("Parcel data copy failed, err = %{public}d", copyRet);
-            free(parcelData);
-            return nullptr;
-        }
-        shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
-        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), msg->changeInfo_.size_)) {
-            napi_status status = SetIsDir(env, parcel, result);
-            if (status != napi_ok) {
-                LOGE("Set subArray named property error! field: subUris");
-                return nullptr;
-            }
-        } else {
-            free(parcelData);
-        }
-    }
     SetValueInt32(env, "type", (int)msg->changeInfo_.changeType_, result);
+
+    if (msg->changeInfo_.size_ > MAX_CHANGE_DATA_SIZE || msg->data_ == nullptr) {
+        LOGE("change info is invalid");
+        return nullptr;
+    }
+    uint8_t *parcelData = (uint8_t *)malloc(msg->changeInfo_.size_);
+    if (parcelData == nullptr) {
+        LOGE("new parcelData failed");
+        return nullptr;
+    }
+    int copyRet = memcpy_s(parcelData, msg->changeInfo_.size_, msg->data_, msg->changeInfo_.size_);
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+        free(parcelData);
+        return nullptr;
+    }
+
+    shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
+    if (!parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), msg->changeInfo_.size_)) {
+        LOGE("parcel parse failed");
+        free(parcelData);
+        return nullptr;
+    }
+    napi_status status = SetIsDir(env, parcel, result);
+    if (status != napi_ok) {
+        LOGE("Set subArray named property error! field: subUris");
+        return nullptr;
+    }
+
     return result;
 }
 

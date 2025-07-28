@@ -24,6 +24,8 @@ namespace OHOS::FileManagement::CloudSync {
 class DfsBatterySrvClient {
 public:
     virtual int32_t GetCapacity() = 0;
+    virtual PowerMgr::BatteryChargeState GetChargingStatus() = 0;
+    virtual PowerMgr::BatteryPluggedType GetPluggedType() = 0;
 public:
     DfsBatterySrvClient() = default;
     virtual ~DfsBatterySrvClient() = default;
@@ -33,6 +35,8 @@ public:
 class BatterySrvClientMock : public DfsBatterySrvClient {
 public:
     MOCK_METHOD0(GetCapacity, int32_t());
+    MOCK_METHOD0(GetChargingStatus, PowerMgr::BatteryChargeState());
+    MOCK_METHOD0(GetPluggedType, PowerMgr::BatteryPluggedType());
 };
 
 }

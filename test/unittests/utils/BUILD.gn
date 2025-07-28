@@ -18,29 +18,21 @@ ohos_unittest("cloud_pref_impl_test") {
 
   sources = [
     "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
+    "${distributedfile_path}/test/mock/preference_helper_mock.cpp",
     "./preference/cloud_pref_impl_test.cpp",
   ]
 
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/test/mock",
     "${distributedfile_path}/utils/log/include",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
-    "c_utils:utils",
-    "dfs_service:cloudsync_kit_inner",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
-    "ipc:ipc_single",
-    "preferences:native_preferences",
   ]
 
   defines = [ "private=public" ]
@@ -70,18 +62,16 @@ ohos_unittest("utils_directory_test") {
   include_dirs = [
     "${utils_path}/system/include",
     "${utils_path}/log/include",
-    "//foundation/multimedia/image_framework/mock/native/include/log/",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "image_framework:image_native",
     "json:nlohmann_json_static",
   ]
 
@@ -101,19 +91,20 @@ ohos_unittest("cloud_file_utils_test") {
   include_dirs = [
     "${utils_path}/cloud_disk/include",
     "${utils_path}/log/include",
-    "//foundation/multimedia/image_framework/mock/native/include/log/",
   ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "image_framework:image_native",
+    "init:libbegetutil",
   ]
 
   defines = [ "private=public" ]
@@ -121,6 +112,9 @@ ohos_unittest("cloud_file_utils_test") {
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
   use_exceptions = true
 }
 
@@ -137,12 +131,12 @@ ohos_unittest("plugin_loader_test") {
   deps = [
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
@@ -168,8 +162,6 @@ ohos_unittest("async_work_test") {
   deps = [
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -183,6 +175,8 @@ ohos_unittest("async_work_test") {
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",

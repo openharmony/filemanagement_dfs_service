@@ -71,7 +71,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
     if (serviceProxy_ != nullptr) {
-        return serviceProxy_;
+        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
+            return serviceProxy_;
+        }
     }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -241,7 +243,9 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri,
+                                                 const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                                 int64_t &downloadId)
 {
     return E_OK;
 }
@@ -249,7 +253,6 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
                                                          int32_t &fieldkey,
-                                                         bool isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback,
                                                          int32_t timeout)
 {
@@ -257,15 +260,15 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
 }
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
-                                              int64_t &downloadId, int32_t fieldkey,
-                                              bool isCallbackValid,
+                                              int64_t &downloadId,
+                                              int32_t fieldkey,
                                               const sptr<IRemoteObject> &downloadCallback,
                                               int32_t timeout)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool needClean)
+int32_t CloudSyncServiceProxy::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     return E_OK;
 }
@@ -276,26 +279,6 @@ int32_t CloudSyncServiceProxy::StopFileCache(int64_t downloadId, bool needClean,
 }
 
 int32_t CloudSyncServiceProxy::DownloadThumb()
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::RegisterFileCacheCallback(const sptr<IRemoteObject> &downloadCallback)
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
-{
-    return E_OK;
-}
-
-int32_t CloudSyncServiceProxy::UnregisterFileCacheCallback()
 {
     return E_OK;
 }
@@ -315,7 +298,8 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
 int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
                                              const std::string &bundleName,
                                              const std::vector<AssetInfoObj> &assetInfoObj,
-                                             std::vector<bool> &assetResultMap)
+                                             std::vector<bool> &assetResultMap,
+                                             int32_t connectTime)
 {
     return E_OK;
 }

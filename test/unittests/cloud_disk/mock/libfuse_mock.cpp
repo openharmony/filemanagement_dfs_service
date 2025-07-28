@@ -87,3 +87,8 @@ int fuse_reply_create(fuse_req_t req, const struct fuse_entry_param *e, const st
 {
     return Assistant::ins->fuse_reply_create(req, e, f);
 }
+
+int fuse_reply_ioctl(fuse_req_t req, int result, const void *buf, size_t size)
+{
+    return Assistant::ins->fuse_reply_ioctl(req, result, buf, size);
+}

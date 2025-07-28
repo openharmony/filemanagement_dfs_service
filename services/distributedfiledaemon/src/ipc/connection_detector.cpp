@@ -28,6 +28,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+constexpr int32_t INVALID_USER_ID = -1;
 std::string ConnectionDetector::GetCellByIndex(const std::string &str, int targetIndex)
 {
     size_t begin = 0;

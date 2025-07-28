@@ -23,7 +23,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -32,7 +32,7 @@ namespace DistributedFile {
 using namespace FileManagement;
 static constexpr int BUF_SIZE = 1024;
 static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
-static constexpr int32_t SLEEP_TIME_MS = 100;
+static constexpr int SLEEP_TIME_US = 100000;
 
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
@@ -67,7 +67,7 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
 
 FileCopyLocalListener::~FileCopyLocalListener()
 {
-    CloseNotifyFd();
+    CloseNotifyFdLocked();
 }
 
 std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(const std::string &srcPath,
@@ -83,17 +83,23 @@ void FileCopyLocalListener::StartListener()
         return;
     }
     notifyHandler_ = std::thread([this] {
+        LOGI("StartListener.");
         GetNotifyEvent();
     });
 }
 
 void FileCopyLocalListener::StopListener()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
+    LOGI("StopListener start.");
     if (processCallback_ != nullptr) {
         processCallback_(progressSize_, totalSize_);
     }
-    CloseNotifyFd();
+    CloseNotifyFdLocked();
+    notifyRun_.store(false);
+    {
+        std::unique_lock<std::mutex> cvLock(cvLock_);
+        notifyCv_.notify_one();
+    }
     if (notifyHandler_.joinable()) {
         notifyHandler_.join();
     }
@@ -114,7 +120,7 @@ void FileCopyLocalListener::AddListenerFile(const std::string &destPath, uint32_
     std::lock_guard<std::mutex> lock(wdsMutex_);
     int newWd = inotify_add_watch(notifyFd_, destPath.c_str(), mode);
     if (newWd < 0) {
-        LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d", newWd);
+        LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d, errno = %{public}d", newWd, errno);
         return;
     }
     std::shared_ptr<ReceiveInfo> receiveInfo = std::make_shared<ReceiveInfo>();
@@ -135,20 +141,49 @@ void FileCopyLocalListener::GetNotifyEvent()
     fds[1].events = POLLIN;
     fds[0].fd = eventFd_;
     fds[1].fd = notifyFd_;
-    while (errorCode_== E_OK && eventFd_ != -1 && notifyFd_ != -1) {
+    while (notifyRun_.load() && errorCode_== E_OK && eventFd_ != -1 && notifyFd_ != -1) {
         auto ret = poll(fds, nfds, -1);
         if (ret > 0) {
             if (static_cast<unsigned short>(fds[0].revents) & POLLNVAL) {
+                notifyRun_.store(false);
                 return;
             }
             if (static_cast<unsigned short>(fds[1].revents) & POLLIN) {
-                ReadNotifyEvent();
+                ReadNotifyEventLocked();
             }
         } else if (ret < 0 && errno == EINTR) {
             continue;
         } else {
             LOGE("poll failed error : %{public}d", errno);
             errorCode_ = errno;
+            return;
+        }
+        {
+            std::unique_lock<std::mutex> cvLock(cvLock_);
+            notifyCv_.wait_for(cvLock, std::chrono::microseconds(SLEEP_TIME_US), [this]() -> bool {
+                return notifyFd_ == -1 || !notifyRun_.load();
+            });
+        }
+    }
+}
+
+void FileCopyLocalListener::ReadNotifyEventLocked()
+{
+    {
+        std::lock_guard<std::mutex> lock(readMutex_);
+        if (readClosed_) {
+            LOGE("read after close");
+            return;
+        }
+        readFlag_ = true;
+    }
+    ReadNotifyEvent();
+    {
+        std::lock_guard<std::mutex> lock(readMutex_);
+        readFlag_ = false;
+        if (readClosed_) {
+            LOGE("close after read");
+            CloseNotifyFd();
             return;
         }
     }
@@ -161,7 +196,7 @@ void FileCopyLocalListener::ReadNotifyEvent()
     int len = 0;
     int64_t index = 0;
     while (((len = read(notifyFd_, &buf, sizeof(buf))) < 0) && (errno == EINTR)) {}
-    while (index < len) {
+    while (notifyRun_.load() && index < len) {
         event = reinterpret_cast<inotify_event *>(buf + index);
         auto [needContinue, errCode, needSend] = HandleProgress(event);
         if (!needContinue) {
@@ -173,6 +208,7 @@ void FileCopyLocalListener::ReadNotifyEvent()
             continue;
         }
         if (progressSize_ == totalSize_) {
+            notifyRun_.store(false);
             return;
         }
         auto currentTime = std::chrono::steady_clock::now();
@@ -222,8 +258,21 @@ bool FileCopyLocalListener::CheckFileValid(const std::string &filePath)
     return filePaths_.count(filePath) != 0;
 }
 
+void FileCopyLocalListener::CloseNotifyFdLocked()
+{
+    std::lock_guard<std::mutex> lock(readMutex_);
+    readClosed_ = true;
+    if (readFlag_) {
+        LOGE("close while reading");
+        return;
+    }
+    CloseNotifyFd();
+}
+
 void FileCopyLocalListener::CloseNotifyFd()
 {
+    readClosed_ = false;
+    std::unique_lock<std::mutex> cvLock(cvLock_);
     if (eventFd_ != -1) {
         close(eventFd_);
         eventFd_ = -1;
@@ -232,12 +281,13 @@ void FileCopyLocalListener::CloseNotifyFd()
         return;
     }
 
-    std::lock_guard<std::mutex> lock(wdsMutex_);
+    std::lock_guard<std::mutex> wdsLock(wdsMutex_);
     for (auto item : wds_) {
         inotify_rm_watch(notifyFd_, item.first);
     }
     close(notifyFd_);
     notifyFd_ = -1;
+    notifyCv_.notify_one();
 }
 
 int FileCopyLocalListener::UpdateProgressSize(const std::string &filePath, std::shared_ptr<ReceiveInfo> receivedInfo)

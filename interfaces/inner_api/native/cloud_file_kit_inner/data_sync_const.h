@@ -37,6 +37,8 @@ enum class SyncTriggerType : int32_t {
     NETWORK_AVAIL_TRIGGER,
     TASK_TRIGGER,
     SYSTEM_LOAD_TRIGGER,
+    POWER_CONNECT_TRIGGER,
+    SCREEN_OFF_TRIGGER,
 };
 
 enum class ThumbState : int32_t {
@@ -95,6 +97,7 @@ static const std::string CLOUDSYNC_STATUS_INC_SYNC = "2";
 static const std::string CLOUDSYNC_STATUS_FULL_SYNC = "3";
 static const std::string CLOUDSYNC_STATUS_FINISH = "4";
 static const std::string CLOUDSYNC_STATUS_SWITCHOFF = "5";
+static const std::string CLOUDSYNC_STATUS_CLEANING = "6";
 
 static inline uint64_t GetCurrentTimeStamp()
 {

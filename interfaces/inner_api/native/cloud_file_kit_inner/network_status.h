@@ -41,6 +41,7 @@ public:
     static bool CheckMobileNetwork(const std::string &bundleName, const int32_t userId);
     static bool CheckNetwork(const std::string &bundleName, const int32_t userId);
     static void NetWorkChangeStopUploadTask();
+    static bool CheckWifiOrEthernet();
 
 private:
     static inline NetConnStatus netStatus_{NO_NETWORK};

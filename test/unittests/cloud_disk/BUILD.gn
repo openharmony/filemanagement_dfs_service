@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,6 +21,7 @@ ohos_unittest("account_status_listener_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${innerkits_native_path}/cloud_file_kit_inner",
     "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "${services_path}/cloudfiledaemon/include/",
@@ -44,8 +45,6 @@ ohos_unittest("account_status_listener_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -53,9 +52,12 @@ ohos_unittest("account_status_listener_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
@@ -76,9 +78,7 @@ ohos_unittest("file_operations_cloud_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/utils/log/include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/clouddisk_database/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/src/cloud_disk/",
@@ -106,8 +106,6 @@ ohos_unittest("file_operations_cloud_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -116,6 +114,8 @@ ohos_unittest("file_operations_cloud_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -150,9 +150,6 @@ ohos_unittest("database_manager_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/clouddisk_database/include/",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include/",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include/",
-    "${media_library_path}/frameworks/utils/include/",
   ]
 
   sources = [
@@ -172,8 +169,6 @@ ohos_unittest("database_manager_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -184,12 +179,15 @@ ohos_unittest("database_manager_test") {
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "preferences:native_preferences",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -208,8 +206,6 @@ ohos_unittest("file_operations_base_test") {
     "${distributedfile_path}/utils/log/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "${distributedfile_path}/services/clouddisk_database/include/",
   ]
 
@@ -227,14 +223,14 @@ ohos_unittest("file_operations_base_test") {
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "libfuse:libfuse",
@@ -255,6 +251,7 @@ ohos_unittest("fuse_operations_test") {
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
@@ -272,7 +269,6 @@ ohos_unittest("fuse_operations_test") {
     "mock/clouddisk_rdbstore_mock.cpp",
     "mock/file_operations_local_mock.cpp",
     "mock/libfuse_mock.cpp",
-    "mock/system_function_mock.cpp",
   ]
 
   deps = [
@@ -280,8 +276,6 @@ ohos_unittest("fuse_operations_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -295,6 +289,8 @@ ohos_unittest("fuse_operations_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -321,6 +317,7 @@ ohos_unittest("file_operations_local_test") {
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
@@ -338,7 +335,6 @@ ohos_unittest("file_operations_local_test") {
     "file_operations_local_test.cpp",
     "mock/clouddisk_rdbstore_mock.cpp",
     "mock/libfuse_mock.cpp",
-    "mock/system_function_mock.cpp",
   ]
 
   deps = [
@@ -346,8 +342,6 @@ ohos_unittest("file_operations_local_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -361,6 +355,8 @@ ohos_unittest("file_operations_local_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -387,6 +383,7 @@ ohos_unittest("file_operations_helper_test") {
 
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
@@ -411,8 +408,6 @@ ohos_unittest("file_operations_helper_test") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [ "--coverage" ]
@@ -426,6 +421,8 @@ ohos_unittest("file_operations_helper_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -435,6 +432,214 @@ ohos_unittest("file_operations_helper_test") {
 
   defines = [
     "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("file_range_lock_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "mock/system_function_mock.cpp",
+    "file_range_lock_test.cpp",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("meta_file_clouddisk_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/system/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/utils/dentry/src/meta_file.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "mock/file_utils_mock.cpp",
+    "mock/system_function_mock.cpp",
+    "meta_file_clouddisk_test.cpp",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("io_message_listener_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/io_message_listener.cpp",
+    "io_message_listener_test.cpp",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
+    "ability_runtime:app_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("appstate_observer_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/appstate_observer.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/io_message_listener.cpp",
+    "appstate_observer_test.cpp",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "ipc:ipc_single",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "libfuse:libfuse",
+    "relational_store:native_rdb",
+    "ability_runtime:app_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "protected=public",
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CLOUD_DAEMON_API\"",
   ]
@@ -458,5 +663,9 @@ group("cloud_disk_test") {
     ":file_operations_helper_test",
     ":file_operations_local_test",
     ":fuse_operations_test",
+    ":file_range_lock_test",
+    ":meta_file_clouddisk_test",
+    ":io_message_listener_test",
+    ":appstate_observer_test",
   ]
 }

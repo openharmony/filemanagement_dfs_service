@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -20,7 +20,6 @@
 #include <memory>
 #include <regex>
 #include <sstream>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include "all_connect/all_connect_manager.h"
@@ -31,16 +30,12 @@
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
 #include "network/softbus/softbus_asset_send_listener.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "refbase.h"
 #include "softbus_bus_center.h"
 #include "utils_log.h"
-
-#ifdef SUPPORT_SAME_ACCOUNT
-#include "inner_socket.h"
-#include "trans_type_enhanced.h"
-#endif
 
 namespace OHOS {
 namespace Storage {
@@ -51,7 +46,6 @@ constexpr size_t BUFFER_SIZE = 512;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 const std::string RELATIVE_PATH_FLAG = "/account/device_view/local/data/";
 const std::string DST_BUNDLE_NAME_FLAG = "/";
 const std::string TEMP_DIR = "ASSET_TEMP";
@@ -72,6 +66,7 @@ SoftBusHandlerAsset::SoftBusHandlerAsset()
     fileReceiveListener.OnBind = SoftbusAssetRecvListener::OnAssetRecvBind;
     fileReceiveListener.OnShutdown = SoftbusAssetRecvListener::OnRecvShutdown;
     fileReceiveListener.OnFile = SoftbusAssetRecvListener::OnFile;
+    fileReceiveListener.OnNegotiate2 = SoftBusAssetSendListener::OnNegotiate2;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
     fileReceiveListener.OnQos = nullptr;
@@ -148,12 +143,16 @@ void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
 
 int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId)
 {
+    if (!SoftBusPermissionCheck::CheckSrcPermission(dstNetworkId)) {
+        LOGI("Check src permission failed");
+        return E_PERMISSION_DENIED;
+    }
     if (dstNetworkId.empty()) {
         LOGI("The parameter is empty");
         return E_OPEN_SESSION;
     }
     LOGI("AssetBind Enter.");
-    if (!IsSameAccount(dstNetworkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(dstNetworkId)) {
         LOGI("The source and sink device is not same account, not support.");
         return E_OPEN_SESSION;
     }
@@ -175,6 +174,11 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         LOGE("Create OpenSoftbusChannel Socket error");
         return E_OPEN_SESSION;
     }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGE("Set access info faiLed");
+        Shutdown(socketId);
+        return E_OPEN_SESSION;
+    }
 
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_ASSET_ROLE_SEND]);
     if (ret != E_OK) {
@@ -188,27 +192,6 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     return E_OK;
 }
 
-void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    uint64_t totalSize = 0;
-    for (uint32_t i = 0; i < srcLen; ++i) {
-        const char *file = src[i];
-        struct stat buf {};
-        if (stat(file, &buf) == -1) {
-            return;
-        }
-        totalSize += static_cast<uint64_t>(buf.st_size);
-    }
-
-    TransFlowInfo flowInfo;
-    flowInfo.sessionType = SHORT_DURATION_SESSION;
-    flowInfo.flowQosType = HIGH_THROUGHPUT;
-    flowInfo.flowSize = totalSize;
-    ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
-#endif
-}
-
 int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile)
 {
     auto assetObj = GetAssetObj(socketId);
@@ -216,7 +199,7 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
         LOGE("get assetObj fail.");
         return ERR_BAD_VALUE;
     }
-    if (!IsSameAccount(assetObj->dstNetworkId_)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(assetObj->dstNetworkId_)) {
         LOGI("The source and sink device is not same account, not support.");
         return ERR_BAD_VALUE;
     }
@@ -234,7 +217,6 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
     dst[0] = dstFile.c_str();
 
     LOGI("AssetSendFile Enter.");
-    SetSocketOpt(socketId, src, 1);
     int32_t ret = ::SendFile(socketId, src, dst, 1);
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", socketId);
@@ -259,7 +241,7 @@ void SoftBusHandlerAsset::closeAssetBind(int32_t socketId)
 void SoftBusHandlerAsset::OnAssetRecvBind(int32_t socketId, const std::string &srcNetWorkId)
 {
     std::lock_guard<std::mutex> lock(clientInfoMutex_);
-    if (!IsSameAccount(srcNetWorkId)) {
+    if (!SoftBusPermissionCheck::IsSameAccount(srcNetWorkId)) {
         LOGE("The source and sink device is not same account, not support.");
         Shutdown(socketId);
         return;
@@ -362,14 +344,14 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
 
     size_t pos = fileName.find(RELATIVE_PATH_FLAG);
     if (pos == std::string::npos) {
-        LOGE("Generate dstBundleName fail, firstFile is %{public}s", GetAnonyString(fileName).c_str());
+        LOGE("Generate dstBundleName fail");
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativeFileName = fileName.substr(pos + RELATIVE_PATH_FLAG.length());
 
     pos = relativeFileName.find(DST_BUNDLE_NAME_FLAG);
     if (pos == std::string::npos) {
-        LOGE("Generate dstBundleName fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
+        LOGE("Generate dstBundleName fail");
         return FileManagement::ERR_BAD_VALUE;
     }
     auto dstBundleName = relativeFileName.substr(0, pos);
@@ -378,14 +360,14 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
     std::smatch match;
     std::regex sessionIdRegex("sessionId=([^&]+)");
     if (!std::regex_search(fileName, match, sessionIdRegex)) {
-        LOGE("Generate sessionId fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
+        LOGE("Generate sessionId fail");
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->sessionId_ = match[1].str();
 
     std::regex srcBundleNameRegex("srcBundleName=([^&]+)");
     if (!std::regex_search(fileName, match, srcBundleNameRegex)) {
-        LOGE("Generate srcBundleName fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
+        LOGE("Generate srcBundleName fail");
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->srcBundleName_ = match[1].str();
@@ -396,22 +378,6 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
-}
-
-bool SoftBusHandlerAsset::IsSameAccount(const std::string &networkId)
-{
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    return false;
 }
 
 std::string SoftBusHandlerAsset::GetDstFile(const std::string &file,
@@ -482,7 +448,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
     LOGI("CompressFile begin.");
     zipFile outputFile = zipOpen64(zipFileName.c_str(), APPEND_STATUS_CREATE);
     if (!outputFile) {
-        LOGE("Minizip failed to zipOpen, zipFileName = %{public}s", GetAnonyString(zipFileName).c_str());
+        LOGE("Minizip failed to zipOpen");
         return E_ZIP;
     }
 
@@ -497,14 +463,14 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
         int err = zipOpenNewFileInZip3_64(outputFile, file.c_str(), NULL, NULL, 0, NULL, 0, NULL,
                                           Z_DEFLATED, 0, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, NULL, 0, 0);
         if (err != ZIP_OK) {
-            LOGE("Minizip failed to zipOpenNewFileInZip, file = %{public}s", GetAnonyString(file).c_str());
+            LOGE("Minizip failed to zipOpenNewFileInZip");
             zipClose(outputFile, NULL);
             return E_ZIP;
         }
 
         FILE* f = fopen(rootFile.c_str(), "rb");
         if (f == NULL) {
-            LOGE("open file fail, path is %{public}s", GetAnonyString(rootFile).c_str());
+            LOGE("open file fail");
             return E_ZIP;
         }
         const size_t pageSize { getpagesize() };
@@ -536,7 +502,7 @@ std::vector<std::string> SoftBusHandlerAsset::DecompressFile(const std::string &
 
     unzFile zipFile = unzOpen64(unZipFileName.c_str());
     if (!zipFile) {
-        LOGE("Minizip failed to unzOpen, zipFileName = %{public}s", GetAnonyString(unZipFileName).c_str());
+        LOGE("Minizip failed to unzOpen");
         return {};
     }
 
@@ -582,7 +548,7 @@ bool SoftBusHandlerAsset::MkDirRecurse(const std::string& path, mode_t mode)
 {
     size_t pos = path.rfind("/");
     if (pos == std::string::npos) {
-        LOGE("is not a dir, path : %{public}s", GetAnonyString(path).c_str());
+        LOGE("is not a dir");
     }
     auto dirPath = path.substr(0, pos);
 
@@ -627,7 +593,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     filenameWithPath = dir + filenameWithPath;
     size_t pos = filenameWithPath.rfind('/');
     if (pos == std::string::npos) {
-        LOGE("file path error, %{public}s", GetAnonyString(filenameWithPath).c_str());
+        LOGE("file path error");
         return "";
     }
     std::string filenameWithoutPath = filenameWithPath.substr(pos + 1);
@@ -636,12 +602,12 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
         MkDirRecurse(filenameWithPath, S_IRWXU | S_IRWXG | S_IXOTH);
     }
     if (unzOpenCurrentFile(unZipFile) != UNZ_OK) {
-        LOGE("Minizip failed to unzOpenCurrentFile, filepath is %{public}s", GetAnonyString(filenameWithPath).c_str());
+        LOGE("Minizip failed to unzOpenCurrentFile");
     }
     std::fstream file;
     file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
     if (!file.is_open()) {
-        LOGE("open zip file fail, path is %{public}s", GetAnonyString(filenameWithPath).c_str());
+        LOGE("open zip file fail");
         return "";
     }
     const size_t pageSize =  { getpagesize() };
@@ -650,8 +616,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     do {
         bytesRead = unzReadCurrentFile(unZipFile, (voidp)fileData.get(), pageSize);
         if (bytesRead < 0) {
-            LOGE("Minizip failed to unzReadCurrentFile, filepath is %{public}s",
-                 GetAnonyString(filenameWithPath).c_str());
+            LOGE("Minizip failed to unzReadCurrentFile");
             file.close();
             return "";
         }
@@ -663,14 +628,14 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
 
 void SoftBusHandlerAsset::RemoveFile(const std::string &path, bool isRemove)
 {
-    LOGI("RemoveFile path is %{public}s", GetAnonyString(path).c_str());
+    LOGI("RemoveFile path start");
     if (!isRemove) {
         LOGI("this file is not need remove");
         return;
     }
     bool ret = std::filesystem::remove(path.c_str());
     if (!ret) {
-        LOGE("remove file fail, remove path is %{public}s", GetAnonyString(path).c_str());
+        LOGE("remove file fail");
     }
 }
 } // namespace DistributedFile

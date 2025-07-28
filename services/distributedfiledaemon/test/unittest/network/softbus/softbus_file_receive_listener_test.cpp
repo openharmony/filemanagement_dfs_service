@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -147,6 +147,28 @@ HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_OnFile_0
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "SoftBusFileReceiveListenerTest_OnFile_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusFileReceiveListenerTest_OnReceiveFileShutdown_0100
+ * @tc.desc: test OnReceiveFileShutdown function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_OnReceiveFileShutdown_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusFileReceiveListenerTest_OnReceiveFileShutdown_0100 start";
+    string testSessionName = "mySessionName";
+    int32_t sessionId = 10;
+    ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
+    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, testSessionName));
+    SoftBusFileReceiveListener::OnReceiveFileShutdown(sessionId, reason);
+    sessionId = 2;
+    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, testSessionName));
+    string sessionName = SoftBusFileReceiveListener::GetLocalSessionName(sessionId);
+    EXPECT_EQ(sessionName, testSessionName);
+    SoftBusHandler::clientSessNameMap_.erase(sessionId);
+    GTEST_LOG_(INFO) << "SoftBusFileReceiveListenerTest_OnReceiveFileShutdown_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

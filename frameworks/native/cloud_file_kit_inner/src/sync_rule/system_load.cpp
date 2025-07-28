@@ -84,11 +84,10 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusUnderNormal(STOPPED_TYPE process)
+bool SystemLoadStatus::IsLoadStatusUnderNormal()
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL_NORMAL && process == STOPPED_IN_SYNC) {
-        LOGI("SetParameter TEMPERATURE_SYSPARAM_SYNC true");
-        system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
+    if (loadstatus_ > SYSTEMLOADLEVEL_NORMAL) {
+        LOGI("system load is over normal");
         return false;
     }
     return true;

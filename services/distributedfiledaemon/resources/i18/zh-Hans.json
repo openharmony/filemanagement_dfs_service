@@ -1,0 +1,20 @@
+{
+  "key-value": [
+    {
+      "key": "notification_title",
+      "value": "文件桥"
+    },
+    {
+      "key": "notification_text",
+      "value": "可在 {} 上管理本机文件"
+    },
+    {
+      "key": "capsule_title",
+      "value": "已连接"
+    },
+    {
+      "key": "button_name",
+      "value": "断开"
+    }
+  ]
+}

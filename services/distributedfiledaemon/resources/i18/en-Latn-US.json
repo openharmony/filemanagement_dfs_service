@@ -1,0 +1,20 @@
+{
+  "key-value": [
+    {
+      "key": "notification_title",
+      "value": "File Bridge"
+    },
+    {
+      "key": "notification_text",
+      "value": "Local file management available in {}"
+    },
+    {
+      "key": "capsule_title",
+      "value": "Connected"
+    },
+    {
+      "key": "button_name",
+      "value": "Disconnect"
+    }
+  ]
+}

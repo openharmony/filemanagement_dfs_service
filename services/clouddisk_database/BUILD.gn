@@ -90,6 +90,7 @@ ohos_shared_library("clouddisk_database") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libfuse:libfuse",
     "preferences:native_preferences",
     "relational_store:native_rdb",

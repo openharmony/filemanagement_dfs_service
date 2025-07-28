@@ -20,6 +20,7 @@ config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test",
     "${distributedfile_path}/test/mock",
@@ -82,7 +83,9 @@ ohos_unittest("daemon_execute_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
@@ -98,6 +101,7 @@ ohos_unittest("daemon_execute_test") {
     "ipc:ipc_single",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
     "zlib:shared_libz",
   ]

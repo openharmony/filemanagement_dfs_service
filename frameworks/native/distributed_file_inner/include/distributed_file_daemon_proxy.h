@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "dm_device_info.h"
 #include "ipc/i_daemon.h"
 #include "iremote_proxy.h"
+#include "remote_file_share.h"
 
 namespace OHOS {
 namespace Storage {
@@ -46,6 +47,7 @@ public:
                            const sptr<IRemoteObject> &listener,
                            HmdfsInfo &info) override;
     int32_t CancelCopyTask(const std::string &sessionName) override;
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
@@ -57,6 +59,13 @@ public:
                       const sptr<IAssetSendCallback> &sendCallback) override;
     int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps) override;
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
 private:
     class DaemonDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,27 +13,20 @@
  * limitations under the License.
  */
 
-#include "cloud_file_download_napi.h"
+#ifndef OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H
+#define OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H
 
-#include <sys/types.h>
+#include <functional>
 
-#include "cloud_sync_manager.h"
-#include "dfs_error.h"
-#include "utils_log.h"
-#include "async_work.h"
-#include "uv.h"
+#include "cloud_sync_common.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace FileManagement::LibN;
-using namespace std;
 
-bool CloudFileDownloadNapi::Export()
-{
-    SetClassName("Download");
-    bool success = CloudFileNapi::Export();
-    if (!success) {
-        return false;
-    }
-    return true;
-}
+class DowngradeDlCallback {
+public:
+    virtual ~DowngradeDlCallback() = default;
+    virtual void OnDownloadProcess(const DowngradeProgress &progress) = 0;
+};
 } // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_DOWNGRADE_DL_CALLBACK_H

@@ -38,11 +38,19 @@ DeviceManagerImpl &DeviceManagerImpl::GetInstance()
 
 int32_t DeviceManagerImpl::InitDeviceManager(const std::string &pkgName, std::shared_ptr<DmInitCallback> dmInitCallback)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->InitDeviceManager(pkgName, dmInitCallback);
 }
 
 int32_t DeviceManagerImpl::UnInitDeviceManager(const std::string &pkgName)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->UnInitDeviceManager(pkgName);
 }
 
@@ -50,6 +58,10 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName,
                                                 const std::string &extra,
                                                 std::vector<DmDeviceInfo> &deviceList)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetTrustedDeviceList(pkgName, extra, deviceList);
 }
 
@@ -76,6 +88,10 @@ int32_t DeviceManagerImpl::GetDeviceInfo(const std::string &pkgName,
 
 int32_t DeviceManagerImpl::GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetLocalDeviceInfo(pkgName, info);
 }
 
@@ -83,6 +99,10 @@ int32_t DeviceManagerImpl::RegisterDevStateCallback(const std::string &pkgName,
                                                     const std::string &extra,
                                                     std::shared_ptr<DeviceStateCallback> callback)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->RegisterDevStateCallback(pkgName, extra, callback);
 }
 
@@ -95,6 +115,10 @@ int32_t DeviceManagerImpl::RegisterDevStatusCallback(const std::string &pkgName,
 
 int32_t DeviceManagerImpl::UnRegisterDevStateCallback(const std::string &pkgName)
 {
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return -1; // -1: default err
+    }
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->UnRegisterDevStateCallback(pkgName);
 }
 
@@ -272,6 +296,7 @@ int32_t DeviceManagerImpl::CheckNewAPIAccessPermission()
 
 int32_t DeviceManagerImpl::GetLocalDeviceNetWorkId(const std::string &pkgName, std::string &networkId)
 {
+    networkId = "testNetworkId";
     return 0;
 }
 
@@ -342,5 +367,41 @@ int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
     return DM_OK;
 }
 #endif
+
+bool DeviceManagerImpl::CheckSrcAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return false;
+    }
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSrcAccessControl(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSinkAccessControl(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return false;
+    }
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSinkAccessControl(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSrcIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return false;
+    }
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSrcIsSameAccount(caller, callee);
+}
+
+bool DeviceManagerImpl::CheckSinkIsSameAccount(const DmAccessCaller &caller,const DmAccessCallee &callee)
+{
+    if (DfsDeviceManagerImpl::dfsDeviceManagerImpl == nullptr) {
+        std::cout << "dfsDeviceManagerImpl is nullptr" << std::endl;
+        return false;
+    }
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->CheckSinkIsSameAccount(caller, callee);
+}
 } // namespace DistributedHardware
 } // namespace OHOS

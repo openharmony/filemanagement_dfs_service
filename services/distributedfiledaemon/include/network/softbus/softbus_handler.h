@@ -51,7 +51,6 @@ public:
     void CloseSessionWithSessionName(const std::string sessionName);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
-    static bool IsSameAccount(const std::string &networkId);
     void RemoveNetworkId(int32_t socketId);
     void CopyOnStop(const std::string &peerNetworkId);
 
@@ -60,7 +59,6 @@ private:
         const std::string &peerDevId, int32_t &socketId);
     std::vector<int32_t> GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId);
     bool IsService(std::string &sessionName);
-    void SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen);
 
     std::mutex socketMutex_;
     static std::mutex clientSessNameMapMutex_;

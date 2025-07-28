@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include <sstream>
 
+#include "copy/ipc_wrapper.h"
 #include "dfs_error.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "iservice_registry.h"
@@ -25,7 +26,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD001600
+#define LOG_DOMAIN 0xD004315
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -33,6 +34,27 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 using namespace OHOS::Storage;
+constexpr int32_t INDEX1 = 1;
+constexpr int32_t INDEX2 = 2;
+constexpr int32_t STEP = 3;
+
+static int32_t ReadUriInfoFromResult(const std::vector<std::string> &result,
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    for (size_t i = 0; (i < result.size()) && (i + INDEX2 < result.size()); i += STEP) {
+        AppFileService::ModuleRemoteFileShare::HmdfsUriInfo info;
+        info.uriStr = result[i + INDEX1];
+        std::istringstream iss(result[i + INDEX2]);
+        iss >> info.fileSize;
+        if (iss.fail()) {
+            LOGE("read fileSize failed: %{public}s", result[i + INDEX2].c_str());
+            return OHOS::FileManagement::E_INVAL_ARG;
+        }
+        uriToDfsUriMaps[result[i]] = info;
+    }
+    LOGI("ReadUriInfoFromResult success, uriToDfsUriMaps size:%{public}d", static_cast<int>(uriToDfsUriMaps.size()));
+    return OHOS::FileManagement::E_OK;
+}
 
 void DistributedFileDaemonProxy::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
@@ -436,6 +458,38 @@ int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &sessionNam
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(dstUri)) {
+        LOGE("Failed to send dstUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK), data, reply,
+        option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t DistributedFileDaemonProxy::PushAsset(int32_t userId,
                                               const sptr<AssetObj> &assetObj,
                                               const sptr<IAssetSendCallback> &sendCallback)
@@ -541,6 +595,187 @@ int32_t DistributedFileDaemonProxy::UnRegisterAssetCallback(const sptr<IAssetRec
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                                           const int32_t userId,
+                                                           std::unordered_map<std::string,
+                                                           AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                                           &uriToDfsUriMaps)
+{
+    LOGI("GetDfsUrisDirFromLocal begin");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!IpcWrapper::WriteBatchUris(data, uriList)) {
+        LOGE("Failed to send uriList");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send userId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL),
+        data, reply, option);
+    if (ret != 0) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Failed to read res");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    if (ret != OHOS::FileManagement::E_OK) {
+        LOGE("Failed to GetDfsUrisDirFromLocal, res: %{public}d", ret);
+        return ret;
+    }
+    std::vector<std::string> total;
+    if (IpcWrapper::ReadBatchUris(reply, total) != FileManagement::E_OK) {
+        LOGE("read total failed");
+        return OHOS::FileManagement::E_IPC_READ_FAILED;
+    }
+
+    LOGI("proxy total.size(): %{public}d", static_cast<int>(total.size()));
+    return ReadUriInfoFromResult(total, uriToDfsUriMaps);
+}
+
+int32_t DistributedFileDaemonProxy::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to write network id.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsSwitchStatus ipc failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDfsSwitchStatus failed, ret = %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadInt32(switchStatus)) {
+        LOGE("Read switchStatus failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::UpdateDfsSwitchStatus(int32_t switchStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteInt32(switchStatus)) {
+        LOGE("Failed to write the switch status");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("UpdateDfsSwitchStatus failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetConnectedDeviceList ipc failed, ret: %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read res failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetConnectedDeviceList failed, ret: %{public}d", ret);
+        return ret;
+    }
+    int32_t len = 0;
+    if (!reply.ReadInt32(len)) {
+        LOGE("Read devicelist length failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    deviceList.clear();
+    for (int32_t i = 0; i < len; ++i) {
+        DfsDeviceInfo deviceInfo;
+        if (!reply.ReadString(deviceInfo.networkId_)) {
+            LOGE("Failed to read networkId");
+            return OHOS::FileManagement::E_BROKEN_IPC;
+        }
+        if (!reply.ReadString(deviceInfo.path_)) {
+            LOGE("Failed to read path");
+            return OHOS::FileManagement::E_BROKEN_IPC;
+        }
+        deviceList.emplace_back(deviceInfo);
+    }
+    return ret;
 }
 } // namespace DistributedFile
 } // namespace Storage

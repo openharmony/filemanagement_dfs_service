@@ -96,7 +96,7 @@ public:
                      const int userId, std::string destPath);
     int32_t CreateDentryFile(MetaBase metaBase, std::string destParentCloudId);
     int32_t GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId);
-    int32_t UpdateTHMStatus(MetaBase &metabase, int32_t status);
+    int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status);
 
     void DatabaseRestore();
 
@@ -126,6 +126,7 @@ private:
 class CloudDiskDataCallBack : public NativeRdb::RdbOpenCallback {
 public:
     int32_t OnCreate(NativeRdb::RdbStore &rdbStore) override;
+    int32_t OnUpgradeExtend(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion);
     int32_t OnUpgrade(NativeRdb::RdbStore &rdbStore, int32_t oldVersion, int32_t newVersion) override;
 };
 

@@ -25,10 +25,10 @@
 namespace OHOS::FileManagement::CloudSync {
 #define FIELD_KEY_MAX_SIZE 4
 constexpr int32_t CLEAN_FILE_MAX_SIZE = 200;
-enum FieldKey {
-    FIELDKEY_CONTENT = 1 << 0,
-    FIELDKEY_THUMB = 1 << 1,
-    FIELDKEY_LCD = 1 << 2,
+enum FieldKey : int32_t {
+    FIELDKEY_CONTENT = 0,
+    FIELDKEY_THUMB,
+    FIELDKEY_LCD,
 };
 
 struct DownloadProgressObj : public Parcelable {
@@ -68,6 +68,35 @@ struct DownloadProgressObj : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static DownloadProgressObj *Unmarshalling(Parcel &parcel);
     std::string to_string();
+};
+
+struct DowngradeProgress : public Parcelable {
+    enum State : int32_t {
+        RUNNING = 0,
+        COMPLETED,
+        STOPPED,
+    };
+    enum StopReason : int32_t {
+        NO_STOP = 0,
+        NETWORK_UNAVAILABLE,
+        LOCAL_STORAGE_FULL,
+        TEMPERATURE_LIMIT,
+        USER_STOPPED,
+        APP_UNLOAD,
+        OTHER_REASON
+    };
+    State state;
+    StopReason stopReason;
+    int64_t downloadedSize;
+    int64_t totalSize;
+    int32_t successfulCount;
+    int32_t failedCount;
+    int32_t totalCount;
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static DowngradeProgress *Unmarshalling(Parcel &parcel);
+    std::string to_string() const;
 };
 
 struct SwitchDataObj : public Parcelable {
@@ -178,5 +207,33 @@ struct  CleanFileInfoObj : public Parcelable {
     }
 };
 
+struct HistoryVersion : public Parcelable {
+    int64_t editedTime{0};
+    uint64_t fileSize{0};
+    uint64_t versionId{0};
+    std::string originalFileName;
+    std::string sha256;
+    bool resolved{false};
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static HistoryVersion *Unmarshalling(Parcel &parcel);
+};
+
+/*
+ * 降级下载：待下载信息
+ */
+struct CloudFileInfo : public Parcelable {
+    int32_t cloudfileCount{0};
+    int64_t cloudFileTotalSize{0};
+    int32_t localFileCount{0};
+    int64_t localFileTotalSize{0};
+    int32_t bothFileCount{0};
+    int64_t bothFileTotalSize{0};
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static CloudFileInfo *Unmarshalling(Parcel &parcel);
+};
 } // namespace OHOS::FileManagement::CloudSync
 #endif

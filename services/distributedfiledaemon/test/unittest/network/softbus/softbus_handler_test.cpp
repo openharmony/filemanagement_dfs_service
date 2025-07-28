@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +20,11 @@
 #include <utility>
 #include <securec.h>
 
-#include "device_manager_impl.h"
+#include "device_manager_impl_mock.h"
 #include "dm_constants.h"
 
 #include "dfs_error.h"
+#include "mock_other_method.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "socket_mock.h"
@@ -35,37 +36,11 @@ using namespace OHOS::FileManagement;
 using namespace std;
 
 namespace {
-bool g_mockGetTrustedDeviceList = true;
 const string TEST_NETWORKID = "45656596896323231";
 const string TEST_NETWORKID_TWO = "45656596896323232";
 const string TEST_NETWORKID_THREE = "45656596896323233";
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
-}
-
-namespace OHOS {
-namespace DistributedHardware {
-int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, const std::string &extra,
-                                                std::vector<DmDeviceInfo> &deviceList)
-{
-    if (!g_mockGetTrustedDeviceList) {
-        return ERR_DM_INPUT_PARA_INVALID;
-    }
-
-    DmDeviceInfo testInfo;
-    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                   TEST_NETWORKID.c_str(), TEST_NETWORKID.size());
-    testInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
-    deviceList.push_back(testInfo);
-    
-    DmDeviceInfo testInfo1;
-    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                   TEST_NETWORKID_TWO.c_str(), TEST_NETWORKID_TWO.size());
-    testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
-    deviceList.push_back(testInfo1);
-    return DM_OK;
-}
-}
 }
 
 namespace OHOS {
@@ -80,14 +55,70 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    void CheckSrcSameAccountPass();
+    void CheckSrcDiffAccountPass();
+    void CheckSrcBothSamePass();
+    void CheckSrcBothDiffPass();
+    static inline shared_ptr<DfsDeviceOtherMethodMock> otherMethodMock_ = nullptr;
     static inline shared_ptr<SocketMock> socketMock_ = nullptr;
+    static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
 };
+
+void SoftbusHandlerTest::CheckSrcSameAccountPass()
+{
+    AccountSA::OhosAccountInfo osAccountInfo;
+    osAccountInfo.uid_ = "test";
+    std::vector<int32_t> userIds{100, 101};
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
+}
+
+void SoftbusHandlerTest::CheckSrcDiffAccountPass()
+{
+    std::vector<int32_t> userIds{100, 101};
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+}
+
+void SoftbusHandlerTest::CheckSrcBothSamePass()
+{
+    AccountSA::OhosAccountInfo osAccountInfo;
+    osAccountInfo.uid_ = "test";
+    std::vector<int32_t> userIds{100, 101};
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
+    EXPECT_CALL(*socketMock_, SetAccessInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
+}
+
+void SoftbusHandlerTest::CheckSrcBothDiffPass()
+{
+    std::vector<int32_t> userIds{100, 101};
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)))
+        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+}
 
 void SoftbusHandlerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
+    DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     socketMock_ = make_shared<SocketMock>();
     SocketMock::dfsSocket = socketMock_;
+    deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
+    DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
 void SoftbusHandlerTest::TearDownTestCase(void)
@@ -95,6 +126,10 @@ void SoftbusHandlerTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
     SocketMock::dfsSocket = nullptr;
     socketMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
+    otherMethodMock_ = nullptr;
 }
 
 void SoftbusHandlerTest::SetUp(void)
@@ -104,6 +139,8 @@ void SoftbusHandlerTest::SetUp(void)
 
 void SoftbusHandlerTest::TearDown(void)
 {
+    SoftBusHandler::GetInstance().clientSessNameMap_.clear();
+    SoftBusHandler::GetInstance().serverIdMap_.clear();
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -173,6 +210,25 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0200, TestSi
 }
 
 /**
+ * @tc.name: SoftbusHandlerTest_CreateSessionServer_0300
+ * @tc.desc: Verify the CreateSessionServer by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0300 start";
+    std::string packageName = "com.example.test";
+    std::string sessionName = "sessionName";
+    DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
+    std::string physicalPath = "/data/test";
+    
+    auto result = SoftBusHandler::GetInstance().CreateSessionServer("", sessionName, role, physicalPath);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0300 end";
+}
+
+/**
  * @tc.name: SoftbusHandlerTest_OpenSession_0100
  * @tc.desc: Verify the OccupySession by Cid function.
  * @tc.type: FUNC
@@ -180,22 +236,25 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0200, TestSi
  */
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level1)
 {
+#ifndef SUPPORT_SAME_ACCOUNT
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 start";
     SoftBusHandler handler;
     std::string packageName = "com.example.test";
     std::string sessionName = "testSession";
     int32_t socketId;
 
-    g_mockGetTrustedDeviceList = true;
+    CheckSrcDiffAccountPass();
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     int32_t result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
+    CheckSrcBothDiffPass();
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
     result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
+    CheckSrcBothDiffPass();
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
     result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
@@ -208,33 +267,127 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level
     }
 
     handler.clientSessNameMap_.erase(socketId);
+#endif
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 end";
 }
 
 /**
  * @tc.name: SoftbusHandlerTest_OpenSession_0200
- * @tc.desc: Verify the OpenSession by Cid function.
+ * @tc.desc: Verify the OccupySession by Cid function.
  * @tc.type: FUNC
  * @tc.require: I9JXPR
  */
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0200, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 start";
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0200 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    SoftBusHandler handler;
+    std::string packageName = "com.example.test";
+    std::string sessionName = "testSession";
+    int32_t socketId;
+
+    CheckSrcSameAccountPass();
+    std::vector<DmDeviceInfo> deviceList;
+    DmDeviceInfo deviceInfo;
+    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceInfo.extraData = "{\"OS_TYPE\":10}";
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID.c_str());
+    if (res != 0) {
+        GTEST_LOG_(INFO) << "strcpy_s failed";
+        return;
+    }
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
+    int32_t result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    CheckSrcBothSamePass();
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
+    result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    CheckSrcBothSamePass();
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
+    result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, socketId);
+    EXPECT_EQ(result, 0);
+
+    if (handler.clientSessNameMap_.find(socketId) != handler.clientSessNameMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+
+    handler.clientSessNameMap_.erase(socketId);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_OpenSession_0300
+ * @tc.desc: Verify the OpenSession by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0300 start";
+#ifndef SUPPORT_SAME_ACCOUNT
     SoftBusHandler handler;
     std::string packageName = "com.example.test";
     std::string sessionName = "testSession";
     int32_t socketId;
     std::string physicalPath = "/data/test";
-
+    CheckSrcDiffAccountPass();
     int32_t result = handler.OpenSession("", sessionName, physicalPath, socketId);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
+    CheckSrcDiffAccountPass();
     result = handler.OpenSession(packageName, "", physicalPath, socketId);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
+    CheckSrcDiffAccountPass();
     result = handler.OpenSession(packageName, sessionName, "", socketId);
     EXPECT_EQ(result, ERR_BAD_VALUE);
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 end";
+#endif
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0300 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_OpenSession_0400
+ * @tc.desc: Verify the OpenSession by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0400 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    SoftBusHandler handler;
+    std::string packageName = "com.example.test";
+    std::string sessionName = "testSession";
+    int32_t socketId;
+    std::string physicalPath = "/data/test";
+    CheckSrcSameAccountPass();
+    int32_t result = handler.OpenSession("", sessionName, physicalPath, socketId);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    CheckSrcSameAccountPass();
+    result = handler.OpenSession(packageName, "", physicalPath, socketId);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    CheckSrcSameAccountPass();
+    result = handler.OpenSession(packageName, sessionName, "", socketId);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0400 end";
 }
 
 /**
@@ -290,32 +443,6 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_GetSessionName_0100, TestSize.Le
 }
 
 /**
- * @tc.name: SoftbusHandlerTest_IsSameAccount_0100
- * @tc.desc: Verify the IsSameAccount.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_IsSameAccount_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_IsSameAccount_0100 start";
-    g_mockGetTrustedDeviceList = true;
-    SoftBusHandler handler;
-    bool flag = handler.IsSameAccount(TEST_NETWORKID);
-    EXPECT_EQ(flag, true);
-#ifdef SUPPORT_SAME_ACCOUNT
-    flag = handler.IsSameAccount(TEST_NETWORKID_TWO);
-    EXPECT_EQ(flag, false);
-    flag = handler.IsSameAccount(TEST_NETWORKID_THREE);
-    EXPECT_EQ(flag, false);
-    g_mockGetTrustedDeviceList = false;
-    flag = handler.IsSameAccount(TEST_NETWORKID);
-    EXPECT_EQ(flag, false);
-#endif
-    g_mockGetTrustedDeviceList = true;
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_IsSameAccount_0100 end";
-}
-
-/**
  * @tc.name: SoftbusHandlerTest_OnSinkSessionOpened_0100
  * @tc.desc: Verify the OnSinkSessionOpened.
  * @tc.type: FUNC
@@ -324,7 +451,6 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_IsSameAccount_0100, TestSize.Lev
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OnSinkSessionOpened_0100 start";
-    g_mockGetTrustedDeviceList = true;
     string sessionName1 = "sessionName1";
     string sessionName2 = "sessionName2";
     string sessionName3 = "sessionName3";
@@ -350,8 +476,45 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     SoftBusHandler handler;
     handler.serverIdMap_.clear();
     handler.serverIdMap_.insert(std::make_pair(sessionName2, 2));
+
+    std::vector<DmDeviceInfo> deviceList;
+    DmDeviceInfo deviceInfo1;
+    deviceInfo1.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    auto res = strcpy_s(deviceInfo1.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID.c_str());
+    if (res != 0) {
+        GTEST_LOG_(INFO) << "strcpy_s failed";
+        return;
+    }
+    deviceList.push_back(deviceInfo1);
+
+    DmDeviceInfo deviceInfo2;
+    deviceInfo2.authForm = DmAuthForm::SHARE;
+    res = strcpy_s(deviceInfo2.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID_TWO.c_str());
+    if (res != 0) {
+        GTEST_LOG_(INFO) << "strcpy_s failed";
+        return;
+    }
+    deviceList.push_back(deviceInfo2);
+
+    DmDeviceInfo deviceInfo3;
+    deviceInfo3.authForm = DmAuthForm::SHARE;
+    res = strcpy_s(deviceInfo3.networkId, DM_MAX_DEVICE_ID_LEN, TEST_NETWORKID_THREE.c_str());
+    if (res != 0) {
+        GTEST_LOG_(INFO) << "strcpy_s failed";
+        return;
+    }
+    deviceList.push_back(deviceInfo3);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId1, info1);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId2, info2);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId3, info3);
 
 #ifdef SUPPORT_SAME_ACCOUNT
@@ -366,9 +529,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     EXPECT_EQ(handler.GetSessionName(sessionId2), sessionName2);
     EXPECT_EQ(handler.GetSessionName(sessionId3), sessionName3);
 #endif
-    handler.clientSessNameMap_.erase(sessionId1);
-    handler.clientSessNameMap_.erase(sessionId2);
-    handler.clientSessNameMap_.erase(sessionId3);
+    handler.clientSessNameMap_.clear();
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OnSinkSessionOpened_0100 end";
 }
 

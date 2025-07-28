@@ -20,16 +20,25 @@
 using namespace OHOS::Storage::DistributedFile;
 int32_t Socket(SocketInfo info)
 {
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
     return DfsSocket::dfsSocket->Socket(info);
 }
 
 int32_t Listen(int32_t socket, const QosTV qos[], uint32_t qosCount, const ISocketListener *listener)
 {
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
     return DfsSocket::dfsSocket->Listen(socket, qos, qosCount, listener);
 }
 
 int32_t Bind(int32_t socket, const QosTV qos[], uint32_t qosCount, const ISocketListener *listener)
 {
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
     return DfsSocket::dfsSocket->Bind(socket, qos, qosCount, listener);
 }
 
@@ -40,10 +49,32 @@ void Shutdown(int32_t socket)
 
 int SendFile(int32_t socket, const char *sFileList[], const char *dFileList[], uint32_t fileCnt)
 {
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
     return DfsSocket::dfsSocket->SendFile(socket, sFileList, dFileList, fileCnt);
 }
 
 int32_t DfsBind(int32_t socket, const ISocketListener *listener)
 {
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
     return DfsSocket::dfsSocket->DfsBind(socket, listener);
+}
+
+int32_t SetAccessInfo(int32_t socket, SocketAccessInfo accessInfo)
+{
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
+    return DfsSocket::dfsSocket->SetAccessInfo(socket, accessInfo);
+}
+
+int32_t SendBytes(int32_t socket, const void *data, uint32_t len)
+{
+    if (DfsSocket::dfsSocket == nullptr) {
+        return -1;
+    }
+    return DfsSocket::dfsSocket->SendBytes(socket, data, len);
 }

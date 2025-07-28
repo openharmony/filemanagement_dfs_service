@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,13 +16,15 @@
 #include "ipc/cloud_daemon.h"
 
 #include <exception>
-#include <stdexcept>
-#include <thread>
 #include <malloc.h>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <thread>
 
+#include "appstate_observer.h"
 #include "cloud_file_fault_event.h"
+#include "concurrent_queue.h"
 #include "dfs_error.h"
 #include "fuse_manager/fuse_manager.h"
 #include "iremote_object.h"
@@ -48,6 +50,7 @@ namespace {
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t STAT_MODE_DIR_DENTRY_CACHE = 02771;
     static const int32_t OID_DFS = 1009;
+    static const int32_t MAX_CONCURRENT_THREADS = 12;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
@@ -114,6 +117,13 @@ void CloudDaemon::OnStart()
     state_ = ServiceRunningState::STATE_RUNNING;
     /* load cloud file ext plugin */
     CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
+    ConcurrentQueue::GetInstance().Init(ffrt_qos_user_initiated, MAX_CONCURRENT_THREADS);
+    
+    std::thread listenThread([&] {
+        vector<string> bundleNameList = {};
+        CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
+    });
+    listenThread.detach();
     LOGI("Start service successfully");
 }
 
@@ -159,6 +169,8 @@ void CloudDaemon::OnStop()
     LOGI("Begin to stop");
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
+    ConcurrentQueue::GetInstance().Deinit();
+    CloudDisk::AppStateObserverManager::GetInstance().UnSubscribeAppState();
     LOGI("Stop finished successfully");
 }
 
@@ -170,11 +182,24 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 
 void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)
 {
-    std::thread([=]() {
+    ffrt::submit([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
             CloudFile::FaultType::FILE, ret, "start fuse, ret = " + std::to_string(ret)});
-        }).detach();
+        });
+}
+
+static int32_t MakeDir(int32_t xcollieId, const std::string &dirName, const std::string &dirPath)
+{
+    if (mkdir(dirPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "create " + dirName + " error:" + std::to_string(errno)});
+            return E_PATH;
+    }
+    return E_OK;
 }
 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)

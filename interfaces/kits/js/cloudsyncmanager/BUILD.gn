@@ -40,6 +40,8 @@ ohos_shared_library("cloudsyncmanager") {
   sources = [
     "cloud_sync_manager_n_exporter.cpp",
     "cloud_sync_manager_napi.cpp",
+    "downgrade_download_napi.cpp",
+    "downgrade_progress_napi.cpp"
   ]
   deps = [
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
@@ -52,6 +54,11 @@ ohos_shared_library("cloudsyncmanager") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "napi:ace_napi",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_FILE_SYNC\"",
   ]
 
   relative_install_dir = "module/file"

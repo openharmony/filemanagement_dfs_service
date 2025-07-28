@@ -60,6 +60,14 @@ public:
     static const std::string SRC_CLOUD_ID;
     static const std::string THM_SIZE;
     static const std::string LCD_SIZE;
+    static const std::string SOURCE_CLOUD_ID;
+    static const std::string LOCAL_FLAG;
+
+    /*  description for LOCAL_FLAG shift
+     *   |-----------------------bit 63 ~ 1 -------------|---bit 0----|
+     *   |--------------------------reserved-------------|-isConflict-|
+    */
+    static const uint64_t LOCAL_FLAG_MASK_ISCONFLICT;
 
     // table name
     static const std::string FILES_TABLE;
@@ -98,8 +106,12 @@ public:
 
     static const std::string ADD_LCD_SIZE;
 
+    static const std::string ADD_SOURCE_CLOUD_ID;
+
     // Add copy field
     static const std::string ADD_SRC_CLOUD_ID;
+
+    static const std::string ADD_LOCAL_FLAG;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
@@ -119,6 +131,9 @@ public:
 
     // Query FILES_TABLE for CopyFile
     static const std::vector<std::string> DISK_CLOUD_FOR_COPY;
+
+    // Query FILES_TABLE for ThmInsert
+    static const std::vector<std::string> DISK_CLOUD_FOR_THM_INSERT;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,9 +65,9 @@ struct CloudDiskFile {
     std::atomic<int> refCount{0};
     std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
     bool isWriteOpen{false};
+    uint64_t mtime;
     ffrt::mutex readLock;
     ffrt::mutex openLock;
-    std::shared_mutex sessionLock;
 };
 
 struct CloudDiskInode {
@@ -79,7 +79,7 @@ struct CloudDiskInode {
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
     std::string path; // just used in local file operation
-    std::shared_ptr<CloudDiskFile> filePtr;
+    std::shared_mutex inodeLock;
 
     /* ops means file operation that uses local or database */
     std::shared_ptr<FileOperationsBase> ops{nullptr};

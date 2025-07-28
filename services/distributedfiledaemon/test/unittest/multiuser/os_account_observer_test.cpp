@@ -26,6 +26,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 using Want = OHOS::AAFwk::Want;
 constexpr int32_t USER_ID = 101;
@@ -45,16 +46,11 @@ void OsAccountObserverTest::SetUpTestCase(void)
     if (g_subScriber == nullptr) {
         EventFwk::MatchingSkills matchingSkills;
         matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
         EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
         g_subScriber = std::make_shared<OsAccountObserver>(subscribeInfo);
         if (g_subScriber == nullptr) {
             LOGE("subscriber is nullptr");
-            return;
-        }
-
-        bool subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(g_subScriber);
-        if (!subRet) {
-            LOGE("Subscribe common event failed");
         }
     }
 }
@@ -62,10 +58,6 @@ void OsAccountObserverTest::SetUpTestCase(void)
 void OsAccountObserverTest::TearDownTestCase(void)
 {
     // input testsuit teardown step，teardown invoked after all testcases
-    bool subRet = EventFwk::CommonEventManager::UnSubscribeCommonEvent(g_subScriber);
-    if (!subRet) {
-        LOGE("UnSubscribe common event failed");
-    }
     g_subScriber = nullptr;
 }
 
@@ -97,6 +89,10 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_OnReceiveEvent_0100, TestS
             std::string data(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
             EventFwk::CommonEventData eventData(want, code, data);
             g_subScriber->OnReceiveEvent(eventData);
+
+            std::string data1(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+            EventFwk::CommonEventData eventData1(want, code, data);
+            g_subScriber->OnReceiveEvent(eventData1);
         }
     } catch (const std::exception &e) {
         res = false;

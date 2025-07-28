@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,18 @@ namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+
+const struct stat mockStat = {.st_dev = 0x00012345,
+                              .st_ino = 123456789,
+                              .st_mode = 00664,
+                              .st_nlink = 1,
+                              .st_uid = 1000,
+                              .st_gid = 1000,
+                              .st_atime = 1623456789,
+                              .st_mtime = 1623456789,
+                              .st_ctime = 1623456789,
+                              .st_blksize = 4096,
+                              .st_blocks = 2};
 
 class FileOperationsCloudTest : public testing::Test {
 public:
@@ -517,6 +529,62 @@ HWTEST_F(FileOperationsCloudTest, OpenTest007, TestSize.Level1)
         GTEST_LOG_(INFO) << "OpenTest007 ERROR";
     }
     GTEST_LOG_(INFO) << "OpenTest007 End";
+}
+
+/**
+ * @tc.name: OpenTest008
+ * @tc.desc: Verify the Open function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudTest, OpenTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OpenTest008 Start";
+    try {
+        CloudDiskFuseData data;
+        data.userId = 0;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        struct fuse_file_info fi;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
+
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
+        fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OpenTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OpenTest008 End";
+}
+
+/**
+ * @tc.name: OpenTest009
+ * @tc.desc: Verify the Open function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudTest, OpenTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OpenTest009 Start";
+    try {
+        CloudDiskFuseData data;
+        data.userId = 0;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        struct fuse_file_info fi;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
+
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(Return(-1));
+        fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OpenTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OpenTest009 End";
 }
 
 /**
@@ -1642,6 +1710,33 @@ HWTEST_F(FileOperationsCloudTest, MkDirTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MkDirTest005
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = ".conflict";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest005 End";
+}
+
+/**
  * @tc.name: RmDirTest001
  * @tc.desc: Verify the RmDir function
  * @tc.type: FUNC
@@ -2247,8 +2342,11 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest004, TestSize.Level1)
         struct fuse_file_info fi;
         fi.fh = 2;
 
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2301,8 +2399,11 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest006, TestSize.Level1)
         struct fuse_file_info fi;
         fi.fh = 0;
 
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2337,6 +2438,99 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest007, TestSize.Level1)
         GTEST_LOG_(INFO) << "ReleaseTest007 ERROR";
     }
     GTEST_LOG_(INFO) << "ReleaseTest007 End";
+}
+
+/**
+ * @tc.name: ReleaseTest008
+ * @tc.desc: Verify the Release function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReleaseTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReleaseTest008 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 1;
+        struct fuse_file_info fi;
+        fi.fh = 2;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(Return(-1));
+
+        fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReleaseTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReleaseTest008 End";
+}
+
+/**
+ * @tc.name: ReleaseTest009
+ * @tc.desc: Verify the Release function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReleaseTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReleaseTest009 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 1;
+        struct fuse_file_info fi;
+        fi.fh = 5;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
+
+        fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReleaseTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReleaseTest009 End";
+}
+
+/**
+ * @tc.name: ReleaseTest010
+ * @tc.desc: Verify the Release function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReleaseTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReleaseTest010 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 1;
+        struct fuse_file_info fi;
+        fi.fh = 6;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)))
+            .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
+
+        fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReleaseTest010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReleaseTest010 End";
 }
 
 /**
@@ -2385,7 +2579,10 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest002, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_attr(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_attr(_, _, _))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_OK))
+            .WillOnce(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, &fi);
         EXPECT_TRUE(true);
     } catch (...) {

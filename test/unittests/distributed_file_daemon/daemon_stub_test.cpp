@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,6 +82,7 @@ public:
                          const sptr<IRemoteObject> &listener,
                          HmdfsInfo &fileInfo));
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
+    MOCK_METHOD2(CancelCopyTask, int32_t(const std::string &srcUri, const std::string &dstUri));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 
     MOCK_METHOD3(PushAsset,
@@ -90,6 +91,14 @@ public:
                          const sptr<IAssetSendCallback> &sendCallback));
     MOCK_METHOD1(RegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
     MOCK_METHOD1(UnRegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
+    MOCK_METHOD3(GetDfsUrisDirFromLocal, int32_t(const std::vector<std::string> &uriList,
+                                                 const int32_t userId,
+                                                 std::unordered_map<std::string,
+                                                 AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                                 &uriToDfsUriMaps));
+    MOCK_METHOD2(GetDfsSwitchStatus, int32_t(const std::string &networkId, int32_t &switchStatus));
+    MOCK_METHOD1(UpdateDfsSwitchStatus, int32_t(int32_t switchStatus));
+    MOCK_METHOD1(GetConnectedDeviceList, int32_t(std::vector<DfsDeviceInfo> &deviceList));
 };
 
 class DaemonStubTest : public testing::Test {
@@ -129,7 +138,7 @@ void DaemonStubTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest001 Start";
     try {
@@ -153,7 +162,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest002, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest002 Start";
     try {
@@ -177,7 +186,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest003, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest003, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest003 Start";
     try {
@@ -201,7 +210,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest004, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest004, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest004 Start";
     try {
@@ -232,7 +241,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest005, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest005 Start";
     try {
@@ -263,7 +272,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest006 Start";
     try {
@@ -293,7 +302,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest007, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest007, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest007 Start";
     try {
@@ -305,7 +314,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest007, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE), data,
             reply, option);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_IPC_READ_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest007 ERROR";
@@ -319,7 +328,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest008, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest008, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest008 Start";
     try {
@@ -331,7 +340,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest008, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO), data,
             reply, option);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_IPC_READ_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest008 ERROR";
@@ -345,7 +354,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest009, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest009, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest009 Start";
     try {
@@ -371,7 +380,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest010, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest010, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest010 Start";
     try {
@@ -397,7 +406,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest011, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest011, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest011 Start";
     try {
@@ -423,7 +432,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest012, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest012, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest012 Start";
     try {
@@ -449,7 +458,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest013, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest013, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest013 Start";
     try {
@@ -475,7 +484,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest014, TestSize.Level1)
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest014, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest014 Start";
     try {

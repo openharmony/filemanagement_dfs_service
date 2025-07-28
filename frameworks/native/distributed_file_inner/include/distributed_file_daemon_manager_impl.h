@@ -42,6 +42,7 @@ public:
                            const sptr<IRemoteObject> &listener,
                            HmdfsInfo &info) override;
     int32_t CancelCopyTask(const std::string &sessionName) override;
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &remoteDeviceId,
@@ -59,6 +60,9 @@ public:
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback processCallback) override;
     int32_t Cancel(const std::string &srcUri, const std::string &destUri) override;
     int32_t Cancel() override;
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
 private:
     DistributedFileDaemonManagerImpl() = default;
 };

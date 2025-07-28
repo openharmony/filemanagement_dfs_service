@@ -45,7 +45,7 @@ void NetConnCallbackObserverTest::TearDownTestCase(void)
 void NetConnCallbackObserverTest::SetUp(void)
 {
     if (oberverPtr_ == nullptr) {
-        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         oberverPtr_ = make_shared<NetConnCallbackObserver>(dataSyncManager);
         ASSERT_TRUE(oberverPtr_ != nullptr) << "CallbackObserver failed";
     }

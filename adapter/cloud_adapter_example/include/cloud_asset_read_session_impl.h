@@ -21,7 +21,8 @@
 namespace OHOS::FileManagement::CloudFile {
 class CloudAssetReadSessionImpl : public CloudAssetReadSession {
 public:
-    CloudAssetReadSessionImpl(std::string recordType,
+    CloudAssetReadSessionImpl(const int32_t userId,
+                              std::string recordType,
                               std::string recordId,
                               std::string assetKey,
                               std::string assetPath);

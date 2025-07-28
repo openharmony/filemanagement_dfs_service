@@ -33,6 +33,7 @@
 namespace OHOS {
 constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
+const pid_t PASTEBOARDUSERID = 3816;
 static pid_t UID = DAEMON_UID;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
@@ -84,6 +85,11 @@ public:
         return 0;
     }
 
+    int32_t CancelCopyTask(const std::string &srcUri, const std::string &dstUri) override
+    {
+        return 0;
+    }
+
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &remoteDeviceId,
@@ -110,6 +116,29 @@ public:
     }
 
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override
+    {
+        return 0;
+    }
+
+    int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
+                                   const int32_t userId,
+                                   std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
+                                   &uriToDfsUriMaps) override
+    {
+        return 0;
+    }
+
+    int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override
+    {
+        return 0;
+    }
+
+    int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override
+    {
+        return 0;
+    }
+
+    int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override
     {
         return 0;
     }
@@ -280,6 +309,40 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
+void HandleGetDfsUrisDirFromLocalFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                          const uint8_t *data,
+                                          size_t size)
+{
+    OHOS::UID = PASTEBOARDUSERID;
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
+{
+    OHOS::UID = DATA_UID;
+    uint32_t code =
+    static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    int len = size >> 1;
+    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
+    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -331,5 +394,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandlePushAssetFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,33 +42,9 @@ const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const std::string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
-#ifdef SUPPORT_SAME_ACCOUNT
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
-#endif
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
     sessionName_ = SESSION_NAME;
-}
-
-bool SoftbusAgent::IsSameAccount(const std::string &networkId)
-{
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == networkId) {
-            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-        }
-    }
-    LOGI("The source and sink device is not same account, not support.");
-    return false;
-#else
-    return true;
-#endif
 }
 
 int32_t SoftbusAgent::JudgeNetworkTypeIsWifi(const DeviceInfo &info)
@@ -97,6 +73,7 @@ void SoftbusAgent::JoinDomain()
         .OnBytes = nullptr,
         .OnMessage = nullptr,
         .OnStream = nullptr,
+        .OnNegotiate2 = SoftbusSessionDispatcher::OnNegotiate2,
     };
 
     SoftbusSessionDispatcher::RegisterSessionListener(sessionName_, shared_from_this());
@@ -157,8 +134,8 @@ void SoftbusAgent::StopBottomHalf() {}
 int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    if (!IsSameAccount(info.GetCid())) {
-        return FileManagement::E_INVAL_ARG;
+    if (!SoftBusPermissionCheck::CheckSrcPermission(info.GetCid())) {
+        return FileManagement::E_PERMISSION_DENIED;
     }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
@@ -188,6 +165,11 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         LOGW("Has find socketId:%{public}d", socketId);
         return FileManagement::E_OK;
     }
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+        LOGW("Fill and set accessInfo failed");
+        Shutdown(socketId);
+        return FileManagement::E_CONTEXT;
+    }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
@@ -197,12 +179,17 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         Shutdown(socketId);
         return FileManagement::E_CONTEXT;
     }
-    auto session = make_shared<SoftbusSession>(socketId, info.GetCid());
+    HandleAfterOpenSession(socketId, info.GetCid());
+    return FileManagement::E_OK;
+}
+
+void SoftbusAgent::HandleAfterOpenSession(const int32_t socketId, const std::string &networkId)
+{
+    auto session = make_shared<SoftbusSession>(socketId, networkId);
     session->DisableSessionListener();
     session->SetFromServer(false);
     AcceptSession(session, "Client");
-    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(info.GetCid()).c_str());
-    return FileManagement::E_OK;
+    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(networkId).c_str());
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)
@@ -241,7 +228,23 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
 void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDeviceId)
 {
     LOGI("OnSessionClosed Enter.");
-    Shutdown(sessionId);
+    CloseSessionForOneDevice(peerDeviceId);
+}
+
+bool SoftbusAgent::OnNegotiate2(int32_t socket, PeerSocketInfo info,
+    SocketAccessInfo *peerInfo, SocketAccessInfo *localInfo)
+{
+    AccountInfo callerAccountInfo;
+    std::string networkId = info.networkId;
+    if (!SoftBusPermissionCheck::TransCallerInfo(peerInfo, callerAccountInfo, networkId)) {
+        LOGE("Trans caller info failed.");
+        return false;
+    }
+    if (!SoftBusPermissionCheck::FillLocalInfo(localInfo)) {
+        LOGE("FillLocalInfo failed.");
+        return false;
+    }
+    return SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
 }
 } // namespace DistributedFile
 } // namespace Storage

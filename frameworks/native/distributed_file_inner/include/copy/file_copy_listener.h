@@ -65,8 +65,10 @@ public:
 
 private:
     void CloseNotifyFd();
+    void CloseNotifyFdLocked();
     void GetNotifyEvent();
     void ReadNotifyEvent();
+    void ReadNotifyEventLocked();
     std::tuple<bool, int, bool> HandleProgress(inotify_event *event);
     bool CheckFileValid(const std::string &filePath);
     int UpdateProgressSize(const std::string &filePath, std::shared_ptr<ReceiveInfo> receivedInfo);
@@ -86,6 +88,14 @@ private:
     std::set<std::string> filePaths_;
     ProcessCallback processCallback_;
     int32_t errorCode_ = 0;
+
+    std::mutex readMutex_;
+    bool readFlag_ = false;
+    bool readClosed_ = false;
+    std::atomic<bool> notifyRun_ {true};
+
+    std::condition_variable notifyCv_;
+    std::mutex cvLock_;
 };
 } // namespace DistributedFile
 } // namespace Storage

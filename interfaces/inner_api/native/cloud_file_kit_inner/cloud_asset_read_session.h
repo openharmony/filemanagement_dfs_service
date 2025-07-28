@@ -24,19 +24,27 @@
 namespace OHOS::FileManagement::CloudFile {
 class CloudAssetReadSession {
 public:
-    CloudAssetReadSession(std::string recordType, std::string recordId, std::string assetKey, std::string assetPath);
+    CloudAssetReadSession(const int32_t userId, std::string recordType,
+        std::string recordId, std::string assetKey, std::string assetPath);
     virtual ~CloudAssetReadSession() = default;
 
     virtual CloudError InitSession();
-    virtual int64_t PRead(int64_t offset, int64_t size, char *buffer, CloudError &error);
+    virtual int64_t PRead(int64_t offset,
+                          int64_t size,
+                          char *buffer,
+                          CloudError &error,
+                          const std::string appId = "");
     virtual bool Close(bool needRemain = false);
-    virtual bool HasCache(int64_t offset, int64_t readSize);
     virtual void SentPrepareTraceId(std::string prepareTraceId);
+    virtual bool Catch(CloudError &error, uint32_t catchTimeOutPara);
     void SetPrepareTraceId(std::string prepareTraceId);
     std::string GetPrepareTraceId();
 
 private:
     std::string traceId_;
+
+protected:
+    int32_t userId_;
 };
 } // namespace OHOS::FileManagement::CloudFile
 

@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "i_cloud_sync_callback.h"
+#include "i_downgrade_dl_callback.h"
 #include "iremote_stub.h"
 #include "dfs_error.h"
 
@@ -42,6 +43,14 @@ public:
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override {}
 };
 
+class DowngradeDlCallbackMock : public IRemoteStub<IDowngradeDlCallback> {
+public:
+    DowngradeDlCallbackMock() = default;
+    virtual ~DowngradeDlCallbackMock() = default;
+
+    MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
+    MOCK_METHOD1(OnDownloadProcess, void(const DowngradeProgress &progress));
+};
 } // namespace OHOS::FileManagement::CloudSync
 
 #endif // MOCK_I_CLOUD_SYNC_CALLBACK_H

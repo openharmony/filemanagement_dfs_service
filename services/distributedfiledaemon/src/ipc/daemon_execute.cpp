@@ -236,7 +236,6 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
                                                                       DFS_CHANNLE_ROLE_SINK, physicalPath);
     if (socketId <= 0) {
         LOGE("CreateSessionServer failed, socketId = %{public}d", socketId);
-        Daemon::DeleteSessionAndListener(sessionName, socketId);
         return E_SOFTBUS_SESSION_FAILED;
     }
     physicalPath.clear();
@@ -247,7 +246,7 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
     auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
-        Daemon::DeleteSessionAndListener(sessionName, socketId);
+        SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
         return ret;
     }
     return ret;
@@ -267,7 +266,6 @@ std::string DaemonExecute::GetZipName(const std::string &relativePath)
         random = std::to_string(rd());
         zipName = value + "_" + random + ".zip";
     }
-    LOGI("zipName is %{public}s", zipName.c_str());
     return zipName;
 }
 
@@ -290,7 +288,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             return {};
         }
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
-            LOGE("invalid path : %{public}s", GetAnonyString(physicalPath).c_str());
+            LOGE("invalid path");
             return {};
         }
         if (OHOS::Storage::DistributedFile::Utils::IsFolder(physicalPath)) {

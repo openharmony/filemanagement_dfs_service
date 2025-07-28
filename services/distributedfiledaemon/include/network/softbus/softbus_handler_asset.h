@@ -25,8 +25,8 @@
 #include <vector>
 
 #include "asset/asset_obj.h"
-#include "third_party/zlib/contrib/minizip/unzip.h"
-#include "third_party/zlib/contrib/minizip/zip.h"
+#include "unzip.h"
+#include "zip.h"
 #include "transport/socket.h"
 #include "transport/trans_type.h"
 
@@ -73,7 +73,6 @@ public:
 
     void RemoveFile(const std::string &path, bool isRemove = true);
 private:
-    static bool IsSameAccount(const std::string &networkId);
     std::string GetDstFile(const std::string &file,
                            const std::string &srcBundleName,
                            const std::string &dstBundleName,
@@ -81,7 +80,6 @@ private:
                            bool isSingleFile);
     std::string GetLocalNetworkId();
     int32_t MkDir(const std::string &path, mode_t mode);
-    void SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen);
 
     bool IsDir(const std::string &path);
     std::string ExtractFile(unzFile unZipFile, const std::string &dir);

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -34,7 +34,11 @@ void AssetCallbackManager::AddRecvCallback(const sptr<IAssetRecvCallback> &recvC
         return;
     }
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
+        if (callback == nullptr) {
+            LOGE("callback is nullptr");
+            continue;
+        }
         if (recvCallback->AsObject() == callback->AsObject()) {
             LOGI("recvCallback registered!");
             return;
@@ -92,7 +96,7 @@ void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
 {
     LOGI("NotifyAssetRecvStart.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
         if (callback != nullptr) {
             callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
         } else {
@@ -102,16 +106,39 @@ void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
     }
 }
 
+void AssetCallbackManager::NotifyAssetRecvProgress(const std::string &srcNetworkId,
+                                                   const sptr<AssetObj> &assetObj,
+                                                   uint64_t total,
+                                                   uint64_t processed)
+{
+    LOGD("NotifyAssetRecvProgress.");
+    std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
+    for (const auto &callback : recvCallbackList_) {
+        if (callback == nullptr) {
+            LOGE("IAssetRecvCallback is empty");
+            if (assetObj != nullptr) {
+                LOGE("SessionId is %{public}s, dstBundleName is %{public}s",
+                    assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            }
+            continue;
+        }
+        callback->OnRecvProgress(srcNetworkId, assetObj, total, processed);
+    }
+}
+
 void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetworkId,
                                                    const sptr<AssetObj> &assetObj,
                                                    int32_t result)
 {
     LOGI("NotifyAssetRecvFinished.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
-    for (auto callback : recvCallbackList_) {
+    for (const auto &callback : recvCallbackList_) {
         if (callback == nullptr) {
-            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
-                 assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            LOGE("IAssetRecvCallback is empty");
+            if (assetObj != nullptr) {
+                LOGE("SessionId is %{public}s, dstBundleName is %{public}s",
+                    assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
+            }
         } else {
             callback->OnFinished(srcNetworkId, assetObj, result);
         }

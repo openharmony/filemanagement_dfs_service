@@ -142,6 +142,30 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGottonCallback_0100, Test
 }
 
 /**
+ * @tc.name: DevslDispatcherTest_DevslGottonCallback_0101
+ * @tc.desc: Verify the DevslGottonCallback function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGottonCallback_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGottonCallback_0101 start";
+    bool res = true;
+    uint32_t level = 0;
+    DEVSLQueryParams queryParam;
+    try {
+        DevslDispatcher::DevslGottonCallback(&queryParam, 0, level);
+        DevslDispatcher::DevslGottonCallback(&queryParam, 1, level);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGottonCallback_0101 end";
+}
+
+/**
  * @tc.name: DevslDispatcherTest_DevslGetRegister_0100
  * @tc.desc: Verify the DevslGetRegister function.
  * @tc.type: FUNC

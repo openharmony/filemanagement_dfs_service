@@ -25,19 +25,19 @@ ohos_unittest("dfsu_fd_guard_test") {
   include_dirs = [
     "${utils_path}/system/include",
     "${utils_path}/log/include",
-    "//foundation/multimedia/image_framework/mock/native/include/log/",
   ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "image_framework:image_native",
   ]
 
   defines = [ "private=public" ]
@@ -61,11 +61,6 @@ ohos_unittest("dfsu_access_token_helper_test") {
 
   include_dirs = [
     "${distributedfile_path}/test/unittests/cloudsync_sa/system/reimplement",
-    "${communication_ipc_path}/ipc/ipc/native/c/adapter/access_token/include",
-    "${communication_ipc_path}/ipc/ipc/native/src/core/include",
-    "${communication_ipc_path}/ipc/utils/include",
-    "${image_framework_path}/interfaces/innerkits/include",
-    "${image_framework_path}/mock/native/include/log/",
     "${utils_path}/system/include",
     "${utils_path}/log/include",
   ]
@@ -73,8 +68,6 @@ ohos_unittest("dfsu_access_token_helper_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -84,8 +77,11 @@ ohos_unittest("dfsu_access_token_helper_test") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "image_framework:image_native",
     "ipc:ipc_core",
     "preferences:native_preferences",
   ]
@@ -109,19 +105,19 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
   include_dirs = [
     "${utils_path}/system/include",
     "${utils_path}/log/include",
-    "//foundation/multimedia/image_framework/mock/native/include/log/",
   ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "image_framework:image_native",
   ]
 
   defines = [ "private=public" ]

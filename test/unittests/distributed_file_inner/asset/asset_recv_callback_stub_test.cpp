@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,10 @@ public:
                                   const std::string &dstNetworkId,
                                   const std::string &sessionId,
                                   const std::string &dstBundleName));
+    MOCK_METHOD4(OnRecvProgress, int32_t(const std::string &srcNetworkId,
+                                         const sptr<AssetObj> &assetObj,
+                                         uint64_t totalBytes,
+                                         uint64_t processBytes));
     MOCK_METHOD3(OnFinished, int32_t(const std::string &srcNetworkId,
                                      const sptr<AssetObj> &assetObj,
                                      int32_t result));
@@ -75,7 +79,7 @@ void AssetRecvCallbackStubTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_OnRemoteRequest_0100 Start";
     uint32_t code = static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START);
@@ -104,7 +108,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0100, 
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_OnRemoteRequest_0200 Start";
     uint32_t code = static_cast<uint32_t>(AssetCallbackInterfaceCode::ASSET_CALLBACK_ON_START);
@@ -129,7 +133,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_OnRemoteRequest_0200, 
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnStart_0100 Start";
     MessageParcel data;
@@ -163,19 +167,60 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnStart_0100, Te
 }
 
 /**
+ * @tc.name: AssetRecvCallbackStub_HandleOnRecvProgress_0100
+ * @tc.desc: verify HandleOnRecvProgress.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnRecvProgress_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnRecvProgress_0100 Start";
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = mockStub_->HandleOnRecvProgress(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    ret = mockStub_->HandleOnRecvProgress(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    data.WriteParcelable(assetObj);
+    ret = mockStub_->HandleOnRecvProgress(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    data.WriteParcelable(assetObj);
+    data.WriteUint64(1024);
+    ret = mockStub_->HandleOnRecvProgress(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    data.WriteString("srcNetworkId");
+    data.WriteParcelable(assetObj);
+    data.WriteUint64(1024);
+    data.WriteUint64(256);
+    EXPECT_CALL(*mockStub_, OnRecvProgress(_, _, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+    ret = mockStub_->HandleOnRecvProgress(data, reply);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnRecvProgress_0100 End";
+}
+
+/**
  * @tc.name: AssetRecvCallbackStub_HandleOnFinished_0100
  * @tc.desc: verify HandleOnFinished.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnFinished_0100 Start";
     MessageParcel data;
     MessageParcel reply;
     auto ret = mockStub_->HandleOnFinished(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);
-    
+
     data.WriteString("srcNetworkId");
     ret = mockStub_->HandleOnFinished(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);
@@ -201,7 +246,7 @@ HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0100,
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0200, TestSize.Level1)
+HWTEST_F(AssetRecvCallbackStubTest, AssetRecvCallbackStub_HandleOnFinished_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackStub_HandleOnFinished_0200 Start";
     MessageParcel data;
