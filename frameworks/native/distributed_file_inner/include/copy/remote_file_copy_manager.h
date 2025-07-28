@@ -36,6 +36,7 @@ private:
         const int32_t userId, const std::string &copyPath);
     bool IsMediaUri(const std::string &uriPath);
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
+    bool IsFile(const std::string &path);
 private:
     static std::shared_ptr<RemoteFileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;

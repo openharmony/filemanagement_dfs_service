@@ -192,26 +192,18 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();
-    auto ret = CreateFileInfos(srcUri, destUri, infos);
+    CreateFileInfos(srcUri, destUri, infos);
     if (IsRemoteUri(infos->srcUri)) {
-        ret = ExecRemote(infos, processCallback);
+        auto ret = ExecRemote(infos, processCallback);
         RemoveFileInfos(infos);
-        return ret;
-    }
-
-    if (ret != E_OK) {
-        if (processCallback == nullptr) {
-            return EINVAL;
-        }
         return ret;
     }
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
-    infos->localListener->StartListener();
     auto result = ExecLocal(infos);
     RemoveFileInfos(infos);
     infos->localListener->StopListener();
-
+    LOGE("FileCopyManager Copy end");
     if (result != E_OK) {
         return result;
     }
@@ -331,46 +323,39 @@ void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
     }
 }
 
-int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
+bool FileCopyManager::IsDirectory(const std::string &path)
 {
-    LOGI("start ExecLocal");
+    struct stat buf {};
+    int ret = stat(path.c_str(), &buf);
+    if (ret == -1) {
+        LOGE("stat failed, errno is %{public}d", errno);
+        return false;
+    }
+    return (buf.st_mode & S_IFMT) == S_IFDIR;
+}
+
+bool FileCopyManager::IsFile(const std::string &path)
+{
+    struct stat buf {};
+    int ret = stat(path.c_str(), &buf);
+    if (ret == -1) {
+        LOGI("stat failed, errno is %{public}d, ", errno);
+        return false;
+    }
+    return (buf.st_mode & S_IFMT) == S_IFREG;
+}
+
+int32_t FileCopyManager::ExecCopy(std::shared_ptr<FileInfos> infos)
+{
     if (infos == nullptr) {
         LOGE("infos is nullptr");
         return EINVAL;
     }
-    // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
-    if (infos->srcUriIsFile) {
-        if (infos->srcPath == infos->destPath) {
-            LOGE("The src and dest is same");
-            return EINVAL;
-        }
-        int32_t ret = CheckOrCreatePath(infos->destPath);
-        if (ret != E_OK) {
-            LOGE("check or create fail, error code is %{public}d", ret);
-            return ret;
-        }
-        bool isFile = false;
-        ret = FileSizeUtils::IsFile(infos->destPath, isFile);
-        if (ret != E_OK || !isFile) {
-            LOGE("IsFile fail or dest is not file");
-            return EINVAL;
-        }
-        if (infos->localListener == nullptr) {
-            LOGE("local listener is nullptr");
-            return EINVAL;
-        }
-        infos->localListener->AddListenerFile(infos->destPath, IN_MODIFY);
+    if (infos->srcUriIsFile && IsFile(infos->destPath)) {
+        // copy file
         return CopyFile(infos->srcPath, infos->destPath, infos);
     }
-
-    bool destIsDirectory;
-    auto ret = FileSizeUtils::IsDirectory(infos->destUri, false, destIsDirectory);
-    if (ret != E_OK) {
-        LOGE("destPath not find, error=%{public}d", ret);
-        return ret;
-    }
-
-    if (destIsDirectory) {
+    if (!infos->srcUriIsFile && IsDirectory(infos->destPath)) {
         if (infos->srcPath.back() != '/') {
             infos->srcPath += '/';
         }
@@ -384,6 +369,33 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     return EINVAL;
 }
 
+int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
+{
+    LOGI("start ExecLocal");
+    if (infos == nullptr || infos->localListener == nullptr) {
+        LOGE("infos or localListener is nullptr");
+        return EINVAL;
+    }
+    if (infos->srcUriIsFile) {
+        if (infos->srcPath == infos->destPath) {
+            LOGE("The src and dest is same");
+            return EINVAL;
+        }
+        int32_t ret = CheckOrCreatePath(infos->destPath);
+        if (ret != E_OK) {
+            LOGE("check or create fail, error code is %{public}d", ret);
+            return ret;
+        }
+    }
+    auto ret = infos->localListener->AddListenerFile(infos->srcPath, infos->destPath, IN_MODIFY);
+    if (ret != E_OK) {
+        LOGE("AddListenerFile fail, errno = %{public}d", ret);
+        return ret;
+    }
+    infos->localListener->StartListener();
+    return ExecCopy(infos);
+}
+
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
     LOGI("CopyFile start");
@@ -393,11 +405,11 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     if (srcFd < 0) {
         return ret;
     }
-    #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+#if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
     if (g_apiCompatibleVersion == 0) {
         g_apiCompatibleVersion = GetApiCompatibleVersion();
     }
-    #endif
+#endif
 
     int32_t destFd = -1;
     if (g_apiCompatibleVersion >= OPEN_TRUC_VERSION) {
@@ -514,11 +526,6 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
         std::lock_guard<std::mutex> lock(infos->subDirsMutex);
         infos->subDirs.insert(destPath);
     }
-    if (infos->localListener == nullptr) {
-        LOGE("local listener is nullptr");
-        return EINVAL;
-    }
-    infos->localListener->AddListenerFile(destPath, IN_MODIFY);
     return RecurCopyDir(srcPath, destPath, infos);
 }
 
@@ -573,15 +580,8 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
     infos->destUri = destUri;
     infos->srcPath = FileSizeUtils::GetPathFromUri(srcUri, true);
     infos->destPath = FileSizeUtils::GetPathFromUri(destUri, false);
+    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || IsFile(infos->srcPath);
     AddFileInfos(infos);
-
-    bool isDirectory;
-    auto ret = FileSizeUtils::IsDirectory(infos->srcUri, true, isDirectory);
-    if (ret != E_OK) {
-        LOGE("srcPath not find, err=%{public}d", ret);
-        return ret;
-    }
-    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
     return E_OK;
 }
 

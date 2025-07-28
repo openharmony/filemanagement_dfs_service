@@ -89,22 +89,6 @@ static int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gi
     return E_OK;
 }
 
-static bool CheckPath(const std::shared_ptr<FileInfos> &infos)
-{
-    std::string destPath = infos->destPath;
-    if (infos->srcUriIsFile) {
-        auto pos = destPath.rfind("/");
-        if (pos == std::string::npos) {
-            return false;
-        }
-        destPath.resize(pos);
-    }
-    if (!(SandboxHelper::CheckValidPath(infos->srcPath) && SandboxHelper::CheckValidPath(destPath))) {
-        return false;
-    }
-    return true;
-}
-
 bool RemoteFileCopyManager::IsMediaUri(const std::string &uriPath)
 {
     Uri uri(uriPath);
@@ -112,30 +96,15 @@ bool RemoteFileCopyManager::IsMediaUri(const std::string &uriPath)
     return bundleName == MEDIA_AUTHORITY;
 }
 
-static int32_t IsDirectory(const std::string &path, bool &isDirectory)
+bool RemoteFileCopyManager::IsFile(const std::string &path)
 {
-    if (!FileSizeUtils::IsFilePathValid(path)) {
-        LOGE("path is forbidden");
-        return EINVAL;
+    struct stat buf {};
+    int ret = stat(path.c_str(), &buf);
+    if (ret == -1) {
+        LOGI("stat failed, errno is %{public}d, ", errno);
+        return false;
     }
-
-    bool isDir = false;
-    auto ret = FileSizeUtils::IsDirectory(path, isDir);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    bool isFile = false;
-    ret = FileSizeUtils::IsFile(path, isFile);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    if (isDir == isFile) {
-        return EINVAL;
-    }
-    isDirectory = isDir;
-    return E_OK;
+    return (buf.st_mode & S_IFMT) == S_IFREG;
 }
 
 static std::string GetFileName(const std::string &path)
@@ -189,14 +158,7 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
     }
     infos->srcPath = srcPhysicalPath;
     infos->destPath = dstPhysicalPath;
-    LOGI("Remote copy srcPath: , destPath: ");
-    bool isDirectory;
-    auto ret = IsDirectory(infos->srcPath, isDirectory);
-    if (ret != E_OK) {
-        LOGE("srcPath not find, err=%{public}d", ret);
-        return ret;
-    }
-    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
+    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || IsFile(infos->srcPath);
     infos->callingUid = IPCSkeleton::GetCallingUid();
     AddFileInfos(infos);
     return E_OK;
@@ -261,25 +223,21 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
         LOGE("CreateFileInfos failed,ret= %{public}d", ret);
         return ret;
     }
-
-    if (!CheckPath(infos)) {
-        LOGE("invalid srcPath or destPath");
-        return EINVAL;
-    }
     std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback = 
         [&listener](uint64_t processSize, uint64_t totalSize) -> void {
-        listener->OnFileReceive(totalSize, processSize);
+        if (processSize != totalSize) {
+            listener->OnFileReceive(totalSize, processSize);
+        }
     };
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
-    infos->localListener->StartListener();
     auto result = FileCopyManager::GetInstance()->ExecLocal(infos);
     if (ChangeOwnerRecursive(infos->destPath, infos->callingUid, infos->callingUid) != 0) {
         LOGE("ChangeOwnerRecursive failed, calling uid= %{public}d", infos->callingUid);
     }
     RemoveFileInfos(infos);
     infos->localListener->StopListener();
-    
+
     if (result != E_OK) {
         return result;
     }

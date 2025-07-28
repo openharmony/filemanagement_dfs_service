@@ -15,6 +15,7 @@
 
 #include "copy/file_copy_listener.h"
 
+#include <cinttypes>
 #include <unistd.h>
 
 #include "copy/file_size_utils.h"
@@ -38,6 +39,7 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
 {
     if (processCallback_ == nullptr) {
+        LOGI("processCallback is nullptr");
         return;
     }
 
@@ -51,18 +53,6 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
         LOGE("Failed to init eventFd, errno:%{public}d", errno);
         return;
     }
-
-    uint64_t fileSize = 0;
-    int32_t err;
-    if (!isFile_) {
-        err = FileSizeUtils::GetDirSize(srcPath, fileSize);
-    } else {
-        err = FileSizeUtils::GetFileSize(srcPath, fileSize);
-    }
-    if (err == E_OK) {
-        totalSize_ = fileSize;
-    }
-    notifyTime_ = std::chrono::steady_clock::now() + NOTIFY_PROGRESS_DELAY;
 }
 
 FileCopyLocalListener::~FileCopyLocalListener()
@@ -80,6 +70,7 @@ std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(c
 void FileCopyLocalListener::StartListener()
 {
     if (processCallback_ == nullptr || totalSize_ == 0) {
+        LOGI("processCallback is nullptr or totalSize is zero, totalSize = %{public}" PRId64 "B", totalSize_);
         return;
     }
     notifyHandler_ = std::thread([this] {
@@ -91,9 +82,11 @@ void FileCopyLocalListener::StartListener()
 void FileCopyLocalListener::StopListener()
 {
     LOGI("StopListener start.");
-    if (processCallback_ != nullptr) {
-        processCallback_(progressSize_, totalSize_);
+    if (processCallback_ == nullptr) {
+        LOGI("processCallback is nullptr");
+        return;
     }
+    processCallback_(progressSize_, totalSize_);
     CloseNotifyFdLocked();
     notifyRun_.store(false);
     {
@@ -111,25 +104,41 @@ void FileCopyLocalListener::AddFile(const std::string &fileName)
     filePaths_.insert(fileName);
 }
 
-void FileCopyLocalListener::AddListenerFile(const std::string &destPath, uint32_t mode)
+int32_t FileCopyLocalListener::AddListenerFile(const std::string &srcPath, const std::string &destPath, uint32_t mode)
 {
-    if (processCallback_ == nullptr || totalSize_ == 0) {
-        return;
+    LOGI("AddListenerFile start");
+    if (processCallback_ == nullptr) {
+        LOGI("processCallback is nullptr");
+        return E_OK;
     }
-
     std::lock_guard<std::mutex> lock(wdsMutex_);
     int newWd = inotify_add_watch(notifyFd_, destPath.c_str(), mode);
     if (newWd < 0) {
         LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d, errno = %{public}d", newWd, errno);
-        return;
+        return errno;
     }
     std::shared_ptr<ReceiveInfo> receiveInfo = std::make_shared<ReceiveInfo>();
     if (receiveInfo == nullptr) {
         LOGE("Failed to request heap memory.");
-        return;
+        return ENOMEM;
     }
     receiveInfo->path = destPath;
     wds_.insert(std::make_pair(newWd, receiveInfo));
+    uint64_t fileSize = 0;
+    int32_t err;
+    if (!isFile_) {
+        err = FileSizeUtils::GetDirSize(srcPath, fileSize);
+    } else {
+        err = FileSizeUtils::GetFileSize(srcPath, fileSize);
+    }
+    if (err != E_OK) {
+        LOGE("Failed to get src size, isFile=%{public}d, err=%{public}d", isFile_, err);
+        return err;
+    }
+    totalSize_ = fileSize;
+    notifyTime_ = std::chrono::steady_clock::now() + NOTIFY_PROGRESS_DELAY;
+    LOGI("AddListenerFile end");
+    return E_OK;
 }
 
 void FileCopyLocalListener::GetNotifyEvent()

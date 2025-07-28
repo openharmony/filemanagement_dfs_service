@@ -95,12 +95,15 @@ private:
     // operator of file
     int32_t CreateFileInfos(const std::string &srcUri, const std::string &destUri, std::shared_ptr<FileInfos> &infos);
     int32_t CheckOrCreatePath(const std::string &destPath);
+    int32_t ExecCopy(std::shared_ptr<FileInfos> infos);
     int MakeDir(const std::string &path);
     bool IsRemoteUri(const std::string &uri);
     bool IsMediaUri(const std::string &uriPath);
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
     void RemoveFileInfos(std::shared_ptr<FileInfos> infos);
     void DeleteResFile(std::shared_ptr<FileInfos> infos);
+    bool IsDirectory(const std::string &path);
+    bool IsFile(const std::string &path);
 };
 } // namespace DistributedFile
 } // namespace Storage
