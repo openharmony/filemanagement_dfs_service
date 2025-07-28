@@ -136,7 +136,7 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnReceiveEventTest002 start";
     try {
         Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING);
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
         EventFwk::CommonEventData eventData(want);
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         auto screenStatusListener = std::make_shared<ScreenStatusListener>(dataSyncManager);
@@ -162,7 +162,7 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnReceiveEventTest003 start";
     try {
         Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
         EventFwk::CommonEventData eventData(want);
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         auto screenStatusListener = std::make_shared<ScreenStatusListener>(dataSyncManager);

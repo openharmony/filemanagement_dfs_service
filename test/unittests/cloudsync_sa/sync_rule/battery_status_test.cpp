@@ -236,28 +236,26 @@ HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest003 End";
 }
 
-HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Enable, TestSize.Level1)
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged_BUTT, TestSize.Level1)
 {
-    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-        .WillOnce(Return(ChargeState::CHARGE_STATE_ENABLE));
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_BUTT));
+
+    batteryStatus_->GetInitChargingStatus();
+    EXPECT_FALSE(batteryStatus_->IsCharging());
+}
+
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged_AC, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
+        .WillOnce(Return(PluggedType::PLUGGED_TYPE_AC));
 
     batteryStatus_->GetInitChargingStatus();
     EXPECT_TRUE(batteryStatus_->IsCharging());
 }
 
-HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Full, TestSize.Level1)
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged_USB, TestSize.Level1)
 {
-    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-        .WillOnce(Return(ChargeState::CHARGE_STATE_FULL));
-
-    batteryStatus_->GetInitChargingStatus();
-    EXPECT_TRUE(batteryStatus_->IsCharging());
-}
-
-HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged, TestSize.Level1)
-{
-    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-        .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
     EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
         .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
 
@@ -265,10 +263,8 @@ HWTEST_F(BatteryStatusTest, GetInitChargingStatus_Plugged, TestSize.Level1)
     EXPECT_TRUE(batteryStatus_->IsCharging());
 }
 
-HWTEST_F(BatteryStatusTest, GetInitChargingStatus_NotCharging_NotPlugged_Battery_Low, TestSize.Level1)
+HWTEST_F(BatteryStatusTest, GetInitChargingStatus_NotCharging_NotPlugged, TestSize.Level1)
 {
-    EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-        .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
     EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
         .WillOnce(Return(PluggedType::PLUGGED_TYPE_NONE));
 

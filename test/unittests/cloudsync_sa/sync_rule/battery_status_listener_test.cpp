@@ -152,7 +152,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnReceiveEventTest002 Start";
     try {
         Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING);
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
         EventFwk::CommonEventData eventData(want);
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
@@ -178,16 +178,14 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnReceiveEventTest003 Start";
     try {
         Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
         EventFwk::CommonEventData eventData(want);
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
-        EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-            .WillOnce(Return(ChargeState::CHARGE_STATE_ENABLE));
         subscriber->OnReceiveEvent(eventData);
-        EXPECT_TRUE(batteryStatus_->IsCharging());
+        EXPECT_FALSE(batteryStatus_->IsCharging());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " OnReceiveEventTest003 FAILED";
@@ -199,69 +197,10 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
  * @tc.name: OnReceiveEventTest
  * @tc.desc: Verify the OnReceiveEvent function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
  */
 HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 Start";
-    try {
-        Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
-        EventFwk::CommonEventData eventData(want);
-        auto dataSyncManager = std::make_shared<DataSyncManager>();
-        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
-        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
-            batteryStatusListener);
-        EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-            .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
-        EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
-            .WillOnce(Return(PluggedType::PLUGGED_TYPE_USB));
-        subscriber->OnReceiveEvent(eventData);
-        EXPECT_TRUE(batteryStatus_->IsCharging());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnReceiveEventTest004 FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
-}
-
-/**
- * @tc.name: OnReceiveEventTest
- * @tc.desc: Verify the OnReceiveEvent function
- * @tc.type: FUNC
- */
-HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest005, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnReceiveEventTest005 Start";
-    try {
-        Want want;
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
-        EventFwk::CommonEventData eventData(want);
-        auto dataSyncManager = std::make_shared<DataSyncManager>();
-        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
-        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
-            batteryStatusListener);
-        EXPECT_CALL(*dfsBatterySrvClient_, GetChargingStatus())
-            .WillOnce(Return(ChargeState::CHARGE_STATE_DISABLE));
-        EXPECT_CALL(*dfsBatterySrvClient_, GetPluggedType())
-            .WillOnce(Return(PluggedType::PLUGGED_TYPE_NONE));
-        subscriber->OnReceiveEvent(eventData);
-        EXPECT_FALSE(batteryStatus_->IsCharging());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnReceiveEventTest005 FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnReceiveEventTest005 End";
-}
-
-/**
- * @tc.name: OnReceiveEventTest
- * @tc.desc: Verify the OnReceiveEvent function
- * @tc.type: FUNC
- */
-HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnReceiveEventTest006 Start";
     try {
         Want want;
         want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
@@ -270,14 +209,13 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
         auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
-        batteryStatus_->SetChargingStatus(true);
         subscriber->OnReceiveEvent(eventData);
         EXPECT_TRUE(batteryStatus_->IsCharging());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnReceiveEventTest006 FAILED";
+        GTEST_LOG_(INFO) << " OnReceiveEventTest004 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnReceiveEventTest006 End";
+    GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
 }
 
 /**
