@@ -1159,6 +1159,10 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
     }
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * Therefore, there is no case where the fd < 0 when the pointer is non-null.
+     */
     int fd = fileno(file);
     if (fd < 0) {
         LOGE("Failed to get fd, err: %{public}d", errno);
@@ -1417,6 +1421,10 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         LOGE("fopen faild, errno: %{public}d", errno);
         return -1;
     }
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * Therefore, there is no case where the fd < 0 when the pointer is non-null.
+     */
     int fd = fileno(file);
     if (fd < 0) {
         LOGE("get fd faild, errno: %{public}d", errno);
