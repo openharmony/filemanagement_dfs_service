@@ -322,7 +322,6 @@ static bool ClearHmdfsCache(const string &dfsPath)
         return false;
     }
     int fd = fileno(file);
-    free(resolvedPath);
     /*
      * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
      * There is no case where the fd < 0 when the pointer is non-null.
