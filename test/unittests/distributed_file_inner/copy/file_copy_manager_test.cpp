@@ -30,7 +30,6 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 constexpr int32_t FILE_NOT_FOUND = 2;
-constexpr int32_t FILE_CAN_NOT_CREATE = 30;
 class FileCopyManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
