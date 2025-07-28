@@ -276,11 +276,13 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
         LOGE("fopen failed, errno:%{public}d", errno);
         return false;
     }
+    int fd = fileno(file);
     /*
      * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
-     * Therefore, there is no case where the fd < 0 when the pointer is non-null.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
      */
-    int fd = fileno(file);
     if (fd < 0) {
         LOGE("get fd failed, errno:%{public}d", errno);
         return false;
@@ -314,12 +316,14 @@ bool CloudFileUtils::ClearCache(const string &dfsPath)
         LOGE("fopen failed, errno:%{public}d", errno);
         return false;
     }
-    /*
-     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
-     * Therefore, there is no case where the fd < 0 when the pointer is non-null.
-     */
     int fd = fileno(file);
     free(resolvedPath);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("get fd failed, errno:%{public}d", errno);
         return false;
