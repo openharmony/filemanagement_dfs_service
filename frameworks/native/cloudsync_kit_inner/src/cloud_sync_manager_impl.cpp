@@ -687,7 +687,9 @@ int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->CleanFileCacheInner(uri);
+    int32_t ret = CloudSyncServiceProxy->CleanFileCacheInner(uri);
+    LOGI("CleanFileCache end, ret: %{public}d", ret);
+    return ret;
 }
 
 int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
