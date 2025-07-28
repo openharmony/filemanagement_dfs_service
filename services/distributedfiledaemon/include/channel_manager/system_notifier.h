@@ -29,14 +29,10 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-class SystemNotifier {
+class SystemNotifier final{
+    DECLARE_SINGLE_INSTANCE_BASE(SystemNotifier);
 public:
     ~SystemNotifier() = default;
-    static SystemNotifier &GetInstance()
-    {
-        static SystemNotifier instance;
-        return instance;
-    }
 
     int32_t CreateLocalLiveView(const std::string &networkId);
     int32_t CreateNotification(const std::string &networkId);

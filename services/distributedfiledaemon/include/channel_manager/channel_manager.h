@@ -43,8 +43,6 @@ public:
     int32_t Init();
     void DeInit();
 
-    int32_t GetVersion();
-
     int32_t CreateClientChannel(const std::string &networkId);
     int32_t DestroyClientChannel(const std::string &networkId);
     bool HasExistChannel(const std::string &networkId);

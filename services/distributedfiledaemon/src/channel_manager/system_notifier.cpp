@@ -35,6 +35,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+IMPLEMENT_SINGLE_INSTANCE(SystemNotifier);
 using namespace std;
 using namespace OHOS::FileManagement;
 

@@ -25,6 +25,7 @@ namespace Storage {
 namespace DistributedFile {
 
 static const char DETERMINE_DEVICE_TYPE_KEY[] = "persist.distributed_scene.sys_settings_data_sync";
+static const uint16_t DFS_CMD_VERSION = 60;
 
 enum ControlCmdType {
     CMD_UNKNOWN = 0,
@@ -38,7 +39,7 @@ enum ControlCmdType {
 struct ControlCmd {
     static std::atomic<int32_t> nextMsgId;
 
-    uint16_t version = 0;
+    uint16_t version = DFS_CMD_VERSION;
     int32_t msgId = 0;
     int32_t msgType = 0;
     std::string msgBody = "";
