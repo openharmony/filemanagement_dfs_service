@@ -39,6 +39,15 @@ using namespace std;
 using namespace OHOS::FileManagement;
 
 namespace {
+#define CHECK_AND_RETURN_IF_EXISTS(networkId)                                     \
+    do {                                                                          \
+        std::shared_lock<std::shared_mutex> readLock(mutex);                      \
+        if (notificationMap_.find(networkId) != notificationMap_.end()) {         \
+            LOGI("Notification %{public}.6s already exists.", networkId.c_str()); \
+            return E_OK;                                                          \
+        }                                                                         \
+    } while (0)
+
 constexpr const char *CAPSULE_ICON_PATH = "/system/etc/dfs_service/resources/icon/capsule_icon.png";
 constexpr const char *NOTIFICATION_ICON_PATH = "/system/etc/dfs_service/resources/icon/notification_icon.png";
 constexpr const char *BUTTON_ICON_PATH = "/system/etc/dfs_service/resources/icon/button_icon.png";
@@ -95,9 +104,7 @@ class DFSNotificationLocalLiveViewSubscriber : public Notification::Notification
      **/
     void OnDied()
     {
-        LOGE("OnDied enter");
-        std::lock_guard<std::mutex> lock(g_resourceMapMutex);
-        g_resourceMap.clear();
+        LOGE("DFSNotificationLocalLiveViewSubscriber OnDied enter");
     }
 };
 
@@ -108,7 +115,10 @@ class DfsNotificationSubscriber : public Notification::NotificationSubscriber {
     void OnDoNotDisturbDateChange(const std::shared_ptr<Notification::NotificationDoNotDisturbDate> &date) {}
     void OnEnabledNotificationChanged(
         const std::shared_ptr<Notification::EnabledNotificationCallbackData> &callbackData) {}
-    void OnDied() {}
+    void OnDied()
+    {
+        LOGE("DfsNotificationSubscriber OnDied enter");
+    }
     void OnCanceled(const std::shared_ptr<OHOS::Notification::Notification> &request,
                     const std::shared_ptr<Notification::NotificationSortingMap> &sortingMap,
                     int deleteReason)
@@ -277,6 +287,7 @@ std::string SystemNotifier::GetKeyValue(const std::string &key, Args &&...args)
 int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 {
     LOGI("CreateNotification enter");
+    CHECK_AND_RETURN_IF_EXISTS(networkId);
     UpdateResourceMapByLanguage();
     std::shared_ptr<Notification::NotificationNormalContent> content =
         std::make_shared<Notification::NotificationNormalContent>();
@@ -310,6 +321,7 @@ int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
 {
     LOGI("CreateLocalLiveView enter");
+    CHECK_AND_RETURN_IF_EXISTS(networkId);
     UpdateResourceMapByLanguage();
     std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
         std::make_shared<Notification::NotificationLocalLiveViewContent>();
@@ -342,7 +354,6 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     request.SetWantAgent(std::make_shared<AbilityRuntime::WantAgent::WantAgent>());
 
     auto ret = Notification::NotificationHelper::PublishNotification(request);
-    LOGI("DFS service publish localLiveView result = %{public}d", ret);
     if (ret != E_OK) {
         LOGE("DFS service publish localLiveView result = %{public}d", ret);
         return static_cast<int32_t>(ret);
@@ -375,7 +386,7 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
     LOGI("DestroyNotification (id: %{public}d), result: %{public}d", notificationId, ret);
 
     ret = DisconnectByNetworkId(networkId);
-    LOGI("DisconnectByNetworkId failed. ret = %{public}d", ret);
+    LOGI("DisconnectByNetworkId networkId = %{public}.6s , ret = %{public}d", networkId.c_str(), ret);
 
     return ret;
 }
@@ -398,19 +409,17 @@ int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
     }
 
     auto ret = Notification::NotificationHelper::CancelNotification(notificationId);
-    if (ret != E_OK) {
-        LOGE("Failed to cancel notification (id: %{public}d) for networkId %{public}.6s, result: %{public}d",
-             notificationId, networkId.c_str(), ret);
-    }
+    LOGI("DestroyNotifyByNetworkId (notificationId: %{public}d), result: %{public}d", notificationId, ret);
+
     ret = DisconnectByNetworkId(networkId);
-    if (ret != E_OK) {
-        LOGE("DisconnectByNetworkId failed. ret = %{public}d", ret);
-    }
+    LOGI("DisconnectByNetworkId networkId = %{public}.6s , ret = %{public}d", networkId.c_str(), ret);
+
     return ret;
 }
 
 int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
 {
+    LOGI("DisconnectByNetworkId enter, networkId is %{public}.6s", networkId.c_str());
     ControlCmd request;
     ControlCmd response;
     request.msgType = CMD_ACTIVE_DISCONNECT;
