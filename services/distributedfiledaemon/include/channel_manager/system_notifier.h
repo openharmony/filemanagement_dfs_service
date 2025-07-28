@@ -17,7 +17,6 @@
 #define FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 
 #include "pixel_map.h"
-#include "single_instance.h"
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
