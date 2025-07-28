@@ -35,20 +35,10 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-IMPLEMENT_SINGLE_INSTANCE(SystemNotifier);
 using namespace std;
 using namespace OHOS::FileManagement;
 
 namespace {
-#define CHECK_AND_RETURN_IF_EXISTS(networkId)                                     \
-    do {                                                                          \
-        std::shared_lock<std::shared_mutex> readLock(mutex);                      \
-        if (notificationMap_.find(networkId) != notificationMap_.end()) {         \
-            LOGI("Notification %{public}.6s already exists.", networkId.c_str()); \
-            return E_OK;                                                          \
-        }                                                                         \
-    } while (0)
-
 constexpr const char *CAPSULE_ICON_PATH = "/system/etc/dfs_service/resources/icon/capsule_icon.png";
 constexpr const char *NOTIFICATION_ICON_PATH = "/system/etc/dfs_service/resources/icon/notification_icon.png";
 constexpr const char *BUTTON_ICON_PATH = "/system/etc/dfs_service/resources/icon/button_icon.png";
@@ -288,7 +278,13 @@ std::string SystemNotifier::GetKeyValue(const std::string &key, Args &&...args)
 int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 {
     LOGI("CreateNotification enter");
-    CHECK_AND_RETURN_IF_EXISTS(networkId);
+    {
+        std::shared_lock<std::shared_mutex> readLock(mutex);
+        if (notificationMap_.find(networkId) != notificationMap_.end()) {
+            LOGI("Notification %{public}.6s already exists.", networkId.c_str());
+            return E_OK;
+        }
+    }
     UpdateResourceMapByLanguage();
     std::shared_ptr<Notification::NotificationNormalContent> content =
         std::make_shared<Notification::NotificationNormalContent>();
@@ -322,7 +318,13 @@ int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
 {
     LOGI("CreateLocalLiveView enter");
-    CHECK_AND_RETURN_IF_EXISTS(networkId);
+    {
+        std::shared_lock<std::shared_mutex> readLock(mutex);
+        if (notificationMap_.find(networkId) != notificationMap_.end()) {
+            LOGI("Notification %{public}.6s already exists.", networkId.c_str());
+            return E_OK;
+        }
+    }
     UpdateResourceMapByLanguage();
     std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
         std::make_shared<Notification::NotificationLocalLiveViewContent>();

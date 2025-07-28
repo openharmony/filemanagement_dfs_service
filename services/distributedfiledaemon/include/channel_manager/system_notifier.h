@@ -17,22 +17,27 @@
 #define FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 
 #include "pixel_map.h"
+#include "single_instance.h"
 #include <iostream>
 #include <mutex>
-#include <utility>
 #include <shared_mutex>
 #include <string>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-class SystemNotifier final{
-    DECLARE_SINGLE_INSTANCE_BASE(SystemNotifier);
+class SystemNotifier final {
 public:
     ~SystemNotifier() = default;
+    static SystemNotifier &GetInstance()
+    {
+        static SystemNotifier instance;
+        return instance;
+    }
 
     int32_t CreateLocalLiveView(const std::string &networkId);
     int32_t CreateNotification(const std::string &networkId);
@@ -50,8 +55,8 @@ private:
     void UpdateResourceMap(const std::string &resourcePath);
     void UpdateResourceMapByLanguage();
 
-    template <typename... Args>
-    std::string GetKeyValue(const std::string &key, Args &&...args);
+    template<typename... Args>
+    std::string GetKeyValue(const std::string &key, Args &&... args);
 
 private:
     std::shared_ptr<Media::PixelMap> capsuleIconPixelMap_{};
