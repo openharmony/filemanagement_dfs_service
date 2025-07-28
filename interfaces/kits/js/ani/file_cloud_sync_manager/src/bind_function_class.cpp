@@ -25,17 +25,9 @@ using namespace arkts::ani_signature;
 
 static ani_status BindContextOnCloudSyncManager(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSyncManager.cloudSyncManager");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("StaticFunction");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.StaticFunction");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;

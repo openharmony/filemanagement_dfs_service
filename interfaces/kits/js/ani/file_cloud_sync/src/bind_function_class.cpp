@@ -28,17 +28,9 @@ using namespace arkts::ani_signature;
 
 static ani_status BindContextOnGallery(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("GallerySync");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.GallerySync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -69,17 +61,9 @@ static ani_status BindContextOnGallery(ani_env *env)
 
 static ani_status BindContextOnCloudFileCache(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("CloudFileCache");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -116,17 +100,9 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
 
 static ani_status BindContextOnFileSync(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("FileSync");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -160,17 +136,9 @@ static ani_status BindContextOnFileSync(ani_env *env)
 
 static ani_status BindContextOnStaticFunction(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("StaticFunction");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.StaticFunction");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -210,17 +178,9 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
 
 static ani_status BindContextOnDownload(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("Download");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.Download");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
