@@ -1616,6 +1616,12 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         auto session = filePtr->readSession;
         if (!session) {
             LOGE("readSession is nullptr");
+            {
+                unique_lock lck(filePtr->readLock);
+                *readFinish = true;
+            }
+            *error = CloudError::CK_LOCAL_ERROR;
+            cond->notify_one();
             return;
         }
         *readSize = session->PRead(offset, size, buf.get(), *error);
@@ -1642,7 +1648,6 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         fuse_reply_buf(req, buf.get(), *readSize);
     } else {
-        filePtr->readSession = nullptr;
         LOGE("read fail");
         fuse_reply_err(req, ret);
     }
