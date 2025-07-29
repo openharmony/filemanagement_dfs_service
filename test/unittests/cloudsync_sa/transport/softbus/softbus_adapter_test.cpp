@@ -269,7 +269,11 @@ HWTEST_F(SoftbusAdapterTest, SendBytesTest001, TestSize.Level1)
         EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
         int socketFd = adapter.OpenSessionByP2P(sessionName, peerNetworkId, groupId, false);
         int result = adapter.SendBytes(socketFd, data, sizeof(data));
+#ifdef CLOUD_ADAPTER_ENABLED
+        EXPECT_NE(result, 0);
+#else
         EXPECT_EQ(result, 0);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SendBytesTest001 failed";
@@ -278,7 +282,7 @@ HWTEST_F(SoftbusAdapterTest, SendBytesTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: SendBytesTest001
+ * @tc.name: SendFileTest001
  * @tc.desc: Verify the OpenSessionByP2P function
  * @tc.type: FUNC
  * @tc.require: IB3T80

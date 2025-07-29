@@ -74,6 +74,29 @@ HWTEST_F(CloudDiskRdbTransactionTest, StartTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: StartTest002
+ * @tc.desc: Verify the Start function.
+ * @tc.type: FUNC
+ * @tc.require: ICPIJI
+ */
+HWTEST_F(CloudDiskRdbTransactionTest, StartTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTest002 Start";
+    try {
+        auto transaction = make_shared<TransactionOperations>(nullptr);
+        transaction->isFinish = true;
+        transaction->isStart = true;
+        auto ret = transaction->Start();
+        EXPECT_EQ(ret.first, E_HAS_DB_ERROR);
+        EXPECT_EQ(ret.second, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StartTest002 End";
+}
+
+/**
  * @tc.name: StartTest003
  * @tc.desc: Verify the Start function.
  * @tc.type: FUNC
@@ -174,6 +197,29 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest001, TestSize.Level1)
     int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "BeginTransaction End";
+}
+
+/**
+ * @tc.name: BeginTransactionTest002
+ * @tc.desc: Verify the BeginTransaction function.
+ * @tc.type: FUNC
+ * @tc.require: ICPIJI
+ */
+HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BeginTransactionTest002 Start";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto transaction = make_shared<TransactionOperations>(rdb);
+        EXPECT_CALL(*rdb, CreateTransaction(_)).WillRepeatedly(Return(make_pair(NativeRdb::E_SQLITE_LOCKED, nullptr)));
+    
+        int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
+        EXPECT_EQ(ret, E_HAS_DB_ERROR);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BeginTransactionTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "BeginTransactionTest002 End";
 }
 
 /**
