@@ -164,7 +164,6 @@ ohos_unittest("database_manager_test") {
   ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
