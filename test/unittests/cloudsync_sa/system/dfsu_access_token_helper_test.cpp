@@ -208,4 +208,67 @@ HWTEST_F(DfsuAccessTokenHelperTest, GetUserIdTest, TestSize.Level1)
 
     GTEST_LOG_(INFO) << "GetUserIdTest End";
 }
+
+/**
+ * @tc.name: IsUserVerified001
+ * @tc.desc: Verify the IsUserVerifyed function
+ * @tc.type: FUNC
+ */
+HWTEST_F(DfsuAccessTokenHelperTest, IsUserVerified001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsUserVerified001 Begin";
+    try {
+        int32_t userId = 100;
+        auto res = DfsuAccessTokenHelper::IsUserVerifyed(userId);
+        // permission denied
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " IsUserVerified001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "IsUserVerified001 End";
+}
+
+/**
+ * @tc.name: IsUserVerified002
+ * @tc.desc: Verify the IsUserVerifyed function
+ * @tc.type: FUNC
+ */
+HWTEST_F(DfsuAccessTokenHelperTest, IsUserVerified002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsUserVerified002 Begin";
+    try {
+        int32_t userId = 10;
+        auto res = DfsuAccessTokenHelper::IsUserVerifyed(userId);
+        // permission denied
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " IsUserVerified002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "IsUserVerified002 End";
+}
+
+/**
+ * @tc.name: GetAccountId001
+ * @tc.desc: Verify the GetAccountId function
+ * @tc.type: FUNC
+ */
+HWTEST_F(DfsuAccessTokenHelperTest, GetAccountId001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAccountId001 Begin";
+    try {
+        int32_t userId = 0;
+        auto res = DfsuAccessTokenHelper::GetAccountId(userId);
+        // permission denied
+        EXPECT_NE(res, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAccountId001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetAccountId001 End";
+}
 } // namespace OHOS::FileManagement::Test

@@ -23,6 +23,7 @@
 #include "uri.h"
 #include "utils_log.h"
 #include "want.h"
+#include "os_account_manager.h"
 
 namespace OHOS::FileManagement {
 using namespace std;
@@ -120,6 +121,32 @@ int32_t DfsuAccessTokenHelper::GetUserId()
 {
     auto uid = IPCSkeleton::GetCallingUid();
     return uid / BASE_USER_RANGE;
+}
+
+bool DfsuAccessTokenHelper::IsUserVerifyed(const int32_t userId)
+{
+    bool isVerified = false;
+    if (AccountSA::OsAccountManager::IsOsAccountVerified(userId, isVerified) != E_OK) {
+        LOGE("check user verified failed");
+        return false;
+    }
+    return isVerified;
+}
+
+int32_t DfsuAccessTokenHelper::GetAccountId(int32_t &userId)
+{
+    vector<int32_t> activeUsers;
+    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
+        LOGE("query active user failed");
+        return E_OSACCOUNT;
+    }
+    userId = activeUsers.front();
+    if (!IsUserVerifyed(userId)) {
+        LOGE("userId is invalid");
+        return E_INVAL_ARG;
+    }
+    LOGI("GetAccountId ok, UserId: %{public}d", userId);
+    return E_OK;
 }
 
 int32_t DfsuAccessTokenHelper::GetPid()

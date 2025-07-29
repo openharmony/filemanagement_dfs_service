@@ -37,12 +37,18 @@ public:
 
 std::string GetParameter(const std::string &key, const std::string &def)
 {
-    return ISystem::system_->GetParameter(key, def);
+    if (ISystem::system_ != nullptr) {
+        return ISystem::system_->GetParameter(key, def);
+    }
+    return "";
 }
 
 bool SetParameter(const std::string &key, const std::string &def)
 {
-    return ISystem::system_->SetParameter(key, def);
+    if (ISystem::system_ != nullptr) {
+        return ISystem::system_->SetParameter(key, def);
+    }
+    return true;
 }
 } // system
 } // OHOS

@@ -68,6 +68,7 @@ ohos_shared_library("cloudfile_kit") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/screen_status.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/system_load.cpp",
   ]
 
@@ -164,6 +165,7 @@ ohos_shared_library("cloudfile_kit_core") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_sync_helper.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
   ]
 
   sources += big_data_statistics
@@ -176,7 +178,9 @@ ohos_shared_library("cloudfile_kit_core") {
   public_configs = [ ":cloudfile_kit_lite_public_config" ]
 
   external_deps = [
+    "ability_runtime:dataobs_manager",
     "c_utils:utils",
+    "data_share:datashare_consumer",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",

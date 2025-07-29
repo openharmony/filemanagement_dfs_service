@@ -43,6 +43,7 @@
 #include "system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
+#include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -194,6 +195,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     TaskStateManager::GetInstance().StartTask();
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
+        SettingsDataManager::InitSettingsDataManager();
         this->HandleStartReason(startReason);
         int32_t userId = 0;
         if (dataSyncManager_->GetUserId(userId) != E_OK) {
@@ -689,7 +691,11 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     LOGI("Begin ChangeAppSwitch");
     RETURN_ON_ERR(CheckPermissions("", true));
 
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t callerUserId = DfsuAccessTokenHelper::GetUserId();
+    /* SA is 0 */
+    if (callerUserId == 0) {
+        DfsuAccessTokenHelper::GetAccountId(callerUserId);
+    }
     LOGI("ChangeAppSwitch, bundleName: %{private}s, status: %{public}d, callerUserId: %{public}d", bundleName.c_str(),
          status, callerUserId);
 
@@ -761,9 +767,13 @@ int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
     LOGI("Begin DisableCloud");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
 
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t callerUserId = DfsuAccessTokenHelper::GetUserId();
+    /* SA is 0 */
+    if (callerUserId == 0) {
+        DfsuAccessTokenHelper::GetAccountId(callerUserId);
+    }
     int32_t ret = dataSyncManager_->DisableCloud(callerUserId);
-    LOGI("End DisableCloud");
+    LOGI("End DisableCloud, ret: %{public}d", ret);
     return ret;
 }
 

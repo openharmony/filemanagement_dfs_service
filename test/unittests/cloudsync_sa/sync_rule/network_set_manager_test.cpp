@@ -321,4 +321,67 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetConfigParams End";
 }
+
+/**
+ * @tc.name: InitNetworkSetManagerTest001
+ * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitNetworkSetManager001 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitNetworkSetManager001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitNetworkSetManager001 End";
+}
+
+/**
+ * @tc.name: InitNetworkSetManagerTest002
+ * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitNetworkSetManager002 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.ailife";
+        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitNetworkSetManager002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitNetworkSetManager002 End";
+}
+
+/**
+ * @tc.name: InitNetworkSetManagerTest003
+ * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitNetworkSetManager003 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "xxxxxxx";
+        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitNetworkSetManager003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitNetworkSetManager003 End";
+}
 }

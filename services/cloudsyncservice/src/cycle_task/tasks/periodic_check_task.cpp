@@ -24,7 +24,8 @@ namespace FileManagement {
 namespace CloudSync {
 static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask(PeriodicCheckTaskName, {"com.ohos.photos", system::GetParameter(FILEMANAGER_KEY, "")},
+    : CycleTask(PeriodicCheckTaskName,
+                {GALLERY_BUNDLE_NAME, system::GetParameter(FILEMANAGER_KEY, ""), HDC_BUNDLE_NAME},
                 THREE_DAY,
                 dataSyncManager)
 {

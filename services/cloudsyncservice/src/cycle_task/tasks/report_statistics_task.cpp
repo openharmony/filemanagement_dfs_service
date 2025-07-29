@@ -21,7 +21,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 ReportStatisticsTask::ReportStatisticsTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask("report_statistics_task", {"com.ohos.photos"}, ONE_DAY, dataSyncManager)
+    : CycleTask("report_statistics_task", {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME}, ONE_DAY, dataSyncManager)
 {
 }
 

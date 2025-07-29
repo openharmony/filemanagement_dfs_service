@@ -26,6 +26,7 @@
 #include "file_operations_helper.h"
 #include "fuse_manager.h"
 #include "meta_file.h"
+#include "setting_data_helper.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -78,6 +79,9 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
         LOGI("Package removed and Clean clouddisk!");
         RemovedClean(eventData);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY) {
+        bool ret = CloudFile::SettingDataHelper::GetInstance().InitActiveBundle();
+        LOGI("READY: Init active bundle, ret: %{public}d", ret);
     }
 }
 
@@ -88,12 +92,13 @@ AccountStatusListener::~AccountStatusListener()
 
 void AccountStatusListener::Start()
 {
-    /* subscribe Account login and logout status */
+    /* subscribe Account login, logout, Package remove and Datashare ready */
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGIN);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<AccountStatusSubscriber>(info);
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);

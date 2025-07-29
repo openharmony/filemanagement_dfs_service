@@ -15,6 +15,7 @@
 
 #include "datashare_helper.h"
 #include "datashare_result_set.h"
+#include "datashare_helper_mock.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -27,6 +28,9 @@ DataSharePredicates *DataSharePredicates::EqualTo(const std::string &field, cons
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
     const std::string &strUri, const CreateOptions &options, const std::string &bundleName)
 {
+    if (DataShareHelperMock::proxy_ != nullptr) {
+        return DataShareHelperMock::proxy_->Creator(strUri, options, bundleName);
+    }
     if (instance_ != nullptr) {
         return instance_;
     }
@@ -37,6 +41,9 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
 std::shared_ptr<DataShareResultSet> DataShareHelper::Query(Uri &uri, const DataSharePredicates &predicates,
     std::vector<std::string> &columns, DatashareBusinessError *businessError)
 {
+    if (DataShareHelperMock::proxy_ != nullptr) {
+        return DataShareHelperMock::proxy_->Query(uri, predicates, columns, businessError);
+    }
     if (resultSet_ != nullptr) {
         return resultSet_;
     }

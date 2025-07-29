@@ -372,4 +372,46 @@ HWTEST_F(FuseManagerStaticTest, DeleteFdsanTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DeleteFdsanTest003 end";
 }
+
+/**
+ * @tc.name: IsHdc001
+ * @tc.desc: Verify the IsHdc function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, IsHdc001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsHdc001 Begin";
+    try {
+        struct FuseData data;
+        data.activeBundle = CloudSync::GALLERY_BUNDLE_NAME;
+        bool ret = IsHdc(&data);
+
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsHdc001 Error";
+    }
+    GTEST_LOG_(INFO) << "IsHdc001 End";
+}
+
+/**
+ * @tc.name: IsHdc002
+ * @tc.desc: Verify the IsHdc function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, IsHdc002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsHdc002 Begin";
+    try {
+        struct FuseData data;
+        data.activeBundle = CloudSync::HDC_BUNDLE_NAME;
+        bool ret = IsHdc(&data);
+
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsHdc002 Error";
+    }
+    GTEST_LOG_(INFO) << "IsHdc002 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test

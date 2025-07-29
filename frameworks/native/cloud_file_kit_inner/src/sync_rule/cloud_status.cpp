@@ -18,6 +18,7 @@
 #include "cloud_file_kit.h"
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const int32_t userId)
@@ -28,15 +29,24 @@ int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const in
         return E_NULLPTR;
     }
 
-    auto ret = instance->GetCloudUserInfo(userId, userInfo_);
+    int32_t ret = instance->GetCloudUserInfo(userId, userInfo_);
     if (ret != E_OK) {
+        LOGE("GetCloudUserInfo failed");
         return ret;
     }
 
     bool switchStatus = false;
-    ret = instance->GetAppSwitchStatus(bundleName, userId, switchStatus);
-    if (ret != E_OK) {
-        return ret;
+    SwitchStatus curSwitch = SettingsDataManager::GetSwitchStatusByCache();
+    if (bundleName == HDC_BUNDLE_NAME) {
+        switchStatus = curSwitch == SwitchStatus::AI_FAMILY;
+    } else if (bundleName == GALLERY_BUNDLE_NAME) {
+        switchStatus = curSwitch == SwitchStatus::CLOUD_SPACE;
+    } else {
+        ret = instance->GetAppSwitchStatus(bundleName, userId, switchStatus);
+        if (ret != E_OK) {
+            LOGE("GetAppSwitchStatus failed");
+            return ret;
+        }
     }
     /* insert key-value */
     appSwitches_.insert(std::make_pair(bundleName, switchStatus));
@@ -61,14 +71,14 @@ bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t
     /* Obtain cloud information only during first sync */
     auto iter = appSwitches_.find(bundleName);
     if (iter == appSwitches_.end()) {
-        LOGI("appSwitches unknown, bundleName:%{private}s, userId:%{public}d", bundleName.c_str(), userId);
-        auto ret = GetCurrentCloudInfo(bundleName, userId);
-        if (ret) {
+        LOGI("appSwitches unknown, bundleName: %{private}s, userId: %{public}d", bundleName.c_str(), userId);
+        int32_t ret = GetCurrentCloudInfo(bundleName, userId);
+        if (ret != E_OK) {
             return false;
         }
     }
 
-    LOGI("bundleName:%{private}s, cloudSatus:%{public}d, switcheStatus:%{public}d", bundleName.c_str(),
+    LOGI("bundleName: %{private}s, cloudSatus: %{public}d, switcheStatus: %{public}d", bundleName.c_str(),
          userInfo_.enableCloud, appSwitches_[bundleName]);
     return appSwitches_[bundleName];
 }

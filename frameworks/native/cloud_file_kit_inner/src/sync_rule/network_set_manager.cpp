@@ -26,6 +26,7 @@
 #include "parameters.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+#include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 const std::string QUERY_URI = "datashareproxy://";
@@ -174,8 +175,8 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
     }
     std::string networkDataStr = param["useMobileNetworkData"];
     bool isValid = std::all_of(networkDataStr.begin(), networkDataStr.end(), ::isdigit);
-    if (!isValid) {
-        LOGE("invalid param");
+    if (networkDataStr.empty() || !isValid) {
+        LOGE("invalid param: %{public}s", networkDataStr.c_str());
         return false;
     }
     int32_t networkData = std::stoi(networkDataStr);
@@ -280,14 +281,17 @@ bool NetworkSetManager::IsAllowNetConnect(const std::string &bundleName, const i
 void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, const int32_t userId)
 {
     LOGI("InitNetworkSetManager bundleName: %{public}s", bundleName.c_str());
-    if (bundleName != PHOTOS_BUNDLE_NAME) {
+    if (bundleName == GALLERY_BUNDLE_NAME) {
+        RegisterObserver(bundleName, userId, CELLULARCONNECT);
+        RegisterObserver(bundleName, userId, NETCONNECT);
+        GetCellularConnect(bundleName, userId);
+        GetNetConnect(bundleName, userId);
+    } else if (bundleName == HDC_BUNDLE_NAME) {
+        SettingsDataManager::GetNetworkConnectionStatus();
+        SettingsDataManager::GetMobileDataStatus();
+    } else {
         LOGE("InitNetworkSetManager bundleName is illegals");
-        return;
     }
-    RegisterObserver(bundleName, userId, CELLULARCONNECT);
-    RegisterObserver(bundleName, userId, NETCONNECT);
-    GetCellularConnect(bundleName, userId);
-    GetNetConnect(bundleName, userId);
 }
 
 void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)

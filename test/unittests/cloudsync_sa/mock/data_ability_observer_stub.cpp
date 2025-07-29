@@ -20,6 +20,7 @@
 #include "ipc_skeleton.h"
 #include "common_utils.h"
 #include "string_ex.h"
+#include "dataobs_mgr_changeinfo.h"
 
 namespace OHOS {
 namespace AAFwk {
@@ -78,7 +79,6 @@ int32_t DataAbilityObserverStub::OnChangeExtInner(MessageParcel &data, MessagePa
     if (!ChangeInfo::Unmarshalling(changeInfo, data)) {
         return IPC_STUB_INVALID_DATA_ERR;
     }
-    OnChangeExt(changeInfo);
     return ERR_NONE;
 }
 

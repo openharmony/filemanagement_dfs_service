@@ -104,6 +104,36 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetCurrentCloudInfo004
+ * @tc.desc: Verify the CloudStatus::GetCurrentCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudStatusTest, GetCurrentCloudInfo004, TestSize.Level1)
+{
+    CloudStatus cloudStatus;
+    const string bundleName = "com.ohos.photos";
+    const int32_t userId = 1;
+    auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetCurrentCloudInfo005
+ * @tc.desc: Verify the CloudStatus::GetCurrentCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudStatusTest, GetCurrentCloudInfo005, TestSize.Level1)
+{
+    CloudStatus cloudStatus;
+    const string bundleName = "com.ohos.ailife";
+    const int32_t userId = 1;
+    auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
  * @tc.name: IsCloudStatusOkay001
  * @tc.desc: Verify the CloudStatus::IsCloudStatusOkay function
  * @tc.type: FUNC

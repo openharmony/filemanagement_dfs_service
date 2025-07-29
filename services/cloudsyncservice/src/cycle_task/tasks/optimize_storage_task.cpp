@@ -15,6 +15,7 @@
 
 #include "optimize_storage_task.h"
 #include "cloud_file_kit.h"
+#include "settings_data_manager.h"
 #include "system_load.h"
 #include "utils_log.h"
 
@@ -22,7 +23,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask("optimize_storage_task", {"com.ohos.photos"}, ONE_DAY, dataSyncManager)
+    : CycleTask("optimize_storage_task", {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME}, ONE_DAY, dataSyncManager)
 {
 }
 
@@ -41,15 +42,23 @@ int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundle
     if (dataSyncManager_->CleanRemainFile(bundleName, userId) != E_OK) {
         LOGW(" clean reamin file fail");
     }
-    std::map<std::string, std::string> param;
-    auto ret = instance->GetAppConfigParams(userId, bundleName, param);
-    if (ret != E_OK || param.empty()) {
-        LOGE("GetAppConfigParams failed");
-        return ret;
+
+    int32_t agingDays = -1;
+    int32_t agingPolicy = -1;
+    if (bundleName == HDC_BUNDLE_NAME) {
+        agingDays = SettingsDataManager::GetLocalSpaceFreeDays();
+        agingPolicy = SettingsDataManager::GetLocalSpaceFreeStatus();
+    } else {
+        std::map<std::string, std::string> param;
+        auto ret = instance->GetAppConfigParams(userId, bundleName, param);
+        if (ret != E_OK || param.empty()) {
+            LOGE("GetAppConfigParams failed");
+            return ret;
+        }
+        agingDays = std::stoi(param["validDays"]);
+        agingPolicy = std::stoi(param["dataAgingPolicy"]);
     }
 
-    int32_t agingDays = std::stoi(param["validDays"]);
-    int32_t agingPolicy = std::stoi(param["dataAgingPolicy"]);
     if (agingPolicy == 0) {
         return dataSyncManager_->OptimizeStorage(bundleName, userId, agingDays);
     }

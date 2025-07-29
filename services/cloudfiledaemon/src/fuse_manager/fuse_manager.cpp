@@ -57,6 +57,7 @@
 #include "fuse_ioctl.h"
 #include "fuse_operations.h"
 #include "parameters.h"
+#include "setting_data_helper.h"
 #ifdef HICOLLIE_ENABLE
 #include "xcollie_helper.h"
 #endif
@@ -84,6 +85,7 @@ static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
 static const string PATH_TEMP_SUFFIX = ".temp.fuse";
 static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
+static const string HDC_BUNDLE_NAME = "com.ohos.ailife";
 static const string PATH_INVALID_FLAG1 = "../";
 static const string PATH_INVALID_FLAG2 = "/..";
 static const uint32_t PATH_INVALID_FLAG_LEN = 3;
@@ -250,6 +252,7 @@ struct FuseData {
     shared_ptr<CloudFile::CloudDatabase> database;
     struct fuse_session *se;
     string photoBundleName{""};
+    string activeBundle{PHOTOS_BUNDLE_NAME};
 };
 
 static shared_ptr<struct CloudFdInfo> FindKeyInCloudFdCache(struct FuseData *data, uint64_t key)
@@ -399,7 +402,7 @@ static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
             return nullptr;
         }
 
-        data->database = instance->GetCloudDatabase(data->userId, PHOTOS_BUNDLE_NAME);
+        data->database = instance->GetCloudDatabase(data->userId, data->activeBundle);
         if (data->database == nullptr) {
             LOGE("get cloud file kit database fail");
             return nullptr;
@@ -908,6 +911,11 @@ static bool IsLocalFile(struct FuseData *data, shared_ptr<CloudInode> cInode)
     return access(localPath.c_str(), F_OK) == 0;
 }
 
+static bool IsHdc(struct FuseData *data)
+{
+    return data->activeBundle == HDC_BUNDLE_NAME;
+}
+
 static bool NeedReCloudOpen(struct FuseData *data, shared_ptr<CloudInode> cInode)
 {
     if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
@@ -978,7 +986,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     struct FuseData *data, shared_ptr<CloudInode>& cInode)
 {
     pid_t pid = GetPidFromTid(req->ctx.pid);
-    string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
+    string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId, IsHdc(data));
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     string prepareTraceId = GetPrepareTraceId(data->userId);
@@ -1863,6 +1871,8 @@ static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &c
     } else {
         LOGE("get cloudfile helper instance failed");
     }
+    // update userdata
+    SettingDataHelper::GetInstance().SetUserData(nullptr);
     return ret;
 }
 
@@ -1887,7 +1897,6 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
                 LOGE("FUSE: log failed");
                 return ;
             }
-
             LOGE("FUSE: %{public}s", str);
             free(str);
 #pragma clang diagnostic pop
@@ -1912,11 +1921,11 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         data.userId = userId;
         data.se = se;
         data.photoBundleName = system::GetParameter(PHOTOS_KEY, "");
+        SettingDataHelper::GetInstance().SetUserData(&data);
         config.max_idle_threads = MAX_IDLE_THREADS;
     }
     LOGI("fuse_session_new success, userId: %{public}d", userId);
-    int ret = SetNewSessionInfo(se, config, devFd, path, userId);
-    return ret;
+    return SetNewSessionInfo(se, config, devFd, path, userId);
 }
 
 struct fuse_session* FuseManager::GetSession(std::string path)
@@ -1936,6 +1945,20 @@ FuseManager &FuseManager::GetInstance()
     return instance_;
 }
 
+void SettingDataHelper::SetActiveBundle(string bundle)
+{
+    lock_guard<mutex> lck(dataMtx_);
+    if (data_ == nullptr) {
+        LOGI("FuseData is null, no need update");
+        return;
+    }
+    struct FuseData *data = static_cast<struct FuseData *>(data_);
+    LOGI("reset database, old: %{public}s new: %{public}s", data->activeBundle.c_str(), bundle.c_str());
+    if (data->activeBundle != bundle) {
+        data->activeBundle = bundle;
+        data->database = nullptr;
+    }
+}
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS
