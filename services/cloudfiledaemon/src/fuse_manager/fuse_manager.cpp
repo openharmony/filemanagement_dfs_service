@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,6 @@
 #include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_type_const.h"
-#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
@@ -882,7 +881,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
-    ConcurrentQueue::GetInstance().Submit([cInode, error, openFinish, cond, data] {
+    ffrt::submit([cInode, error, openFinish, cond, data] {
         if (IsVideoType(cInode->mBase->name)) {
             LoadCacheFileIndex(cInode, data);
         }
@@ -1323,6 +1322,12 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
         return;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("Failed to get fd, err: %{public}d", errno);
         return;
@@ -1393,7 +1398,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                 static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-            ConcurrentQueue::GetInstance().Submit(
+            ffrt::submit(
                 [data, readArgs, cInode, cacheIndex] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
         }
         wSesLock.unlock();
@@ -1444,8 +1449,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
             static_cast<long>(cacheIndex));
     }
     if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-        ConcurrentQueue::GetInstance().Submit(
-            [readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
+        ffrt::submit([readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
     }
     wSesLock.unlock();
     return;
@@ -1584,6 +1588,12 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
         return -1;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("get fd faild, errno: %{public}d", errno);
         return fd;
@@ -1632,7 +1642,7 @@ static bool DoReadSlice(fuse_req_t req,
         fuse_reply_err(req, ENETUNREACH);
         return false;
     }
-    ConcurrentQueue::GetInstance().Submit([pid, readArgs, cInode, readSession, data] {
+    ffrt::submit([pid, readArgs, cInode, readSession, data] {
         CloudReadOnCloudFile(pid, data, readArgs, cInode, readSession);
     });
     return true;
@@ -1668,7 +1678,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
             LOGE("Init readArgsCache failed");
             break;
         }
-        ConcurrentQueue::GetInstance().Submit([readArgsCache, params, data] {
+        ffrt::submit([readArgsCache, params, data] {
             CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data);
         });
     }

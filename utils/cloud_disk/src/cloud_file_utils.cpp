@@ -282,6 +282,12 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
         return false;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("get fd failed, errno:%{public}d", errno);
         return false;
@@ -316,6 +322,12 @@ static bool ClearHmdfsCache(const string &dfsPath)
         return false;
     }
     int fd = fileno(file);
+    /*
+     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
+     * There is no case where the fd < 0 when the pointer is non-null.
+     * This is to judge the exception where the file carrying the fd has been closed.
+     * In such cases, fclose is not needed.
+     */
     if (fd < 0) {
         LOGE("get fd failed, errno:%{public}d", errno);
         return false;

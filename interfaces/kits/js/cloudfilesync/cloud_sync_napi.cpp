@@ -1031,7 +1031,6 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
 
     int ret = CheckPermissions(PERM_CLOUD_SYNC, true);
     if (ret != 0) {
-        LOGE("Permission denied");
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }

@@ -36,13 +36,12 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         listener_->OnStatusNormal();
         return;
     }
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING) {
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
+        LOGI("Charging status changed: discharging");
+        BatteryStatus::SetChargingStatus(false);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         LOGI("Charging status changed: charging");
         BatteryStatus::SetChargingStatus(true);
-    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING) {
-        LOGI("Charging status changed: discharging");
-        BatteryStatus::GetInitChargingStatus();
-    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         listener_->OnPowerConnected();
     } else {
         LOGI("OnReceiveEvent action is invalid");
@@ -64,8 +63,7 @@ void BatteryStatusListener::Start()
     /* subscribe Battery Okay Status and Charging status */
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<BatteryStatusSubscriber>(info, shared_from_this());
@@ -92,8 +90,8 @@ void BatteryStatusListener::OnStatusAbnormal() {}
 
 void BatteryStatusListener::OnPowerConnected()
 {
+    dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
     dataSyncManager_->DownloadThumb();
     dataSyncManager_->CacheVideo();
-    dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
 }
 } // namespace OHOS::FileManagement::CloudSync

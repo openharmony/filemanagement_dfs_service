@@ -16,10 +16,10 @@
 #include "cloud_file_cache_napi.h"
 
 #include <cstddef>
-#include <set>
 #include <memory>
 #include <mutex>
 #include <sys/types.h>
+#include <unordered_set>
 
 #include "async_work.h"
 #include "cloud_sync_manager.h"
@@ -32,7 +32,8 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
-static const std::set<int32_t> errForSingleFileSync = { ENOENT, EACCES, EAGAIN, EINTR, ENOSYS, E_ILLEGAL_URI };
+static const std::unordered_set<int32_t> errForSingleFileSync = { ENOENT, EACCES, EAGAIN,
+    EINTR, ENOSYS, E_ILLEGAL_URI };
 
 int32_t CloudFileCacheCallbackImplNapi::StartDownloadInner(const std::string &uri, int32_t fieldKey)
 {

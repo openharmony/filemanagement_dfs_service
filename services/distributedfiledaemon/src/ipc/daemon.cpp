@@ -223,7 +223,6 @@ int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &devi
 
 int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Connection Count networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     auto st_dev = ConnectionDetector::MocklispHash(path);
@@ -308,6 +307,10 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     if (dfsListenerDeathRecipient_ == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
         dfsListenerDeathRecipient_ = sptr(new (std::nothrow) DfsListenerDeathRecipient());
+    }
+    if (dfsListenerDeathRecipient_ == nullptr) {
+        LOGE("Daemon::OpenP2PConnectionEx, dfsListenerDeathRecipient is nullptr");
+        return E_INVAL_ARG_NAPI;
     }
     if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
@@ -893,7 +896,7 @@ void Daemon::StartEventHandler()
 int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
 {
     LOGI("Daemon::SendDfsDelayTask enter.");
-    constexpr int32_t DEFAULT_DELAY_INTERVAL = 120 * 1000; // 120s
+    constexpr int32_t DEFAULT_DELAY_INTERVAL = 1 * 1000;
     if (networkId.empty()) {
         LOGE("networkId is empty.");
         return E_NULLPTR;

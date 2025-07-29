@@ -30,7 +30,6 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 constexpr int32_t FILE_NOT_FOUND = 2;
-constexpr int32_t FILE_CAN_NOT_CREATE = 30;
 class FileCopyManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -125,28 +124,6 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0002 End";
-}
-
-/**
-* @tc.name: FileCopyManager_Copy_0003
-* @tc.desc: The execution of the Copy failed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
- */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 Start";
-    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
-    string destUri = "*";
-    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
-    int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
-    ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0003!" << errno;
-    close(fd);
-
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
-    EXPECT_EQ(ret, FILE_CAN_NOT_CREATE);
-    ASSERT_EQ(remove(srcPath.c_str()), 0);
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
 }
 
 /**
@@ -370,6 +347,29 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0010, TestSize.Level0)
     EXPECT_EQ(ret, EINVAL);
 
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0010 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_Copy_0011
+ * @tc.desc: The execution of the Copy failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0011, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0011 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/a1.txt";
+    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
+
+    EXPECT_TRUE(OHOS::RemoveFile(srcPath));
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    EXPECT_EQ(ret, ENOENT);
+
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0011 End";
 }
 
 /**

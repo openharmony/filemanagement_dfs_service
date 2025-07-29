@@ -687,7 +687,9 @@ int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->CleanFileCacheInner(uri);
+    int32_t ret = CloudSyncServiceProxy->CleanFileCacheInner(uri);
+    LOGI("CleanFileCache end, ret: %{public}d", ret);
+    return ret;
 }
 
 int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
@@ -782,6 +784,7 @@ void CloudSyncManagerImpl::SystemAbilityStatusChange::OnRemoveSystemAbility(int3
 
 void CloudSyncManagerImpl::CleanGalleryDentryFile()
 {
+    LOGI("CleanGalleryDentryFile start");
     const std::string photoDir = "/storage/media/cloud/files/Photo";
     const std::string thumbsDir = "/storage/media/cloud/files/.thumbs/Photo";
     if (!OHOS::Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(photoDir)) {
@@ -811,7 +814,7 @@ static std::string GetThumbsPath(const std::string& path)
 {
     const string str = "files/";
     size_t len = str.size() - 1;
-    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(path.find(str) + len);
+    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(path.find(str) + len); // 待删除的文件路径
     return newPath;
 }
 

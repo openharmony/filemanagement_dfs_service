@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,6 @@
 #include "clouddisk_rdb_transaction.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_notify.h"
-#include "concurrent_queue.h"
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "ffrt_inner.h"
@@ -96,6 +95,10 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return;
+    }
     childInode->stat = parentInode->stat;
     childInode->stat.st_ino = static_cast<uint64_t>(inodeId);
     childInode->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
@@ -437,7 +440,8 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
                     auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
                     rdbstore->UpdateTHMStatus(metaFile, metaBase, CloudSync::DOWNLOADED_THM);
                 } else {
-                    LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d", tmpPath.c_str(), errno);
+                    LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d",
+                        GetAnonyString(tmpPath).c_str(), errno);
                     return errno;
                 }
             }
@@ -1413,7 +1417,7 @@ void RDBUnlinkAsync(shared_ptr<CloudDiskRdbStore> rdbStore, const string& cloudI
                 "Failed to unlink DB cloudId: " + cloudId});
         }
     };
-    ConcurrentQueue::GetInstance().Submit(rdbUnlink);
+    ffrt::thread(rdbUnlink).detach();
 }
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
@@ -1617,6 +1621,12 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         auto session = filePtr->readSession;
         if (!session) {
             LOGE("readSession is nullptr");
+            {
+                unique_lock lck(filePtr->readLock);
+                *readFinish = true;
+            }
+            *error = CloudError::CK_LOCAL_ERROR;
+            cond->notify_one();
             return;
         }
         *readSize = session->PRead(offset, size, buf.get(), *error);
@@ -1643,7 +1653,6 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         fuse_reply_buf(req, buf.get(), *readSize);
     } else {
-        filePtr->readSession = nullptr;
         LOGE("read fail");
         fuse_reply_err(req, ret);
     }
@@ -1961,6 +1970,11 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
     }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
         auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);

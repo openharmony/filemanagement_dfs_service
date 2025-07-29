@@ -236,4 +236,4 @@ struct CloudFileInfo : public Parcelable {
     static CloudFileInfo *Unmarshalling(Parcel &parcel);
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif
+#endif // OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
