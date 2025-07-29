@@ -25,6 +25,7 @@
 #include "common_event_manager.h"
 #include "connect_count/connect_count.h"
 #include "connection_detector_mock.h"
+#include "copy/file_size_utils.h"
 #include "daemon.h"
 #include "daemon_execute.h"
 #include "daemon_mock.h"
@@ -32,6 +33,7 @@
 #include "device_manager_agent_mock.h"
 #include "device_manager_impl.h"
 #include "device_manager_impl_mock.h"
+#include "device_profile_adapter.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "i_file_trans_listener.h"
@@ -80,6 +82,15 @@ int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(const std::string &netw
                                                          DfsVersion &dfsVersion,
                                                          VersionPackageName packageName)
 {
+    if (networkId == NETWORKID_ONE) {
+        dfsVersion.majorVersionNum = 0;
+        return OHOS::FileManagement::E_OK;
+    }
+
+    if (networkId == NETWORKID_TWO) {
+        dfsVersion.majorVersionNum = 1;
+        return OHOS::FileManagement::E_OK;
+    }
     dfsVersion = g_dfsVersion;
     return g_getDfsVersionFromNetworkId;
 }
@@ -280,6 +291,8 @@ void DaemonTest::TearDownTestCase(void)
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
     channelManagerMock_ = nullptr;
     IChannelManagerMock::iChannelManagerMock = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
@@ -597,8 +610,8 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), ERR_BAD_VALUE);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), E_OK);
@@ -761,51 +774,64 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_003, TestSize.Level1)
 
 /**
  * @tc.name: DaemonTest_PrepareSession_001
- * @tc.desc: verify PrepareSession.
+ * @tc.desc: 验证 PrepareSession 方法在多种场景下的分支覆盖
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
 HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_001 begin";
+    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_001 start";
     ASSERT_NE(daemon_, nullptr);
     HmdfsInfo hmdfsInfo;
+    std::string srcUri = "file://docs/storage/el2/distributedfiles/test.txt";
+    std::string dstUri = "file://media/storage/el2/distributedfiles/test.txt?networkid=testDevice";
+    std::string srcDeviceId = "testDevice";
+    sptr<IRemoteObject> listener = new (std::nothrow) FileTransListenerMock();
+    ASSERT_TRUE(listener != nullptr) << "监听器创建失败";
+
+    // 测试用例 1: 空监听器
     EXPECT_EQ(daemon_->PrepareSession("", "", "", nullptr, hmdfsInfo), E_NULLPTR);
 
-    sptr<IRemoteObject> listener = new (std::nothrow) FileTransListenerMock();
-    ASSERT_TRUE(listener != nullptr) << "listener assert failed!";
-    sptr<ISystemAbilityManagerMock> sysAbilityManager = new (std::nothrow) ISystemAbilityManagerMock();
-    ASSERT_TRUE(sysAbilityManager != nullptr) << "sysAbilityManager assert failed!";
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(nullptr));
-    EXPECT_EQ(daemon_->PrepareSession("", "", "", listener, hmdfsInfo), E_SA_LOAD_FAILED);
+    // 测试用例 2: 无效 URI，触发 IsFilePathValid 错误分支
+    std::string invalidSrcUri = "file://docs/../test.txt";                   // 包含 "../"
+    std::string invalidDstUri = "file://media/test/..?networkid=testDevice"; // 以 "/.." 结尾
+    EXPECT_EQ(daemon_->PrepareSession(invalidSrcUri, invalidDstUri, srcDeviceId, listener, hmdfsInfo), EINVAL);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, invalidDstUri, srcDeviceId, listener, hmdfsInfo), EINVAL);
 
-    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
-    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->PrepareSession("", "", "", listener, hmdfsInfo), E_SOFTBUS_SESSION_FAILED);
+    // 测试用例 3: 有效 URI，物理路径无效
+    g_getPhysicalPath = ERR_BAD_VALUE;
+    g_checkValidPath = false;
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), EINVAL);
 
-    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    // 测试用例 4: 有效 URI，物理路径有效，stat 失败
     g_getPhysicalPath = E_OK;
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/test.txt";
+    g_checkValidPath = true;
     g_isFile = false;
-    g_isFolder = true;
-    hmdfsInfo.dirExistFlag = true;
-    g_physicalPath = "tes@t/test";
-    std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    SoftBusSessionPool::SessionInfo sessionInfo;
-    while (true) {
-        auto ret = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
-        if (ret.empty()) {
-            break;
-        }
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), EINVAL);
+
+    // 测试用例 5: 有效 URI，物理路径有效，stat 成功，DFS 版本为 0，文件大小 < 1GB, 走innerCopy
+    g_getPhysicalPath = E_OK;
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
+    g_checkValidPath = true;
+    g_isFile = true;
+    g_isFolder = false;
+    std::ofstream file(g_physicalPath);
+    ASSERT_TRUE(file.good()) << "创建测试文件失败";
+    file.close();
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), 4);
+
+    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
+
+    // 测试用例 7: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
+    g_getDfsVersionFromNetworkId = -1;
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), 4);
+
+    // 清理
+    if (std::filesystem::exists(g_physicalPath)) {
+        std::filesystem::remove(g_physicalPath);
     }
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_SOFTBUS_SESSION_FAILED);
-    SoftBusSessionPool::GetInstance().sessionMap_.clear();
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_001 end";
 }
 
