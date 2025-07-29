@@ -40,6 +40,7 @@ ohos_unittest("daemon_test") {
   module_out_path = module_output_path
 
   include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/device",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
