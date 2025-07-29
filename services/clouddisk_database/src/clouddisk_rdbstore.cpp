@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,6 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
-#include "concurrent_queue.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -1539,7 +1538,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         }
         CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     };
-    ConcurrentQueue::GetInstance().Submit(rdbUpdate);
+    ffrt::thread(rdbUpdate).detach();
     return E_OK;
 }
 
