@@ -75,6 +75,10 @@ ohos_unittest("device_profile_adapter_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (support_device_profile) {
+    defines += [ "SUPPORT_DEVICE_PROFILE" ]
+  }
 }
 
 group("unittest") {

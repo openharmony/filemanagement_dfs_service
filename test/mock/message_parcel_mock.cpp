@@ -267,6 +267,6 @@ uint32_t Parcel::ReadUint32()
         return DfsMessageParcel::messageParcel->ReadUint32();
     }
     std::cout << "ReadUint32 mock failed, messageParcel is nullptr" << std::endl;
-    return 1; // 1: default value
+    return 1; // : default value
 }
 } // namespace OHOS

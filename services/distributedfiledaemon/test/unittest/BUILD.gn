@@ -47,7 +47,9 @@ ohos_unittest("device_info_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ 
+    "${utils_path}:libdistributedfileutils" 
+  ]
 
   external_deps = [
     "app_file_service:remote_file_share_native",
@@ -80,9 +82,6 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
-  ]
-
-  sources += [
     "device/device_manager_agent_sup_test.cpp",
     "device/mock_other_method.cpp",
   ]
@@ -848,6 +847,7 @@ ohos_unittest("softbus_handler_asset_test") {
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
     "zlib:shared_libz",
+    "dataclassification:data_transit_mgr",
   ]
 
   defines = [ "private=public" ]

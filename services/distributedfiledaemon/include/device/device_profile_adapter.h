@@ -70,7 +70,7 @@ private:
         }
         return it->second;
     }
-#ifndef SUPPORT_DEVICE_PROFILE
+#ifdef SUPPORT_DEVICE_PROFILE
     int32_t GetDfsVersionDataFromAppInfo(const std::string &packageNamesData,
         const std::string &versionsData, VersionPackageName packageName, std::string &dfsVersionData);
     int32_t GetAppInfoFromDP(const std::string &udid, const std::string &serviceName, std::string &appInfoJsonData);
