@@ -253,7 +253,7 @@ struct FuseData {
     shared_ptr<CloudFile::CloudDatabase> database;
     struct fuse_session *se;
     string photoBundleName{""};
-    string activeBundle{""};
+    string activeBundle{PHOTOS_BUNDLE_NAME};
 };
 
 static shared_ptr<struct CloudFdInfo> FindKeyInCloudFdCache(struct FuseData *data, uint64_t key)

@@ -62,19 +62,17 @@ bool SettingDataHelper::IsDataShareReady()
 
 string SettingDataHelper::GetActiveBundle()
 {
-    // get from cache, or get from datashare if not exits
+    // get from datashare
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
     if (status == AI_FAMILY) {
         return HDC_BUNDLE_NAME;
     }
-    if (status == CLOUD_SPACE) {
-        return GALLERY_BUNDLE_NAME;
-    }
-    return "";
+    return GALLERY_BUNDLE_NAME;
 }
 
 bool SettingDataHelper::InitActiveBundle()
 {
+    lock_guard<mutex> lck(initMtx_);
     if (isBundleInited_) {
         return true;
     }
@@ -89,8 +87,6 @@ bool SettingDataHelper::InitActiveBundle()
 
 void SettingDataHelper::UpdateActiveBundle()
 {
-    // update cache data
-    CloudSync::SettingsDataManager::QuerySwitchStatus();
     // get latest data
     string bundle = GetActiveBundle();
     // update FuseData

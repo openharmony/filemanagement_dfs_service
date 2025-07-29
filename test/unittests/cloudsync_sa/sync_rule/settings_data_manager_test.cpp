@@ -380,7 +380,6 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeStatusTest001, TestSize.Level
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     int32_t status = SettingsDataManager::GetLocalSpaceFreeStatus();
     EXPECT_EQ(status, 0);
-
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeStatusTest001 End";
 }
 
@@ -392,7 +391,6 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeStatusTest002, TestSize.Level
     SettingsDataManager::settingsDataMap_.EnsureInsert(LOCAL_SPACE_FREE_KEY, "1");
     int32_t status = SettingsDataManager::GetLocalSpaceFreeStatus();
     EXPECT_EQ(status, 1);
-
     SettingsDataManager::settingsDataMap_.Clear();
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeStatusTest002 End";
 }
@@ -404,7 +402,6 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest001, TestSize.Level1)
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     int32_t status = SettingsDataManager::GetLocalSpaceFreeDays();
     EXPECT_EQ(status, 0);
-
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest001 End";
 }
 
@@ -416,7 +413,6 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest002, TestSize.Level1)
     SettingsDataManager::settingsDataMap_.EnsureInsert(LOCAL_SPACE_DAYS_KEY, "10");
     int32_t status = SettingsDataManager::GetLocalSpaceFreeDays();
     EXPECT_EQ(status, 10);
-
     SettingsDataManager::settingsDataMap_.Clear();
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest002 End";
 }

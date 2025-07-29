@@ -490,6 +490,7 @@ ohos_unittest("fuse_manager_static_test") {
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
     "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/include/utils/",
     "${services_path}/cloudfiledaemon/src/fuse_manager",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${clouddisk_database_path}/include",

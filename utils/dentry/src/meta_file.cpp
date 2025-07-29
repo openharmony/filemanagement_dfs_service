@@ -296,6 +296,7 @@ static bool UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de->fileType = base.fileType;
     de->size = base.size;
     de->mode = base.mode;
+    (void)memset_s(de->recordId, CLOUD_RECORD_ID_LEN, 0, CLOUD_RECORD_ID_LEN);
     ret = memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length());
     if (ret != EOK) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
@@ -739,6 +740,14 @@ std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr, bool isHdc)
     return result;
 }
 
+/**
+ * @brief convert cloudId to recordId
+ *
+ * @param cloudId
+ * @param isHdc is homedatacenter's cloudId
+ * @return string recordId
+ * @example recordId: 012345678ff -> 12345678 when isHdc=true
+ */
 std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId, bool isHdc)
 {
     std::stringstream result;

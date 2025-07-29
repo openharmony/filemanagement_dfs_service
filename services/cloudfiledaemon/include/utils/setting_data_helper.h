@@ -47,6 +47,7 @@ private:
     bool isDataShareReady_ = false;
     bool isBundleInited_ = false;
     std::mutex dataMtx_;
+    std::mutex initMtx_;
 };
 } // namespace CloudFile
 } // namespace FileManagement
