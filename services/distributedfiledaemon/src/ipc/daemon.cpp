@@ -468,25 +468,18 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         return E_NULLPTR;
     }
 
-    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
-        LOGE("path is forbidden");
-        return EINVAL;
-    }
-
     std::string srcPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(QueryActiveUserId()), srcPhysicalPath) != E_OK) {
         LOGE("Get src path failed, invalid uri");
         return EINVAL;
     }
+
+    uint64_t fileSize = 0;
     struct stat fileStat;
-    if (stat(srcPhysicalPath.c_str(), &fileStat) == -1) {
-        LOGE("Stat srcPhysicalPath failed");
-        return EINVAL;
+    if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
+        LOGE("Stat srcPhysicalPath success");
+        fileSize = fileStat.st_size;
     }
-    uint64_t fileSize = fileStat.st_size;
-    LOGI("srcUri=%{public}s, srcPhysicalPath=%{public}s, filesize=%{public}lu", srcUri.c_str(), srcPhysicalPath.c_str(),
-         fileSize);
 
     DfsVersion remoteDfsVersion;
     auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(srcDeviceId, remoteDfsVersion);
