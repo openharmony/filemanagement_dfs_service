@@ -802,7 +802,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/test.txt";
     g_checkValidPath = true;
     g_isFile = false;
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), 22);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 测试用例 4: 有效 URI，物理路径有效，stat 成功，DFS 版本为 0，文件大小 < 1GB, 走innerCopy
     g_getPhysicalPath = E_OK;
@@ -813,13 +813,13 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     std::ofstream file(g_physicalPath);
     ASSERT_TRUE(file.good()) << "创建测试文件失败";
     file.close();
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), 4);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
 
     // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), 4);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 清理
     if (std::filesystem::exists(g_physicalPath)) {
