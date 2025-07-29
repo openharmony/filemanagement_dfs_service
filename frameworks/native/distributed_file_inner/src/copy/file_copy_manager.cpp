@@ -193,19 +193,18 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
     auto infos = std::make_shared<FileInfos>();
     auto ret = CreateFileInfos(srcUri, destUri, infos);
-    if (ret != E_OK) {
-        if (processCallback == nullptr) {
-            return EINVAL;
-        }
-        return ret;
-    }
-
     if (IsRemoteUri(infos->srcUri)) {
         ret = ExecRemote(infos, processCallback);
         RemoveFileInfos(infos);
         return ret;
     }
 
+    if (ret != E_OK) {
+        if (processCallback == nullptr) {
+            return EINVAL;
+        }
+        return ret;
+    }
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
     infos->localListener->StartListener();
@@ -574,6 +573,7 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
     infos->destUri = destUri;
     infos->srcPath = FileSizeUtils::GetPathFromUri(srcUri, true);
     infos->destPath = FileSizeUtils::GetPathFromUri(destUri, false);
+    AddFileInfos(infos);
 
     bool isDirectory;
     auto ret = FileSizeUtils::IsDirectory(infos->srcUri, true, isDirectory);
@@ -582,7 +582,6 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
         return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
-    AddFileInfos(infos);
     return E_OK;
 }
 

@@ -858,7 +858,7 @@ void Daemon::StartEventHandler()
 int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
 {
     LOGI("Daemon::SendDfsDelayTask enter.");
-    constexpr int32_t DEFAULT_DELAY_INTERVAL = 120 * 1000; // 120s
+    constexpr int32_t DEFAULT_DELAY_INTERVAL = 1 * 1000;
     if (networkId.empty()) {
         LOGE("networkId is empty.");
         return E_NULLPTR;
