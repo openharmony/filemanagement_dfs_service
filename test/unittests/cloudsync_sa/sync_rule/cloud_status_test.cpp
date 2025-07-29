@@ -66,11 +66,7 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo001, TestSize.Level1)
     const string bundleName = "ohos.com.test";
     const int32_t userId = 1;
     auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
-#if CLOUD_ADAPTER_ENABLED
     EXPECT_EQ(ret, E_NULLPTR);
-#else
-    EXPECT_EQ(ret, E_OK);
-#endif
 }
 
 /**
