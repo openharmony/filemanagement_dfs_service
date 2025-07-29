@@ -79,19 +79,20 @@ bool SessionPool::FindSocketId(int32_t socketId)
     return false;
 }
 
-void SessionPool::ReleaseSession(const std::string &cid, bool releaseServer)
+void SessionPool::ReleaseSession(const std::string &cid, bool isReleaseAll)
 {
     lock_guard lock(sessionPoolLock_);
     std::vector<std::shared_ptr<BaseSession>> sessions;
     LOGI("ReleaseSession, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
-    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetCid() != cid || ((*iter)->IsFromServer() && !releaseServer)) {
+    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
+        if ((*iter)->GetCid() != cid || ((*iter)->IsFromServer() && !isReleaseAll)) {
+            ++iter;
             continue;
         }
         sessions.push_back(*iter);
         iter = usrSpaceSessionPool_.erase(iter);
     }
-    for (auto session : sessions) {
+    for (const auto &session : sessions) {
         session->Release();
     }
 
@@ -102,7 +103,6 @@ void SessionPool::ReleaseSession(const std::string &cid, bool releaseServer)
 
 bool SessionPool::FindCid(const std::string &cid)
 {
-    lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
         if ((*iter)->GetCid() == cid) {
             return true;
