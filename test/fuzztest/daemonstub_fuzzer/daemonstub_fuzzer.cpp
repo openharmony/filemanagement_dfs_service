@@ -19,6 +19,7 @@
 #include <cstring>
 #include <string>
 
+#include "copy/ipc_wrapper.h"
 #include "daemon_stub.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
@@ -343,6 +344,51 @@ void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
+void WriteUriByRawDataFuzzTest(const uint8_t *data, size_t size)
+{
+    MessageParcel datas;
+    std::vector<std::string> uriVec { std::string(reinterpret_cast<const char *>(data), size) };
+
+    IpcWrapper::WriteUriByRawData(datas, uriVec);
+    IpcWrapper::WriteBatchUris(datas, uriVec);
+
+    void* buf = nullptr;
+    if (IpcWrapper::GetData(buf, size, data)) {
+        free(buf);
+        buf = nullptr;
+    }
+}
+
+void ReadBatchUriByRawDataFuzzTest(const uint8_t *data, size_t size)
+{
+    MessageParcel datas;
+    std::vector<std::string> uriVec;
+
+    datas.WriteInt32(0);
+    IpcWrapper::ReadBatchUriByRawData(datas, uriVec);
+
+    datas.WriteInt32(1);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    IpcWrapper::ReadBatchUriByRawData(datas, uriVec);
+}
+
+void ReadBatchUrisFuzzTest(const uint8_t *data, size_t size)
+{
+    MessageParcel datas;
+    std::vector<std::string> uriVec;
+
+    datas.WriteUint32(0);
+    IpcWrapper::ReadBatchUris(datas, uriVec);
+
+    datas.WriteUint32(1);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    IpcWrapper::ReadBatchUris(datas, uriVec);
+}
+
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -396,5 +442,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
+
+    OHOS::WriteUriByRawDataFuzzTest(data, size);
+    OHOS::ReadBatchUriByRawDataFuzzTest(data, size);
+    OHOS::ReadBatchUrisFuzzTest(data, size);
     return 0;
 }
