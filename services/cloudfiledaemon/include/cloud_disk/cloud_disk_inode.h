@@ -79,7 +79,7 @@ struct CloudDiskInode {
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
     std::string path; // just used in local file operation
-    std::shared_mutex inodeLock;
+    std::shared_mutex sessionLock;
 
     /* ops means file operation that uses local or database */
     std::shared_ptr<FileOperationsBase> ops{nullptr};
@@ -90,6 +90,7 @@ struct CloudDiskFuseData {
     int64_t bundleNameId{1};
     int64_t fileId{0};
     std::shared_ptr<CloudDiskInode> rootNode{nullptr};
+    std::unordered_map<std::string, std::shared_ptr<CloudFile::CloudAssetReadSession>> readSessionCache;
     std::unordered_map<int64_t, std::shared_ptr<CloudDiskInode>> inodeCache;
     std::unordered_map<int64_t, std::shared_ptr<CloudDiskFile>> fileCache;
     std::unordered_map<std::string, int64_t> localIdCache;

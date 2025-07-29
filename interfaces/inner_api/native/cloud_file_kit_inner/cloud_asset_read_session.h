@@ -17,6 +17,7 @@
 #define OHOS_CLOUD_FILE_CLOUD_ASSET_READ_SESSION_H
 
 #include <memory>
+#include <shared_mutex>
 #include <string>
 
 #include "cloud_info.h"
@@ -39,7 +40,7 @@ public:
     virtual bool Catch(CloudError &error, uint32_t catchTimeOutPara);
     void SetPrepareTraceId(std::string prepareTraceId);
     std::string GetPrepareTraceId();
-
+    int32_t sessionCount {0};
 private:
     std::string traceId_;
 
