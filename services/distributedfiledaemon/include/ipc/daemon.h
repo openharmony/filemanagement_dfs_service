@@ -136,6 +136,11 @@ private:
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
+    int32_t CopyBaseOnRPC(const std::string &srcUri,
+                          const std::string &dstUri,
+                          const std::string &srcDeviceId,
+                          const sptr<IFileTransListener> &listenerCallback,
+                          HmdfsInfo &info);
 
     void DisconnectByRemote(const std::string &networkId);
     int32_t CreatControlLink(const std::string &networkId);

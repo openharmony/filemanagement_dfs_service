@@ -81,6 +81,7 @@ constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
 constexpr int32_t VALID_MOUNT_NETWORKID_LEN = 16;
+constexpr uint64_t INNER_COPY_LIMIT = 1024 * 1024 * 1024;
 } // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -458,21 +459,49 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     return ret;
 }
 
-int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &srcDeviceId,
-    const sptr<IRemoteObject> &listener, HmdfsInfo &info)
+int32_t Daemon::PrepareSession(const std::string &srcUri,
+                               const std::string &dstUri,
+                               const std::string &srcDeviceId,
+                               const sptr<IRemoteObject> &listener,
+                               HmdfsInfo &info)
 {
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
         return E_NULLPTR;
     }
+
+    std::string srcPhysicalPath;
+    if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(QueryActiveUserId()), srcPhysicalPath) != E_OK) {
+        LOGE("Get src path failed, invalid uri");
+        return EINVAL;
+    }
+
+    uint64_t fileSize = 0;
+    struct stat fileStat;
+    if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
+        fileSize = fileStat.st_size;
+    } else {
+        LOGE("Stat srcPhysicalPath failed.");
+    }
+
     DfsVersion remoteDfsVersion;
     auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(srcDeviceId, remoteDfsVersion);
     LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
-    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0)) {
+
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0) && fileSize < INNER_COPY_LIMIT) {
         return InnerCopy(srcUri, dstUri, srcDeviceId, listenerCallback, info);
     }
 
+    return CopyBaseOnRPC(srcUri, dstUri, srcDeviceId, listenerCallback, info);
+}
+
+int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
+                              const std::string &dstUri,
+                              const std::string &srcDeviceId,
+                              const sptr<IFileTransListener> &listenerCallback,
+                              HmdfsInfo &info)
+{
     auto daemon = GetRemoteSA(srcDeviceId);
     if (daemon == nullptr) {
         LOGE("Daemon is nullptr");
@@ -480,7 +509,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
     }
 
     std::string physicalPath;
-    ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
@@ -491,8 +520,8 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
     }
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
-    auto prepareSessionData = std::make_shared<PrepareSessionData>(
-        srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
+    auto prepareSessionData =
+        std::make_shared<PrepareSessionData>(srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
