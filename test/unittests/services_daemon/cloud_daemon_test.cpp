@@ -43,11 +43,13 @@ public:
 
 void CloudDaemonTest::SetUpTestCase(void)
 {
+    FuseAssistantMock::EnableMock();
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void CloudDaemonTest::TearDownTestCase(void)
 {
+    FuseAssistantMock::DisableMock();
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -57,12 +59,14 @@ void CloudDaemonTest::SetUp(void)
     bool runOnCreate = true;
     insMock_ = make_shared<FuseAssistantMock>();
     FuseAssistantMock::ins = insMock_;
+    insMock_->EnableMock();
     cloudDaemon_ = std::make_shared<CloudDaemon>(saID, runOnCreate);
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void CloudDaemonTest::TearDown(void)
 {
+    insMock_->DisableMock();
     FuseAssistantMock::ins = nullptr;
     insMock_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";

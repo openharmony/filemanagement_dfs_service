@@ -24,11 +24,6 @@
 
 using namespace OHOS::FileManagement::CloudFile;
 
-int mkdir(const char *path, mode_t mode)
-{
-    return FuseAssistant::ins->mkdir(path, mode);
-}
-
 int chown(const char *path, uid_t owner, gid_t group)
 {
     return FuseAssistant::ins->chown(path, owner, group);

@@ -37,6 +37,7 @@ public:
     virtual int chmod(const char *path, mode_t mode) = 0;
     virtual void HandleStartMove(int32_t userId) = 0;
     static inline std::shared_ptr<FuseAssistant> ins = nullptr;
+    static inline bool mockable = false;
 };
 
 class FuseAssistantMock : public FuseAssistant {
@@ -49,6 +50,11 @@ public:
     MOCK_METHOD3(chown, int(const char * path, uid_t owner, gid_t group));
     MOCK_METHOD2(chmod, int(const char * path, mode_t mode));
     MOCK_METHOD1(HandleStartMove, void(int32_t userId));
+
+public:
+    static void EnableMock();
+    static void DisableMock();
+    static bool IsMockable();
 };
 } // namespace OHOS::FileManagement::CloudDisk
 #endif // TEST_UNITTESTS_CLOUD_FILE_FUSEASSISTANT_H

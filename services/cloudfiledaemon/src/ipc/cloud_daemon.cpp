@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023~2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,6 +45,10 @@ using namespace std;
 using namespace CloudDisk;
 
 namespace {
+    static const string BETA_VERSION = "beta";
+    static const string CN_REGION = "CN";
+    static const string GLOBAL_REGION = "const.global.region";
+    static const string KEY_VERSION_TYPE = "const.logsystem.versiontype";
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_DENTRY_CACHE = "/hmdfs/cache/account_cache/dentry_cache/";
     static const string LOCAL_PATH_HMDFS_CACHE_CLOUD = "/hmdfs/cache/account_cache/dentry_cache/cloud";
@@ -96,6 +100,13 @@ static void ModSysParam()
     }
 }
 
+static bool ShouldRegisterListener()
+{
+    const string versionType = system::GetParameter(KEY_VERSION_TYPE, "");
+    const string region = system::GetParameter(GLOBAL_REGION, "");
+    return versionType == BETA_VERSION && region == CN_REGION;
+}
+
 void CloudDaemon::OnStart()
 {
     LOGI("Begin to start service");
@@ -119,11 +130,13 @@ void CloudDaemon::OnStart()
     /* load cloud file ext plugin */
     CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
 
-    std::thread listenThread([&] {
-        vector<string> bundleNameList = {};
-        CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
-    });
-    listenThread.detach();
+    if (ShouldRegisterListener()) {
+        auto bundleNameList = vector<string>{};
+        std::thread listenThread([bundleNameList] {
+            CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
+        });
+        listenThread.detach();
+    }
     LOGI("Start service successfully");
 }
 

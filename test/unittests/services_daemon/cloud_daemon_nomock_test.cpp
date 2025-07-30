@@ -23,13 +23,17 @@
 #include "iremote_object.h"
 #include "setting_data_helper.h"
 #include "system_ability_definition.h"
+#include "system_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudFile::Test {
 using namespace testing;
 using namespace testing::ext;
+using namespace system;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t DEV_FD = 10;
+const string REGION_PARAMETER = "const.global.region";
+const string VERSION_TYPE_PARAMETER = "const.logsystem.versiontype";
 
 class CloudDaemonTest : public testing::Test {
 public:
@@ -38,6 +42,8 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<CloudDaemon> cloudDaemon_;
+    static inline shared_ptr<FuseAssistantMock> insMock_ = nullptr;
+    static inline shared_ptr<SystemMock> systemMock = nullptr;
 };
 
 void CloudDaemonTest::SetUpTestCase(void)
@@ -55,11 +61,21 @@ void CloudDaemonTest::SetUp(void)
     int32_t saID = FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID;
     bool runOnCreate = true;
     cloudDaemon_ = std::make_shared<CloudDaemon>(saID, runOnCreate);
+    insMock_ = make_shared<FuseAssistantMock>();
+    FuseAssistantMock::ins = insMock_;
+
+    systemMock = make_shared<SystemMock>();
+    ISystem::system_ = systemMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void CloudDaemonTest::TearDown(void)
 {
+    FuseAssistantMock::ins = nullptr;
+    insMock_ = nullptr;
+
+    systemMock = nullptr;
+    ISystem::system_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -101,5 +117,101 @@ HWTEST_F(CloudDaemonTest, OnAddSystemAbilityTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 failed";
     }
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 end";
+}
+
+/**
+ * @tc.name: OnStartTest1
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest1 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->registerToService_ = true;
+        EXPECT_CALL(*systemMock, GetParameter(AllOf(Ne(REGION_PARAMETER), Ne(VERSION_TYPE_PARAMETER)), _)).
+            WillRepeatedly(Return("0"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(REGION_PARAMETER), _)).WillRepeatedly(Return("CN"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(VERSION_TYPE_PARAMETER), _)).WillRepeatedly(Return("beta"));
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest1  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest1 End";
+}
+
+/**
+ * @tc.name: OnStartTest2
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest2 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->registerToService_ = true;
+        EXPECT_CALL(*systemMock, GetParameter(AllOf(Ne(REGION_PARAMETER), Ne(VERSION_TYPE_PARAMETER)), _)).
+            WillRepeatedly(Return("test"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(REGION_PARAMETER), _)).WillRepeatedly(Return("US"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(VERSION_TYPE_PARAMETER), _)).WillRepeatedly(Return("beta"));
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest2  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest2 End";
+}
+
+/**
+ * @tc.name: OnStartTest3
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest3, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest3 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->registerToService_ = true;
+        EXPECT_CALL(*systemMock, GetParameter(AllOf(Ne(REGION_PARAMETER), Ne(VERSION_TYPE_PARAMETER)), _)).
+            WillRepeatedly(Return("test"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(REGION_PARAMETER), _)).WillRepeatedly(Return("CN"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(VERSION_TYPE_PARAMETER), _)).WillRepeatedly(Return("commercial"));
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest3  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest3 End";
+}
+
+/**
+ * @tc.name: OnStartTest4
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest4, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest4 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->registerToService_ = true;
+        EXPECT_CALL(*systemMock, GetParameter(AllOf(Ne(REGION_PARAMETER), Ne(VERSION_TYPE_PARAMETER)), _)).
+            WillRepeatedly(Return("test"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(REGION_PARAMETER), _)).WillRepeatedly(Return("US"));
+        EXPECT_CALL(*systemMock, GetParameter(StrEq(VERSION_TYPE_PARAMETER), _)).WillRepeatedly(Return("commercial"));
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest4  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest4 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
