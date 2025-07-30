@@ -480,8 +480,9 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     uint64_t fileSize = 0;
     struct stat fileStat;
     if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
-        LOGE("Stat srcPhysicalPath success");
         fileSize = fileStat.st_size;
+    } else {
+        LOGE("Stat srcPhysicalPath failed.");
     }
 
     DfsVersion remoteDfsVersion;
