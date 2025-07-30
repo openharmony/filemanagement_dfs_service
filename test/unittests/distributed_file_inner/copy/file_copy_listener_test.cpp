@@ -147,6 +147,7 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartStop_0001, TestSi
 {
     GTEST_LOG_(INFO) << "FileCopyLocalListener_StartStop_0001 Start";
 
+    std::string srcPath = "/data/test.txt";
     std::string testPath = "/data/test_file_listener.txt";
     std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
         GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
@@ -157,11 +158,15 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartStop_0001, TestSi
     out << "init";
     out.close();
 
+    std::ofstream out1(srcPath);
+    out1 << "test";
+    out1.close();
+
     auto listener = FileCopyLocalListener::GetLocalListener(testPath, true, callback);
     ASSERT_NE(listener, nullptr);
 
     // 添加监听路径
-    listener->AddListenerFile(testPath, IN_MODIFY | IN_CLOSE_WRITE);
+    listener->AddListenerFile(srcPath, testPath, IN_MODIFY | IN_CLOSE_WRITE);
     listener->AddFile(testPath); // 使其通过 CheckFileValid 校验
 
     listener->StartListener();

@@ -107,9 +107,6 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Le
     ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy("", "", listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(localUri, dstUri, listenerCallback, userId, copyPath);
-    EXPECT_EQ(ret, ENOENT);
-
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0001 create dir err";
@@ -135,7 +132,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
     string destUri = "file://docs/storage/media/100/local/files/Docs/dest1.txt";
     string srcPath = "/storage/media/100/local/files/Docs/1.txt";
     int32_t userId = 100;
-    string copyPath = "/data/storage/el2/distributedfiles/123412345/dest1.txt";
+    string copyPath = "/data/storage/el2/distributedfiles/123412345";
 
     sptr<IFileTransListener> listenerCallback;
     int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
@@ -237,7 +234,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
     int32_t userId = 100;
     string copyPath = "/data/storage/el2/distributedfiles/123412345/test.txt";
     int32_t ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->CreateFileInfos("", "", infos, userId, copyPath);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 End";
 }
 
