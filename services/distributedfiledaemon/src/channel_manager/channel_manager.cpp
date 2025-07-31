@@ -135,7 +135,6 @@ void ChannelManager::DeInit()
 {
     LOGI("start deInit channel manager");
     std::lock_guard<std::mutex> initLock(initMutex_);
-
     // stop send task
     if (eventHandler_ != nullptr) {
         eventHandler_->GetEventRunner()->Stop();
