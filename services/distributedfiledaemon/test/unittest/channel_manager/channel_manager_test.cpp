@@ -741,7 +741,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_006, TestSize.Level1
     std::string jsonStr = responseJson.dump();
 
     // Start a thread to simulate delayed response
-    std::thread responseThread([&jsonStr]() {
+    std::thread responseThread([jsonStr]() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.c_str(), jsonStr.size());
     });

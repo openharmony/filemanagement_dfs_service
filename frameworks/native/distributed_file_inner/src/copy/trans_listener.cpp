@@ -59,8 +59,13 @@ int32_t TransListener::WaitForCopyResult()
 {
     LOGI("WaitForCopyResult.");
     std::unique_lock<std::mutex> lock(cvMutex_);
-    cv_.wait(lock, [this]() {
-        return copyEvent_.copyResult == DFS_SUCCESS || copyEvent_.copyResult == DFS_FAILED;
+    cv_.wait(lock, [obj {wptr<TransListener>(this)}]() {
+        auto ptr = obj.promote();
+        if (ptr == nullptr) {
+            LOGE("ptr is nullptr.");
+            return true;
+        }
+        return ptr->copyEvent_.copyResult == DFS_SUCCESS || ptr->copyEvent_.copyResult == DFS_FAILED;
     });
     return copyEvent_.copyResult;
 }

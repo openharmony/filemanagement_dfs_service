@@ -96,6 +96,7 @@ private:
 
     std::condition_variable notifyCv_;
     std::mutex cvLock_;
+    std::mutex processMutex_;
 };
 } // namespace DistributedFile
 } // namespace Storage

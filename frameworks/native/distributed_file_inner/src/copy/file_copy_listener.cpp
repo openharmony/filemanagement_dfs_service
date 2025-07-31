@@ -58,6 +58,9 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
 FileCopyLocalListener::~FileCopyLocalListener()
 {
     CloseNotifyFdLocked();
+    if (notifyHandler_.joinable()) {
+        notifyHandler_.join();
+    }
 }
 
 std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(const std::string &srcPath,
@@ -69,8 +72,13 @@ std::shared_ptr<FileCopyLocalListener> FileCopyLocalListener::GetLocalListener(c
 
 void FileCopyLocalListener::StartListener()
 {
+    std::lock_guard<std::mutex> lock(processMutex_);
     if (processCallback_ == nullptr || totalSize_ == 0) {
         LOGI("processCallback is nullptr or totalSize is zero, totalSize = %{public}" PRId64 "B", totalSize_);
+        return;
+    }
+    if (notifyHandler_.joinable()) {
+        LOGE("notifyHandler has join");
         return;
     }
     notifyHandler_ = std::thread([this] {
@@ -81,6 +89,7 @@ void FileCopyLocalListener::StartListener()
 
 void FileCopyLocalListener::StopListener()
 {
+    std::lock_guard<std::mutex> lock(processMutex_);
     LOGI("StopListener start.");
     if (processCallback_ == nullptr) {
         LOGI("processCallback is nullptr");
