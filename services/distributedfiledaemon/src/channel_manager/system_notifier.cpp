@@ -416,7 +416,6 @@ int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
 
     ret = DisconnectByNetworkId(networkId);
     LOGI("DisconnectByNetworkId networkId = %{public}.6s , ret = %{public}d", networkId.c_str(), ret);
-
     return ret;
 }
 
