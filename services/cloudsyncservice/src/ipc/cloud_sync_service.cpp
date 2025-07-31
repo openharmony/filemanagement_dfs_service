@@ -249,13 +249,13 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
         dataSyncManager_->DownloadThumb();
     } else if (reason == "usual.event.SCREEN_OFF") {
-        dataSyncManager_->DownloadThumb();
-        dataSyncManager_->CacheVideo();
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SCREEN_OFF_TRIGGER);
-    } else if (reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
+    } else if (reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
+        dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
     } else if (reason == "usual.event.PACKAGE_REMOVED") {
         HandlePackageRemoved(startReason);
     }
