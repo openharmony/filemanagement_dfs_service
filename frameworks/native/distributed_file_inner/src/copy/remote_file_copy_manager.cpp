@@ -43,7 +43,7 @@ std::shared_ptr<RemoteFileCopyManager> RemoteFileCopyManager::instance_ = nullpt
 
 static std::string GetBundleName(const std::string &uri)
 {
-    auto pos = uri.find(FILE_SCHEMA);
+     auto pos = uri.find(FILE_SCHEMA);
     if (pos == std::string::npos) {
         return "";
     }
