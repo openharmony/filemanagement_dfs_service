@@ -193,19 +193,6 @@ void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::str
         });
 }
 
-static int32_t MakeDir(int32_t xcollieId, const std::string &dirName, const std::string &dirPath)
-{
-    if (mkdir(dirPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
-#ifdef HICOLLIE_ENABLE
-            XCollieHelper::CancelTimer(xcollieId);
-#endif
-            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
-                CloudFile::FaultType::FILE, errno, "create " + dirName + " error:" + std::to_string(errno)});
-            return E_PATH;
-    }
-    return E_OK;
-}
-
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
 #ifdef HICOLLIE_ENABLE
