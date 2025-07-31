@@ -110,7 +110,11 @@ HWTEST_F(SoftbusSessionTest, SendDataTest001, TestSize.Level1)
         auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
         EXPECT_TRUE(softbusSession != nullptr);
         int32_t result = softbusSession->SendData(data, sizeof(data));
+#ifdef CLOUD_ADAPTER_ENABLED
+        EXPECT_NE(result, 0);
+#else
         EXPECT_EQ(result, 0);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SendDataTest001 failed";
