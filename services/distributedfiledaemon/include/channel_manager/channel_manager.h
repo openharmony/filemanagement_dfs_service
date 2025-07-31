@@ -43,8 +43,6 @@ public:
     int32_t Init();
     void DeInit();
 
-    int32_t GetVersion();
-
     int32_t CreateClientChannel(const std::string &networkId);
     int32_t DestroyClientChannel(const std::string &networkId);
     bool HasExistChannel(const std::string &networkId);
@@ -78,7 +76,6 @@ private:
     void DoSendBytesAsync(const ControlCmd &request, const std::string &networkId);
 
 private:
-    int32_t version_ = 60;
     std::mutex initMutex_;
     int32_t serverSocketId_ = -1;
     std::string ownerName_ = "dfs_channel_manager";

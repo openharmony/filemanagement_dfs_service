@@ -15,7 +15,6 @@
 
 #include "channel_manager.h"
 #include "network/softbus/softbus_permission_check.h"
-#include "nlohmann/json.hpp"
 #include "securec.h"
 #include "softbus_error_code.h"
 #include "utils_log.h"
@@ -97,15 +96,10 @@ ChannelManager::~ChannelManager()
     DeInit();
 };
 
-int32_t ChannelManager::GetVersion()
-{
-    return version_;
-}
-
 int32_t ChannelManager::Init()
 {
     LOGI("start init channel manager");
-    std::lock_guard<std::mutex> lockInit(initMutex_);
+    std::lock_guard<std::mutex> initLock(initMutex_);
 
     if (eventHandler_ != nullptr && callbackEventHandler_ != nullptr && serverSocketId_ > 0) {
         LOGW("server channel already init");
@@ -140,6 +134,7 @@ int32_t ChannelManager::Init()
 void ChannelManager::DeInit()
 {
     LOGI("start deInit channel manager");
+    std::lock_guard<std::mutex> initLock(initMutex_);
     // stop send task
     if (eventHandler_ != nullptr) {
         eventHandler_->GetEventRunner()->Stop();
@@ -482,7 +477,7 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
 
     std::string outJsonStr;
     if (outCmd.msgType != ControlCmdType::CMD_UNKNOWN && ControlCmdParser::SerializeToJson(outCmd, outJsonStr)) {
-        LOGI("Send response: %{public}zu", outJsonStr.length());
+        LOGI("Send response length: %{public}zu", outJsonStr.length());
         DoSendBytes(socketId, outJsonStr);
         return;
     }
@@ -560,7 +555,7 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
             response = waiter->response;
             std::string responseStr;
             ControlCmdParser::SerializeToJson(response, responseStr);
-            LOGI("response is %{public}s", responseStr.c_str());
+            LOGI("response length is %{public}zu", responseStr.length());
         } else {
             LOGE("Timeout waiting for response");
             ret = E_TIMEOUT;

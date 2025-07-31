@@ -124,6 +124,7 @@ HWTEST_F(SystemNotifierTest, CreateLocalLiveView_001, TestSize.Level1)
     EXPECT_EQ(ret, ERR_OK);
 
     g_publishNotification = ERR_BAD_VALUE;
+    notifier.notificationMap_.clear();
     int32_t ret2 = notifier.CreateLocalLiveView(testNetworkId);
     EXPECT_EQ(ret2, ERR_BAD_VALUE);
 
@@ -145,6 +146,7 @@ HWTEST_F(SystemNotifierTest, CreateNotification_001, TestSize.Level1)
     EXPECT_EQ(ret, ERR_OK);
 
     g_publishNotification = ERR_BAD_VALUE;
+    notifier.notificationMap_.clear();
     int32_t ret2 = notifier.CreateNotification(testNetworkId);
     EXPECT_EQ(ret2, ERR_BAD_VALUE);
 

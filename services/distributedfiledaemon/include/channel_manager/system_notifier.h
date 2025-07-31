@@ -19,17 +19,17 @@
 #include "pixel_map.h"
 #include <iostream>
 #include <mutex>
-#include <utility>
 #include <shared_mutex>
 #include <string>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-class SystemNotifier {
+class SystemNotifier final {
 public:
     ~SystemNotifier() = default;
     static SystemNotifier &GetInstance()
@@ -54,8 +54,8 @@ private:
     void UpdateResourceMap(const std::string &resourcePath);
     void UpdateResourceMapByLanguage();
 
-    template <typename... Args>
-    std::string GetKeyValue(const std::string &key, Args &&...args);
+    template<typename... Args>
+    std::string GetKeyValue(const std::string &key, Args &&... args);
 
 private:
     std::shared_ptr<Media::PixelMap> capsuleIconPixelMap_{};

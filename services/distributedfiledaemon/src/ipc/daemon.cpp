@@ -1086,9 +1086,13 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
     ControlCmd request;
     request.msgType = ControlCmdType::CMD_PUBLISH_NOTIFICATION;
 
-    std::string srcNetworkId;
-    DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetworkId);
-    request.networkId = srcNetworkId;
+    std::string srcNetId;
+    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
+        return ret;
+    }
+    request.networkId = srcNetId;
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
@@ -1109,6 +1113,14 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
     }
     ControlCmd request;
     request.msgType = ControlCmdType::CMD_CANCEL_NOTIFICATION;
+
+    std::string srcNetId;
+    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
+        return ret;
+    }
+    request.networkId = srcNetId;
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
