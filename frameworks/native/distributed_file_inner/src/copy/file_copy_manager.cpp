@@ -339,7 +339,7 @@ bool FileCopyManager::IsFile(const std::string &path)
     struct stat buf {};
     int ret = stat(path.c_str(), &buf);
     if (ret == -1) {
-        LOGI("stat failed, errno is %{public}d, ", errno);
+        LOGE("stat failed, errno is %{public}d, ", errno);
         return false;
     }
     return (buf.st_mode & S_IFMT) == S_IFREG;
