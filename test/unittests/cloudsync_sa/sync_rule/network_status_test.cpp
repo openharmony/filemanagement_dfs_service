@@ -371,7 +371,7 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest005, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "on");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "1");
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -481,10 +481,33 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest009, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CheckMobileNetworkTest010
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: ICQFDC
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest010 Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.ailife";
+        int32_t userId = 100;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "0");
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest005 End";
+}
+
+/**
  * @tc.name: CheckNetworkTest001
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICQFDC
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest001, TestSize.Level1)
 {
@@ -506,7 +529,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest001, TestSize.Level1)
  * @tc.name: CheckNetworkTest002
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICQFDC
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
 {
@@ -515,8 +538,9 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.photos";
         int32_t userId = 1;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "off");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
-        EXPECT_EQ(ret, true);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
@@ -528,7 +552,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
  * @tc.name: CheckNetworkTest003
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICQFDC
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
 {
@@ -537,6 +561,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "on");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -550,7 +575,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
  * @tc.name: CheckNetworkTest004
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICQFDC
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest004, TestSize.Level1)
 {
@@ -559,7 +584,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest004, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_network_connection_status", "on");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "on");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -573,7 +598,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest004, TestSize.Level1)
  * @tc.name: CheckNetworkTest005
  * @tc.desc: Verify the CheckNetwork function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICQFDC
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest005, TestSize.Level1)
 {
@@ -582,7 +607,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest005, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_network_connection_status", "false");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "false");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, false);
     } catch (...) {

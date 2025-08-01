@@ -14,6 +14,8 @@
  */
 #include "settings_data_manager.h"
 
+#include <charconv>
+
 #include "datashare_helper.h"
 #include "datashare_errno.h"
 #include "datashare_result_set.h"
@@ -24,14 +26,16 @@ namespace OHOS::FileManagement::CloudSync {
 static const std::string SETTING_DATA_QUERY_URI = "datashareproxy://";
 static const std::string SETTING_DATA_COMMON_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
-static const std::string SYNC_SWITCH_KEY = "photos_sync_options";
-static const std::string NETWORK_CONNECTION_KEY = "photos_network_connection_status";
-static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";
-static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_days";
-static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";
+static const std::string SYNC_SWITCH_KEY = "photos_sync_options";                       // "0", "1", "2"
+static const std::string NETWORK_CONNECTION_KEY = "photo_network_connection_status";    // "on", "off"
+static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";              // "1", "0"
+static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_free_day_count";    // "30"
+static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";              // "1", "0"
 static const std::string AI_FAMILY_STATUS = "2";
 static const std::string CLOUD_STATUS = "1";
-static const std::string SUCCESS_STATUS = "on";
+static const std::string OPEN_STATUS = "on";
+static const std::string ALLOW_STATUS = "1";
+static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
 
 void SettingsDataManager::InitSettingsDataManager()
 {
@@ -39,6 +43,8 @@ void SettingsDataManager::InitSettingsDataManager()
     RegisterObserver(SYNC_SWITCH_KEY);
     RegisterObserver(NETWORK_CONNECTION_KEY);
     RegisterObserver(MOBILE_DATA_SYNC_KEY);
+    RegisterObserver(LOCAL_SPACE_FREE_KEY);
+    RegisterObserver(LOCAL_SPACE_DAYS_KEY);
     QuerySwitchStatus();
     QueryNetworkConnectionStatus();
     QueryLocalSpaceFreeStatus();
@@ -72,6 +78,19 @@ int32_t SettingsDataManager::QueryNetworkConnectionStatus()
     return E_OK;
 }
 
+int32_t SettingsDataManager::QueryMobileDataStatus()
+{
+    std::string value;
+    int32_t ret = QueryParamInSettingsData(MOBILE_DATA_SYNC_KEY, value);
+    if (ret != E_OK) {
+        LOGE("query MOBILE_DATA_SYNC_KEY failed");
+        settingsDataMap_.Erase(MOBILE_DATA_SYNC_KEY);
+        return ret;
+    }
+    settingsDataMap_.EnsureInsert(MOBILE_DATA_SYNC_KEY, value);
+    return E_OK;
+}
+
 int32_t SettingsDataManager::QueryLocalSpaceFreeStatus()
 {
     std::string value;
@@ -95,19 +114,6 @@ int32_t SettingsDataManager::QueryLocalSpaceFreeDays()
         return ret;
     }
     settingsDataMap_.EnsureInsert(LOCAL_SPACE_DAYS_KEY, value);
-    return E_OK;
-}
-
-int32_t SettingsDataManager::QueryMobileDataStatus()
-{
-    std::string value;
-    int32_t ret = QueryParamInSettingsData(MOBILE_DATA_SYNC_KEY, value);
-    if (ret != E_OK) {
-        LOGE("query MOBILE_DATA_SYNC_KEY failed");
-        settingsDataMap_.Erase(MOBILE_DATA_SYNC_KEY);
-        return ret;
-    }
-    settingsDataMap_.EnsureInsert(MOBILE_DATA_SYNC_KEY, value);
     return E_OK;
 }
 
@@ -148,17 +154,30 @@ SwitchStatus SettingsDataManager::GetSwitchStatusByCache()
     }
 }
 
-std::string SettingsDataManager::GetNetworkConnectionStatus()
+bool SettingsDataManager::GetNetworkConnectionStatus()
 {
     std::string value;
     if (!settingsDataMap_.Find(NETWORK_CONNECTION_KEY, value)) {
         if (QueryNetworkConnectionStatus() != E_OK) {
-            return SUCCESS_STATUS;
+            return true;
         }
     }
 
     value = settingsDataMap_.ReadVal(NETWORK_CONNECTION_KEY);
-    return value;
+    return value == OPEN_STATUS;
+}
+
+bool SettingsDataManager::GetMobileDataStatus()
+{
+    std::string value;
+    if (!settingsDataMap_.Find(MOBILE_DATA_SYNC_KEY, value)) {
+        if (QueryMobileDataStatus() != E_OK) {
+            return false;
+        }
+    }
+
+    value = settingsDataMap_.ReadVal(MOBILE_DATA_SYNC_KEY);
+    return value == ALLOW_STATUS;
 }
 
 int32_t SettingsDataManager::GetLocalSpaceFreeStatus()
@@ -169,9 +188,18 @@ int32_t SettingsDataManager::GetLocalSpaceFreeStatus()
             return 0;
         }
     }
-
     value = settingsDataMap_.ReadVal(LOCAL_SPACE_FREE_KEY);
-    return std::stol(value);
+    if (value == ALLOW_STATUS) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static bool ConvertToInt(const std::string &str, int32_t &val)
+{
+    auto [ptr, ec] = std::from_chars(str.c_str(), str.c_str() + str.size(), val);
+    return ec == std::errc() && ptr == str.c_str() + str.size();
 }
 
 int32_t SettingsDataManager::GetLocalSpaceFreeDays()
@@ -179,25 +207,18 @@ int32_t SettingsDataManager::GetLocalSpaceFreeDays()
     std::string value;
     if (!settingsDataMap_.Find(LOCAL_SPACE_DAYS_KEY, value)) {
         if (QueryLocalSpaceFreeDays() != E_OK) {
-            return 0;
+            return LOCAL_SPACE_DAYS_DEFAULT;
         }
     }
 
     value = settingsDataMap_.ReadVal(LOCAL_SPACE_DAYS_KEY);
-    return std::stol(value);
-}
-
-std::string SettingsDataManager::GetMobileDataStatus()
-{
-    std::string value;
-    if (!settingsDataMap_.Find(MOBILE_DATA_SYNC_KEY, value)) {
-        if (QueryMobileDataStatus() != E_OK) {
-            return SUCCESS_STATUS;
-        }
+    int32_t val = 0;
+    if (ConvertToInt(value, val)) {
+        return val;
+    } else {
+        LOGE("ConvertToInt failed, value: %{public}s", value.c_str());
+        return LOCAL_SPACE_DAYS_DEFAULT;
     }
-
-    value = settingsDataMap_.ReadVal(MOBILE_DATA_SYNC_KEY);
-    return value;
 }
 
 int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)

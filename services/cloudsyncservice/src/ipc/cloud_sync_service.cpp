@@ -39,11 +39,11 @@
 #include "sandbox_helper.h"
 #include "screen_status.h"
 #include "session_manager.h"
+#include "settings_data_manager.h"
 #include "system_ability_definition.h"
 #include "system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
-#include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;

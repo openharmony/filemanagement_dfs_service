@@ -24,9 +24,9 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "parameters.h"
+#include "settings_data_manager.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
-#include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 const std::string QUERY_URI = "datashareproxy://";

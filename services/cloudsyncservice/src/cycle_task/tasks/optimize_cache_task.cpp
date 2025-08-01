@@ -14,6 +14,7 @@
  */
 
 #include "optimize_cache_task.h"
+
 #include "cloud_file_kit.h"
 #include "parameters.h"
 #include "system_load.h"
@@ -25,7 +26,7 @@ namespace CloudSync {
 static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 OptimizeCacheTask::OptimizeCacheTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
     : CycleTask("optimize_cache_task",
-                {GALLERY_BUNDLE_NAME, system::GetParameter(FILEMANAGER_KEY, ""), HDC_BUNDLE_NAME},
+                {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME, system::GetParameter(FILEMANAGER_KEY, "")},
                 ONE_DAY,
                 dataSyncManager)
 {}

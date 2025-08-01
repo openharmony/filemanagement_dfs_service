@@ -18,14 +18,13 @@
 #include <cstdint>
 #include <unistd.h>
 
-#include "net_conn_client.h"
-#include "parameter.h"
-
 #include "dfs_error.h"
 #include "network_set_manager.h"
 #include "net_conn_callback_observer.h"
-#include "utils_log.h"
+#include "net_conn_client.h"
+#include "parameter.h"
 #include "settings_data_manager.h"
+#include "utils_log.h"
 
 using namespace OHOS::NetManagerStandard;
 
@@ -142,7 +141,7 @@ bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int3
             return true;
         }
     } else if (bundleName == HDC_BUNDLE_NAME) {
-        if (SettingsDataManager::GetMobileDataStatus() == "on") {
+        if (SettingsDataManager::GetMobileDataStatus()) {
             LOGI("ailife is setting mobie data sync");
             return true;
         }
@@ -154,14 +153,9 @@ bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int3
 
 bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t userId)
 {
-    if (bundleName == GALLERY_BUNDLE_NAME) {
-        if (NetworkSetManager::IsAllowNetConnect(bundleName, userId)) {
-            LOGI("CheckNetwork on");
-            return true;
-        }
-    } else if (bundleName == HDC_BUNDLE_NAME) {
-        if (SettingsDataManager::GetNetworkConnectionStatus() == "on") {
-            LOGI("ailife is setting network connection status");
+    if (bundleName == GALLERY_BUNDLE_NAME || bundleName == HDC_BUNDLE_NAME) {
+        if (SettingsDataManager::GetNetworkConnectionStatus()) {
+            LOGI("settingData is set network connection");
             return true;
         }
     } else {

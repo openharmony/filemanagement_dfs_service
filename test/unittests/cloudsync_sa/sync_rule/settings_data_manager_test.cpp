@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <cstdint>
 
 #include "datashare_helper_mock.h"
 #include "datashare_result_set_mock.h"
@@ -28,11 +28,11 @@ using namespace testing::ext;
 using namespace std;
 using namespace OHOS::DataShare;
 
-static const std::string SYNC_SWITCH_KEY = "photos_sync_options";
-static const std::string NETWORK_CONNECTION_KEY = "photos_network_connection_status";
-static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";
-static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_days";
-static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";
+static const std::string SYNC_SWITCH_KEY = "photos_sync_options";                       // "0", "1", "2"
+static const std::string NETWORK_CONNECTION_KEY = "photo_network_connection_status";    // "on", "off"
+static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";              // "1", "0"
+static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_free_day_count";    // "30"
+static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";              // "1", "0"
 
 class SettingsDataManagerTest : public testing::Test {
 public:
@@ -354,8 +354,8 @@ HWTEST_F(SettingsDataManagerTest, GetNetworkConnectionStatusTest001, TestSize.Le
     GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    std::string status = SettingsDataManager::GetNetworkConnectionStatus();
-    EXPECT_EQ(status, "on");
+    bool status = SettingsDataManager::GetNetworkConnectionStatus();
+    EXPECT_EQ(status, true);
 
     GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest001 End";
 }
@@ -365,12 +365,25 @@ HWTEST_F(SettingsDataManagerTest, GetNetworkConnectionStatusTest002, TestSize.Le
     GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest002 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    SettingsDataManager::settingsDataMap_.EnsureInsert(NETWORK_CONNECTION_KEY, "false");
-    std::string status = SettingsDataManager::GetNetworkConnectionStatus();
-    EXPECT_EQ(status, "false");
+    SettingsDataManager::settingsDataMap_.EnsureInsert(NETWORK_CONNECTION_KEY, "off");
+    bool status = SettingsDataManager::GetNetworkConnectionStatus();
+    EXPECT_EQ(status, false);
 
     SettingsDataManager::settingsDataMap_.Clear();
     GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetNetworkConnectionStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest003 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::settingsDataMap_.EnsureInsert(NETWORK_CONNECTION_KEY, "on");
+    bool status = SettingsDataManager::GetNetworkConnectionStatus();
+    EXPECT_EQ(status, true);
+
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "GetNetworkConnectionStatusTest003 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeStatusTest001, TestSize.Level1)
@@ -401,7 +414,7 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest001, TestSize.Level1)
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     int32_t status = SettingsDataManager::GetLocalSpaceFreeDays();
-    EXPECT_EQ(status, 0);
+    EXPECT_EQ(status, 30);
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest001 End";
 }
 
@@ -417,13 +430,37 @@ HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest002 End";
 }
 
+HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest003 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::settingsDataMap_.EnsureInsert(LOCAL_SPACE_DAYS_KEY, "");
+    int32_t status = SettingsDataManager::GetLocalSpaceFreeDays();
+    EXPECT_EQ(status, 30);
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetLocalSpaceFreeDaysTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest004 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::settingsDataMap_.EnsureInsert(LOCAL_SPACE_DAYS_KEY, "xx");
+    int32_t status = SettingsDataManager::GetLocalSpaceFreeDays();
+    EXPECT_EQ(status, 30);
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "GetLocalSpaceFreeDaysTest004 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, GetMobileDataStatusTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetMobileDataStatusTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    std::string status = SettingsDataManager::GetMobileDataStatus();
-    EXPECT_EQ(status, "on");
+    bool status = SettingsDataManager::GetMobileDataStatus();
+    EXPECT_EQ(status, false);
 
     GTEST_LOG_(INFO) << "GetMobileDataStatusTest001 End";
 }
@@ -433,12 +470,25 @@ HWTEST_F(SettingsDataManagerTest, GetMobileDataStatusTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetMobileDataStatusTest002 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    SettingsDataManager::settingsDataMap_.EnsureInsert(MOBILE_DATA_SYNC_KEY, "false");
-    std::string status = SettingsDataManager::GetMobileDataStatus();
-    EXPECT_EQ(status, "false");
+    SettingsDataManager::settingsDataMap_.EnsureInsert(MOBILE_DATA_SYNC_KEY, "0");
+    bool status = SettingsDataManager::GetMobileDataStatus();
+    EXPECT_EQ(status, false);
 
     SettingsDataManager::settingsDataMap_.Clear();
     GTEST_LOG_(INFO) << "GetMobileDataStatusTest002 end";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetMobileDataStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetMobileDataStatusTest003 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::settingsDataMap_.EnsureInsert(MOBILE_DATA_SYNC_KEY, "1");
+    bool status = SettingsDataManager::GetMobileDataStatus();
+    EXPECT_EQ(status, true);
+
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "GetMobileDataStatusTest003 end";
 }
 
 HWTEST_F(SettingsDataManagerTest, RegisterObserverTest001, TestSize.Level1)

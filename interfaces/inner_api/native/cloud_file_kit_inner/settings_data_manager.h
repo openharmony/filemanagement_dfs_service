@@ -44,16 +44,16 @@ public:
 
     static int32_t QuerySwitchStatus();
     static int32_t QueryNetworkConnectionStatus();
+    static int32_t QueryMobileDataStatus();
     static int32_t QueryLocalSpaceFreeStatus();
     static int32_t QueryLocalSpaceFreeDays();
-    static int32_t QueryMobileDataStatus();
 
     static SwitchStatus GetSwitchStatus();
     static SwitchStatus GetSwitchStatusByCache();
-    static std::string GetNetworkConnectionStatus();
+    static bool GetNetworkConnectionStatus();
+    static bool GetMobileDataStatus();
     static int32_t GetLocalSpaceFreeStatus();
     static int32_t GetLocalSpaceFreeDays();
-    static std::string GetMobileDataStatus();
 
     static void RegisterObserver(const std::string &key);
     static void RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver);
