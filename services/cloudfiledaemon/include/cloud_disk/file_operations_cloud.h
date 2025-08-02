@@ -28,7 +28,19 @@ struct CloudOpenParams {
     std::shared_ptr<CloudDiskMetaFile> metaFile;
     std::shared_ptr<CloudDiskFile> filePtr;
 };
-    
+
+struct SessionCountParams {
+    std::string path;
+    std::string cloudId;
+    std::string assets;
+};
+
+struct HandleOpenErrorParams {
+    std::shared_ptr<CloudDiskFile> filePtr;
+    std::shared_ptr<CloudDiskInode> inoPtr;
+    fuse_ino_t ino;
+};
+
 class FileOperationsCloud final : public FileOperationsBase {
 public:
     void Lookup(fuse_req_t req, fuse_ino_t parent, const char *name) override;
