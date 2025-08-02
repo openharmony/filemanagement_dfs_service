@@ -19,34 +19,46 @@
 #include "parameters.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
-#include "res_sched_client.h"
+#ifdef support_thermal_manager
+#include "thermal_mgr_client.h"
+#endif
 
 namespace OHOS::FileManagement::CloudSync {
-
-void SystemLoadListener::SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+#ifdef support_thermal_manager
+std::shared_ptr<PowerMgr::ThermalMgrListener> SystemLoadStatus::thermalListener_ =
+    std::make_shared<PowerMgr::ThermalMgrListener>();
+std::shared_ptr<SystemLoadEvent> SystemLoadStatus::thermalEvent_ =  std::make_shared<SystemLoadEvent>();
+std::atomic<PowerMgr::ThermalLevel> SystemLoadStatus::levelStatus_ = PowerMgr::ThermalLevel::NORMAL;
+void SystemLoadEvent::SetDataSyncer(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }
 
 void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
-    sptr<SystemLoadListener> loadListener = new (std::nothrow) SystemLoadListener();
-    if (loadListener == nullptr) {
+    if (thermalEvent_ == nullptr) {
+        LOGE("thermalEvent_ is nullptr");
         return;
     }
-    loadListener->SetDataSycner(dataSyncManager);
-    ResourceSchedule::ResSchedClient::GetInstance().RegisterSystemloadNotifier(loadListener);
+    thermalEvent_->SetDataSyncer(dataSyncManager);
+    int32_t ret = thermalListener_->SubscribeLevelEvent(thermalEvent_);
+    if (ret != E_OK) {
+        LOGE("SubscribeLevelEvent failed, ret:%{public}d", ret);
+        return;
+    }
 }
 
-void SystemLoadListener::OnSystemloadLevel(int32_t level)
+void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
 {
+    LOGD("thermal level change, old is:%{public}d, new is %{public}d",
+        static_cast<int32_t>(SystemLoadStatus::Getload()), static_cast<int32_t>(level));
     SystemLoadStatus::Setload(level);
-    if (level >= SYSTEMLOADLEVEL_HOT) {
-        LOGI("OnSystemloadLevel over warm");
+    if (level >= PowerMgr::ThermalLevel::HOT) {
+        LOGI("thermal over warm");
     } else if (dataSyncManager_) {
         std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
-        LOGI("OnSystemloadLevel is normal, level:%{public}d", level);
+        LOGI("thermal under warm, level:%{public}d", level);
         if (systemLoadSync == "true") {
             LOGI("SetParameter TEMPERATURE_SYSPARAM_SYNC false");
             system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "false");
@@ -54,9 +66,9 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
             dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         }
         if (systemLoadThumb == "true") {
-            if (BatteryStatus::IsCharging() && level > SYSTEMLOADLEVEL_WARM) {
+            if (BatteryStatus::IsCharging() && level > PowerMgr::ThermalLevel::WARM) {
                 return;
-            } else if (!BatteryStatus::IsCharging() && level > SYSTEMLOADLEVEL_NORMAL) {
+            } else if (!BatteryStatus::IsCharging() && level > PowerMgr::ThermalLevel::NORMAL) {
                 return;
             }
             LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
@@ -69,13 +81,18 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
 
 void SystemLoadStatus::GetSystemloadLevel()
 {
-    loadstatus_ = ResourceSchedule::ResSchedClient::GetInstance().GetSystemloadLevel();
-    LOGI("GetSystemloadLevel finish, loadstatus:%{public}d", loadstatus_);
+    Setload(PowerMgr::ThermalMgrClient::GetInstance().GetThermalLevel());
+    LOGI("GetThermalLevel finish, load level is:%{public}d", static_cast<int32_t>(Getload()));
 }
 
-void SystemLoadStatus::Setload(int32_t load)
+void SystemLoadStatus::Setload(const PowerMgr::ThermalLevel &level)
 {
-    loadstatus_ = load;
+    levelStatus_.store(level);
+}
+
+PowerMgr::ThermalLevel SystemLoadStatus::Getload()
+{
+    return levelStatus_.load();
 }
 
 void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
@@ -83,19 +100,12 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     GetSystemloadLevel();
     RegisterSystemloadCallback(dataSyncManager);
 }
+#endif
 
-bool SystemLoadStatus::IsLoadStatusUnderNormal()
+bool SystemLoadStatus::IsSystemLoadAllowed(STOPPED_TYPE process, const PowerMgr::ThermalLevel &level)
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL_NORMAL) {
-        LOGI("system load is over normal");
-        return false;
-    }
-    return true;
-}
-
-bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process, int32_t level)
-{
-    if (loadstatus_ > level) {
+#ifdef support_thermal_manager
+    if (Getload() > level) {
         if (process == STOPPED_IN_THUMB) {
             LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB true");
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
@@ -105,6 +115,7 @@ bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process, int32_t level)
         }
         return false;
     }
+#endif
     return true;
 }
 }

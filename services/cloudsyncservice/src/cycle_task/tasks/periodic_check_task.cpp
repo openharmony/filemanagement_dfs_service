@@ -34,7 +34,7 @@ PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager>
 int32_t PeriodicCheckTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
     if (ScreenStatus::IsScreenOn() || !BatteryStatus::IsCharging()
-        || !SystemLoadStatus::IsLoadStatusUnderHot()) {
+        || !SystemLoadStatus::IsSystemLoadAllowed()) {
         LOGI("PeriodicCheckTask::RunTaskForBundle isScreenOn or not charging");
         return E_STOP;
     }

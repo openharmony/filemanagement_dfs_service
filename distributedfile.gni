@@ -40,10 +40,10 @@ declare_args() {
   dfs_service_feature_enable_dist_file_daemon = true
 
   if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
-    cloudsync_service_resource_schedule = true
+      defined(global_parts_info.powermgr_thermal_manager)) {
+    support_thermal_manager = true
   } else {
-    cloudsync_service_resource_schedule = false
+    support_thermal_manager = false
   }
 
   if (defined(global_parts_info) &&
