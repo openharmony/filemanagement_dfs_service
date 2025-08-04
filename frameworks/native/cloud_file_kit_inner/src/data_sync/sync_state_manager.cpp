@@ -59,27 +59,9 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
 
 bool SyncStateManager::CheckMediaLibCleaning()
 {
-    std::string closeSwitchTime = system::GetParameter(CLOUDSYNC_SWITCH_STATUS, "");
-    if (closeSwitchTime.empty() || closeSwitchTime == "0") {
-        LOGI("current no clean task");
-        return false;
-    }
-    if (closeSwitchTime.size() > MICROSECOND_TIME_LENGTH_LIMIT ||
-        !std::all_of(closeSwitchTime.begin(), closeSwitchTime.end(), ::isdigit)) {
-        LOGW("prev closeSwitch is invalid, reset to 0");
-        system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
-        return false;
-    }
-
-    uint64_t prevTime = std::stoull(closeSwitchTime);
-    uint64_t curTime = GetCurrentTimeStamp();
-    uint64_t intervalTime = curTime - prevTime;
-    if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MICROSECOND) {
-        LOGW("prev closeSwitch over 12h, reset to 0");
-        system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
-        return false;
-    }
-    return true;
+    auto ret = system::GetParameter(CLOUDSYNC_STATUS_KEY, "");
+    LOGI("CLOUDSYNC_STATUS_KEY %{public}s", ret.c_str());
+    return ret == CLOUDSYNC_STATUS_CLEANING;
 }
 
 bool SyncStateManager::CheckCleaningFlag()

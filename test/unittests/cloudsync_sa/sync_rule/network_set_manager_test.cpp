@@ -332,9 +332,10 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager001 Start";
     try {
+        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
-        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        networkSetManager_->InitNetworkSetManager(bundleName, userId);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -353,9 +354,10 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager002 Start";
     try {
+        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "com.ohos.ailife";
-        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        networkSetManager_->InitNetworkSetManager(bundleName, userId);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -374,9 +376,10 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager003 Start";
     try {
+        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "xxxxxxx";
-        NetworkSetManager::InitNetworkSetManager(bundleName, userId);
+        networkSetManager_->InitNetworkSetManager(bundleName, userId);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

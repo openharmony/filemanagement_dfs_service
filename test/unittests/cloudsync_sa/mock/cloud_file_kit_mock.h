@@ -43,14 +43,20 @@ public:
 
 CloudFileKit *CloudFileKit::GetInstance()
 {
-    return ICloudFileKit::proxy_->GetInstance();
+    if (ICloudFileKit::proxy_ != nullptr) {
+        return ICloudFileKit::proxy_->GetInstance();
+    }
+    return nullptr;
 }
 
 int32_t CloudFileKit::GetAppConfigParams(const int32_t userId,
                                          const std::string &bundleName,
                                          std::map<std::string, std::string> &param)
 {
-    return ICloudFileKit::proxy_->GetAppConfigParams(userId, bundleName, param);
+    if (ICloudFileKit::proxy_ != nullptr) {
+        return ICloudFileKit::proxy_->GetAppConfigParams(userId, bundleName, param);
+    }
+    return E_OK;
 }
 } // OHOS::FileManagement::CloudFile
 #endif // MOCK_CLOUD_FILE_KIT_H

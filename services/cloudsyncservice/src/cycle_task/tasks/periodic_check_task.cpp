@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "battery_status.h"
 #include "periodic_check_task.h"
+
+#include "battery_status.h"
 #include "parameters.h"
 #include "screen_status.h"
 #include "system_load.h"
@@ -25,7 +26,7 @@ namespace CloudSync {
 static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
     : CycleTask(PeriodicCheckTaskName,
-                {GALLERY_BUNDLE_NAME, system::GetParameter(FILEMANAGER_KEY, ""), HDC_BUNDLE_NAME},
+                {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME, system::GetParameter(FILEMANAGER_KEY, "")},
                 THREE_DAY,
                 dataSyncManager)
 {
