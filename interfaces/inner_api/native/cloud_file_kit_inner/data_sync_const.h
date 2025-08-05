@@ -80,8 +80,7 @@ const int32_t DIRECTORY = 1;
 const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
 const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
-const uint64_t TWELVE_HOURS_MICROSECOND = 12 * 60 * 60 * MILLISECOND_TO_NANOSECOND;
-const int32_t MICROSECOND_TIME_LENGTH_LIMIT = 16;
+const uint64_t TWELVE_HOURS_MILLISECOND = 12 * 60 * 60 * SECOND_TO_MILLISECOND;
 
 const int32_t NOT_IN_TRASH = 0;
 const int32_t NOT_IN_PENDING = 0;
@@ -109,6 +108,13 @@ static inline uint64_t GetCurrentTimeStamp()
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     return t.tv_sec * MILLISECOND_TO_NANOSECOND + t.tv_nsec / SECOND_TO_MILLISECOND;
+}
+
+static inline uint64_t GetCurrentTimeStampMs()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H

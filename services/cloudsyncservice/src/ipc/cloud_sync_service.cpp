@@ -713,6 +713,10 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         }
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
+        if (bundleName == HDC_BUNDLE_NAME || bundleName == GALLERY_BUNDLE_NAME) {
+            std::string curTime = std::to_string(GetCurrentTimeStampMs());
+            system::SetParameter(CLOUDSYNC_SWITCH_STATUS, curTime);
+        }
         ret = dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
         if (ret != E_OK) {
             LOGE("StopSyncSynced failed, ret: %{public}d", ret);

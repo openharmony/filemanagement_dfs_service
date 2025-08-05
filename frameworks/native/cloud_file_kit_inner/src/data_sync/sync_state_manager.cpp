@@ -15,6 +15,7 @@
 
 #include "sync_state_manager.h"
 
+#include <charconv>
 #include <type_traits>
 
 #include "utils_log.h"
@@ -57,11 +58,36 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
     return true;
 }
 
+static bool ConvertToNumber(const std::string &str, uint64_t &val)
+{
+    auto [ptr, ec] = std::from_chars(str.c_str(), str.c_str() + str.size(), val);
+    return ec == std::errc() && ptr == str.c_str() + str.size();
+}
+
 bool SyncStateManager::CheckMediaLibCleaning()
 {
-    auto ret = system::GetParameter(CLOUDSYNC_STATUS_KEY, "");
-    LOGI("CLOUDSYNC_STATUS_KEY %{public}s", ret.c_str());
-    return ret == CLOUDSYNC_STATUS_CLEANING;
+    std::string closeSwitchTime = system::GetParameter(CLOUDSYNC_SWITCH_STATUS, "");
+    LOGD("prev close time: %{public}s", closeSwitchTime.c_str());
+    if (closeSwitchTime.empty() || closeSwitchTime == "0") {
+        return false;
+    }
+
+    uint64_t prevTime = 0;
+    if (!ConvertToNumber(closeSwitchTime, prevTime)) {
+        LOGE("prev closeSwitch is invalid, reset to 0");
+        system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
+        return false;
+    }
+
+    uint64_t curTime = GetCurrentTimeStampMs();
+    uint64_t intervalTime = curTime - prevTime;
+    LOGI("media clean time: %{public}s, cur: %{public}s", closeSwitchTime.c_str(), std::to_string(curTime).c_str());
+    if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MILLISECOND) {
+        LOGE("prev closeSwitch over 12h, reset to 0");
+        system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
+        return false;
+    }
+    return true;
 }
 
 bool SyncStateManager::CheckCleaningFlag()
