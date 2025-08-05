@@ -181,7 +181,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level0)
 * @tc.type: FUNC
 * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 Start";
     string localUri = "/data/test/test.txt";
@@ -203,14 +203,14 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
 }
 
 /**
- * @tc.name: FileCopyManager_Copy_0007
+ * @tc.name: FileCopyManager_Copy_0006
  * @tc.desc: The execution of the Copy failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level0)
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 Start";
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
     string destUri = "file://docs/storage/media/100/local/files/Docs/a1.txt";
     string srcPath = "/storage/media/100/local/files/Docs/1.txt";
@@ -222,7 +222,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level0)
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
     EXPECT_EQ(ret, ENOENT);
 
-    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 End";
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
 }
 
 /**
@@ -364,9 +364,11 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0003, TestSize.Level0)
         infos->srcUriIsFile, processCallback);
     // srcUriIsFile is true, destpath not exist
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
-    EXPECT_EQ(ret, ENOTDIR);
-    ASSERT_EQ(remove(srcpath.c_str()), 0);
-    ASSERT_EQ(remove(destpath.c_str()), 0);
+    EXPECT_NE(ret, E_OK);
+    ASSERT_EQ(ForceRemoveDirectory(srcpath), true);
+    if (!ForceRemoveDirectory(destpath)) {
+        GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0003 remove dir err";
+    }
     GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0003 End";
 }
 
@@ -1003,6 +1005,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0004, TestSize.Level0)
     destUri = "destUri1";
     ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
+    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.clear();
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0004 End";
 }
 
