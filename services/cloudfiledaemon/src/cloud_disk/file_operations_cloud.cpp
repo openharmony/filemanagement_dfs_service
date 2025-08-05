@@ -121,16 +121,6 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     }
 }
 
-static void InsertFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi,
-                           shared_ptr<CloudDiskFile> filePtr)
-{
-    std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
-    wLock.lock();
-    data->fileCache[fi->fh] = filePtr;
-    wLock.unlock();
-    filePtr->refCount++;
-}
-
 static shared_ptr<CloudDiskFile> InitFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi)
 {
     std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
