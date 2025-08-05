@@ -66,6 +66,7 @@ using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
 using namespace OHOS::Storage::DistributedFile;
 using FileManagement::ERR_OK;
+
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
