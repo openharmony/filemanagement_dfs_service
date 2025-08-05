@@ -65,6 +65,7 @@ using namespace std;
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
 using namespace OHOS::Storage::DistributedFile;
+using FileManagement::ERR_OK;
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
@@ -1023,42 +1024,42 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
     LOGI("start CreatControlLink");
     if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
         LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
-        return FileManagement::ERR_OK;
+        return ERR_OK;
     }
 
     DfsVersion remoteDfsVersion;
     auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
     LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
-    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
+    if ((ret == ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
         LOGW("old version, not need CreatControlLink");
-        return FileManagement::ERR_OK;
+        return ERR_OK;
     }
 
-    if (ChannelManager::GetInstance().CreateClientChannel(networkId) != FileManagement::ERR_OK) {
+    if (ChannelManager::GetInstance().CreateClientChannel(networkId) != ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
-    return FileManagement::ERR_OK;
+    return ERR_OK;
 }
 
 int32_t Daemon::CancelControlLink(const std::string &networkId)
 {
     if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
         LOGI("not exist channel, networkId: %{public}.6s", networkId.c_str());
-        return FileManagement::ERR_OK;
+        return ERR_OK;
     }
-    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
+    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
-    return FileManagement::ERR_OK;
+    return ERR_OK;
 }
 
 int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
 {
     LOGI("start CheckRemoteAllowConnect");
     int32_t ret = CreatControlLink(networkId);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
         return ret;
     }
@@ -1067,7 +1068,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         return ret;
     }
@@ -1079,7 +1080,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemotePublishNotification");
     int32_t ret = CreatControlLink(networkId);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("NotifyRemotePublishNotification ret = %{public}d", ret);
         return ret;
     }
@@ -1088,7 +1089,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 
     std::string srcNetId;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         return ret;
     }
@@ -1096,7 +1097,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         return ret;
     }
@@ -1107,7 +1108,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemoteCancelNotification");
     int32_t ret = CreatControlLink(networkId);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
         return ret;
     }
@@ -1116,7 +1117,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 
     std::string srcNetId;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         return ret;
     }
@@ -1124,7 +1125,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
-    if (ret != FileManagement::ERR_OK) {
+    if (ret != ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         return ret;
     }
