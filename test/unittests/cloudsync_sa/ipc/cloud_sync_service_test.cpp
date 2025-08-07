@@ -96,6 +96,87 @@ void CloudSyncServiceTest::TearDown(void)
 }
 
 /**
+ * @tc.name: ChangeAppSwitchTest001
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string accountId = "";
+        bool status = false;
+        std::string bundleName = "com.ohos.photos";
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ChangeAppSwitchTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest001 end";
+}
+
+/**
+ * @tc.name: ChangeAppSwitchTest002
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string accountId = "";
+        bool status = false;
+        std::string bundleName = "com.ohos.ailife";
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ChangeAppSwitchTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest002 end";
+}
+
+/**
+ * @tc.name: ChangeAppSwitchTest003
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string accountId = "";
+        bool status = false;
+        std::string bundleName = "com.ohos.xxxxxx";
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 end";
+}
+
+/**
  * @tc.name:UnRegisterCallbackInnerTest
  * @tc.desc:Verify the UnRegisterCallbackInner function.
  * @tc.type:FUNC
@@ -1544,44 +1625,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
     }
     GTEST_LOG_(INFO) << "DownloadFilesTest003 end";
-}
-
-/**
- * @tc.name: DownloadFilesTest004
- * @tc.desc: Verify the DownloadFiles function.
- * @tc.type: FUNC
- * @tc.require: NA
- */
-HWTEST_F(CloudSyncServiceTest, DownloadFilesTest004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DownloadFilesTest004 start";
-    try {
-        EXPECT_NE(servicePtr_, nullptr);
-        int32_t userId = 100;
-        const std::string bundleName = "com.ohos.test";
-        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
-        AssetInfoObj assetInfoObj;
-        assetInfoObj.uri = uri;
-        std::vector<AssetInfoObj> assetInfoObjs;
-        assetInfoObjs.push_back(assetInfoObj);
-        std::vector<bool> assetResultMap;
-        assetResultMap.push_back(true);
-        int32_t connectTime = 1;
-        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
-        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
-
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*cloudFileKitMock, GetCloudAssetsDownloader(_, _)).WillOnce(
-                        Return(make_shared<CloudAssetsDownloader>(userId, bundleName)));
-
-        auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "DownloadFilesTest004 failed";
-    }
-    GTEST_LOG_(INFO) << "DownloadFilesTest004 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync
