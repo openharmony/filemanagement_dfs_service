@@ -92,6 +92,8 @@ HWTEST_F(FileSizeUtilsTest, FileSizeUtils_0001, TestSize.Level0)
     int fd = open(testFile.c_str(), O_RDWR | O_CREAT);
     if (fd < 0) {
         GTEST_LOG_(INFO) << "GetGetDirSize_0001 create file err" << testFile;
+    } else {
+        close(fd);
     }
     ret = ptr->GetSize(testFile, isSrcUri, fileSize);
     EXPECT_EQ(ret, E_OK);
@@ -189,6 +191,8 @@ HWTEST_F(FileSizeUtilsTest, GetGetDirSize_0001, TestSize.Level0)
     int fd = open(testFile.c_str(), O_RDWR | O_CREAT);
     if (fd < 0) {
         GTEST_LOG_(INFO) << "GetGetDirSize_0001 create file err" << testFile;
+    } else {
+        close(fd);
     }
     std::string testLink = path + "/2"; // 2: link file name
     if (symlink(testFile.c_str(), testLink.c_str())) {

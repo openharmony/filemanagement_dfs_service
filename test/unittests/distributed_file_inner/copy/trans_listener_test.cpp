@@ -442,7 +442,7 @@ HWTEST_F(TransListenerTest, TransListener_0009, TestSize.Level0)
 
     // Set up destination URI
     string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
-    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    sptr<TransListener> ptr(new (std::nothrow) TransListener(desturi, listener));
 
     // Simulate successful completion in separate thread
     std::thread t([ptr]() {
@@ -469,7 +469,8 @@ HWTEST_F(TransListenerTest, TransListener_0010, TestSize.Level0)
 
     // Set up destination URI
     string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
-    auto ptr = std::make_shared<TransListener>(desturi, listener);
+    sptr<TransListener> ptr(new (std::nothrow) TransListener(desturi, listener));
+    ASSERT_TRUE(ptr != nullptr) << "ptr is nullptr!";
 
     // Simulate failure in separate thread
     std::thread t([ptr]() {
@@ -497,6 +498,7 @@ HWTEST_F(TransListenerTest, TransListener_0011, TestSize.Level0)
     // Set up destination URI
     string desturi = "file://docs/storage/media/100/local/files/Docs/aa1/";
     auto ptr = std::make_shared<TransListener>(desturi, listener);
+    ASSERT_TRUE(ptr != nullptr) << "ptr is nullptr!";
 
     // Test filename extraction from valid path
     string filename = ptr->GetFileName("/path/to/file.txt");

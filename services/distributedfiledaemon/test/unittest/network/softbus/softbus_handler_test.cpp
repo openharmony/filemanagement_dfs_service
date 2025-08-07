@@ -574,6 +574,26 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0100, TestSize.Leve
 }
 
 /**
+ * @tc.name: SoftbusHandlerTest_CloseSession_0200
+ * @tc.desc: Verify the CloseSession.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0200 end";
+    string sessionName = "sessionName";
+    SoftBusHandler::serverIdMap_.insert({"testSession", 0});
+    SoftBusHandler::clientSessNameMap_.insert({0, "test"});
+    SoftBusHandler::GetInstance().CloseSession(1, sessionName); // 1: testSessionId
+    EXPECT_EQ(SoftBusHandler::serverIdMap_.size(), 1); // 1: size
+    EXPECT_EQ(SoftBusHandler::clientSessNameMap_.size(), 1); // 1: size
+    SoftBusHandler::serverIdMap_.clear();
+    SoftBusHandler::clientSessNameMap_.clear();
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0200 end";
+}
+
+/**
  * @tc.name: SoftbusHandlerTest_CloseSessionWithSessionName_0100
  * @tc.desc: Verify the CloseSession.
  * @tc.type: FUNC

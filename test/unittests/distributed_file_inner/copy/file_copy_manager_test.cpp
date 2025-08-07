@@ -802,6 +802,8 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0
     int fd = open(testFile.c_str(), O_RDWR | O_CREAT);
     if (fd < 0) {
         GTEST_LOG_(INFO) << "FileCopyManager_RecurCopyDir_0001 create file err" << testFile;
+    } else {
+        close(fd);
     }
     std::string testLink = srcPath + "2";
     if (symlink(testFile.c_str(), testLink.c_str())) {
