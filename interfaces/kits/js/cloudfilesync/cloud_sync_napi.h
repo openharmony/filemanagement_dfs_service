@@ -83,7 +83,7 @@ public:
     ~CloudSyncNapi() = default;
 
 protected:
-    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
+    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_{nullptr};
 
 private:
     static bool CheckRef(napi_env env, napi_ref ref, ChangeListenerNapi &listObj, const std::string &uri);
