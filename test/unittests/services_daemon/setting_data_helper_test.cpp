@@ -126,7 +126,7 @@ HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsDataShareReadyTest002 start";
     try {
-        EXPECT_CALL(*mock_, Creator()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_DATA_SHARE_NOT_READY, nullptr)));
         SettingDataHelper::GetInstance().isDataShareReady_ = false;
         bool ret = SettingDataHelper::GetInstance().IsDataShareReady();
         EXPECT_EQ(ret, false);
@@ -146,9 +146,7 @@ HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsDataShareReadyTest003 start";
     try {
-        shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();;
-        EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
-        EXPECT_CALL(*mock_, Creator()).WillOnce(Return(helper));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, nullptr)));
         SettingDataHelper::GetInstance().isDataShareReady_ = false;
         bool ret = SettingDataHelper::GetInstance().IsDataShareReady();
         EXPECT_EQ(ret, true);
@@ -157,6 +155,48 @@ HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsDataShareReadyTest003 failed";
     }
     GTEST_LOG_(INFO) << "IsDataShareReadyTest003 end";
+}
+
+/**
+ * @tc.name: IsDataShareReadyTest004
+ * @tc.desc: Verify the IsDataShareReady function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsDataShareReadyTest004 start";
+    try {
+        shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();;
+        EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, helper)));
+        SettingDataHelper::GetInstance().isDataShareReady_ = false;
+        bool ret = SettingDataHelper::GetInstance().IsDataShareReady();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsDataShareReadyTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "IsDataShareReadyTest004 end";
+}
+
+/**
+ * @tc.name: IsDataShareReadyTest005
+ * @tc.desc: Verify the IsDataShareReady function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsDataShareReadyTest005 start";
+    try {
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_ERROR, nullptr)));
+        SettingDataHelper::GetInstance().isDataShareReady_ = false;
+        bool ret = SettingDataHelper::GetInstance().IsDataShareReady();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsDataShareReadyTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "IsDataShareReadyTest005 end";
 }
 
 /**
@@ -208,7 +248,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus003, TestSize.Level1)
     try {
         EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
-        EXPECT_EQ(bundle, "");
+        EXPECT_EQ(bundle, GALLERY_BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetSwitchStatus003 failed";
@@ -247,7 +287,7 @@ HWTEST_F(SettingDataHelperTest, InitActiveBundle002, TestSize.Level1)
         SettingDataHelper::GetInstance().isBundleInited_ = false;
         SettingDataHelper::GetInstance().isDataShareReady_ = false;
 
-        EXPECT_CALL(*mock_, Creator()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_DATA_SHARE_NOT_READY, nullptr)));
 
         bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
         EXPECT_EQ(ret, false);
@@ -272,8 +312,7 @@ HWTEST_F(SettingDataHelperTest, InitActiveBundle003, TestSize.Level1)
 
         shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();
         EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
-        EXPECT_CALL(*mock_, Creator()).WillOnce(Return(helper));
-        EXPECT_CALL(*mock_, QuerySwitchStatus()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, helper)));
         EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
 
         bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
@@ -294,7 +333,6 @@ HWTEST_F(SettingDataHelperTest, UpdateActiveBundle001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UpdateActiveBundle001 start";
     try {
-        EXPECT_CALL(*mock_, QuerySwitchStatus()).WillOnce(Return(E_OK));
         EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
 
         SettingDataHelper::GetInstance().UpdateActiveBundle();

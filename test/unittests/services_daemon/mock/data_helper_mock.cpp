@@ -16,13 +16,12 @@
 
 namespace OHOS::DataShare {
 using namespace OHOS::FileManagement::CloudFile;
-std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const std::string &strUri,
-                                                          const CreateOptions &options,
-                                                          const std::string &bundleName,
-                                                          const int waitTime,
-                                                          bool isSystem)
+std::pair<int, std::shared_ptr<DataShareHelper>> DataShareHelper::Create(const sptr<IRemoteObject> &token,
+                                                                         const std::string &strUri,
+                                                                         const std::string &extUri,
+                                                                         const int waitTime)
 {
-    return IDataHelper::ins->Creator();
+    return IDataHelper::ins->Create();
 }
 } // namespace OHOS::DataShare
 

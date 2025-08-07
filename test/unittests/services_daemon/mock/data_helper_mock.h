@@ -97,7 +97,7 @@ public:
 class IDataHelper {
 public:
     virtual ~IDataHelper() = default;
-    virtual std::shared_ptr<DataShareHelper> Creator() = 0;
+    virtual std::pair<int, std::shared_ptr<DataShareHelper>> Create() = 0;
     virtual SwitchStatus GetSwitchStatus() = 0;
     virtual int32_t QuerySwitchStatus() = 0;
 
@@ -107,7 +107,7 @@ public:
 
 class DataHelperMock : public IDataHelper {
 public:
-    MOCK_METHOD0(Creator, std::shared_ptr<DataShareHelper>());
+    MOCK_METHOD0(Create, std::pair<int, std::shared_ptr<DataShareHelper>>());
     MOCK_METHOD0(GetSwitchStatus, SwitchStatus());
     MOCK_METHOD0(QuerySwitchStatus, int32_t());
 };
