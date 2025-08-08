@@ -2602,7 +2602,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest003, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2658,7 +2658,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest005, TestSize.Level1)
         fi.fh = -1;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
