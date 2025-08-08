@@ -38,6 +38,11 @@ private:
 
     int32_t HandleStartFuseInner(MessageParcel &data, MessageParcel &reply);
 };
+
+class ICloudDaemonBroker : public IRemoteBroker {
+public:
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.filemanagement.distributedfile.clouddaemon")
+};
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS

@@ -14,6 +14,7 @@
  */
 #include "setting_data_helper.h"
 
+#include "cloud_daemon_stub.h"
 #include "data_sync_const.h"
 #include "datashare_helper.h"
 #include "settings_data_manager.h"
@@ -25,7 +26,9 @@ namespace CloudFile {
 using namespace std;
 using namespace OHOS::FileManagement::CloudSync;
 namespace {
-static const string SETTING_DATA_QUERY_URI = "datashareproxy://";
+static const string SETTINGS_DATA_COMMON_URI =
+    "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
+static const string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 static const string SYNC_SWITCH_KEY = "photos_sync_options";
 } // namespace
 
@@ -47,16 +50,34 @@ bool SettingDataHelper::IsDataShareReady()
         return true;
     }
     // try get DataShareHelper
-    DataShare::CreateOptions options;
-    options.enabled_ = true;
-    auto dataShareHelper = DataShare::DataShareHelper::Creator(SETTING_DATA_QUERY_URI, options);
-    if (dataShareHelper == nullptr) {
-        LOGE("get data share helper fail, will retry again after recv ready event");
+    auto remote = sptr<ICloudDaemonBroker>(new (std::nothrow) IRemoteStub<ICloudDaemonBroker>());
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
         return false;
     }
-    bool ret = dataShareHelper->Release();
-    LOGI("release data share helper, ret=%{public}d", ret);
-    isDataShareReady_ = true;
+    auto remoteObj = remote->AsObject();
+    if (remoteObj == nullptr) {
+        LOGE("remoteObj is nullptr");
+        return false;
+    }
+
+    pair<int, shared_ptr<DataShare::DataShareHelper>> ret =
+        DataShare::DataShareHelper::Create(remoteObj, SETTINGS_DATA_COMMON_URI, SETTINGS_DATA_EXT_URI);
+    LOGI("create datashare helper, ret=%{public}d", ret.first);
+    if (ret.first == DataShare::E_DATA_SHARE_NOT_READY) {
+        LOGE("create datashare helper faild");
+        isDataShareReady_ = false;
+        return false;
+    }
+    if (ret.first == DataShare::E_OK) {
+        auto helper = ret.second;
+        if (helper != nullptr) {
+            bool releaseRet = helper->Release();
+            LOGI("release datashare helper, ret=%{public}d", releaseRet);
+        }
+        isDataShareReady_ = true;
+        return true;
+    }
     return true;
 }
 
