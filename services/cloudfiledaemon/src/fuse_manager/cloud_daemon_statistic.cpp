@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "utils_log.h"
 #include "dfs_error.h"
+#include "meta_file.h"
+#include "hisysevent.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -33,6 +35,9 @@ using namespace std;
 #define STAT_TIME_MS_TO_S 1000
 #define CLOUD_FILE_DIR_MOD 0770
 #define CLOUD_FILE_MOD 0660
+#define CLOUD_SYNC_SYS_EVENT(eventName, type, ...)    \
+    HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, eventName,    \
+                    type, ##__VA_ARGS__)    \
 
 static const string STAT_DATA_DIR_NAME = "/data/service/el1/public/cloudfile/cloud_data_statistic";
 static const string STAT_DATA_FILE_NAME = "cloud_sync_read_file_stat";
@@ -127,7 +132,12 @@ void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
     CheckOverflow(videoReadInfo_[index], 1);
 }
 
-void CloudDaemonStatistic::AddFileData()
+void CloudDaemonStatistic::UpdateBundleName(std::string bundleName)
+{
+    bundleName_ = bundleName;
+}
+
+void CloudDaemonStatistic::AddFileData(CloudDaemonStatisticInfo &info)
 {
     /* file not exist means first time, no former data, normal case */
     auto ret = access(STAT_DATA_DIR_NAME.c_str(), F_OK);
@@ -141,31 +151,26 @@ void CloudDaemonStatistic::AddFileData()
         return;
     }
     
-    uint64_t tmpData;
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
-        statDataFile >> tmpData;
-        CheckOverflow(openSizeStat_[i], tmpData);
+        statDataFile >> info.openSizeStat[i];
     }
     for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
         for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
-            statDataFile >> tmpData;
-            CheckOverflow(openTimeStat_[i][j], tmpData);
+            statDataFile >> info.openTimeStat[i][j];
         }
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
-        statDataFile >> tmpData;
-        CheckOverflow(readSizeStat_[i], tmpData);
+        statDataFile >> info.readSizeStat[i];
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
-            statDataFile >> tmpData;
-            CheckOverflow(readTimeStat_[i][j], tmpData);
+            statDataFile >> info.readTimeStat[i][j];
         }
     }
     for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
-        statDataFile >> tmpData;
-        CheckOverflow(videoReadInfo_[i], tmpData);
+        statDataFile >> info.videoReadInfo[i];
     }
+    statDataFile >> info.bundleName;
     statDataFile.close();
 }
 
@@ -234,6 +239,7 @@ void CloudDaemonStatistic::OutputToFile()
         tmpStr += (to_string(videoReadInfo_[i]) + " ");
     }
     statDataFile << tmpStr << endl;
+    statDataFile << bundleName_ << endl;
     statDataFile.close();
 }
 
@@ -260,10 +266,68 @@ void CloudDaemonStatistic::ClearStat()
     }
 }
 
+void CloudDaemonStatistic::SumTwoReadStat(CloudDaemonStatisticInfo info)
+{
+    for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
+        CheckOverflow(openSizeStat_[i], info.openSizeStat[i]);
+    }
+    for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
+        for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
+            CheckOverflow(openTimeStat_[i][j], info.openTimeStat[i][j]);
+        }
+    }
+    for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
+        CheckOverflow(readSizeStat_[i], info.readSizeStat[i]);
+    }
+    for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
+        for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
+            CheckOverflow(readTimeStat_[i][j], info.readTimeStat[i][j]);
+        }
+    }
+    for (uint32_t i = 0; i < VIDEO_READ_INFO; i++) {
+        CheckOverflow(videoReadInfo_[i], info.videoReadInfo[i]);
+    }
+}
+
+int32_t CloudDaemonStatistic::ReportReadStat(CloudDaemonStatisticInfo info)
+{
+    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_READ_FILE_STAT",
+        HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "open_size", info.openSizeStat,
+        "open_thm_time", info.openTimeStat[FILE_TYPE_THUMBNAIL],
+        "open_lcd_time", info.openTimeStat[FILE_TYPE_LCD],
+        "open_content_time", info.openTimeStat[FILE_TYPE_CONTENT],
+        "read_size", info.readSizeStat,
+        "read_time_128KB", info.readTimeStat[READ_SIZE_128K],
+        "read_time_256KB", info.readTimeStat[READ_SIZE_256K],
+        "read_time_512KB", info.readTimeStat[READ_SIZE_512K],
+        "read_time_1M", info.readTimeStat[READ_SIZE_1M],
+        "read_time_2M", info.readTimeStat[READ_SIZE_2M],
+        "read_time_4M", info.readTimeStat[READ_SIZE_4M],
+        "video_read_info", info.videoReadInfo,
+        "bundle_name", info.bundleName
+    );
+    return ret;
+}
+
+void CloudDaemonStatistic::IsSameBundleName(CloudDaemonStatisticInfo info)
+{
+    if (!info.bundleName.empty() && info.bundleName != bundleName_) {
+        auto ret = ReportReadStat(info);
+        if (ret != E_OK) {
+            LOGE("report CLOUD_SYNC_READ_FILE_STAT error %{public}d", ret);
+        }
+    } else {
+        SumTwoReadStat(info);
+    }
+}
+
 void CloudDaemonStatistic::UpdateStatData()
 {
     lock_guard<mutex> lock(mutex_);
-    AddFileData();
+    CloudDaemonStatisticInfo info;
+    AddFileData(info);
+    IsSameBundleName(info);
     OutputToFile();
     ClearStat();
 }

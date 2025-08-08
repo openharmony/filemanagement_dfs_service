@@ -198,4 +198,141 @@ HWTEST_F(CloudDaemonStatisticTest, CloudDaemonStatisticTest_010, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "CloudDaemonStatisticTest_010 End";
 }
+
+/**
+ * @tc.name: UpdateBundleNameTest_001
+ * @tc.desc: Verify the UpdateBundleName function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, UpdateBundleNameTest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateBundleNameTest_001 Start";
+    CloudDaemonStatistic cds;
+    string bundleName = "test.bundle.name";
+
+    try {
+        cds.UpdateBundleName(bundleName);
+        EXPECT_EQ(cds.bundleName_, bundleName);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateBundleNameTest_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateBundleNameTest_001 End";
+}
+
+/**
+ * @tc.name: ReportReadStatTest_001
+ * @tc.desc: Verify the ReportReadStat function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, ReportReadStatTest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReportReadStatTest_001 Start";
+    CloudDaemonStatisticInfo info;
+    info.bundleName = "test.bundle.name";
+
+    CloudDaemonStatistic cds;
+    try {
+        auto ret = cds.ReportReadStat(info);
+        EXPECT_EQ(ret, 0);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReportReadStatTest_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReportReadStatTest_001 End";
+}
+
+/**
+ * @tc.name: IsSameBundleNameTest_001
+ * @tc.desc: Verify the IsSameBundleName function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, IsSameBundleNameTest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 Start";
+    CloudDaemonStatistic cds;
+    cds.bundleName_ = "test.bundle.name";
+    CloudDaemonStatisticInfo info;
+    info.bundleName = "test.bundle.name";
+    try {
+        cds.IsSameBundleName(info);
+        EXPECT_EQ(cds.bundleName_, "test.bundle.name");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 End";
+}
+
+/**
+ * @tc.name: IsSameBundleNameTest_002
+ * @tc.desc: Verify the IsSameBundleName function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, IsSameBundleNameTest_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 Start";
+    CloudDaemonStatistic cds;
+    cds.bundleName_ = "test.bundle.name";
+    CloudDaemonStatisticInfo info;
+    info.bundleName = "different.bundle.name";
+    try {
+        cds.IsSameBundleName(info);
+        EXPECT_EQ(cds.bundleName_, "test.bundle.name");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 End";
+}
+
+/**
+ * @tc.name: IsSameBundleNameTest_003
+ * @tc.desc: Verify the IsSameBundleName function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, IsSameBundleNameTest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 Start";
+    CloudDaemonStatistic cds;
+    cds.bundleName_ = "test.bundle.name";
+    CloudDaemonStatisticInfo info;
+    info.bundleName = "";
+    try {
+        cds.IsSameBundleName(info);
+        EXPECT_EQ(cds.bundleName_, "test.bundle.name");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 End";
+}
+
+/**
+ * @tc.name: IsSameBundleNameTest_004
+ * @tc.desc: Verify the IsSameBundleName function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(CloudDaemonStatisticTest, IsSameBundleNameTest_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 Start";
+    CloudDaemonStatistic cds;
+    cds.bundleName_ = "";
+    CloudDaemonStatisticInfo info;
+    info.bundleName = "";
+    try {
+        cds.IsSameBundleName(info);
+        EXPECT_EQ(cds.bundleName_, "");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 End";
+}
 }

@@ -31,10 +31,39 @@ enum VideoReadInfoIndex {
     READ_SUM,
 };
 
+enum ReadSize {
+    READ_SIZE_128K = 0,
+    READ_SIZE_256K,
+    READ_SIZE_512K,
+    READ_SIZE_1M,
+    READ_SIZE_2M,
+    READ_SIZE_4M
+};
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
 using namespace std;
+
+struct CloudDaemonStatisticInfo {
+public:
+    CloudDaemonStatisticInfo() : openSizeStat(OPEN_SIZE_MAX, 0),
+        openTimeStat(FILE_TYPE_MAX, vector<uint64_t>(OPEN_TIME_MAX, 0)),
+        readSizeStat(READ_SIZE_MAX, 0),
+        readTimeStat(READ_SIZE_MAX, vector<uint64_t>(READ_TIME_MAX, 0)),
+        videoReadInfo(VIDEO_READ_INFO, 0),
+        bundleName("")
+    {
+    }
+    ~CloudDaemonStatisticInfo() = default;
+
+    vector<uint64_t> openSizeStat;
+    vector<vector<uint64_t>> openTimeStat;
+    vector<uint64_t> readSizeStat;
+    vector<vector<uint64_t>> readTimeStat;
+    vector<uint32_t> videoReadInfo;
+    std::string bundleName;
+};
 
 class CloudDaemonStatistic final {
 public:
@@ -49,14 +78,19 @@ public:
     void UpdateReadTimeStat(uint64_t size, uint64_t time);
     void UpdateStatData();
     void UpdateReadInfo(uint32_t index);
+    void UpdateBundleName(std::string bundleName);
     mutex mutex_;
 private:
     CloudDaemonStatistic() = default;
     ~CloudDaemonStatistic() = default;
-    void AddFileData();
+    void AddFileData(CloudDaemonStatisticInfo &info);
     void ClearStat();
     void OutputToFile();
     int32_t CheckFileStat();
+    void SumTwoReadStat(CloudDaemonStatisticInfo info);
+    int32_t ReportReadStat(CloudDaemonStatisticInfo info);
+    void IsSameBundleName(CloudDaemonStatisticInfo info);
+
     vector<uint64_t> openSizeStat_ = vector<uint64_t>(OPEN_SIZE_MAX, 0);
     vector<vector<uint64_t>> openTimeStat_ =
         vector<vector<uint64_t>>(FILE_TYPE_MAX, vector<uint64_t>(OPEN_TIME_MAX, 0));
@@ -64,6 +98,7 @@ private:
     vector<vector<uint64_t>> readTimeStat_ =
         vector<vector<uint64_t>>(READ_SIZE_MAX, vector<uint64_t>(READ_TIME_MAX, 0));
     vector<uint32_t> videoReadInfo_ = vector<uint32_t>(VIDEO_READ_INFO, 0);
+    std::string bundleName_{"com.ohos.photos"};
 };
 } // namespace CloudFile
 } // namespace FileManagement

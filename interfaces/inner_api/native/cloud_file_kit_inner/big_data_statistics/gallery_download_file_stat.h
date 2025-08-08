@@ -54,6 +54,7 @@ public:
     GalleryDownloadFileStat& operator=(const GalleryDownloadFileStat&) = delete;
 
     void UpdateDownloadStat(uint32_t mediaType, uint64_t size, uint64_t duration);
+    void UpdateDownloadBundleName(const std::string &bundleName);
     void OutputToFile();
     void Report();
 private:
@@ -63,6 +64,8 @@ private:
     void UpdateDownloadSpeedStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     void UpdateDownloadSizeStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     DownloadFileStatInfo ReadVecFromLocal();
+    int32_t ReportDownloadFileStat(DownloadFileStatInfo info);
+    void IsSameBundleName(DownloadFileStatInfo info);
 
     DownloadFileStatInfo stat_;
 };

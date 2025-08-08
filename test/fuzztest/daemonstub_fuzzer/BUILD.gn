@@ -48,6 +48,7 @@ ohos_fuzztest("DaemonStubFuzzTest") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "selinux_adapter:librestorecon",
