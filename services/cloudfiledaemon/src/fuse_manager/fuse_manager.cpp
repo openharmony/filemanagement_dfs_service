@@ -1957,6 +1957,9 @@ void SettingDataHelper::SetActiveBundle(string bundle)
     if (data->activeBundle != bundle) {
         data->activeBundle = bundle;
         data->database = nullptr;
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.UpdateStatData();
+        readStat.UpdateBundleName(data->activeBundle);
     }
 }
 } // namespace CloudFile

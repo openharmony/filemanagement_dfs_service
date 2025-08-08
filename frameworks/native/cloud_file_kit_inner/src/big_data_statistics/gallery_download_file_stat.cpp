@@ -41,7 +41,8 @@ const std::vector<uint64_t> DOWNLOAD_IMAGE_SIZE_RANGE_VECTOR = { 2, 4, 6, 8, 15 
 const std::vector<uint64_t> DOWNLOAD_VIDEO_SIZE_RANGE_VECTOR = { 20, 40, 80, 200, 400, 800 };
 
 enum DownloadFileStatIndex {
-    DOWNLOAD_FILE_ERROR = 1,
+    DOWNLOAD_BUNDLE_NAME = 0,
+    DOWNLOAD_FILE_ERROR,
     DOWNLOAD_IMAGE_SIZE,
     DOWNLOAD_IMAGE_SPEED,
     DOWNLOAD_VIDEO_SIZE,
@@ -151,6 +152,11 @@ void GalleryDownloadFileStat::UpdateDownloadStat(uint32_t mediaType, uint64_t si
     UpdateDownloadSpeedStat(mediaType, size, duration);
 }
 
+void GalleryDownloadFileStat::UpdateDownloadBundleName(const std::string &bundleName)
+{
+    stat_.bundleName = bundleName;
+}
+
 static std::string VectorToString(const std::vector<uint64_t> &vec)
 {
     std::ostringstream oss;
@@ -192,13 +198,29 @@ static inline DownloadFileStatInfo SumTwoDownloadFileStat(DownloadFileStatInfo d
     SumTwoVector(dataOne.imageDownloadSpeed, dataTwo.imageDownloadSpeed);
     SumTwoVector(dataOne.videoSize, dataTwo.videoSize);
     SumTwoVector(dataOne.videoDownloadSpeed, dataTwo.videoDownloadSpeed);
+    if (dataOne.bundleName.empty()) {
+        dataOne.bundleName = dataTwo.bundleName;
+    }
     return dataOne;
+}
+
+void GalleryDownloadFileStat::IsSameBundleName(DownloadFileStatInfo info)
+{
+    if (!info.bundleName.empty() && info.bundleName != stat_.bundleName &&
+        !stat_.bundleName.empty()) {
+        auto ret = ReportDownloadFileStat(info);
+        if (ret != E_OK) {
+            LOGE("report CLOUD_SYNC_DOWNLOAD_FILE_STAT error %{public}d", ret);
+        }
+    } else {
+        stat_ = SumTwoDownloadFileStat(stat_, info);
+    }
 }
 
 void GalleryDownloadFileStat::OutputToFile()
 {
     DownloadFileStatInfo tmpInfo = ReadVecFromLocal();
-    stat_ = SumTwoDownloadFileStat(stat_, tmpInfo);
+    IsSameBundleName(tmpInfo);
 
     std::vector<std::string> lines;
     /*  Keep code order below */
@@ -234,6 +256,9 @@ DownloadFileStatInfo GalleryDownloadFileStat::ReadVecFromLocal()
             if (rowCount != 0) {
                 vec = StringToVector(line);
             }
+            if (rowCount == DOWNLOAD_BUNDLE_NAME) {
+                tmpStat.bundleName = line;
+            }
             if (rowCount == DOWNLOAD_FILE_ERROR) {
                 tmpStat.downloadFileError = vec;
             }
@@ -267,6 +292,19 @@ void GalleryDownloadFileStat::ClearDownloadFileStat()
     std::fill(stat_.videoDownloadSpeed.begin(), stat_.videoDownloadSpeed.end(), 0);
 }
 
+int32_t GalleryDownloadFileStat::ReportDownloadFileStat(DownloadFileStatInfo info)
+{
+    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_DOWNLOAD_FILE_STAT",
+        HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "bundle_name", info.bundleName,
+        "download_file", info.downloadFileError,
+        "image_size", info.imageSize,
+        "image_download_speed", info.imageDownloadSpeed,
+        "video_size", info.videoSize,
+        "video_download_speed", info.videoDownloadSpeed);
+    return ret;
+}
+
 void GalleryDownloadFileStat::Report()
 {
     const std::string path = DOWNLOAD_FILE_STAT_LOCAL_PATH + DOWNLOAD_FILE_STAT_NAME;
@@ -278,14 +316,7 @@ void GalleryDownloadFileStat::Report()
     /* read stat from dist */
     stat_ = ReadVecFromLocal();
 
-    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_DOWNLOAD_FILE_STAT",
-        HiviewDFX::HiSysEvent::EventType::STATISTIC,
-        "bundle_name", stat_.bundleName,
-        "download_file", stat_.downloadFileError,
-        "image_size", stat_.imageSize,
-        "image_download_speed", stat_.imageDownloadSpeed,
-        "video_size", stat_.videoSize,
-        "video_download_speed", stat_.videoDownloadSpeed);
+    int32_t ret = ReportDownloadFileStat(stat_);
     if (ret != E_OK) {
         LOGE("report CLOUD_SYNC_DOWNLOAD_FILE_STAT error %{public}d", ret);
     }

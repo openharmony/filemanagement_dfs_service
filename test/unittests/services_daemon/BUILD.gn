@@ -541,6 +541,7 @@ ohos_unittest("setting_data_helper_test") {
 
   sources = [
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "mock/data_helper_mock.cpp",
     "setting_data_helper_test.cpp",
   ]
