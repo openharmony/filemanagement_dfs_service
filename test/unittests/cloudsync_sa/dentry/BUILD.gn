@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("dentry_meta_file_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "./mock/base_interface_lib_mock.cpp",
@@ -47,7 +47,7 @@ ohos_unittest("dentry_meta_file_test") {
 }
 
 ohos_unittest("dentry_file_utils_test") {
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [ "dentry_file_utils_test.cpp" ]
 
@@ -77,7 +77,7 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
     cfi_cross_dso = true
     debug = false
   }
-  module_out_path = "dfs_service/distributed_filesystem"
+  module_out_path = "dfs_service/dfs_service"
 
   sources = [
     "./mock/base_interface_lib_mock.cpp",
