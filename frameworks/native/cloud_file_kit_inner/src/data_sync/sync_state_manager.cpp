@@ -37,7 +37,6 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     if (!CheckCleaningFlag() &&
         !CheckDisableCloudFlag() &&
-        !CheckMediaLibCleaning() &&
         state_ != SyncState::SYNCING) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
