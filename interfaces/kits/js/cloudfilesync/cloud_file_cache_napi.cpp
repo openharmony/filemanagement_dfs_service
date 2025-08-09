@@ -71,7 +71,7 @@ int32_t CloudFileCacheCallbackImplNapi::StartDownloadInner(const std::vector<std
                                                            int64_t &downloadId,
                                                            int32_t fieldKey)
 {
-    std::unique_lock<std::mutex> lock(downloadInfoMtx_);
+    std::lock_guard<std::mutex> lock(downloadInfoMtx_);
     int32_t ret = CloudSyncManager::GetInstance().StartFileCache(uriVec, downloadId, fieldKey, shared_from_this());
     if (ret != E_OK) {
         LOGE("Start batch download failed! ret = %{public}d", ret);
@@ -232,7 +232,7 @@ static std::tuple<int32_t, std::string> ParseUriFromParam(napi_env env, NFuncArg
 {
     auto [succ, uri, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!succ || size == 0) {
-        LOGE("Off get progress failed!");
+        LOGE("Parse URI from parameter failed!");
         return {E_PARAMS, ""};
     }
     return {E_OK, string(uri.get())};
