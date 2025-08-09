@@ -39,7 +39,7 @@ public:
 protected:
     virtual void DownloadProgressInner(std::shared_ptr<DlProgressNapi> progress){};
     std::vector<int64_t> GetDownloadIdsByUri(const std::string &uri);
-    std::shared_ptr<DlProgressNapi> GetDownloadInfo(int64_t downloadId);
+    std::shared_ptr<DlProgressNapi> GetDownloadInfo(const DownloadProgressObj &progress);
 
 protected:
     std::mutex downloadInfoMtx_;

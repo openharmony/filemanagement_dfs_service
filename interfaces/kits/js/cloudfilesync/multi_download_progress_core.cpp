@@ -152,9 +152,4 @@ FsResult<std::vector<std::string>> MultiDlProgressCore::GetDownloadedFileList()
     std::vector<string> res(downloadedFiles.begin(), downloadedFiles.end());
     return FsResult<std::vector<std::string>>::Success(res);
 }
-
-void MultiDlProgressCore::SetProgress(std::unique_ptr<BatchProgressAni> progress)
-{
-    downloadProgress_ = std::move(progress);
-}
 } // namespace OHOS::FileManagement::CloudSync

@@ -27,6 +27,7 @@ void SingleProgressAni::Update(const DownloadProgressObj &progress)
     if (taskId_ != progress.downloadId) {
         return;
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     uri_ = progress.path;
     totalSize_ = progress.totalSize;
     downloadedSize_ = progress.downloadedSize;
@@ -84,11 +85,17 @@ ani_object SingleProgressAni::ConvertToObject(ani_env *env)
     return pg;
 }
 
+std::shared_ptr<DlProgressAni> SingleProgressAni::CreateNewObject()
+{
+    return std::make_shared<SingleProgressAni>(taskId_);
+}
+
 void BatchProgressAni::Update(const DownloadProgressObj &progress)
 {
     if (taskId_ != progress.downloadId) {
         return;
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     state_ = static_cast<int32_t>(progress.batchState);
     downloadedSize_ = progress.batchDownloadSize;
     totalSize_ = progress.batchTotalSize;
@@ -103,6 +110,26 @@ void BatchProgressAni::Update(const DownloadProgressObj &progress)
                   progress.batchState != DownloadProgressObj::RUNNING);
 }
 
+// no need to lock here, because it is called only once when a new object is copied out.
+void BatchProgressAni::SetDownloadedFiles(const std::unordered_set<std::string> &fileList)
+{
+    downloadedFiles_ = fileList;
+}
+
+void BatchProgressAni::SetFailedFiles(const std::unordered_map<std::string, int32_t> &fileList)
+{
+    failedFiles_ = fileList;
+}
+
+std::shared_ptr<DlProgressAni> BatchProgressAni::CreateNewObject()
+{
+    auto resProgress = std::make_shared<BatchProgressAni>(taskId_);
+    std::lock_guard<std::mutex> lock(mtx_);
+    resProgress->SetDownloadedFiles(downloadedFiles_);
+    resProgress->SetFailedFiles(failedFiles_);
+    return resProgress;
+}
+
 ani_object BatchProgressAni::ConvertToObject(ani_env *env)
 {
     ModuleFileIO::FsResult<MultiDlProgressCore *> data = MultiDlProgressCore::Constructor();
@@ -110,10 +137,11 @@ ani_object BatchProgressAni::ConvertToObject(ani_env *env)
         return nullptr;
     }
     MultiDlProgressCore *multiProgress = data.GetData().value();
-    multiProgress->SetProgress(std::make_unique<BatchProgressAni>(*this));
+    multiProgress->downloadProgress_ = shared_from_this();
 
     ani_object pg = MultiDlProgressWrapper::Wrap(env, multiProgress);
     if (pg == nullptr) {
+        multiProgress->downloadProgress_.reset();
         delete multiProgress;
     }
     return pg;

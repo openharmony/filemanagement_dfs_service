@@ -28,6 +28,7 @@ void SingleProgressNapi::Update(const DownloadProgressObj &progress)
     if (taskId_ != progress.downloadId) {
         return;
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     uri_ = progress.path;
     totalSize_ = progress.totalSize;
     downloadedSize_ = progress.downloadedSize;
@@ -47,11 +48,17 @@ napi_value SingleProgressNapi::ConvertToValue(napi_env env)
     return obj.val_;
 }
 
+std::shared_ptr<DlProgressNapi> SingleProgressNapi::CreateNewObject()
+{
+    return std::make_shared<SingleProgressNapi>(taskId_);
+}
+
 void BatchProgressNapi::Update(const DownloadProgressObj &progress)
 {
     if (taskId_ != progress.downloadId) {
         return;
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     state_ = static_cast<int32_t>(progress.batchState);
     downloadedSize_ = progress.batchDownloadSize;
     totalSize_ = progress.batchTotalSize;
@@ -66,6 +73,26 @@ void BatchProgressNapi::Update(const DownloadProgressObj &progress)
                   progress.batchState != DownloadProgressObj::RUNNING);
 }
 
+// no need to lock here, because it is called only once when a new object is copied out.
+void BatchProgressNapi::SetDownloadedFiles(const std::unordered_set<std::string> &fileList)
+{
+    downloadedFiles_ = fileList;
+}
+
+void BatchProgressNapi::SetFailedFiles(const std::unordered_map<std::string, int32_t> &fileList)
+{
+    failedFiles_ = fileList;
+}
+
+std::shared_ptr<DlProgressNapi> BatchProgressNapi::CreateNewObject()
+{
+    auto resProgress = std::make_shared<BatchProgressNapi>(taskId_);
+    std::lock_guard<std::mutex> lock(mtx_);
+    resProgress->SetDownloadedFiles(downloadedFiles_);
+    resProgress->SetFailedFiles(failedFiles_);
+    return resProgress;
+}
+
 napi_value BatchProgressNapi::ConvertToValue(napi_env env)
 {
     napi_value progressVal = NClass::InstantiateClass(env, MultiDlProgressNapi::className_, {});
@@ -78,7 +105,7 @@ napi_value BatchProgressNapi::ConvertToValue(napi_env env)
         LOGE("Failed to get progressEntity.");
         return nullptr;
     }
-    progressEntity->downloadProgress = std::make_unique<BatchProgressNapi>(*this);
+    progressEntity->downloadProgress = shared_from_this();
     return progressVal;
 }
 } // namespace OHOS::FileManagement::CloudSync
