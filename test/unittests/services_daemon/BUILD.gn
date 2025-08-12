@@ -240,6 +240,7 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
     "cloud_daemon_test.cpp",
     "mock/system_function_mock.cpp",
+    "mock/fuse_assistant.cpp",
   ]
 
   cloud_disk = [
