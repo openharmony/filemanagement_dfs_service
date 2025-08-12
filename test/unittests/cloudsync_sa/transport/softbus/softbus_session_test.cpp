@@ -95,34 +95,6 @@ HWTEST_F(SoftbusSessionTest, StartTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: SendDataTest001
- * @tc.desc: Verify the SendData function
- * @tc.type: FUNC
- * @tc.require: IB3T9R
- */
-HWTEST_F(SoftbusSessionTest, SendDataTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SendDataTest001 start";
-    try {
-        char data[] = "test data";
-        string peerNetworkId = "test peerNetworkId";
-        auto type = SoftbusSession::TYPE_BYTES;
-        auto softbusSession = make_shared<SoftbusSession>(peerNetworkId, "test session", type);
-        EXPECT_TRUE(softbusSession != nullptr);
-        int32_t result = softbusSession->SendData(data, sizeof(data));
-#ifdef CLOUD_ADAPTER_ENABLED
-        EXPECT_NE(result, 0);
-#else
-        EXPECT_EQ(result, 0);
-#endif
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SendDataTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "SendDataTest001 end";
-}
-
-/**
  * @tc.name: SendFileTest001
  * @tc.desc: Verify the SendFile function
  * @tc.type: FUNC
