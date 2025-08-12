@@ -86,9 +86,6 @@
                     },
                     {
                         "name": "usual.event.USER_UNLOCKED"
-                    },
-                    {
-                        "name": "usual.event.PACKAGE_REMOVED"
                     }
                 ]
             }
