@@ -35,6 +35,7 @@ static const std::string AI_FAMILY_STATUS = "2";
 static const std::string CLOUD_STATUS = "1";
 static const std::string OPEN_STATUS = "on";
 static const std::string ALLOW_STATUS = "1";
+static const std::string LSF_ALLOW_STATUS = "0";
 static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
 
 void SettingsDataManager::InitSettingsDataManager()
@@ -185,14 +186,14 @@ int32_t SettingsDataManager::GetLocalSpaceFreeStatus()
     std::string value;
     if (!settingsDataMap_.Find(LOCAL_SPACE_FREE_KEY, value)) {
         if (QueryLocalSpaceFreeStatus() != E_OK) {
-            return 0;
+            return 1;
         }
     }
     value = settingsDataMap_.ReadVal(LOCAL_SPACE_FREE_KEY);
-    if (value == ALLOW_STATUS) {
-        return 1;
-    } else {
+    if (value == LSF_ALLOW_STATUS) {
         return 0;
+    } else {
+        return 1;
     }
 }
 
