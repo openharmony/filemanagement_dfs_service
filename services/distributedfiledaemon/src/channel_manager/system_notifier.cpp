@@ -350,10 +350,6 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     request.SetCreatorUid(DFS_SERVICE_UID);
     request.SetContent(content);
     request.SetLittleIcon(notificationIconPixelMap_);
-
-    std::shared_ptr<AAFwk::WantParams> wantParam = std::make_shared<AAFwk::WantParams>();
-    wantParam->SetParam("hw_capsule_icon_animation_type", OHOS::AAFwk::Integer::Box(1));
-    request.SetAdditionalData(wantParam);
     request.SetWantAgent(std::make_shared<AbilityRuntime::WantAgent::WantAgent>());
 
     auto ret = Notification::NotificationHelper::PublishNotification(request);
