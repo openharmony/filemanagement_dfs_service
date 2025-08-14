@@ -30,6 +30,7 @@ public:
     virtual ~DlProgressAni() = default;
     virtual void Update(const DownloadProgressObj &progress) = 0;
     virtual ani_object ConvertToObject(ani_env *env) = 0;
+    virtual std::shared_ptr<DlProgressAni> CreateNewObject() = 0;
 
     int64_t GetTaskId() const
     {
@@ -69,6 +70,7 @@ protected:
     int32_t state_{0};
     int32_t errorType_{0};
     bool needClean_{false};
+    std::mutex mtx_;
 };
 
 class SingleProgressAni : public DlProgressAni {
@@ -76,13 +78,16 @@ public:
     explicit SingleProgressAni(int64_t downloadId) : DlProgressAni(downloadId) {}
     void Update(const DownloadProgressObj &progress) override;
     ani_object ConvertToObject(ani_env *env) override;
+    std::shared_ptr<DlProgressAni> CreateNewObject() override;
 };
 
-class BatchProgressAni : public DlProgressAni {
+class BatchProgressAni : public DlProgressAni,
+                         public std::enable_shared_from_this<BatchProgressAni> {
 public:
     explicit BatchProgressAni(int64_t downloadId) : DlProgressAni(downloadId) {}
     void Update(const DownloadProgressObj &progress) override;
     ani_object ConvertToObject(ani_env *env) override;
+    std::shared_ptr<DlProgressAni> CreateNewObject() override;
 
     // Getters for batch download progress
     int64_t GetTotalNum() const
@@ -105,6 +110,10 @@ public:
     {
         return failedFiles_;
     }
+
+    // The maximum size of files list is 400, which may cause performance problems.
+    void SetDownloadedFiles(const std::unordered_set<std::string> &fileList);
+    void SetFailedFiles(const std::unordered_map<std::string, int32_t> &fileList);
 
 private:
     int64_t totalNum_{0};

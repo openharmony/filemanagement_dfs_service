@@ -44,10 +44,8 @@ public:
     int32_t GetErrorType();
     ModuleFileIO::FsResult<std::vector<FailedFileInfo>> GetFailedFileList();
     ModuleFileIO::FsResult<std::vector<std::string>> GetDownloadedFileList();
-    void SetProgress(std::unique_ptr<BatchProgressAni> progress);
 
-private:
-    std::unique_ptr<BatchProgressAni> downloadProgress_{nullptr};
+    std::shared_ptr<BatchProgressAni> downloadProgress_{nullptr};
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_MULTI_DOWNLOAD_PROGRESS_CORE_H

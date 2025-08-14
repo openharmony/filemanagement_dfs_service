@@ -24,14 +24,23 @@ void CloudDlCallbackMiddleNapi::RemoveDownloadInfo(int64_t downloadId)
     downloadInfos_.erase(downloadId);
 }
 
-std::shared_ptr<DlProgressNapi> CloudDlCallbackMiddleNapi::GetDownloadInfo(int64_t downloadId)
+std::shared_ptr<DlProgressNapi> CloudDlCallbackMiddleNapi::GetDownloadInfo(const DownloadProgressObj &progress)
 {
-    std::lock_guard<std::mutex> lock(downloadInfoMtx_);
-    auto it = downloadInfos_.find(downloadId);
-    if (it != downloadInfos_.end()) {
-        return it->second;
+    std::shared_ptr<DlProgressNapi> originProgress = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(downloadInfoMtx_);
+        auto it = downloadInfos_.find(progress.downloadId);
+        if (it == downloadInfos_.end()) {
+            return nullptr;
+        }
+        originProgress = it->second;
     }
-    return nullptr;
+
+    // Copy a new object to return the callback to avoid affecting the download progress.
+    std::shared_ptr<DlProgressNapi> resProgress = originProgress->CreateNewObject();
+    originProgress->Update(progress);
+    resProgress->Update(progress);
+    return resProgress;
 }
 
 std::vector<int64_t> CloudDlCallbackMiddleNapi::GetDownloadIdsByUri(const std::string &uri)
@@ -48,12 +57,11 @@ std::vector<int64_t> CloudDlCallbackMiddleNapi::GetDownloadIdsByUri(const std::s
 
 void CloudDlCallbackMiddleNapi::OnDownloadProcess(const DownloadProgressObj &progress)
 {
-    auto fileCacheInfo = GetDownloadInfo(progress.downloadId);
+    auto fileCacheInfo = GetDownloadInfo(progress);
     if (fileCacheInfo == nullptr) {
         LOGE("Failed to callback, no such taskId: %{public}lld", static_cast<long long>(progress.downloadId));
         return;
     }
-    fileCacheInfo->Update(progress);
     std::shared_ptr<CloudDlCallbackMiddleNapi> callbackImpl = shared_from_this();
     napi_status status = napi_send_event(
         callbackImpl->env_,

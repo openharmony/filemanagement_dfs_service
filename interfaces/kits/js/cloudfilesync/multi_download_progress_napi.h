@@ -45,7 +45,7 @@ public:
 };
 
 struct MultiDlProgressEntity {
-    std::unique_ptr<BatchProgressNapi> downloadProgress{nullptr};
+    std::shared_ptr<BatchProgressNapi> downloadProgress{nullptr};
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_MULTI_DOWNLOAD_PROGRESS_NAPI_H

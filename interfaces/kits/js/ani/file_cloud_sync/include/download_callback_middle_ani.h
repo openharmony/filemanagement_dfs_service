@@ -37,7 +37,7 @@ public:
 
 protected:
     std::vector<int64_t> GetDownloadIdsByUri(const std::string &uri);
-    std::shared_ptr<DlProgressAni> GetDownloadInfo(int64_t downloadId);
+    std::shared_ptr<DlProgressAni> GetDownloadInfo(const DownloadProgressObj &progress);
 
 protected:
     std::mutex downloadInfoMtx_;
