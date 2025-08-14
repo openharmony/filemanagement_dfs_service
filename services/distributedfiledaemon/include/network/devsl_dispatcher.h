@@ -43,11 +43,11 @@ public:
     static void DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t result, uint32_t levelInfo);
     static uint32_t DevslGetRegister(const std::string &cid, std::weak_ptr<KernelTalker>);
     static bool CompareDevslWithLocal(const std::string &peerNetworkId, const std::vector<std::string> &paths);
+    static int32_t GetDeviceDevsl(const std::string &networkId);
     
 private:
     static DEVSLQueryParams MakeDevslQueryParams(const std::string &cid);
     static void DevslGottonCallbackAsync(const std::string udid, uint32_t devsl);
-    static int32_t GetDeviceDevsl(const std::string &networkId);
     static int32_t GetSecurityLabel(const std::string &path);
     static std::map<std::string, std::vector<std::weak_ptr<KernelTalker>>> talkersMap_;
     static std::map<std::string, std::string> idMap_;

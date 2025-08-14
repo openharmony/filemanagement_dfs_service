@@ -98,8 +98,8 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
         return;
     }
     SetCmd(cmd);
-
-    DevslDispatcher::DevslGetRegister(cid, shared_from_this());
+    int32_t remoteDevsl = DevslDispatcher::GetDeviceDevsl(cid);
+    SinkDevslTokernel(cid, remoteDevsl);
 }
 
 void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
