@@ -50,6 +50,7 @@
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "network/devsl_dispatcher.h"
 #include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
@@ -237,6 +238,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     int32_t ret = 0;
     if (!ConnectCount::GetInstance()->CheckCount(networkId)) {
         ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+        DevslDispatcher::GetDeviceDevsl(networkId);
         if (ret == NO_ERROR) {
             ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
         }
