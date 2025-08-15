@@ -78,6 +78,7 @@ static const string LOCAL_PATH_HMDFS_CLOUD_CACHE = "/hmdfs/cache/cloud_cache";
 static const string DEVICE_VIEW_PHOTOS_PATH = "/account/device_view/local/data/";
 static const string CLOUD_CACHE_DIR = "/.video_cache";
 static const string PHOTOS_KEY = "persist.kernel.bundle_name.photos";
+static const string FILEMGR_KEY = "persist.kernel.bundle_name.filemanager";
 static const string CLOUD_CACHE_XATTR_NAME = "user.cloud.cacheMap";
 static const string VIDEO_TYPE_PREFIX = "VID_";
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
@@ -1909,6 +1910,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         }
         cloudDiskData.userId = userId;
         cloudDiskData.se = se;
+        cloudDiskData.fileMgrBundle = system::GetParameter(FILEMGR_KEY, "");
         config.max_idle_threads = 1;
         std::lock_guard<std::mutex> lock(sessionMutex_);
         sessions_[path] = se;

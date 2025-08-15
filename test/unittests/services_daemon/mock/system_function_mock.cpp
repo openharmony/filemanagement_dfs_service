@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "file_operations_base.h"
 #include "fuse_assistant.h"
 #include "securec.h"
 
