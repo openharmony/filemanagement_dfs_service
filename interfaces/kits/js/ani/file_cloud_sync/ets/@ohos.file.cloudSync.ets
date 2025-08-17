@@ -26,6 +26,7 @@ export default namespace cloudSync {
         CLOUD_STORAGE_FULL = 5,
         LOCAL_STORAGE_FULL = 6,
         DEVICE_TEMPERATURE_TOO_HIGH = 7,
+        REMOTE_SERVER_ABNORMAL = 8,
     };
 
     export enum SyncState {
