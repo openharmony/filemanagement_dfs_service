@@ -108,7 +108,7 @@ HWTEST_F(CloudDaemonTest, OnAddSystemAbilityTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 start";
     try {
-        const int32_t systemAbilityId = DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID;
+        const int32_t systemAbilityId = COMMON_EVENT_SERVICE_ID;
         const std::string deviceId = "device_test";
         SettingDataHelper::GetInstance().isBundleInited_ = true;
         cloudDaemon_->OnAddSystemAbility(systemAbilityId, deviceId);
@@ -117,6 +117,26 @@ HWTEST_F(CloudDaemonTest, OnAddSystemAbilityTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 failed";
     }
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest002 end";
+}
+
+/**
+ * @tc.name: OnAddSystemAbilityTest003
+ * @tc.desc: Verify the OnAddSystemAbility function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, OnAddSystemAbilityTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest003 start";
+    try {
+        const int32_t systemAbilityId = DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID;
+        const std::string deviceId = "device_test";
+        SettingDataHelper::GetInstance().isBundleInited_ = true;
+        cloudDaemon_->OnAddSystemAbility(systemAbilityId, deviceId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnAddSystemAbilityTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "OnAddSystemAbilityTest003 end";
 }
 
 /**
