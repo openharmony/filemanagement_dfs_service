@@ -991,7 +991,8 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     string prepareTraceId = GetPrepareTraceId(data->userId);
 
-    LOGI("%{public}d open %{public}s", pid, GetAnonyString(CloudPath(data, ino)).c_str());
+    LOGI("%{public}d %{public}d %{public}d open %{public}s", pid, req->ctx.pid, req->ctx.uid,
+         GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
         EraseCloudFdCache(data, fi->fh);
@@ -1724,8 +1725,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    LOGI("CloudRead: %{public}s, size=%{public}zd, off=%{public}lu",
-         GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+    LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid, req->ctx.pid,
+         req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
 
     if (!CloudReadHelper(req, size, cInode)) {
         return;
