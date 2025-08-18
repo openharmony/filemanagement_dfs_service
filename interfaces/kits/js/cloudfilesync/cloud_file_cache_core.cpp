@@ -126,4 +126,17 @@ FsResult<void> CloudFileCacheCore::CleanCache(const string &uri)
 
     return FsResult<void>::Success();
 }
+
+FsResult<void> CloudFileCacheCore::CleanFileCache(const string &uri)
+{
+    LOGI("CleanFileCache start");
+
+    int32_t ret = CloudSyncManager::GetInstance().CleanFileCache(uri);
+    if (ret != E_OK) {
+        LOGE("Clean File Cache failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+
+    return FsResult<void>::Success();
+}
 } // namespace OHOS::FileManagement::CloudSync

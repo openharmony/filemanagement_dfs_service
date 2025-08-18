@@ -20,6 +20,7 @@
 #include "cloud_file_cache_ani.h"
 #include "cloud_sync_ani.h"
 #include "file_sync_ani.h"
+#include "file_version_ani.h"
 #include "multi_download_progress_ani.h"
 #include "utils_log.h"
 
@@ -140,6 +141,8 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStop)},
         ani_native_function{"cleanCache", sSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCache)},
+        ani_native_function{"cleanFileCache", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCache)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -224,6 +227,8 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
     std::array methods = {
         ani_native_function{"getFileSyncStateInner", siSign.c_str(),
             reinterpret_cast<void *>(CloudSyncAni::GetFileSyncState)},
+        ani_native_function{"getCoreFileSyncStateInner", siSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncAni::GetCoreFileSyncState)},
         ani_native_function{"registerChangeInner", sbfSign.c_str(),
             reinterpret_cast<void *>(CloudSyncAni::RegisterChange)},
         ani_native_function{"unregisterChangeInner", sSign.c_str(),
@@ -286,6 +291,51 @@ static ani_status BindContextOnDownload(ani_env *env)
     return ANI_OK;
 }
 
+static ani_status BindContextOnFileVersion(ani_env *env)
+{
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileVersion");
+    ani_class cls;
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+    std::string ct = Builder::BuildConstructorName();
+    std::string vSign = Builder::BuildSignatureDescriptor({});
+    std::string getHisListSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String"),
+        Builder::BuildDouble()}, Builder::BuildClass("escompat.Array"));
+    std::string downloadHisVerSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String"),
+        Builder::BuildFunctionalObject(1, false)}, Builder::BuildClass("std.core.String"));
+    std::string replaceSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String")});
+    std::string isConflictSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildClass("std.core.String")}, Builder::BuildBoolean());
+    std::string clearConflictSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::array methods = {
+        ani_native_function{ct.c_str(), vSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionConstructor)},
+        ani_native_function{"getHistoryVersionListInner", getHisListSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionGetHistoryVersionList)},
+        ani_native_function{"downloadHistoryVersionInner", downloadHisVerSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionDownloadHistoryVersion)},
+        ani_native_function{"replaceFileWithHistoryVersionInner", replaceSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionReplaceFileWithHistoryVersion)},
+        ani_native_function{"isFileConflictInner", isConflictSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionIsFileConflict)},
+        ani_native_function{"clearFileConflictInner", clearConflictSign.c_str(),
+            reinterpret_cast<void *>(FileVersionAni::FileVersionClearFileConflict)},
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+
+    return ANI_OK;
+}
+
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
@@ -315,6 +365,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return status;
     }
     status = BindContextOnStaticFunction(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+    status = BindContextOnFileVersion(env);
     if (status != ANI_OK) {
         return status;
     }

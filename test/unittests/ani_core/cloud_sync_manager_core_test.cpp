@@ -21,6 +21,7 @@
 #include <sys/xattr.h>
 
 #include "cloud_sync_manager.h"
+#include "cloud_sync_manager_mock.h"
 #include "dfs_error.h"
 #include "uri.h"
 #include "utils_log.h"
@@ -97,6 +98,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoNotifyEventChangeTest1, TestSize.Level1)
     int32_t userId = 100;
     std::string eventId = "testId";
     std::string extraData = "testData";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, NotifyEventChange(_, _, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION_DENIED));
     auto data = CloudSyncManagerCore::DoNotifyEventChange(userId, eventId, extraData);
     EXPECT_FALSE(data.IsSuccess());
 }
@@ -122,6 +125,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoNotifyDataChangeTest1, TestSize.Level1)
 HWTEST_F(CloudSyncManagerCoreTest, DoDisableCloudTest1, TestSize.Level1)
 {
     std::string accoutId = "100";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, DisableCloud(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION_DENIED));
     auto data = CloudSyncManagerCore::DoDisableCloud(accoutId);
     EXPECT_FALSE(data.IsSuccess());
 }
@@ -135,6 +140,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoEnableCloudTest1, TestSize.Level1)
 {
     std::string accoutId = "100";
     SwitchDataObj switchData;
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, EnableCloud(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION_DENIED));
     auto data = CloudSyncManagerCore::DoEnableCloud(accoutId, switchData);
     EXPECT_FALSE(data.IsSuccess());
 }
@@ -148,6 +155,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoCleanTest1, TestSize.Level1)
 {
     std::string accoutId = "100";
     CleanOptions cleanOptions {};
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, Clean(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION_DENIED));
     auto data = CloudSyncManagerCore::DoClean(accoutId, cleanOptions);
     EXPECT_FALSE(data.IsSuccess());
 }

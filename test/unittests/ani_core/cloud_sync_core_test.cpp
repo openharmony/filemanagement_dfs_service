@@ -20,11 +20,12 @@
 #include <sys/types.h>
 #include <sys/xattr.h>
 
-#include "cloud_sync_manager.h"
+#include "cloud_sync_manager_mock.h"
+#include "system_mock.h"
 #include "dfs_error.h"
 #include "uri.h"
 #include "utils_log.h"
-
+ 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -39,16 +40,23 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<SystemMock> sys = nullptr;
 };
 
 void CloudSyncCoreTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    sys = std::make_shared<SystemMock>();
+    SystemMock::EnableMock();
+    System::ins = sys;
 }
 
 void CloudSyncCoreTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    SystemMock::DisableMock();
+    System::ins = nullptr;
+    sys = nullptr;
 }
 
 void CloudSyncCoreTest::SetUp(void)
@@ -95,6 +103,8 @@ HWTEST_F(CloudSyncCoreTest, DoOnTest1, TestSize.Level1)
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoOn(event, callback);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -112,8 +122,11 @@ HWTEST_F(CloudSyncCoreTest, DoOffTest3, TestSize.Level1)
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoOn(event, callback);
     EXPECT_FALSE(ret.IsSuccess());
+    EXPECT_CALL(cloudMock, UnRegisterCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     ret = cloudSync->DoOff(event);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -148,6 +161,8 @@ HWTEST_F(CloudSyncCoreTest, DoOnTest3, TestSize.Level1)
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(E_OK));
     auto ret = cloudSync->DoOn(event, callback);
     ret = cloudSync->DoOn(event, callback);
     EXPECT_TRUE(ret.IsSuccess());
@@ -162,6 +177,8 @@ HWTEST_F(CloudSyncCoreTest, DoOffTest1, TestSize.Level1)
 {
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
     std::string event = "progress";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, UnRegisterCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoOff(event);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -193,6 +210,8 @@ HWTEST_F(CloudSyncCoreTest, DoOffTest2, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoStartTest1, TestSize.Level1)
 {
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartSync(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoStart();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -208,11 +227,14 @@ HWTEST_F(CloudSyncCoreTest, DoStartTest1, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoStartTest2, TestSize.Level1)
 {
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartSync(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoStart();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
     EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_CALL(cloudMock, StopSync(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     ret = cloudSync->DoStop();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &error = ret.GetError();
@@ -228,6 +250,8 @@ HWTEST_F(CloudSyncCoreTest, DoStartTest2, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoStopTest1, TestSize.Level1)
 {
     CloudSyncCore *cloudSync = CloudSyncCore::Constructor().GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StopSync(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoStop();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -251,12 +275,100 @@ HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest1, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DoGetCoreFileSyncState
+ * @tc.desc: Verify the CloudSyncCore::DoGetCoreFileSyncState function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
+{
+    string filePath = "/test/test.txt";
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
+    auto ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+#if CLOUD_ADAPTER_ENABLED
+    EXPECT_TRUE(ret.IsSuccess());
+#else
+    EXPECT_FALSE(ret.IsSuccess());
+#endif
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(-1));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+#if CLOUD_ADAPTER_ENABLED
+    EXPECT_TRUE(ret.IsSuccess());
+#else
+    EXPECT_FALSE(ret.IsSuccess());
+#endif
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '7';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, JsErrCode::E_INNER_FAILED);
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '5';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoGetCoreFileSyncState
+ * @tc.desc: Verify the CloudSyncCore::DoGetCoreFileSyncState function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest2, TestSize.Level1)
+{
+    string filePath = "/test/test.txt";
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '0';
+        }), Return(1)));
+    auto ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '1';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '2';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '3';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
+        Invoke([](const char *path, const char *name, void *value, size_t size) {
+            *static_cast<char *>(value) = '4';
+        }), Return(1)));
+    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
  * @tc.name: DoOptimizeStorage
  * @tc.desc: Verify the CloudSyncCore::DoOptimizeStorage function
  * @tc.type: FUNC
  */
 HWTEST_F(CloudSyncCoreTest, DoOptimizeStorageTest1, TestSize.Level1)
 {
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, OptimizeStorage(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = CloudSyncCore::DoOptimizeStorage();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -277,6 +389,8 @@ HWTEST_F(CloudSyncCoreTest, DoStartOptimizeStorageTest1, TestSize.Level1)
     optimizeOptions.totalSize = totalSize;
     optimizeOptions.agingDays = agingDays;
     auto callback = std::make_shared<CloudOptimizeCallbackAniImpl>(nullptr, nullptr);
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, OptimizeStorage(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = CloudSyncCore::DoStartOptimizeStorage(optimizeOptions, callback);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -291,6 +405,8 @@ HWTEST_F(CloudSyncCoreTest, DoStartOptimizeStorageTest1, TestSize.Level1)
  */
 HWTEST_F(CloudSyncCoreTest, DoStopOptimizeStorageTest1, TestSize.Level1)
 {
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StopOptimizeStorage()).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = CloudSyncCore::DoStopOptimizeStorage();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();

@@ -24,24 +24,33 @@ ohos_unittest("cloud_sync_core_test") {
     "${interfaces_js_path}/ani/file_cloud_sync/src/download_callback_impl_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/download_callback_middle_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/download_progress_ani.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/file_version_callback_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/multi_download_progress_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/register_callback_manager_ani.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync_manager/src/downgrade_callback_ani.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_sync_core.cpp",
     "${interfaces_js_path}/cloudfilesync/file_sync_core.cpp",
+    "${interfaces_js_path}/cloudfilesync/file_version_core.cpp",
     "${interfaces_js_path}/cloudfilesync/multi_download_progress_core.cpp",
     "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "${interfaces_js_path}/cloudsyncmanager/downgrade_download_core.cpp",
     "cloud_file_cache_core_test.cpp",
     "cloud_file_core_test.cpp",
     "cloud_sync_core_test.cpp",
     "cloud_sync_manager_core_test.cpp",
+    "cloud_sync_manager_mock.cpp",
     "file_sync_core_test.cpp",
+    "downgrade_download_core_test.cpp",
+    "file_version_core_test.cpp",
+    "system_mock.cpp",
   ]
 
   include_dirs = [
     "${interfaces_js_path}/ani/ani_helper/include",
     "${interfaces_js_path}/ani/file_cloud_sync/include",
+    "${interfaces_js_path}/ani/file_cloud_sync_manager/include",
     "${interfaces_js_path}/cloudfilesync",
     "${interfaces_js_path}/cloudsyncmanager",
   ]
@@ -71,7 +80,9 @@ ohos_unittest("cloud_sync_core_test") {
     "LOG_DOMAIN=0xD004309",
     "LOG_TAG=\"CLOUD_FILE_SYNC\"",
   ]
-
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
   use_exceptions = true
 }
 
