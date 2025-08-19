@@ -16,11 +16,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "battery_status.h"
 #include "system_load.h"
 #include "dfs_error.h"
 #include "parameters.h"
 #include "utils_log.h"
-#include "res_sched_client.h"
 #include "task_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
@@ -34,8 +34,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    shared_ptr<SystemLoadStatus> SystemLoadStatus_ = nullptr;
-    shared_ptr<SystemLoadListener> SystemLoadListener_ = nullptr;
+#ifdef support_thermal_manager
+    shared_ptr<SystemLoadStatus> systemLoadStatus_ = nullptr;
+    shared_ptr<SystemLoadEvent> systemLoadEvent_ = nullptr;
+#endif
 };
 
 void SytemLoadTest::SetUpTestCase(void)
@@ -50,233 +52,424 @@ void SytemLoadTest::TearDownTestCase(void)
 
 void SytemLoadTest::SetUp(void)
 {
+#ifdef support_thermal_manager
     GTEST_LOG_(INFO) << "SetUp";
-    SystemLoadStatus_ = make_shared<SystemLoadStatus>();
-    SystemLoadListener_ = make_shared<SystemLoadListener>();
+    systemLoadStatus_ = make_shared<SystemLoadStatus>();
+    systemLoadEvent_ = make_shared<SystemLoadEvent>();
+    systemLoadStatus_->thermalEvent_ = systemLoadEvent_;
+#endif
 }
 
 void SytemLoadTest::TearDown(void)
 {
+#ifdef support_thermal_manager
     GTEST_LOG_(INFO) << "TearDown";
     TaskStateManager::GetInstance().CancelUnloadTask();
-    SystemLoadStatus_ = nullptr;
-    SystemLoadListener_ = nullptr;
+    systemLoadStatus_ = nullptr;
+    systemLoadEvent_ = nullptr;
+#endif
 }
 
+#ifdef support_thermal_manager
 /**
- * @tc.name: RegisterSystemloadCallbackTest
+ * @tc.name: RegisterSystemloadCallbackTest001
  * @tc.desc: Verify the RegisterSystemloadCallback function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, RegisterSystemloadCallbackTest, TestSize.Level1)
+HWTEST_F(SytemLoadTest, RegisterSystemloadCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest Start";
     try {
         std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
-        SystemLoadStatus_->RegisterSystemloadCallback(dataSyncManager);
+        systemLoadStatus_->RegisterSystemloadCallback(dataSyncManager);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest FAILED";
+        GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest End";
+    GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest001 End";
 }
 
 /**
- * @tc.name: OnSystemloadLevelTest001
- * @tc.desc: Verify the OnSystemloadLevel function
+ * @tc.name: RegisterSystemloadCallbackTest002
+ * @tc.desc: Verify the RegisterSystemloadCallback function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, OnSystemloadLevelTest001, TestSize.Level1)
+HWTEST_F(SytemLoadTest, RegisterSystemloadCallbackTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 Start";
+    GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest002 Start";
     try {
-        int32_t level = 10;
-        SystemLoadListener_->OnSystemloadLevel(level);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 End";
-}
-
-/**
- * @tc.name: OnSystemloadLevelTest002
- * @tc.desc: Verify the OnSystemloadLevel function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(SytemLoadTest, OnSystemloadLevelTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 Start";
-    try {
-        int32_t level = 1;
+        systemLoadStatus_->thermalEvent_ = nullptr;
         std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
-        SystemLoadListener_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
-        SystemLoadListener_->OnSystemloadLevel(level);
+        systemLoadStatus_->RegisterSystemloadCallback(dataSyncManager);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 FAILED";
+        GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest002 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 End";
+    GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest002 End";
 }
 
 /**
- * @tc.name: OnSystemloadLevelTest003
- * @tc.desc: Verify the OnSystemloadLevel function
+ * @tc.name: OnThermalLevelResultTest001
+ * @tc.desc: Verify the OnThermalLevelResult function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, OnSystemloadLevelTest003, TestSize.Level1)
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 Start";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 Start";
     try {
-        int32_t level = 1;
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest002
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 Start";
+    try {
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
+        systemLoadEvent_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest003
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest003 Start";
+    try {
         system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
-        SystemLoadListener_->SetDataSycner(dataSyncManager);
-        SystemLoadListener_->OnSystemloadLevel(level);
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 FAILED";
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest003 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 End";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest003 End";
 }
 
 /**
- * @tc.name: OnSystemloadLevelTest004
- * @tc.desc: Verify the OnSystemloadLevel function
+ * @tc.name: OnThermalLevelResultTest004
+ * @tc.desc: 充电状态下，NORMAL档位时恢复缩略图下载
  * @tc.type: FUNC
- * @tc.require: I6JPKG
+ * @tc.require: ICR23A
  */
-HWTEST_F(SytemLoadTest, OnSystemloadLevelTest004, TestSize.Level1)
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 Start";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest004 Start";
     try {
-        int32_t level = 1;
         system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        BatteryStatus::SetChargingStatus(true);
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
-        SystemLoadListener_->SetDataSycner(dataSyncManager);
-        SystemLoadListener_->OnSystemloadLevel(level);
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
+        EXPECT_EQ("false", systemLoadThumb);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 FAILED";
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest004 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 End";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest004 End";
 }
 
 /**
- * @tc.name: IsLoadStatusUnderHotTest001
- * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.name: OnThermalLevelResultTest005
+ * @tc.desc: 充电状态下，warm档位时不恢复缩略图下载
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 Start";
+    try {
+        system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        BatteryStatus::SetChargingStatus(true);
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
+        std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
+        EXPECT_EQ("true", systemLoadThumb);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest006
+ * @tc.desc: 不充电状态下，normal档位时恢复缩略图下载
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest006 Start";
+    try {
+        system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        BatteryStatus::SetChargingStatus(false);
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
+        EXPECT_EQ("false", systemLoadThumb);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest006 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest007
+ * @tc.desc: 不充电状态下，cool档位时恢复缩略图下载
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest007 Start";
+    try {
+        system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        BatteryStatus::SetChargingStatus(false);
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::COOL);
+        std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
+        EXPECT_EQ("false", systemLoadThumb);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest007 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest005
+ * @tc.desc: Verify the OnThermalLevelResult function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest001, TestSize.Level1)
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest0010, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 Start";
     try {
-        SystemLoadStatus_->Setload(10);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
+        system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 End";
+}
+
+/**
+ * @tc.name: IsSystemLoadAllowedTest001
+ * @tc.desc: Verify the IsSystemLoadAllowed function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest001 Start";
+    try {
+        systemLoadStatus_->Setload(PowerMgr::ThermalLevel::OVERHEATED);
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed();
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest001 End";
 }
 
 /**
- * @tc.name: IsLoadStatusUnderHotTest002
- * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.name: IsSystemLoadAllowedTest002
+ * @tc.desc: Verify the IsSystemLoadAllowed function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest002, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest002 Start";
     try {
-        SystemLoadStatus_->Setload(10);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
+        systemLoadStatus_->Setload(PowerMgr::ThermalLevel::WARNING);
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed();
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest002 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest002 End";
 }
 
 /**
- * @tc.name: IsLoadStatusUnderHotTest003
- * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.name: IsSystemLoadAllowedTest003
+ * @tc.desc: Verify the IsSystemLoadAllowed function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest003 Start";
     try {
-        SystemLoadStatus_->Setload(1);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
+        systemLoadStatus_->Setload(PowerMgr::ThermalLevel::NORMAL);
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed();
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest003 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest003 End";
 }
 
 /**
- * @tc.name: IsLoadStatusUnderHotTest004
- * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.name: IsSystemLoadAllowedTest004
+ * @tc.desc: Verify the IsSystemLoadAllowed function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest004, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest004 Start";
-    SystemLoadStatus_->Setload(10);
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest004 Start";
+    systemLoadStatus_->Setload(PowerMgr::ThermalLevel::OVERHEATED);
     STOPPED_TYPE process = STOPPED_IN_THUMB;
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(process);
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed(process);
     EXPECT_EQ(ret, false);
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest004 End";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest004 End";
 }
 
 /**
- * @tc.name: IsLoadStatusUnderHotTest005
- * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.name: IsSystemLoadAllowedTest005
+ * @tc.desc: Verify the IsSystemLoadAllowed function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest005, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest005 Start";
-    SystemLoadStatus_->Setload(10);
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest005 Start";
+    systemLoadStatus_->Setload(PowerMgr::ThermalLevel::OVERHEATED);
     STOPPED_TYPE process = STOPPED_IN_SYNC;
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(process);
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed(process);
     EXPECT_EQ(ret, false);
-    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest005 End";
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest005 End";
 }
 
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest001, TestSize.Level1)
+/**
+ * @tc.name: IsSystemLoadAllowedTest006
+ * @tc.desc: Verify the IsSystemLoadAllowed function
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, IsSystemLoadAllowedTest006, TestSize.Level1)
 {
-    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL);
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
-    EXPECT_TRUE(ret);
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest006 Start";
+    systemLoadStatus_->Setload(PowerMgr::ThermalLevel::HOT);
+    STOPPED_TYPE process = STOPPED_IN_SYNC;
+    bool ret = systemLoadStatus_->IsSystemLoadAllowed(process, PowerMgr::ThermalLevel::WARM);
+    EXPECT_EQ(ret, false);
+    GTEST_LOG_(INFO) << "IsSystemLoadAllowedTest006 End";
 }
 
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest002, TestSize.Level1)
+/**
+ * @tc.name: GetSystemloadLevel
+ * @tc.desc: Verify the GetSystemloadLevel function
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, GetSystemloadLevel, TestSize.Level1)
 {
-    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL + 1);
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
-    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "GetSystemloadLevel Start";
+    try {
+        systemLoadStatus_->GetSystemloadLevel();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSystemloadLevel FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetSystemloadLevel End";
 }
 
-HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest003, TestSize.Level1)
+/**
+ * @tc.name: SetloadAndGetloadTest
+ * @tc.desc: Verify the SetloadAndGetloadTest function
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, SetloadAndGetloadTest, TestSize.Level1)
 {
-    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL - 1);
-    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal();
-    EXPECT_TRUE(ret);
+    GTEST_LOG_(INFO) << "SetloadAndGetloadTest Start";
+    try {
+        systemLoadStatus_->Setload(PowerMgr::ThermalLevel::COOL);
+        EXPECT_EQ(systemLoadStatus_->Getload(), PowerMgr::ThermalLevel::COOL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetloadAndGetloadTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetloadAndGetloadTest End";
 }
 
+/**
+ * @tc.name: SetDataSyncerTest
+ * @tc.desc: Verify the SetDataSyncerTest function
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, SetDataSyncerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetDataSyncerTest Start";
+    try {
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetDataSyncerTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetDataSyncerTest End";
+}
+
+/**
+ * @tc.name: InitSystemloadTest
+ * @tc.desc: Verify the InitSystemloadTest function
+ * @tc.type: FUNC
+ * @tc.require: ICR23A
+ */
+HWTEST_F(SytemLoadTest, InitSystemloadTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitSystemloadTest Start";
+    try {
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadStatus_->InitSystemload(dataSyncManager);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitSystemloadTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitSystemloadTest End";
+}
+#endif
 } // namespace OHOS::FileManagement::CloudSync::Test

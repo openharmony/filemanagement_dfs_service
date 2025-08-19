@@ -29,7 +29,7 @@ OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<CloudFile::DataSyncMana
 
 int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    if (!SystemLoadStatus::IsLoadStatusUnderHot()) {
+    if (!SystemLoadStatus::IsSystemLoadAllowed()) {
         LOGE("OptimizeStorageTask::RunTaskForBundle system load is over hot");
         return E_STOP;
     }

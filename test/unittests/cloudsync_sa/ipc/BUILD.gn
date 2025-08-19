@@ -119,9 +119,11 @@ ohos_unittest("cloud_sync_service_test") {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
-  if (cloudsync_service_resource_schedule) {
-    external_deps += [ "resource_schedule_service:ressched_client" ]
-    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  if (support_thermal_manager) {
+    external_deps += [ "bundle_framework:appexecfwk_base" ]
+    external_deps += [ "thermal_manager:thermalmgr_listener" ]
+    external_deps += [ "thermal_manager:thermalsrv_client" ]
+    defines += [ "support_thermal_manager" ]
   }
   
   if (cloudsync_service_power) {

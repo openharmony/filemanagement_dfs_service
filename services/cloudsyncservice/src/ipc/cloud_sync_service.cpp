@@ -182,7 +182,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
-        AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+        AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
         AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
         AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     } catch (const exception &e) {
@@ -307,8 +307,10 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->AddObserver(sessionManager);
         fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
         fileTransferManager_->Init();
-    } else if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
+    } else if (systemAbilityId == POWER_MANAGER_THERMAL_SERVICE_ID) {
+#ifdef support_thermal_manager
         SystemLoadStatus::InitSystemload(dataSyncManager_);
+#endif
     } else if (systemAbilityId == COMM_NET_CONN_MANAGER_SYS_ABILITY_ID) {
         NetworkStatus::InitNetwork(dataSyncManager_);
     } else if (systemAbilityId == MEMORY_MANAGER_SA_ID) {

@@ -18,44 +18,62 @@
 
 #include "data_sync_manager.h"
 #include <functional>
-#include "res_sched_systemload_notifier_client.h"
-#include "res_type.h"
 #include "sync_state_manager.h"
+#include <mutex>
+#ifdef support_thermal_manager
+#include "thermal_mgr_listener.h"
+#else
+namespace OHOS::PowerMgr {
+enum class ThermalLevel : int32_t {
+        COOL,
+        NORMAL,
+        WARM,
+        HOT,
+        OVERHEATED,
+        WARNING,
+        EMERGENCY,
+        ESCAPE,
+};
+}
+#endif
 
 namespace OHOS::FileManagement::CloudSync {
-constexpr int32_t SYSTEMLOADLEVEL_HOT = ResourceSchedule::ResType::SystemloadLevel::HIGH;
-constexpr int32_t SYSTEMLOADLEVEL_WARM = ResourceSchedule::ResType::SystemloadLevel::MEDIUM;
-constexpr int32_t SYSTEMLOADLEVEL_NORMAL = ResourceSchedule::ResType::SystemloadLevel::NORMAL;
-const std::string TEMPERATURE_SYSPARAM_SYNC = "persist.kernel.cloudsync.temperature_abnormal_sync";
-const std::string TEMPERATURE_SYSPARAM_THUMB = "persist.kernel.cloudsync.temperature_abnormal_thumb";
-
 enum STOPPED_TYPE {
     STOPPED_IN_SYNC = 0,
     STOPPED_IN_THUMB = 1,
     STOPPED_IN_OTHER = 2,
 };
+#ifdef support_thermal_manager
+const std::string TEMPERATURE_SYSPARAM_SYNC = "persist.kernel.cloudsync.temperature_abnormal_sync";
+const std::string TEMPERATURE_SYSPARAM_THUMB = "persist.kernel.cloudsync.temperature_abnormal_thumb";
+
+class SystemLoadEvent : public PowerMgr::ThermalMgrListener::ThermalLevelEvent {
+public:
+    SystemLoadEvent() = default;
+    void OnThermalLevelResult(const PowerMgr::ThermalLevel &level) override;
+    void SetDataSyncer(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
+private:
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
+};
+#endif
 
 class SystemLoadStatus {
 public:
     SystemLoadStatus() = default;
     virtual ~SystemLoadStatus() = default;
+    static bool IsSystemLoadAllowed(STOPPED_TYPE process = STOPPED_IN_OTHER,
+        const PowerMgr::ThermalLevel &level = PowerMgr::ThermalLevel::HOT);
+    static void Setload(const PowerMgr::ThermalLevel &level);
+    static PowerMgr::ThermalLevel Getload();
+#ifdef support_thermal_manager
     static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
-    static bool IsLoadStatusUnderHot(STOPPED_TYPE process = STOPPED_IN_OTHER, int32_t level = SYSTEMLOADLEVEL_HOT);
-    static bool IsLoadStatusUnderNormal();
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
-    static void Setload(int32_t load);
-    static inline int32_t loadstatus_ = 0;
-};
-
-class SystemLoadListener : public ResourceSchedule::ResSchedSystemloadNotifierClient {
-public:
-    SystemLoadListener() = default;
-    void OnSystemloadLevel(int32_t level) override;
-    void SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
 private:
-    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
+    static std::atomic<PowerMgr::ThermalLevel> levelStatus_;
+    static std::shared_ptr<PowerMgr::ThermalMgrListener> thermalListener_;
+    static std::shared_ptr<SystemLoadEvent> thermalEvent_;
+#endif
 };
 } // OHOS
-
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_SYSTEM_LOAD_H

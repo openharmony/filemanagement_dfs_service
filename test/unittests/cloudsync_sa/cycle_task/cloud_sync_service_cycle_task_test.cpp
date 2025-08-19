@@ -19,6 +19,7 @@
 #include "dfs_error.h"
 #include "cycle_task.h"
 #include "cycle_task_runner.h"
+#include "system_load.h"
 #include "tasks/database_backup_task.h"
 #include "tasks/optimize_cache_task.h"
 #include "tasks/optimize_storage_task.h"
@@ -120,6 +121,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest002, TestSize.Level1
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
         EXPECT_NE(ret, 0);
@@ -143,6 +145,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest003, TestSize.Level1
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
         shared_ptr<PeriodicCheckTask> task = make_shared<PeriodicCheckTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
         EXPECT_NE(ret, 0);
@@ -273,9 +276,9 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest006, TestSize.Level1
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
         shared_ptr<OptimizeCacheTask> task = make_shared<OptimizeCacheTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
-
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -298,6 +301,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest007, TestSize.Level1
         int32_t userId = 100;
         CloudFile::CloudFileKit::instance_ = ability.get();
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
 
@@ -356,6 +360,81 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest009, TestSize.Level1
         GTEST_LOG_(INFO) << "RunTaskForBundleTest009 FAILED";
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest009 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest010
+ * @tc.desc: 温控后不触发核查任务
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest010 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
+        shared_ptr<PeriodicCheckTask> task = make_shared<PeriodicCheckTask>(g_dataSyncManagerPtr_);
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_NE(ret, E_STOP);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest010 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest010 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest011
+ * @tc.desc: 温控后不触发老化任务
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest011 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_NE(ret, E_STOP);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest011 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest011 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest012
+ * @tc.desc: 温控后不触发清理任务
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest012 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
+        shared_ptr<OptimizeCacheTask> task = make_shared<OptimizeCacheTask>(g_dataSyncManagerPtr_);
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_NE(ret, E_STOP);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest012 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest012 end";
 }
 
 /*

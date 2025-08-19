@@ -33,7 +33,7 @@ OptimizeCacheTask::OptimizeCacheTask(std::shared_ptr<CloudFile::DataSyncManager>
 
 int32_t OptimizeCacheTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    if (!SystemLoadStatus::IsLoadStatusUnderHot()) {
+    if (!SystemLoadStatus::IsSystemLoadAllowed()) {
         LOGE("OptimizeCacheTask::RunTaskForBundle system load is over hot");
         return E_STOP;
     }
