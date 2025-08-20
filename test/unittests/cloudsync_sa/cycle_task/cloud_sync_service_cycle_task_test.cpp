@@ -378,7 +378,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest010, TestSize.Level1
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
         shared_ptr<PeriodicCheckTask> task = make_shared<PeriodicCheckTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
-        EXPECT_NE(ret, E_STOP);
+        EXPECT_EQ(ret, E_STOP);
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -403,7 +403,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest011, TestSize.Level1
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
-        EXPECT_NE(ret, E_STOP);
+        EXPECT_EQ(ret, E_STOP);
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -428,7 +428,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest012, TestSize.Level1
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::OVERHEATED);
         shared_ptr<OptimizeCacheTask> task = make_shared<OptimizeCacheTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
-        EXPECT_NE(ret, E_STOP);
+        EXPECT_EQ(ret, E_STOP);
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
     } catch (...) {
         EXPECT_TRUE(false);
