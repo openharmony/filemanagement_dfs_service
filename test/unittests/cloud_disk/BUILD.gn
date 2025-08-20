@@ -128,6 +128,7 @@ ohos_unittest("file_operations_cloud_test") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
@@ -192,6 +193,7 @@ sources = [
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "json:nlohmann_json_static",
     "libfuse:libfuse",
     "relational_store:native_rdb",
@@ -366,6 +368,7 @@ ohos_unittest("fuse_operations_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
@@ -432,6 +435,7 @@ ohos_unittest("file_operations_local_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
@@ -498,6 +502,7 @@ ohos_unittest("file_operations_helper_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
@@ -645,6 +650,7 @@ ohos_unittest("io_message_listener_test") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
     "ability_runtime:app_manager",

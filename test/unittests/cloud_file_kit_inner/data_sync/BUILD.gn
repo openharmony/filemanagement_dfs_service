@@ -158,6 +158,7 @@ ohos_unittest("task_state_manager_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_single",
     "libfuse:libfuse",
     "memmgr:memmgrclient",
     "samgr:samgr_proxy",
