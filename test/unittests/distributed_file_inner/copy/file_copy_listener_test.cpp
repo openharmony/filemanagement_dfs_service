@@ -40,6 +40,7 @@ const std::string SRC_FILE = TEST_DIR + "test_src.txt";
 const std::string DEST_DIR = TEST_DIR + "dest/";
 constexpr uint64_t TEST_FILE_SIZE = 1024; // 1KB test file
 constexpr mode_t TEST_DIR_MODE = 0777;
+constexpr uint64_t MTP_SPEED_SIZE = 3 * 1024 * 1024;
 
 /* Test Fixture */
 class FileCopyLocalListenerTest : public testing::Test {
@@ -224,6 +225,142 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_ThreadSafety_0001, Tes
     EXPECT_EQ(listener->GetFilePath().size(), threadCount * filesPerThread);
 
     GTEST_LOG_(INFO) << "FileCopyLocalListener_ThreadSafety_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyLocalListener_StartListener_0001
+ * @tc.desc: Verify StartListener behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartListener_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_StartListener_0001 Start";
+
+    std::string srcPath = "/data/test.txt";
+    std::string testPath = "/data/test_file_listener.txt";
+    std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
+        GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
+    };
+
+    std::ofstream out(testPath);
+    out << "init";
+    out.close();
+
+    std::ofstream out1(srcPath);
+    out1 << "test";
+    out1.close();
+
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, true, callback);
+    ASSERT_NE(listener, nullptr);
+
+    listener->AddListenerFile(srcPath, testPath, IN_MODIFY | IN_CLOSE_WRITE);
+    listener->AddFile(testPath);
+
+    listener->isMtpPath_ = true;
+    listener->StartListener();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::ofstream modify(testPath);
+    modify << "trigger event";
+    modify.close();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    listener->StopListener();
+    remove(testPath.c_str());
+
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_StartListener_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyLocalListener_StartListener_0002
+ * @tc.desc: Verify StartListener behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_StartListener_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_StartListener_0002 Start";
+
+    std::string srcPath = "/data/test.txt";
+    std::string testPath = "/data/test_file_listener.txt";
+    std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
+        GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
+    };
+
+    std::ofstream out(testPath);
+    out << "init";
+    out.close();
+
+    std::ofstream out1(srcPath);
+    out1 << "test";
+    out1.close();
+
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, true, callback);
+    ASSERT_NE(listener, nullptr);
+
+    listener->AddListenerFile(srcPath, testPath, IN_MODIFY | IN_CLOSE_WRITE);
+    listener->AddFile(testPath);
+
+    listener->isMtpPath_ = true;
+    listener->totalSize_ = MTP_SPEED_SIZE;
+    listener->StartListener();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::ofstream modify(testPath);
+    modify << "trigger event";
+    modify.close();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    listener->StopListener();
+    remove(testPath.c_str());
+
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_StartListener_0002 End";
+}
+
+/**
+ * @tc.name: FileCopyLocalListener_GetNotifyEvent4Mtp_0001
+ * @tc.desc: Verify GetNotifyEvent4Mtp behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_GetNotifyEvent4Mtp_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_GetNotifyEvent4Mtp_0001 Start";
+
+    std::string testPath = "/data/test_file_listener.txt";
+    std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
+        GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
+    };
+
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, true, callback);
+    ASSERT_NE(listener, nullptr);
+
+    listener->notifyRun_.store(false);
+    listener->GetNotifyEvent4Mtp();
+
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_GetNotifyEvent4Mtp_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyLocalListener_GetNotifyEvent4Mtp_0002
+ * @tc.desc: Verify GetNotifyEvent4Mtp behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_GetNotifyEvent4Mtp_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_GetNotifyEvent4Mtp_0002 Start";
+
+    std::string testPath = "/data/test_file_listener.txt";
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, true, nullptr);
+    ASSERT_NE(listener, nullptr);
+
+    listener->GetNotifyEvent4Mtp();
+
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_GetNotifyEvent4Mtp_0002 End";
 }
 
 } // namespace Test

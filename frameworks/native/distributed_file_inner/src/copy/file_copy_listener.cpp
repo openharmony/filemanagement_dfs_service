@@ -34,6 +34,7 @@ using namespace FileManagement;
 static constexpr int BUF_SIZE = 1024;
 static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
 static constexpr int SLEEP_TIME_US = 100000;
+constexpr uint64_t DEFAULT_SPEED_SIZE = 2.8 * 1024 * 1024;
 
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
@@ -81,10 +82,30 @@ void FileCopyLocalListener::StartListener()
         LOGE("notifyHandler has join");
         return;
     }
-    notifyHandler_ = std::thread([this] {
-        LOGI("StartListener.");
-        GetNotifyEvent();
+    if (isMtpPath_) {
+        notifyHandler_ = std::thread([this] {
+            LOGI("MTP copy StartListener.");
+            GetNotifyEvent4Mtp();
     });
+    } else {
+        notifyHandler_ = std::thread([this] {
+            LOGI("StartListener.");
+            GetNotifyEvent();
+        });
+    }
+}
+
+void FileCopyLocalListener::GetNotifyEvent4Mtp()
+{
+    prctl(PR_SET_NAME, "NotifyThread4Mtp");
+    while (notifyRun_.load() && (processCallback_ != nullptr)) {
+        progressSize_ += DEFAULT_SPEED_SIZE;
+        if (progressSize_ >= totalSize_) {
+            progressSize_ = totalSize_;
+        }
+        processCallback_(progressSize_, totalSize_);
+        usleep(SLEEP_TIME_US);
+    }
 }
 
 void FileCopyLocalListener::StopListener()
@@ -95,7 +116,11 @@ void FileCopyLocalListener::StopListener()
         LOGI("processCallback is nullptr");
         return;
     }
-    processCallback_(progressSize_, totalSize_);
+    if (isMtpPath_) {
+        processCallback_(totalSize_, totalSize_);
+    } else {
+        processCallback_(progressSize_, totalSize_);
+    }
     CloseNotifyFdLocked();
     notifyRun_.store(false);
     {

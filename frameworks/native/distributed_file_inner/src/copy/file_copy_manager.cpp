@@ -200,6 +200,10 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
+    if (infos->srcPath.rfind(MTP_PATH_PREFIX, 0) != std::string::npos) {
+        infos->localListener->SetMtpPath();
+        LOGI("Copy srcpath is mtp path");
+    }
     auto result = ExecLocal(infos);
     RemoveFileInfos(infos);
     infos->localListener->StopListener();

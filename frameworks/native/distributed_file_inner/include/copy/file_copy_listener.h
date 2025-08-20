@@ -62,6 +62,10 @@ public:
         return filePaths_;
     }
     int32_t GetResult() { return errorCode_; };
+    void SetMtpPath()
+    {
+        isMtpPath_ = true;
+    }
 
 private:
     void CloseNotifyFd();
@@ -72,6 +76,7 @@ private:
     std::tuple<bool, int, bool> HandleProgress(inotify_event *event);
     bool CheckFileValid(const std::string &filePath);
     int UpdateProgressSize(const std::string &filePath, std::shared_ptr<ReceiveInfo> receivedInfo);
+    void GetNotifyEvent4Mtp();
 
 private:
     bool isFile_ = false;
@@ -97,6 +102,7 @@ private:
     std::condition_variable notifyCv_;
     std::mutex cvLock_;
     std::mutex processMutex_;
+    bool isMtpPath_ = false;
 };
 } // namespace DistributedFile
 } // namespace Storage
