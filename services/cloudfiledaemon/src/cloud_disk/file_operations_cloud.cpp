@@ -64,6 +64,7 @@ namespace {
     static const string FILE_LOCAL = "1";
     static const string ROOT_CLOUD_ID = "rootId";
     static const string RECYCLE_NAME = ".trash";
+    static const string CONFLICT_PATH = ".cloudFileVersionConflict";
     static const uint64_t UNKNOWN_INODE_ID = 0;
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const string LOCAL_PATH_DATA_STORAGE = "/data/storage/el2/cloud/";
@@ -1420,7 +1421,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     }
     string fileName = name;
     bool noNeedUpload;
-    if ((fileName == ".cloudthumbnails" || fileName == ".conflict") && parentInode->cloudId == ROOT_CLOUD_ID) {
+    if ((fileName == ".cloudthumbnails" || fileName == CONFLICT_PATH) && parentInode->cloudId == ROOT_CLOUD_ID) {
         noNeedUpload = true;
     } else if (parentInode->cloudId != ROOT_CLOUD_ID) {
         int32_t err = GetParentUpload(parentInode, data, noNeedUpload);

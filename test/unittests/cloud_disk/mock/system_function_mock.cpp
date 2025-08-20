@@ -21,42 +21,9 @@
 
 #include "assistant.h"
 
-constexpr int32_t TEST_ERR = 2;
-
 using namespace OHOS::FileManagement::CloudDisk;
-int access(const char *name, int type)
-{
-    return Assistant::ins->access(name, type);
-}
 
 int open(const char *file, int oflag)
 {
     return Assistant::ins->open(file, oflag);
-}
-
-int close(int fd)
-{
-    return Assistant::ins->close(fd);
-}
-
-off_t lseek(int fd, off_t offset, int whence)
-{
-    return Assistant::ins->lseek(fd, offset, whence);
-}
-
-int fstat(int fd, struct stat *buf)
-{
-    errno = TEST_ERR;
-    return Assistant::ins->fstat(fd, buf);
-}
-
-int fcntl(int fd, int op, ...)
-{
-    errno = TEST_ERR;
-    return Assistant::ins->fcntl(fd, op);
-}
-
-int ftruncate(int fd, off_t length)
-{
-    return Assistant::ins->ftruncate(fd, length);
 }

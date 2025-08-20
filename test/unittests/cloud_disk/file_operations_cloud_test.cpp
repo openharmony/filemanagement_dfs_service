@@ -60,6 +60,7 @@ public:
 void FileOperationsCloudTest::SetUpTestCase(void)
 {
     fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    AssistantMock::EnableMock();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUpTestCase";
@@ -67,6 +68,7 @@ void FileOperationsCloudTest::SetUpTestCase(void)
 
 void FileOperationsCloudTest::TearDownTestCase(void)
 {
+    AssistantMock::DisableMock();
     Assistant::ins = nullptr;
     insMock = nullptr;
     fileOperationsCloud_ = nullptr;
@@ -1729,6 +1731,60 @@ HWTEST_F(FileOperationsCloudTest, MkDirTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "MkDirTest005 ERROR";
     }
     GTEST_LOG_(INFO) << "MkDirTest005 End";
+}
+
+/**
+ * @tc.name: MkDirTest006
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICTXJ9
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = ".cloudFileVersionConflict";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest006 End";
+}
+
+/**
+ * @tc.name: MkDirTest007
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICTXJ9
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest007 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = "testDirName";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest007 End";
 }
 
 /**

@@ -76,6 +76,7 @@ public:
     virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
     virtual int64_t WriteFile(int fd, const void *data, off_t offset, size_t size) = 0;
     virtual int FilePosLock(int fd, off_t offset, size_t size, int type) = 0;
+    static inline bool mockable = false;
 };
 
 class AssistantMock : public Assistant {
@@ -110,6 +111,10 @@ public:
     MOCK_METHOD4(ReadFile, int64_t(int fd, off_t offset, size_t size, void *data));
     MOCK_METHOD4(WriteFile, int64_t(int fd, const void *data, off_t offset, size_t size));
     MOCK_METHOD4(FilePosLock, int(int fd, off_t offset, size_t size, int type));
+
+    static void EnableMock();
+    static void DisableMock();
+    static bool IsMockable();
 };
 } // namespace OHOS::FileManagement::CloudDisk
 #endif // TEST_UNITTESTS_CLOUD_DISK_ASSISTANT_H
