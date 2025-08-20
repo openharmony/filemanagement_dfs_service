@@ -530,7 +530,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         LOGW("invalidate %s", GetAnonyString(childName).c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
-    if (child->path != childName) {
+    if (child->path != childName && !create) {
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
             FaultType::INODE_FILE, ENOMEM, "hash collision"});
     }
