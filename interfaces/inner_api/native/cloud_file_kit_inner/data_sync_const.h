@@ -57,6 +57,7 @@ struct LocalInfo {
     int64_t rowId;
     int32_t thm_flag;
     int32_t lcd_flag;
+    int32_t dirtyType;
 };
 
 struct BundleNameUserInfo {

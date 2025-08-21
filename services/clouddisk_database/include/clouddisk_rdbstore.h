@@ -55,7 +55,7 @@ public:
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
         const std::string &name = "", const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-        const std::string &newParentCloudId, const std::string &newFileName);
+        const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload);
     int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
@@ -73,10 +73,10 @@ public:
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
     int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
     int32_t ExtAttributeSetXattr(const std::string &cloudId, const std::string &value, const std::string &key);
-    int32_t GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position);
+    int32_t GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position, int32_t &dirtyType);
     int32_t GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetRecycleInfo(std::shared_ptr<NativeRdb::Transaction> transaction,
-        const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr);
+        const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr, int32_t &dirtyType);
     int32_t GetSourcePath(const std::string &attr, const std::string &parentCloudId, std::string &sourcePath);
     int32_t SourcePathSetValue(const std::string &cloudId, const std::string &attr, NativeRdb::ValuesBucket &setXattr);
     int32_t HandleRecycleXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
@@ -96,6 +96,9 @@ public:
                      const int userId, std::string destPath);
     int32_t CreateDentryFile(MetaBase metaBase, std::string destParentCloudId);
     int32_t GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId);
+    void TriggerSyncForWrite(const std::string &fileName, const std::string &parentCloudId);
+    int32_t HandleRenameValue(NativeRdb::ValuesBucket &rename, int32_t position, uint8_t noNeedUpload,
+        const CacheNode &oldNode, const CacheNode &newNode);
     int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status);
 
     void DatabaseRestore();
