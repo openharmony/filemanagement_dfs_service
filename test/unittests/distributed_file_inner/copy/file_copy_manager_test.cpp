@@ -226,6 +226,26 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
 }
 
 /**
+ * @tc.name: FileCopyManager_Copy_0007
+ * @tc.desc: The execution of the Copy failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 Start";
+    string srcUri = "file://docs/storage/External/mtp/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/a1.txt";
+    string srcPath = "/storage/External/mtp/1.txt";
+
+    EXPECT_TRUE(OHOS::RemoveFile(srcPath));
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, emptyCallback_);
+    EXPECT_EQ(ret, EINVAL);
+
+    GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 End";
+}
+
+/**
 * @tc.name: FileCopyManager_ExecLocal_0001
 * @tc.desc: The execution of the execlocal failed.
 * @tc.type: FUNC
@@ -466,7 +486,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0006, TestSize.Level0)
     infos->destPath = destpath;
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, listener_);
-    
+
     // destpath is invalid
     auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
     EXPECT_EQ(ret, ENOENT);
