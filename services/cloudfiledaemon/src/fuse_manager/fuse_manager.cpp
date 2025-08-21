@@ -900,6 +900,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
             " prepareTraceId: " + prepareTraceId;
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
                 FaultType::OPEN_CLOUD_FILE_TIMEOUT, ENETUNREACH, msg});
+        cInode->readSession->CancelSession();
         return -ENETUNREACH;
     }
     return HandleOpenResult(*error, data, cInode, fi);
@@ -1083,16 +1084,19 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         return;
     }
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", pid,
-         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load());
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d, fileType: %{public}d", pid,
+         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load(), cInode->mBase->fileType);
     wSesLock.lock();
     cInode->sessionRefCount--;
     auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
     DeleteFdsan(cloudFdInfo);
     EraseCloudFdCache(data, fi->fh);
     if (cInode->sessionRefCount == 0) {
-        if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
-            LOGE("Failed to close readSession");
+        if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
+            cInode->readSession->CancelSession();
+            if (!cInode->readSession->Close(false)) {
+                LOGE("Failed to close readSession");
+            }
         }
         cInode->readSession = nullptr;
         cInode->readCacheMap.clear();
