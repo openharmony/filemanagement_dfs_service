@@ -592,6 +592,20 @@ static int32_t WriteUpdateDentry(MetaBase &metaBase, uint32_t userId, const std:
     return ret;
 }
 
+void CloudDiskRdbStore::TriggerSyncForWrite(const std::string &fileName, const std::string &parentCloudId)
+{
+    MetaBase metaBase(fileName);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != E_OK) {
+        LOGE("lookup dentry failed, ret = %{public}d", ret);
+        return;
+    }
+    if (metaBase.noUpload == NEED_UPLOAD) {
+        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    }
+}
+
 int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string &parentCloudId,
     const std::string &cloudId)
 {
@@ -638,7 +652,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         return E_RDB;
     }
     rdbTransaction.Finish();
-    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    TriggerSyncForWrite(fileName, parentCloudId);
     return E_OK;
 }
 
@@ -777,7 +791,6 @@ int32_t CloudDiskRdbStore::HasTHMSetXattr(const std::string &name, const std::st
     return E_OK;
 }
 
-
 int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -797,10 +810,12 @@ int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
     return E_OK;
 }
 
-static int32_t RecycleSetValue(TrashOptType val, ValuesBucket &setXAttr, int32_t position)
+static int32_t RecycleSetValue(TrashOptType val, ValuesBucket &setXAttr, int32_t position, int32_t dirtyType)
 {
     if (position != LOCAL) {
-        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+            setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        }
     } else {
         setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::NEW));
     }
@@ -999,13 +1014,14 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &
     int64_t rowId = 0;
     int32_t position = -1;
     string attr;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     if (ret != E_OK) {
         LOGE("get recycle fields fail, ret %{public}d", ret);
         return E_RDB;
@@ -1023,7 +1039,7 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &
     ValuesBucket setXAttr;
     setXAttr.PutString(FileColumn::PARENT_CLOUD_ID, realParentCloudId);
     setXAttr.PutString(FileColumn::FILE_NAME, newName);
-    RETURN_ON_ERR(RecycleSetValue(TrashOptType::RESTORE, setXAttr, position));
+    RETURN_ON_ERR(RecycleSetValue(TrashOptType::RESTORE, setXAttr, position, dirtyType));
     struct RestoreInfo restoreInfo = {name, realParentCloudId, newName, rowId};
     ret = RestoreUpdateRdb(cloudId, restoreInfo, setXAttr);
     if (ret != E_OK) {
@@ -1040,20 +1056,21 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
     int64_t rowId = 0;
     int32_t position = -1;
     string attr;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     if (ret != E_OK) {
         LOGE("get rowId and position fail, ret %{public}d", ret);
         return E_RDB;
     }
     ValuesBucket setXAttr;
     SourcePathSetValue(cloudId, attr, setXAttr);
-    ret = RecycleSetValue(TrashOptType::RECYCLE, setXAttr, position);
+    ret = RecycleSetValue(TrashOptType::RECYCLE, setXAttr, position, dirtyType);
     if (ret != E_OK) {
         return ret;
     }
@@ -1077,14 +1094,15 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
 }
 
 int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, const std::string &cloudId,
-    int64_t &rowId, int32_t &position, string &attr)
+    int64_t &rowId, int32_t &position, string &attr, int32_t &dirtyType)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
     AbsRdbPredicates getRowIdAndPositionPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     getRowIdAndPositionPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = transaction->QueryByStep(getRowIdAndPositionPredicates,
-                                              {FileColumn::ROW_ID, FileColumn::POSITION, FileColumn::ATTRIBUTE});
+                                              {FileColumn::ROW_ID, FileColumn::POSITION, FileColumn::ATTRIBUTE,
+                                               FileColumn::DIRTY_TYPE});
     if (resultSet == nullptr) {
         LOGE("get nullptr result set");
         return E_RDB;
@@ -1106,6 +1124,11 @@ int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, c
     ret = CloudDiskRdbUtils::GetString(FileColumn::ATTRIBUTE, attr, resultSet);
     if (ret != E_OK) {
         LOGE("get file attribute failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
+    if (ret != E_OK) {
+        LOGE("get dirtyType failed");
         return ret;
     }
     return E_OK;
@@ -1268,7 +1291,8 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
 
     std::string res;
     int32_t pos = 0;
-    int32_t ret = GetExtAttr(cloudId, res, pos);
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    int32_t ret = GetExtAttr(cloudId, res, pos, dirtyType);
     if (ret != E_OK || res.empty()) {
         LOGE("get ext attr value res is empty");
         return E_RDB;
@@ -1290,7 +1314,8 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position)
+int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position,
+    int32_t &dirtyType)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
@@ -1318,6 +1343,12 @@ int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &v
     ret = CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
     if (ret != E_OK) {
         LOGE("get location value failed");
+        return ret;
+    }
+
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
+    if (ret != E_OK) {
+        LOGE("get dirtyType value failed");
         return ret;
     }
 
@@ -1352,8 +1383,21 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
     return ret;
 }
 
-static int32_t ExtAttributeSetValue(const std::string &key, const std::string &value,
-    ValuesBucket &setXAttr, std::string &xattrList, int32_t pos)
+static int32_t ExtAttrJsonValue(std::string &jsonValue, ValuesBucket &setXAttr, int32_t pos, int32_t dirtyType)
+{
+    setXAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
+    if (pos != LOCAL) {
+        if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+            setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        }
+        setXAttr.PutLong(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::UNKNOWN_TYPE));
+    }
+    setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    return E_OK;
+}
+
+static int32_t ExtAttributeSetValue(std::string &jsonValue, const std::string &key,
+    const std::string &value, std::string &xattrList)
 {
     auto jsonObj = nlohmann::json::parse(xattrList, nullptr, false);
     if (jsonObj.is_discarded() || (!jsonObj.is_object())) {
@@ -1368,20 +1412,12 @@ static int32_t ExtAttributeSetValue(const std::string &key, const std::string &v
         jsonObj[key] = value;
     }
 
-    std::string jsonValue;
     try {
         jsonValue = jsonObj.dump();
     } catch (nlohmann::json::type_error& err) {
         LOGE("failed to dump json object, reason: %{public}s", err.what());
         return E_INVAL_ARG;
     }
-
-    setXAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
-    if (pos != LOCAL) {
-        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
-        setXAttr.PutLong(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::UNKNOWN_TYPE));
-    }
-    setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
     return E_OK;
 }
 
@@ -1399,8 +1435,11 @@ int32_t CloudDiskRdbStore::ExtAttributeSetXattr(const std::string &cloudId, cons
     }
     std::string xattrList;
     int32_t pos = 0;
-    RETURN_ON_ERR(GetExtAttr(cloudId, xattrList, pos));
-    RETURN_ON_ERR(ExtAttributeSetValue(key, value, setAttr, xattrList, pos));
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    RETURN_ON_ERR(GetExtAttr(cloudId, xattrList, pos, dirtyType));
+    std::string jsonValue = "";
+    RETURN_ON_ERR(ExtAttributeSetValue(jsonValue, key, value, xattrList));
+    RETURN_ON_ERR(ExtAttrJsonValue(jsonValue, setAttr, pos, dirtyType));
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     std::tie(ret, changedRows) = transaction->Update(setAttr, predicates);
@@ -1441,61 +1480,73 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
     return ret;
 }
 
-static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
+static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName,
+    const int32_t dirtyType)
 {
     values.PutString(FileColumn::FILE_NAME, newFileName);
     values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     FillFileType(newFileName, values);
     if (position != LOCAL) {
-        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+            values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        }
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
     }
 }
 
-static void FileMove(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId)
+static void FileMove(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId,
+    const int32_t dirtyType)
 {
     values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
     values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     if (position != LOCAL) {
-        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+            values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        }
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
     }
 }
 
 static void FileMoveAndRename(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId,
-    const std::string &newFileName)
+    const std::string &newFileName, const int32_t dirtyType)
 {
     values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
     values.PutString(FileColumn::FILE_NAME, newFileName);
     values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     FillFileType(newFileName, values);
     if (position != LOCAL) {
-        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+            values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        }
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
     }
 }
 
-static void HandleRenameValue(ValuesBucket &rename, int32_t position, const CacheNode &oldNode,
-    const CacheNode &newNode)
+int32_t CloudDiskRdbStore::HandleRenameValue(ValuesBucket &rename, int32_t position, uint8_t noNeedUpload,
+    const CacheNode &oldNode, const CacheNode &newNode)
 {
     string oldParentCloudId = oldNode.parentCloudId;
     string oldFileName = oldNode.fileName;
     string newParentCloudId = newNode.parentCloudId;
     string newFileName = newNode.fileName;
     rename.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    rename.PutInt(FileColumn::NO_NEED_UPLOAD, noNeedUpload);
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    RETURN_ON_ERR(GetDirtyType(oldNode.cloudId, dirtyType));
     if (oldFileName != newFileName && oldParentCloudId == newParentCloudId) {
-        FileRename(rename, position, newFileName);
+        FileRename(rename, position, newFileName, dirtyType);
     }
     if (oldFileName == newFileName && oldParentCloudId != newParentCloudId) {
-        FileMove(rename, position, newParentCloudId);
+        FileMove(rename, position, newParentCloudId, dirtyType);
     }
     if (oldFileName != newFileName && oldParentCloudId != newParentCloudId) {
-        FileMoveAndRename(rename, position, newParentCloudId, newFileName);
+        FileMoveAndRename(rename, position, newParentCloudId, newFileName, dirtyType);
     }
+    return E_OK;
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-    const std::string &newParentCloudId, const std::string &newFileName)
+    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload)
 {
     int32_t ret = CheckName(newFileName);
     if (ret != E_OK) {
@@ -1513,14 +1564,16 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGE("lookup dentry failed, ret = %{public}d", ret);
         return EINVAL;
     }
+    uint8_t oldFileNoNeedUpload = metaBase.noUpload;
+    metaBase.noUpload = (newFileNoNeedUpload == NEED_UPLOAD)? NEED_UPLOAD : NO_UPLOAD;
     ret = CheckNameForSpace(newFileName, S_ISDIR(metaBase.mode));
     if (ret != E_OK) {
         return ret;
     }
     ValuesBucket rename;
-    CacheNode newNode = {.parentCloudId = newParentCloudId, .fileName = newFileName};
-    CacheNode oldNode = {.parentCloudId = oldParentCloudId, .fileName = oldFileName};
-    HandleRenameValue(rename, metaBase.position, oldNode, newNode);
+    CacheNode newNode = {.cloudId = metaBase.cloudId, .parentCloudId = newParentCloudId, .fileName = newFileName};
+    CacheNode oldNode = {.cloudId = metaBase.cloudId, .parentCloudId = oldParentCloudId, .fileName = oldFileName};
+    RETURN_ON_ERR(HandleRenameValue(rename, metaBase.position, metaBase.noUpload, oldNode, newNode));
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(metaBase.cloudId);
     auto newMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, newParentCloudId);
@@ -1529,14 +1582,17 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGE("rename dentry failed, ret = %{public}d", ret);
         return EINVAL;
     }
-    function<void()> rdbUpdate = [this, rename, bindArgs] {
+    function<void()> rdbUpdate = [this, rename, bindArgs,
+        oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName] {
         int32_t changedRows = -1;
         int32_t ret = rdbStore_ ->Update(changedRows, FileColumn::FILES_TABLE, rename,
                                          FileColumn::CLOUD_ID + " = ?", bindArgs);
         if (ret != E_OK) {
             LOGE("rename file fail, ret %{public}d", ret);
         }
-        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+        if ((oldFileNoNeedUpload == NEED_UPLOAD) || (newFileNoNeedUpload == NEED_UPLOAD)) {
+            CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+        }
     };
     ffrt::thread(rdbUpdate).detach();
     return E_OK;
