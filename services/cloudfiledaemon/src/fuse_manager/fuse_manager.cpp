@@ -532,7 +532,8 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     }
     if (child->path != childName && !create) {
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
-            FaultType::INODE_FILE, ENOMEM, "hash collision"});
+            FaultType::INODE_FILE, ENOMEM, "hash collision: childName:" + GetAnonyString(childName) +
+            ",path:" + GetAnonyString(child->path)});
     }
     child->path = childName;
     child->parent = parent;
