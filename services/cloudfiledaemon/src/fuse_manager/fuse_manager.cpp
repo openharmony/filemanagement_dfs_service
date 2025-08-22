@@ -955,12 +955,15 @@ static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<Cloud
     fuse_reply_open(req, fi);
 }
 
-static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
+static void UpdateReadStat(shared_ptr<CloudInode> cInode,
+                           uint64_t startTime,
+                           std::string bundleName)
 {
     uint64_t endTime = UTCTimeMilliSeconds();
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
     readStat.UpdateOpenSizeStat(cInode->mBase->size);
     readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
+    readStat.UpdateBundleName(bundleName);
 }
 
 static string GetPrepareTraceId(int32_t userId)
@@ -1021,7 +1024,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
                 fuse_reply_err(req, -ret);
                 cInode->readSession = nullptr;
             }
-            UpdateReadStat(cInode, startTime);
+            UpdateReadStat(cInode, startTime, data->activeBundle);
             wSesLock.unlock();
             return;
         }
@@ -1351,7 +1354,10 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
 }
 
-static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
+static void UpdateReadStatInfo(size_t size,
+                               std::string name,
+                               uint64_t readTime,
+                               std::string bundleName)
 {
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
     readStat.UpdateReadSizeStat(size);
@@ -1359,6 +1365,7 @@ static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
     if (IsVideoType(name)) {
         readStat.UpdateReadInfo(READ_SUM);
     }
+    readStat.UpdateBundleName(bundleName);
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
@@ -1392,7 +1399,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError, readArgs->appId);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readStatus = READ_FINISHED;
@@ -1448,7 +1455,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, startTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
 
     cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
     wSesLock.lock();

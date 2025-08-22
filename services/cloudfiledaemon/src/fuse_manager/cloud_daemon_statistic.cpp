@@ -132,7 +132,7 @@ void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
     CheckOverflow(videoReadInfo_[index], 1);
 }
 
-void CloudDaemonStatistic::UpdateBundleName(std::string bundleName)
+void CloudDaemonStatistic::UpdateBundleName(const std::string &bundleName)
 {
     bundleName_ = bundleName;
 }
@@ -266,7 +266,7 @@ void CloudDaemonStatistic::ClearStat()
     }
 }
 
-void CloudDaemonStatistic::SumTwoReadStat(CloudDaemonStatisticInfo info)
+void CloudDaemonStatistic::SumTwoReadStat(const CloudDaemonStatisticInfo &info)
 {
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
         CheckOverflow(openSizeStat_[i], info.openSizeStat[i]);
@@ -289,7 +289,7 @@ void CloudDaemonStatistic::SumTwoReadStat(CloudDaemonStatisticInfo info)
     }
 }
 
-int32_t CloudDaemonStatistic::ReportReadStat(CloudDaemonStatisticInfo info)
+int32_t CloudDaemonStatistic::ReportReadStat(const CloudDaemonStatisticInfo &info)
 {
     int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_READ_FILE_STAT",
         HiviewDFX::HiSysEvent::EventType::STATISTIC,
@@ -310,7 +310,7 @@ int32_t CloudDaemonStatistic::ReportReadStat(CloudDaemonStatisticInfo info)
     return ret;
 }
 
-void CloudDaemonStatistic::IsSameBundleName(CloudDaemonStatisticInfo info)
+void CloudDaemonStatistic::HandleBundleName(const CloudDaemonStatisticInfo &info)
 {
     if (!info.bundleName.empty() && info.bundleName != bundleName_) {
         auto ret = ReportReadStat(info);
@@ -327,7 +327,7 @@ void CloudDaemonStatistic::UpdateStatData()
     lock_guard<mutex> lock(mutex_);
     CloudDaemonStatisticInfo info;
     AddFileData(info);
-    IsSameBundleName(info);
+    HandleBundleName(info);
     OutputToFile();
     ClearStat();
 }
