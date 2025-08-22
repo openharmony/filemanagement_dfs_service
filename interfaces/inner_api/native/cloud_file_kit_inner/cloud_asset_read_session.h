@@ -35,6 +35,7 @@ public:
                           char *buffer,
                           CloudError &error,
                           const std::string appId = "");
+    virtual void CancelSession();
     virtual bool Close(bool needRemain = false);
     virtual void SentPrepareTraceId(std::string prepareTraceId);
     virtual bool Catch(CloudError &error, uint32_t catchTimeOutPara);
