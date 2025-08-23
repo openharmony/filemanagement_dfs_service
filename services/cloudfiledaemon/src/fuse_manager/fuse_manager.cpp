@@ -488,6 +488,15 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
     }
 }
 
+static void CheckAndReport(const string &path, const string &childName, bool create)
+{
+    if (path != childName && !create) {
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
+            FaultType::INODE_FILE, ENOMEM, "hash collision: childName:" + GetAnonyString(childName) +
+            ",path:" + GetAnonyString(path)});
+    }
+}
+
 static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_entry_param *e,
     FuseData *data, string& parentName)
 {
@@ -530,11 +539,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         LOGW("invalidate %s", GetAnonyString(childName).c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
-    if (child->path != childName && !create) {
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
-            FaultType::INODE_FILE, ENOMEM, "hash collision: childName:" + GetAnonyString(childName) +
-            ",path:" + GetAnonyString(child->path)});
-    }
+    CheckAndReport(child->path, childName, create);
     child->path = childName;
     child->parent = parent;
     LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
