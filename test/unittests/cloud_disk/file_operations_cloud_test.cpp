@@ -2008,6 +2008,64 @@ HWTEST_F(FileOperationsCloudTest, RenameTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RenameTest005
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 1;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest005 End";
+}
+ 
+/**
+ * @tc.name: RenameTest006
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 3;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest006 End";
+}
+
+/**
  * @tc.name: ReadTest001
  * @tc.desc: Verify the ReadDir function
  * @tc.type: FUNC

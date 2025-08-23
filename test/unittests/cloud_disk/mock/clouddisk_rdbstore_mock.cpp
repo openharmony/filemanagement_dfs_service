@@ -96,6 +96,10 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     return E_OK;
 }
 
+void CloudDiskRdbStore::TriggerSyncForWrite(const std::string &fileName, const std::string &parentCloudId)
+{
+}
+
 int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string &parentCloudId,
     const std::string &cloudId)
 {
@@ -153,7 +157,8 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position)
+int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position,
+    int32_t &dirtyType)
 {
     return E_OK;
 }
@@ -183,7 +188,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-    const std::string &newParentCloudId, const std::string &newFileName)
+    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload)
 {
     if (oldFileName == "mock" || newFileName == "mock") {
         return 1;
