@@ -414,4 +414,24 @@ HWTEST_F(FuseManagerStaticTest, IsHdc002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IsHdc002 End";
 }
+
+/**
+ * @tc.name: CheckAndReport001
+ * @tc.desc: Verify the IsHdc function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CheckAndReport001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndReport001 Begin";
+    try {
+        string path = "/mnt/data/100/cloud_fuse/1";
+        string child = "/mnt/data/100/cloud_fuse/2";
+        bool create = false;
+        CheckAndReport(path, childName, create);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndReport001 Error";
+    }
+    GTEST_LOG_(INFO) << "CheckAndReport001 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
