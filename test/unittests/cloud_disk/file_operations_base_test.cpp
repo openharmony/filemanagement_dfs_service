@@ -50,6 +50,7 @@ void FileOperationBaseTest::TearDownTestCase(void)
 void FileOperationBaseTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    AssistantMock::EnableMock();
     insMock = std::make_shared<AssistantMock>();
     Assistant::ins = insMock;
 }
@@ -57,6 +58,7 @@ void FileOperationBaseTest::SetUp(void)
 void FileOperationBaseTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    AssistantMock::DisableMock();
     Assistant::ins = nullptr;
     insMock = nullptr;
 }
