@@ -74,7 +74,7 @@ HWTEST_F(FuseManagerStaticTest, CheckAndReport001, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckAndReport001 Begin";
     try {
         string path = "/mnt/data/100/cloud_fuse/1";
-        string child = "/mnt/data/100/cloud_fuse/2";
+        string childName = "/mnt/data/100/cloud_fuse/2";
         bool create = false;
         CheckAndReport(path, childName, create);
     } catch (...) {
