@@ -434,5 +434,4 @@ HWTEST_F(FuseManagerStaticTest, IsHdc002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IsHdc002 End";
 }
-
 } // namespace OHOS::FileManagement::CloudSync::Test
