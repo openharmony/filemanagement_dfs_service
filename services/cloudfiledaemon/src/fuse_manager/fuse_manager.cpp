@@ -490,7 +490,7 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
 
 static void CheckAndReport(const string &path, const string &childName, bool create)
 {
-    if (path != childName && !create) {
+    if (!create && path != childName) {
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
             FaultType::INODE_FILE, ENOMEM, "hash collision: childName:" + GetAnonyString(childName) +
             ",path:" + GetAnonyString(path)});
