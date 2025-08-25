@@ -63,6 +63,9 @@ public:
     int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
     int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
     int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
+    int32_t RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener) override;
+    int32_t UnregisterFileDfsListener(const std::string &instanceId) override;
+    int32_t IsSameAccountDevice(const std::string &networkId, bool &isSameAccount) override;
 private:
     DistributedFileDaemonManagerImpl() = default;
 };

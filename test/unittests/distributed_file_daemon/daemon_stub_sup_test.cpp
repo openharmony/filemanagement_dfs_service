@@ -152,6 +152,10 @@ public:
     MOCK_METHOD2(GetDfsSwitchStatus, int32_t(const std::string &networkId, int32_t &switchStatus));
     MOCK_METHOD1(UpdateDfsSwitchStatus, int32_t(int32_t switchStatus));
     MOCK_METHOD1(GetConnectedDeviceList, int32_t(std::vector<DfsDeviceInfo> &deviceList));
+    MOCK_METHOD2(RegisterFileDfsListener,
+                 int32_t(const std::string &instanceId, const sptr<IFileDfsListener> &listener));
+    MOCK_METHOD1(UnregisterFileDfsListener, int32_t(const std::string &instanceId));
+    MOCK_METHOD2(IsSameAccountDevice, int32_t(const std::string &networkId, bool &isSameAccount));
 };
 
 class DaemonStubSupPTest : public testing::Test {
@@ -773,5 +777,129 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetConnectedDeviceList, TestSize
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetConnectedDeviceList End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleRegisterFileDfsListener
+ * @tc.desc: Verify the HandleRegisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterFileDfsListener, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterFileDfsListener Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleRegisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleRegisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
+    ret = daemonStub_->HandleRegisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    auto listener = sptr(new FileDfsListenerMock());
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("instanceId"));
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(listener));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, RegisterFileDfsListener(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleRegisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("instanceId"));
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(listener));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, RegisterFileDfsListener(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleRegisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterFileDfsListener End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleUnregisterFileDfsListener
+ * @tc.desc: Verify the HandleUnregisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnregisterFileDfsListener, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUnregisterFileDfsListener Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleUnregisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleUnregisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, UnregisterFileDfsListener(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUnregisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, UnregisterFileDfsListener(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUnregisterFileDfsListener(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUnregisterFileDfsListener End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleIsSameAccountDevice
+ * @tc.desc: Verify the HandleIsSameAccountDevice function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleIsSameAccountDevice, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleIsSameAccountDevice Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(DoAll(SetArgReferee<1>(true), Return(E_OK)));
+    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleIsSameAccountDevice End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

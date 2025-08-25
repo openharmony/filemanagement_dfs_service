@@ -54,6 +54,10 @@ private:
     int32_t HandleGetDfsSwitchStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUpdateDfsSwitchStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetConnectedDeviceList(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleRegisterFileDfsListener(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUnregisterFileDfsListener(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleIsSameAccountDevice(MessageParcel &data, MessageParcel &reply);
+    void InitDFileFunction();
 };
 } // namespace DistributedFile
 } // namespace Storage

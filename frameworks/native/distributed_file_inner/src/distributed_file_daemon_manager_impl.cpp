@@ -180,6 +180,37 @@ int32_t DistributedFileDaemonManagerImpl::GetConnectedDeviceList(std::vector<Dfs
     return distributedFileDaemonProxy->GetConnectedDeviceList(deviceList);
 }
 
+int32_t DistributedFileDaemonManagerImpl::RegisterFileDfsListener(const std::string &instanceId,
+    const sptr<IFileDfsListener> &listener)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->RegisterFileDfsListener(instanceId, listener);
+}
+
+int32_t DistributedFileDaemonManagerImpl::UnregisterFileDfsListener(const std::string &instanceId)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->UnregisterFileDfsListener(instanceId);
+}
+
+int32_t DistributedFileDaemonManagerImpl::IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->IsSameAccountDevice(networkId, isSameAccount);
+}
+
 int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("DistributedFileDaemonManagerImpl registerAssetCallback enter.");

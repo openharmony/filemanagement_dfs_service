@@ -21,8 +21,9 @@
 #include "dm_device_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
-#include "utils_log.h"
 #include "securec.h"
+#include "utils_log.h"
+
 
 namespace OHOS {
 namespace Storage {
@@ -65,6 +66,11 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandlePushAsset;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL)] =
         &DaemonStub::HandleGetDfsUrisDirFromLocal;
+    InitDFileFunction();
+}
+
+void DaemonStub::InitDFileFunction()
+{
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS)] =
         &DaemonStub::HandleGetDfsSwitchStatus;
@@ -74,6 +80,15 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST)] =
         &DaemonStub::HandleGetConnectedDeviceList;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_FILE_DFS_LISTENER)] =
+        &DaemonStub::HandleRegisterFileDfsListener;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER)] =
+        &DaemonStub::HandleUnregisterFileDfsListener;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE)] =
+        &DaemonStub::HandleIsSameAccountDevice;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -555,6 +570,82 @@ int32_t DaemonStub::HandleGetConnectedDeviceList(MessageParcel &data, MessagePar
     }
     return E_OK;
 }
-}  // namespace DistributedFile
-}  // namespace Storage
-}  // namespace OHOS
+
+int32_t DaemonStub::HandleRegisterFileDfsListener(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    std::string instanceId;
+    if (!data.ReadString(instanceId)) {
+        LOGE("Read instanceId failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        LOGE("Read remoteObject failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
+    if (remoteReverseObj == nullptr) {
+        LOGE("RemoteReverseObj is null");
+        return E_INVAL_ARG;
+    }
+    int32_t res = RegisterFileDfsListener(instanceId, remoteReverseObj);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleRegisterFileDfsListener write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t DaemonStub::HandleUnregisterFileDfsListener(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    std::string instanceId;
+    if (!data.ReadString(instanceId)) {
+        LOGE("Read instanceId failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t res = UnregisterFileDfsListener(instanceId);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleUnregisterFileDfsListener write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t DaemonStub::HandleIsSameAccountDevice(MessageParcel &data, MessageParcel &reply)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGE("Permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return E_PERMISSION_DENIED;
+    }
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("Read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    bool isSameAccount = false;
+    int32_t res = IsSameAccountDevice(networkId, isSameAccount);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleIsSameAccountDevice write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    if (res != E_OK) {
+        LOGE("IsSameAccountDevice failed, res is %{public}d", res);
+        return E_OK;
+    }
+    if (!reply.WriteBool(isSameAccount)) {
+        LOGE("HandleIsSameAccountDevice write isSameAccount:%{public}d failed", isSameAccount);
+        return E_IPC_WRITE_FAILED;
+    }
+    return E_OK;
+}
+} // namespace DistributedFile
+} // namespace Storage
+} // namespace OHOS
