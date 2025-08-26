@@ -418,9 +418,10 @@ void HandleGetDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const u
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleUpdateDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+void HandleUpdateDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS);
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS);
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
@@ -432,9 +433,10 @@ void HandleUpdateDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, cons
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleGetConnectedDeviceList(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+void HandleGetConnectedDeviceList(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST);
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST);
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
@@ -446,9 +448,10 @@ void HandleGetConnectedDeviceList(std::shared_ptr<DaemonStub> daemonStubPtr, con
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleRegisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+void HandleRegisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_FILE_DFS_LISTENER);
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_FILE_DFS_LISTENER);
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
@@ -460,9 +463,10 @@ void HandleRegisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, co
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleUnregisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+void HandleUnregisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER);
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER);
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
