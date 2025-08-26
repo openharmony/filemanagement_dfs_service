@@ -404,6 +404,90 @@ void ReadBatchUrisFuzzTest(const uint8_t *data, size_t size)
     IpcWrapper::ReadBatchUris(datas, uriVec);
 }
 
+void HandleGetDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleUpdateDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UPDATE_DFS_SWITCH_STATUS);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleGetConnectedDeviceList(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_CONNECTED_DEVICE_LIST);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleRegisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_FILE_DFS_LISTENER);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleUnregisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size) 
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleIsSameAccountDevice(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE);
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -457,6 +541,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
+
+    OHOS::HandleGetDfsSwitchStatus(daemonStubPtr, data, size);
+    OHOS::HandleUpdateDfsSwitchStatus(daemonStubPtr, data, size);
+    OHOS::HandleGetConnectedDeviceList(daemonStubPtr, data, size);
+    OHOS::HandleRegisterFileDfsListener(daemonStubPtr, data, size);
+    OHOS::HandleUnregisterFileDfsListener(daemonStubPtr, data, size);
+    OHOS::HandleIsSameAccountDevice(daemonStubPtr, data, size);
 
     OHOS::WriteUriByRawDataFuzzTest(data, size);
     OHOS::ReadBatchUriByRawDataFuzzTest(data, size);
