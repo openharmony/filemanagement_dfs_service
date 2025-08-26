@@ -99,6 +99,10 @@ public:
     MOCK_METHOD2(GetDfsSwitchStatus, int32_t(const std::string &networkId, int32_t &switchStatus));
     MOCK_METHOD1(UpdateDfsSwitchStatus, int32_t(int32_t switchStatus));
     MOCK_METHOD1(GetConnectedDeviceList, int32_t(std::vector<DfsDeviceInfo> &deviceList));
+    MOCK_METHOD2(RegisterFileDfsListener,
+                 int32_t(const std::string &instanceId, const sptr<IFileDfsListener> &listener));
+    MOCK_METHOD1(UnregisterFileDfsListener, int32_t(const std::string &instanceId));
+    MOCK_METHOD2(IsSameAccountDevice, int32_t(const std::string &networkId, bool &isSameAccount));
 };
 
 class DaemonStubTest : public testing::Test {
