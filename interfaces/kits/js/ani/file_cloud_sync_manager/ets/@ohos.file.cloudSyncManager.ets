@@ -117,7 +117,7 @@ export default namespace cloudSyncManager  {
 
     export class DowngradeDownload {
         static {
-            loadLibrary("cloud_sync_manager_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_manager_ani", "@ohos.file.cloudSyncManager");
         }
         private nativePtr: long = 0;
         native constructor(bundleName: string);
@@ -190,7 +190,7 @@ export default namespace cloudSyncManager  {
 
     class StaticFunction {
         static {
-            loadLibrary("cloud_sync_manager_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_manager_ani", "@ohos.file.cloudSyncManager");
         }
         static native changeAppCloudSwitchInner(accountId: string, bundleName: string, status: boolean): void;
         static native notifyDataChangeInner(accountId: string, bundleName: string): void;
