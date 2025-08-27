@@ -167,9 +167,9 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
             reinterpret_cast<void *>(CloudSyncAni::StopOptimizeStorage)},
     };
 
-    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    ret = env->Class_BindStaticNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
-        LOGE("bind native method failed. ret = %{public}d", ret);
+        LOGE("bind static native method failed. ret = %{public}d", ret);
         return ret;
     };
 
