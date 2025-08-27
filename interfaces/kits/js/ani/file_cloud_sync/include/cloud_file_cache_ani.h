@@ -34,6 +34,7 @@ public:
     static void CloudFileCacheStop(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean);
     static void CloudFileCacheStopBatch(ani_env *env, ani_object object, ani_double taskId, ani_boolean needClean);
     static void CloudFileCacheCleanCache(ani_env *env, ani_object object, ani_string uri);
+    static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_ANI_H

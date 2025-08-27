@@ -21,6 +21,7 @@
 #include <sys/xattr.h>
 
 #include "cloud_sync_manager.h"
+#include "cloud_sync_manager_mock.h"
 #include "dfs_error.h"
 #include "uri.h"
 #include "utils_log.h"
@@ -178,6 +179,8 @@ HWTEST_F(FileSyncCoreTest, DoOffTest1, TestSize.Level1)
     std::string bundleName = "com.example.test";
     FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
     std::string event = "progress";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, UnRegisterFileSyncCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = fileSync->DoOff(event);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -213,6 +216,8 @@ HWTEST_F(FileSyncCoreTest, DoStartTest1, TestSize.Level1)
 {
     std::string bundleName = "com.example.test";
     FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartFileSync(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = fileSync->DoStart();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -230,11 +235,14 @@ HWTEST_F(FileSyncCoreTest, DoStartTest2, TestSize.Level1)
 {
     std::string bundleName = "com.example.test";
     FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartFileSync(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = fileSync->DoStart();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
     EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_CALL(cloudMock, StopFileSync(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     ret = fileSync->DoStop();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &error = ret.GetError();
@@ -252,6 +260,8 @@ HWTEST_F(FileSyncCoreTest, DoStopTest1, TestSize.Level1)
 {
     std::string bundleName = "com.example.test";
     FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StopFileSync(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = fileSync->DoStop();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -269,6 +279,8 @@ HWTEST_F(FileSyncCoreTest, DoGetLastSyncTimeTest1, TestSize.Level1)
 {
     std::string bundleName = "com.example.test";
     FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetSyncTime(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = fileSync->DoGetLastSyncTime();
     EXPECT_FALSE(ret.IsSuccess());
 }

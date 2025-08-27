@@ -31,6 +31,7 @@ public:
     static void StartOptimizeStorage(ani_env *env, ani_class clazz, ani_object optim, ani_object fun);
     static void StopOptimizeStorage(ani_env *env, ani_class clazz);
     static ani_int GetFileSyncState(ani_env *env, ani_class clazz, ani_string path);
+    static ani_int GetCoreFileSyncState(ani_env *env, ani_class clazz, ani_string path);
     static int32_t RegisterToObs(const RegisterParams &registerParams);
     static bool CheckRef(ani_env *env, ani_ref ref, ChangeListenerAni &listObj, const string &uri);
     static int32_t GetRegisterParams(
