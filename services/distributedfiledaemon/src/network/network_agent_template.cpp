@@ -30,6 +30,7 @@ constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
+constexpr int32_t VALID_MOUNT_PATH_LEN = 16;
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -118,12 +119,15 @@ void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
     sessionPool_.ReleaseSession(info.GetCid(), false);
 }
 
+// dm device offline
 void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
     ConnectCount::GetInstance()->RemoveConnect(info.GetCid());
+    ConnectCount::GetInstance()->NotifyFileStatusChange(
+        info.GetCid(), ON_STATUS_OFFLINE, cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
 }
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
@@ -134,10 +138,13 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
     Recv(move(cmd));
 }
 
+// softbus offline, allConnect offline, hmdfs never has socket
 void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 {
     sessionPool_.ReleaseSession(cid, true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance()->NotifyFileStatusChange(cid, ON_STATUS_OFFLINE,
+        cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
     ConnectCount::GetInstance()->RemoveConnect(cid);
 }
 
@@ -179,6 +186,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     }
 }
 
+// hmdfs offline
 void NetworkAgentTemplate::GetSession(const string &cid)
 {
     std::this_thread::sleep_for(std::chrono::seconds(NOTIFY_GET_SESSION_WAITING_TIME));
@@ -192,11 +200,7 @@ void NetworkAgentTemplate::GetSession(const string &cid)
         sessionPool_.SinkOffline(cid);
         ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
         ConnectCount::GetInstance()->RemoveConnect(cid);
-        auto deviceManager = DeviceManagerAgent::GetInstance();
-        auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
-        if (!deviceId.empty()) {
-            deviceManager->UMountDfsDocs(cid, deviceId, true);
-        }
+        DeviceManagerAgent::GetInstance()->UMountDfsDocs(cid, cid.substr(0, VALID_MOUNT_PATH_LEN), true);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }

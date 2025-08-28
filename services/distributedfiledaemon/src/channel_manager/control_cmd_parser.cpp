@@ -107,12 +107,8 @@ bool ControlCmdParser::HandleRequest(const ControlCmd &inCmd, ControlCmd &outCmd
     }
 }
 
-bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &outCmd)
+bool ControlCmdParser::IsLocalItDevice()
 {
-    outCmd.msgType = ControlCmdType::CMD_MSG_RESPONSE;
-    outCmd.msgId = inCmd.msgId;
-    outCmd.msgBody = "false";
-
     const char *syncType = "1";
     const int bufferLen = 10;
     char paramOutBuf[bufferLen] = {0};
@@ -120,8 +116,16 @@ bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &ou
     LOGI("paramOutBuf: %{public}s, ret: %{public}d", paramOutBuf, ret);
     if (ret > 0 && strncmp(paramOutBuf, syncType, strlen(syncType)) == 0) {
         LOGI("Determining the e2e device succeeded.");
-        outCmd.msgBody = "true";
+        return true;
     }
+    return false;
+}
+
+bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &outCmd)
+{
+    outCmd.msgType = ControlCmdType::CMD_MSG_RESPONSE;
+    outCmd.msgId = inCmd.msgId;
+    outCmd.msgBody = IsLocalItDevice() ? "true" : "false";
     return true;
 }
 
@@ -154,7 +158,7 @@ bool ControlCmdParser::DisconnectByRemote(const ControlCmd &inCmd, ControlCmd &o
         LOGE("callback is null");
         return false;
     }
-    disconnectCallback_(inCmd.msgBody);
+    disconnectCallback_(inCmd.networkId);
     return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,8 @@ using namespace std;
 using namespace OHOS::Storage;
 using namespace OHOS::FileManagement;
 
-void FileDfsListenerProxy::OnStatus(const std::string &networkId, int32_t status)
+void FileDfsListenerProxy::OnStatus(const std::string &networkId, int32_t status,
+    const std::string &path, int32_t type)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -45,6 +46,14 @@ void FileDfsListenerProxy::OnStatus(const std::string &networkId, int32_t status
         LOGE("Failed to send status");
         return;
     }
+    if (!data.WriteString(path)) {
+        LOGE("Failed to send path");
+        return;
+    }
+    if (!data.WriteInt32(type)) {
+        LOGE("Failed to send type");
+        return;
+    }
     auto remote = Remote();
     if (remote == nullptr) {
         LOGE("remote is nullptr");
@@ -53,12 +62,10 @@ void FileDfsListenerProxy::OnStatus(const std::string &networkId, int32_t status
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(FileDfsListenerInterfaceCode::FILE_DFS_LISTENER_ON_STATUS), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the request, errno:%{public}d", errno);
+        LOGE("Failed to send out the request, ret:%{public}d", ret);
         return;
     }
-    return;
 }
-
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

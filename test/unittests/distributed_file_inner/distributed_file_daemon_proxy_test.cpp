@@ -255,8 +255,10 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection
     sptr<FileDfsListenerMock> errPtr = nullptr;
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
     ret = proxy_->OpenP2PConnectionEx("test", errPtr);
-    EXPECT_EQ(ret, E_BROKEN_IPC);
+    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnectionEx_0200 End";
 }
 

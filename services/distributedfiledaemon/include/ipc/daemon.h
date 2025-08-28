@@ -65,8 +65,8 @@ public:
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo);
-    int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
-        const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo, const std::string &networkId,
+        sptr<IFileDfsListener> remoteReverseObj);
     int32_t InnerCopy(const std::string &srcUri, const std::string &dstUri,
         const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info);
     int32_t PrepareSession(const std::string &srcUri,

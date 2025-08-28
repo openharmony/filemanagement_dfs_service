@@ -102,53 +102,53 @@ void DeviceProfileAdapterTest::TearDown(void)
 }
 
 /**
- * @tc.name: DeviceProfileAdapterTest_IsRemoteDfsVersionLower_001
+ * @tc.name: DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanLocal_001
  * @tc.desc: verify PublishSA.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_IsRemoteDfsVersionLower_001, TestSize.Level1)
+HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanLocal_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLower_001 begin";
+    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanLocal_001 begin";
 
     g_GetLocalDeviceInfo = ERR_BAD_VALUE;
-    auto ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLower("");
+    auto ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanLocal("");
     EXPECT_EQ(ret, false);
 
     g_GetLocalDeviceInfo = FileManagement::ERR_OK;
     g_GetUdidByNetworkId = FileManagement::ERR_OK;
     g_GetCharacteristicProfile = FileManagement::ERR_OK;
-    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLower("");
+    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanLocal("");
     EXPECT_EQ(ret, false);
 
-    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLower_001 end";
+    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanLocal_001 end";
 }
 
 /**
- * @tc.name: DeviceProfileAdapterTest_IsRemoteDfsVersionLower_002
+ * @tc.name: DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanGiven_001
  * @tc.desc: verify PublishSA.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_IsRemoteDfsVersionLower_002, TestSize.Level1)
+HWTEST_F(DeviceProfileAdapterTest, DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanGiven_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLower_002 begin";
+    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanGiven_001 begin";
 
-    auto ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLower("", {0, 0, 0});
+    auto ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven("", {0, 0, 0});
     EXPECT_EQ(ret, false);
 
     g_GetUdidByNetworkId = -1;
     std::string remoteNetworkId = "remoteTest";
-    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLower(remoteNetworkId, {0, 0, 0});
+    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(remoteNetworkId, {0, 0, 0});
     EXPECT_EQ(ret, false);
 
     g_GetUdidByNetworkId = FileManagement::ERR_OK;
     g_GetCharacteristicProfile = FileManagement::ERR_OK;
     DfsVersion thresholdDfsVersion = {99, 99, 99};
-    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLower(remoteNetworkId, thresholdDfsVersion);
+    ret = DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(remoteNetworkId, thresholdDfsVersion);
     EXPECT_EQ(ret, true);
 
-    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLower_002 end";
+    GTEST_LOG_(INFO) << "DeviceProfileAdapterTest_IsRemoteDfsVersionLowerThanGiven_001 end";
 }
 
 /**

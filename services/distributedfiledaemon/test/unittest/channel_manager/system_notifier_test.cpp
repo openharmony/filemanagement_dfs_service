@@ -65,6 +65,11 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
     return OHOS::FileManagement::ERR_OK;
 }
 
+int32_t ChannelManager::NotifyClient(const std::string &networkId, const ControlCmd &request)
+{
+    return OHOS::FileManagement::ERR_OK;
+}
+
 namespace Test {
 using namespace testing;
 using namespace testing::ext;
@@ -226,7 +231,7 @@ HWTEST_F(SystemNotifierTest, CancelNotifyByNotificationId_002, TestSize.Level1)
     g_cancelNotification = ERR_BAD_VALUE;
     auto &notifier = SystemNotifier::GetInstance();
     int32_t ret = notifier.DestroyNotifyByNotificationId(9999);  // Non-existent ID
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, FileManagement::ERR_DATA_INVALID);
 
     GTEST_LOG_(INFO) << "CancelNotifyByNotificationId_002 end";
 }

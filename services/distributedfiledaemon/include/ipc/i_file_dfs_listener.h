@@ -26,7 +26,8 @@ class IFileDfsListener : public OHOS::IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.filedfslistener");
 
-    virtual void OnStatus(const std::string &networkId, int32_t status) = 0;
+    virtual void OnStatus(const std::string &networkId, int32_t status,
+        const std::string &path, int32_t type) = 0;
 
     enum {
         FILE_DFS_LISTENER_SUCCESS = 0,

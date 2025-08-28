@@ -51,6 +51,7 @@ constexpr const char *DFS_LANGUAGE_FILEPATH_PREFIX = "/system/etc/dfs_service/re
 constexpr const char *DFS_LANGUAGE_FILEPATH_SUFFIX = ".json";
 constexpr const char *DFS_DEFAULT_LANGUAGE = "/system/etc/dfs_service/resources/i18/en-Latn-US.json";
 
+constexpr const char *DFS_DEFAULT_BUTTON_NAME = "dfs_default_button_name";
 constexpr const char *NOTIFICATION_TITLE = "notification_title";
 constexpr const char *NOTIFICATION_TEXT = "notification_text";
 constexpr const char *CAPSULE_TITLE = "capsule_title";
@@ -154,6 +155,7 @@ static Notification::NotificationLocalLiveViewButton CreateNotificationLocalLive
 {
     LOGI("CreateNotificationLocalLiveViewButton start");
     Notification::NotificationLocalLiveViewButton button;
+    button.addSingleButtonName(DFS_DEFAULT_BUTTON_NAME);
     button.addSingleButtonIcon(pixelMap);
     return button;
 }
@@ -350,7 +352,6 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     request.SetCreatorUid(DFS_SERVICE_UID);
     request.SetContent(content);
     request.SetLittleIcon(notificationIconPixelMap_);
-    request.SetWantAgent(std::make_shared<AbilityRuntime::WantAgent::WantAgent>());
 
     auto ret = Notification::NotificationHelper::PublishNotification(request);
     if (ret != E_OK) {
@@ -381,7 +382,12 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
         }
     }
 
-    auto ret = Notification::NotificationHelper::CancelNotification(notificationId);
+    if (networkId.empty()) {
+        LOGE("can not find %{public}.6s in map!", networkId.c_str());
+        return ERR_DATA_INVALID;
+    }
+
+    int32_t ret = Notification::NotificationHelper::CancelNotification(notificationId);
     LOGI("DestroyNotification (id: %{public}d), result: %{public}d", notificationId, ret);
 
     ret = DisconnectByNetworkId(networkId);
@@ -419,7 +425,6 @@ int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
 {
     LOGI("DisconnectByNetworkId enter, networkId is %{public}.6s", networkId.c_str());
     ControlCmd request;
-    ControlCmd response;
     request.msgType = CMD_ACTIVE_DISCONNECT;
     std::string srcNetworkId;
     auto result = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(SERVICE_NAME, srcNetworkId);
@@ -429,7 +434,7 @@ int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
     }
     request.networkId = srcNetworkId;
 
-    auto ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    int32_t ret = ChannelManager::GetInstance().NotifyClient(networkId, request);
     LOGI("DisconnectByNetworkId end. networkId = %{public}.6s ,ret = %{public}d", networkId.c_str(), ret);
     return ret;
 }

@@ -29,7 +29,8 @@ class FileDfsListenerProxy : public IRemoteProxy<IFileDfsListener> {
 public:
     explicit FileDfsListenerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IFileDfsListener>(object) {}
     ~FileDfsListenerProxy() override {}
-    void OnStatus(const std::string &networkId, int32_t status) override;
+    void OnStatus(const std::string &networkId, int32_t status,
+        const std::string &path, int32_t type) override;
 
 private:
     static inline BrokerDelegator<FileDfsListenerProxy> delegator_;

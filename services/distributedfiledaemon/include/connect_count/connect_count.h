@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -38,6 +38,11 @@ struct Connect {
     sptr<IFileDfsListener> listener;
 };
 
+enum class StatusType {
+    SWITCH_STATUS = 1,
+    CONNECTION_STATUS
+};
+
 class ConnectCount final {
 public:
     ConnectCount() = default;
@@ -53,11 +58,16 @@ public:
     std::vector<std::string> GetNetworkIds(uint32_t callingTokenId);
     void NotifyRemoteReverseObj(const std::string &networkId, int32_t status);
     int32_t FindCallingTokenIdForListerner(const sptr<IRemoteObject> &listener, uint32_t &callingTokenId);
-
+    void AddFileConnect(const std::string &instanceId, const sptr<IFileDfsListener> &listener);
+    bool RmFileConnect(const std::string &instanceId);
+    void NotifyFileStatusChange(const std::string &networkId,
+        int32_t status, const std::string &path, StatusType type);
 private:
     static std::shared_ptr<ConnectCount> instance_;
     std::recursive_mutex connectMutex_;
     std::unordered_set<std::shared_ptr<Connect>> connectList_;
+    std::recursive_mutex fileConnectMutex_;
+    std::unordered_map<std::string, sptr<IFileDfsListener>> fileConnectMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage

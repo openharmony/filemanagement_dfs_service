@@ -236,11 +236,8 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &netwo
         LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
-    if (remoteReverseObj == nullptr) {
-        LOGE("remoteReverseObj is nullptr.");
-        return OHOS::FileManagement::E_BROKEN_IPC;
-    }
-    if (!data.WriteRemoteObject(remoteReverseObj->AsObject())) {
+
+    if (remoteReverseObj != nullptr && !data.WriteRemoteObject(remoteReverseObj->AsObject())) {
         LOGE("fail to WriteRemoteObject remoteReverseObj");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }

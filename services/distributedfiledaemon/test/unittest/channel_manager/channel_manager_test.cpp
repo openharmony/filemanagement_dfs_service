@@ -794,6 +794,122 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_PostCallbackTask_001, TestSize.L
     GTEST_LOG_(INFO) << "ChannelManagerTest_PostCallbackTask_001 end";
 }
 
+/**
+ * @tc.name: ChannelManagerTest_NotifyClient_001
+ * @tc.desc: Verify NotifyClient returns ERR_NO_EXIST_CHANNEL when networkId is not found
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_NotifyClient_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_001 start";
+
+    // Setup: No networkId in serverNetworkSocketMap_
+    ControlCmd request;
+    request.msgId = 1;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Test: Call NotifyClient with non-existent networkId
+    int32_t ret = ChannelManager::GetInstance().NotifyClient("invalid_network", request);
+    EXPECT_EQ(ret, ERR_NO_EXIST_CHANNEL);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_NotifyClient_002
+ * @tc.desc: Verify NotifyClient handles serialization failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_NotifyClient_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_002 start";
+
+    // Initialize ChannelManager
+    InitChannelManager();
+
+    // Setup: Add valid networkId to serverNetworkSocketMap_
+    ChannelManager::GetInstance().serverNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock serialization failure
+    g_resSerializeToJson = false;
+    ControlCmd request;
+    request.msgId = 2;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Test: Call NotifyClient with serialization failure
+    int32_t ret = ChannelManager::GetInstance().NotifyClient("valid_network", request);
+    EXPECT_EQ(ret, ERR_DATA_INVALID);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_002 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_NotifyClient_003
+ * @tc.desc: Verify NotifyClient handles DoSendBytes failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_NotifyClient_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_003 start";
+
+    // Initialize ChannelManager
+    InitChannelManager();
+
+    // Setup: Add valid networkId to serverNetworkSocketMap_
+    ChannelManager::GetInstance().serverNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock successful serialization but failed send
+    g_resSerializeToJson = true;
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).WillOnce(Return(ERR_SEND_DATA_BY_SOFTBUS_FAILED));
+
+    ControlCmd request;
+    request.msgId = 3;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Test: Call NotifyClient with DoSendBytes failure
+    int32_t ret = ChannelManager::GetInstance().NotifyClient("valid_network", request);
+    EXPECT_EQ(ret, ERR_SEND_DATA_BY_SOFTBUS_FAILED);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_003 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_NotifyClient_004
+ * @tc.desc: Verify successful NotifyClient execution
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_NotifyClient_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_004 start";
+
+    // Initialize ChannelManager
+    InitChannelManager();
+
+    // Setup: Add valid networkId to serverNetworkSocketMap_
+    ChannelManager::GetInstance().serverNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock successful serialization and send
+    g_resSerializeToJson = true;
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).WillOnce(Return(ERR_OK));
+
+    ControlCmd request;
+    request.msgId = 4;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Test: Call NotifyClient with successful path
+    int32_t ret = ChannelManager::GetInstance().NotifyClient("valid_network", request);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify serialization was called
+    EXPECT_EQ(g_callSerializeToJsonTimes, 1);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_004 end";
+}
+
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage

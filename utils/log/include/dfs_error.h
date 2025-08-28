@@ -167,6 +167,7 @@ enum DFSErrCode {
     ERR_NULL_EVENT_HANDLER,
     ERR_POST_TASK_FAILED,
     ERR_NO_EXIST_CHANNEL,
+    ERR_DATA_INVALID,
 };
 
 static inline std::unordered_map<int, int> softbusErr2ErrCodeTable {

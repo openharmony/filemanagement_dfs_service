@@ -713,6 +713,59 @@ ohos_unittest("ipc_wrapper_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("file_dfs_listener_stub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_dfs_listener_stub.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "file_dfs_listener_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "include",
+    "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "data_share:datashare_consumer",
+    "hilog:libhilog",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("distributed_file_inner") {
   testonly = true
 
@@ -730,5 +783,6 @@ group("distributed_file_inner") {
     ":ipc_wrapper_test",
     ":remote_file_copy_manager_test",
     ":trans_listener_test",
+    ":file_dfs_listener_stub_test",
   ]
 }

@@ -44,13 +44,13 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
-#include "network/devsl_dispatcher.h"
 #include "remote_file_share.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
@@ -74,7 +74,6 @@ using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 namespace {
 const string FILE_MANAGER_AUTHORITY = "docs";
 const string MEDIA_AUTHORITY = "media";
-const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
@@ -85,6 +84,11 @@ constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
 constexpr int32_t VALID_MOUNT_NETWORKID_LEN = 16;
 constexpr uint64_t INNER_COPY_LIMIT = 1024 * 1024 * 1024;
+constexpr int32_t ERR_DP_CAN_NOT_FIND = 98566199;
+constexpr int32_t DEFAULT_DP_CANNOTFIND_VALUE = -1;
+constexpr const char* HMDFS_FATH = "/storage/hmdfs/";
+constexpr DfsVersion FILEMANAGER_VERSION = {6, 0, 1};
+constexpr int32_t MIN_NETWORKID_LENGTH = 16;
 } // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -175,6 +179,11 @@ void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &devi
         }
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().CreateAssetLocalSessionServer();
+        ChannelManager::GetInstance().Init();
+        ControlCmdParser::RegisterDisconnectCallback([this](std::string networkId) {
+            LOGE("callback networkid is %{public}.6s", networkId.c_str());
+            this->DisconnectByRemote(networkId);
+        });
     }
 }
 
@@ -189,6 +198,7 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
         LOGI("OnRemoveSystemAbility common event service offline");
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
+        ChannelManager::GetInstance().DeInit();
     }
 }
 
@@ -272,10 +282,17 @@ int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo)
 }
 
 int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
-    const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj)
+                                   const std::string &networkId,
+                                   sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("ConnectionAndMount start");
-    int32_t ret = NO_ERROR;
+    int32_t ret = CheckRemoteAllowConnect(networkId);
+    if (ret != E_OK) {
+        LOGE("CheckRemoteAllowConnect failed for %{public}.6s, ret is %{public}d", networkId.c_str(), ret);
+        return ret;
+    }
+
+    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     ret = ConnectionCount(deviceInfo);
     if (ret != NO_ERROR) {
         LOGE("connection failed");
@@ -284,58 +301,64 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
         }
         return ret;
     }
+
     ConnectCount::GetInstance()->AddConnect(callingTokenId, networkId, remoteReverseObj);
 
     if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGW("permission denied: FILE_ACCESS_MANAGER_PERMISSION");
         return ret;
     }
+    std::string mountPath = networkId.substr(0, VALID_MOUNT_NETWORKID_LEN);
     auto deviceManager = DeviceManagerAgent::GetInstance();
-    std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
-    ret = deviceManager->MountDfsDocs(networkId, deviceId);
+    ret = deviceManager->MountDfsDocs(networkId, mountPath, callingTokenId);
     if (ret != NO_ERROR) {
         ConnectCount::GetInstance()->RemoveConnect(callingTokenId, networkId);
         LOGE("[MountDfsDocs] failed");
+        return ret;
     }
+    ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, E_OK, HMDFS_FATH + mountPath,
+                                                        StatusType::CONNECTION_STATUS);
+    NotifyRemotePublishNotification(networkId);
     return ret;
 }
 
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
-    std::lock_guard<std::mutex> lock(connectMutex_);
-    LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
+    LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}.6s", networkId.c_str());
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[OpenP2PConnectionEx] DATASYNC permission denied");
-        return E_PERMISSION_DENIED_NAPI;
+        LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
+        return E_PERMISSION;
     }
-    if (dfsListenerDeathRecipient_ == nullptr) {
-        LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
-        dfsListenerDeathRecipient_ = sptr(new (std::nothrow) DfsListenerDeathRecipient());
-    }
-    if (dfsListenerDeathRecipient_ == nullptr) {
-        LOGE("Daemon::OpenP2PConnectionEx, dfsListenerDeathRecipient is nullptr");
-        return E_INVAL_ARG_NAPI;
-    }
-    if (remoteReverseObj == nullptr) {
-        LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
-        return E_INVAL_ARG_NAPI;
-    }
-    remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
-    auto deviceManager = DeviceManagerAgent::GetInstance();
-    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+
+    if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
         LOGE("Daemon::OpenP2PConnectionEx networkId length is invalid.");
         return E_INVAL_ARG_NAPI;
     }
+    std::lock_guard<std::mutex> lock(connectMutex_);
+    if (remoteReverseObj != nullptr) {
+        LOGI("Daemon::OpenP2PConnectionEx remoteReverseObj is not nullptr");
+        if (dfsListenerDeathRecipient_ == nullptr) {
+            LOGI("Daemon::OpenP2PConnectionEx, new death recipient");
+            dfsListenerDeathRecipient_ = new (std::nothrow) DfsListenerDeathRecipient();
+        }
+        if (dfsListenerDeathRecipient_ == nullptr) {
+            LOGE("Daemon::OpenP2PConnectionEx failed to allocate memory for dfsListenerDeathRecipient_");
+            return E_INVAL_ARG_NAPI;
+        }
+        remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
+    }
+    RemoveDfsDelayTask(networkId);
+
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != NO_ERROR) {
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
     }
-    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    RemoveDfsDelayTask(networkId);
-    int32_t ret = ConnectionAndMount(deviceInfo, networkId, callingTokenId, remoteReverseObj);
+
+    int32_t ret = ConnectionAndMount(deviceInfo, networkId, remoteReverseObj);
     if (ret != NO_ERROR) {
+        LOGE(ConnectionAndMount ret is %{public}d, ret);
         CleanUp(deviceInfo);
         return E_CONNECTION_FAILED;
     }
@@ -345,29 +368,26 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 
 int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
 {
-    std::lock_guard<std::mutex> lock(connectMutex_);
-    LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}.6s", networkId.c_str());
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
-        return E_PERMISSION_DENIED_NAPI;
+        return E_PERMISSION;
     }
-    auto deviceManager = DeviceManagerAgent::GetInstance();
-    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
-        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu",  networkId.length());
+
+    if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu", networkId.length());
         return E_INVAL_ARG_NAPI;
     }
-    std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
-    if (deviceId.empty()) {
-        LOGE("fail to get deviceId");
-        return E_CONNECTION_FAILED;
-    }
+    std::lock_guard<std::mutex> lock(connectMutex_);
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
-        LOGE("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
-        int32_t ret_umount = deviceManager->UMountDfsDocs(networkId, deviceId, false);
-        if (ret_umount != NO_ERROR) {
+        LOGI("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
+        if (DeviceManagerAgent::GetInstance()->UMountDfsDocs(networkId, networkId.substr(0, VALID_MOUNT_NETWORKID_LEN),
+                                                             false) != NO_ERROR) {
             LOGE("[UMountDfsDocs] failed");
             return E_UNMOUNT;
+        } else {
+            auto res = NotifyRemoteCancelNotification(networkId);
+            LOGI("NotifyRemoteCancelNotification ret is %{public}d", res);
         }
     }
     DistributedHardware::DmDeviceInfo deviceInfo{};
@@ -376,7 +396,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
     }
-    ConnectCount::GetInstance()->RemoveConnect(callingTokenId, networkId);
+    ConnectCount::GetInstance()->RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
     int32_t ret = CleanUp(deviceInfo);
     if (ret != NO_ERROR) {
         LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
@@ -442,7 +462,7 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
 }
 
 int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
-    const std::string &srcDeviceId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
+    const std::string &networkId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
@@ -450,7 +470,7 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         return ERR_BAD_VALUE;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
-    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, srcDeviceId.c_str());
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
         LOGE("strcpy failed, res = %{public}d", res);
         return ERR_BAD_VALUE;
@@ -465,10 +485,12 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
 
 int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const std::string &dstUri,
-                               const std::string &srcDeviceId,
+                               const std::string &networkId,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfo &info)
 {
+    LOGE("PrepareSession networkId: %{public}.6s", networkId.c_str());
+
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
@@ -490,14 +512,13 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     DfsVersion remoteDfsVersion;
-    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(srcDeviceId, remoteDfsVersion);
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
     LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
-
     if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0) && fileSize < INNER_COPY_LIMIT) {
-        return InnerCopy(srcUri, dstUri, srcDeviceId, listenerCallback, info);
+        return InnerCopy(srcUri, dstUri, networkId, listenerCallback, info);
     }
 
-    return CopyBaseOnRPC(srcUri, dstUri, srcDeviceId, listenerCallback, info);
+    return CopyBaseOnRPC(srcUri, dstUri, networkId, listenerCallback, info);
 }
 
 int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
@@ -513,7 +534,7 @@ int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    int32_t ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
@@ -524,8 +545,8 @@ int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
     }
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
-    auto prepareSessionData =
-        std::make_shared<PrepareSessionData>(srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
+    auto prepareSessionData = std::make_shared<PrepareSessionData>(
+        srcUri, physicalPath, info.sessionName, daemon, info, prepareSessionBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
     {
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
@@ -793,23 +814,17 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
         LOGE("fail to FindCallingTokenIdForListerner");
         return;
     }
-    auto networkIds = ConnectCount::GetInstance()->RemoveConnect(callingTokenId);
+    std::vector<std::string> networkIds = ConnectCount::GetInstance()->RemoveConnect(callingTokenId);
     if (networkIds.empty()) {
         LOGE("fail to get networkIdSet");
         return;
     }
-    auto deviceManager = DeviceManagerAgent::GetInstance();
+
     for (auto it = networkIds.begin(); it != networkIds.end(); ++it) {
         if (it->empty()) {
             LOGE("[DfsListenerDeathRecipient] networkId is null");
             continue;
         }
-        std::string deviceId = deviceManager->GetDeviceIdByNetworkId(*it);
-        if (deviceId.empty()) {
-            LOGE("fail to get deviceId, networkId: %{public}s", Utils::GetAnonyString(*it).c_str());
-            continue;
-        }
-        deviceManager->UMountDfsDocs(*it, deviceId, false);
         DistributedHardware::DmDeviceInfo deviceInfo{};
         auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, it->c_str());
         if (res != 0) {
@@ -913,7 +928,11 @@ int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
         return E_EVENT_HANDLER;
     }
 
-    auto executeFunc = [this, networkId] { DisconnectDevice(networkId); };
+    auto executeFunc = [this, networkId] {
+        DisconnectDevice(networkId);
+        auto res = CancelControlLink(networkId);
+        LOGI("cancel control link ret is %{public}d", res);
+    };
     bool isSucc = eventHandler_->PostTask(executeFunc, networkId, DEFAULT_DELAY_INTERVAL,
         AppExecFwk::EventHandler::Priority::IMMEDIATE);
     if (!isSucc) {
@@ -977,40 +996,118 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
 
 int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
 {
-    LOGI("GetDfsSwitchStatus enter. networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
-    LOGI("GetDfsSwitchStatus end, switchStatus %{public}d", switchStatus);
-    return E_OK;
+    LOGI("GetDfsSwitchStatus enter.");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("GetDfsSwitchStatus networkId length is invalid.");
+        return E_INVAL_ARG_NAPI;
+    }
+    bool tempStatus = false;
+    int32_t ret = DeviceProfileAdapter::GetInstance().GetDeviceStatus(networkId, tempStatus);
+    if (ret == E_OK) {
+        switchStatus = tempStatus;
+        return E_OK;
+    }
+    if (ret == ERR_DP_CAN_NOT_FIND) {
+        LOGE("NetworkId: %{public}s not support switch", Utils::GetAnonyString(networkId).c_str());
+        switchStatus = DEFAULT_DP_CANNOTFIND_VALUE;
+        return ret;
+    }
+    LOGE("Get switch status failed, networkId: %{pulblic}s", Utils::GetAnonyString(networkId).c_str());
+    return ret;
 }
 
 int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
 {
     LOGI("UpdateDfsSwitchStatus enter, switch status: %{public}d", switchStatus);
-    return E_OK;
+    int32_t ret = DeviceProfileAdapter::GetInstance().PutDeviceStatus(switchStatus);
+    if (ret != E_OK) {
+        LOGE("UpdateDfsSwitchStatus failed, err: %{public}d", ret);
+        return ret;
+    }
+    if (switchStatus == 0) {
+        std::unordered_map<std::string, MountCountInfo> allMountInfo =
+            DeviceManagerAgent::GetInstance()->GetAllMountInfo();
+        for (const auto &mountInfo : allMountInfo) {
+            DistributedHardware::DmDeviceInfo deviceInfo{};
+            std::string networkId = mountInfo.second.networkId_;
+            auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+            if (res != NO_ERROR) {
+                LOGE("strcpy failed, res = %{public}d", res);
+                return E_INVAL_ARG_NAPI;
+            }
+            for (const auto &ele : mountInfo.second.callingCountMap_) {
+                ConnectCount::GetInstance()->RemoveConnect(ele.first, networkId);
+            }
+            ret = CleanUp(deviceInfo);
+            if (ret != NO_ERROR) {
+                LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
+                return E_CONNECTION_FAILED;
+            }
+        }
+    }
+    return ret;
 }
 
 int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
 {
     LOGI("GetConnectedDeviceList enter.");
-    (void)deviceList;
+    DeviceManagerAgent::GetInstance()->GetConnectedDeviceList(deviceList);
     return E_OK;
 }
 
 int32_t Daemon::RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener)
 {
     LOGI("RegisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
+    if (instanceId.empty()) {
+        LOGE("InstanceId length is invalid.");
+        return E_INVAL_ARG_NAPI;
+    }
+    if (listener == nullptr) {
+        LOGE("listener is nullptr");
+        return E_INVAL_ARG_NAPI;
+    }
+    ConnectCount::GetInstance()->AddFileConnect(instanceId, listener);
     return E_OK;
 }
 
 int32_t Daemon::UnregisterFileDfsListener(const std::string &instanceId)
 {
     LOGI("UnregisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
+    if (instanceId.empty()) {
+        LOGE("InstanceId length is invalid.");
+        return E_INVAL_ARG_NAPI;
+    }
+    if (!ConnectCount::GetInstance()->RmFileConnect(instanceId)) {
+        LOGE("RmFileConnect failed");
+        return E_INVAL_ARG_NAPI;
+    }
     return E_OK;
 }
 
 int32_t Daemon::IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
 {
     LOGI("IsSameAccountDevice enter, instanceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+#ifdef SUPPORT_SAME_ACCOUNT
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0) {
+        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
+        isSameAccount = false;
+        return E_INVAL_ARG_NAPI;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == networkId) {
+            isSameAccount = (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
+            return E_OK;
+        }
+    }
+    LOGE("The source and sink device is not same account, not support.");
+    isSameAccount = false;
+    return E_INVAL_ARG_NAPI;
+#else
+    isSameAccount = true;
     return E_OK;
+#endif
 }
 
 void Daemon::DisconnectByRemote(const string &networkId)
@@ -1048,14 +1145,6 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
         return ERR_OK;
     }
 
-    DfsVersion remoteDfsVersion;
-    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
-    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
-    if ((ret == ERR_OK) && (remoteDfsVersion.majorVersionNum == 0)) {
-        LOGW("old version, not need CreatControlLink");
-        return ERR_OK;
-    }
-
     if (ChannelManager::GetInstance().CreateClientChannel(networkId) != ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
@@ -1079,15 +1168,20 @@ int32_t Daemon::CancelControlLink(const std::string &networkId)
 int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
 {
     LOGI("start CheckRemoteAllowConnect");
+    if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
+        LOGW("remote verison < 6.0.1, pass check!");
+        return FileManagement::ERR_OK;
+    }
+
     int32_t ret = CreatControlLink(networkId);
     if (ret != ERR_OK) {
         LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
         return ret;
     }
     ControlCmd request;
+    ControlCmd response;
     request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
 
-    ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
     if (ret != ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
@@ -1100,6 +1194,11 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
 int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemotePublishNotification");
+    if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
+        LOGW("remote verison < 6.0.1, pass check!");
+        return FileManagement::ERR_OK;
+    }
+
     int32_t ret = CreatControlLink(networkId);
     if (ret != ERR_OK) {
         LOGE("NotifyRemotePublishNotification ret = %{public}d", ret);
@@ -1128,6 +1227,11 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemoteCancelNotification");
+    if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
+        LOGW("remote verison < 6.0.1, pass check!");
+        return FileManagement::ERR_OK;
+    }
+
     int32_t ret = CreatControlLink(networkId);
     if (ret != ERR_OK) {
         LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
