@@ -51,6 +51,7 @@ class IoMessageManager {
 private:
     std::string currentBundleName = "";
     std::atomic<bool> isThreadRunning{false};
+    std::atomic<bool> reportThreadRunning{false};
     std::thread ioThread;
     std::mutex sleepMutex;
     std::mutex cvMute;
@@ -61,11 +62,24 @@ private:
     IoDataToWrite dataToWrite;
     AppExecFwk::AppStateData lastestAppStateData;
 
+    std::vector<std::string> ioTimes;
+    std::vector<std::string> ioBundleName;
+    std::vector<std::string> ioReadCharDiff;
+    std::vector<std::string> ioSyscReadDiff;
+    std::vector<std::string> ioReadBytesDiff;
+    std::vector<std::string> ioSyscOpenDiff;
+    std::vector<std::string> ioSyscStatDiff;
+    std::vector<std::string> ioResult;
+
     bool ReadIoDataFromFile(const std::string &path);
     void RecordDataToFile(const std::string &path);
     bool IsFirstLineHeader(const std::string &path);
     void RecordIoData();
     void ProcessIoData(const std::string &path);
+    void PushData(const std::vector<std::string> &fields);
+    void ReadAndReportIoMessage();
+    void CheckMaxSizeAndReport();
+    void Report();
 
 public:
     static IoMessageManager &GetInstance();

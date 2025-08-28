@@ -45,6 +45,7 @@ using namespace std;
 using namespace CloudDisk;
 
 namespace {
+    static const string IO_MESSAGE_DIR = "/data/service/el1/public/cloudfile/io/";
     static const string BETA_VERSION = "beta";
     static const string CN_REGION = "CN";
     static const string GLOBAL_REGION = "const.global.region";
@@ -133,6 +134,14 @@ void CloudDaemon::OnStart()
     if (ShouldRegisterListener()) {
         auto bundleNameList = vector<string>{};
         std::thread listenThread([bundleNameList] {
+            if (!filesystem::create_directories(IO_MESSAGE_DIR)) {
+                try {
+                    filesystem::create_directories(IO_MESSAGE_DIR);
+                } catch (const filesystem::filesystem_error& e) {
+                    LOGI("Mkdir for io failed");
+                    return;
+                }
+            }
             CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
         });
         listenThread.detach();

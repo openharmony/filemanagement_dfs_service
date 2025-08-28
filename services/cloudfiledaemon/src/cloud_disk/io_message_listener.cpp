@@ -14,6 +14,7 @@
  */
 #include "io_message_listener.h"
 
+#include "hisysevent.h"
 #include "utils_log.h"
 
 using namespace std;
@@ -28,9 +29,13 @@ const int32_t GET_FREQUENCY = 5;
 const int32_t READ_THRESHOLD = 1000;
 const int32_t OPEN_THRESHOLD = 1000;
 const int32_t STAT_THRESHOLD = 1000;
-const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/rdb/io_message.csv";
+const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/io/";
+const string IO_FILE_NAME = "io_message.csv";
+const string IO_NEED_REPORT_PREFIX = "wait_report_";
 const int32_t TYPE_FRONT = 2;
 const int32_t TYPE_BACKGROUND = 4;
+const int32_t MAX_IO_FILE_SIZE = 128 * 1024;
+int32_t MAX_IO_REPORT_NUMBER = 100;
 
 IoMessageManager &IoMessageManager::GetInstance()
 {
@@ -110,6 +115,148 @@ void IoMessageManager::RecordDataToFile(const string &path)
     LOGI("Write io data success");
 }
 
+static vector<const char*> ConvertToCStringArray(const vector<string>& vec)
+{
+    vector<const char*> cstrVec;
+    for (const auto& str : vec) {
+        cstrVec.push_back(str.c_str());
+    }
+    return cstrVec;
+}
+
+void IoMessageManager::Report()
+{
+    auto charIoTimes = ConvertToCStringArray(ioTimes);
+    auto charIoBundleName = ConvertToCStringArray(ioBundleName);
+    auto charIoReadCharDiff = ConvertToCStringArray(ioReadCharDiff);
+    auto charIoSyscReadDiff = ConvertToCStringArray(ioSyscReadDiff);
+    auto charIoReadBytesDiff = ConvertToCStringArray(ioReadBytesDiff);
+    auto charIoSyscOpenDiff = ConvertToCStringArray(ioSyscOpenDiff);
+    auto charIoSyscStatDiff = ConvertToCStringArray(ioSyscStatDiff);
+    auto charIoResult = ConvertToCStringArray(ioResult);
+
+    HiSysEventParam params[] = {
+        { "time", HISYSEVENT_STRING_ARRAY, { .array = charIoTimes.data() },
+            static_cast<int>(charIoTimes.size()) },
+        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = charIoBundleName.data() },
+            static_cast<int>(charIoBundleName.size()) },
+        { "ReadCharDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoReadCharDiff.data() },
+            static_cast<int>(charIoReadCharDiff.size()) },
+        { "SyscReadDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscReadDiff.data() },
+            static_cast<int>(charIoSyscReadDiff.size()) },
+        { "ReadBytesDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoReadBytesDiff.data() },
+            static_cast<int>(charIoReadBytesDiff.size()) },
+        { "SyscOpenDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscOpenDiff.data() },
+            static_cast<int>(charIoSyscOpenDiff.size()) },
+        { "SyscStatDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscStatDiff.data() },
+            static_cast<int>(charIoSyscStatDiff.size()) },
+        { "Result", HISYSEVENT_STRING_ARRAY, { .array = charIoResult.data() },
+            static_cast<int>(charIoResult.size()) },
+    };
+
+    auto ret = OH_HiSysEvent_Write(
+        "KERNEL_VENDOR",
+        "CLOUD_DISK_IO",
+        HISYSEVENT_FAULT,
+        params,
+        sizeof(params) / sizeof(params[0])
+    );
+
+    if (ret != 0) {
+        LOGE("Report failed, err : %{public}d", ret);
+    }
+
+    ioTimes.clear();
+    ioBundleName.clear();
+    ioReadCharDiff.clear();
+    ioSyscReadDiff.clear();
+    ioReadBytesDiff.clear();
+    ioSyscOpenDiff.clear();
+    ioSyscStatDiff.clear();
+    ioResult.clear();
+}
+
+void IoMessageManager::PushData(const vector<string> &fields)
+{
+    static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
+        { 0, [this](const std::string& value) { ioTimes.push_back(value); }},
+        { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
+        { 2, [this](const std::string& value) { ioReadCharDiff.push_back(value); }},
+        { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(value); }},
+        { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(value); }},
+        { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(value); }},
+        { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(value); }},
+        { 7, [this](const std::string& value) { ioResult.push_back(value); }},
+    };
+    for (int i = 0; i < fields.size(); ++i) {
+        auto it = fieldMap.find(i);
+        if (it == fieldMap.end()) {
+            LOGE("Unknow field index: %{public}d", i);
+            continue;
+        }
+        it->second(fields[i]);
+    }
+}
+
+void IoMessageManager::ReadAndReportIoMessage()
+{
+    ifstream localData(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+    if (!localData) {
+        LOGE("Open cloud data statistic local data fail : %{public}d", errno);
+        return;
+    }
+
+    string line;
+    int32_t reportCount = 0;
+    while (getline(localData, line)) {
+        vector<string> fields;
+        istringstream iss(line);
+        string token;
+
+        while (getline(iss, token, ',')) {
+            fields.push_back(token);
+        }
+
+        PushData(fields);
+        reportCount++;
+
+        if (reportCount >= MAX_IO_REPORT_NUMBER) {
+            Report();
+            reportCount = 0;
+        }
+    }
+    if (reportCount > 0) {
+        Report();
+    }
+    bool ret = filesystem::remove(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+    if (!ret) {
+        LOGE("Failed to remove need_report_io_file, err:%{public}d", errno);
+    }
+    reportThreadRunning.store(false);
+}
+
+void IoMessageManager::CheckMaxSizeAndReport()
+{
+    try {
+        auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME);
+        if (fileSize >= MAX_IO_FILE_SIZE) {
+            if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
+                LOGI("Report file exist");
+            }
+            filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
+                IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+            if (!reportThreadRunning.load()) {
+                reportThreadRunning.store(true);
+                LOGI("Start report io data");
+                thread reportThread(&IoMessageManager::ReadAndReportIoMessage, this);
+                reportThread.detach();
+            }
+        }
+    } catch (const filesystem::filesystem_error& e) {
+        LOGE("Rename or get file size failed, err: %{public}s", e.what());
+    }
+}
+
 void IoMessageManager::ProcessIoData(const string &path)
 {
     if (currentBundleName != lastestAppStateData.bundleName) {
@@ -141,7 +288,8 @@ void IoMessageManager::ProcessIoData(const string &path)
     if (dataToWrite.result >= READ_THRESHOLD ||
         dataToWrite.syscopenDiff >= OPEN_THRESHOLD ||
         dataToWrite.syscstatDiff >= STAT_THRESHOLD) {
-        RecordDataToFile(IO_DATA_FILE_PATH);
+        CheckMaxSizeAndReport();
+        RecordDataToFile(IO_DATA_FILE_PATH + IO_FILE_NAME);
     }
 
     preData = currentData;
