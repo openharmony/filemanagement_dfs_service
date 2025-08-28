@@ -126,8 +126,9 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
     sessionPool_.ReleaseSession(info.GetCid(), true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
     ConnectCount::GetInstance()->RemoveConnect(info.GetCid());
-    ConnectCount::GetInstance()->NotifyFileStatusChange(
-        info.GetCid(), ON_STATUS_OFFLINE, cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
+    ConnectCount::GetInstance()->NotifyFileStatusChange(info.GetCid(), Status::DEVICE_OFFLINE,
+                                                        info.GetCid().substr(0, VALID_MOUNT_PATH_LEN),
+                                                        StatusType::CONNECTION_STATUS);
 }
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
@@ -143,8 +144,8 @@ void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 {
     sessionPool_.ReleaseSession(cid, true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
-    ConnectCount::GetInstance()->NotifyFileStatusChange(cid, ON_STATUS_OFFLINE,
-        cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
+    ConnectCount::GetInstance()->NotifyFileStatusChange(
+        cid, Status::DEVICE_OFFLINE, cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
     ConnectCount::GetInstance()->RemoveConnect(cid);
 }
 

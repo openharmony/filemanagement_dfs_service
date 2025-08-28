@@ -316,7 +316,7 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
         LOGE("[MountDfsDocs] failed");
         return ret;
     }
-    ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, E_OK, HMDFS_FATH + mountPath,
+    ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, Status::CONNECT_OK, HMDFS_FATH + mountPath,
                                                         StatusType::CONNECTION_STATUS);
     NotifyRemotePublishNotification(networkId);
     return ret;
@@ -358,7 +358,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 
     int32_t ret = ConnectionAndMount(deviceInfo, networkId, remoteReverseObj);
     if (ret != NO_ERROR) {
-        LOGE(ConnectionAndMount ret is %{public}d, ret);
+        LOGE("ConnectionAndMount ret is %{public}d", ret);
         CleanUp(deviceInfo);
         return E_CONNECTION_FAILED;
     }

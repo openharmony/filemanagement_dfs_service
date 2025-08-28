@@ -597,9 +597,8 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_IncreaseMountDfsCount
     for (int i = 0; i < threadCount; ++i) {
         threads.emplace_back([&, i]() {
             for (int j = 0; j < operationsPerThread; ++j) {
-                testPtr->IncreaseMountDfsCount("network_" + std::to_string(i), 
-                                             mountPath + std::to_string(i),
-                                             callingTokenId + i);
+                testPtr->IncreaseMountDfsCount("network_" + std::to_string(i), mountPath + std::to_string(i),
+                                               callingTokenId + i);
             }
         });
     }

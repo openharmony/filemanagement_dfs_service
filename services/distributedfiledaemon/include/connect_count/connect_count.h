@@ -43,6 +43,12 @@ enum class StatusType {
     CONNECTION_STATUS
 };
 
+enum Status {
+    CONNECT_OK = 0,
+    DISCONNECT_OK = 1,
+    DEVICE_OFFLINE = 2
+};
+
 class ConnectCount final {
 public:
     ConnectCount() = default;

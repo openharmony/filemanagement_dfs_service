@@ -536,8 +536,9 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGI("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
         RemoveMountDfsCount(deviceId);
-        ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, 2,
-            MOUNT_PATH + networkId.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
+        ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, Status::DISCONNECT_OK,
+                                                            MOUNT_PATH + networkId.substr(0, VALID_MOUNT_PATH_LEN),
+                                                            StatusType::CONNECTION_STATUS);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
