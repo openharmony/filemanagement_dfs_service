@@ -117,7 +117,7 @@ HWTEST_F(CloudFileCacheCoreTest, DoStartTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_INVALID_URI);
 }
 
 /**
@@ -134,7 +134,7 @@ HWTEST_F(CloudFileCacheCoreTest, DoStartTest2, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_INVALID_URI);
 }
 
 /**
