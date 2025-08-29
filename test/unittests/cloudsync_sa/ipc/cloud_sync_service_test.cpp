@@ -1395,7 +1395,7 @@ HWTEST_F(CloudSyncServiceTest, StartFileCacheTest001, TestSize.Level1)
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
         EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
         auto ret = servicePtr_->StartFileCache({uri}, downloadId, fieldkey, callback, timeout);
-        EXPECT_EQ(ret, E_SERVICE_INNER_ERROR);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "StartFileCacheTest001 failed";
