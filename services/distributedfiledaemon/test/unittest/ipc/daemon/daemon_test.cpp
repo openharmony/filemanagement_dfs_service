@@ -25,6 +25,7 @@
 #include "common_event_manager.h"
 #include "connect_count/connect_count.h"
 #include "connection_detector_mock.h"
+#include "control_cmd_parser.h"
 #include "copy/file_size_utils.h"
 #include "daemon.h"
 #include "daemon_execute.h"
@@ -49,6 +50,7 @@
 #include "system_ability_manager_client_mock.h"
 
 namespace {
+bool g_isLocalItDevice = false;
 bool g_checkCallerPermission = true;
 bool g_checkCallerPermissionDatasync = true;
 int g_getHapTokenInfo = 0;
@@ -114,6 +116,11 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(
 int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
 {
     return g_putDeviceStatus;
+}
+
+bool ControlCmdParser::IsLocalItDevice()
+{
+    return g_isLocalItDevice;
 }
 } // namespace OHOS::Storage::DistributedFile
 
@@ -266,8 +273,6 @@ void DaemonTest::SetUpTestCase(void)
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
     deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
-    channelManagerMock_ = std::make_shared<ChannelManagerMock>();
-    IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
@@ -299,8 +304,6 @@ void DaemonTest::TearDownTestCase(void)
     softBusHandlerMock_ = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
-    channelManagerMock_ = nullptr;
-    IChannelManagerMock::iChannelManagerMock = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 
@@ -330,12 +333,17 @@ void DaemonTest::SetUp(void)
         .authForm = OHOS::DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT,
         .extraData = "{\"OS_TYPE\":10}",
     };
+    g_isLocalItDevice = false;
+    channelManagerMock_ = std::make_shared<ChannelManagerMock>();
+    IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
 }
 
 void DaemonTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
     daemon_ = nullptr;
+    channelManagerMock_ = nullptr;
+    IChannelManagerMock::iChannelManagerMock = nullptr;
 }
 
 /**
@@ -618,6 +626,17 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     DistributedHardware::DmDeviceInfo deviceInfo = {.networkId = "test"};
     sptr<IFileDfsListener> remoteReverseObj = nullptr;
     ConnectCount::GetInstance()->RemoveAllConnect();
+
+    // g_checkCallerPermission is ok but remote reject
+    g_checkCallerPermission = true;
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillRepeatedly(Return(true));
+    // EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillRepeatedly(Return(FileManagement::ERR_OK));
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_PERMISSION);
+
+    // g_checkCallerPermission is false
+    g_checkCallerPermission = true;
+    g_isRemoteDfsVersionLowerThanGiven = false;
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), ERR_BAD_VALUE);
 
@@ -650,19 +669,30 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 begin";
 
+    // check fileAccessManager permit failed
+    g_checkCallerPermission = true;
+    g_isLocalItDevice = true;
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION);
+
     // check permission failed
+    g_isLocalItDevice = false;
     g_checkCallerPermissionDatasync = false;
     EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION);
 
     // networkId length is invalid
+    g_checkCallerPermission = false;
     g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_INVAL_ARG_NAPI);
     std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
     EXPECT_EQ(daemon_->OpenP2PConnectionEx(longNetworkId, nullptr), E_INVAL_ARG_NAPI);
 
-    // networkId is valid
+    // networkId is valid and obj is null
     std::string validNetworkId(64, 'a');
-    EXPECT_NE(daemon_->OpenP2PConnectionEx("", nullptr), NO_ERROR);
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx(validNetworkId, nullptr), NO_ERROR);
+
+    // networkId is valid and obj is not null
+    auto listener = sptr<IFileDfsListener>(new FileDfsListenerMock());
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx(validNetworkId, listener), NO_ERROR);
 
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 end";
 }
@@ -677,11 +707,18 @@ HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 begin";
 
+    // check fileAccessManager permit failed
+    g_checkCallerPermission = true;
+    g_isLocalItDevice = true;
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION);
+
     // check permission failed
+    g_isLocalItDevice = false;
     g_checkCallerPermissionDatasync = false;
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION);
 
     // networkId length is invalid
+    g_checkCallerPermission = false;
     g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_INVAL_ARG_NAPI);
     std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
@@ -1437,7 +1474,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_CheckRemoteAllowConnect_001";
     // Test remoteDfs version is lower
     g_isRemoteDfsVersionLowerThanGiven = true;
-    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_OK);
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
 
     // Test SendRequest failed
     g_isRemoteDfsVersionLowerThanGiven = false;
@@ -1464,7 +1501,7 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Le
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemotePublishNotification_001";
     // Test remoteDfs version is lower
     g_isRemoteDfsVersionLowerThanGiven = true;
-    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_OK);
+    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
 
     // Test CreatControlLink failed
     g_isRemoteDfsVersionLowerThanGiven = false;
@@ -1497,7 +1534,7 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Lev
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
     // Test remoteDfs version is lower
     g_isRemoteDfsVersionLowerThanGiven = true;
-    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_OK);
+    EXPECT_EQ(daemon_->NotifyRemoteCancelNotification("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
 
     // Test CreatControlLink failed
     g_isRemoteDfsVersionLowerThanGiven = false;

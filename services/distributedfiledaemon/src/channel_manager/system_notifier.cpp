@@ -513,6 +513,26 @@ std::string SystemNotifier::GetRemoteDeviceName(const std::string &networkId)
     return deviceName;
 }
 
+void SystemNotifier::ClearAllConnect()
+{
+    LOGI("ClearALLConnect start.");
+    std::shared_lock<std::shared_mutex> readLock(mutex);
+    std::vector<std::string> needClearItems;
+    for (const auto &pair : notificationMap_) {
+        needClearItems.push_back(pair.first);
+    }
+    for (const auto &networkId :needClearItems) {
+        // donot disconncetbyremote
+        DestroyNotifyByNetworkId(networkId);
+    }
+}
+
+int32_t SystemNotifier::GetNotificationMapSize()
+{
+    LOGI("GetNotificationMapSize size is %{public}zu", notificationMap_.size());
+    return notificationMap_.size();
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

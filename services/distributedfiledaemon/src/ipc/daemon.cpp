@@ -286,14 +286,14 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
                                    sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("ConnectionAndMount start");
-    int32_t ret = CheckRemoteAllowConnect(networkId);
-    if (ret != E_OK) {
-        LOGE("CheckRemoteAllowConnect failed for %{public}.6s, ret is %{public}d", networkId.c_str(), ret);
-        return ret;
+    bool hasFileAccessManager = DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION);
+    if (hasFileAccessManager && CheckRemoteAllowConnect(networkId) != NO_ERROR) {
+        LOGE("CheckRemoteAllowConnect failed for %{public}.6s", networkId.c_str());
+        return E_PERMISSION;
     }
 
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    ret = ConnectionCount(deviceInfo);
+    auto ret = ConnectionCount(deviceInfo);
     if (ret != NO_ERROR) {
         LOGE("connection failed");
         if (ret == ERR_CHECKOUT_COUNT) {
@@ -304,7 +304,7 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
 
     ConnectCount::GetInstance()->AddConnect(callingTokenId, networkId, remoteReverseObj);
 
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+    if (!hasFileAccessManager) {
         LOGW("permission denied: FILE_ACCESS_MANAGER_PERMISSION");
         return ret;
     }
@@ -313,7 +313,7 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
     ret = deviceManager->MountDfsDocs(networkId, mountPath, callingTokenId);
     if (ret != NO_ERROR) {
         ConnectCount::GetInstance()->RemoveConnect(callingTokenId, networkId);
-        LOGE("[MountDfsDocs] failed");
+        LOGE("[MountDfsDocs] failed, ret is %{public}d", ret);
         return ret;
     }
     ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, Status::CONNECT_OK, HMDFS_FATH + mountPath,
@@ -325,6 +325,11 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}.6s", networkId.c_str());
+    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) && ControlCmdParser::IsLocalItDevice()) {
+        LOGE("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
+        return E_PERMISSION;
+    }
+
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         return E_PERMISSION;
@@ -369,6 +374,11 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
 {
     LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}.6s", networkId.c_str());
+    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) && ControlCmdParser::IsLocalItDevice()) {
+        LOGW("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
+        return E_PERMISSION;
+    }
+
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         return E_PERMISSION;
@@ -1169,8 +1179,8 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
 {
     LOGI("start CheckRemoteAllowConnect");
     if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
-        LOGW("remote verison < 6.0.1, pass check!");
-        return FileManagement::ERR_OK;
+        LOGW("remote verison < 6.0.1, not support!");
+        return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
     int32_t ret = CreatControlLink(networkId);
@@ -1195,8 +1205,8 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemotePublishNotification");
     if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
-        LOGW("remote verison < 6.0.1, pass check!");
-        return FileManagement::ERR_OK;
+        LOGW("remote verison < 6.0.1, not support!");
+        return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
     int32_t ret = CreatControlLink(networkId);
@@ -1228,8 +1238,8 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 {
     LOGI("start NotifyRemoteCancelNotification");
     if (DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(networkId, FILEMANAGER_VERSION)) {
-        LOGW("remote verison < 6.0.1, pass check!");
-        return FileManagement::ERR_OK;
+        LOGW("remote verison < 6.0.1, not support!");
+        return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
     int32_t ret = CreatControlLink(networkId);

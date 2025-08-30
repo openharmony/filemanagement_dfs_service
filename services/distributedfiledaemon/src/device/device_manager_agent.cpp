@@ -37,6 +37,7 @@
 #include "parameters.h"
 #include "softbus_bus_center.h"
 #include "system_ability_definition.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -128,6 +129,7 @@ void DeviceManagerAgent::QuitGroup(shared_ptr<MountPoint> smp)
 {
     LOGI("quit group begin");
     OfflineAllDevice();
+    SystemNotifier::GetInstance().ClearAllConnect();
 
     if (!smp) {
         stringstream ss("Failed to quit group: Received empty mountpoint");
@@ -489,6 +491,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
         LOGE("GetCurrentUserId Fail");
         return INVALID_USER_ID;
     }
+    currentUserId_ = userId;
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
         LOGE("storageMgrProxy_ is null");
@@ -519,7 +522,7 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGE("do not need umount");
         return ret;
     }
-    int32_t userId = GetCurrentUserId();
+    int32_t userId = currentUserId_;
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
         return INVALID_USER_ID;

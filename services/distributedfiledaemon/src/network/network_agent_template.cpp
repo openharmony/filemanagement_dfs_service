@@ -19,6 +19,7 @@
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -113,6 +114,7 @@ void NetworkAgentTemplate::DisconnectAllDevices()
     ConnectCount::GetInstance()->RemoveAllConnect();
 }
 
+// for closeP2P
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
 {
     LOGI("CloseP2P, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
@@ -131,6 +133,7 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
                                                         StatusType::CONNECTION_STATUS);
 }
 
+// softbus offline, allConnect offline, hmdfs never has socket
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, std::string>>(
@@ -139,7 +142,6 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
     Recv(move(cmd));
 }
 
-// softbus offline, allConnect offline, hmdfs never has socket
 void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 {
     sessionPool_.ReleaseSession(cid, true);
@@ -165,6 +167,7 @@ bool NetworkAgentTemplate::FindSocketId(int32_t socketId)
     return sessionPool_.FindSocketId(socketId);
 }
 
+// hmdfs offline
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(
@@ -181,13 +184,15 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
     sessionPool_.ReleaseSession(fd);
     if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
+        // for client
         GetSession(cidStr);
     } else {
+        // for server
         sessionPool_.SinkOffline(cidStr);
+        SystemNotifier::GetInstance().DestroyNotifyByNetworkId(cidStr);
     }
 }
 
-// hmdfs offline
 void NetworkAgentTemplate::GetSession(const string &cid)
 {
     std::this_thread::sleep_for(std::chrono::seconds(NOTIFY_GET_SESSION_WAITING_TIME));
