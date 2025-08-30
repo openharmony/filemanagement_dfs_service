@@ -84,7 +84,6 @@ bool SyncStateManager::CheckMediaLibCleaning()
     uint64_t intervalTime = curTime - prevTime;
     LOGI("media clean time: %{public}s, cur: %{public}s", closeSwitchTime.c_str(), std::to_string(curTime).c_str());
     if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MILLISECOND) {
-        LOGE("prev closeSwitch over 12h, reset to 0");
         CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_SWITCH_CLOSE,
             CloudFile::FaultType::TIMEOUT, E_TIMEOUT,
             "media clean time is: " + closeSwitchTime + " over 12h"});
