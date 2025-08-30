@@ -631,7 +631,6 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     g_checkCallerPermission = true;
     g_isRemoteDfsVersionLowerThanGiven = true;
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillRepeatedly(Return(true));
-    // EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillRepeatedly(Return(FileManagement::ERR_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_PERMISSION);
 
     // g_checkCallerPermission is false

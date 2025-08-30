@@ -150,6 +150,8 @@ private:
     std::unordered_map<std::string, MountCountInfo> mountDfsCount_;
     std::mutex networkIdMapMutex_;
     std::unordered_map<uint32_t, std::unordered_set<std::string>> networkIdMap_;
+
+    int32_t currentUserId_ = -1;
 };
 } // namespace DistributedFile
 } // namespace Storage

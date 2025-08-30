@@ -325,7 +325,8 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}.6s", networkId.c_str());
-    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) && ControlCmdParser::IsLocalItDevice()) {
+    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) &&
+        ControlCmdParser::IsLocalItDevice()) {
         LOGE("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         return E_PERMISSION;
     }
@@ -374,7 +375,8 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
 {
     LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}.6s", networkId.c_str());
-    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) && ControlCmdParser::IsLocalItDevice()) {
+    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) &&
+        ControlCmdParser::IsLocalItDevice()) {
         LOGW("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         return E_PERMISSION;
     }
