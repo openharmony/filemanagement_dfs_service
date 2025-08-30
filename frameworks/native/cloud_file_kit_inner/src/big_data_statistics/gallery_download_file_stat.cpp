@@ -219,6 +219,7 @@ void GalleryDownloadFileStat::IsSameBundleName(DownloadFileStatInfo info)
 
 void GalleryDownloadFileStat::OutputToFile()
 {
+    std::lock_guard<std::mutex> lck(mutex_);
     DownloadFileStatInfo tmpInfo = ReadVecFromLocal();
     IsSameBundleName(tmpInfo);
 
@@ -307,6 +308,7 @@ int32_t GalleryDownloadFileStat::ReportDownloadFileStat(DownloadFileStatInfo inf
 
 void GalleryDownloadFileStat::Report()
 {
+    std::lock_guard<std::mutex> lck(mutex_);
     const std::string path = DOWNLOAD_FILE_STAT_LOCAL_PATH + DOWNLOAD_FILE_STAT_NAME;
     if (access(path.c_str(), F_OK) == -1) {
         LOGE("download file statistics data file not exists");

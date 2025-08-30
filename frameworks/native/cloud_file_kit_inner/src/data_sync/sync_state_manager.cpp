@@ -82,7 +82,6 @@ bool SyncStateManager::CheckMediaLibCleaning()
     uint64_t intervalTime = curTime - prevTime;
     LOGI("media clean time: %{public}s, cur: %{public}s", closeSwitchTime.c_str(), std::to_string(curTime).c_str());
     if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MILLISECOND) {
-        LOGE("prev closeSwitch over 12h, reset to 0");
         system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
         return false;
     }
