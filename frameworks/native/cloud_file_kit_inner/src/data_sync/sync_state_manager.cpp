@@ -18,6 +18,8 @@
 #include <charconv>
 #include <type_traits>
 
+#include "cloud_file_fault_event.h"
+#include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -82,6 +84,9 @@ bool SyncStateManager::CheckMediaLibCleaning()
     uint64_t intervalTime = curTime - prevTime;
     LOGI("media clean time: %{public}s, cur: %{public}s", closeSwitchTime.c_str(), std::to_string(curTime).c_str());
     if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MILLISECOND) {
+        CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_SWITCH_CLOSE,
+            CloudFile::FaultType::TIMEOUT, E_TIMEOUT,
+            "media clean time is: " + closeSwitchTime + " over 12h"});
         system::SetParameter(CLOUDSYNC_SWITCH_STATUS, "0");
         return false;
     }

@@ -131,6 +131,22 @@ public:
     {
         return FileManagement::E_OK;
     }
+
+    int32_t RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t UnregisterFileDfsListener(const std::string &instanceId)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
+    {
+        isSameAccount = true;
+        return FileManagement::E_OK;
+    }
 };
 } // namespace OHOS::Storage::DistributedFile
 

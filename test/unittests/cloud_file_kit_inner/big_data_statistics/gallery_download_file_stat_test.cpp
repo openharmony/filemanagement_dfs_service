@@ -353,117 +353,117 @@ HWTEST_F(GalleryDownloadFileStatTest, UpdateDownloadBundleNameTest_001, TestSize
 }
 
 /**
- * @tc.name: IsSameBundleNameTest_001
- * @tc.desc: Verify the IsSameBundleName function
+ * @tc.name: HandleBundleNameTest_001
+ * @tc.desc: Verify the HandleBundleName function
  * @tc.type: FUNC
  * @tc.require: ICQTGD
  */
-HWTEST_F(GalleryDownloadFileStatTest, IsSameBundleNameTest_001, TestSize.Level1)
+HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 Start";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_001 Start";
     GalleryDownloadFileStat downloadStat;
     downloadStat.stat_.bundleName = "test.bundle.name";
     DownloadFileStatInfo info;
     info.bundleName = "test.bundle.name";
     try {
-        downloadStat.IsSameBundleName(info);
+        downloadStat.HandleBundleName(info);
         EXPECT_EQ(downloadStat.stat_.bundleName, "test.bundle.name");
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 ERROR";
+        GTEST_LOG_(INFO) << "HandleBundleNameTest_001 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_001 End";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_001 End";
 }
 
 /**
- * @tc.name: IsSameBundleNameTest_002
- * @tc.desc: Verify the IsSameBundleName function
+ * @tc.name: HandleBundleNameTest_002
+ * @tc.desc: Verify the HandleBundleName function
  * @tc.type: FUNC
  * @tc.require: ICQTGD
  */
-HWTEST_F(GalleryDownloadFileStatTest, IsSameBundleNameTest_002, TestSize.Level1)
+HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 Start";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_002 Start";
     GalleryDownloadFileStat downloadStat;
     downloadStat.stat_.bundleName = "test.bundle.name";
     DownloadFileStatInfo info;
     info.bundleName = "different.bundle.name";
     try {
-        downloadStat.IsSameBundleName(info);
+        downloadStat.HandleBundleName(info);
         EXPECT_EQ(downloadStat.stat_.bundleName, "test.bundle.name");
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 ERROR";
+        GTEST_LOG_(INFO) << "HandleBundleNameTest_002 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_002 End";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_002 End";
 }
 
 /**
- * @tc.name: IsSameBundleNameTest_003
- * @tc.desc: Verify the IsSameBundleName function
+ * @tc.name: HandleBundleNameTest_003
+ * @tc.desc: Verify the HandleBundleName function
  * @tc.type: FUNC
  * @tc.require: ICQTGD
  */
-HWTEST_F(GalleryDownloadFileStatTest, IsSameBundleNameTest_003, TestSize.Level1)
+HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 Start";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_003 Start";
     GalleryDownloadFileStat downloadStat;
     downloadStat.stat_.bundleName = "";
     DownloadFileStatInfo info;
     info.bundleName = "test.bundle.name";
     try {
-        downloadStat.IsSameBundleName(info);
+        downloadStat.HandleBundleName(info);
         EXPECT_EQ(downloadStat.stat_.bundleName, "test.bundle.name");
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 ERROR";
+        GTEST_LOG_(INFO) << "HandleBundleNameTest_003 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_003 End";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_003 End";
 }
 
 /**
- * @tc.name: IsSameBundleNameTest_004
- * @tc.desc: Verify the IsSameBundleName function
+ * @tc.name: HandleBundleNameTest_004
+ * @tc.desc: Verify the HandleBundleName function
  * @tc.type: FUNC
  * @tc.require: ICQTGD
  */
-HWTEST_F(GalleryDownloadFileStatTest, IsSameBundleNameTest_004, TestSize.Level1)
+HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 Start";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_004 Start";
     GalleryDownloadFileStat downloadStat;
     downloadStat.stat_.bundleName = "";
     DownloadFileStatInfo info;
     info.bundleName = "";
     try {
-        downloadStat.IsSameBundleName(info);
+        downloadStat.HandleBundleName(info);
         EXPECT_EQ(downloadStat.stat_.bundleName, "");
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 ERROR";
+        GTEST_LOG_(INFO) << "HandleBundleNameTest_004 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_004 End";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_004 End";
 }
 
 /**
- * @tc.name: IsSameBundleNameTest_005
- * @tc.desc: Verify the IsSameBundleName function
+ * @tc.name: HandleBundleNameTest_005
+ * @tc.desc: Verify the HandleBundleName function
  * @tc.type: FUNC
  * @tc.require: ICQTGD
  */
-HWTEST_F(GalleryDownloadFileStatTest, IsSameBundleNameTest_005, TestSize.Level1)
+HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_005 Start";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_005 Start";
     GalleryDownloadFileStat downloadStat;
     downloadStat.stat_.bundleName = "test.bundle.name";
     DownloadFileStatInfo info;
     info.bundleName = "";
     try {
-        downloadStat.IsSameBundleName(info);
+        downloadStat.HandleBundleName(info);
         EXPECT_EQ(downloadStat.stat_.bundleName, "test.bundle.name");
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsSameBundleNameTest_005 ERROR";
+        GTEST_LOG_(INFO) << "HandleBundleNameTest_005 ERROR";
     }
-    GTEST_LOG_(INFO) << "IsSameBundleNameTest_005 End";
+    GTEST_LOG_(INFO) << "HandleBundleNameTest_005 End";
 }
 }

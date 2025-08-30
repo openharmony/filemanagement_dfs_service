@@ -60,6 +60,7 @@ public:
 void FileOperationsCloudTest::SetUpTestCase(void)
 {
     fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    AssistantMock::EnableMock();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUpTestCase";
@@ -67,6 +68,7 @@ void FileOperationsCloudTest::SetUpTestCase(void)
 
 void FileOperationsCloudTest::TearDownTestCase(void)
 {
+    AssistantMock::DisableMock();
     Assistant::ins = nullptr;
     insMock = nullptr;
     fileOperationsCloud_ = nullptr;
@@ -1732,6 +1734,60 @@ HWTEST_F(FileOperationsCloudTest, MkDirTest005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MkDirTest006
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICTXJ9
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = ".cloudFileVersionConflict";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest006 End";
+}
+
+/**
+ * @tc.name: MkDirTest007
+ * @tc.desc: Verify the MkDir function, name is conflict.
+ * @tc.type: FUNC
+ * @tc.require: ICTXJ9
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest007 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = "testDirName";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest007 End";
+}
+
+/**
  * @tc.name: RmDirTest001
  * @tc.desc: Verify the RmDir function
  * @tc.type: FUNC
@@ -2005,6 +2061,64 @@ HWTEST_F(FileOperationsCloudTest, RenameTest004, TestSize.Level1)
         GTEST_LOG_(INFO) << "RenameTest004 ERROR";
     }
     GTEST_LOG_(INFO) << "RenameTest004 End";
+}
+
+/**
+ * @tc.name: RenameTest005
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 1;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest005 End";
+}
+ 
+/**
+ * @tc.name: RenameTest006
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 3;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest006 End";
 }
 
 /**

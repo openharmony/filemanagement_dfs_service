@@ -545,5 +545,85 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetConnectedDeviceListTest, TestSize.
     }
     GTEST_LOG_(INFO) << "GetConnectedDeviceListTest End";
 }
+
+/**
+ * @tc.name: RegisterFileDfsListenerTest
+ * @tc.desc: Verify the RegisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, RegisterFileDfsListenerTest, TestSize.Level1)
+{
+    auto remoteReverseObj = sptr(new FileDfsListenerMock());
+    GTEST_LOG_(INFO) << "RegisterFileDfsListenerTest Start";
+    try {
+        g_isNullptr = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->RegisterFileDfsListener("test", remoteReverseObj);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->RegisterFileDfsListener("test", remoteReverseObj);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterFileDfsListenerTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "RegisterFileDfsListenerTest End";
+}
+
+/**
+ * @tc.name: UnregisterFileDfsListenerTest
+ * @tc.desc: Verify the UnregisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, UnregisterFileDfsListenerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterFileDfsListenerTest Start";
+    try {
+        g_isNullptr = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->UnregisterFileDfsListener("test");
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->UnregisterFileDfsListener("test");
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterFileDfsListenerTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "UnregisterFileDfsListenerTest End";
+}
+
+/**
+ * @tc.name: IsSameAccountDeviceTest
+ * @tc.desc: Verify the IsSameAccountDevice function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, IsSameAccountDeviceTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsSameAccountDeviceTest Start";
+    try {
+        g_isNullptr = false;
+        bool isSameAccount = false;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->IsSameAccountDevice("test", isSameAccount);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+
+        g_isNullptr = true;
+        res = distributedDaemonManagerImpl_->IsSameAccountDevice("test", isSameAccount);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsSameAccountDeviceTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "IsSameAccountDeviceTest End";
+}
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

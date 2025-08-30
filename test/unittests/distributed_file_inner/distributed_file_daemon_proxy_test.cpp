@@ -1118,4 +1118,172 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetConnectedDevic
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList End";
 }
+
+/**
+ * @tc.name: DistributedFileDaemon_RegisterFileDfsListener
+ * @tc.desc: Verify RegisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_RegisterFileDfsListener, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RegisterFileDfsListener Start";
+    auto listener = sptr(new FileDfsListenerMock());
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    ret = proxy_->RegisterFileDfsListener("instance", nullptr);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(false));
+    ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    ret = proxy_->RegisterFileDfsListener("instance", listener);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RegisterFileDfsListener End";
 }
+
+/**
+ * @tc.name: DistributedFileDaemon_UnregisterFileDfsListener
+ * @tc.desc: Verify UnregisterFileDfsListener function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UnregisterFileDfsListener, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UnregisterFileDfsListener Start";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    auto tmpProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = tmpProxy->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    ret = proxy_->UnregisterFileDfsListener("instance");
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UnregisterFileDfsListener End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_IsSameAccountDevice
+ * @tc.desc: Verify IsSameAccountDevice function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_IsSameAccountDevice, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_IsSameAccountDevice Start";
+    bool isSameAccount = false;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    auto tmpProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = tmpProxy->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_INVAL_ARG), Return(true)));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).WillOnce(Return(false));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).WillOnce(Return(true));
+    ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_IsSameAccountDevice End";
+}
+} // namespace OHOS::Storage::DistributedFile::Test

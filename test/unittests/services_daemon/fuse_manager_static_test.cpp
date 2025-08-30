@@ -65,6 +65,26 @@ void FuseManagerStaticTest::TearDown(void)
 }
 
 /**
+ * @tc.name: CheckAndReport001
+ * @tc.desc: Verify the IsHdc function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CheckAndReport001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndReport001 Begin";
+    try {
+        string path = "/mnt/data/100/cloud_fuse/1";
+        string childName = "/mnt/data/100/cloud_fuse/2";
+        bool create = false;
+        CheckAndReport(path, childName, create);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndReport001 Error";
+    }
+    GTEST_LOG_(INFO) << "CheckAndReport001 End";
+}
+
+/**
  * @tc.name: IsValidCachePathTest001
  * @tc.desc: Verify the IsValidCachePath function
  * @tc.type: FUNC
@@ -413,5 +433,107 @@ HWTEST_F(FuseManagerStaticTest, IsHdc002, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsHdc002 Error";
     }
     GTEST_LOG_(INFO) << "IsHdc002 End";
+}
+
+/**
+ * @tc.name: UpdateReadStatInfoTest001
+ * @tc.desc: Verify the UpdateReadStatInfo function
+ * @tc.type: FUNC
+ * @tc.require:ICTLI4
+ */
+HWTEST_F(FuseManagerStaticTest, UpdateReadStatInfoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateReadStatInfoTest001 Begin";
+    try {
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.bundleName_ = "";
+        size_t size = 1;
+        string name = "name";
+        uint64_t readTime = 1;
+        string bundleName = "test.bundle.name";
+        UpdateReadStatInfo(size, name, 1, bundleName);
+        EXPECT_EQ(readStat.bundleName_, "test.bundle.name");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateReadStatInfoTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "UpdateReadStatInfoTest001 End";
+}
+
+/**
+ * @tc.name: UpdateReadStatInfoTest002
+ * @tc.desc: Verify the UpdateReadStatInfo function
+ * @tc.type: FUNC
+ * @tc.require:ICTLI4
+ */
+HWTEST_F(FuseManagerStaticTest, UpdateReadStatInfoTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateReadStatInfoTest002 Begin";
+    try {
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.bundleName_ = "test.bundle.name";
+        size_t size = 1;
+        string name = "name";
+        uint64_t readTime = 1;
+        string bundleName = "new.bundle.name";
+        UpdateReadStatInfo(size, name, 1, bundleName);
+        EXPECT_EQ(readStat.bundleName_, "new.bundle.name");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateReadStatInfoTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "UpdateReadStatInfoTest002 End";
+}
+
+/**
+ * @tc.name: UpdateReadStatTest001
+ * @tc.desc: Verify the UpdateReadStat function
+ * @tc.type: FUNC
+ * @tc.require:ICTLI4
+ */
+HWTEST_F(FuseManagerStaticTest, UpdateReadStatTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateReadStatTest001 Begin";
+    try {
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.bundleName_ = "";
+        auto cInode = make_shared<CloudInode>();
+        cInode->mBase = make_shared<MetaBase>("test");
+        cInode->mBase->fileType = FILE_TYPE_THUMBNAIL;
+        uint64_t startTime = 1;
+        string bundleName = "test.bundle.name";
+        UpdateReadStat(cInode, startTime, bundleName);
+        EXPECT_EQ(readStat.bundleName_, "test.bundle.name");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateReadStatTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "UpdateReadStatTest001 End";
+}
+
+/**
+ * @tc.name: UpdateReadStatTest002
+ * @tc.desc: Verify the UpdateReadStat function
+ * @tc.type: FUNC
+ * @tc.require:ICTLI4
+ */
+HWTEST_F(FuseManagerStaticTest, UpdateReadStatTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateReadStatTest002 Begin";
+    try {
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.bundleName_ = "test.bundle.name";
+        auto cInode = make_shared<CloudInode>();
+        cInode->mBase = make_shared<MetaBase>("test");
+        cInode->mBase->fileType = FILE_TYPE_THUMBNAIL;
+        uint64_t startTime = 1;
+        string bundleName = "new.bundle.name";
+        UpdateReadStat(cInode, startTime, bundleName);
+        EXPECT_EQ(readStat.bundleName_, "new.bundle.name");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateReadStatTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "UpdateReadStatTest002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

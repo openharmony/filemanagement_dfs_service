@@ -42,6 +42,11 @@ int64_t CloudAssetReadSession::PRead(int64_t offset,
     return E_OK;
 }
 
+void CloudAssetReadSession::CancelSession()
+{
+    return;
+}
+
 bool CloudAssetReadSession::Close(bool needRemain)
 {
     return true;

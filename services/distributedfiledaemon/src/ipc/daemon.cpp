@@ -995,6 +995,24 @@ int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
     return E_OK;
 }
 
+int32_t Daemon::RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener)
+{
+    LOGI("RegisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
+    return E_OK;
+}
+
+int32_t Daemon::UnregisterFileDfsListener(const std::string &instanceId)
+{
+    LOGI("UnregisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
+    return E_OK;
+}
+
+int32_t Daemon::IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
+{
+    LOGI("IsSameAccountDevice enter, instanceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    return E_OK;
+}
+
 void Daemon::DisconnectByRemote(const string &networkId)
 {
     LOGI("start DisconnectByRemote");

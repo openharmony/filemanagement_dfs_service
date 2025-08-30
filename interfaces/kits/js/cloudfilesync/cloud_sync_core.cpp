@@ -192,4 +192,34 @@ FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
 
     return FsResult<int32_t>::Success(val);
 }
+
+FsResult<int32_t> CloudSyncCore::DoGetCoreFileSyncState(string path)
+{
+    Uri uri(path);
+    string sandBoxPath = uri.GetPath();
+    string xattrKey = "user.cloud.filestatus";
+
+    auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
+    if (xattrValueSize < 0) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
+    if (xattrValue == nullptr) {
+        LOGE("Failed to allocate memory for xattrvalue");
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
+    if (xattrValueSize <= 0) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    int32_t fileStatus = atoi(xattrValue.get());
+    int32_t val;
+    if (fileStatus >= 0 && fileStatus < publicStatusMap.size()) {
+        val = publicStatusMap[fileStatus];
+    } else {
+        LOGE("invalid value");
+        return FsResult<int32_t>::Error(JsErrCode::E_INNER_FAILED);
+    }
+    return FsResult<int32_t>::Success(val);
+}
 } // namespace OHOS::FileManagement::CloudSync

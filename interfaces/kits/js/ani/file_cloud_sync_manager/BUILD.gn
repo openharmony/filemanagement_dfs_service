@@ -29,8 +29,11 @@ ohos_shared_library("cloud_sync_manager_ani") {
     "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
     "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
     "${interfaces_js_path}/cloudsyncmanager/cloud_sync_manager_core.cpp",
+    "${interfaces_js_path}/cloudsyncmanager/downgrade_download_core.cpp",
     "src/bind_function_class.cpp",
     "src/cloud_sync_manager_ani.cpp",
+    "src/downgrade_download_ani.cpp",
+    "src/downgrade_callback_ani.cpp",
   ]
   sanitize = {
     integer_overflow = true

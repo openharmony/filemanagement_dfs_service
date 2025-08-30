@@ -45,6 +45,7 @@ void FuseOperationsHelperTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
     fuseoperationshelper_ = make_shared<FileOperationsHelper>();
+    AssistantMock::EnableMock();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
 }
@@ -52,6 +53,7 @@ void FuseOperationsHelperTest::SetUpTestCase(void)
 void FuseOperationsHelperTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    AssistantMock::DisableMock();
     fuseoperationshelper_ = nullptr;
     Assistant::ins = nullptr;
     insMock = nullptr;

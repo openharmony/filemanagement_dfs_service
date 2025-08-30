@@ -21,6 +21,7 @@
 #include <sys/xattr.h>
 
 #include "cloud_sync_manager.h"
+#include "cloud_sync_manager_mock.h"
 #include "dfs_error.h"
 #include "download_callback_impl_ani.h"
 #include "uri.h"
@@ -113,6 +114,8 @@ HWTEST_F(CloudFileCacheCoreTest, DoStartTest1, TestSize.Level1)
 {
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string uri = "testuri";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartFileCache(_, _, _, _, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudFileCache->DoStart(uri);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -130,6 +133,8 @@ HWTEST_F(CloudFileCacheCoreTest, DoStartTest2, TestSize.Level1)
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string uri = "testuri";
     int32_t fieldKey = 0;
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StartFileCache(_, _, _, _, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudFileCache->DoStart({uri}, fieldKey);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -183,6 +188,8 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest3, TestSize.Level1)
         std::make_pair("batchDownload", std::make_shared<CloudFileCacheCallbackImplAni>()));
     int64_t downloadId = 0;
     bool needClean = false;
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, StopFileCache(_, _, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudFileCache->DoStop(downloadId, needClean);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -221,10 +228,45 @@ HWTEST_F(CloudFileCacheCoreTest, CleanCacheTest1, TestSize.Level1)
 {
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string uri = "testuri";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanCache(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudFileCache->CleanCache(uri);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
     EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: CleanFileCache
+ * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTest1, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::string uri = "testuri";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanFileCache(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    auto ret = cloudFileCache->CleanFileCache(uri);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: CleanFileCache
+ * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTest2, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::string uri = "testuri";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanFileCache(_)).WillOnce(Return(E_OK));
+    auto ret = cloudFileCache->CleanFileCache(uri);
+    EXPECT_TRUE(ret.IsSuccess());
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

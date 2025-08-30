@@ -289,6 +289,25 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
     return static_cast<ani_int>(data.GetData().value());
 }
 
+ani_int CloudSyncAni::GetCoreFileSyncState(ani_env *env, ani_class clazz, ani_string path)
+{
+    string filePath;
+    ani_status ret = ANIUtils::AniString2String(env, path, filePath);
+    if (ret != ANI_OK) {
+        LOGE("ani string get size failed. ret = %{public}d", static_cast<int32_t>(ret));
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return static_cast<int32_t>(ret);
+    }
+    auto data = CloudSyncCore::DoGetCoreFileSyncState(filePath);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync do GetCoreFileSyncState failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+        return err.GetErrNo();
+    }
+    return static_cast<ani_int>(data.GetData().value());
+}
+
 static bool CheckIsValidUri(Uri uri)
 {
     string scheme = uri.GetScheme();

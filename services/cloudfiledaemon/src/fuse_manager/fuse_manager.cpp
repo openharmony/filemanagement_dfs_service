@@ -488,6 +488,15 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
     }
 }
 
+static void CheckAndReport(const string &path, const string &childName, bool create)
+{
+    if (!create && path != childName) {
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
+            FaultType::INODE_FILE, ENOMEM, "hash collision: childName:" + GetAnonyString(childName) +
+            ",path:" + GetAnonyString(path)});
+    }
+}
+
 static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_entry_param *e,
     FuseData *data, string& parentName)
 {
@@ -530,10 +539,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         LOGW("invalidate %s", GetAnonyString(childName).c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
-    if (child->path != childName) {
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
-            FaultType::INODE_FILE, ENOMEM, "hash collision"});
-    }
+    CheckAndReport(child->path, childName, create);
     child->path = childName;
     child->parent = parent;
     LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
@@ -900,6 +906,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
             " prepareTraceId: " + prepareTraceId;
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
                 FaultType::OPEN_CLOUD_FILE_TIMEOUT, ENETUNREACH, msg});
+        cInode->readSession->CancelSession();
         return -ENETUNREACH;
     }
     return HandleOpenResult(*error, data, cInode, fi);
@@ -955,12 +962,15 @@ static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<Cloud
     fuse_reply_open(req, fi);
 }
 
-static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
+static void UpdateReadStat(shared_ptr<CloudInode> cInode,
+                           uint64_t startTime,
+                           std::string bundleName)
 {
     uint64_t endTime = UTCTimeMilliSeconds();
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
     readStat.UpdateOpenSizeStat(cInode->mBase->size);
     readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
+    readStat.UpdateBundleName(bundleName);
 }
 
 static string GetPrepareTraceId(int32_t userId)
@@ -1021,7 +1031,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
                 fuse_reply_err(req, -ret);
                 cInode->readSession = nullptr;
             }
-            UpdateReadStat(cInode, startTime);
+            UpdateReadStat(cInode, startTime, data->activeBundle);
             wSesLock.unlock();
             return;
         }
@@ -1083,16 +1093,19 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         return;
     }
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", pid,
-         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load());
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d, fileType: %{public}d", pid,
+         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load(), cInode->mBase->fileType);
     wSesLock.lock();
     cInode->sessionRefCount--;
     auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
     DeleteFdsan(cloudFdInfo);
     EraseCloudFdCache(data, fi->fh);
     if (cInode->sessionRefCount == 0) {
-        if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
-            LOGE("Failed to close readSession");
+        if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
+            cInode->readSession->CancelSession();
+            if (!cInode->readSession->Close(false)) {
+                LOGE("Failed to close readSession");
+            }
         }
         cInode->readSession = nullptr;
         cInode->readCacheMap.clear();
@@ -1351,7 +1364,10 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
 }
 
-static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
+static void UpdateReadStatInfo(size_t size,
+                               std::string name,
+                               uint64_t readTime,
+                               std::string bundleName)
 {
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
     readStat.UpdateReadSizeStat(size);
@@ -1359,6 +1375,7 @@ static void UpdateReadStatInfo(size_t size, std::string name, uint64_t readTime)
     if (IsVideoType(name)) {
         readStat.UpdateReadInfo(READ_SUM);
     }
+    readStat.UpdateBundleName(bundleName);
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
@@ -1392,7 +1409,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError, readArgs->appId);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readStatus = READ_FINISHED;
@@ -1448,7 +1465,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, startTime);
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
 
     cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
     wSesLock.lock();

@@ -46,12 +46,14 @@ void FileRangeLockTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
     insMock = std::make_shared<CloudDisk::AssistantMock>();
+    CloudDisk::AssistantMock::EnableMock();
     CloudDisk::Assistant::ins = insMock;
 }
 
 void FileRangeLockTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    CloudDisk::AssistantMock::DisableMock();
     CloudDisk::Assistant::ins = nullptr;
     insMock = nullptr;
 }

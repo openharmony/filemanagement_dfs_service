@@ -66,6 +66,9 @@ public:
     virtual int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) = 0;
     virtual int32_t UpdateDfsSwitchStatus(int32_t switchStatus) = 0;
     virtual int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) = 0;
+    virtual int32_t RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener) = 0;
+    virtual int32_t UnregisterFileDfsListener(const std::string &instanceId) = 0;
+    virtual int32_t IsSameAccountDevice(const std::string &networkId, bool &isSameAccount) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile

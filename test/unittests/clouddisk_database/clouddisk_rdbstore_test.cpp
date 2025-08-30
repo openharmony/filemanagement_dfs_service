@@ -300,7 +300,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetAttrTest4, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
-    
+
     int32_t ret = clouddiskrdbStore_->GetAttr(cloudId, info);
     EXPECT_EQ(ret, E_OK);
 }
@@ -571,7 +571,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
     clouddiskrdbStore_->userId_ = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
+
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
@@ -644,11 +644,11 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest4, TestSize.Level1)
     bool noNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
+
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
-    
+
     int32_t ret = clouddiskrdbStore_->MkDir(cloudId, parentCloudId, directoryName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -1833,7 +1833,7 @@ HWTEST_F(CloudDiskRdbStoreTest, HandleRecycleXattrTest4, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest001
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1844,6 +1844,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest1, TestSize.Level1)
     int32_t position;
     std::string attr;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
@@ -1851,12 +1852,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest1, TestSize.Level1)
     EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest002
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1867,6 +1868,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest2, TestSize.Level1)
     int32_t position;
     std::string attr;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
@@ -1875,12 +1877,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest2, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest003
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1891,6 +1893,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest3, TestSize.Level1)
     int32_t position;
     std::string attr;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
@@ -1900,12 +1903,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest3, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest004
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1915,6 +1918,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest4, TestSize.Level1)
     int64_t rowId;
     int32_t position;
     std::string attr;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -1926,12 +1930,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest4, TestSize.Level1)
     EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest005
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1942,6 +1946,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest5, TestSize.Level1)
     int32_t position;
     std::string attr;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
@@ -1953,12 +1958,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest5, TestSize.Level1)
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
 /**
- * @tc.name: GetRecycleInfo
+ * @tc.name: GetRecycleInfoTest006
  * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
  * @tc.type: FUNC
  */
@@ -1969,6 +1974,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest6, TestSize.Level1)
     int32_t position;
     std::string attr;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
@@ -1980,8 +1986,37 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest6, TestSize.Level1)
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr);
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetRecycleInfoTest007
+ * @tc.desc: Verify the CloudDiskRdbStore::GetRecycleInfo function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest7, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    int64_t rowId;
+    int32_t position;
+    std::string attr;
+    bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_RDB));
+ 
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -2681,9 +2716,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest1, TestSize.Level1)
     const std::string cloudId = "";
     std::string value = "";
     int32_t pos = 0;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -2697,9 +2733,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest2, TestSize.Level1)
     const std::string cloudId = "rootId";
     std::string value = "";
     int32_t pos = 0;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -2713,13 +2750,14 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest3, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "mock";
     int32_t pos = 0;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -2733,6 +2771,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest4, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = 0;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -2740,8 +2779,8 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest4, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -2756,6 +2795,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest5, TestSize.Level1)
     std::string value = "mock";
     int32_t pos = 0;
     bool preCount = true;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
@@ -2763,8 +2803,8 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest5, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_RDB));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -2778,6 +2818,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest6, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = -1;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -2787,8 +2828,8 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest6, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_RDB));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -2802,6 +2843,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest7, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = -1;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -2811,8 +2853,8 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest7, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -2826,6 +2868,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest8, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = 1;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
     bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -2833,9 +2876,34 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest8, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
-    
-    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetExtAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetXattr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest9, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    std::string value = "";
+    int32_t pos = 1;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
+
+    int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos, dirtyType);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -3145,10 +3213,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest1, TestSize.Level1)
     const std::string oldFileName = "test";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -3163,10 +3233,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest2, TestSize.Level1)
     const std::string oldFileName = "test";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -3181,10 +3253,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest3, TestSize.Level1)
     const std::string oldFileName = "";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -3199,10 +3273,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest4, TestSize.Level1)
     const std::string oldFileName = "test";
     const std::string newParentCloudId = "";
     const std::string newFileName = "newFileName";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -3217,10 +3293,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest5, TestSize.Level1)
     const std::string oldFileName = "mock";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -3235,10 +3313,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest6, TestSize.Level1)
     const std::string oldFileName = "oldFileName";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "..";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -3253,10 +3333,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest7, TestSize.Level1)
     const std::string oldFileName = "oldFileName";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "mock";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -3271,10 +3353,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest8, TestSize.Level1)
     const std::string oldFileName = "oldFileName";
     const std::string newParentCloudId = "100";
     const std::string newFileName = "mock";
+    const bool newFileNoNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
-    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4546,5 +4630,51 @@ HWTEST_F(CloudDiskRdbStoreTest, GetSrcCloudIdTest004, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetSrcCloudIdTest004 failed";
     }
     GTEST_LOG_(INFO) << "GetSrcCloudIdTest004 end";
+}
+
+/**
+ * @tc.name: TriggerSyncForWrite
+ * @tc.desc: Verify the CloudDiskRdbStore::TriggerSyncForWrite function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TriggerSyncForWriteTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncForWriteTest001 start";
+    try {
+        auto rdb = make_shared<RdbStoreMock>();
+        const std::string fileName = "Test";
+        const std::string parentCloudId = "100";
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        clouddiskrdbStore_->TriggerSyncForWrite(fileName, parentCloudId);
+        EXPECT_EQ(fileName, "Test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncForWriteTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncForWriteTest001 end";
+}
+ 
+/**
+ * @tc.name: TriggerSyncForWrite
+ * @tc.desc: Verify the CloudDiskRdbStore::TriggerSyncForWrite function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TriggerSyncForWriteTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncForWriteTest002 start";
+    try {
+        auto rdb = make_shared<RdbStoreMock>();
+        const std::string fileName = "mock";
+        const std::string parentCloudId = "100";
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        clouddiskrdbStore_->TriggerSyncForWrite(fileName, parentCloudId);
+        EXPECT_EQ(fileName, "mock");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncForWriteTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncForWriteTest002 end";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

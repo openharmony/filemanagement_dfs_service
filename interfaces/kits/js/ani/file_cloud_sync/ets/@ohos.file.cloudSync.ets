@@ -301,7 +301,16 @@ export default namespace cloudSync {
         uris: Array<string>;
     }
 
-    enum FileSyncState {
+    export enum FileState {
+        INITIAL_AFTER_DOWNLOAD = 0,
+        UPLOADING = 1,
+        STOPPED = 2,
+        TO_BE_UPLOADED = 3,
+        UPLOAD_SUCCESS = 4,
+        UPLOAD_FAILURE = 5,
+    }
+
+    export enum FileSyncState {
         UPLOADING = 0,
         DOWNLOADING = 1,
         COMPLETED = 2,
@@ -567,6 +576,7 @@ export default namespace cloudSync {
         native CloudFileCacheStartBatch(uris: Array<string>, fieldKey: DownloadFileType): number;
         native CloudFileCacheStopBatch(downloadId: number, clean: boolean): void;
         native cleanCache(uri: string): void;
+        native cleanFileCache(uri: string): void;
 
         StartInner(uri: string): int {
             this.CloudFileCacheStart(uri);
@@ -628,6 +638,7 @@ export default namespace cloudSync {
             loadLibrary("cloud_sync_ani");
         }
         static native getFileSyncStateInner(uri: string): int;
+        static native getCoreFileSyncStateInner(uri: string): int;
         static native registerChangeInner(uri: string, recursion: boolean, callback: Callback<ChangeData>): void;
         static native unregisterChangeInner(uri: string): void;
         static native optimizeStorageInner(): void;
@@ -685,6 +696,11 @@ export default namespace cloudSync {
         return res as FileSyncState;
     }
 
+    export function getCoreFileSyncState(uri: string): FileState {
+        let res: int = StaticFunction.getCoreFileSyncStateInner(uri);
+        return res as FileState;
+    }
+
     export function registerChange(uri: string, recursion: boolean, callback: Callback<ChangeData>): void {
         StaticFunction.registerChangeInner(uri, recursion, callback);
     }
@@ -732,5 +748,164 @@ export default namespace cloudSync {
 
     export function stopOptimizeSpace(): void {
         StaticFunction.stopOptimizeSpaceInner();
+    }
+
+    export interface HistoryVersion {
+        editedTime: number;
+        fileSize: number;
+        versionId: string;
+        originalFileName: string;
+        sha256: string;
+        autoResolved: boolean;
+    }
+
+    class HistoryVersionInner implements HistoryVersion {
+        constructor(
+            editedTime: number,
+            fileSize: number,
+            versionId: string,
+            originalFileName: string,
+            sha256: string,
+            autoResolved: boolean
+        ) {
+            this.editedTime = editedTime;
+            this.fileSize = fileSize;
+            this.versionId = versionId;
+            this.originalFileName = originalFileName;
+            this.sha256 = sha256;
+            this.autoResolved = autoResolved;
+        }
+        public editedTime: number;
+        public fileSize: number;
+        public versionId: string;
+        public originalFileName: string;
+        public sha256: string;
+        public autoResolved: boolean;
+    }
+
+    export interface VersionDownloadProgress {
+        state: State;
+        progress: number;
+        errType: DownloadErrorType;
+    }
+
+    class VersionDownloadProgressInner implements VersionDownloadProgress {
+        constructor(
+            state: State,
+            progress: number,
+            errType: DownloadErrorType
+        ) {
+            this.state = state;
+            this.progress = progress;
+            this.errType = errType;
+        }
+        public state: State;
+        public progress: number;
+        public errType: DownloadErrorType;
+    }
+
+    export class FileVersion {
+        static {
+            loadLibrary("cloud_sync_ani");
+        }
+        private nativePtr: long = 0;
+        native constructor();
+
+        bindNativePtr(ptr: long): void {
+            if (this.nativePtr == 0) {
+                this.nativePtr = ptr;
+            }
+        }
+
+        getHistoryVersionList(uri: string, versionNumLimit: number): Promise<Array<HistoryVersion>> {
+            return new Promise<Array<HistoryVersion>>((resolve: (result: Array<HistoryVersion>) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    uriIn: string,
+                    versionNumLimitIn: number
+                ): Array<HistoryVersion> => {
+                    return this.getHistoryVersionListInner(uriIn, versionNumLimitIn);
+                }, uri, versionNumLimit);
+                promise.then<Array<HistoryVersion>>((ret: Array<HistoryVersion>): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        downloadHistoryVersion(uri: string, versionId: string, callback: Callback<VersionDownloadProgress>): Promise<string> {
+            return new Promise<string>((resolve: (result: string) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    uriIn: string,
+                    versionIdIn: string,
+                    callbackIn: Callback<VersionDownloadProgress>
+                ): string => {
+                    return this.downloadHistoryVersionInner(uriIn, versionIdIn, callbackIn);
+                }, uri, versionId, callback);
+                promise.then<string>((ret: string): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+        replaceFileWithHistoryVersion(originalUri: string, versionUri: string): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    originalUriIn: string,
+                    versionUriIn: string
+                ): int => {
+                    this.replaceFileWithHistoryVersionInner(originalUriIn, versionUriIn);
+                    return 0;
+                }, originalUri, versionUri);
+                promise.then<void>((ret: undefined): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        isFileConflict(uri: string): Promise<boolean> {
+            return new Promise<boolean>((resolve: (result: boolean) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    uriIn: string
+                ): boolean => {
+                    return this.isFileConflictInner(uriIn);
+                }, uri);
+                promise.then<boolean>((ret: boolean): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        clearFileConflict(uri: string): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    uriIn: string
+                ): int => {
+                    this.clearFileConflictInner(uriIn);
+                    return 0;
+                }, uri);
+                promise.then<void>((ret: undefined): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        native getHistoryVersionListInner(uri: string, versionNumLimit: number): Array<HistoryVersion>;
+        native downloadHistoryVersionInner(uri: string, versionId: string, callback: Callback<VersionDownloadProgress>): string;
+        native replaceFileWithHistoryVersionInner(originalUri: string, versionUri: string): void;
+        native isFileConflictInner(uri: string): boolean;
+        native clearFileConflictInner(uri: string): void;
     }
 };

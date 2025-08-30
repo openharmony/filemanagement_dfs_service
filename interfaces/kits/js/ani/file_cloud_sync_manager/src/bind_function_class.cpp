@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "cloud_sync_manager_ani.h"
+#include "downgrade_download_ani.h"
 #include "utils_log.h"
 
 using namespace OHOS;
@@ -73,6 +74,40 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
     return ANI_OK;
 }
 
+static ani_status BindContextOnDowngradeDownload(ani_env *env)
+{
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.DowngradeDownload");
+    ani_class cls;
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+    std::string ct = Builder::BuildConstructorName();
+    std::string vSign = Builder::BuildSignatureDescriptor({});
+    std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::string fSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
+    std::string fileInfoSign = Builder::BuildSignatureDescriptor({},
+        Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.CloudFileInfo"));
+    std::array methods = {
+        ani_native_function{ct.c_str(), sSign.c_str(),
+            reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadConstructor)},
+        ani_native_function{"DowngradeGetCloudFileInfo", fileInfoSign.c_str(),
+            reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadGetCloudFileInfo)},
+        ani_native_function{"DowngradeStartDownload", fSign.c_str(),
+            reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadStartDownload)},
+        ani_native_function{"DowngradeStopDownload", vSign.c_str(),
+            reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadStopDownload)},
+    };
+
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    }
+    return ANI_OK;
+}
+
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
@@ -82,6 +117,11 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     auto status = BindContextOnCloudSyncManager(env);
+    if (status != ANI_OK) {
+        return status;
+    }
+
+    status = BindContextOnDowngradeDownload(env);
     if (status != ANI_OK) {
         return status;
     }

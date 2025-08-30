@@ -285,4 +285,27 @@ void CloudFileCacheAni::CloudFileCacheCleanCache(ani_env *env, ani_object object
         ErrorHandler::Throw(env, err);
     }
 }
+
+void CloudFileCacheAni::CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri)
+{
+    std::string uriInput;
+    ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return;
+    }
+
+    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
+    if (cloudFileCache == nullptr) {
+        LOGE("Cannot wrap cloudFileCache.");
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return;
+    }
+    auto data = cloudFileCache->CleanFileCache(uriInput);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloudFileCache do cleanFileCache failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync

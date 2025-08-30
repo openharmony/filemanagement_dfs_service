@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BusinessError, AsyncCallback } from "@ohos.base";
+import { BusinessError, AsyncCallback, Callback } from "@ohos.base";
 
 export default namespace cloudSyncManager  {
 
@@ -37,6 +37,155 @@ export default namespace cloudSyncManager  {
         }
         eventId: string;
         extraData: string;
+    }
+
+    export enum DownloadStopReason {
+        NO_STOP = 0,
+        NETWORK_UNAVAILABLE = 1,
+        LOCAL_STORAGE_FULL = 2,
+        TEMPERATURE_LIMIT = 3,
+        USER_STOPPED = 4,
+        APP_UNLOAD = 5,
+        OTHER_REASON = 6
+    }
+
+    export enum DownloadState {
+        RUNNING = 0,
+        COMPLETED = 1,
+        STOPPED = 2
+    }
+
+    export interface CloudFileInfo {
+        cloudFileCount: number;
+        cloudFileTotalSize: number;
+        localFileCount: number;
+        localFileTotalSize: number;
+        bothFileCount: number;
+        bothFileTotalSize: number;
+    }
+
+    class CloudFileInfoInner implements CloudFileInfo {
+        constructor(
+            cloudFileCount: number,
+            cloudFileTotalSize: number,
+            localFileCount: number,
+            localFileTotalSize: number,
+            bothFileCount: number,
+            bothFileTotalSize: number
+        ) {
+            this.cloudFileCount = cloudFileCount;
+            this.cloudFileTotalSize = cloudFileTotalSize;
+            this.localFileCount = localFileCount;
+            this.localFileTotalSize = localFileTotalSize;
+            this.bothFileCount = bothFileCount;
+            this.bothFileTotalSize = bothFileTotalSize;
+        }
+        cloudFileCount: number;
+        cloudFileTotalSize: number;
+        localFileCount: number;
+        localFileTotalSize: number;
+        bothFileCount: number;
+        bothFileTotalSize: number;
+    }
+
+    export class DownloadProgress {
+        constructor(
+            state: DownloadState,
+            successfulCount: number,
+            failedCount: number,
+            totalCount: number,
+            downloadedSize: number,
+            totalSize: number,
+            stopReason: DownloadStopReason
+        ) {
+            this.state = state;
+            this.successfulCount = successfulCount;
+            this.failedCount = failedCount;
+            this.totalCount = totalCount;
+            this.downloadedSize = downloadedSize;
+            this.totalSize = totalSize;
+            this.stopReason = stopReason;
+        }
+        state: DownloadState;
+        successfulCount: number;
+        failedCount: number;
+        totalCount: number;
+        downloadedSize: number;
+        totalSize: number;
+        stopReason: DownloadStopReason;
+    }
+
+    export class DowngradeDownload {
+        static {
+            loadLibrary("cloud_sync_manager_ani");
+        }
+        private nativePtr: long = 0;
+        native constructor(bundleName: string);
+
+        bindNativePtr(ptr: long): void {
+            if (this.nativePtr == 0) {
+                this.nativePtr = ptr;
+            }
+        }
+
+        getCloudFileInfo(): Promise<CloudFileInfo> {
+            return new Promise<CloudFileInfo>((resolve: (result: CloudFileInfo) => void,
+                reject: (e: BusinessError<void>) => void): CloudFileInfo => {
+                let promise = taskpool.execute((): CloudFileInfo => this.getCloudFileInfoInner());
+                promise.then<CloudFileInfo>((ret: CloudFileInfo): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        startDownload(callback: Callback<DownloadProgress>): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((
+                    callbackIn: Callback<DownloadProgress>
+                ): int => {
+                    this.startDownloadInner(callbackIn);
+                    return 0;
+                }, callback);
+                promise.then<void>((ret: undefined): void => {
+                resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        stopDownload(): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => this.stopDownloadInner());
+                promise.then<void>((ret: undefined): void => {
+                    resolve(ret);
+                }, (e: BusinessError<void>): void => {
+                    reject(e);
+                });
+            });
+        }
+
+        native DowngradeGetCloudFileInfo(): CloudFileInfo;
+        native DowngradeStartDownload(callback: Callback<DownloadProgress>): void;
+        native DowngradeStopDownload(): void;
+
+        getCloudFileInfoInner(): CloudFileInfo {
+            return this.DowngradeGetCloudFileInfo();
+        }
+
+        startDownloadInner(callback: Callback<DownloadProgress>): int {
+            this.DowngradeStartDownload(callback);
+            return 0;
+        }
+
+        stopDownloadInner(): int {
+            this.DowngradeStopDownload();
+            return 0;
+        }
     }
 
     class StaticFunction {

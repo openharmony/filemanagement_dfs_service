@@ -777,6 +777,119 @@ int32_t DistributedFileDaemonProxy::GetConnectedDeviceList(std::vector<DfsDevice
     }
     return ret;
 }
+
+int32_t DistributedFileDaemonProxy::RegisterFileDfsListener(const std::string &instanceId,
+    const sptr<IFileDfsListener> &listener)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(instanceId)) {
+        LOGE("Failed to write instance id.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (listener == nullptr) {
+        LOGE("Listener is nullptr.");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteRemoteObject(listener->AsObject())) {
+        LOGE("Fail to WriteRemoteObject");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_FILE_DFS_LISTENER), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("RegisterFileDfsListener ipc failed, ret: %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::UnregisterFileDfsListener(const std::string &instanceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(instanceId)) {
+        LOGE("Failed to write instance id.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("UnregisterFileDfsListener ipc failed, ret: %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to write network id.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE), data,
+        reply, option);
+    if (ret != FileManagement::E_OK) {
+        LOGE("IsSameAccountDevice ipc failed, ret: %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("Read ret failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (ret != OHOS::FileManagement::E_OK) {
+        LOGE("IsSameAccountDevice failed, ret: %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadBool(isSameAccount)) {
+        LOGE("Read isSameAccount failed");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return ret;
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

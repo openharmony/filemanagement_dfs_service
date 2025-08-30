@@ -818,7 +818,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         for (auto &uri : uriVec) {
             if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
                 LOGE("permission denied");
-                return E_PERMISSION_DENIED;
+                return E_ILLEGAL_URI;
             }
         }
     }
