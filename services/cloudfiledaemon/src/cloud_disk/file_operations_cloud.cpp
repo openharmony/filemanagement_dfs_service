@@ -380,10 +380,11 @@ static unsigned int GetFileOpenFlags(int32_t fileFlags)
     return flags;
 }
 
-static int32_t CheckBucketPath(string cloudId, string bundleName, int32_t userId, string tmpPath)
+static int32_t CheckBucketPath(const string &cloudId, const string &bundleName,
+    struct CloudDiskFuseData *data, string tmpPath)
 {
-    string baseDir = CloudFileUtils::GetLocalBaseDir(bundleName, userId);
-    string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);
+    string baseDir = CloudFileUtils::GetLocalBaseDir(bundleName, data->userId);
+    string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, data->userId);
     if (access(baseDir.c_str(), F_OK) != 0) {
         LOGE("bucket path's parent directory not exits, errno=%{public}d", errno);
         auto accessErrno = errno;
@@ -404,6 +405,7 @@ static int32_t CheckBucketPath(string cloudId, string bundleName, int32_t userId
             return mkdirErrno;
         }
         LOGW("mkdir bucketPath success");
+        CloudFileUtils::ChangeUid(data->userId, bundleName, data->fileMgrBundle, STAT_MODE_DIR, bucketPath);
     }
     return EOK;
 }
@@ -417,7 +419,7 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
     if (metaBase.fileType != FILE_TYPE_CONTENT) {
         string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
         string tmpPath = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-        auto ret = CheckBucketPath(inoPtr->cloudId, inoPtr->bundleName, data->userId, tmpPath);
+        auto ret = CheckBucketPath(inoPtr->cloudId, inoPtr->bundleName, data, tmpPath);
         if (ret != EOK) {
             LOGE("check bucketPath failed, ret = %{public}d", ret);
             return ret;
@@ -433,6 +435,7 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
                     GetAnonyString(tmpPath).c_str(), errno);
                 return errno;
             }
+            CloudFileUtils::ChangeUid(data->userId, inoPtr->bundleName, data->fileMgrBundle, STAT_MODE_REG, path);
         }
         unsigned int flags = GetFileOpenFlags(fi->flags);
         int32_t fd = open(path.c_str(), flags);
@@ -700,11 +703,12 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
     }
 }
 
-static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, int32_t userId, mode_t mode)
+static int32_t CreateLocalFile(const string &cloudId, const string &bundleName,
+    struct CloudDiskFuseData *data, mode_t mode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);
-    string path = CloudFileUtils::GetLocalFilePath(cloudId, bundleName, userId);
+    string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, data->userId);
+    string path = CloudFileUtils::GetLocalFilePath(cloudId, bundleName, data->userId);
     if (access(bucketPath.c_str(), F_OK) != 0) {
         if (mkdir(bucketPath.c_str(), STAT_MODE_DIR) != 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::MKNOD,
@@ -712,6 +716,7 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
                 " err: " + std::to_string(errno)});
             return -errno;
         }
+        CloudFileUtils::ChangeUid(data->userId, bundleName, data->fileMgrBundle, STAT_MODE_DIR, bucketPath);
     }
     int32_t fd = open(path.c_str(), (mode & O_NOFOLLOW) | O_CREAT | O_RDWR, STAT_MODE_REG);
     if (fd < 0) {
@@ -720,6 +725,7 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
             " err: " + std::to_string(errno)});
         return -errno;
     }
+    CloudFileUtils::ChangeUid(data->userId, bundleName, data->fileMgrBundle, STAT_MODE_REG, path);
     return fd;
 }
 
@@ -792,7 +798,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
             CloudFile::FaultType::FILE, err, "Failed to generate cloud id"});
         return -err;
     }
-    int32_t fd = CreateLocalFile(cloudId, parentInode->bundleName, data->userId, mode);
+    int32_t fd = CreateLocalFile(cloudId, parentInode->bundleName, data, mode);
     if (fd < 0) {
         LOGD("Create local file failed error:%{public}d", fd);
         return fd;

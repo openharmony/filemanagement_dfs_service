@@ -16,11 +16,14 @@
 #include <gtest/gtest.h>
 
 #include "cloud_file_utils.h"
+#include "fuse_assistant.h"
 #include "parameters.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace std;
+using namespace CloudFile;
 using namespace OHOS;
+using namespace testing;
 using namespace testing::ext;
 
 static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
@@ -31,15 +34,26 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<FuseAssistantMock> insMock_ = nullptr;
 };
 
 void CloudFileUtilsTest::SetUpTestCase(void) {}
 
 void CloudFileUtilsTest::TearDownTestCase(void) {}
 
-void CloudFileUtilsTest::SetUp(void) {}
+void CloudFileUtilsTest::SetUp(void)
+{
+    insMock_ = make_shared<FuseAssistantMock>();
+    FuseAssistantMock::ins = insMock_;
+    insMock_->EnableMock();
+}
 
-void CloudFileUtilsTest::TearDown(void) {}
+void CloudFileUtilsTest::TearDown(void)
+{
+    insMock_->DisableMock();
+    FuseAssistantMock::ins = nullptr;
+    insMock_ = nullptr;
+}
 
 /**
  * @tc.name: DfsService_CloudDisk_GetCloudId_001
@@ -219,5 +233,114 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_04, TestSize.Level1
     string cloudPath = "/invalid/path";
     bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CloudFileUtils_ChangeUid
+ * @tc.desc: Verify ChangeUid for bundle name.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUid, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUid Start.";
+    try {
+        int32_t userId = 100;
+        string bundleName = "";
+        uint32_t mode = 0771;
+        string path = "";
+        string fileMgrBundle = "";
+        string tempBundle = system::GetParameter(FILEMANAGER_KEY, "");
+        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+
+        bundleName = "com.ohos.camera";
+        fileMgrBundle = system::GetParameter(FILEMANAGER_KEY, "");
+        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+
+        bundleName = system::GetParameter(FILEMANAGER_KEY, "");
+        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+
+        fileMgrBundle = "";
+        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+
+        fileMgrBundle = "";
+        system::SetParameter(FILEMANAGER_KEY, "");
+        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+        system::SetParameter(FILEMANAGER_KEY, tempBundle);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUid ERROR.";
+    }
+}
+
+/**
+ * @tc.name: CloudFileUtils_ChangeUidByCloudId
+ * @tc.desc: Verify ChangeUidByCloudId for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUidByCloudId, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUidByCloudId Start.";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.camera";
+        uint32_t mode = 0771;
+        string cloudId = "";
+        uid_t uid = 0;
+        CloudFileUtils::ChangeUidByCloudId(userId, bundleName, cloudId, mode, uid);
+
+        cloudId = "testCloudId";
+        CloudFileUtils::ChangeUidByCloudId(userId, bundleName, cloudId, mode, uid);
+
+        userId = 0;
+        bundleName = "";
+        CloudFileUtils::ChangeUidByCloudId(userId, bundleName, cloudId, mode, uid);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUidByCloudId ERROR.";
+    }
+}
+
+/**
+ * @tc.name: CloudFileUtils_ChangeUidByPath
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUidByPath, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUidByPath Start.";
+    try {
+        mode_t mode = 0;
+        string path = "/data/testdir";
+        uid_t uid = 0;
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        uid = 1;
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        path = "/data/test";
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(-1));
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        EXPECT_CALL(*insMock_, chmod(_, _)).Times(3).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, chown(_, _, _)).WillOnce(Return(-1));
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        mode = 0755;
+        EXPECT_CALL(*insMock_, chown(_, _, _)).Times(2).WillOnce(Return(0));
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        uid = 1000;
+        CloudFileUtils::ChangeUidByPath(path, mode, uid);
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUidByPath ERROR.";
+    }
 }
 } // OHOS
