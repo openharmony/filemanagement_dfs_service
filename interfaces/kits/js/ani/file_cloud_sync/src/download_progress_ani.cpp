@@ -87,7 +87,7 @@ ani_object SingleProgressAni::ConvertToObject(ani_env *env)
 
 std::shared_ptr<DlProgressAni> SingleProgressAni::CreateNewObject()
 {
-    return std::make_shared<SingleProgressAni>(taskId_);
+    return std::make_shared<SingleProgressAni>(taskId_, uri_);
 }
 
 void BatchProgressAni::Update(const DownloadProgressObj &progress)
