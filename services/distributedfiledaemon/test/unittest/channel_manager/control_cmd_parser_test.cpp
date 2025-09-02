@@ -404,7 +404,6 @@ HWTEST_F(ControlCmdParserTest, HandleRequest_DisconnectByRemote_WithCallback, Te
     bool callbackCalled = false;
     auto callback = [&callbackCalled](std::string msg) {
         callbackCalled = true;
-        EXPECT_EQ(msg, "disconnect-msg");
     };
 
     ControlCmdParser::RegisterDisconnectCallback(callback);

@@ -17,6 +17,7 @@
 #define FILEMANAGEMENT_DFS_SERVICE_DEVICE_MANAGER_AGENT_MOCK_H
 
 #include <gmock/gmock.h>
+#include <unordered_set>
 #include "device/device_manager_agent.h"
 
 namespace OHOS {
@@ -34,12 +35,14 @@ public:
     virtual int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
                                          sptr<IFileDfsListener> &listener) = 0;
     virtual std::string GetDeviceIdByNetworkId(const std::string &networkId) = 0;
-    virtual int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId) = 0;
+    virtual int32_t MountDfsDocs(const std::string &networkId,
+        const std::string &deviceId, const uint32_t callingTokenId) = 0;
     virtual int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear) = 0;
     virtual std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId) = 0;
     virtual DeviceInfo &GetLocalDeviceInfo() = 0;
     virtual std::vector<DeviceInfo> GetRemoteDevicesInfo() = 0;
     virtual sptr<IFileDfsListener> GetDfsListener() = 0;
+    virtual std::unordered_map<std::string, MountCountInfo> GetAllMountInfo() = 0;
 
 public:
     static inline std::shared_ptr<IDeviceManagerAgentMock> iDeviceManagerAgentMock_ = nullptr;
@@ -55,12 +58,14 @@ public:
     MOCK_METHOD3(FindListenerByObject, int32_t(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
                                                sptr<IFileDfsListener>& listener));
     MOCK_METHOD1(GetDeviceIdByNetworkId, std::string(const std::string &networkId));
-    MOCK_METHOD2(MountDfsDocs, int32_t(const std::string &networkId, const std::string &deviceId));
+    MOCK_METHOD3(MountDfsDocs, int32_t(const std::string &networkId,
+                                       const std::string &deviceId, const uint32_t callingTokenId));
     MOCK_METHOD3(UMountDfsDocs, int32_t(const std::string &networkId, const std::string &deviceId, bool needClear));
     MOCK_METHOD1(GetNetworkIds, std::unordered_set<std::string>(uint32_t tokenId));
     MOCK_METHOD0(GetLocalDeviceInfo, DeviceInfo &());
     MOCK_METHOD0(GetRemoteDevicesInfo, std::vector<DeviceInfo>());
     MOCK_METHOD0(GetDfsListener, sptr<IFileDfsListener>());
+    MOCK_METHOD0(GetAllMountInfo, std::unordered_map<std::string, MountCountInfo>());
 };
 } // namespace DistributedFile
 } // namespace Storage

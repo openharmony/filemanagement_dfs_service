@@ -66,11 +66,21 @@ int32_t FileDfsListenerStub::HandleOnStatus(MessageParcel &data, MessageParcel &
         LOGE("read status failed");
         return E_INVAL_ARG;
     }
+    std::string path;
+    if (!data.ReadString(path)) {
+        LOGE("Failed to read path");
+        return E_INVAL_ARG;
+    }
+    int32_t type = -1;
+    if (!data.ReadInt32(type)) {
+        LOGE("Failed to read type");
+        return E_INVAL_ARG;
+    }
     if (networkId.empty() || status < 0) {
         LOGE("Invalid arguments");
         return E_INVAL_ARG;
     }
-    OnStatus(networkId, status);
+    OnStatus(networkId, status, path, type);
     return NO_ERROR;
 }
 

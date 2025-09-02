@@ -61,6 +61,7 @@ public:
     static bool PublishNotification(const ControlCmd &inCmd, ControlCmd &outCmd);
     static bool CancelNotification(const ControlCmd &inCmd, ControlCmd &outCmd);
     static bool DisconnectByRemote(const ControlCmd &inCmd, ControlCmd &outCmd);
+    static bool IsLocalItDevice();
 
     static void RegisterDisconnectCallback(std::function<void(std::string)> cb);
 

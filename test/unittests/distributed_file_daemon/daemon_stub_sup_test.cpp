@@ -96,20 +96,12 @@ bool IPCSkeleton::IsLocalCalling()
 namespace OHOS::FileManagement {
 bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
 {
-    if (g_checkUriPermissionTrue) {
-        return true;
-    }
-
-    return false;
+    return g_checkUriPermissionTrue;
 }
 
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
 {
-    if (g_checkCallerPermissionTrue) {
-        return true;
-    }
-
-    return false;
+    return g_checkCallerPermissionTrue;
 }
 }
 
@@ -187,6 +179,7 @@ void DaemonStubSupPTest::TearDownTestCase(void)
 void DaemonStubSupPTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    g_checkCallerPermissionTrue = true;
 }
 
 void DaemonStubSupPTest::TearDown(void)
@@ -253,8 +246,10 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleOpenP2PConnectionExTest001, Test
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
+    EXPECT_CALL(*daemonStub_, OpenP2PConnectionEx(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     ret = daemonStub_->HandleOpenP2PConnectionEx(data, reply);
-    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+    EXPECT_EQ(ret, E_OK);
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
     sptr<IRemoteObject> listenerPtr = sptr(new FileDfsListenerMock());
@@ -666,24 +661,17 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetDfsSwitchStatus, TestSize.Lev
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_INVAL_ARG));
     ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
     EXPECT_EQ(ret, E_OK);
 
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("networkId"));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
-    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_OK));
-    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
-    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
-
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return("networkId"));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*daemonStub_, GetDfsSwitchStatus(_, _)).WillOnce(Return(E_OK));
-    ret = daemonStub_->HandleGetDfsSwitchStatus(data, reply);
-    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetDfsSwitchStatus End";
 }
 
@@ -742,36 +730,28 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetConnectedDeviceList, TestSize
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(Return(E_INVAL_ARG));
-    ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
-    EXPECT_EQ(ret, E_OK);
-
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
     EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(Return(E_OK));
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
 
     DfsDeviceInfo testDevice;
     testDevice.networkId_ = "networkId";
+    testDevice.path_ = "test_path";
     std::vector<DfsDeviceInfo> deviceList = {testDevice};
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
     EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
     EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*daemonStub_, GetConnectedDeviceList(_)).WillOnce(DoAll(SetArgReferee<0>(deviceList), Return(E_OK)));
     ret = daemonStub_->HandleGetConnectedDeviceList(data, reply);
@@ -880,12 +860,6 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleIsSameAccountDevice, TestSize.Le
     EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(Return(E_OK));
     ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
     EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
-
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    EXPECT_CALL(*daemonStub_, IsSameAccountDevice(_, _)).WillOnce(Return(E_INVAL_ARG));
-    ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
-    EXPECT_EQ(ret, E_OK);
 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));

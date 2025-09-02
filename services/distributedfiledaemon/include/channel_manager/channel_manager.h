@@ -50,6 +50,7 @@ public:
     int32_t SendRequest(
         const std::string &networkId, ControlCmd &request, ControlCmd &response, bool needResponse = false);
     int32_t SendBytes(const std::string &networkId, const std::string &data);
+    int32_t NotifyClient(const std::string &networkId, const ControlCmd &request);
 
     void OnSocketError(int32_t socketId, const int32_t errorCode);
     void OnSocketConnected(int32_t socketId, const PeerSocketInfo &info);

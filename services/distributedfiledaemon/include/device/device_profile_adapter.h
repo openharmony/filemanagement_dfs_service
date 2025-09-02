@@ -48,9 +48,9 @@ public:
         static DeviceProfileAdapter instance;
         return instance;
     }
-    bool IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
+    bool IsRemoteDfsVersionLowerThanLocal(const std::string &remoteNetworkId,
         VersionPackageName packageName = VersionPackageName::DFS_VERSION);
-    bool IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
+    bool IsRemoteDfsVersionLowerThanGiven(const std::string &remoteNetworkId,
         const DfsVersion& thresholdDfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     int32_t GetDfsVersionFromNetworkId(const std::string &networkId,
         DfsVersion &dfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);

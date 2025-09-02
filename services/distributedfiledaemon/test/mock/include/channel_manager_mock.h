@@ -35,6 +35,7 @@ public:
                                 ControlCmd &response,
                                 bool needResponse = false) = 0;
     virtual int32_t SendBytes(const std::string &networkId, const std::string &data) = 0;
+    virtual int32_t NotifyClient(const std::string &networkId, const ControlCmd &request) = 0;
 
 public:
     static inline std::shared_ptr<IChannelManagerMock> iChannelManagerMock = nullptr;
@@ -48,6 +49,7 @@ public:
     MOCK_METHOD4(SendRequest,
                  int32_t(const std::string &networkId, ControlCmd &request, ControlCmd &response, bool needResponse));
     MOCK_METHOD2(SendBytes, int32_t(const std::string &networkId, const std::string &data));
+    MOCK_METHOD2(NotifyClient, int32_t(const std::string &networkId, const ControlCmd &request));
 };
 } // namespace DistributedFile
 } // namespace Storage

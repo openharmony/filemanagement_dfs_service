@@ -372,7 +372,7 @@ int32_t ChannelManager::DoSendBytes(const std::int32_t socketId, const std::stri
 
 void ChannelManager::OnSocketConnected(int32_t socketId, const PeerSocketInfo &info)
 {
-    LOGI("socket %{public}d bind now", socketId);
+    LOGI("socket %{public}d bind now, clientNetworkId is %{public}.6s", socketId, info.networkId);
     if (socketId <= 0) {
         LOGE("invalid socket id, %{public}d", socketId);
         return;
@@ -563,6 +563,33 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
         }
         std::lock_guard<std::mutex> lock(mtx_);
         pendingResponses_.erase(msgId);
+    }
+    return ret;
+}
+
+int32_t ChannelManager::NotifyClient(const std::string &networkId, const ControlCmd &request)
+{
+    LOGI("start NotifyClient, networkId: %{public}.6s", networkId.c_str());
+    int32_t socketId = -1;
+    {
+        std::shared_lock<std::shared_mutex> readLock(serverMutex_);
+        if (serverNetworkSocketMap_.find(networkId) == serverNetworkSocketMap_.end()) {
+            LOGE("networkId not found");
+            return ERR_NO_EXIST_CHANNEL;
+        }
+        socketId = serverNetworkSocketMap_[networkId];
+    }
+
+    string data;
+    if (!ControlCmdParser::SerializeToJson(request, data)) {
+        LOGE("ControlCmdParser::SerializeToJson failed.");
+        return ERR_DATA_INVALID;
+    }
+
+    int32_t ret = DoSendBytes(socketId, data);
+    if (ret != E_OK) {
+        LOGE("DoSendBytes failed.");
+        return ERR_SEND_DATA_BY_SOFTBUS_FAILED;
     }
     return ret;
 }

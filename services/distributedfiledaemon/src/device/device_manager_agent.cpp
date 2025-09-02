@@ -20,11 +20,13 @@
 #include <string>
 #include <unordered_set>
 
+#include "connect_count/connect_count.h"
 #include "device_auth.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
+#include "ipc_skeleton.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "istorage_manager.h"
@@ -35,6 +37,7 @@
 #include "parameters.h"
 #include "softbus_bus_center.h"
 #include "system_ability_definition.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -49,8 +52,15 @@ const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_account_test";
+constexpr const char *MOUNT_PATH = "/storage/hmdfs/";
+constexpr int32_t VALID_MOUNT_PATH_LEN = 16;
 } // namespace
 using namespace std;
+MountCountInfo::MountCountInfo(std::string networkId, uint32_t callingTokenId)
+{
+    networkId_ = networkId;
+    callingCountMap_.emplace(callingTokenId, MOUNT_DFS_COUNT_ONE);
+}
 
 DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, std::numeric_limits<uint32_t>::max()) {}
 
@@ -119,6 +129,7 @@ void DeviceManagerAgent::QuitGroup(shared_ptr<MountPoint> smp)
 {
     LOGI("quit group begin");
     OfflineAllDevice();
+    SystemNotifier::GetInstance().ClearAllConnect();
 
     if (!smp) {
         stringstream ss("Failed to quit group: Received empty mountpoint");
@@ -224,12 +235,8 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     }
 
     auto networkId = std::string(deviceInfo.networkId);
-    auto deviceId = std::string(deviceInfo.deviceId);
-    if (deviceId.empty()) {
-        deviceId = GetDeviceIdByNetworkId(networkId);
-    }
     if (!networkId.empty()) {
-        UMountDfsDocs(networkId, deviceId, true);
+        UMountDfsDocs(networkId, networkId.substr(0, VALID_MOUNT_PATH_LEN), true);
     }
 
     auto cmd2 = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
@@ -340,20 +347,11 @@ bool DeviceManagerAgent::MountDfsCountOnly(const std::string &deviceId)
         LOGI("mountDfsCount_ can not find key");
         return false;
     }
-    if (itCount->second > 0) {
-        LOGI("[MountDfsCountOnly] deviceId %{public}s has already established a link, count %{public}d, \
-            increase count by one now", Utils::GetAnonyString(deviceId).c_str(), itCount->second);
-        return true;
-    }
-    return false;
+    return true;
 }
 
 bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool needClear)
 {
-    if (deviceId.empty()) {
-        LOGI("deviceId empty");
-        return false;
-    }
     std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
     if (itCount == mountDfsCount_.end()) {
@@ -362,14 +360,18 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
     }
     if (needClear) {
         LOGI("mountDfsCount_ erase");
-        mountDfsCount_.erase(itCount);
+        std::map<uint32_t, int32_t> emptyMap;
+        itCount->second.callingCountMap_.swap(emptyMap);
         return false;
     }
-    if (itCount->second > MOUNT_DFS_COUNT_ONE) {
+    auto &callingCountMap = itCount->second.callingCountMap_;
+    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
+    auto callingIter = callingCountMap.find(callingTokenId);
+    if (callingIter != callingCountMap.end() && callingIter->second > MOUNT_DFS_COUNT_ONE) {
         LOGI("[UMountDfsCountOnly] deviceId %{public}s has already established more than one link, \
             count %{public}d, decrease count by one now",
-            Utils::GetAnonyString(deviceId).c_str(), itCount->second);
-        mountDfsCount_[deviceId]--;
+            Utils::GetAnonyString(deviceId).c_str(), callingIter->second);
+        --callingIter->second;
         return true;
     }
     LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
@@ -471,9 +473,10 @@ std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t token
     return networkIdMap_[tokenId];
 }
 
-int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
+int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
+                                         const std::string &deviceId,
+                                         const uint32_t callingTokenId)
 {
-    LOGI("MountDfsDocs start");
     if (networkId.empty() || deviceId.empty()) {
         LOGE("NetworkId or DeviceId is empty");
         return INVALID_USER_ID;
@@ -481,7 +484,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
     int32_t ret = NO_ERROR;
     if (MountDfsCountOnly(deviceId)) {
         LOGI("only count plus one, do not need mount");
-        IncreaseMountDfsCount(deviceId);
+        IncreaseMountDfsCount(networkId, deviceId, callingTokenId);
         return ret;
     }
     int32_t userId = GetCurrentUserId();
@@ -489,6 +492,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
         LOGE("GetCurrentUserId Fail");
         return INVALID_USER_ID;
     }
+    currentUserId_ = userId;
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
         LOGE("storageMgrProxy_ is null");
@@ -499,8 +503,8 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
         LOGE("MountDfsDocs fail, ret = %{public}d", ret);
     } else {
         LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
-            Utils::GetAnonyString(deviceId).c_str());
-        IncreaseMountDfsCount(deviceId);
+             Utils::GetAnonyString(deviceId).c_str());
+        IncreaseMountDfsCount(networkId, deviceId, callingTokenId);
     }
     LOGI("storageMgr.MountDfsDocs end.");
     return ret;
@@ -519,7 +523,7 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGE("do not need umount");
         return ret;
     }
-    int32_t userId = GetCurrentUserId();
+    int32_t userId = currentUserId_;
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
         return INVALID_USER_ID;
@@ -533,24 +537,56 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
     } else {
-        LOGE("UMountDfsDocs success, deviceId %{public}s erase count",
+        LOGI("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
         RemoveMountDfsCount(deviceId);
+        ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, Status::DISCONNECT_OK,
+                                                            MOUNT_PATH + networkId.substr(0, VALID_MOUNT_PATH_LEN),
+                                                            StatusType::CONNECTION_STATUS);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
 }
 
-void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &deviceId)
+void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &networkId,
+    const std::string &mountPath, const uint32_t callingTokenId)
 {
     std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
-    mountDfsCount_[deviceId]++;
+    auto iter = mountDfsCount_.find(mountPath);
+    if (iter == mountDfsCount_.end()) {
+        MountCountInfo tmpInfo(networkId, callingTokenId);
+        mountDfsCount_.emplace(mountPath, tmpInfo);
+    } else {
+        auto &callingCountMap = iter->second.callingCountMap_;
+        auto callingIter = callingCountMap.find(callingTokenId);
+        if (callingIter != callingCountMap.end()) {
+            ++callingIter->second;
+            LOGI("Mountpath %{public}s has already established more than one link, \
+                count %{public}d, Increase count by one now",
+                Utils::GetAnonyString(mountPath).c_str(), callingIter->second);
+        } else {
+            callingCountMap.emplace(callingTokenId, MOUNT_DFS_COUNT_ONE);
+        }
+    }
 }
 
-void DeviceManagerAgent::RemoveMountDfsCount(const std::string &deviceId)
+void DeviceManagerAgent::RemoveMountDfsCount(const std::string &mountPath)
 {
     std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
-    mountDfsCount_.erase(deviceId);
+    auto iter = mountDfsCount_.find(mountPath);
+    if (iter == mountDfsCount_.end()) {
+        LOGE("Can not find mountPath: %{public}s", mountPath.c_str());
+        return;
+    }
+    mountDfsCount_.erase(mountPath);
+}
+
+void DeviceManagerAgent::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    for (const auto &ele : mountDfsCount_) {
+        deviceList.emplace_back(DfsDeviceInfo(ele.second.networkId_, MOUNT_PATH + ele.first));
+    }
 }
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
@@ -562,7 +598,7 @@ void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, in
             LOGI("get onstatusReverseProxy fail");
             return;
         }
-        onstatusReverseProxy->OnStatus(networkId, status);
+        onstatusReverseProxy->OnStatus(networkId, status, "", 0);
         LOGI("NotifyRemoteReverseObj, deviceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
     }
 }
@@ -850,6 +886,12 @@ void DeviceManagerAgent::UnregisterFromExternalDm()
         ThrowException(errCode, "Failed to UnInitDeviceManager");
     }
     LOGI("UnregisterFromExternalDm Succeed");
+}
+
+std::unordered_map<std::string, MountCountInfo> DeviceManagerAgent::GetAllMountInfo()
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    return mountDfsCount_;
 }
 } // namespace DistributedFile
 } // namespace Storage
