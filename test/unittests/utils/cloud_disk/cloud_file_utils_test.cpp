@@ -249,24 +249,10 @@ HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUid, TestSize.Level1)
         string bundleName = "";
         uint32_t mode = 0771;
         string path = "";
-        string fileMgrBundle = "";
-        string tempBundle = system::GetParameter(FILEMANAGER_KEY, "");
-        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
+        CloudFileUtils::ChangeUid(userId, bundleName, mode, path);
 
         bundleName = "com.ohos.camera";
-        fileMgrBundle = system::GetParameter(FILEMANAGER_KEY, "");
-        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
-
-        bundleName = system::GetParameter(FILEMANAGER_KEY, "");
-        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
-
-        fileMgrBundle = "";
-        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
-
-        fileMgrBundle = "";
-        system::SetParameter(FILEMANAGER_KEY, "");
-        CloudFileUtils::ChangeUid(userId, bundleName, fileMgrBundle, mode, path);
-        system::SetParameter(FILEMANAGER_KEY, tempBundle);
+        CloudFileUtils::ChangeUid(userId, bundleName, mode, path);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

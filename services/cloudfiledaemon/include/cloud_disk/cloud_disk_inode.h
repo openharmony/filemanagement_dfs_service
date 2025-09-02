@@ -100,7 +100,6 @@ struct CloudDiskFuseData {
     std::shared_mutex fileIdLock;
     std::shared_mutex localIdLock;
     struct fuse_session *se;
-    std::string fileMgrBundle {""};
 };
 } // namespace CloudDisk
 } // namespace FileManagement

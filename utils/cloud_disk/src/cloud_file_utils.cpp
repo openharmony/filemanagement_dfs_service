@@ -43,8 +43,6 @@ namespace {
     static const uint64_t DELTA_DISK = 0x9E3779B9;
     static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
     static const int32_t OID_DFS = 1009;
-    static const int32_t UID_BASE = 200000;
-    static const string FILEMGR_KEY = "persist.kernel.bundle_name.filemanager";
 }
 
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
@@ -404,8 +402,7 @@ string CloudFileUtils::GetRealPath(const string &path)
     return realPath.string();
 }
 
-void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, string fileMgrBundle,
-    uint32_t mode, const string &path)
+void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, uint32_t mode, const string &path)
 {
     string baseDir = GetLocalBaseDir(bundleName, userId);
     struct stat baseInfo{};
@@ -415,16 +412,6 @@ void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, string 
     }
     uid_t bundleUid = baseInfo.st_uid;
 
-    if (fileMgrBundle == "") {
-        fileMgrBundle = system::GetParameter(FILEMGR_KEY, "");
-        if (fileMgrBundle == "") {
-            LOGE("chmod and chown faild, get fileMgr bundle faild.");
-            return;
-        }
-    }
-    if (bundleName == fileMgrBundle) {
-        bundleUid = UID_BASE * userId + OID_DFS % UID_BASE;
-    }
     ChangeUidByPath(path, mode, bundleUid);
 }
 
