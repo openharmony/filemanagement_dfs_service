@@ -360,7 +360,8 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
     }
     if (needClear) {
         LOGI("mountDfsCount_ erase");
-        itCount->second.callingCountMap_.clear();
+        std::map<uint32_t, int32_t> emptyMap;
+        itCount->second.callingCountMap_.swap(emptyMap);
         return false;
     }
     auto &callingCountMap = itCount->second.callingCountMap_;

@@ -67,7 +67,7 @@ public:
     void AddFileConnect(const std::string &instanceId, const sptr<IFileDfsListener> &listener);
     bool RmFileConnect(const std::string &instanceId);
     void NotifyFileStatusChange(const std::string &networkId,
-        int32_t status, const std::string &path, StatusType type);
+        const int32_t status, const std::string &path, StatusType type);
 private:
     static std::shared_ptr<ConnectCount> instance_;
     std::recursive_mutex connectMutex_;

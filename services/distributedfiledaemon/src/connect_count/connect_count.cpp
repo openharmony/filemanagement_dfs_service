@@ -169,7 +169,9 @@ bool ConnectCount::RmFileConnect(const std::string &instanceId)
 }
 
 void ConnectCount::NotifyFileStatusChange(const std::string &networkId,
-    int32_t status, const std::string &path, StatusType type)
+                                          const int32_t status,
+                                          const std::string &path,
+                                          StatusType type)
 {
     std::lock_guard lock(fileConnectMutex_);
     for (const auto &connect : fileConnectMap_) {

@@ -501,7 +501,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfo &info)
 {
-    LOGE("PrepareSession networkId: %{public}.6s", networkId.c_str());
+    LOGI("PrepareSession networkId: %{public}.6s", networkId.c_str());
 
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
@@ -1102,7 +1102,7 @@ int32_t Daemon::IsSameAccountDevice(const std::string &networkId, bool &isSameAc
 #ifdef SUPPORT_SAME_ACCOUNT
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0) {
+    if (deviceList.empty()) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         isSameAccount = false;
         return E_INVAL_ARG_NAPI;

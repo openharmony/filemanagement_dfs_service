@@ -591,7 +591,6 @@ int32_t ChannelManager::NotifyClient(const std::string &networkId, const Control
         LOGE("DoSendBytes failed.");
         return ERR_SEND_DATA_BY_SOFTBUS_FAILED;
     }
-
     return ret;
 }
 
