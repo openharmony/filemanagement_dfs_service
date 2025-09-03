@@ -1619,8 +1619,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (flags) {
         LOGE("Fuse failed to support flag");
-        fuse_reply_err(req, EINVAL);
-        return;
+        return (void) fuse_reply_err(req, EINVAL);
     }
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
@@ -1628,20 +1627,26 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     if (!parentInode || !newParentInode) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RENAME,
             CloudFile::FaultType::INODE_FILE, EINVAL, "rename old or new parent not found"});
-        fuse_reply_err(req, EINVAL);
-        return;
+        return (void) fuse_reply_err(req, EINVAL);
+    }
+
+    bool noNeedUpload = false;
+    if (newParentInode->cloudId != ROOT_CLOUD_ID) {
+        int32_t err = GetParentUpload(newParentInode, data, noNeedUpload);
+        if (err != 0) {
+            LOGE("Failed to get parent no upload");
+            return (void) fuse_reply_err(req, err);
+        }
     }
 
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
-                                                                         data->userId);
-    int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName);
+    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
+    int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName, noNeedUpload);
     if (err != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{parentInode->bundleName,
             CloudFile::FaultOperation::RENAME, CloudFile::FaultType::DATABASE, err,
             "Failed to Rename DB name: " + GetAnonyString(name) + "err:" + std::to_string(err)});
-        fuse_reply_err(req, EINVAL);
-        return;
+        return (void) fuse_reply_err(req, EINVAL);
     }
     bool isDir = false;
     string key = std::to_string(parent) + name;
@@ -1653,8 +1658,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-        NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName},
-        {FileStatus::UNKNOW, isDir});
+        NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName}, {FileStatus::UNKNOW, isDir});
     return (void) fuse_reply_err(req, 0);
 }
 

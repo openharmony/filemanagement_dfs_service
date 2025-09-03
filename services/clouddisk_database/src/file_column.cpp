@@ -134,7 +134,7 @@ const std::string FileColumn::ADD_THM_SIZE = "ALTER Table " + FILES_TABLE +
 const std::string FileColumn::ADD_LCD_SIZE = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + LCD_SIZE + " INT DEFAULT 0";
 
-    const std::string FileColumn::ADD_SOURCE_CLOUD_ID = "ALTER Table " + FILES_TABLE +
+const std::string FileColumn::ADD_SOURCE_CLOUD_ID = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + SOURCE_CLOUD_ID + " TEXT";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
@@ -229,6 +229,7 @@ const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
     ROW_ID,
     THM_FLAG,
     LCD_FLAG,
+    DIRTY_TYPE,
 };
 
 const std::vector<std::string> FileColumn::DISK_CLOUD_FOR_THM_INSERT = {
@@ -244,7 +245,8 @@ const std::vector<std::string> FileColumn::DISK_CLOUD_FOR_THM_INSERT = {
 
 const std::vector<std::string> FileColumn::EXT_ATTR_QUERY_COLUMNS = {
     ATTRIBUTE,
-    POSITION
+    POSITION,
+    DIRTY_TYPE,
 };
 } // namespace CloudDisk
 } // namespace FileManagement

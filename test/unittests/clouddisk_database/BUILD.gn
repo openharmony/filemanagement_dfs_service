@@ -201,6 +201,120 @@ ohos_unittest("clouddisk_rdbstore_test") {
   use_exceptions = true
 }
 
+ohos_unittest("clouddisk_rdbstore_static_test") {
+  branch_protector_ret = "pac_ret"
+  public_configs =
+      [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_notify_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/transaction_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "clouddisk_rdbstore_static_test.cpp",
+  ]
+
+  clouddisk_database = [
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+  ]
+
+  sources += clouddisk_database
+  include_dirs = [
+    "${services_path}/clouddisk_database/include",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudfiledaemon/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${utils_path}/log/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
+    "${services_path}/clouddisk_database/src",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
+    "eventhandler:libeventhandler",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+
+  use_exceptions = true
+}
+
 ohos_unittest("clouddisk_notify_test") {
   branch_protector_ret = "pac_ret"
   public_configs =
@@ -536,6 +650,7 @@ group("clouddisk_database_test") {
     ":clouddisk_notify_utils_test",
     ":clouddisk_rdb_transaction_test",
     ":clouddisk_rdb_utils_test",
+    ":clouddisk_rdbstore_static_test",
     ":clouddisk_rdbstore_test",
     ":clouddisk_sync_helper_test",
   ]
