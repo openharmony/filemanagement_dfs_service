@@ -189,9 +189,10 @@ void CloudDaemon::OnStop()
 void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
-    accountStatusListener_->Start();
-    // get setting data when sa load
-    if (systemAbilityId == DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        accountStatusListener_->Start();
+    } else if (systemAbilityId == DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
+        // get setting data when sa load
         bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
         LOGI("SERVICE LOAD: Init active bundle, ret: %{public}d", ret);
     }
