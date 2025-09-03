@@ -75,7 +75,10 @@ protected:
 
 class SingleProgressAni : public DlProgressAni {
 public:
-    explicit SingleProgressAni(int64_t downloadId) : DlProgressAni(downloadId) {}
+    SingleProgressAni(int64_t downloadId, const std::string &uri) : DlProgressAni(downloadId)
+    {
+        uri_ = uri;
+    }
     void Update(const DownloadProgressObj &progress) override;
     ani_object ConvertToObject(ani_env *env) override;
     std::shared_ptr<DlProgressAni> CreateNewObject() override;

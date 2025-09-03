@@ -76,7 +76,10 @@ protected:
 
 class SingleProgressNapi : public DlProgressNapi {
 public:
-    explicit SingleProgressNapi(int64_t downloadId) : DlProgressNapi(downloadId) {}
+    SingleProgressNapi(int64_t downloadId, const std::string &uri) : DlProgressNapi(downloadId)
+    {
+        uri_ = uri;
+    }
     void Update(const DownloadProgressObj &progress) override;
     napi_value ConvertToValue(napi_env env) override;
     std::shared_ptr<DlProgressNapi> CreateNewObject() override;

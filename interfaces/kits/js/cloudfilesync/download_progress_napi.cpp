@@ -50,7 +50,7 @@ napi_value SingleProgressNapi::ConvertToValue(napi_env env)
 
 std::shared_ptr<DlProgressNapi> SingleProgressNapi::CreateNewObject()
 {
-    return std::make_shared<SingleProgressNapi>(taskId_);
+    return std::make_shared<SingleProgressNapi>(taskId_, uri_);
 }
 
 void BatchProgressNapi::Update(const DownloadProgressObj &progress)
