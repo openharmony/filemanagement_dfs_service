@@ -78,7 +78,7 @@ public:
     void UpdateReadTimeStat(uint64_t size, uint64_t time);
     void UpdateStatData();
     void UpdateReadInfo(uint32_t index);
-    void UpdateBundleName(std::string bundleName);
+    void UpdateBundleName(const std::string &bundleName);
     mutex mutex_;
 private:
     CloudDaemonStatistic() = default;
@@ -87,9 +87,9 @@ private:
     void ClearStat();
     void OutputToFile();
     int32_t CheckFileStat();
-    void SumTwoReadStat(CloudDaemonStatisticInfo info);
-    int32_t ReportReadStat(CloudDaemonStatisticInfo info);
-    void IsSameBundleName(CloudDaemonStatisticInfo info);
+    void SumTwoReadStat(const CloudDaemonStatisticInfo &info);
+    int32_t ReportReadStat(const CloudDaemonStatisticInfo &info);
+    void HandleBundleName(const CloudDaemonStatisticInfo &info);
 
     vector<uint64_t> openSizeStat_ = vector<uint64_t>(OPEN_SIZE_MAX, 0);
     vector<vector<uint64_t>> openTimeStat_ =
@@ -98,7 +98,7 @@ private:
     vector<vector<uint64_t>> readTimeStat_ =
         vector<vector<uint64_t>>(READ_SIZE_MAX, vector<uint64_t>(READ_TIME_MAX, 0));
     vector<uint32_t> videoReadInfo_ = vector<uint32_t>(VIDEO_READ_INFO, 0);
-    std::string bundleName_{"com.ohos.photos"};
+    std::string bundleName_{""};
 };
 } // namespace CloudFile
 } // namespace FileManagement

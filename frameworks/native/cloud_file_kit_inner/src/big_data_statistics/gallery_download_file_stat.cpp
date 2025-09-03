@@ -204,7 +204,7 @@ static inline DownloadFileStatInfo SumTwoDownloadFileStat(DownloadFileStatInfo d
     return dataOne;
 }
 
-void GalleryDownloadFileStat::IsSameBundleName(DownloadFileStatInfo info)
+void GalleryDownloadFileStat::HandleBundleName(const DownloadFileStatInfo &info)
 {
     if (!info.bundleName.empty() && info.bundleName != stat_.bundleName &&
         !stat_.bundleName.empty()) {
@@ -220,7 +220,7 @@ void GalleryDownloadFileStat::IsSameBundleName(DownloadFileStatInfo info)
 void GalleryDownloadFileStat::OutputToFile()
 {
     DownloadFileStatInfo tmpInfo = ReadVecFromLocal();
-    IsSameBundleName(tmpInfo);
+    HandleBundleName(tmpInfo);
 
     std::vector<std::string> lines;
     /*  Keep code order below */
@@ -292,7 +292,7 @@ void GalleryDownloadFileStat::ClearDownloadFileStat()
     std::fill(stat_.videoDownloadSpeed.begin(), stat_.videoDownloadSpeed.end(), 0);
 }
 
-int32_t GalleryDownloadFileStat::ReportDownloadFileStat(DownloadFileStatInfo info)
+int32_t GalleryDownloadFileStat::ReportDownloadFileStat(const DownloadFileStatInfo &info)
 {
     int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_DOWNLOAD_FILE_STAT",
         HiviewDFX::HiSysEvent::EventType::STATISTIC,
