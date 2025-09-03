@@ -62,14 +62,14 @@ private:
     IoDataToWrite dataToWrite;
     AppExecFwk::AppStateData lastestAppStateData;
 
-    std::vector<std::string> ioTimes;
+    std::vector<int32_t> ioTimes;
     std::vector<std::string> ioBundleName;
-    std::vector<std::string> ioReadCharDiff;
-    std::vector<std::string> ioSyscReadDiff;
-    std::vector<std::string> ioReadBytesDiff;
-    std::vector<std::string> ioSyscOpenDiff;
-    std::vector<std::string> ioSyscStatDiff;
-    std::vector<std::string> ioResult;
+    std::vector<int64_t> ioReadCharDiff;
+    std::vector<int64_t> ioSyscReadDiff;
+    std::vector<int64_t> ioReadBytesDiff;
+    std::vector<int64_t> ioSyscOpenDiff;
+    std::vector<int64_t> ioSyscStatDiff;
+    std::vector<double> ioResult;
 
     bool ReadIoDataFromFile(const std::string &path);
     void RecordDataToFile(const std::string &path);

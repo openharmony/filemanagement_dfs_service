@@ -126,38 +126,31 @@ static vector<const char*> ConvertToCStringArray(const vector<string>& vec)
 
 void IoMessageManager::Report()
 {
-    auto charIoTimes = ConvertToCStringArray(ioTimes);
     auto charIoBundleName = ConvertToCStringArray(ioBundleName);
-    auto charIoReadCharDiff = ConvertToCStringArray(ioReadCharDiff);
-    auto charIoSyscReadDiff = ConvertToCStringArray(ioSyscReadDiff);
-    auto charIoReadBytesDiff = ConvertToCStringArray(ioReadBytesDiff);
-    auto charIoSyscOpenDiff = ConvertToCStringArray(ioSyscOpenDiff);
-    auto charIoSyscStatDiff = ConvertToCStringArray(ioSyscStatDiff);
-    auto charIoResult = ConvertToCStringArray(ioResult);
 
     HiSysEventParam params[] = {
-        { "time", HISYSEVENT_STRING_ARRAY, { .array = charIoTimes.data() },
+        { "time", HISYSEVENT_INT32_ARRAY, { .array = charIoTimes.data() },
             static_cast<int>(charIoTimes.size()) },
         { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = charIoBundleName.data() },
             static_cast<int>(charIoBundleName.size()) },
-        { "ReadCharDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoReadCharDiff.data() },
+        { "ReadCharDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoReadCharDiff.data() },
             static_cast<int>(charIoReadCharDiff.size()) },
-        { "SyscReadDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscReadDiff.data() },
+        { "SyscReadDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscReadDiff.data() },
             static_cast<int>(charIoSyscReadDiff.size()) },
-        { "ReadBytesDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoReadBytesDiff.data() },
+        { "ReadBytesDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoReadBytesDiff.data() },
             static_cast<int>(charIoReadBytesDiff.size()) },
-        { "SyscOpenDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscOpenDiff.data() },
+        { "SyscOpenDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscOpenDiff.data() },
             static_cast<int>(charIoSyscOpenDiff.size()) },
-        { "SyscStatDiff", HISYSEVENT_STRING_ARRAY, { .array = charIoSyscStatDiff.data() },
+        { "SyscStatDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscStatDiff.data() },
             static_cast<int>(charIoSyscStatDiff.size()) },
-        { "Result", HISYSEVENT_STRING_ARRAY, { .array = charIoResult.data() },
+        { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = charIoResult.data() },
             static_cast<int>(charIoResult.size()) },
     };
 
     auto ret = OH_HiSysEvent_Write(
-        "KERNEL_VENDOR",
-        "CLOUD_DISK_IO",
-        HISYSEVENT_FAULT,
+        "HM_FS",
+        "ABNORMAL_IO_STATISTICS_DATA",
+        HISYSEVENT_STATISTIC,
         params,
         sizeof(params) / sizeof(params[0])
     );
@@ -179,14 +172,14 @@ void IoMessageManager::Report()
 void IoMessageManager::PushData(const vector<string> &fields)
 {
     static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
-        { 0, [this](const std::string& value) { ioTimes.push_back(value); }},
+        { 0, [this](const std::string& value) { ioTimes.push_back(std::stoi(value)); }},
         { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
-        { 2, [this](const std::string& value) { ioReadCharDiff.push_back(value); }},
-        { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(value); }},
-        { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(value); }},
-        { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(value); }},
-        { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(value); }},
-        { 7, [this](const std::string& value) { ioResult.push_back(value); }},
+        { 2, [this](const std::string& value) { ioReadCharDiff.push_back(std::stoll(value)); }},
+        { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(std::stoll(value)); }},
+        { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(std::stoll(value)); }},
+        { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(std::stoll(value)); }},
+        { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(std::stoll(value)); }},
+        { 7, [this](const std::string& value) { ioResult.push_back(std::stod(value)); }},
     };
     for (int i = 0; i < fields.size(); ++i) {
         auto it = fieldMap.find(i);
