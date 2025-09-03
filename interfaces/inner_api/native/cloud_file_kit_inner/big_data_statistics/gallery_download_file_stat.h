@@ -64,8 +64,8 @@ private:
     void UpdateDownloadSpeedStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     void UpdateDownloadSizeStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     DownloadFileStatInfo ReadVecFromLocal();
-    int32_t ReportDownloadFileStat(DownloadFileStatInfo info);
-    void IsSameBundleName(DownloadFileStatInfo info);
+    int32_t ReportDownloadFileStat(const DownloadFileStatInfo &info);
+    void HandleBundleName(const DownloadFileStatInfo &info);
 
     DownloadFileStatInfo stat_;
 };
