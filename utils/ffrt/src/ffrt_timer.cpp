@@ -18,7 +18,7 @@
 #include "cloud_file_log.h"
 
 namespace OHOS::FileManagement::CloudFile {
-static constexpr uint32_t TIMER_MAX_INTERVAL_MS = 200;
+
 using namespace std;
 
 FfrtTimer::FfrtTimer(const std::string &name) : name_(name) {}

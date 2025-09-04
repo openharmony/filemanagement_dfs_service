@@ -28,8 +28,6 @@ const string BUNDLENAME_FLAG = "<BundleName>";
 const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
 const string BACKFLASH = "/";
 const string RECYCLE_BIN = ".trash";
-constexpr uint32_t MAX_NOTIFY_LIST_SIZE = 32;
-constexpr size_t MNOTIFY_TIME_INTERVAL = 500;
 static pair<string, shared_ptr<CloudDiskRdbStore>> cacheRdbStore("", nullptr);
 std::mutex cacheRdbMutex;
 
