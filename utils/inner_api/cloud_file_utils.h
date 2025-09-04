@@ -79,8 +79,7 @@ public:
     static void TeaTransform(uint32_t buf[4], uint32_t const in[]);
     static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num);
     static bool IsDotDotdot(const std::string &name);
-    static void ChangeUid(int32_t userId, const std::string &bundleName, std::string fileMgrBundle,
-        uint32_t mode, const std::string &path);
+    static void ChangeUid(int32_t userId, const std::string &bundleName, uint32_t mode, const std::string &path);
     static void ChangeUidByCloudId(int32_t userId, const std::string &bundleName,
         const std::string &cloudId, uint32_t mode, uid_t uid);
     static void ChangeUidByPath(const std::string &path, mode_t mode, uid_t uid);
