@@ -134,7 +134,7 @@ void CloudDaemon::OnStart()
     if (ShouldRegisterListener()) {
         auto bundleNameList = vector<string>{};
         std::thread listenThread([bundleNameList] {
-            if (!filesystem::create_directories(IO_MESSAGE_DIR)) {
+            if (!filesystem::exists(IO_MESSAGE_DIR)) {
                 try {
                     filesystem::create_directories(IO_MESSAGE_DIR);
                 } catch (const filesystem::filesystem_error& e) {
