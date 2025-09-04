@@ -73,7 +73,6 @@ private:
 
     bool ReadIoDataFromFile(const std::string &path);
     void RecordDataToFile(const std::string &path);
-    bool IsFirstLineHeader(const std::string &path);
     void RecordIoData();
     void ProcessIoData(const std::string &path);
     void PushData(const std::vector<std::string> &fields);

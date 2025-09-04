@@ -80,17 +80,6 @@ bool IoMessageManager::ReadIoDataFromFile(const std::string &path)
     return true;
 }
 
-bool IoMessageManager::IsFirstLineHeader(const string &path)
-{
-    ifstream inFile(path);
-    if (!inFile.is_open()) {
-        return false;
-    }
-
-    string firstLine;
-    getline(inFile, firstLine);
-    return firstLine.find("time") != string::npos;
-}
 
 void IoMessageManager::RecordDataToFile(const string &path)
 {
@@ -98,10 +87,6 @@ void IoMessageManager::RecordDataToFile(const string &path)
     if (!outFile) {
         LOGE("Failed to open io file to write, err: %{public}d", errno);
         return;
-    }
-
-    if (!IsFirstLineHeader(path)) {
-        outFile << "time, bundle_name, rchar_diff, syscr_diff, read_bytes_diff, syscopen_diff, syscstat_diff, result\n";
     }
 
     outFile << bundleTimeMap[dataToWrite.bundleName] << ","
@@ -129,22 +114,22 @@ void IoMessageManager::Report()
     auto charIoBundleName = ConvertToCStringArray(ioBundleName);
 
     HiSysEventParam params[] = {
-        { "time", HISYSEVENT_INT32_ARRAY, { .array = charIoTimes.data() },
-            static_cast<int>(charIoTimes.size()) },
-        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = charIoBundleName.data() },
+        { "time", HISYSEVENT_INT32_ARRAY, { .array = ioTimes.data() },
+            static_cast<int>(ioTimes.size()) },
+        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = IoBundleName.data() },
             static_cast<int>(charIoBundleName.size()) },
-        { "ReadCharDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoReadCharDiff.data() },
-            static_cast<int>(charIoReadCharDiff.size()) },
-        { "SyscReadDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscReadDiff.data() },
-            static_cast<int>(charIoSyscReadDiff.size()) },
-        { "ReadBytesDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoReadBytesDiff.data() },
-            static_cast<int>(charIoReadBytesDiff.size()) },
-        { "SyscOpenDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscOpenDiff.data() },
-            static_cast<int>(charIoSyscOpenDiff.size()) },
-        { "SyscStatDiff", HISYSEVENT_INT64_ARRAY, { .array = charIoSyscStatDiff.data() },
-            static_cast<int>(charIoSyscStatDiff.size()) },
-        { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = charIoResult.data() },
-            static_cast<int>(charIoResult.size()) },
+        { "ReadCharDiff", HISYSEVENT_INT64_ARRAY, { .array = ioReadCharDiff.data() },
+            static_cast<int>(ioReadCharDiff.size()) },
+        { "SyscReadDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscReadDiff.data() },
+            static_cast<int>(ioSyscReadDiff.size()) },
+        { "ReadBytesDiff", HISYSEVENT_INT64_ARRAY, { .array = ioReadBytesDiff.data() },
+            static_cast<int>(ioReadBytesDiff.size()) },
+        { "SyscOpenDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscOpenDiff.data() },
+            static_cast<int>(ioSyscOpenDiff.size()) },
+        { "SyscStatDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscStatDiff.data() },
+            static_cast<int>(ioSyscStatDiff.size()) },
+        { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = ioResult.data() },
+            static_cast<int>(ioResult.size()) },
     };
 
     auto ret = OH_HiSysEvent_Write(
@@ -171,23 +156,31 @@ void IoMessageManager::Report()
 
 void IoMessageManager::PushData(const vector<string> &fields)
 {
-    static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
-        { 0, [this](const std::string& value) { ioTimes.push_back(std::stoi(value)); }},
-        { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
-        { 2, [this](const std::string& value) { ioReadCharDiff.push_back(std::stoll(value)); }},
-        { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(std::stoll(value)); }},
-        { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(std::stoll(value)); }},
-        { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(std::stoll(value)); }},
-        { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(std::stoll(value)); }},
-        { 7, [this](const std::string& value) { ioResult.push_back(std::stod(value)); }},
-    };
-    for (int i = 0; i < fields.size(); ++i) {
-        auto it = fieldMap.find(i);
-        if (it == fieldMap.end()) {
-            LOGE("Unknow field index: %{public}d", i);
-            continue;
+    try{
+        static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
+            { 0, [this](const std::string& value) { ioTimes.push_back(std::stoi(value)); }},
+            { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
+            { 2, [this](const std::string& value) { ioReadCharDiff.push_back(std::stoll(value)); }},
+            { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(std::stoll(value)); }},
+            { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(std::stoll(value)); }},
+            { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(std::stoll(value)); }},
+            { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(std::stoll(value)); }},
+            { 7, [this](const std::string& value) { ioResult.push_back(std::stod(value)); }},
+        };
+        for (int i = 0; i < fields.size(); ++i) {
+            auto it = fieldMap.find(i);
+            if (it == fieldMap.end()) {
+                LOGE("Unknow field index: %{public}d", i);
+                continue;
+            }
+            it->second(fields[i]);
         }
-        it->second(fields[i]);
+    } catch (const invalid_argument& e) {
+        LOGE("Invalid argument: %{public}s", e.what());
+        return;
+    } catch (const out_of_range& e) {
+        LOGE("Out of range: %{public}s", e.what());
+        return;
     }
 }
 
@@ -305,25 +298,34 @@ void IoMessageManager::RecordIoData()
 
 void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateData)
 {
-    if (appStateData.bundleName != DESK_BUNDLE_NAME) {
-        if (appStateData.state == TYPE_FRONT) {
-            lastestAppStateData = appStateData;
-            if (!ioThread.joinable()) {
+    if (appStateData.bundleName == DESK_BUNDLE_NAME) {
+        return;
+    }
+    if (appStateData.state == TYPE_FRONT) {
+        lastestAppStateData = appStateData;
+        if (!ioThread.joinable()) {
+            try {
                 isThreadRunning.store(true);
                 ioThread = thread(&IoMessageManager::RecordIoData, this);
-            }
-            return;
-        }
-        if (appStateData.state == TYPE_BACKGROUND) {
-            if (ioThread.joinable()) {
-                lock_guard<mutex> lock(cvMute);
+            } catch (const std::system_error &e) {
+                LOGE("System error while creating thread: %{public}s", e.what());
                 isThreadRunning.store(false);
-                sleepCv.notify_all();
-                ioThread.join();
-                ioThread = thread();
-                currentData = {};
-                preData = {};
+            } catch (const std::exception &e) {
+                LOGE("Exception while creating thread: %{public}s", e.what());
+                isThreadRunning.store(false);
             }
+        }
+        return;
+    }
+    if (appStateData.state == TYPE_BACKGROUND) {
+        if (ioThread.joinable()) {
+            lock_guard<mutex> lock(cvMute);
+            isThreadRunning.store(false);
+            sleepCv.notify_all();
+            ioThread.join();
+            ioThread = thread();
+            currentData = {};
+            preData = {};
         }
     }
 }
