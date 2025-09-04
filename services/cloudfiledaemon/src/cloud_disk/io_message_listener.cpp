@@ -116,7 +116,7 @@ void IoMessageManager::Report()
     HiSysEventParam params[] = {
         { "time", HISYSEVENT_INT32_ARRAY, { .array = ioTimes.data() },
             static_cast<int>(ioTimes.size()) },
-        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = IoBundleName.data() },
+        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = charIoBundleName.data() },
             static_cast<int>(charIoBundleName.size()) },
         { "ReadCharDiff", HISYSEVENT_INT64_ARRAY, { .array = ioReadCharDiff.data() },
             static_cast<int>(ioReadCharDiff.size()) },
