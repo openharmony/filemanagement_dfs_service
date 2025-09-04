@@ -558,74 +558,6 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest017, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsFirstLineHeaderTest001
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 End";
-}
-
-/**
- * @tc.name: IsFirstLineHeaderTest002
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        close(fd);
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 ERROR";
-    }
-    unlink(path.c_str());
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 End";
-}
-
-/**
- * @tc.name: IsFirstLineHeaderTest003
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        string line1 = "time\n";
-        write(fd, line1.c_str(), line1.size());
-        close(fd);
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 ERROR";
-    }
-    unlink(path.c_str());
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 End";
-}
-
-/**
  * @tc.name: RecordDataToFileTest001
  * @tc.desc: Read IO data
  * @tc.type: FUNC
@@ -1351,14 +1283,14 @@ HWTEST_F(IoMessageListenerTest, Report001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Report001 Start";
     for (int i = 0; i <= 101; i++) {
-        ioMessageManager_->ioTimes.push_back("tdd");
+        ioMessageManager_->ioTimes.push_back(1);
         ioMessageManager_->ioBundleName.push_back("tdd");
-        ioMessageManager_->ioReadCharDiff.push_back("tdd");
-        ioMessageManager_->ioSyscReadDiff.push_back("tdd");
-        ioMessageManager_->ioReadBytesDiff.push_back("tdd");
-        ioMessageManager_->ioSyscOpenDiff.push_back("tdd");
-        ioMessageManager_->ioSyscStatDiff.push_back("tdd");
-        ioMessageManager_->ioResult.push_back("tdd");
+        ioMessageManager_->ioReadCharDiff.push_back(1);
+        ioMessageManager_->ioSyscReadDiff.push_back(1);
+        ioMessageManager_->ioReadBytesDiff.push_back(1);
+        ioMessageManager_->ioSyscOpenDiff.push_back(1);
+        ioMessageManager_->ioSyscStatDiff.push_back(1);
+        ioMessageManager_->ioResult.push_back(1.0);
     }
     try {
         ioMessageManager_->Report();
@@ -1379,14 +1311,14 @@ HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Report002 Start";
     for (int i = 0; i <= 10; i++) {
-        ioMessageManager_->ioTimes.push_back("tdd");
+        ioMessageManager_->ioTimes.push_back(1);
         ioMessageManager_->ioBundleName.push_back("tdd");
-        ioMessageManager_->ioReadCharDiff.push_back("tdd");
-        ioMessageManager_->ioSyscReadDiff.push_back("tdd");
-        ioMessageManager_->ioReadBytesDiff.push_back("tdd");
-        ioMessageManager_->ioSyscOpenDiff.push_back("tdd");
-        ioMessageManager_->ioSyscStatDiff.push_back("tdd");
-        ioMessageManager_->ioResult.push_back("tdd");
+        ioMessageManager_->ioReadCharDiff.push_back(1);
+        ioMessageManager_->ioSyscReadDiff.push_back(1);
+        ioMessageManager_->ioReadBytesDiff.push_back(1);
+        ioMessageManager_->ioSyscOpenDiff.push_back(1);
+        ioMessageManager_->ioSyscStatDiff.push_back(1);
+        ioMessageManager_->ioResult.push_back(1.0);
     }
     try {
         ioMessageManager_->Report();
@@ -1396,6 +1328,24 @@ HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
         GTEST_LOG_(INFO) << "Report002 ERROR";
     }
     GTEST_LOG_(INFO) << "Report002 End";
+}
+
+/**
+ * @tc.name: PushDataRollBack001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushDataRollBack001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushDataRollBack001 Start";
+    try {
+        ioMessageManager_->PushDataRollBack();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushDataRollBack001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushDataRollBack001 End";
 }
 
 /**
