@@ -154,6 +154,18 @@ void IoMessageManager::Report()
     ioResult.clear();
 }
 
+void PushDataRollBack() {
+    size_t initialSize = ioResult.size();
+    ioTimes.resize(initialSize);
+    ioBundleName.resize(initialSize);
+    ioReadCharDiff.resize(initialSize);
+    ioSyscReadDiff.resize(initialSize);
+    ioReadBytesDiff.resize(initialSize);
+    ioSyscOpenDiff.resize(initialSize);
+    ioSyscStatDiff.resize(initialSize);
+    ioResult.resize(initialSize);
+}
+
 void IoMessageManager::PushData(const vector<string> &fields)
 {
     try{
@@ -177,9 +189,11 @@ void IoMessageManager::PushData(const vector<string> &fields)
         }
     } catch (const invalid_argument& e) {
         LOGE("Invalid argument: %{public}s", e.what());
+        PushDataRollBack();
         return;
     } catch (const out_of_range& e) {
         LOGE("Out of range: %{public}s", e.what());
+        PushDataRollBack();
         return;
     }
 }

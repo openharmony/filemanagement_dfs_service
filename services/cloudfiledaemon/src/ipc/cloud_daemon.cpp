@@ -134,13 +134,15 @@ void CloudDaemon::OnStart()
     if (ShouldRegisterListener()) {
         auto bundleNameList = vector<string>{};
         std::thread listenThread([bundleNameList] {
-            if (!filesystem::exists(IO_MESSAGE_DIR)) {
-                try {
-                    filesystem::create_directories(IO_MESSAGE_DIR);
-                } catch (const filesystem::filesystem_error& e) {
-                    LOGI("Mkdir for io failed");
-                    return;
-                }
+            if (filesystem::exists(IO_MESSAGE_DIR)) {
+                CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
+                return;
+            }
+            try {
+                filesystem::create_directories(IO_MESSAGE_DIR);
+            } catch (const filesystem::filesystem_error& e) {
+                LOGI("Mkdir for io failed");
+                return;
             }
             CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
         });

@@ -75,6 +75,7 @@ private:
     void RecordDataToFile(const std::string &path);
     void RecordIoData();
     void ProcessIoData(const std::string &path);
+    void PushDataRollBack();
     void PushData(const std::vector<std::string> &fields);
     void ReadAndReportIoMessage();
     void CheckMaxSizeAndReport();
