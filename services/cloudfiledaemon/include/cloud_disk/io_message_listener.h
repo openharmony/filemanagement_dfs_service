@@ -55,6 +55,7 @@ private:
     std::thread ioThread;
     std::mutex sleepMutex;
     std::mutex cvMute;
+    std::mutex iothreadMute;
     std::condition_variable sleepCv;
     std::map<std::string, int32_t> bundleTimeMap;
     IoData currentData;

@@ -317,6 +317,7 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
     }
     if (appStateData.state == TYPE_FRONT) {
         lastestAppStateData = appStateData;
+        lock_guard<mutex> lock(iothreadMute);
         if (!ioThread.joinable()) {
             try {
                 isThreadRunning.store(true);
@@ -332,6 +333,7 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
         return;
     }
     if (appStateData.state == TYPE_BACKGROUND) {
+        lock_guard<mutex> lock(iothreadMute);
         if (ioThread.joinable()) {
             lock_guard<mutex> lock(cvMute);
             isThreadRunning.store(false);
