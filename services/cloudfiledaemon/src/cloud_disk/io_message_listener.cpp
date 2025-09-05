@@ -131,7 +131,6 @@ void IoMessageManager::Report()
         { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = ioResult.data() },
             static_cast<int>(ioResult.size()) },
     };
-
     auto ret = OH_HiSysEvent_Write(
         "HM_FS",
         "ABNORMAL_IO_STATISTICS_DATA",
@@ -139,11 +138,9 @@ void IoMessageManager::Report()
         params,
         sizeof(params) / sizeof(params[0])
     );
-
     if (ret != 0) {
         LOGE("Report failed, err : %{public}d", ret);
     }
-
     ioTimes.clear();
     ioBundleName.clear();
     ioReadCharDiff.clear();
@@ -154,11 +151,12 @@ void IoMessageManager::Report()
     ioResult.clear();
 }
 
-void IoMessageManager::PushDataRollBack() {
+void IoMessageManager::PushDataRollBack()
+{
     size_t initialSize = ioResult.size();
     ioTimes.resize(initialSize);
     ioBundleName.resize(initialSize);
-    ioReadCharDiff.resize(initialSize);
+    ioReadCharDiff.resize(inNORMAL_IO_STATISTICS_DATitialSize);
     ioSyscReadDiff.resize(initialSize);
     ioReadBytesDiff.resize(initialSize);
     ioSyscOpenDiff.resize(initialSize);
@@ -168,7 +166,7 @@ void IoMessageManager::PushDataRollBack() {
 
 void IoMessageManager::PushData(const vector<string> &fields)
 {
-    try{
+    try {
         static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
             { 0, [this](const std::string& value) { ioTimes.push_back(std::stoi(value)); }},
             { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
