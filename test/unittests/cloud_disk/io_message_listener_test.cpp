@@ -39,6 +39,8 @@ const int32_t THREAD_SLEEP_TIME = 100;
 const int32_t FRONT_EVENT = 2;
 const int32_t BACKGROUND_EVENT = 4;
 const int32_t UNKNOWN_EVENT = 8;
+const int32_t LOOP_COUNT = 20000;
+const int32_t FEWER_LOOP_COUNT = 101;
 const string IO_REPORT_FILE = "/data/service/el1/public/cloudfile/io/wait_report_io_message.csv";
 const string IO_FILE = "/data/service/el1/public/cloudfile/io/io_message.csv";
 
@@ -1310,7 +1312,7 @@ HWTEST_F(IoMessageListenerTest, Report001, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Report002 Start";
-    for (int i = 0; i <= 10; i++) {
+    for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
         ioMessageManager_->ioTimes.push_back(1);
         ioMessageManager_->ioBundleName.push_back("tdd");
         ioMessageManager_->ioReadCharDiff.push_back(1);
@@ -1525,7 +1527,7 @@ HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage005, TestSize.Level1)
         if (!filesystem::exists(IO_REPORT_FILE)) {
             fd = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         }
-        for (int i = 0; i <= 101; i++) {
+        for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
             string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
             write(fd, line.c_str(), line.size());
         }
@@ -1609,7 +1611,7 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport003, TestSize.Level1)
             unlink(IO_FILE.c_str());
         }
         fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        for (int i = 0; i <= 20000; i++) {
+        for (int i = 0; i <= LOOP_COUNT; i++) {
             string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
             write(fd, line.c_str(), line.size());
         }
@@ -1645,7 +1647,7 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport004, TestSize.Level1)
             unlink(IO_FILE.c_str());
         }
         fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        for (int i = 0; i <= 20000; i++) {
+        for (int i = 0; i <= LOOP_COUNT; i++) {
             string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
             write(fd, line.c_str(), line.size());
         }
@@ -1680,7 +1682,7 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport005, TestSize.Level1)
             unlink(IO_FILE.c_str());
         }
         fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        for (int i = 0; i <= 20000; i++) {
+        for (int i = 0; i <= LOOP_COUNT; i++) {
             string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
             write(fd, line.c_str(), line.size());
         }
