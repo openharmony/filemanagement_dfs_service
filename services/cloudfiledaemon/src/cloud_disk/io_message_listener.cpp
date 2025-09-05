@@ -154,7 +154,7 @@ void IoMessageManager::Report()
     ioResult.clear();
 }
 
-void PushDataRollBack() {
+void IoMessageManager::PushDataRollBack() {
     size_t initialSize = ioResult.size();
     ioTimes.resize(initialSize);
     ioBundleName.resize(initialSize);
