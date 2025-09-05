@@ -180,7 +180,7 @@ struct CloudInode {
     atomic<int> refCount{0};
     shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
-    std::shared_mutex sessionLock;
+    ffrt::shared_mutex sessionLock;
     ffrt::mutex readLock;
     ffrt::mutex openLock;
     std::mutex readArgsLock;
@@ -998,7 +998,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     pid_t pid = GetPidFromTid(req->ctx.pid);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId, IsHdc(data));
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     string prepareTraceId = GetPrepareTraceId(data->userId);
 
     LOGI("%{public}d %{public}d %{public}d open %{public}s", pid, req->ctx.pid, req->ctx.uid,
@@ -1092,7 +1092,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d, fileType: %{public}d", pid,
          GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load(), cInode->mBase->fileType);
     wSesLock.lock();
@@ -1215,7 +1215,7 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
             }
         }
     }
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     wSesLock.lock();
     for (auto &it : cInode->readCacheMap) {
         std::unique_lock<std::mutex> lock(it.second->mutex);
@@ -1391,7 +1391,7 @@ static void CloudReadOnCloudFile(pid_t pid,
     uint64_t startTime = UTCTimeMilliSeconds();
     bool isReading = true;
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     wSesLock.lock();
     if (readArgs->offset % MAX_READ_SIZE == 0 && cInode->readCacheMap.find(cacheIndex) == cInode->readCacheMap.end()) {
         auto memInfo = std::make_shared<ReadCacheInfo>();
@@ -1444,7 +1444,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     usleep(READ_CACHE_SLEEP);
     uint64_t startTime = UTCTimeMilliSeconds();
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     wSesLock.lock();
     if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
@@ -1555,7 +1555,7 @@ static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<R
         return false;
     }
     if (!waitStatus) {
-        std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+        std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
         int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
         cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
         wSesLock.lock();
@@ -1928,7 +1928,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         cloudDiskData.userId = userId;
         cloudDiskData.se = se;
         config.max_idle_threads = 1;
-        std::lock_guard<std::mutex> lock(sessionMutex_);
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
         sessions_[path] = se;
     } else {
         se = fuse_session_new(&args, &cloudMediaFuseOps, sizeof(cloudMediaFuseOps), &data);
@@ -1948,7 +1948,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
 
 struct fuse_session* FuseManager::GetSession(std::string path)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     auto iterator = sessions_.find(path);
     if (iterator != sessions_.end()) {
         return iterator->second;

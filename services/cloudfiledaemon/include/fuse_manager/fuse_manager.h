@@ -19,6 +19,7 @@
 #include <shared_mutex>
 #include <string>
 #include <map>
+#include "ffrt_inner.h"
 
 struct fuse_session;
 
@@ -38,7 +39,7 @@ private:
     FuseManager() = default;
     ~FuseManager() = default;
 private:
-    std::mutex sessionMutex_;
+    ffrt::mutex sessionMutex_;
     map<std::string, struct fuse_session *> sessions_;
 };
 } // namespace CloudFile
