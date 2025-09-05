@@ -814,7 +814,12 @@ static std::string GetThumbsPath(const std::string& path)
 {
     const string str = "files/";
     size_t len = str.size() - 1;
-    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(path.find(str) + len); // 待删除的文件路径
+    auto found = path.find(str);
+    if (found == string::npos) {
+        LOGE("\"files/\" not found in path");
+        return "";
+    }
+    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(found + len); // 待删除的文件路径
     return newPath;
 }
 
@@ -822,7 +827,12 @@ static std::string GetMediaPath(const std::string& path)
 {
     const string str = "storage/";
     size_t len = str.size() - 1;
-    std::string newPath = "/storage/media" + path.substr(path.find(str) + len);
+    auto found = path.find(str);
+    if (found == string::npos) {
+        LOGE("\"storage/\" not found in path");
+        return "";
+    }
+    std::string newPath = "/storage/media" + path.substr(found + len);
     return newPath;
 }
 

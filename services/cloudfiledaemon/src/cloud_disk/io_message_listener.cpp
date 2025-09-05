@@ -175,8 +175,10 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
         }
         if (appStateData.state == TYPE_BACKGROUND) {
             if (ioThread.joinable()) {
-                lock_guard<mutex> lock(cvMute);
-                isThreadRunning.store(false);
+                {
+                    lock_guard<mutex> lock(sleepMutex);
+                    isThreadRunning.store(false);
+                }
                 sleepCv.notify_all();
                 ioThread.join();
                 ioThread = thread();

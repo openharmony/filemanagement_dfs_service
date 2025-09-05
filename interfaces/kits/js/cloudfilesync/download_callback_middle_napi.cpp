@@ -64,7 +64,7 @@ void CloudDlCallbackMiddleNapi::OnDownloadProcess(const DownloadProgressObj &pro
     }
     std::shared_ptr<CloudDlCallbackMiddleNapi> callbackImpl = shared_from_this();
     napi_status status = napi_send_event(
-        callbackImpl->env_,
+        env_,
         [fileCacheInfo, callbackImpl]() mutable {
             if (fileCacheInfo == nullptr || callbackImpl == nullptr) {
                 LOGE("Failed to callback, is callbackImpl null: %{public}d", (callbackImpl == nullptr));
