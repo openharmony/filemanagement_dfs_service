@@ -131,6 +131,7 @@ void IoMessageManager::Report()
         { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = ioResult.data() },
             static_cast<int>(ioResult.size()) },
     };
+
     auto ret = OH_HiSysEvent_Write(
         "HM_FS",
         "ABNORMAL_IO_STATISTICS_DATA",
@@ -156,7 +157,7 @@ void IoMessageManager::PushDataRollBack()
     size_t initialSize = ioResult.size();
     ioTimes.resize(initialSize);
     ioBundleName.resize(initialSize);
-    ioReadCharDiff.resize(inNORMAL_IO_STATISTICS_DATitialSize);
+    ioReadCharDiff.resize(initialSize);
     ioSyscReadDiff.resize(initialSize);
     ioReadBytesDiff.resize(initialSize);
     ioSyscOpenDiff.resize(initialSize);
