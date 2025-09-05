@@ -144,6 +144,7 @@ void IoMessageManager::Report()
     }
     ioTimes.clear();
     ioBundleName.clear();
+    charIoBundleName.clear();
     ioReadCharDiff.clear();
     ioSyscReadDiff.clear();
     ioReadBytesDiff.clear();
