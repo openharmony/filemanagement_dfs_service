@@ -249,7 +249,6 @@ void SystemNotifier::UpdateResourceMapByLanguage()
 template<typename... Args>
 std::string SystemNotifier::GetKeyValue(const std::string &key, Args &&...args)
 {
-    std::lock_guard<std::mutex> lock(g_resourceMapMutex);
     auto it = g_resourceMap.find(key);
     if (it == g_resourceMap.end()) {
         return "";
@@ -396,7 +395,7 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
     return ret;
 }
 
-int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
+int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote)
 {
     LOGI("DestroyNotifyByNetworkId for networkId: %{public}.6s", networkId.c_str());
     int32_t notificationId = 0;

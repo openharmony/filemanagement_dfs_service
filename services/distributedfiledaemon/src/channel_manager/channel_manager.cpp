@@ -115,6 +115,7 @@ int32_t ChannelManager::Init()
     int32_t ret = Listen(socketServerId, g_low_qosInfo, g_lowQosTvParamIndex, &channelManagerListener);
     if (ret != ERR_OK) {
         LOGE("service listen failed, ret: %{public}d", ret);
+        Shutdown(socketServerId);
         return ERR_LISTEN_SOCKET_FAILED;
     }
 
@@ -263,6 +264,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
         LOGE("Fill and set accessInfo failed");
+        Shutdown(socketId);
         return ERR_BAD_VALUE;
     }
 

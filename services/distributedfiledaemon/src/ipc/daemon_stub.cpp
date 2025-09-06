@@ -186,9 +186,10 @@ int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel
         return E_IPC_READ_FAILED;
     }
     auto remote = data.ReadRemoteObject();
-    LOGW("is FileManager ? result is %{public}d", remote == nullptr);
-
     auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
+    if (remoteReverseObj == nullptr) {
+        LOGW("nullptr pass, is FileManager situation!");
+    }
     int32_t res = OpenP2PConnectionEx(networkId, remoteReverseObj);
     reply.WriteInt32(res);
     LOGI("DaemonStub::End OpenP2PConnection, res = %{public}d.", res);
