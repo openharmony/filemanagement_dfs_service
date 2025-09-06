@@ -38,7 +38,7 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     return g_publishNotification;
 }
 
-int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
+int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemonte)
 {
     return g_cancelNotification;
 }

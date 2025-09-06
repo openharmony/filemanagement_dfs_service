@@ -181,15 +181,18 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
-    bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
+    bool isServer = false;
+    bool ifGetSession = sessionPool_.CheckIfGetSession(fd, isServer);
     sessionPool_.ReleaseSession(fd);
     if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
         // for client
         GetSession(cidStr);
     } else {
-        // for server
+        // for server and client active close
         sessionPool_.SinkOffline(cidStr);
-        SystemNotifier::GetInstance().DestroyNotifyByNetworkId(cidStr);
+    }
+    if (isServer) {
+        SystemNotifier::GetInstance().DestroyNotifyByNetworkId(cidStr, false);
     }
 }
 

@@ -36,7 +36,7 @@ public:
     void ReleaseSession(const int32_t fd);
     void ReleaseSession(const std::string &cid, bool isReleaseAll);
     void ReleaseAllSession();
-    bool CheckIfGetSession(const int32_t fd);
+    bool CheckIfGetSession(const int32_t fd, bool &isServer);
     void SinkOffline(const std::string &cid);
     bool FindSocketId(int32_t socketId);
 private:

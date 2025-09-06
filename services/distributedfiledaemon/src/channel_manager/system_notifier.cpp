@@ -395,7 +395,7 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
     return ret;
 }
 
-int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
+int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote)
 {
     LOGI("DestroyNotifyByNetworkId for networkId: %{public}.6s", networkId.c_str());
     int32_t notificationId = 0;
