@@ -59,7 +59,7 @@ export default namespace cloudSync {
 
     export class GallerySync {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         private nativePtr: long = 0;
         native constructor();
@@ -186,7 +186,7 @@ export default namespace cloudSync {
 
     export class MultiDownloadProgress {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         state: State;
         taskId: number;
@@ -212,7 +212,7 @@ export default namespace cloudSync {
 
     export class Download {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         private nativePtr: long = 0;
         native constructor();
@@ -360,7 +360,7 @@ export default namespace cloudSync {
 
     export class FileSync {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         private nativePtr: long = 0;
         native constructor();
@@ -464,7 +464,7 @@ export default namespace cloudSync {
 
     export class CloudFileCache {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         private nativePtr: long = 0;
         native constructor();
@@ -635,7 +635,7 @@ export default namespace cloudSync {
 
     class StaticFunction {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         static native getFileSyncStateInner(uri: string): int;
         static native getCoreFileSyncStateInner(uri: string): int;
@@ -806,7 +806,7 @@ export default namespace cloudSync {
 
     export class FileVersion {
         static {
-            loadLibrary("cloud_sync_ani");
+            loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         private nativePtr: long = 0;
         native constructor();
