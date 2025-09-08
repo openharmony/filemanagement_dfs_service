@@ -715,6 +715,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         }
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
+        if (bundleName == HDC_BUNDLE_NAME || bundleName == GALLERY_BUNDLE_NAME) {
+            CloudStatus::isStopSync_.store(true);
+        }
         ret = dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
         if (ret != E_OK) {
             LOGE("StopSyncSynced failed, ret: %{public}d", ret);
@@ -722,6 +725,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     }
 
     ret = dataSyncManager_->ChangeAppSwitch(bundleName, callerUserId, status);
+    if (!status && (bundleName == HDC_BUNDLE_NAME || bundleName == GALLERY_BUNDLE_NAME)) {
+        CloudStatus::isStopSync_.store(false);
+    }
     LOGI("End ChangeAppSwitch");
     return ret;
 }
