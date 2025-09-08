@@ -12,11 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "sync_state_manager.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "sync_state_manager.h"
-#include "system_mock.h"
+
+#include "cloud_status.h"
 #include "data_sync_const.h"
+#include "system_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -512,6 +516,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_001 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return(""));
@@ -531,6 +536,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_002 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("0"));
@@ -550,6 +556,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_003 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("xxx"));
@@ -570,6 +577,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_004 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("10xx"));
@@ -590,6 +598,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_005 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("   10"));
@@ -610,6 +619,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_006, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_006 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return("10  "));
@@ -630,6 +640,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_007 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         uint64_t curTime = GetCurrentTimeStampMs() - TWELVE_HOURS_MILLISECOND;
@@ -651,6 +662,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_008, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_008 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         uint64_t curTime = GetCurrentTimeStampMs() - 10;
@@ -671,6 +683,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_009, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_009 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         uint64_t curTime = GetCurrentTimeStampMs() + 10;
@@ -692,6 +705,7 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_010, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_010 start";
     try {
+        CloudStatus::isStopSync_.store(false);
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         uint64_t curTime = GetCurrentTimeStampMs() - TWELVE_HOURS_MILLISECOND + 50000;
@@ -706,5 +720,26 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_010, TestSize.Level1)
         GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_010 ERROR";
     }
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_010 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_011 start";
+    try {
+        CloudStatus::isStopSync_.store(true);
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).Times(0);
+        SyncStateManager syncStateManager;
+        bool ret = syncStateManager.CheckMediaLibCleaning();
+        EXPECT_EQ(ret, true);
+
+        ISystem::system_ = nullptr;
+        CloudStatus::isStopSync_.store(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_011 End";
 }
 }

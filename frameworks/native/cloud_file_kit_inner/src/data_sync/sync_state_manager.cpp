@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "cloud_file_fault_event.h"
+#include "cloud_status.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -67,6 +68,11 @@ static bool ConvertToNumber(const std::string &str, uint64_t &val)
 
 bool SyncStateManager::CheckMediaLibCleaning()
 {
+    if (CloudStatus::isStopSync_.load()) {
+        LOGI("cloudfileservice in stop sync");
+        return true;
+    }
+
     std::string closeSwitchTime = system::GetParameter(CLOUDSYNC_SWITCH_STATUS, "");
     LOGD("prev close time: %{public}s", closeSwitchTime.c_str());
     if (closeSwitchTime.empty() || closeSwitchTime == "0") {
