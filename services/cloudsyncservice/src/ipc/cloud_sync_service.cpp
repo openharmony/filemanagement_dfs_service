@@ -561,7 +561,7 @@ int32_t CloudSyncService::StopFileSyncInner(const string &bundleName, bool force
     return ret;
 }
 
-int32_t CloudSyncService::ResetCursor(const string &bundleName)
+int32_t CloudSyncService::ResetCursor(bool flag, const string &bundleName)
 {
     LOGI("Begin ResetCursor");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -574,7 +574,7 @@ int32_t CloudSyncService::ResetCursor(const string &bundleName)
         return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    ret = dataSyncManager_->ResetCursor(targetBundleName, callerUserId);
+    ret = dataSyncManager_->ResetCursor(targetBundleName, callerUserId, flag);
     LOGI("End ResetCursor");
     return ret;
 }

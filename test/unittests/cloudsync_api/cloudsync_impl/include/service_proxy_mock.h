@@ -43,7 +43,7 @@ public:
     MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, int32_t userId));
     MOCK_METHOD2(StopSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
     MOCK_METHOD2(StopFileSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
-    MOCK_METHOD1(ResetCursor, int32_t(const std::string &bundleName));
+    MOCK_METHOD2(ResetCursor, int32_t(bool flag, const std::string &bundleName));
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD3(OptimizeStorage,
                  int32_t(const OptimizeSpaceOptions &optimizeOptions,

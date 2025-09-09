@@ -45,6 +45,7 @@ public:
     int32_t StopSync(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t StopFileSync(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ResetCursor(const std::string &bundleName = "") override;
+    int32_t ResetCursor(bool flag, const std::string &bundleName = "") override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
         const std::shared_ptr<CloudOptimizeCallback> optimizeCallback = nullptr) override;

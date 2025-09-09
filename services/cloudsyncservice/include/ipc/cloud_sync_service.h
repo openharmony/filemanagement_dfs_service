@@ -52,7 +52,7 @@ public:
     ErrCode TriggerSyncInner(const std::string &bundleName, int32_t userId) override;
     ErrCode StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
     ErrCode StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
-    ErrCode ResetCursor(const std::string &bundleName = "") override;
+    ErrCode ResetCursor(bool flag = false, const std::string &bundleName = "") override;
     ErrCode OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions,
                             bool isCallbackValid,
                             const sptr<IRemoteObject> &optimizeCallback) override;
