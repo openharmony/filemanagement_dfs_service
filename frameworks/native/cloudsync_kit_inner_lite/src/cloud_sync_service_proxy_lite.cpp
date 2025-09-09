@@ -194,7 +194,7 @@ int32_t CloudSyncServiceProxy::StopFileSyncInner(const std::string &bundleName, 
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::ResetCursor(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::ResetCursor(bool flag, const std::string &bundleName)
 {
     return E_OK;
 }

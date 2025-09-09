@@ -41,6 +41,7 @@ public:
     MOCK_METHOD2(StopSync, int32_t(const std::string &bundleName, bool forceFlag));
     MOCK_METHOD2(StopFileSync, int32_t(const std::string &bundleName, bool forceFlag));
     MOCK_METHOD1(ResetCursor, int32_t(const std::string &bundleName));
+    MOCK_METHOD2(ResetCursor, int32_t(bool flag, const std::string &bundleName));
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(OptimizeStorage, int32_t(const OptimizeSpaceOptions &optimizeOptions,
         const std::shared_ptr<CloudOptimizeCallback> optimizeCallback));

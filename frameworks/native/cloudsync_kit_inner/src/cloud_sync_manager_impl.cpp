@@ -271,7 +271,18 @@ int32_t CloudSyncManagerImpl::ResetCursor(const std::string &bundleName)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->ResetCursor(bundleName);
+    return CloudSyncServiceProxy->ResetCursor(false, bundleName);
+}
+
+int32_t CloudSyncManagerImpl::ResetCursor(bool flag, const std::string &bundleName)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->ResetCursor(flag, bundleName);
 }
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)

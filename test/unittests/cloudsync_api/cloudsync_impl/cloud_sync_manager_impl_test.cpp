@@ -581,9 +581,27 @@ HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-    EXPECT_CALL(*serviceProxy_, ResetCursor(_)).WillOnce(Return(E_PERMISSION_DENIED));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
     int res = CloudSyncManagerImpl::GetInstance().ResetCursor(bundleName);
     EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest002, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest003, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).Times(0);
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
+    EXPECT_EQ(res, E_SA_LOAD_FAILED);
 }
 
 HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
