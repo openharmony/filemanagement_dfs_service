@@ -30,6 +30,10 @@ public:
     napi_status RegisterCallback(napi_value callback);
     napi_status UnregisterCallback(napi_value callback);
     void OnJsCallback(napi_value *value, uint32_t argc);
+    virtual ~RegisterCallbackManagerNapi();
+
+protected:
+    void CleanAllCallback(bool force);
 
 protected:
     napi_env env_;

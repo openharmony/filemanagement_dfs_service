@@ -32,9 +32,10 @@ class CloudDlCallbackMiddleNapi : public CloudDownloadCallback,
                                   public std::enable_shared_from_this<CloudDlCallbackMiddleNapi> {
 public:
     explicit CloudDlCallbackMiddleNapi(napi_env env) : RegisterCallbackManagerNapi(env) {}
-    virtual ~CloudDlCallbackMiddleNapi() = default;
+    ~CloudDlCallbackMiddleNapi() override = default;
     void OnDownloadProcess(const DownloadProgressObj &progress) override;
     void RemoveDownloadInfo(int64_t downloadId);
+    void TryCleanCallback();
 
 protected:
     virtual void DownloadProgressInner(std::shared_ptr<DlProgressNapi> progress){};

@@ -44,7 +44,7 @@ napi_status RegisterCallbackManagerNapi::RegisterCallback(napi_value callback)
 
 napi_status RegisterCallbackManagerNapi::UnregisterCallback(napi_value callback)
 {
-    if (validRefNum_ == 0) {
+    if (validRefNum_.load() == 0) {
         return napi_ok;
     }
     std::lock_guard<std::recursive_mutex> lock(callbackMtx_);
@@ -80,7 +80,6 @@ napi_status RegisterCallbackManagerNapi::UnregisterCallback(napi_value callback)
     }
     LOGI("After unregister, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
          validRefNum_.load());
-
     return napi_ok;
 }
 
@@ -131,5 +130,27 @@ void RegisterCallbackManagerNapi::OnJsCallback(napi_value *value, uint32_t argc)
         }
         iter++;
     }
+}
+
+RegisterCallbackManagerNapi::~RegisterCallbackManagerNapi()
+{
+    CleanAllCallback(true);
+}
+
+void RegisterCallbackManagerNapi::CleanAllCallback(bool force)
+{
+    std::lock_guard<std::recursive_mutex> lock(callbackMtx_);
+    if (!force) {
+        if (validRefNum_.load() != 0) {
+            return;
+        }
+    }
+
+    for (auto &iter : callbackList_) {
+        napi_delete_reference(env_, iter.second);
+    }
+    callbackList_.clear();
+    validRefNum_ = 0;
+    LOGI("Clean all callback, valid callback count is 0");
 }
 } // namespace OHOS::FileManagement::CloudSync

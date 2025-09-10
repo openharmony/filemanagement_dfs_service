@@ -94,4 +94,16 @@ void CloudDlCallbackMiddleNapi::OnDownloadProcess(const DownloadProgressObj &pro
         LOGE("Failed to execute libuv work queue, status: %{public}d", status);
     }
 }
+
+void CloudDlCallbackMiddleNapi::TryCleanCallback()
+{
+    bool noTask = false;
+    {
+        std::lock_guard<std::mutex> lock(downloadInfoMtx_);
+        noTask = (downloadInfos_.size() == 0);
+    }
+    if (noTask) {
+        CleanAllCallback(false);
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync
