@@ -1695,7 +1695,7 @@ HWTEST_F(IoMessageListenerTest, CheckInt001, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckInt001 Start";
     
     try {
-        CheckInt("1234");
+        OHOS::FileManagement::CloudDisk::CheckInt("1234");
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1714,7 +1714,7 @@ HWTEST_F(IoMessageListenerTest, CheckInt002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckInt002 Start";
     
     try {
-        CheckInt("str");
+        OHOS::FileManagement::CloudDisk::CheckInt("str");
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1733,7 +1733,7 @@ HWTEST_F(IoMessageListenerTest, CheckDouble001, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckDouble001 Start";
     
     try {
-        CheckDouble("1.0");
+        OHOS::FileManagement::CloudDisk::CheckDouble("1.0");
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1752,7 +1752,7 @@ HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckDouble002 Start";
     
     try {
-        CheckDouble("str");
+        OHOS::FileManagement::CloudDisk::CheckDouble("str");
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
