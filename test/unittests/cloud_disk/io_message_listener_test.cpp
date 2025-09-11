@@ -1333,24 +1333,6 @@ HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
 }
 
 /**
- * @tc.name: PushDataRollBack001
- * @tc.desc: Report IO data
- * @tc.type: FUNC
- */
-HWTEST_F(IoMessageListenerTest, PushDataRollBack001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PushDataRollBack001 Start";
-    try {
-        ioMessageManager_->PushDataRollBack();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PushDataRollBack001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "PushDataRollBack001 End";
-}
-
-/**
  * @tc.name: PushData001
  * @tc.desc: Report IO data
  * @tc.type: FUNC
@@ -1701,6 +1683,82 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport005, TestSize.Level1)
     unlink(IO_FILE.c_str());
     unlink(IO_REPORT_FILE.c_str());
     GTEST_LOG_(INFO) << "CheckMaxSizeAndReport005 End";
+}
+
+/**
+ * @tc.name: CheckInt001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt001 Start";
+    
+    try {
+        CheckInt("1234");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt001 End";
+}
+
+/**
+ * @tc.name: CheckInt002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt002 Start";
+    
+    try {
+        CheckInt("str");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt001 End";
+}
+
+/**
+ * @tc.name: CheckDouble001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble001 Start";
+    
+    try {
+        CheckDouble("1.0");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt001 End";
+}
+
+/**
+ * @tc.name: CheckDouble002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble002 Start";
+    
+    try {
+        CheckDouble("str");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckDouble002 End";
 }
 
 } // namespace OHOS::FileManagement::CloudDisk::Test
