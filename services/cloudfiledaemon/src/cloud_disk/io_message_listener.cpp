@@ -193,17 +193,30 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
 
 void IoMessageManager::Report()
 {
+    auto sizeVector = [](auto &vec) {
+        if (vec.szie() == 0) {
+            return;
+        }
+    }
+    for (auto &variant : targetVectors) {
+        std::visit(sizeVector, variant);
+    }
     auto charIoBundleName = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_BUNDLE_NAME>(targetVectors));
-
     HiSysEventParam params[] = {
         CreateParam("time", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
         CreateParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
-        CreateParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
-        CreateParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
-        CreateParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
-        CreateParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
-        CreateParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
-        CreateParam("Result", HISYSEVENT_DOUBLE_ARRAY, GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
+        CreateParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
+        CreateParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
+        CreateParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
+        CreateParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
+        CreateParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
+        CreateParam("Result", HISYSEVENT_DOUBLE_ARRAY,
+            GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
     };
 
     auto ret = OH_HiSysEvent_Write(
