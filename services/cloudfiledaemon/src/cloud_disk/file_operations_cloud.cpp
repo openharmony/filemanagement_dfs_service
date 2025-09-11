@@ -380,7 +380,7 @@ static unsigned int GetFileOpenFlags(int32_t fileFlags)
     return flags;
 }
 
-static int32_t CheckBucketPath(string cloudId, string bundleName, int32_t userId, string tmpPath)
+static int32_t CheckBucketPath(const string &cloudId, const string &bundleName, int32_t userId, string tmpPath)
 {
     string baseDir = CloudFileUtils::GetLocalBaseDir(bundleName, userId);
     string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);
@@ -404,6 +404,7 @@ static int32_t CheckBucketPath(string cloudId, string bundleName, int32_t userId
             return mkdirErrno;
         }
         LOGW("mkdir bucketPath success");
+        CloudFileUtils::ChangeUid(userId, bundleName, STAT_MODE_DIR, bucketPath);
     }
     return EOK;
 }
@@ -433,6 +434,7 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
                     GetAnonyString(tmpPath).c_str(), errno);
                 return errno;
             }
+            CloudFileUtils::ChangeUid(data->userId, inoPtr->bundleName, STAT_MODE_REG, path);
         }
         unsigned int flags = GetFileOpenFlags(fi->flags);
         int32_t fd = open(path.c_str(), flags);
@@ -712,6 +714,7 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
                 " err: " + std::to_string(errno)});
             return -errno;
         }
+        CloudFileUtils::ChangeUid(userId, bundleName, STAT_MODE_DIR, bucketPath);
     }
     int32_t fd = open(path.c_str(), (mode & O_NOFOLLOW) | O_CREAT | O_RDWR, STAT_MODE_REG);
     if (fd < 0) {
@@ -720,6 +723,7 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
             " err: " + std::to_string(errno)});
         return -errno;
     }
+    CloudFileUtils::ChangeUid(userId, bundleName, STAT_MODE_REG, path);
     return fd;
 }
 

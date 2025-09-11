@@ -48,7 +48,7 @@ void SessionPool::ReleaseSession(const int32_t fd)
     }
 }
 
-bool SessionPool::CheckIfGetSession(const int32_t fd)
+bool SessionPool::CheckIfGetSession(const int32_t fd, bool &isServer)
 {
     lock_guard lock(sessionPoolLock_);
     std::shared_ptr<BaseSession> session = nullptr;
@@ -59,8 +59,11 @@ bool SessionPool::CheckIfGetSession(const int32_t fd)
         }
     }
     if (session == nullptr) {
+        // client disconnect, server allconnect disconnect
+        isServer = false;
         return false;
     }
+    isServer = session->IsFromServer();
     return !session->IsFromServer();
 }
 

@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_STATUS_H
 #define OHOS_FILEMGMT_CLOUD_STATUS_H
 
+#include <atomic>
 #include <map>
 #include <mutex>
 #include <string>
@@ -30,6 +31,7 @@ public:
     static bool IsCloudStatusOkay(const std::string &bundleName, const int32_t userId);
     static int32_t ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool appSwitchStatus);
     static bool IsAccountIdChanged(const std::string &accountId);
+    static inline std::atomic<bool> isStopSync_ = false;
 
 private:
     static inline CloudFile::CloudUserInfo userInfo_;

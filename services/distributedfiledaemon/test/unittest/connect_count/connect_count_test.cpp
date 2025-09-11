@@ -32,7 +32,7 @@ using namespace OHOS::FileManagement;
 
 class MockFileDfsListener : public IFileDfsListener {
 public:
-    MOCK_METHOD2(OnStatus, void(const std::string &networkId, int32_t status));
+    MOCK_METHOD4(OnStatus, void(const std::string &networkId, int32_t status, const std::string &path, int32_t type));
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
 };
 
@@ -196,7 +196,7 @@ HWTEST_F(ConnectCountTest, NotifyRemoteReverseObj_001, TestSize.Level1)
 
     // 设置 EXPECT_CALL
     EXPECT_CALL(*static_cast<MockFileDfsListener*>(testListener.GetRefPtr()),
-                OnStatus(testNetworkId, ON_STATUS_OFFLINE))
+                OnStatus(testNetworkId, ON_STATUS_OFFLINE, "", 0))
                 .Times(1);  // 仅在当前测试用例中生效
 
     connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);

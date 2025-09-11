@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "fuse_ioctl.h"
+#include "parameters.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -41,6 +42,7 @@ namespace {
     static const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
     static const uint64_t DELTA_DISK = 0x9E3779B9;
     static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
+    static const int32_t OID_DFS = 1009;
 }
 
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
@@ -398,6 +400,53 @@ string CloudFileUtils::GetRealPath(const string &path)
         }
     }
     return realPath.string();
+}
+
+void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, uint32_t mode, const string &path)
+{
+    string baseDir = GetLocalBaseDir(bundleName, userId);
+    struct stat baseInfo{};
+    if (stat(baseDir.c_str(), &baseInfo) != 0) {
+        LOGE("chmod and chown stat failed, err is %{public}d", errno);
+        return;
+    }
+    uid_t bundleUid = baseInfo.st_uid;
+
+    ChangeUidByPath(path, mode, bundleUid);
+}
+
+void CloudFileUtils::ChangeUidByCloudId(int32_t userId, const std::string &bundleName,
+    const std::string &cloudId, uint32_t mode, uid_t uid)
+{
+    string path = GetLocalFilePath(cloudId, bundleName, userId);
+    ChangeUidByPath(path, mode, uid);
+}
+
+void CloudFileUtils::ChangeUidByPath(const std::string &path, mode_t mode, uid_t uid)
+{
+    if (uid == 0) {
+        LOGE("uid is not allowed.");
+        return;
+    }
+
+    struct stat baseInfo{};
+    if (stat(path.c_str(), &baseInfo) != 0) {
+        LOGE("chmod and chown stat failed, err is %{public}d", errno);
+        return;
+    }
+
+    if (baseInfo.st_mode != mode) {
+        if (chmod(path.c_str(), mode) != 0) {
+            LOGE("chmod failed, err is %{public}d", errno);
+            return;
+        }
+    }
+
+    if (baseInfo.st_uid != uid) {
+        if (chown(path.c_str(), uid, OID_DFS) != 0) {
+            LOGE("chown failed, err is %{public}d", errno);
+        }
+    }
 }
 } // namespace CloudDisk
 } // namespace FileManagement

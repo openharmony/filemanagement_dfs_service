@@ -561,7 +561,7 @@ int32_t CloudSyncService::StopFileSyncInner(const string &bundleName, bool force
     return ret;
 }
 
-int32_t CloudSyncService::ResetCursor(const string &bundleName)
+int32_t CloudSyncService::ResetCursor(bool flag, const string &bundleName)
 {
     LOGI("Begin ResetCursor");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -574,7 +574,7 @@ int32_t CloudSyncService::ResetCursor(const string &bundleName)
         return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    ret = dataSyncManager_->ResetCursor(targetBundleName, callerUserId);
+    ret = dataSyncManager_->ResetCursor(targetBundleName, callerUserId, flag);
     LOGI("End ResetCursor");
     return ret;
 }
@@ -715,6 +715,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         }
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
+        if (bundleName == HDC_BUNDLE_NAME || bundleName == GALLERY_BUNDLE_NAME) {
+            CloudStatus::isStopSync_.store(true);
+        }
         ret = dataSyncManager_->StopSyncSynced(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
         if (ret != E_OK) {
             LOGE("StopSyncSynced failed, ret: %{public}d", ret);
@@ -722,6 +725,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     }
 
     ret = dataSyncManager_->ChangeAppSwitch(bundleName, callerUserId, status);
+    if (!status && (bundleName == HDC_BUNDLE_NAME || bundleName == GALLERY_BUNDLE_NAME)) {
+        CloudStatus::isStopSync_.store(false);
+    }
     LOGI("End ChangeAppSwitch");
     return ret;
 }
@@ -818,7 +824,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         for (auto &uri : uriVec) {
             if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
                 LOGE("permission denied");
-                return E_PERMISSION_DENIED;
+                return E_ILLEGAL_URI;
             }
         }
     }

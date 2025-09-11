@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "cloud_file_fault_event.h"
+#include "cloud_status.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -67,6 +68,11 @@ static bool ConvertToNumber(const std::string &str, uint64_t &val)
 
 bool SyncStateManager::CheckMediaLibCleaning()
 {
+    if (CloudStatus::isStopSync_.load()) {
+        LOGI("cloudfileservice in stop sync");
+        return true;
+    }
+
     std::string closeSwitchTime = system::GetParameter(CLOUDSYNC_SWITCH_STATUS, "");
     LOGD("prev close time: %{public}s", closeSwitchTime.c_str());
     if (closeSwitchTime.empty() || closeSwitchTime == "0") {
@@ -84,7 +90,6 @@ bool SyncStateManager::CheckMediaLibCleaning()
     uint64_t intervalTime = curTime - prevTime;
     LOGI("media clean time: %{public}s, cur: %{public}s", closeSwitchTime.c_str(), std::to_string(curTime).c_str());
     if (prevTime > curTime || intervalTime >= TWELVE_HOURS_MILLISECOND) {
-        LOGE("prev closeSwitch over 12h, reset to 0");
         CLOUD_SYNC_FAULT_REPORT({"", CloudFile::FaultScenarioCode::CLOUD_SWITCH_CLOSE,
             CloudFile::FaultType::TIMEOUT, E_TIMEOUT,
             "media clean time is: " + closeSwitchTime + " over 12h"});

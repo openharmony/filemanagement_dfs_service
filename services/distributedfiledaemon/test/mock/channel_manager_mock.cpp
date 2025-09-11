@@ -53,6 +53,11 @@ int32_t ChannelManager::SendRequest(const std::string &networkId,
     return IChannelManagerMock::iChannelManagerMock->SendRequest(networkId, request, response, needResponse);
 }
 
+int32_t ChannelManager::NotifyClient(const std::string &networkId, const ControlCmd &request)
+{
+    return IChannelManagerMock::iChannelManagerMock->NotifyClient(networkId, request);
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

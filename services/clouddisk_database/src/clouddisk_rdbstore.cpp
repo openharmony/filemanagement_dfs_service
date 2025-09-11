@@ -888,7 +888,7 @@ int32_t CloudDiskRdbStore::GetSourcePath(const string &attr, const string &paren
     string uri;
     int32_t ret = GetUriFromDB(parentCloudId, uri);
     if (ret == E_OK) {
-        sourcePath == ConvertUriToSrcPath(uri);
+        sourcePath = ConvertUriToSrcPath(uri);
     } else {
         LOGI("file src path fail, restore to root dir");
     }

@@ -79,13 +79,13 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "cloud_sync_manager_impl_test.cpp",
   ]
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/mock/ipc",

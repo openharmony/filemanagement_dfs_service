@@ -135,9 +135,13 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     auto env = cloudSyncCallback->env_;
     auto ref = cloudSyncCallback->cbOnRef_;
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
+    napi_status status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok || scope == nullptr) {
+        LOGE("open handle scope failed, status: %{public}d", status);
+        return;
+    }
     napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(env, ref, &jsCallback);
+    status = napi_get_reference_value(env, ref, &jsCallback);
     if (status != napi_ok) {
         LOGE("Create reference failed, status: %{public}d", status);
         napi_close_handle_scope(env, scope);

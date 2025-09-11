@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,17 +76,19 @@ void FileDfsListenerProxyTest::TearDown(void)
 HWTEST_F(FileDfsListenerProxyTest, FileDfsListener_OnStatus_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileDfsListener_OnStatus_0100 Start";
+
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
-    proxy_->OnStatus("test", 0);
+    proxy_->OnStatus("test", 0, "", 0);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
-    proxy_->OnStatus("test", 0);
+    proxy_->OnStatus("test", 0, "", 0);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
-    proxy_->OnStatus("test", 0);
+    proxy_->OnStatus("test", 0, "", 0);
+
     GTEST_LOG_(INFO) << "FileDfsListener_OnStatus_0100 End";
 }
 
@@ -99,11 +101,17 @@ HWTEST_F(FileDfsListenerProxyTest, FileDfsListener_OnStatus_0100, TestSize.Level
 HWTEST_F(FileDfsListenerProxyTest, FileTransListener_OnStatus_0200, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0200 Start";
+
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
-    auto testProxy = make_shared<FileDfsListenerProxy>(nullptr);
-    testProxy->OnStatus("test", 0);
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    proxy_->OnStatus("test", 0, "", 0);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    proxy_->OnStatus("test", 0, "", 0);
+
     GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0200 End";
 }
 
@@ -116,28 +124,19 @@ HWTEST_F(FileDfsListenerProxyTest, FileTransListener_OnStatus_0200, TestSize.Lev
 HWTEST_F(FileDfsListenerProxyTest, FileTransListener_OnStatus_0300, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0300 Start";
-    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
-    proxy_->OnStatus("test", 0);
-    GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0300 End";
-}
 
-/**
- * @tc.name: FileTransListener_OnStatus_0400
- * @tc.desc: The execution of the OnStatus succeeded.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(FileDfsListenerProxyTest, FileTransListener_OnStatus_0400, TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0400 Start";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return((true)));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    proxy_->OnStatus("test", 0, "", 0);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return((true)));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
-    proxy_->OnStatus("test", 0);
-    GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0400 End";
+    proxy_->OnStatus("test", 0, "", 0);
+
+    GTEST_LOG_(INFO) << "FileTransListener_OnStatus_0300 End";
 }
 }

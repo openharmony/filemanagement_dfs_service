@@ -25,6 +25,7 @@
 #include "common_event_manager.h"
 #include "connect_count/connect_count.h"
 #include "connection_detector_mock.h"
+#include "control_cmd_parser.h"
 #include "copy/file_size_utils.h"
 #include "daemon.h"
 #include "daemon_execute.h"
@@ -49,6 +50,7 @@
 #include "system_ability_manager_client_mock.h"
 
 namespace {
+bool g_isLocalItDevice = false;
 bool g_checkCallerPermission = true;
 bool g_checkCallerPermissionDatasync = true;
 int g_getHapTokenInfo = 0;
@@ -64,17 +66,20 @@ bool g_subscribeCommonEvent;
 bool g_unSubscribeCommonEvent;
 int32_t g_getDfsVersionFromNetworkId = 0;
 OHOS::Storage::DistributedFile::DfsVersion g_dfsVersion;
+bool g_isRemoteDfsVersionLowerThanGiven = false;
+int32_t g_getDeviceStatus = 0;
+int32_t g_putDeviceStatus = 0;
 } // namespace
 
 namespace {
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
-const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
-const int32_t E_UNMOUNT = 13600004;
 const std::string NETWORKID_ONE = "testNetWork1";
 const std::string NETWORKID_TWO = "testNetWork2";
+OHOS::DistributedHardware::DmDeviceInfo deviceInfo;
+constexpr int32_t ERR_DP_CAN_NOT_FIND = 98566199;
 } // namespace
 
 namespace OHOS::Storage::DistributedFile {
@@ -93,6 +98,29 @@ int32_t DeviceProfileAdapter::GetDfsVersionFromNetworkId(const std::string &netw
     }
     dfsVersion = g_dfsVersion;
     return g_getDfsVersionFromNetworkId;
+}
+
+int32_t DeviceProfileAdapter::GetDeviceStatus(const std::string &networkId, bool &status)
+{
+    return g_getDeviceStatus;
+}
+
+bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(
+    const std::string &remoteNetworkId,
+    const DfsVersion &thresholdDfsVersion,
+    VersionPackageName packageName)
+{
+    return g_isRemoteDfsVersionLowerThanGiven;
+}
+
+int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
+{
+    return g_putDeviceStatus;
+}
+
+bool ControlCmdParser::IsLocalItDevice()
+{
+    return g_isLocalItDevice;
 }
 } // namespace OHOS::Storage::DistributedFile
 
@@ -151,15 +179,6 @@ DeviceManager &DeviceManager::GetInstance()
 }
 } // namespace DistributedHardware
 } // namespace OHOS
-
-OHOS::DistributedHardware::DmDeviceInfo deviceInfo = {
-    .deviceId = "testdevid",
-    .deviceName = "testdevname",
-    .deviceTypeId = 1,
-    .networkId = "testNetWork1",
-    .authForm = OHOS::DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT,
-    .extraData = "{\"OS_TYPE\":10}",
-};
 
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -234,7 +253,7 @@ public:
 
 class FileDfsListenerMock : public IRemoteStub<IFileDfsListener> {
 public:
-    MOCK_METHOD2(OnStatus, void(const std::string &networkId, int32_t status));
+    MOCK_METHOD4(OnStatus, void(const std::string &networkId, int32_t status, const std::string &path, int32_t type));
 };
 
 void DaemonTest::SetUpTestCase(void)
@@ -254,8 +273,6 @@ void DaemonTest::SetUpTestCase(void)
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
     deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
-    channelManagerMock_ = std::make_shared<ChannelManagerMock>();
-    IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
@@ -268,8 +285,6 @@ void DaemonTest::SetUpTestCase(void)
     }
     std::ofstream file(path + "/docs/1.txt");
     std::ofstream file1(path + "/docs/1@.txt");
-    g_getDfsVersionFromNetworkId = 0;
-    g_dfsVersion = {0, 0, 0};
 }
 
 void DaemonTest::TearDownTestCase(void)
@@ -289,8 +304,6 @@ void DaemonTest::TearDownTestCase(void)
     softBusHandlerMock_ = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
-    channelManagerMock_ = nullptr;
-    IChannelManagerMock::iChannelManagerMock = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 
@@ -307,12 +320,30 @@ void DaemonTest::SetUp(void)
     bool runOnCreate = true;
     daemon_ = new (std::nothrow) Daemon(saID, runOnCreate);
     ASSERT_TRUE(daemon_ != nullptr) << "daemon_ assert failed!";
+    g_getDfsVersionFromNetworkId = 0;
+    g_dfsVersion = {0, 0, 0};
+    g_isRemoteDfsVersionLowerThanGiven = false;
+    g_getDeviceStatus = 0;
+    g_putDeviceStatus = 0;
+    deviceInfo = {
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork1",
+        .authForm = OHOS::DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT,
+        .extraData = "{\"OS_TYPE\":10}",
+    };
+    g_isLocalItDevice = false;
+    channelManagerMock_ = std::make_shared<ChannelManagerMock>();
+    IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
 }
 
 void DaemonTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
     daemon_ = nullptr;
+    channelManagerMock_ = nullptr;
+    IChannelManagerMock::iChannelManagerMock = nullptr;
 }
 
 /**
@@ -592,29 +623,38 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 begin";
-    ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo = {.networkId = "test"};
     sptr<IFileDfsListener> remoteReverseObj = nullptr;
     ConnectCount::GetInstance()->RemoveAllConnect();
+
+    // g_checkCallerPermission is ok but remote reject
+    g_checkCallerPermission = true;
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillRepeatedly(Return(true));
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_PERMISSION);
+
+    // g_checkCallerPermission is false
+    g_checkCallerPermission = true;
+    g_isRemoteDfsVersionLowerThanGiven = false;
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     g_checkCallerPermission = false;
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), E_OK);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
 
     g_checkCallerPermission = true;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), E_OK);
+    EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 end";
 }
 
@@ -627,16 +667,32 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 begin";
-    ASSERT_NE(daemon_, nullptr);
+
+    // check fileAccessManager permit failed
+    g_checkCallerPermission = true;
+    g_isLocalItDevice = true;
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION);
+
+    // check permission failed
+    g_isLocalItDevice = false;
     g_checkCallerPermissionDatasync = false;
-    EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION_DENIED_NAPI);
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_PERMISSION);
 
+    // networkId length is invalid
+    g_checkCallerPermission = false;
     g_checkCallerPermissionDatasync = true;
-    daemon_->dfsListenerDeathRecipient_ = nullptr;
     EXPECT_EQ(daemon_->OpenP2PConnectionEx("", nullptr), E_INVAL_ARG_NAPI);
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx(longNetworkId, nullptr), E_INVAL_ARG_NAPI);
 
+    // networkId is valid and obj is null
+    std::string validNetworkId(64, 'a');
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx(validNetworkId, nullptr), NO_ERROR);
+
+    // networkId is valid and obj is not null
     auto listener = sptr<IFileDfsListener>(new FileDfsListenerMock());
-    EXPECT_EQ(daemon_->OpenP2PConnectionEx("", listener), E_INVAL_ARG_NAPI);
+    EXPECT_EQ(daemon_->OpenP2PConnectionEx(validNetworkId, listener), NO_ERROR);
+
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 end";
 }
 
@@ -649,21 +705,33 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 begin";
-    ASSERT_NE(daemon_, nullptr);
-    g_checkCallerPermissionDatasync = false;
-    EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION_DENIED_NAPI);
 
+    // check fileAccessManager permit failed
+    g_checkCallerPermission = true;
+    g_isLocalItDevice = true;
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION);
+
+    // check permission failed
+    g_isLocalItDevice = false;
+    g_checkCallerPermissionDatasync = false;
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_PERMISSION);
+
+    // networkId length is invalid
+    g_checkCallerPermission = false;
     g_checkCallerPermissionDatasync = true;
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(""), E_INVAL_ARG_NAPI);
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(longNetworkId), E_INVAL_ARG_NAPI);
 
-    std::string networkId = "test";
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return(""));
-    EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_CONNECTION_FAILED);
+    // networkId is valid but without file access permissions
+    std::string validNetworkId(64, 'a');
+    g_checkCallerPermission = false;
+    EXPECT_NE(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
 
+    // networkId is valid with file access permissions
     g_checkCallerPermission = true;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_UNMOUNT);
+    EXPECT_NE(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
+
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 end";
 }
 
@@ -1403,16 +1471,14 @@ HWTEST_F(DaemonTest, DaemonTest_DestroyControlLink_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CheckRemoteAllowConnect_001";
-    ASSERT_NE(daemon_, nullptr);
-    // Test CreatControlLink failed
-    g_dfsVersion = {6, 0, 0};
-    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
-    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
+    // Test remoteDfs version is lower
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
 
     // Test SendRequest failed
-    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
-    EXPECT_CALL(*channelManagerMock_, SendRequest(_, _, _, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    g_isRemoteDfsVersionLowerThanGiven = false;
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
 
     // Test CheckRemoteAllowConnect success
@@ -1432,8 +1498,12 @@ HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemotePublishNotification_001";
-    ASSERT_NE(daemon_, nullptr);
+    // Test remoteDfs version is lower
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_EQ(daemon_->NotifyRemotePublishNotification("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
+
     // Test CreatControlLink failed
+    g_isRemoteDfsVersionLowerThanGiven = false;
     g_dfsVersion = {6, 0, 0};
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
     EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
@@ -1461,8 +1531,12 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemotePublishNotification_001, TestSize.Le
 HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
-    ASSERT_NE(daemon_, nullptr);
+    // Test remoteDfs version is lower
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_EQ(daemon_->NotifyRemoteCancelNotification("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
+
     // Test CreatControlLink failed
+    g_isRemoteDfsVersionLowerThanGiven = false;
     g_dfsVersion = {6, 0, 0};
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
     EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
@@ -1480,5 +1554,465 @@ HWTEST_F(DaemonTest, DaemonTest_NotifyRemoteCancelNotification_001, TestSize.Lev
 
     GTEST_LOG_(INFO) << "DaemonTest_NotifyRemoteCancelNotification_001";
 }
+
+/**
+ * @tc.name: DaemonTest_IsSameAccountDevice_001
+ * @tc.desc: verify IsSameAccountDevice with same account device.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_IsSameAccountDevice_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    bool isSameAccount = false;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+
+    // Test same account device
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+
+    int32_t result = daemon_->IsSameAccountDevice(NETWORKID_ONE, isSameAccount);
+    EXPECT_EQ(result, E_OK);
+    EXPECT_TRUE(isSameAccount);
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_001 end";
+#else
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_001 not support!";
+#endif
+}
+
+/**
+ * @tc.name: DaemonTest_IsSameAccountDevice_002
+ * @tc.desc: verify IsSameAccountDevice with different account device.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_IsSameAccountDevice_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_002 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    bool isSameAccount = false;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+
+    // Create device with different account
+    DistributedHardware::DmDeviceInfo diffAccountDevice = deviceInfo;
+    diffAccountDevice.authForm = DistributedHardware::DmAuthForm::ACROSS_ACCOUNT;
+    deviceList.push_back(diffAccountDevice);
+
+    // Test different account device
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+
+    int32_t result = daemon_->IsSameAccountDevice(NETWORKID_ONE, isSameAccount);
+    EXPECT_EQ(result, E_OK);
+    EXPECT_FALSE(isSameAccount);
+
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_002 end";
+#else
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_002 not support!";
+#endif
+}
+
+/**
+ * @tc.name: DaemonTest_IsSameAccountDevice_003
+ * @tc.desc: verify IsSameAccountDevice with empty device list.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_IsSameAccountDevice_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_003 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    bool isSameAccount = true;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+
+    // Test empty device list
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+
+    int32_t result = daemon_->IsSameAccountDevice(NETWORKID_ONE, isSameAccount);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+    EXPECT_FALSE(isSameAccount);
+
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_003 end";
+#else
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_003 not support!";
+#endif
+}
+
+/**
+ * @tc.name: DaemonTest_IsSameAccountDevice_004
+ * @tc.desc: verify IsSameAccountDevice with device not in trusted list.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_IsSameAccountDevice_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_004 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    bool isSameAccount = true;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+
+    // Create device with different networkId
+    DistributedHardware::DmDeviceInfo differentDevice = deviceInfo;
+    (void)memcpy_s(differentDevice.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+        "different_network_id", strlen("different_network_id"));
+    deviceList.push_back(differentDevice);
+
+    // Test device not in trusted list
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+
+    int32_t result = daemon_->IsSameAccountDevice(NETWORKID_ONE, isSameAccount);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+    EXPECT_FALSE(isSameAccount);
+
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_004 end";
+#else
+    GTEST_LOG_(INFO) << "DaemonTest_IsSameAccountDevice_004 not support!";
+#endif
+}
+
+/**
+ * @tc.name: DaemonTest_RegisterFileDfsListener_001
+ * @tc.desc: verify RegisterFileDfsListener with valid parameters.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_001 begin";
+
+    std::string instanceId = "test_instance";
+    sptr<IFileDfsListener> listener = new FileDfsListenerMock();
+
+    // Test valid parameters
+    int32_t result = daemon_->RegisterFileDfsListener(instanceId, listener);
+    EXPECT_EQ(result, E_OK);
+
+    // Verify listener was added
+    EXPECT_TRUE(ConnectCount::GetInstance()->RmFileConnect(instanceId));
+
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_RegisterFileDfsListener_002
+ * @tc.desc: verify RegisterFileDfsListener with empty instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_002 begin";
+
+    std::string emptyInstanceId = "";
+    sptr<IFileDfsListener> listener = new FileDfsListenerMock();
+
+    // Test empty instanceId
+    int32_t result = daemon_->RegisterFileDfsListener(emptyInstanceId, listener);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_RegisterFileDfsListener_003
+ * @tc.desc: verify RegisterFileDfsListener with null listener.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_003 begin";
+
+    std::string instanceId = "test_instance";
+    sptr<IFileDfsListener> nullListener = nullptr;
+
+    // Test null listener
+    int32_t result = daemon_->RegisterFileDfsListener(instanceId, nullListener);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UnregisterFileDfsListener_001
+ * @tc.desc: verify UnregisterFileDfsListener with valid instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UnregisterFileDfsListener_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_001 begin";
+
+    std::string instanceId = "test_instance";
+    sptr<IFileDfsListener> listener = new FileDfsListenerMock();
+
+    // First register a listener
+    daemon_->RegisterFileDfsListener(instanceId, listener);
+
+    // Test unregister with valid instanceId
+    int32_t result = daemon_->UnregisterFileDfsListener(instanceId);
+    EXPECT_EQ(result, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UnregisterFileDfsListener_002
+ * @tc.desc: verify UnregisterFileDfsListener with empty instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UnregisterFileDfsListener_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_002 begin";
+
+    std::string emptyInstanceId = "";
+
+    // Test empty instanceId
+    int32_t result = daemon_->UnregisterFileDfsListener(emptyInstanceId);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UnregisterFileDfsListener_003
+ * @tc.desc: verify UnregisterFileDfsListener with non-existent instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UnregisterFileDfsListener_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_003 begin";
+
+    std::string nonExistentInstanceId = "non_existent_instance";
+
+    // Test non-existent instanceId
+    int32_t result = daemon_->UnregisterFileDfsListener(nonExistentInstanceId);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UnregisterFileDfsListener_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsSwitchStatus_001
+ * @tc.desc: verify GetDfsSwitchStatus with valid networkId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsSwitchStatus_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_001 begin";
+
+    // Test valid networkId with success
+    g_getDeviceStatus = E_OK;
+    int32_t status = 0;
+
+    int32_t result = daemon_->GetDfsSwitchStatus(NETWORKID_ONE, status);
+    EXPECT_EQ(result, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsSwitchStatus_002
+ * @tc.desc: verify GetDfsSwitchStatus with empty networkId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsSwitchStatus_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_002 begin";
+
+    std::string emptyNetworkId = "";
+    int32_t status = 0;
+
+    // Test empty networkId
+    int32_t result = daemon_->GetDfsSwitchStatus(emptyNetworkId, status);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsSwitchStatus_003
+ * @tc.desc: verify GetDfsSwitchStatus with long networkId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsSwitchStatus_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_003 begin";
+
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
+    int32_t status = 0;
+
+    // Test long networkId
+    int32_t result = daemon_->GetDfsSwitchStatus(longNetworkId, status);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsSwitchStatus_004
+ * @tc.desc: verify GetDfsSwitchStatus with device not found.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsSwitchStatus_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_004 begin";
+
+    // Test device not found
+    g_getDeviceStatus = ERR_DP_CAN_NOT_FIND;
+    int32_t status = 0;
+
+    int32_t result = daemon_->GetDfsSwitchStatus(NETWORKID_ONE, status);
+    EXPECT_EQ(result, ERR_DP_CAN_NOT_FIND);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_004 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsSwitchStatus_005
+ * @tc.desc: verify GetDfsSwitchStatus with other error.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsSwitchStatus_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_005 begin";
+
+    // Test other error
+    g_getDeviceStatus = ERR_BAD_VALUE;
+    int32_t status = 0;
+
+    int32_t result = daemon_->GetDfsSwitchStatus(NETWORKID_ONE, status);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsSwitchStatus_005 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UpdateDfsSwitchStatus_001
+ * @tc.desc: verify UpdateDfsSwitchStatus with valid status.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_001 begin";
+
+    // Test valid status with success
+    g_putDeviceStatus = E_OK;
+
+    int32_t result = daemon_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(result, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UpdateDfsSwitchStatus_002
+ * @tc.desc: verify UpdateDfsSwitchStatus with PutDeviceStatus failure.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_002 begin";
+
+    // Test PutDeviceStatus failure
+    g_putDeviceStatus = ERR_BAD_VALUE;
+
+    int32_t result = daemon_->UpdateDfsSwitchStatus(1);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UpdateDfsSwitchStatus_003
+ * @tc.desc: verify UpdateDfsSwitchStatus with status 0 and cleanup.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_003 begin";
+
+    // Prepare mount info
+    MountCountInfo mountInfo(NETWORKID_ONE, 1);
+
+    std::unordered_map<std::string, MountCountInfo> allMountInfo = {{"test", mountInfo}};
+
+    // Test status 0 with cleanup
+    g_putDeviceStatus = E_OK;
+    EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
+
+    int32_t result = daemon_->UpdateDfsSwitchStatus(0);
+    EXPECT_NE(result, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UpdateDfsSwitchStatus_004
+ * @tc.desc: verify UpdateDfsSwitchStatus with status 0 and cleanup failure.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_004 begin";
+    ASSERT_NE(daemon_, nullptr);
+
+    // Prepare mount info
+    MountCountInfo mountInfo(NETWORKID_ONE, 1);
+
+    std::unordered_map<std::string, MountCountInfo> allMountInfo = {{"test", mountInfo}};
+
+    // Test status 0 with cleanup failure
+    g_putDeviceStatus = E_OK;
+    EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(ERR_BAD_VALUE));
+
+    int32_t result = daemon_->UpdateDfsSwitchStatus(0);
+    EXPECT_EQ(result, E_CONNECTION_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_004 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UpdateDfsSwitchStatus_005
+ * @tc.desc: verify UpdateDfsSwitchStatus with status 0 and strcpy failure.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_005 begin";
+
+    // Prepare mount info with very long networkId to cause strcpy failure
+    MountCountInfo mountInfo(std::string(DM_MAX_DEVICE_ID_LEN + 1, 'a'), 1);
+
+    std::unordered_map<std::string, MountCountInfo> allMountInfo = {{"test", mountInfo}};
+
+    // Test status 0 with strcpy failure
+    g_putDeviceStatus = E_OK;
+    EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
+
+    int32_t result = daemon_->UpdateDfsSwitchStatus(0);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_005 end";
+}
+
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile
