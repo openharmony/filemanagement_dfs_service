@@ -37,6 +37,8 @@ napi_status RegisterCallbackManagerNapi::RegisterCallback(napi_value callback)
 
     callbackList_.push_back(std::make_pair(true, ref));
     validRefNum_++;
+    LOGI("After register, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+         validRefNum_.load());
     return napi_ok;
 }
 
@@ -51,6 +53,8 @@ napi_status RegisterCallbackManagerNapi::UnregisterCallback(napi_value callback)
             iter.first = false;
         }
         validRefNum_ = 0;
+        LOGI("After unregister all, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+             validRefNum_.load());
         return napi_ok;
     }
     bool isFound = false;
@@ -74,6 +78,8 @@ napi_status RegisterCallbackManagerNapi::UnregisterCallback(napi_value callback)
             break;
         }
     }
+    LOGI("After unregister, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+         validRefNum_.load());
 
     return napi_ok;
 }
