@@ -52,6 +52,8 @@ using Int32Vector = std::vector<int32_t>;
 using Int64Vector = std::vector<int64_t>;
 using StringVector = std::vector<std::string>;
 using DoubleVector = std::vector<double>;
+bool CheckInt(const std::string &value);
+bool CheckDouble(const std::string &value);
 
 enum class VectorIndex {
     IO_TIMES,
