@@ -76,7 +76,6 @@ private:
     std::thread ioThread;
     std::mutex sleepMutex;
     std::mutex cvMute;
-    std::mutex iothreadMutex;
     std::condition_variable sleepCv;
     std::map<std::string, int32_t> bundleTimeMap;
     IoData currentData;
@@ -93,15 +92,15 @@ private:
     Int64Vector ioSyscStatDiff;
     DoubleVector ioResult;
 
-    std::vector<VectorVariant> targetVecots = {
-        VectorVariant(std::in_place_type<>, std::move(ioTimes));
-        VectorVariant(std::in_place_type<>, std::move(ioBundleName));
-        VectorVariant(std::in_place_type<>, std::move(ioReadCharDiff));
-        VectorVariant(std::in_place_type<>, std::move(ioSyscOpenDiff));
-        VectorVariant(std::in_place_type<>, std::move(ioReadBytesDiff));
-        VectorVariant(std::in_place_type<>, std::move(ioSyscOpenDiff));
-        VectorVariant(std::in_place_type<>, std::move(ioSyscStatDiff));
-        VectorVariant(std::in_place_type<>, std::move(ioResult));
+    std::vector<VectorVariant> targetVectors = {
+        VectorVariant(std::in_place_type<Int32Vector>, std::move(ioTimes));
+        VectorVariant(std::in_place_type<StringVector>, std::move(ioBundleName));
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadCharDiff));
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscReadDiff));
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadBytesDiff));
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscOpenDiff));
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscStatDiff));
+        VectorVariant(std::in_place_type<DoubleVector>, std::move(ioResult));
     }
 
     template <typename T, VectorIndex Index>

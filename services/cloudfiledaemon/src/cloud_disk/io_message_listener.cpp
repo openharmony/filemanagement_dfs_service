@@ -145,7 +145,7 @@ bool CheckDouble(const std::string &value)
     }
 
     char *endptr;
-    std::strtod(value.c_str(), &emdptr);
+    std::strtod(value.c_str(), &endptr);
     return *endptr == '\0' || (std::isspace(*endptr) && endptr[1] == '\0');
 }
 
@@ -156,7 +156,7 @@ struct PushBackVisitor {
     void operator()(std::vector<T> &vec) {
         PushField(value, vec);
     }
-}
+};
 
 struct CheckVisitor {
     const std::string &value;
@@ -174,7 +174,7 @@ struct CheckVisitor {
             checkType = true;
         }
     }
-}
+};
 
 template <typename T>
 HiSysEventParam CreateParam(const char *name, HiSysEventParamType type, std::vector<T> &data)
@@ -191,17 +191,17 @@ HiSysEventParam CreateParam(const char *name, HiSysEventParamType type, std::vec
 
 void IoMessageManager::Report()
 {
-    auto charIoBundleName = ConvertToCStringArray(getVector<StringVector,VectorIndex::IO_BUNDLE_NAME>(targetVectors));
+    auto charIoBundleName = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_BUNDLE_NAME>(targetVectors));
 
     HiSysEventParam params[] = {
-        createParam("time", HISYSEVENT_INT32_ARRAY, getVector<Int32Vector,VectorIndex::IO_TIME>(targetVectors)),
-        createParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
-        createParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
-        createParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
-        createParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
-        createParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
-        createParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
-        createParam("Result", HISYSEVENT_DOUBLE_ARRAY, getVector<Int64Vector,VectorIndex::IO_RESULT>(targetVectors)),
+        CreateParam("time", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
+        CreateParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
+        CreateParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
+        CreateParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
+        CreateParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
+        CreateParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
+        CreateParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY, GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
+        CreateParam("Result", HISYSEVENT_DOUBLE_ARRAY, GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
     };
 
     auto ret = OH_HiSysEvent_Write(
@@ -229,15 +229,15 @@ void IoMessageManager::PushData(const vector<string> &fields)
     }
     for (unsigned i = 0; i < fields.size(); ++i) {
         bool checkType = false;
-        CheckVisitor visitor(fields[i], checkType);
-        std::visit(visitor,targetVectors[i]);
+        CheckVisitor visitor{fields[i], checkType};
+        std::visit(visitor, targetVectors[i]);
         if (!checkType) {
             LOGI("checkType failed. value = %{public}s", fields[i].c_str());
             return;
         }
     }
     for (unsigned i = 0; i < fields.size(); ++i) {
-        PushBackVisitor visitor(fileds[i]);
+        PushBackVisitor visitor{fields[i]};
         std::visit(visitor, targetVectors[i]);
     }
     return;
@@ -293,11 +293,11 @@ void IoMessageManager::CheckMaxSizeAndReport()
     if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
         LOGI("Report file exist");
     }
-    std::error_code errcode;
+    std::error_code errCode;
     filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
-        IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
-    if (errcode.value() != 0) {
-        LOGE("Failed to rename file, error code: %{public}d", errcode.value());
+        IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME, errCode);
+    if (errCode.value() != 0) {
+        LOGE("Failed to rename file, error code: %{public}d", errCode.value());
         return;
     }
     if (!reportThreadRunning.load()) {
