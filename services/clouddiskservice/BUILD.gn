@@ -1,0 +1,129 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/idl_tool/idl.gni")
+import("//build/ohos.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+config("optimize-size") {
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
+config("cloud_disk_service_public_config") {
+  include_dirs = [ "${target_gen_dir}" ]
+}
+
+idl_gen_interface("cloud_disk_service") {
+  sources = [ "ICloudDiskService.idl" ]
+  sources_cpp = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+  ]
+  sub_include = [
+    "${distributedfile_path}/utils/log/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+  ]
+  configs = []
+
+  sequenceable_ext_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  innerapi_tags = [ "platformsdk" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  log_domainid = "0xD003900"
+  log_tag = "CloudDiskService"
+  subsystem_name = "filemanagement"
+  part_name = "dfs_service"
+}
+
+ohos_shared_library("clouddiskservice_sa") {
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  public_configs = [ ":cloud_disk_service_public_config" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  include_dirs = [
+    "ipc/include",
+  ]
+
+  sources = [
+    "ipc/src/cloud_disk_service.cpp",
+    "ipc/src/cloud_disk_service_callback_manager.cpp",
+    "ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "ipc/src/cloud_disk_sync_folder.cpp",
+    "ipc/src/account_status_listener.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+  ]
+
+  output_values = get_target_outputs(":cloud_disk_service")
+  sources += filter_include(output_values, [ "*_stub.cpp" ])
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUDDISKSERVICE_SA\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE "]
+  }
+
+  deps = [
+    ":cloud_disk_service",
+    ":libcloud_disk_service_proxy",
+    "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "e2fsprogs:libext2_uuid",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+    "safwk:system_ability_fwk",
+    "user_file_service:cloud_disk_manager_kit"
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
