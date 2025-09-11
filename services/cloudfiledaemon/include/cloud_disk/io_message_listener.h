@@ -24,6 +24,7 @@
 
 #include "application_state_observer_stub.h"
 #include "common_event_subscriber.h"
+#include "ffrt_inner.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -73,10 +74,8 @@ private:
     std::string currentBundleName = "";
     std::atomic<bool> isThreadRunning{false};
     std::atomic<bool> reportThreadRunning{false};
-    std::thread ioThread;
-    std::mutex sleepMutex;
-    std::mutex cvMute;
-    std::condition_variable sleepCv;
+    ffrt::mutex sleepMutex;
+    ffrt::condition_variable sleepCv;
     std::map<std::string, int32_t> bundleTimeMap;
     IoData currentData;
     IoData preData;

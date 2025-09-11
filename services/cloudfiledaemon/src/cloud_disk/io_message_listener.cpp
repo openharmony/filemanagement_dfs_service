@@ -353,7 +353,7 @@ void IoMessageManager::RecordIoData()
             string path = "/proc/" + to_string(lastestAppStateData.pid) + "/sys_count";
             ProcessIoData(path);
         }
-        unique_lock<mutex> lock(sleepMutex);
+        unique_lock<ffrt::mutex> lock(sleepMutex);
         sleepCv.wait_for(lock, chrono::seconds(GET_FREQUENCY), [&] {
             return !isThreadRunning.load();
         });
@@ -367,23 +367,18 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
     }
     if (appStateData.state == TYPE_FRONT) {
         lastestAppStateData = appStateData;
-        if (!ioThread.joinable()) {
+        if (!isThreadRunning.load()) {
             isThreadRunning.store(true);
-            ffrt::submit([this] {RecordIoData();}, {}, {},
-                ffrt::task_attr().qos(ffrt::qos_background));
+            ffrt::submit([this] {RecordIoData();}, {}, {},ffrt::task_attr().qos(ffrt::qos_background));
         }
         return;
     }
     if (appStateData.state == TYPE_BACKGROUND) {
-        if (ioThread.joinable()) {
-            lock_guard<mutex> lock(cvMute);
-            isThreadRunning.store(false);
-            sleepCv.notify_all();
-            ioThread.join();
-            ioThread = thread();
-            currentData = {};
-            preData = {};
-        }
+        lock_guard<ffrt::mutex> lock(sleepMutex);
+        isThreadRunning.store(false);
+        sleepCv.notify_all();
+        currentData = {};
+        preData = {};
     }
 }
 } // namespace CloudDisk
