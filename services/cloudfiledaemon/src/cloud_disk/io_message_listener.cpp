@@ -15,7 +15,10 @@
 #include "io_message_listener.h"
 
 #include "hisysevent.h"
+#include "ffrt_inner.h"
 #include "utils_log.h"
+#include <thread>
+#include <chrono>
 
 using namespace std;
 using namespace chrono;
@@ -29,6 +32,7 @@ const int32_t GET_FREQUENCY = 5;
 const int32_t READ_THRESHOLD = 1000;
 const int32_t OPEN_THRESHOLD = 1000;
 const int32_t STAT_THRESHOLD = 1000;
+const int32_t MAX_RECORD_IN_FILE = 2400;
 const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/io/";
 const string IO_FILE_NAME = "io_message.csv";
 const string IO_NEED_REPORT_PREFIX = "wait_report_";
@@ -109,27 +113,95 @@ static vector<const char*> ConvertToCStringArray(const vector<string>& vec)
     return cstrVec;
 }
 
+template <typename T>
+void PushField(const std::string &value, std::vector<T> &vec)
+{
+    if constexpr (std::is_same_v<T, int32_t>) {
+        vec.push_back(std::stoi(value));
+    } else if constexpr (std::is_same_v<T, int64_t>) {
+        vec.push_back(std::stoll(value));
+    } else if constexpr (std::is_same_v<T, double>) {
+        vec.push_back(std::stod(value));
+    } else {
+        vec.push_back(value);
+    }
+}
+
+bool CheckInt(const std::string &value)
+{
+    if (value.empty()) {
+        return false;
+    }
+    if (!all_of(value.begin(), value.end(), ::isdigit)) {
+        return false;
+    }
+    return true;
+}
+
+bool CheckDouble(const std::string &value)
+{
+    if (value.empty()) {
+        return false;
+    }
+
+    char *endptr;
+    std::strtod(value.c_str(), &emdptr);
+    return *endptr == '\0' || (std::isspace(*endptr) && endptr[1] == '\0');
+}
+
+struct PushBackVisitor {
+    const std::string &value;
+
+    template<typename T>
+    void operator()(std::vector<T> &vec) {
+        PushField(value, vec);
+    }
+}
+
+struct CheckVisitor {
+    const std::string &value;
+    bool &checkType;
+
+    template<typename T>
+    void operator()(std::vector<T> &vec) {
+        if constexpr (std::is_same_v<T, int32_t>) {
+            checkType = CheckInt(value);
+        } else if constexpr (std::is_same_v<T, int64_t>) {
+            checkType = CheckInt(value);
+        } else if constexpr (std::is_same_v<T, double>) {
+            checkType = CheckDouble(value);
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            checkType = true;
+        }
+    }
+}
+
+template <typename T>
+HiSysEventParam CreateParam(const char *name, HiSysEventParamType type, std::vector<T> &data)
+{
+    HiSysEventParam param;
+    size_t len = std::min(strlen(name), static_cast<size_t>(MAX_LENGTH_OF_PARAM_NAME - 1));
+    std::copy_n(name, len, param.name);
+    param.name[len] = '\0';
+    param.t = type;
+    param.v.array = data.data();
+    param.arraySize = static_cast<int>(data.size());
+    return param;
+}
+
 void IoMessageManager::Report()
 {
-    auto charIoBundleName = ConvertToCStringArray(ioBundleName);
+    auto charIoBundleName = ConvertToCStringArray(getVector<StringVector,VectorIndex::IO_BUNDLE_NAME>(targetVectors));
 
     HiSysEventParam params[] = {
-        { "time", HISYSEVENT_INT32_ARRAY, { .array = ioTimes.data() },
-            static_cast<int>(ioTimes.size()) },
-        { "BundleName", HISYSEVENT_STRING_ARRAY, { .array = charIoBundleName.data() },
-            static_cast<int>(charIoBundleName.size()) },
-        { "ReadCharDiff", HISYSEVENT_INT64_ARRAY, { .array = ioReadCharDiff.data() },
-            static_cast<int>(ioReadCharDiff.size()) },
-        { "SyscReadDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscReadDiff.data() },
-            static_cast<int>(ioSyscReadDiff.size()) },
-        { "ReadBytesDiff", HISYSEVENT_INT64_ARRAY, { .array = ioReadBytesDiff.data() },
-            static_cast<int>(ioReadBytesDiff.size()) },
-        { "SyscOpenDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscOpenDiff.data() },
-            static_cast<int>(ioSyscOpenDiff.size()) },
-        { "SyscStatDiff", HISYSEVENT_INT64_ARRAY, { .array = ioSyscStatDiff.data() },
-            static_cast<int>(ioSyscStatDiff.size()) },
-        { "Result", HISYSEVENT_DOUBLE_ARRAY, { .array = ioResult.data() },
-            static_cast<int>(ioResult.size()) },
+        createParam("time", HISYSEVENT_INT32_ARRAY, getVector<Int32Vector,VectorIndex::IO_TIME>(targetVectors)),
+        createParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
+        createParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
+        createParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
+        createParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
+        createParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
+        createParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY, getVector<Int64Vector,VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
+        createParam("Result", HISYSEVENT_DOUBLE_ARRAY, getVector<Int64Vector,VectorIndex::IO_RESULT>(targetVectors)),
     };
 
     auto ret = OH_HiSysEvent_Write(
@@ -142,60 +214,33 @@ void IoMessageManager::Report()
     if (ret != 0) {
         LOGE("Report failed, err : %{public}d", ret);
     }
-    ioTimes.clear();
-    ioBundleName.clear();
-    charIoBundleName.clear();
-    ioReadCharDiff.clear();
-    ioSyscReadDiff.clear();
-    ioReadBytesDiff.clear();
-    ioSyscOpenDiff.clear();
-    ioSyscStatDiff.clear();
-    ioResult.clear();
-}
-
-void IoMessageManager::PushDataRollBack()
-{
-    size_t initialSize = ioResult.size();
-    ioTimes.resize(initialSize);
-    ioBundleName.resize(initialSize);
-    ioReadCharDiff.resize(initialSize);
-    ioSyscReadDiff.resize(initialSize);
-    ioReadBytesDiff.resize(initialSize);
-    ioSyscOpenDiff.resize(initialSize);
-    ioSyscStatDiff.resize(initialSize);
-    ioResult.resize(initialSize);
+    auto clearVector = [](auto &vec) {
+        vec.clear();
+    };
+    for (auto &variant : targetVectors) {
+        std::visit(clearVector, variant);
+    }
 }
 
 void IoMessageManager::PushData(const vector<string> &fields)
 {
-    try {
-        static const std::map<int32_t, std::function<void(const std::string&)>> fieldMap = {
-            { 0, [this](const std::string& value) { ioTimes.push_back(std::stoi(value)); }},
-            { 1, [this](const std::string& value) { ioBundleName.push_back(value); }},
-            { 2, [this](const std::string& value) { ioReadCharDiff.push_back(std::stoll(value)); }},
-            { 3, [this](const std::string& value) { ioSyscReadDiff.push_back(std::stoll(value)); }},
-            { 4, [this](const std::string& value) { ioReadBytesDiff.push_back(std::stoll(value)); }},
-            { 5, [this](const std::string& value) { ioSyscOpenDiff.push_back(std::stoll(value)); }},
-            { 6, [this](const std::string& value) { ioSyscStatDiff.push_back(std::stoll(value)); }},
-            { 7, [this](const std::string& value) { ioResult.push_back(std::stod(value)); }},
-        };
-        for (int i = 0; i < fields.size(); ++i) {
-            auto it = fieldMap.find(i);
-            if (it == fieldMap.end()) {
-                LOGE("Unknow field index: %{public}d", i);
-                continue;
-            }
-            it->second(fields[i]);
-        }
-    } catch (const invalid_argument& e) {
-        LOGE("Invalid argument: %{public}s", e.what());
-        PushDataRollBack();
-        return;
-    } catch (const out_of_range& e) {
-        LOGE("Out of range: %{public}s", e.what());
-        PushDataRollBack();
+    if (fields.size() != targetVectors.size()) {
         return;
     }
+    for (unsigned i = 0; i < fields.size(); ++i) {
+        bool checkType = false;
+        CheckVisitor visitor(fields[i], checkType);
+        std::visit(visitor,targetVectors[i]);
+        if (!checkType) {
+            LOGI("checkType failed. value = %{public}s", fields[i].c_str());
+            return;
+        }
+    }
+    for (unsigned i = 0; i < fields.size(); ++i) {
+        PushBackVisitor visitor(fileds[i]);
+        std::visit(visitor, targetVectors[i]);
+    }
+    return;
 }
 
 void IoMessageManager::ReadAndReportIoMessage()
@@ -208,6 +253,7 @@ void IoMessageManager::ReadAndReportIoMessage()
 
     string line;
     int32_t reportCount = 0;
+    int32_t totalCount = 0;
     while (getline(localData, line)) {
         vector<string> fields;
         istringstream iss(line);
@@ -219,10 +265,13 @@ void IoMessageManager::ReadAndReportIoMessage()
 
         PushData(fields);
         reportCount++;
-
+        totalCount++;
         if (reportCount >= MAX_IO_REPORT_NUMBER) {
             Report();
             reportCount = 0;
+        }
+        if (totalCount >= MAX_RECORD_IN_FILE) {
+            break;
         }
     }
     if (reportCount > 0) {
@@ -237,23 +286,24 @@ void IoMessageManager::ReadAndReportIoMessage()
 
 void IoMessageManager::CheckMaxSizeAndReport()
 {
-    try {
-        auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME);
-        if (fileSize >= MAX_IO_FILE_SIZE) {
-            if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
-                LOGI("Report file exist");
-            }
-            filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
-                IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
-            if (!reportThreadRunning.load()) {
-                reportThreadRunning.store(true);
-                LOGI("Start report io data");
-                thread reportThread(&IoMessageManager::ReadAndReportIoMessage, this);
-                reportThread.detach();
-            }
-        }
-    } catch (const filesystem::filesystem_error& e) {
-        LOGE("Rename or get file size failed, err: %{public}s", e.what());
+    auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME);
+    if (fileSize < MAX_IO_FILE_SIZE) {
+        return;
+    }
+    if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
+        LOGI("Report file exist");
+    }
+    std::error_code errcode;
+    filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
+        IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+    if (errcode.value() != 0) {
+        LOGE("Failed to rename file, error code: %{public}d", errcode.value());
+        return;
+    }
+    if (!reportThreadRunning.load()) {
+        reportThreadRunning.store(true);
+        LOGI("Start report io data");
+        ffrt::thread([this] {ReadAndReportIoMessage();}).detach();
     }
 }
 
@@ -318,16 +368,9 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
     if (appStateData.state == TYPE_FRONT) {
         lastestAppStateData = appStateData;
         if (!ioThread.joinable()) {
-            try {
-                isThreadRunning.store(true);
-                ioThread = thread(&IoMessageManager::RecordIoData, this);
-            } catch (const std::system_error &e) {
-                LOGE("System error while creating thread: %{public}s", e.what());
-                isThreadRunning.store(false);
-            } catch (const std::exception &e) {
-                LOGE("Exception while creating thread: %{public}s", e.what());
-                isThreadRunning.store(false);
-            }
+            isThreadRunning.store(true);
+            ffrt::submit([this] {RecordIoData();}, {}, {},
+                ffrt::task_attr().qos(ffrt::qos_background));
         }
         return;
     }

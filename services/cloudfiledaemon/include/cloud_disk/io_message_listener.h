@@ -47,6 +47,27 @@ struct IoDataToWrite {
     double result = 0;
 };
 
+using Int32Vector = std::vector<int32_t>;
+using Int64Vector = std::vector<int64_t>;
+using StringVector = std::vector<std::string>;
+using DoubleVector = std::vector<double>;
+
+enum class VectorIndex {
+    IO_TIMES,
+    IO_BUNDLE_NAME,
+    IO_READ_CHAR_DIFF,
+    IO_SYSC_READ_DIFF,
+    IO_READ_BYTES_DIFF,
+    IO_SYSC_OPEN_DIFF,
+    IO_SYSC_STAT_DIFF,
+    IO_RESULT
+};
+using VectorVariant = std::variant<
+    Int32Vector,
+    StringVector,
+    Int64Vector,
+    DoubleVector
+>;
 class IoMessageManager {
 private:
     std::string currentBundleName = "";
@@ -55,6 +76,7 @@ private:
     std::thread ioThread;
     std::mutex sleepMutex;
     std::mutex cvMute;
+    std::mutex iothreadMutex;
     std::condition_variable sleepCv;
     std::map<std::string, int32_t> bundleTimeMap;
     IoData currentData;
@@ -62,20 +84,34 @@ private:
     IoDataToWrite dataToWrite;
     AppExecFwk::AppStateData lastestAppStateData;
 
-    std::vector<int32_t> ioTimes;
-    std::vector<std::string> ioBundleName;
-    std::vector<int64_t> ioReadCharDiff;
-    std::vector<int64_t> ioSyscReadDiff;
-    std::vector<int64_t> ioReadBytesDiff;
-    std::vector<int64_t> ioSyscOpenDiff;
-    std::vector<int64_t> ioSyscStatDiff;
-    std::vector<double> ioResult;
+    Int32Vector ioTimes;
+    StringVector ioBundleName;
+    Int64Vector ioReadCharDiff;
+    Int64Vector ioSyscReadDiff;
+    Int64Vector ioReadBytesDiff;
+    Int64Vector ioSyscOpenDiff;
+    Int64Vector ioSyscStatDiff;
+    DoubleVector ioResult;
 
+    std::vector<VectorVariant> targetVecots = {
+        VectorVariant(std::in_place_type<>, std::move(ioTimes));
+        VectorVariant(std::in_place_type<>, std::move(ioBundleName));
+        VectorVariant(std::in_place_type<>, std::move(ioReadCharDiff));
+        VectorVariant(std::in_place_type<>, std::move(ioSyscOpenDiff));
+        VectorVariant(std::in_place_type<>, std::move(ioReadBytesDiff));
+        VectorVariant(std::in_place_type<>, std::move(ioSyscOpenDiff));
+        VectorVariant(std::in_place_type<>, std::move(ioSyscStatDiff));
+        VectorVariant(std::in_place_type<>, std::move(ioResult));
+    }
+
+    template <typename T, VectorIndex Index>
+    T& GetVector(std::vector<VectorVariant>& targetVectors) {
+        return std::get<T>(targetVectors[static_cast<size_t>(Index)]);
+    }
     bool ReadIoDataFromFile(const std::string &path);
     void RecordDataToFile(const std::string &path);
     void RecordIoData();
     void ProcessIoData(const std::string &path);
-    void PushDataRollBack();
     void PushData(const std::vector<std::string> &fields);
     void ReadAndReportIoMessage();
     void CheckMaxSizeAndReport();
