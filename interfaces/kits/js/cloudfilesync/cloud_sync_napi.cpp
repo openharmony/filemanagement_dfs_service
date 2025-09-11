@@ -137,7 +137,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_handle_scope scope = nullptr;
     napi_status status = napi_open_handle_scope(env, &scope);
     if (status != napi_ok || scope == nullptr) {
-        LOGE("open handle scope failed");
+         LOGE("open handle scope failed, status: %{public}d", status);
         return;
     }
     napi_value jsCallback = nullptr;
