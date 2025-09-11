@@ -31,14 +31,14 @@ const int32_t GET_FREQUENCY = 5;
 const int32_t READ_THRESHOLD = 1000;
 const int32_t OPEN_THRESHOLD = 1000;
 const int32_t STAT_THRESHOLD = 1000;
-const int32_t MAX_RECORD_IN_FILE = 2400;
 const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/io/";
 const string IO_FILE_NAME = "io_message.csv";
 const string IO_NEED_REPORT_PREFIX = "wait_report_";
 const int32_t TYPE_FRONT = 2;
 const int32_t TYPE_BACKGROUND = 4;
 const int32_t MAX_IO_FILE_SIZE = 128 * 1024;
-int32_t MAX_IO_REPORT_NUMBER = 100;
+const size_t MAX_RECORD_IN_FILE = 10000;
+const size_t MAX_IO_REPORT_NUMBER = 100;
 
 IoMessageManager &IoMessageManager::GetInstance()
 {
@@ -176,12 +176,10 @@ struct CheckVisitor {
 };
 
 template <typename T>
-HiSysEventParam CreateParam(const char *name, HiSysEventParamType type, std::vector<T> &data)
+HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, std::vector<T> &data)
 {
     HiSysEventParam param;
-    size_t len = std::min(strlen(name), static_cast<size_t>(MAX_LENGTH_OF_PARAM_NAME - 1));
-    std::copy_n(name, len, param.name);
-    param.name[len] = '\0';
+    strncpy_s(param.name, sizeof(param.name), name.c_str(), sizeof(name.c_str()));
     param.t = type;
     param.v.array = data.data();
     param.arraySize = static_cast<int>(data.size());
@@ -226,7 +224,7 @@ void IoMessageManager::PushData(const vector<string> &fields)
     if (fields.size() != targetVectors.size()) {
         return;
     }
-    for (unsigned i = 0; i < fields.size(); ++i) {
+    for (uint32_t i = 0; i < fields.size(); ++i) {
         bool checkType = false;
         CheckVisitor visitor{fields[i], checkType};
         std::visit(visitor, targetVectors[i]);
@@ -235,7 +233,7 @@ void IoMessageManager::PushData(const vector<string> &fields)
             return;
         }
     }
-    for (unsigned i = 0; i < fields.size(); ++i) {
+    for (uint32_t i = 0; i < fields.size(); ++i) {
         PushBackVisitor visitor{fields[i]};
         std::visit(visitor, targetVectors[i]);
     }
@@ -251,8 +249,8 @@ void IoMessageManager::ReadAndReportIoMessage()
     }
 
     string line;
-    int32_t reportCount = 0;
-    int32_t totalCount = 0;
+    size_t reportCount = 0;
+    size_t totalCount = 0;
     while (getline(localData, line)) {
         vector<string> fields;
         istringstream iss(line);
@@ -302,7 +300,7 @@ void IoMessageManager::CheckMaxSizeAndReport()
     if (!reportThreadRunning.load()) {
         reportThreadRunning.store(true);
         LOGI("Start report io data");
-        ffrt::thread([this] {ReadAndReportIoMessage();}).detach();
+        ffrt::submit([this] { ReadAndReportIoMessage(); }, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
     }
 }
 

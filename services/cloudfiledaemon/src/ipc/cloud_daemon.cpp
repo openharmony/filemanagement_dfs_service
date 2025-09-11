@@ -138,11 +138,11 @@ void CloudDaemon::OnStart()
                 CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
                 return;
             }
-            try {
-                filesystem::create_directories(IO_MESSAGE_DIR);
-            } catch (const filesystem::filesystem_error& e) {
+            std::error_code errCode;
+            filesystem::create_directories(IO_MESSAGE_DIR, errCode);
+            if (error_code.value() != 0) {
                 LOGE("Mkdir for io failed");
-                return;
+                return;               
             }
             CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
         });
