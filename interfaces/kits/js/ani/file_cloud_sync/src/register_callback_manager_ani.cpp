@@ -47,6 +47,8 @@ ani_status RegisterCallbackManagerAni::RegisterCallback(ani_env *env, ani_object
 
     callbackList_.push_back(std::make_pair(true, ref));
     validRefNum_++;
+    LOGI("After register, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+         validRefNum_.load());
     return ANI_OK;
 }
 
@@ -61,6 +63,8 @@ ani_status RegisterCallbackManagerAni::UnregisterCallback(ani_env *env, ani_obje
             iter.first = false;
         }
         validRefNum_ = 0;
+        LOGI("After unregister all, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+             validRefNum_.load());
         return ANI_OK;
     }
     ani_ref ref;
@@ -84,6 +88,8 @@ ani_status RegisterCallbackManagerAni::UnregisterCallback(ani_env *env, ani_obje
             break;
         }
     }
+    LOGI("After unregister, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
+         validRefNum_.load());
 
     return ANI_OK;
 }
