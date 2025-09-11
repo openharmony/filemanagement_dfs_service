@@ -15,7 +15,6 @@
 #include "io_message_listener.h"
 
 #include "hisysevent.h"
-#include "ffrt_inner.h"
 #include "utils_log.h"
 #include <thread>
 #include <chrono>
