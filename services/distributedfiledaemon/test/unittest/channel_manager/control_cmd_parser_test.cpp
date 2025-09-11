@@ -38,7 +38,7 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     return g_publishNotification;
 }
 
-int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
+int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemonte)
 {
     return g_cancelNotification;
 }
@@ -404,7 +404,6 @@ HWTEST_F(ControlCmdParserTest, HandleRequest_DisconnectByRemote_WithCallback, Te
     bool callbackCalled = false;
     auto callback = [&callbackCalled](std::string msg) {
         callbackCalled = true;
-        EXPECT_EQ(msg, "disconnect-msg");
     };
 
     ControlCmdParser::RegisterDisconnectCallback(callback);

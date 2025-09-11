@@ -271,7 +271,18 @@ int32_t CloudSyncManagerImpl::ResetCursor(const std::string &bundleName)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->ResetCursor(bundleName);
+    return CloudSyncServiceProxy->ResetCursor(false, bundleName);
+}
+
+int32_t CloudSyncManagerImpl::ResetCursor(bool flag, const std::string &bundleName)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->ResetCursor(flag, bundleName);
 }
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
@@ -814,7 +825,12 @@ static std::string GetThumbsPath(const std::string& path)
 {
     const string str = "files/";
     size_t len = str.size() - 1;
-    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(path.find(str) + len); // 待删除的文件路径
+    auto found = path.find(str);
+    if (found == string::npos) {
+        LOGE("\"files/\" not found in path");
+        return "";
+    }
+    std::string newPath = "/storage/media/cloud/files/.thumbs" + path.substr(found + len); // 待删除的文件路径
     return newPath;
 }
 
@@ -822,7 +838,12 @@ static std::string GetMediaPath(const std::string& path)
 {
     const string str = "storage/";
     size_t len = str.size() - 1;
-    std::string newPath = "/storage/media" + path.substr(path.find(str) + len);
+    auto found = path.find(str);
+    if (found == string::npos) {
+        LOGE("\"storage/\" not found in path");
+        return "";
+    }
+    std::string newPath = "/storage/media" + path.substr(found + len);
     return newPath;
 }
 

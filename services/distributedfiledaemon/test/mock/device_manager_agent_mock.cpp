@@ -167,12 +167,13 @@ std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t token
     return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetNetworkIds(tokenId);
 }
 
-int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
+int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
+    const std::string &deviceId, const uint32_t callingTokenId)
 {
     if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
         return -1;
     }
-    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->MountDfsDocs(networkId, deviceId);
+    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->MountDfsDocs(networkId, deviceId, callingTokenId);
 }
 
 int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
@@ -183,12 +184,13 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->UMountDfsDocs(networkId, deviceId, needClear);
 }
 
-void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &deviceId)
+void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &networkId,
+    const std::string &mountPath, const uint32_t callingTokenId)
 {
     return;
 }
 
-void DeviceManagerAgent::RemoveMountDfsCount(const std::string &deviceId)
+void DeviceManagerAgent::RemoveMountDfsCount(const std::string &mountPath)
 {
     return;
 }
@@ -320,6 +322,11 @@ void DeviceManagerAgent::RegisterToExternalDm()
 void DeviceManagerAgent::UnregisterFromExternalDm()
 {
     return;
+}
+
+std::unordered_map<std::string, MountCountInfo> DeviceManagerAgent::GetAllMountInfo()
+{
+    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetAllMountInfo();
 }
 } // namespace DistributedFile
 } // namespace Storage

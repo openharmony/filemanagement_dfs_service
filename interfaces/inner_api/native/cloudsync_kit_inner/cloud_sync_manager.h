@@ -83,6 +83,14 @@ public:
      */
     virtual int32_t ResetCursor(const std::string &bundleName = "") = 0;
     /**
+     * @brief 清理水位
+     *
+     * @param flag 状态位
+     * @param bundleName 应用包名
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t ResetCursor(bool flag, const std::string &bundleName = "") = 0;
+    /**
      * @brief 切换应用云同步开关
      *
      * @param accoutId 账号ID

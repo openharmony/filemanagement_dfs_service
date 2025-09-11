@@ -64,29 +64,29 @@ static inline bool Str2Bool(const std::string &value)
 }
 #endif
 
-bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
+bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanLocal(const std::string &remoteNetworkId,
     VersionPackageName packageName)
 {
+    LOGI("remoteDevice.networkId: %{public}.6s", remoteNetworkId.c_str());
 #ifdef SUPPORT_DEVICE_PROFILE
-    LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     DfsVersion localDfsVersion;
     int32_t ret = GetLocalDfsVersion(packageName, localDfsVersion);
     if (ret != FileManagement::ERR_OK) {
         LOGE("GetLocalDfsVersion failed, ret=%{public}d", ret);
         return false;
     }
-    return IsRemoteDfsVersionLower(remoteNetworkId, localDfsVersion, packageName);
+    return IsRemoteDfsVersionLowerThanGiven(remoteNetworkId, localDfsVersion, packageName);
 #else
     return false;
 #endif
 }
 
 // Comparison of version numbers later than the current version number is not supported.
-bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetworkId,
-    const DfsVersion &thresholdDfsVersion, VersionPackageName packageName)
+bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(const std::string &remoteNetworkId,
+    const DfsVersion &givenDfsVersion, VersionPackageName packageName)
 {
+    LOGI("remoteDevice.networkId: %{public}.6s", remoteNetworkId.c_str());
 #ifdef SUPPORT_DEVICE_PROFILE
-    LOGI("remoteDevice.networkId: %{public}.5s", remoteNetworkId.c_str());
     if (remoteNetworkId.empty()) {
         LOGE("remoteNetworkId is empty");
         return false;
@@ -97,7 +97,7 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLower(const std::string &remoteNetw
         LOGE("GetDfsVersionFromNetworkId failed, ret=%{public}d", ret);
         return false;
     }
-    return CompareDfsVersion(remoteDfsVersion, thresholdDfsVersion);
+    return CompareDfsVersion(remoteDfsVersion, givenDfsVersion);
 #else
     return false;
 #endif

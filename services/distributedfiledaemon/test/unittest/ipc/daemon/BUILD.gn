@@ -24,6 +24,7 @@ config("module_private_config") {
     "${distributedfile_path}/test",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/include/channel_manager",
   ]
 }
 
@@ -83,6 +84,7 @@ ohos_unittest("daemon_test") {
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
+    "distributed_notification_service:ans_innerkits",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "googletest:gmock_main",

@@ -127,6 +127,7 @@ ohos_shared_library("libdistributedfileutils") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "napi:ace_napi",
@@ -258,6 +259,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "init:libbegetutil",
     "json:nlohmann_json_static",
   ]
 

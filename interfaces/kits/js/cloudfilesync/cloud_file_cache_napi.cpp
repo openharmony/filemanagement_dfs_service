@@ -44,7 +44,7 @@ int32_t CloudFileCacheCallbackImplNapi::StartDownloadInner(const std::string &ur
         LOGE("Start single download failed! ret = %{public}d", ret);
         return ret;
     }
-    downloadInfos_[downloadId] = std::make_shared<SingleProgressNapi>(downloadId);
+    downloadInfos_[downloadId] = std::make_shared<SingleProgressNapi>(downloadId, uri);
     return ret;
 }
 

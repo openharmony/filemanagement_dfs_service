@@ -50,6 +50,12 @@ struct GroupInfo {
     }
 };
 
+struct MountCountInfo {
+    MountCountInfo(std::string networkId, uint32_t callingTokenId);
+    std::string networkId_;
+    std::map<uint32_t, int32_t> callingCountMap_;
+};
+
 void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo);
 
 class DeviceManagerAgent final : public DistributedHardware::DmInitCallback,
@@ -87,15 +93,18 @@ public:
     int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
         sptr<IFileDfsListener>& listener);
     std::string GetDeviceIdByNetworkId(const std::string &networkId);
-    int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId);
+    int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId, const uint32_t callingTokenId);
     int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
     void AddNetworkId(uint32_t tokenId, const std::string &networkId);
     void RemoveNetworkId(uint32_t tokenId);
     void RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId);
     void RemoveNetworkIdForAllToken(const std::string &networkId);
     void ClearNetworkId();
-    void IncreaseMountDfsCount(const std::string &deviceId);
-    void RemoveMountDfsCount(const std::string &devcieId);
+    void IncreaseMountDfsCount(const std::string &networkId,
+                               const std::string &mountPath,
+                               const uint32_t callingTokenId);
+    void RemoveMountDfsCount(const std::string &mountPath);
+    void GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList);
     std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId);
 
     void OfflineAllDevice();
@@ -104,6 +113,7 @@ public:
 
     DeviceInfo &GetLocalDeviceInfo();
     std::vector<DeviceInfo> GetRemoteDevicesInfo();
+    std::unordered_map<std::string, MountCountInfo> GetAllMountInfo();
     std::mutex appCallConnectMutex_;
     std::unordered_map<uint32_t, sptr<IFileDfsListener>> appCallConnect_;
 
@@ -134,10 +144,14 @@ private:
     int32_t GetCurrentUserId();
     void GetStorageManager();
     sptr<StorageManager::IStorageManager> storageMgrProxy_;
+
+    // deviceid(Network 16) -> MountCountInfo
     std::mutex mountDfsCountMutex_;
-    std::unordered_map<std::string, int32_t> mountDfsCount_;
+    std::unordered_map<std::string, MountCountInfo> mountDfsCount_;
     std::mutex networkIdMapMutex_;
     std::unordered_map<uint32_t, std::unordered_set<std::string>> networkIdMap_;
+
+    int32_t currentUserId_ = -1;
 };
 } // namespace DistributedFile
 } // namespace Storage

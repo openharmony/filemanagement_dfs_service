@@ -19,6 +19,7 @@
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -30,6 +31,7 @@ constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
+constexpr int32_t VALID_MOUNT_PATH_LEN = 16;
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -112,20 +114,26 @@ void NetworkAgentTemplate::DisconnectAllDevices()
     ConnectCount::GetInstance()->RemoveAllConnect();
 }
 
+// for closeP2P
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
 {
     LOGI("CloseP2P, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), false);
 }
 
+// dm device offline
 void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
     ConnectCount::GetInstance()->RemoveConnect(info.GetCid());
+    ConnectCount::GetInstance()->NotifyFileStatusChange(info.GetCid(), Status::DEVICE_OFFLINE,
+                                                        info.GetCid().substr(0, VALID_MOUNT_PATH_LEN),
+                                                        StatusType::CONNECTION_STATUS);
 }
 
+// softbus offline, allConnect offline, hmdfs never has socket
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, std::string>>(
@@ -138,6 +146,8 @@ void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 {
     sessionPool_.ReleaseSession(cid, true);
     ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance()->NotifyFileStatusChange(
+        cid, Status::DEVICE_OFFLINE, cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
     ConnectCount::GetInstance()->RemoveConnect(cid);
 }
 
@@ -157,6 +167,7 @@ bool NetworkAgentTemplate::FindSocketId(int32_t socketId)
     return sessionPool_.FindSocketId(socketId);
 }
 
+// hmdfs offline
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(
@@ -170,12 +181,18 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
-    bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
+    bool isServer = false;
+    bool ifGetSession = sessionPool_.CheckIfGetSession(fd, isServer);
     sessionPool_.ReleaseSession(fd);
     if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
+        // for client
         GetSession(cidStr);
     } else {
+        // for server and client active close
         sessionPool_.SinkOffline(cidStr);
+    }
+    if (isServer) {
+        SystemNotifier::GetInstance().DestroyNotifyByNetworkId(cidStr, false);
     }
 }
 
@@ -192,11 +209,7 @@ void NetworkAgentTemplate::GetSession(const string &cid)
         sessionPool_.SinkOffline(cid);
         ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
         ConnectCount::GetInstance()->RemoveConnect(cid);
-        auto deviceManager = DeviceManagerAgent::GetInstance();
-        auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
-        if (!deviceId.empty()) {
-            deviceManager->UMountDfsDocs(cid, deviceId, true);
-        }
+        DeviceManagerAgent::GetInstance()->UMountDfsDocs(cid, cid.substr(0, VALID_MOUNT_PATH_LEN), true);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }

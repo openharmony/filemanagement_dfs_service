@@ -35,7 +35,7 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void TriggerSyncInner([in] String bundleName, [in] int userId);
     void StopSyncInner([in] String bundleName, [in] boolean forceFlag);
     void StopFileSyncInner([in] String bundleName, [in] boolean forceFlag);
-    void ResetCursor([in] String bundleName);
+    void ResetCursor([in] boolean flag, [in] String bundleName);
     void ChangeAppSwitch([in] String accoutId, [in] String bundleName, [in] boolean status);
     void OptimizeStorage([in] OptimizeSpaceOptions optimizeOptions, [in] boolean isCallbackValid,
                          [in] IRemoteObject optimizeCallback);

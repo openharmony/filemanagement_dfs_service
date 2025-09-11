@@ -87,7 +87,7 @@ public:
         return E_OK;
     }
 
-    int32_t ResetCursor(const std::string &bundleName = "") override
+    int32_t ResetCursor(bool flag = false, const std::string &bundleName = "") override
     {
         return E_OK;
     }

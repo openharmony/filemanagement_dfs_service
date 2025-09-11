@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "cloud_sync_manager_impl.h"
+#include "cloud_sync_manager_impl.cpp"
 #include "dfs_error.h"
 #include "icloud_sync_service.h"
 #include "iservice_registry.h"
@@ -36,8 +36,6 @@ namespace fs = std::filesystem;
 using namespace testing::ext;
 using namespace testing;
 using namespace std;
-constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
-constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 
 class CloudSyncManagerImplTest : public testing::Test {
 public:
@@ -581,9 +579,27 @@ HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-    EXPECT_CALL(*serviceProxy_, ResetCursor(_)).WillOnce(Return(E_PERMISSION_DENIED));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
     int res = CloudSyncManagerImpl::GetInstance().ResetCursor(bundleName);
     EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest002, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
+    EXPECT_EQ(res, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest003, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+    EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).Times(0);
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
+    EXPECT_EQ(res, E_SA_LOAD_FAILED);
 }
 
 HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
@@ -1370,6 +1386,46 @@ HWTEST_F(CloudSyncManagerImplTest, ClearFileConflictTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << " ClearFileConflictTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "ClearFileConflictTest001 End";
+}
+
+/*
+ * @tc.name: GetThumbsPath
+ * @tc.desc: Verify the GetThumbsPath function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetThumbsPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetThumbsPathTest001 Start";
+    try {
+        string inputPath = "/storage/cloud/100/data";
+        auto ret = GetThumbsPath(inputPath);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetThumbsPathTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetThumbsPathTest001 End";
+}
+
+/*
+ * @tc.name: GetMediaPath
+ * @tc.desc: Verify the GetMediaPath function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetMediaPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetMediaPathTest001 Start";
+    try {
+        string inputPath = "/data/service/el2/100/hmdfs/account/files";
+        auto ret = GetMediaPath(inputPath);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetMediaPathTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetMediaPathTest001 End";
 }
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

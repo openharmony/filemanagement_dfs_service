@@ -40,8 +40,10 @@ public:
 
     int32_t CreateLocalLiveView(const std::string &networkId);
     int32_t CreateNotification(const std::string &networkId);
-    int32_t DestroyNotifyByNetworkId(const std::string &networkId);
+    int32_t DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote = true);
     int32_t DestroyNotifyByNotificationId(int32_t notifyId);
+    void ClearAllConnect();
+    int32_t GetNotificationMapSize();
 
 private:
     SystemNotifier();

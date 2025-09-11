@@ -65,6 +65,26 @@ void FuseManagerStaticTest::TearDown(void)
 }
 
 /**
+ * @tc.name: CheckAndReport001
+ * @tc.desc: Verify the IsHdc function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CheckAndReport001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndReport001 Begin";
+    try {
+        string path = "/mnt/data/100/cloud_fuse/1";
+        string childName = "/mnt/data/100/cloud_fuse/2";
+        bool create = false;
+        CheckAndReport(path, childName, create);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndReport001 Error";
+    }
+    GTEST_LOG_(INFO) << "CheckAndReport001 End";
+}
+
+/**
  * @tc.name: IsValidCachePathTest001
  * @tc.desc: Verify the IsValidCachePath function
  * @tc.type: FUNC

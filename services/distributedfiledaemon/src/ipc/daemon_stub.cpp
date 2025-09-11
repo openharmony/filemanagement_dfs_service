@@ -186,14 +186,9 @@ int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel
         return E_IPC_READ_FAILED;
     }
     auto remote = data.ReadRemoteObject();
-    if (remote == nullptr) {
-        LOGE("read remoteObject failed");
-        return E_IPC_READ_FAILED;
-    }
     auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
     if (remoteReverseObj == nullptr) {
-        LOGE("remoteReverseObj is null");
-        return E_INVAL_ARG;
+        LOGW("nullptr pass, is FileManager situation!");
     }
     int32_t res = OpenP2PConnectionEx(networkId, remoteReverseObj);
     reply.WriteInt32(res);
@@ -507,10 +502,6 @@ int32_t DaemonStub::HandleGetDfsSwitchStatus(MessageParcel &data, MessageParcel 
         LOGE("HandleGetDfsSwitchStatus write res failed, res is %{public}d", res);
         return E_IPC_WRITE_FAILED;
     }
-    if (res != E_OK) {
-        LOGE("GetDfsSwitchStatus failed, res is %{public}d", res);
-        return E_OK;
-    }
     if (!reply.WriteInt32(switchStatus)) {
         LOGE("HandleGetDfsSwitchStatus write switchStatus failed, switchStatus is %{public}d", switchStatus);
         return E_IPC_WRITE_FAILED;
@@ -548,10 +539,6 @@ int32_t DaemonStub::HandleGetConnectedDeviceList(MessageParcel &data, MessagePar
     if (!reply.WriteInt32(res)) {
         LOGE("HandleGetConnectedDeviceList write res failed, res is %{public}d", res);
         return E_IPC_WRITE_FAILED;
-    }
-    if (res != E_OK) {
-        LOGE("GetConnectedDeviceList failed, res is %{public}d", res);
-        return E_OK;
     }
     size_t len = deviceList.size();
     if (!reply.WriteInt32(len)) {
@@ -635,10 +622,6 @@ int32_t DaemonStub::HandleIsSameAccountDevice(MessageParcel &data, MessageParcel
     if (!reply.WriteInt32(res)) {
         LOGE("HandleIsSameAccountDevice write res failed, res is %{public}d", res);
         return E_IPC_WRITE_FAILED;
-    }
-    if (res != E_OK) {
-        LOGE("IsSameAccountDevice failed, res is %{public}d", res);
-        return E_OK;
     }
     if (!reply.WriteBool(isSameAccount)) {
         LOGE("HandleIsSameAccountDevice write isSameAccount:%{public}d failed", isSameAccount);

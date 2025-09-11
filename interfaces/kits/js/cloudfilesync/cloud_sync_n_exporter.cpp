@@ -163,6 +163,7 @@ void InitErrorType(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL", NVal::CreateInt32(env, LOCAL_STORAGE_FULL).val_),
         DECLARE_NAPI_STATIC_PROPERTY("DEVICE_TEMPERATURE_TOO_HIGH",
             NVal::CreateInt32(env, DEVICE_TEMPERATURE_TOO_HIGH).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("REMOTE_SERVER_ABNORMAL", NVal::CreateInt32(env, REMOTE_SERVER_ABNORMAL).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);

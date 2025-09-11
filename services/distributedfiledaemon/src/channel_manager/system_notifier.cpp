@@ -51,6 +51,7 @@ constexpr const char *DFS_LANGUAGE_FILEPATH_PREFIX = "/system/etc/dfs_service/re
 constexpr const char *DFS_LANGUAGE_FILEPATH_SUFFIX = ".json";
 constexpr const char *DFS_DEFAULT_LANGUAGE = "/system/etc/dfs_service/resources/i18/en-Latn-US.json";
 
+constexpr const char *DFS_DEFAULT_BUTTON_NAME = "dfs_default_button_name";
 constexpr const char *NOTIFICATION_TITLE = "notification_title";
 constexpr const char *NOTIFICATION_TEXT = "notification_text";
 constexpr const char *CAPSULE_TITLE = "capsule_title";
@@ -154,6 +155,7 @@ static Notification::NotificationLocalLiveViewButton CreateNotificationLocalLive
 {
     LOGI("CreateNotificationLocalLiveViewButton start");
     Notification::NotificationLocalLiveViewButton button;
+    button.addSingleButtonName(DFS_DEFAULT_BUTTON_NAME);
     button.addSingleButtonIcon(pixelMap);
     return button;
 }
@@ -247,7 +249,6 @@ void SystemNotifier::UpdateResourceMapByLanguage()
 template<typename... Args>
 std::string SystemNotifier::GetKeyValue(const std::string &key, Args &&...args)
 {
-    std::lock_guard<std::mutex> lock(g_resourceMapMutex);
     auto it = g_resourceMap.find(key);
     if (it == g_resourceMap.end()) {
         return "";
@@ -350,7 +351,6 @@ int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
     request.SetCreatorUid(DFS_SERVICE_UID);
     request.SetContent(content);
     request.SetLittleIcon(notificationIconPixelMap_);
-    request.SetWantAgent(std::make_shared<AbilityRuntime::WantAgent::WantAgent>());
 
     auto ret = Notification::NotificationHelper::PublishNotification(request);
     if (ret != E_OK) {
@@ -381,7 +381,12 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
         }
     }
 
-    auto ret = Notification::NotificationHelper::CancelNotification(notificationId);
+    if (networkId.empty()) {
+        LOGE("can not find %{public}.6s in map!", networkId.c_str());
+        return ERR_DATA_INVALID;
+    }
+
+    int32_t ret = Notification::NotificationHelper::CancelNotification(notificationId);
     LOGI("DestroyNotification (id: %{public}d), result: %{public}d", notificationId, ret);
 
     ret = DisconnectByNetworkId(networkId);
@@ -390,7 +395,7 @@ int32_t SystemNotifier::DestroyNotifyByNotificationId(int32_t notificationId)
     return ret;
 }
 
-int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId)
+int32_t SystemNotifier::DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote)
 {
     LOGI("DestroyNotifyByNetworkId for networkId: %{public}.6s", networkId.c_str());
     int32_t notificationId = 0;
@@ -419,7 +424,6 @@ int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
 {
     LOGI("DisconnectByNetworkId enter, networkId is %{public}.6s", networkId.c_str());
     ControlCmd request;
-    ControlCmd response;
     request.msgType = CMD_ACTIVE_DISCONNECT;
     std::string srcNetworkId;
     auto result = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(SERVICE_NAME, srcNetworkId);
@@ -429,7 +433,7 @@ int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
     }
     request.networkId = srcNetworkId;
 
-    auto ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
+    int32_t ret = ChannelManager::GetInstance().NotifyClient(networkId, request);
     LOGI("DisconnectByNetworkId end. networkId = %{public}.6s ,ret = %{public}d", networkId.c_str(), ret);
     return ret;
 }
@@ -506,6 +510,26 @@ std::string SystemNotifier::GetRemoteDeviceName(const std::string &networkId)
     }
     LOGI("networkId is %{public}.6s, deviceName is %{public}s", networkId.c_str(), deviceName.c_str());
     return deviceName;
+}
+
+void SystemNotifier::ClearAllConnect()
+{
+    LOGI("ClearALLConnect start.");
+    std::shared_lock<std::shared_mutex> readLock(mutex);
+    std::vector<std::string> needClearItems;
+    for (const auto &pair : notificationMap_) {
+        needClearItems.push_back(pair.first);
+    }
+    for (const auto &networkId :needClearItems) {
+        // donot disconncetbyremote
+        DestroyNotifyByNetworkId(networkId);
+    }
+}
+
+int32_t SystemNotifier::GetNotificationMapSize()
+{
+    LOGI("GetNotificationMapSize size is %{public}zu", notificationMap_.size());
+    return notificationMap_.size();
 }
 
 } // namespace DistributedFile

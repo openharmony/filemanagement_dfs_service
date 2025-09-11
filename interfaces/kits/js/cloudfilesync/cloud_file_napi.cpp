@@ -40,7 +40,7 @@ int32_t CloudDownloadCallbackImplNapi::StartDownloadInner(const std::string &uri
         return ret;
     }
 
-    downloadInfos_[downloadId] = std::make_shared<SingleProgressNapi>(downloadId);
+    downloadInfos_[downloadId] = std::make_shared<SingleProgressNapi>(downloadId, uri);
     return ret;
 }
 
