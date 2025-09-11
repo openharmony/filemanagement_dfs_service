@@ -53,7 +53,6 @@ private:
     std::atomic<bool> isThreadRunning{false};
     std::thread ioThread;
     std::mutex sleepMutex;
-    std::mutex cvMute;
     std::condition_variable sleepCv;
     std::map<std::string, int32_t> bundleTimeMap;
     IoData currentData;
