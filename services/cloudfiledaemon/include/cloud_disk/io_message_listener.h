@@ -93,15 +93,15 @@ private:
     DoubleVector ioResult;
 
     std::vector<VectorVariant> targetVectors = {
-        VectorVariant(std::in_place_type<Int32Vector>, std::move(ioTimes));
-        VectorVariant(std::in_place_type<StringVector>, std::move(ioBundleName));
-        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadCharDiff));
-        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscReadDiff));
-        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadBytesDiff));
-        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscOpenDiff));
-        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscStatDiff));
-        VectorVariant(std::in_place_type<DoubleVector>, std::move(ioResult));
-    }
+        VectorVariant(std::in_place_type<Int32Vector>, std::move(ioTimes)),
+        VectorVariant(std::in_place_type<StringVector>, std::move(ioBundleName)),
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadCharDiff)),
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscReadDiff)),
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadBytesDiff)),
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscOpenDiff)),
+        VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscStatDiff)),
+        VectorVariant(std::in_place_type<DoubleVector>, std::move(ioResult))
+    };
 
     template <typename T, VectorIndex Index>
     T& GetVector(std::vector<VectorVariant>& targetVectors) {
