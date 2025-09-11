@@ -15,7 +15,7 @@
 #include "io_message_listener.h"
 
 #include <chrono>
-#include <thread>
+#include <errno.h>
 #include "hisysevent.h"
 #include "utils_log.h"
 
@@ -144,8 +144,12 @@ bool CheckDouble(const std::string &value)
         return false;
     }
 
+    errno = 0;
     char *endptr;
     std::strtod(value.c_str(), &endptr);
+    if (errno != 0) {
+        return false;
+    }
     return *endptr == '\0' || (std::isspace(*endptr) && endptr[1] == '\0');
 }
 
