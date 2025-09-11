@@ -1,0 +1,22 @@
+[
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_RegisterSyncFolderChange"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_UnregisterSyncFolderChange"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_GetSyncFolderChanges"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_SetFileSyncStates"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_GetFileSyncStates"
+    }
+]
