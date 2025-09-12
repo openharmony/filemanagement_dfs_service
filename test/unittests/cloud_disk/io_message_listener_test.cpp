@@ -1539,6 +1539,10 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport001, TestSize.Level1)
         if (filesystem::exists(IO_FILE)) {
             unlink(IO_FILE.c_str());
         }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        string line = "test,test,test,test,test,test,test,test\n";
+        write(fd, line.c_str(), line.size());
+        close(fd);
 
         ioMessageManager_->CheckMaxSizeAndReport();
         EXPECT_TRUE(true);

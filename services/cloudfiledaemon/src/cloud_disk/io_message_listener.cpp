@@ -303,6 +303,10 @@ void IoMessageManager::ReadAndReportIoMessage()
 void IoMessageManager::CheckMaxSizeAndReport()
 {
     if (!filesystem::exists(IO_DATA_FILE_PATH + IO_FILE_NAME)) {
+        LOGE("source file not exist");
+        return;
+    }
+    if (!filesystem::exists(IO_DATA_FILE_PATH + IO_FILE_NAME)) {
         LOGI("Source file not exist");
         return;
     }
