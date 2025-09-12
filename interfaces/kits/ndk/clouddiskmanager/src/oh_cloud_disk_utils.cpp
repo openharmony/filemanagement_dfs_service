@@ -15,10 +15,11 @@
 
 #include "oh_cloud_disk_utils.h"
 
-CloudDisk_ErrorCode CovertToErrorCode(int32_t innerErrorCode)
+CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode)
 {
-    if (innerToNErrTable.find(innerErrorCode) != innerToNErrTable.end()) {
-        return innerToNErrTable.at(innerErrorCode);
+    auto iter = innerToNErrTable.find(innerErrorCode);
+    if (iter != innerToNErrTable.end()) {
+        return iter->second;
     } else {
         return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
     }

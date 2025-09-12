@@ -21,7 +21,7 @@
 #include "cloud_disk_service_error.h"
 #include "oh_cloud_disk_error_code.h"
 
-CloudDisk_ErrorCode CovertToErrorCode(int32_t innerErrorCode);
+CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
 
 const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_ERR_OK},
