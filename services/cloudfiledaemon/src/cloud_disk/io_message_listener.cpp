@@ -185,7 +185,7 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
 {
     HiSysEventParam param;
     size_t count = std::min(name.size(), sizeof(param.name) - 1);
-    strncpy_s(param.name, sizeof(param.name), name.c_str(), sizeof(name.c_str()));
+    strncpy_s(param.name, sizeof(param.name), name.c_str(), count);
     param.t = type;
     param.v.array = data.data();
     param.arraySize = static_cast<int>(data.size());
