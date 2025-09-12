@@ -184,6 +184,7 @@ template <typename T>
 HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, std::vector<T> &data)
 {
     HiSysEventParam param;
+    size_t count = std::min(name.size(), sizeof(param.name) - 1);
     strncpy_s(param.name, sizeof(param.name), name.c_str(), sizeof(name.c_str()));
     param.t = type;
     param.v.array = data.data();
