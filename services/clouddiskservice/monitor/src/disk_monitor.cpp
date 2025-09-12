@@ -36,7 +36,7 @@ constexpr uint32_t EVENTS_BUF_SIZE = 4096;
 const string MOUNT_PATH = "/data/service";
 const string DATA_SERVICE_EL2 = "/data/service/el2/";
 const string HMDFS_DOCS = "/hmdfs/account/files/Docs";
-const vector<string> BLACK_DIRS = {"/.Trash", "/.Recent", "/.thumbs", "/HO_DATA_EXT_MISC"};
+const vector<string> BLOCK_DIRS = {"/.Trash", "/.Recent", "/.thumbs", "/HO_DATA_EXT_MISC"};
 } // namespace
 
 DiskMonitor &DiskMonitor::GetInstance()
@@ -81,7 +81,7 @@ void DiskMonitor::InitStatus(int32_t userId)
     userId_ = userId;
     isRunning_ = true;
     syncFolderPrefix_ = DATA_SERVICE_EL2 + to_string(userId) + HMDFS_DOCS;
-    for (auto &it : BLACK_DIRS) {
+    for (auto &it : BLOCK_DIRS) {
         blockList_.push_back(DATA_SERVICE_EL2 + to_string(userId) + HMDFS_DOCS + it);
     }
 }
