@@ -56,7 +56,7 @@ private:
     int32_t fanotifyFd_{-1};
     DIR *mountFp_{nullptr};
     int32_t mountFd_{-1};   // will be closed automatically after close(DIR*)
-    bool isRunning_{true};
+    bool isRunning_{false};
     ffrt::mutex mutex_;
     // events handle
     EventInfo oldEventInfo_;
