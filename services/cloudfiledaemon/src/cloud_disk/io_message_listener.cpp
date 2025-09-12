@@ -15,7 +15,6 @@
 #include "io_message_listener.h"
 
 #include <chrono>
-#include <errno.h>
 #include "hisysevent.h"
 #include "utils_log.h"
 
@@ -167,7 +166,8 @@ struct CheckVisitor {
     bool &checkType;
 
     template<typename T>
-    void operator()(std::vector<T> &vec) {
+    void operator()(std::vector<T> &vec)
+    {
         if constexpr (std::is_same_v<T, int32_t>) {
             checkType = CheckInt(value);
         } else if constexpr (std::is_same_v<T, int64_t>) {
@@ -388,7 +388,7 @@ void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateDa
         lastestAppStateData = appStateData;
         if (!isThreadRunning.load()) {
             isThreadRunning.store(true);
-            ffrt::submit([this] {RecordIoData();}, {}, {},ffrt::task_attr().qos(ffrt::qos_background));
+            ffrt::submit([this] {RecordIoData();}, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
         }
         return;
     }

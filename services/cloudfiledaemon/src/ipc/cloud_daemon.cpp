@@ -142,7 +142,7 @@ void CloudDaemon::OnStart()
             filesystem::create_directories(IO_MESSAGE_DIR, errCode);
             if (error_code.value() != 0) {
                 LOGE("Mkdir for io failed");
-                return;               
+                return;
             }
             CloudDisk::AppStateObserverManager::GetInstance().SubscribeAppState(bundleNameList);
         });

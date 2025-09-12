@@ -105,7 +105,8 @@ private:
     };
 
     template <typename T, VectorIndex Index>
-    T& GetVector(std::vector<VectorVariant>& targetVectors) {
+    T& GetVector(std::vector<VectorVariant>& targetVectors)
+    {
         return std::get<T>(targetVectors[static_cast<size_t>(Index)]);
     }
     bool ReadIoDataFromFile(const std::string &path);
