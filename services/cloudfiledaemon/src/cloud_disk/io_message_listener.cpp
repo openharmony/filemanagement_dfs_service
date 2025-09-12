@@ -194,7 +194,7 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
 void IoMessageManager::Report()
 {
     auto sizeVector = [](auto &vec) {
-        if (vec.szie() == 0) {
+        if (vec.size() == 0) {
             return;
         }
     }
