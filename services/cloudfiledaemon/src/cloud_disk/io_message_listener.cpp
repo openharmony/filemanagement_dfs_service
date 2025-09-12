@@ -186,7 +186,7 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
     size_t count = std::min(name.size(), sizeof(param.name) - 1);
     auto ret = strncpy_s(param.name, sizeof(param.name), name.c_str(), count);
     if (ret != EOK) {
-        LOGE(HisysEventParam set failed);
+        LOGE("HisysEventParam set failed");
         param.name[0] = '\0';
     }
     param.t = type;
