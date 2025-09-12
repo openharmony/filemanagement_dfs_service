@@ -18,7 +18,6 @@
 #include "hisysevent.h"
 #include "utils_log.h"
 
-
 using namespace std;
 using namespace chrono;
 
@@ -185,7 +184,11 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
 {
     HiSysEventParam param;
     size_t count = std::min(name.size(), sizeof(param.name) - 1);
-    strncpy_s(param.name, sizeof(param.name), name.c_str(), count);
+    auto ret = strncpy_s(param.name, sizeof(param.name), name.c_str(), count);
+    if (ret != EOK) {
+        LOGE(HisysEventParam set failed);
+        param.name[0] = '\0';
+    }
     param.t = type;
     param.v.array = data.data();
     param.arraySize = static_cast<int>(data.size());
@@ -198,7 +201,7 @@ void IoMessageManager::Report()
         if (vec.size() == 0) {
             return;
         }
-    }
+    };
     for (auto &variant : targetVectors) {
         std::visit(sizeVector, variant);
     }
@@ -302,18 +305,18 @@ void IoMessageManager::ReadAndReportIoMessage()
 
 void IoMessageManager::CheckMaxSizeAndReport()
 {
-    if (!filesystem::exists(IO_DATA_FILE_PATH + IO_FILE_NAME)) {
+    std::error_code errCode;
+    if (!filesystem::exists(IO_DATA_FILE_PATH + IO_FILE_NAME, errCode) || errCode.value() != 0) {
         LOGE("source file not exist");
         return;
     }
-    auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME);
-    if (fileSize < MAX_IO_FILE_SIZE) {
+    auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME, errCode);
+    if (fileSize < MAX_IO_FILE_SIZE || errCode.value() != 0) {
         return;
     }
     if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
         LOGI("Report file exist");
     }
-    std::error_code errCode;
     filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
         IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME, errCode);
     if (errCode.value() != 0) {
