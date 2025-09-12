@@ -18,5 +18,29 @@
     {
         "first_introduced": "21",
         "name": "OH_CloudDisk_GetFileSyncStates"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_RegisterSyncFolder"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_UnregisterSyncFolder"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_ActiveSyncFolder"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_DeactiveSyncFolder"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_GetSyncFolders"
+    },
+    {
+        "first_introduced": "21",
+        "name": "OH_CloudDisk_UpdateCustomAlias"
     }
 ]

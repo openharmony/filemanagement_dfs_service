@@ -294,6 +294,59 @@ typedef struct CloudDisk_ResultList {
 } CloudDisk_ResultList;
 
 /**
+ * @brief Enumerates the state of sync folder.
+ * @since 21
+ */
+typedef enum CloudDisk_SyncFolderState {
+    /**
+     * Indicates that the state of sync folder is inactive.
+     */
+    INACTIVE = 0,
+    /**
+     * Indicates that the state of sync folder is active.
+     */
+    ACTIVE = 1,
+} CloudDisk_SyncFolderState;
+
+/**
+ * @brief Defines the sync folder displayName info of cloud disk.
+ * @since 21
+ */
+typedef struct CloudDisk_DisplayNameInfo {
+    /**
+     * Indicates the displayNameResId of sync folder.
+     */
+    uint32_t displayNameResId;
+    /**
+     * Indicates the user-defined alias.
+     */
+    char *customAlias;
+    /**
+     * Indicates the length of the customAlias.
+     */
+    size_t customAliasLength;
+} CloudDisk_DisplayNameInfo;
+
+/**
+ * @brief Defines the sync folder of cloud disk.
+ * @since 21
+ */
+typedef struct CloudDisk_SyncFolder {
+    /**
+     * Indicates the path of sync folder.
+     */
+    CloudDisk_SyncFolderPath path;
+    /**
+     * Indicates the state of sync folder.
+     */
+    CloudDisk_SyncFolderState state;
+    /**
+     * Indicates the displayName info of sync folder.
+     */
+    CloudDisk_DisplayNameInfo displayNameInfo;
+} CloudDisk_SyncFolder;
+
+/**
  * @brief Registers a callback function to notify the application of sync folder changes.
  *
  * @param syncFolderPath Indicates the sync folder path information.
@@ -371,6 +424,72 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
                                                    size_t length,
                                                    CloudDisk_ResultList **resultLists,
                                                    size_t *resultCount);
+
+/**
+ * @brief Registers a sync folder.
+ *
+ * @param syncFolder Indicates the sync folder.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder);
+
+/**
+ * @brief Unregisters a sync folder.
+ *
+ * @param syncFolderPath Indicates the sync folder path.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
+
+/**
+ * @brief Activates a sync folder.
+ *
+ * @param syncFolderPath Indicates the sync folder path.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
+
+/**
+ * @brief Deactivates a sync folder.
+ *
+ * @param syncFolderPath Indicates the sync folder path.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
+
+/**
+ * @brief Gets the sync folders.
+ *
+ * @param syncFolders Output parameter. Returns the array of {@link CloudDisk_SyncFolder} to store the sync folders.
+ * @param count Output parameter. Returns the number of sync folders.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders,
+                                                size_t *count);
+
+/**
+ * @brief Updates the display name of a sync folder.
+ *
+ * @param syncFolderPath Indicates the sync folder path.
+ * @param customAlias Indicates the user-defined alias.
+ * @param customAliasLength Indicates the length of the customAlias.
+ * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                   const char *customAlias,
+                                                   size_t customAliasLength);
 #ifdef __cplusplus
 }
 #endif
