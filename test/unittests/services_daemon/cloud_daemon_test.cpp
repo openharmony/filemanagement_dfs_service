@@ -31,6 +31,7 @@ using namespace testing::ext;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t DEV_FD = 10;
 const string IO_MESSAGE_DIR = "/data/service/el1/public/cloudfile/io/"
+
 class CloudDaemonTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
