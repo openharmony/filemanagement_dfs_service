@@ -1542,6 +1542,7 @@ HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport001, TestSize.Level1)
         string line = "test,test,test,test,test,test,test,test\n";
         write(fd, line.c_str(), line.size());
         close(fd);
+
         ioMessageManager_->CheckMaxSizeAndReport();
         EXPECT_TRUE(true);
     } catch (...) {
