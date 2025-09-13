@@ -630,6 +630,26 @@ HWTEST_F(IoMessageListenerTest, RecordDataToFileTest003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RecordDataToFileTest004
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ * @tc.require: issuesI92WQP
+ */
+HWTEST_F(IoMessageListenerTest, RecordDataToFileTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecordDataToFileTest004 Start";
+    string path = "";
+    try {
+        ioMessageManager_->RecordDataToFile(path);
+        EXPECT_FALSE(false);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RecordDataToFileTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RecordDataToFileTest004 End";
+}
+
+/**
  * @tc.name: ProcessIoDataTest001
  * @tc.desc: Read IO data
  * @tc.type: FUNC
@@ -1283,7 +1303,7 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest005, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, Report001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Report001 Start";
-    for (int i = 0; i <= 101; i++) {
+    for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
         ioMessageManager_->ioTimes.push_back(1);
         ioMessageManager_->ioBundleName.push_back("tdd");
         ioMessageManager_->ioReadCharDiff.push_back(1);
@@ -1311,7 +1331,7 @@ HWTEST_F(IoMessageListenerTest, Report001, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Report002 Start";
-    for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
+    for (int i = 0; i <= 10; i++) {
         ioMessageManager_->ioTimes.push_back(1);
         ioMessageManager_->ioBundleName.push_back("tdd");
         ioMessageManager_->ioReadCharDiff.push_back(1);
@@ -1329,6 +1349,24 @@ HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
         GTEST_LOG_(INFO) << "Report002 ERROR";
     }
     GTEST_LOG_(INFO) << "Report002 End";
+}
+
+/**
+ * @tc.name: Report003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, Report003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Report003 Start";
+    try {
+        ioMessageManager_->Report();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "Report003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Report003 End";
 }
 
 /**
@@ -1379,7 +1417,14 @@ HWTEST_F(IoMessageListenerTest, PushData003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PushData003 Start";
     vector<string> fields;
-    fields.push_back("tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
     try {
         ioMessageManager_->PushData(fields);
         EXPECT_TRUE(true);
@@ -1388,6 +1433,33 @@ HWTEST_F(IoMessageListenerTest, PushData003, TestSize.Level1)
         GTEST_LOG_(INFO) << "PushData003 ERROR";
     }
     GTEST_LOG_(INFO) << "PushData003 End";
+}
+
+/**
+ * @tc.name: PushData004
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushData004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushData004 Start";
+    vector<string> fields;
+    fields.push_back(TEST_INT32);
+    fields.push_back("tdd");
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_DOUBLE);
+    try {
+        ioMessageManager_->PushData(fields);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushData004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushData004 End";
 }
 
 /**
@@ -1723,7 +1795,26 @@ HWTEST_F(IoMessageListenerTest, CheckInt002, TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckInt002 ERROR";
     }
-    GTEST_LOG_(INFO) << "CheckInt001 End";
+    GTEST_LOG_(INFO) << "CheckInt002 End";
+}
+
+/**
+ * @tc.name: CheckInt003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt003 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckInt("");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt003 End";
 }
 
 /**
@@ -1764,4 +1855,41 @@ HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckDouble002 End";
 }
 
+/**
+ * @tc.name: CheckDouble003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble003 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckDouble("");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckDouble003 End";
+}
+
+/**
+ * @tc.name: CheckDouble002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble002 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckDouble("str");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckDouble002 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
