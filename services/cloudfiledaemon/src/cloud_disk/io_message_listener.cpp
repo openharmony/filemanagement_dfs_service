@@ -148,14 +148,15 @@ bool CheckDouble(const std::string &value)
     if (errno != 0) {
         return false;
     }
-    return *endptr == '\0' || (std::isspace(*endptr) && endptr[1] == '\0');
+    return *endptr == '\0';
 }
 
 struct PushBackVisitor {
     const std::string &value;
 
     template<typename T>
-    void operator()(std::vector<T> &vec) {
+    void operator()(std::vector<T> &vec)
+    {
         PushField(value, vec);
     }
 };
