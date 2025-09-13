@@ -232,6 +232,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
         NError(JsErrCode::E_IPCSS).ThrowErr(env);
         return nullptr;
     }
+    callbackImpl->TryCleanCallback();
     return NVal::CreateUndefined(env).val_;
 }
 

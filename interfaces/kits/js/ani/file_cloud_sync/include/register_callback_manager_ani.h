@@ -32,6 +32,10 @@ public:
     void OnJsCallback(ani_env *env, ani_object value, uint32_t argc);
     ani_env *GetEnv();
     void DetachEnv();
+    virtual ~RegisterCallbackManagerAni();
+
+protected:
+    void CleanAllCallback(bool force);
 
 protected:
     ani_vm *vm_{nullptr};

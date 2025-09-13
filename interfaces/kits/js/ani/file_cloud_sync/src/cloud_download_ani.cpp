@@ -167,6 +167,7 @@ void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string 
         ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
+    callbackImpl->TryCleanCallback();
 }
 
 void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object, ani_string evt)

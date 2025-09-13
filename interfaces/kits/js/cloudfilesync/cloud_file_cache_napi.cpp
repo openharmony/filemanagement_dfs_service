@@ -560,6 +560,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
         NError(JsErrCode::E_INNER_FAILED).ThrowErr(env);
         return nullptr;
     }
+    callbackImpl->TryCleanCallback();
 
     return NVal::CreateUndefined(env).val_;
 }

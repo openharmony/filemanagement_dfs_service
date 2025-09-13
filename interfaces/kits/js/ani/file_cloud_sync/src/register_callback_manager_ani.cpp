@@ -54,7 +54,7 @@ ani_status RegisterCallbackManagerAni::RegisterCallback(ani_env *env, ani_object
 
 ani_status RegisterCallbackManagerAni::UnregisterCallback(ani_env *env, ani_object callback)
 {
-    if (validRefNum_ == 0) {
+    if (validRefNum_.load() == 0) {
         return ANI_OK;
     }
     std::lock_guard<std::recursive_mutex> lock(callbackMtx_);
@@ -162,5 +162,35 @@ void RegisterCallbackManagerAni::DetachEnv()
     if ((ret = vm_->DetachCurrentThread()) != ANI_OK) {
         LOGE("detach current env failed, err: %{private}d", ret);
     }
+}
+
+RegisterCallbackManagerAni::~RegisterCallbackManagerAni()
+{
+    CleanAllCallback(true);
+}
+
+void RegisterCallbackManagerAni::CleanAllCallback(bool force)
+{
+    std::lock_guard<std::recursive_mutex> lock(callbackMtx_);
+    if (!force) {
+        if (validRefNum_.load() != 0) {
+            return;
+        }
+    }
+    ani_env *env = GetEnv();
+    if (env != nullptr) {
+        for (auto &iter : callbackList_) {
+            env->GlobalReference_Delete(iter.second);
+        }
+    } else {
+        LOGE("Failed to delete reference before clean callback");
+    }
+    if (callbackList_.size() != 0) {
+        DetachEnv();
+    }
+
+    callbackList_.clear();
+    validRefNum_ = 0;
+    LOGI("Clean all callback, valid callback count is 0");
 }
 } // namespace OHOS::FileManagement::CloudSync

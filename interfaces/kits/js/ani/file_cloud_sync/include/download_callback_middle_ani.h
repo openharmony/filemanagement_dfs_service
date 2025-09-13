@@ -31,9 +31,10 @@ class CloudDlCallbackMiddleAni : public CloudDownloadCallback,
                                  public RegisterCallbackManagerAni,
                                  public std::enable_shared_from_this<CloudDlCallbackMiddleAni> {
 public:
-    virtual ~CloudDlCallbackMiddleAni() = default;
+    ~CloudDlCallbackMiddleAni() override = default;
     void OnDownloadProcess(const DownloadProgressObj &progress) override;
     void RemoveDownloadInfo(int64_t downloadId);
+    void TryCleanCallback();
 
 protected:
     std::vector<int64_t> GetDownloadIdsByUri(const std::string &uri);

@@ -148,6 +148,7 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
         ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
         return;
     }
+    callbackImpl->TryCleanCallback();
 }
 
 void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt)

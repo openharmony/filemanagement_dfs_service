@@ -97,4 +97,16 @@ void CloudDlCallbackMiddleAni::OnDownloadProcess(const DownloadProgressObj &prog
         LOGE("failed to send event");
     }
 }
+
+void CloudDlCallbackMiddleAni::TryCleanCallback()
+{
+    bool noTask = false;
+    {
+        std::lock_guard<std::mutex> lock(downloadInfoMtx_);
+        noTask = (downloadInfos_.size() == 0);
+    }
+    if (noTask) {
+        CleanAllCallback(false);
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync
