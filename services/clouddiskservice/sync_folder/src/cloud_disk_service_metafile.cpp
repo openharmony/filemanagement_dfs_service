@@ -795,4 +795,11 @@ int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaF
     return E_OK;
 }
 
+void MetaFileMgr::CloudDiskServiceClearAll()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    metaFiles_.clear();
+    metaFileList_.clear();
+}
+
 } // namespace OHOS::FileManagement::CloudDiskService

@@ -142,6 +142,7 @@ public:
         const uint32_t syncFolderIndex, const uint64_t inode);
 
     int32_t GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaFile> metaFile, std::string &path);
+    void CloudDiskServiceClearAll();
 private:
     MetaFileMgr() = default;
     ~MetaFileMgr() = default;
