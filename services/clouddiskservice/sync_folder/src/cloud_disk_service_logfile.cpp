@@ -602,6 +602,7 @@ int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint64_t sy
     std::lock_guard<std::mutex> lock(mtx_);
     LogFileKey key(userId, syncFolderIndex);
     LogFiles_.erase(key);
+    MetaFileMgr::GetInstance().CloudDiskServiceClearAll();
 
     std::string rootDir =
         "/data/service/el2/" + std::to_string(userId) +
