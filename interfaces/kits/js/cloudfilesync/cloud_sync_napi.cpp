@@ -229,9 +229,12 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
         obj.AddProp("state", NVal::CreateInt32(env, (int32_t)state).val_);
         obj.AddProp("progress", NVal::CreateInt32(env, (int32_t)progress).val_);
         napi_value retVal = nullptr;
-        status = napi_call_function(env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+        status = napi_call_function(env, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
         if (status != napi_ok) {
             LOGE("napi call function failed, status: %{public}d", status);
+        }
+        if (state != OptimizeState::OPTIMIZE_RUNNING) {
+            cbOnRef_.DeleteJsEnv();
         }
         napi_close_handle_scope(env, scope);
     };
