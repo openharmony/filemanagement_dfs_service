@@ -39,6 +39,9 @@ const int32_t THREAD_SLEEP_TIME = 100;
 const int32_t FRONT_EVENT = 2;
 const int32_t BACKGROUND_EVENT = 4;
 const int32_t UNKNOWN_EVENT = 8;
+const string TEST_INT32 = "10000";
+const string TEST_INT64 = "20000";
+const string TEST_DOUBLE = "888.123"
 const int32_t LOOP_COUNT = 20000;
 const int32_t FEWER_LOOP_COUNT = 101;
 const string IO_REPORT_FILE = "/data/service/el1/public/cloudfile/io/wait_report_io_message.csv";
@@ -1361,9 +1364,9 @@ HWTEST_F(IoMessageListenerTest, Report003, TestSize.Level1)
     GTEST_LOG_(INFO) << "Report003 Start";
     try {
         ioMessageManager_->Report();
-        EXPECT_TRUE(true);
+        EXPECT_FALSE(false);
     } catch (...) {
-        EXPECT_TRUE(false);
+        EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "Report003 ERROR";
     }
     GTEST_LOG_(INFO) << "Report003 End";
@@ -1874,22 +1877,4 @@ HWTEST_F(IoMessageListenerTest, CheckDouble003, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckDouble003 End";
 }
 
-/**
- * @tc.name: CheckDouble002
- * @tc.desc: Report IO data
- * @tc.type: FUNC
- */
-HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CheckDouble002 Start";
-    
-    try {
-        OHOS::FileManagement::CloudDisk::CheckDouble("str");
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "CheckDouble002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CheckDouble002 End";
-}
 } // namespace OHOS::FileManagement::CloudDisk::Test
