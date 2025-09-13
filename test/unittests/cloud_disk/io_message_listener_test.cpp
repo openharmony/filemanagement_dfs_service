@@ -1222,7 +1222,6 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest002, TestSize.Level1)
         AppExecFwk::AppStateData appStateData;
         appStateData.bundleName = "";
         appStateData.state = FRONT_EVENT;
-        ioMessageManager_->ioThread =std::thread();
         ioMessageManager_->OnReceiveEvent(appStateData);
         EXPECT_TRUE(true);
     } catch (...) {
