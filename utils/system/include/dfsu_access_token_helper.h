@@ -19,6 +19,7 @@
 #include <string>
 
 namespace OHOS::FileManagement {
+inline const std::string PERM_CLOUD_DISK_SERVICE = "ohos.permission.ACCESS_CLOUD_DISK_INFO";
 inline const std::string PERM_CLOUD_SYNC_MANAGER = "ohos.permission.CLOUDFILE_SYNC_MANAGER";
 inline const std::string PERM_CLOUD_SYNC = "ohos.permission.CLOUDFILE_SYNC";
 inline const std::string PERM_AUTH_URI = "ohos.permission.PROXY_AUTHORIZATION_URI";

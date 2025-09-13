@@ -25,8 +25,20 @@ ohos_sa_profile("distributedfile_sa_profile") {
   part_name = "dfs_service"
 }
 
+ohos_sa_profile("clouddiskservice_sa_profile") {
+  sources = [ "5207.json" ]
+  part_name = "dfs_service"
+}
+
 ohos_prebuilt_etc("distributedfile_etc") {
   source = "distributedfile.cfg"
+  relative_install_dir = "init"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("clouddiskservice_etc") {
+  source = "clouddiskservice.cfg"
   relative_install_dir = "init"
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
