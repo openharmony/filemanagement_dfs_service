@@ -140,7 +140,7 @@ void CloudDaemon::OnStart()
             }
             std::error_code errCode;
             filesystem::create_directories(IO_MESSAGE_DIR, errCode);
-            if (error_code.value() != 0) {
+            if (errCode.value() != 0) {
                 LOGE("Mkdir for io failed");
                 return;
             }
