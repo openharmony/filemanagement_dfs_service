@@ -30,6 +30,7 @@ using namespace testing;
 using namespace testing::ext;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t DEV_FD = 10;
+const string IO_MESSAGE_DIR = "/data/service/el1/public/cloudfile/io/";
 
 class CloudDaemonTest : public testing::Test {
 public:
@@ -132,6 +133,30 @@ HWTEST_F(CloudDaemonTest, OnStartTest2, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnStart2  ERROR";
     }
     GTEST_LOG_(INFO) << "OnStart2 End";
+}
+
+/**
+ * @tc.name: OnStartTest3
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest3, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStart3 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->registerToService_ = true;
+        if (filesystem::exists(IO_MESSAGE_DIR)) {
+            filesystem::remove(IO_MESSAGE_DIR);
+        }
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStart3  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStart3 End";
 }
 
 /**

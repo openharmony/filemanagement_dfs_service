@@ -14,6 +14,8 @@
  */
 #include "io_message_listener.h"
 
+#include <chrono>
+#include "hisysevent.h"
 #include "utils_log.h"
 
 using namespace std;
@@ -28,9 +30,14 @@ const int32_t GET_FREQUENCY = 5;
 const int32_t READ_THRESHOLD = 1000;
 const int32_t OPEN_THRESHOLD = 1000;
 const int32_t STAT_THRESHOLD = 1000;
-const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/rdb/io_message.csv";
+const string IO_DATA_FILE_PATH = "/data/service/el1/public/cloudfile/io/";
+const string IO_FILE_NAME = "io_message.csv";
+const string IO_NEED_REPORT_PREFIX = "wait_report_";
 const int32_t TYPE_FRONT = 2;
 const int32_t TYPE_BACKGROUND = 4;
+const int32_t MAX_IO_FILE_SIZE = 128 * 1024;
+const size_t MAX_RECORD_IN_FILE = 10000;
+const size_t MAX_IO_REPORT_NUMBER = 100;
 
 IoMessageManager &IoMessageManager::GetInstance()
 {
@@ -75,17 +82,6 @@ bool IoMessageManager::ReadIoDataFromFile(const std::string &path)
     return true;
 }
 
-bool IoMessageManager::IsFirstLineHeader(const string &path)
-{
-    ifstream inFile(path);
-    if (!inFile.is_open()) {
-        return false;
-    }
-
-    string firstLine;
-    getline(inFile, firstLine);
-    return firstLine.find("time") != string::npos;
-}
 
 void IoMessageManager::RecordDataToFile(const string &path)
 {
@@ -93,10 +89,6 @@ void IoMessageManager::RecordDataToFile(const string &path)
     if (!outFile) {
         LOGE("Failed to open io file to write, err: %{public}d", errno);
         return;
-    }
-
-    if (!IsFirstLineHeader(path)) {
-        outFile << "time, bundle_name, rchar_diff, syscr_diff, read_bytes_diff, syscopen_diff, syscstat_diff, result\n";
     }
 
     outFile << bundleTimeMap[dataToWrite.bundleName] << ","
@@ -108,6 +100,231 @@ void IoMessageManager::RecordDataToFile(const string &path)
             << dataToWrite.syscstatDiff << ","
             << dataToWrite.result << "\n";
     LOGI("Write io data success");
+}
+
+static vector<const char*> ConvertToCStringArray(const vector<string>& vec)
+{
+    vector<const char*> cstrVec;
+    for (const auto& str : vec) {
+        cstrVec.push_back(str.c_str());
+    }
+    return cstrVec;
+}
+
+template <typename T>
+void PushField(const std::string &value, std::vector<T> &vec)
+{
+    if constexpr (std::is_same_v<T, int32_t>) {
+        vec.push_back(std::stoi(value));
+    } else if constexpr (std::is_same_v<T, int64_t>) {
+        vec.push_back(std::stoll(value));
+    } else if constexpr (std::is_same_v<T, double>) {
+        vec.push_back(std::stod(value));
+    } else {
+        vec.push_back(value);
+    }
+}
+
+bool CheckInt(const std::string &value)
+{
+    if (value.empty()) {
+        return false;
+    }
+    if (!all_of(value.begin(), value.end(), ::isdigit)) {
+        return false;
+    }
+    return true;
+}
+
+bool CheckDouble(const std::string &value)
+{
+    if (value.empty()) {
+        return false;
+    }
+
+    errno = 0;
+    char *endptr;
+    std::strtod(value.c_str(), &endptr);
+    if (errno != 0) {
+        return false;
+    }
+    return *endptr == '\0';
+}
+
+struct PushBackVisitor {
+    const std::string &value;
+
+    template<typename T>
+    void operator()(std::vector<T> &vec)
+    {
+        PushField(value, vec);
+    }
+};
+
+struct CheckVisitor {
+    const std::string &value;
+    bool &checkType;
+
+    template<typename T>
+    void operator()(std::vector<T> &vec)
+    {
+        if constexpr (std::is_same_v<T, int32_t>) {
+            checkType = CheckInt(value);
+        } else if constexpr (std::is_same_v<T, int64_t>) {
+            checkType = CheckInt(value);
+        } else if constexpr (std::is_same_v<T, double>) {
+            checkType = CheckDouble(value);
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            checkType = true;
+        }
+    }
+};
+
+template <typename T>
+HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, std::vector<T> &data)
+{
+    HiSysEventParam param;
+    std::copy(name.begin(), name.begin() + std::min(name.length(), sizeof(param.name) - 1), param.name);
+    param.name[sizeof(param.name) - 1] = '\0';
+    param.t = type;
+    param.v.array = data.data();
+    param.arraySize = static_cast<int>(data.size());
+    return param;
+}
+
+void IoMessageManager::Report()
+{
+    auto sizeVector = [](auto &vec) {
+        if (vec.size() == 0) {
+            return;
+        }
+    };
+    for (auto &variant : targetVectors) {
+        std::visit(sizeVector, variant);
+    }
+    auto charIoBundleName = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_BUNDLE_NAME>(targetVectors));
+    HiSysEventParam params[] = {
+        CreateParam("time", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
+        CreateParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
+        CreateParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
+        CreateParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
+        CreateParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
+        CreateParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
+        CreateParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY,
+            GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
+        CreateParam("Result", HISYSEVENT_DOUBLE_ARRAY,
+            GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
+    };
+
+    auto ret = OH_HiSysEvent_Write(
+        "HM_FS",
+        "ABNORMAL_IO_STATISTICS_DATA",
+        HISYSEVENT_STATISTIC,
+        params,
+        sizeof(params) / sizeof(params[0])
+    );
+    if (ret != 0) {
+        LOGE("Report failed, err : %{public}d", ret);
+    }
+    auto clearVector = [](auto &vec) {
+        vec.clear();
+    };
+    for (auto &variant : targetVectors) {
+        std::visit(clearVector, variant);
+    }
+}
+
+void IoMessageManager::PushData(const vector<string> &fields)
+{
+    if (fields.size() != targetVectors.size()) {
+        return;
+    }
+    for (uint32_t i = 0; i < fields.size(); ++i) {
+        bool checkType = false;
+        CheckVisitor visitor{fields[i], checkType};
+        std::visit(visitor, targetVectors[i]);
+        if (!checkType) {
+            LOGI("checkType failed. value = %{public}s", fields[i].c_str());
+            return;
+        }
+    }
+    for (uint32_t i = 0; i < fields.size(); ++i) {
+        PushBackVisitor visitor{fields[i]};
+        std::visit(visitor, targetVectors[i]);
+    }
+    return;
+}
+
+void IoMessageManager::ReadAndReportIoMessage()
+{
+    ifstream localData(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+    if (!localData) {
+        LOGE("Open cloud data statistic local data fail : %{public}d", errno);
+        return;
+    }
+
+    string line;
+    size_t reportCount = 0;
+    size_t totalCount = 0;
+    while (getline(localData, line)) {
+        vector<string> fields;
+        istringstream iss(line);
+        string token;
+
+        while (getline(iss, token, ',')) {
+            fields.push_back(token);
+        }
+
+        PushData(fields);
+        reportCount++;
+        totalCount++;
+        if (reportCount >= MAX_IO_REPORT_NUMBER) {
+            Report();
+            reportCount = 0;
+        }
+        if (totalCount >= MAX_RECORD_IN_FILE) {
+            break;
+        }
+    }
+    if (reportCount > 0) {
+        Report();
+    }
+    bool ret = filesystem::remove(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME);
+    if (!ret) {
+        LOGE("Failed to remove need_report_io_file, err:%{public}d", errno);
+    }
+    reportThreadRunning.store(false);
+}
+
+void IoMessageManager::CheckMaxSizeAndReport()
+{
+    std::error_code errCode;
+    if (!filesystem::exists(IO_DATA_FILE_PATH + IO_FILE_NAME, errCode) || errCode.value() != 0) {
+        LOGE("source file not exist");
+        return;
+    }
+    auto fileSize = filesystem::file_size(IO_DATA_FILE_PATH + IO_FILE_NAME, errCode);
+    if (fileSize < MAX_IO_FILE_SIZE || errCode.value() != 0) {
+        return;
+    }
+    if (filesystem::exists(IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME)) {
+        LOGI("Report file exist");
+    }
+    filesystem::rename(IO_DATA_FILE_PATH + IO_FILE_NAME,
+        IO_DATA_FILE_PATH + IO_NEED_REPORT_PREFIX + IO_FILE_NAME, errCode);
+    if (errCode.value() != 0) {
+        LOGE("Failed to rename file, error code: %{public}d", errCode.value());
+        return;
+    }
+    if (!reportThreadRunning.load()) {
+        reportThreadRunning.store(true);
+        LOGI("Start report io data");
+        ffrt::submit([this] { ReadAndReportIoMessage(); }, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
+    }
 }
 
 void IoMessageManager::ProcessIoData(const string &path)
@@ -141,7 +358,8 @@ void IoMessageManager::ProcessIoData(const string &path)
     if (dataToWrite.result >= READ_THRESHOLD ||
         dataToWrite.syscopenDiff >= OPEN_THRESHOLD ||
         dataToWrite.syscstatDiff >= STAT_THRESHOLD) {
-        RecordDataToFile(IO_DATA_FILE_PATH);
+        CheckMaxSizeAndReport();
+        RecordDataToFile(IO_DATA_FILE_PATH + IO_FILE_NAME);
     }
 
     preData = currentData;
@@ -155,7 +373,7 @@ void IoMessageManager::RecordIoData()
             string path = "/proc/" + to_string(lastestAppStateData.pid) + "/sys_count";
             ProcessIoData(path);
         }
-        unique_lock<mutex> lock(sleepMutex);
+        unique_lock<ffrt::mutex> lock(sleepMutex);
         sleepCv.wait_for(lock, chrono::seconds(GET_FREQUENCY), [&] {
             return !isThreadRunning.load();
         });
@@ -164,28 +382,23 @@ void IoMessageManager::RecordIoData()
 
 void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateData)
 {
-    if (appStateData.bundleName != DESK_BUNDLE_NAME) {
-        if (appStateData.state == TYPE_FRONT) {
-            lastestAppStateData = appStateData;
-            if (!ioThread.joinable()) {
-                isThreadRunning.store(true);
-                ioThread = thread(&IoMessageManager::RecordIoData, this);
-            }
-            return;
+    if (appStateData.bundleName == DESK_BUNDLE_NAME) {
+        return;
+    }
+    if (appStateData.state == TYPE_FRONT) {
+        lastestAppStateData = appStateData;
+        if (!isThreadRunning.load()) {
+            isThreadRunning.store(true);
+            ffrt::submit([this] {RecordIoData();}, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
         }
-        if (appStateData.state == TYPE_BACKGROUND) {
-            if (ioThread.joinable()) {
-                {
-                    lock_guard<mutex> lock(sleepMutex);
-                    isThreadRunning.store(false);
-                }
-                sleepCv.notify_all();
-                ioThread.join();
-                ioThread = thread();
-                currentData = {};
-                preData = {};
-            }
-        }
+        return;
+    }
+    if (appStateData.state == TYPE_BACKGROUND) {
+        lock_guard<ffrt::mutex> lock(sleepMutex);
+        isThreadRunning.store(false);
+        sleepCv.notify_all();
+        currentData = {};
+        preData = {};
     }
 }
 } // namespace CloudDisk

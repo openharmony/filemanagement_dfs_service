@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <fcntl.h>
+#include <fstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
@@ -38,6 +39,14 @@ const int32_t THREAD_SLEEP_TIME = 100;
 const int32_t FRONT_EVENT = 2;
 const int32_t BACKGROUND_EVENT = 4;
 const int32_t UNKNOWN_EVENT = 8;
+const string TEST_INT32 = "100000";
+const string TEST_INT64 = "200000";
+const string TEST_DOUBLE = "888.123";
+const int32_t LOOP_COUNT = 20000;
+const int32_t FEWER_LOOP_COUNT = 101;
+const string IO_REPORT_FILE = "/data/service/el1/public/cloudfile/io/wait_report_io_message.csv";
+const string IO_FILE = "/data/service/el1/public/cloudfile/io/io_message.csv";
+
 
 class IoMessageListenerTest : public testing::Test {
 public:
@@ -554,74 +563,6 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest017, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsFirstLineHeaderTest001
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest001 End";
-}
-
-/**
- * @tc.name: IsFirstLineHeaderTest002
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        close(fd);
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 ERROR";
-    }
-    unlink(path.c_str());
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest002 End";
-}
-
-/**
- * @tc.name: IsFirstLineHeaderTest003
- * @tc.desc: Read IO data
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(IoMessageListenerTest, IsFirstLineHeaderTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-    try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        string line1 = "time\n";
-        write(fd, line1.c_str(), line1.size());
-        close(fd);
-        bool ret = ioMessageManager_->IsFirstLineHeader(path);
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 ERROR";
-    }
-    unlink(path.c_str());
-    GTEST_LOG_(INFO) << "IsFirstLineHeaderTest003 End";
-}
-
-/**
  * @tc.name: RecordDataToFileTest001
  * @tc.desc: Read IO data
  * @tc.type: FUNC
@@ -689,6 +630,26 @@ HWTEST_F(IoMessageListenerTest, RecordDataToFileTest003, TestSize.Level1)
     }
     unlink(path.c_str());
     GTEST_LOG_(INFO) << "RecordDataToFileTest003 End";
+}
+
+/**
+ * @tc.name: RecordDataToFileTest004
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ * @tc.require: issuesI92WQP
+ */
+HWTEST_F(IoMessageListenerTest, RecordDataToFileTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecordDataToFileTest004 Start";
+    string path = "";
+    try {
+        ioMessageManager_->RecordDataToFile(path);
+        EXPECT_FALSE(false);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RecordDataToFileTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RecordDataToFileTest004 End";
 }
 
 /**
@@ -1284,7 +1245,6 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest002, TestSize.Level1)
         AppExecFwk::AppStateData appStateData;
         appStateData.bundleName = "";
         appStateData.state = FRONT_EVENT;
-        ioMessageManager_->ioThread =std::thread();
         ioMessageManager_->OnReceiveEvent(appStateData);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1336,6 +1296,585 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnReceiveEventTest005 ERROR";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest005 End";
+}
+
+/**
+ * @tc.name: Report001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, Report001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Report001 Start";
+    for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
+        ioMessageManager_->ioTimes.push_back(1);
+        ioMessageManager_->ioBundleName.push_back("tdd");
+        ioMessageManager_->ioReadCharDiff.push_back(1);
+        ioMessageManager_->ioSyscReadDiff.push_back(1);
+        ioMessageManager_->ioReadBytesDiff.push_back(1);
+        ioMessageManager_->ioSyscOpenDiff.push_back(1);
+        ioMessageManager_->ioSyscStatDiff.push_back(1);
+        ioMessageManager_->ioResult.push_back(1.0);
+    }
+    try {
+        ioMessageManager_->Report();
+        EXPECT_FALSE(false);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "Report001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Report001 End";
+}
+
+/**
+ * @tc.name: Report002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, Report002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Report002 Start";
+    for (int i = 0; i <= 10; i++) {
+        ioMessageManager_->ioTimes.push_back(1);
+        ioMessageManager_->ioBundleName.push_back("tdd");
+        ioMessageManager_->ioReadCharDiff.push_back(1);
+        ioMessageManager_->ioSyscReadDiff.push_back(1);
+        ioMessageManager_->ioReadBytesDiff.push_back(1);
+        ioMessageManager_->ioSyscOpenDiff.push_back(1);
+        ioMessageManager_->ioSyscStatDiff.push_back(1);
+        ioMessageManager_->ioResult.push_back(1.0);
+    }
+    try {
+        ioMessageManager_->Report();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "Report002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Report002 End";
+}
+
+/**
+ * @tc.name: Report003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, Report003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Report003 Start";
+    try {
+        ioMessageManager_->Report();
+        EXPECT_FALSE(false);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "Report003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Report003 End";
+}
+
+/**
+ * @tc.name: PushData001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushData001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushData001 Start";
+    vector<string> fields;
+    try {
+        ioMessageManager_->PushData(fields);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushData001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushData001 End";
+}
+
+/**
+ * @tc.name: PushData002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushData002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushData002 Start";
+    vector<string> fields;
+    fields.push_back("tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd");
+    try {
+        ioMessageManager_->PushData(fields);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushData002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushData002 End";
+}
+
+/**
+ * @tc.name: PushData003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushData003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushData003 Start";
+    vector<string> fields;
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    fields.push_back("tdd");
+    try {
+        ioMessageManager_->PushData(fields);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushData003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushData003 End";
+}
+
+/**
+ * @tc.name: PushData004
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, PushData004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PushData004 Start";
+    vector<string> fields;
+    fields.push_back(TEST_INT32);
+    fields.push_back("tdd");
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_INT64);
+    fields.push_back(TEST_DOUBLE);
+    try {
+        ioMessageManager_->PushData(fields);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushData004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushData004 End";
+}
+
+/**
+ * @tc.name: ReadAndReportIoMessage001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage001 Start";
+    
+    try {
+        if (filesystem::exists(IO_REPORT_FILE)) {
+            filesystem::remove(IO_REPORT_FILE);
+        }
+        ioMessageManager_->Report();
+        EXPECT_FALSE(false);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ReadAndReportIoMessage001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage001 End";
+}
+
+/**
+ * @tc.name: ReadAndReportIoMessage002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage002 Start";
+    
+    try {
+        int fd = -1;
+        if (!filesystem::exists(IO_REPORT_FILE)) {
+            fd = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            close(fd);
+        }
+
+        ioMessageManager_->ReadAndReportIoMessage();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadAndReportIoMessage002 ERROR";
+    }
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage002 End";
+}
+
+/**
+ * @tc.name: ReadAndReportIoMessage003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage003 Start";
+    
+    try {
+        int fd = -1;
+        if (!filesystem::exists(IO_REPORT_FILE)) {
+            fd = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        }
+        string line1 = "tdd tdd tdd tdd tdd tdd tdd tdd\n";
+        write(fd, line1.c_str(), line1.size());
+        close(fd);
+
+        ioMessageManager_->ReadAndReportIoMessage();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadAndReportIoMessage003 ERROR";
+    }
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage003 End";
+}
+
+/**
+ * @tc.name: ReadAndReportIoMessage004
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage004 Start";
+    
+    try {
+        int fd = -1;
+        if (!filesystem::exists(IO_REPORT_FILE)) {
+            fd = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        }
+        string line1 = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+        write(fd, line1.c_str(), line1.size());
+        close(fd);
+
+        ioMessageManager_->ReadAndReportIoMessage();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadAndReportIoMessage004 ERROR";
+    }
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage004 End";
+}
+
+/**
+ * @tc.name: ReadAndReportIoMessage005
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, ReadAndReportIoMessage005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage005 Start";
+    
+    try {
+        int fd = -1;
+        if (!filesystem::exists(IO_REPORT_FILE)) {
+            fd = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        }
+        for (int i = 0; i <= FEWER_LOOP_COUNT; i++) {
+            string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+            write(fd, line.c_str(), line.size());
+        }
+        close(fd);
+
+        ioMessageManager_->ReadAndReportIoMessage();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadAndReportIoMessage005 ERROR";
+    }
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "ReadAndReportIoMessage005 End";
+}
+
+/**
+ * @tc.name: CheckMaxSizeAndReport001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport001 Start";
+    
+    try {
+        int fd = -1;
+        if (filesystem::exists(IO_FILE)) {
+            unlink(IO_FILE.c_str());
+        }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        string line = "test,test,test,test,test,test,test,test\n";
+        write(fd, line.c_str(), line.size());
+        close(fd);
+
+        ioMessageManager_->CheckMaxSizeAndReport();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMaxSizeAndReport001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport001 End";
+}
+
+/**
+ * @tc.name: CheckMaxSizeAndReport002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport002 Start";
+    
+    try {
+        int fd = -1;
+        if (filesystem::exists(IO_FILE)) {
+            unlink(IO_FILE.c_str());
+        }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+        write(fd, line.c_str(), line.size());
+        close(fd);
+
+        ioMessageManager_->CheckMaxSizeAndReport();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMaxSizeAndReport002 ERROR";
+    }
+    unlink(IO_FILE.c_str());
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport002 End";
+}
+
+/**
+ * @tc.name: CheckMaxSizeAndReport003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport003 Start";
+    
+    try {
+        int fd = -1;
+        if (filesystem::exists(IO_FILE)) {
+            unlink(IO_FILE.c_str());
+        }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        for (int i = 0; i <= LOOP_COUNT; i++) {
+            string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+            write(fd, line.c_str(), line.size());
+        }
+        close(fd);
+
+        if (!filesystem::exists(IO_REPORT_FILE)) {
+            int fd2 = open(IO_REPORT_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            close(fd2);
+        }
+        ioMessageManager_->CheckMaxSizeAndReport();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMaxSizeAndReport003 ERROR";
+    }
+    unlink(IO_FILE.c_str());
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport003 End";
+}
+
+/**
+ * @tc.name: CheckMaxSizeAndReport004
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport004 Start";
+    
+    try {
+        int fd = -1;
+        if (filesystem::exists(IO_FILE)) {
+            unlink(IO_FILE.c_str());
+        }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        for (int i = 0; i <= LOOP_COUNT; i++) {
+            string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+            write(fd, line.c_str(), line.size());
+        }
+        close(fd);
+
+        if (filesystem::exists(IO_REPORT_FILE)) {
+            unlink(IO_REPORT_FILE.c_str());
+        }
+        ioMessageManager_->CheckMaxSizeAndReport();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMaxSizeAndReport004 ERROR";
+    }
+    unlink(IO_FILE.c_str());
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport004 End";
+}
+
+/**
+ * @tc.name: CheckMaxSizeAndReport005
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckMaxSizeAndReport005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport005 Start";
+    
+    try {
+        int fd = -1;
+        if (filesystem::exists(IO_FILE)) {
+            unlink(IO_FILE.c_str());
+        }
+        fd = open(IO_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        for (int i = 0; i <= LOOP_COUNT; i++) {
+            string line = "tdd,tdd,tdd,tdd,tdd,tdd,tdd,tdd\n";
+            write(fd, line.c_str(), line.size());
+        }
+        close(fd);
+
+        if (filesystem::exists(IO_REPORT_FILE)) {
+            unlink(IO_REPORT_FILE.c_str());
+        }
+        ioMessageManager_->reportThreadRunning.store(true);
+        ioMessageManager_->CheckMaxSizeAndReport();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMaxSizeAndReport005 ERROR";
+    }
+    unlink(IO_FILE.c_str());
+    unlink(IO_REPORT_FILE.c_str());
+    GTEST_LOG_(INFO) << "CheckMaxSizeAndReport005 End";
+}
+
+/**
+ * @tc.name: CheckInt001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt001 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckInt("1234");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt001 End";
+}
+
+/**
+ * @tc.name: CheckInt002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt002 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckInt("str");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt002 End";
+}
+
+/**
+ * @tc.name: CheckInt003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckInt003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckInt003 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckInt("");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckInt003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt003 End";
+}
+
+/**
+ * @tc.name: CheckDouble001
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble001 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckDouble("1.0");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckInt001 End";
+}
+
+/**
+ * @tc.name: CheckDouble002
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble002 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckDouble("str");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckDouble002 End";
+}
+
+/**
+ * @tc.name: CheckDouble003
+ * @tc.desc: Report IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, CheckDouble003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckDouble003 Start";
+    
+    try {
+        OHOS::FileManagement::CloudDisk::CheckDouble("");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckDouble003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckDouble003 End";
 }
 
 } // namespace OHOS::FileManagement::CloudDisk::Test
