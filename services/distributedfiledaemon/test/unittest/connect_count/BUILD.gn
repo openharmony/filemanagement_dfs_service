@@ -63,6 +63,7 @@ ohos_unittest("connect_count_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
+    "safwk:system_ability_fwk",
   ]
 
   defines = [

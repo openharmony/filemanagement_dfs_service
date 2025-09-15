@@ -64,7 +64,6 @@ static const int OPEN_TRUC_VERSION = 20;
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
 const uint32_t API_VERSION_MOD = 1000;
 #endif
-std::shared_ptr<FileCopyManager> FileCopyManager::instance_ = nullptr;
 uint32_t g_apiCompatibleVersion = 0;
 
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
@@ -165,14 +164,10 @@ uint32_t GetApiCompatibleVersion()
 }
 #endif
 
-std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
+FileCopyManager &FileCopyManager::GetInstance()
 {
-    static std::once_flag once;
-    std::call_once(once, []() {
-        FileCopyManager::instance_ = std::make_shared<FileCopyManager>();
-    });
-
-    return instance_;
+    static FileCopyManager instance;
+    return instance;
 }
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)

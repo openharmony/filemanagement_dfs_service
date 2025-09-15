@@ -255,6 +255,7 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
         LOGE("storageMgrProxy_ is null");
+        return;
     }
     ret = storageMgrProxy_->UMountDisShareFile(userId, localNetworkId);
     if (ret != NO_ERROR) {
@@ -540,9 +541,9 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGI("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
         RemoveMountDfsCount(deviceId);
-        ConnectCount::GetInstance()->NotifyFileStatusChange(networkId, Status::DISCONNECT_OK,
-                                                            MOUNT_PATH + networkId.substr(0, VALID_MOUNT_PATH_LEN),
-                                                            StatusType::CONNECTION_STATUS);
+        ConnectCount::GetInstance().NotifyFileStatusChange(networkId, Status::DISCONNECT_OK,
+                                                           MOUNT_PATH + networkId.substr(0, VALID_MOUNT_PATH_LEN),
+                                                           StatusType::CONNECTION_STATUS);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
@@ -619,6 +620,7 @@ int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IF
 int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
 {
     LOGI("DeviceManagerAgent::RemoveRemoteReverseObj called");
+    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
     if (clear) {
         appCallConnect_.clear();
         return FileManagement::E_OK;

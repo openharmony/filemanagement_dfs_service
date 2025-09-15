@@ -44,7 +44,6 @@ public:
     void TearDown();
 
 public:
-    static inline std::shared_ptr<ConnectCount> connectCount_ = nullptr;
     static inline uint32_t testCallingTokenId = 1234;
     static inline std::string testNetworkId = "testNetworkId";
     static inline sptr<IFileDfsListener> testListener = nullptr;
@@ -55,7 +54,6 @@ public:
 void ConnectCountTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "ConnectCountTest SetUpTestCase";
-    connectCount_ = ConnectCount::GetInstance();
     testListener = new MockFileDfsListener();  // Use Mock class
 }
 
@@ -63,7 +61,6 @@ void ConnectCountTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "ConnectCountTest TearDownTestCase";
 
-    connectCount_ = nullptr;
     testListener = nullptr;
 }
 
@@ -75,7 +72,7 @@ void ConnectCountTest::SetUp(void)
 void ConnectCountTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
-    connectCount_->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
 }
 
 /**
@@ -87,9 +84,9 @@ void ConnectCountTest::TearDown(void)
 HWTEST_F(ConnectCountTest, GetInstance_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetInstance_001 start";
-    auto instance1 = ConnectCount::GetInstance();
-    auto instance2 = ConnectCount::GetInstance();
-    EXPECT_EQ(instance1, instance2);  // Verify singleton instance
+    auto &instance1 = ConnectCount::GetInstance();
+    auto &instance2 = ConnectCount::GetInstance();
+    EXPECT_EQ(&instance1, &instance2);  // Verify singleton instance
     GTEST_LOG_(INFO) << "GetInstance_001 end";
 }
 
@@ -102,8 +99,8 @@ HWTEST_F(ConnectCountTest, GetInstance_001, TestSize.Level1)
 HWTEST_F(ConnectCountTest, AddConnect_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AddConnect_001 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    EXPECT_TRUE(connectCount_->CheckCount(testNetworkId));  // Verify connection is added
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    EXPECT_TRUE(ConnectCount::GetInstance().CheckCount(testNetworkId));  // Verify connection is added
     GTEST_LOG_(INFO) << "AddConnect_001 end";
 }
 
@@ -116,9 +113,9 @@ HWTEST_F(ConnectCountTest, AddConnect_001, TestSize.Level1)
 HWTEST_F(ConnectCountTest, AddConnect_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AddConnect_002 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    auto networkIds = connectCount_->GetNetworkIds(testCallingTokenId);
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    auto networkIds = ConnectCount::GetInstance().GetNetworkIds(testCallingTokenId);
     EXPECT_EQ(networkIds.size(), 1);  // Verify only one networkId is added
     GTEST_LOG_(INFO) << "AddConnect_002 end";
 }
@@ -132,10 +129,10 @@ HWTEST_F(ConnectCountTest, AddConnect_002, TestSize.Level1)
 HWTEST_F(ConnectCountTest, RemoveConnect_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RemoveConnect_001 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    auto networkIds = connectCount_->RemoveConnect(testCallingTokenId);
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    auto networkIds = ConnectCount::GetInstance().RemoveConnect(testCallingTokenId);
     EXPECT_EQ(networkIds.size(), 1);  // Verify networkId is returned
-    EXPECT_FALSE(connectCount_->CheckCount(testNetworkId));  // Verify connection is removed
+    EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));  // Verify connection is removed
     GTEST_LOG_(INFO) << "RemoveConnect_001 end";
 }
 
@@ -148,9 +145,9 @@ HWTEST_F(ConnectCountTest, RemoveConnect_001, TestSize.Level1)
 HWTEST_F(ConnectCountTest, RemoveConnect_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RemoveConnect_002 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    connectCount_->RemoveConnect(testNetworkId);
-    EXPECT_FALSE(connectCount_->CheckCount(testNetworkId));  // Verify connection is removed
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().RemoveConnect(testNetworkId);
+    EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));  // Verify connection is removed
     GTEST_LOG_(INFO) << "RemoveConnect_002 end";
 }
 
@@ -163,9 +160,9 @@ HWTEST_F(ConnectCountTest, RemoveConnect_002, TestSize.Level1)
 HWTEST_F(ConnectCountTest, RemoveConnect_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RemoveConnect_003 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    connectCount_->RemoveConnect(testCallingTokenId, testNetworkId);
-    EXPECT_FALSE(connectCount_->CheckCount(testNetworkId));  // Verify connection is removed
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().RemoveConnect(testCallingTokenId, testNetworkId);
+    EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));  // Verify connection is removed
     GTEST_LOG_(INFO) << "RemoveConnect_003 end";
 }
 
@@ -178,9 +175,9 @@ HWTEST_F(ConnectCountTest, RemoveConnect_003, TestSize.Level1)
 HWTEST_F(ConnectCountTest, RemoveAllConnect_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RemoveAllConnect_001 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    connectCount_->RemoveAllConnect();
-    EXPECT_FALSE(connectCount_->CheckCount(testNetworkId));  // Verify all connections are removed
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().RemoveAllConnect();
+    EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));  // Verify all connections are removed
     GTEST_LOG_(INFO) << "RemoveAllConnect_001 end";
 }
 
@@ -199,8 +196,8 @@ HWTEST_F(ConnectCountTest, NotifyRemoteReverseObj_001, TestSize.Level1)
                 OnStatus(testNetworkId, ON_STATUS_OFFLINE, "", 0))
                 .Times(1);  // 仅在当前测试用例中生效
 
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
-    connectCount_->NotifyRemoteReverseObj(testNetworkId, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().NotifyRemoteReverseObj(testNetworkId, ON_STATUS_OFFLINE);
 
     // 清除 EXPECT_CALL 断言
     testing::Mock::VerifyAndClearExpectations(testListener.GetRefPtr());
@@ -217,9 +214,10 @@ HWTEST_F(ConnectCountTest, NotifyRemoteReverseObj_001, TestSize.Level1)
 HWTEST_F(ConnectCountTest, FindCallingTokenIdForListerner_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FindCallingTokenIdForListerner_001 start";
-    connectCount_->AddConnect(testCallingTokenId, testNetworkId, testListener);
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
     uint32_t foundCallingTokenId = 0;
-    int32_t ret = connectCount_->FindCallingTokenIdForListerner(testListener->AsObject(), foundCallingTokenId);
+    int32_t ret =
+        ConnectCount::GetInstance().FindCallingTokenIdForListerner(testListener->AsObject(), foundCallingTokenId);
     EXPECT_EQ(ret, FileManagement::E_OK);  // Verify success
     EXPECT_EQ(foundCallingTokenId, testCallingTokenId);  // Verify correct tokenId is found
     GTEST_LOG_(INFO) << "FindCallingTokenIdForListerner_001 end";
@@ -236,7 +234,7 @@ HWTEST_F(ConnectCountTest, FindCallingTokenIdForListerner_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "FindCallingTokenIdForListerner_002 start";
     sptr<IRemoteObject> invalidListener = nullptr;
     uint32_t foundCallingTokenId = 0;
-    int32_t ret = connectCount_->FindCallingTokenIdForListerner(invalidListener, foundCallingTokenId);
+    int32_t ret = ConnectCount::GetInstance().FindCallingTokenIdForListerner(invalidListener, foundCallingTokenId);
     EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);  // Verify error is returned
     GTEST_LOG_(INFO) << "FindCallingTokenIdForListerner_002 end";
 }

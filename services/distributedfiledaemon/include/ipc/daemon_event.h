@@ -67,13 +67,15 @@ struct PrepareSessionData {
                        const std::string &sessionName,
                        const sptr<IDaemon> daemon,
                        HmdfsInfo &info,
-                       const std::shared_ptr<BlockObject<int32_t>> &prepareSessionBlock)
+                       const std::shared_ptr<BlockObject<int32_t>> &prepareSessionBlock,
+                       const std::string &srcNetworkId)
         : srcUri_(srcUri),
           physicalPath_(physicalPath),
           sessionName_(sessionName),
           daemon_(daemon),
           info_(info),
-          prepareSessionBlock_(prepareSessionBlock)
+          prepareSessionBlock_(prepareSessionBlock),
+          srcNetworkId_(srcNetworkId)
     {
     }
 
@@ -83,6 +85,7 @@ struct PrepareSessionData {
     const sptr<IDaemon> daemon_;
     HmdfsInfo &info_;
     const std::shared_ptr<BlockObject<int32_t>> prepareSessionBlock_;
+    const std::string srcNetworkId_;
 };
 
 } // namespace DistributedFile

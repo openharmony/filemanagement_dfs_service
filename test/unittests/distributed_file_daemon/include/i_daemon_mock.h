@@ -77,7 +77,20 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t RequestSendFileACL(const std::string &srcUri, const std::string &dstPath,
+                                   const std::string &remoteDeviceId, const std::string &sessionName,
+                                   const AccountInfo &callerAccountInfo)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t GetRemoteCopyInfoACL(const std::string &srcUri, bool &isFile, bool &isDir,
+                                     const AccountInfo &callerAccountInfo)
     {
         return FileManagement::E_OK;
     }

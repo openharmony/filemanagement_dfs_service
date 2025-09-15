@@ -73,11 +73,11 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanLocal(const std::string &r
     int32_t ret = GetLocalDfsVersion(packageName, localDfsVersion);
     if (ret != FileManagement::ERR_OK) {
         LOGE("GetLocalDfsVersion failed, ret=%{public}d", ret);
-        return false;
+        return true;
     }
     return IsRemoteDfsVersionLowerThanGiven(remoteNetworkId, localDfsVersion, packageName);
 #else
-    return false;
+    return true;
 #endif
 }
 
@@ -89,17 +89,17 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(const std::string &r
 #ifdef SUPPORT_DEVICE_PROFILE
     if (remoteNetworkId.empty()) {
         LOGE("remoteNetworkId is empty");
-        return false;
+        return true;
     }
     DfsVersion remoteDfsVersion;
     int32_t ret = GetDfsVersionFromNetworkId(remoteNetworkId, remoteDfsVersion, packageName);
     if (ret != FileManagement::ERR_OK) {
         LOGE("GetDfsVersionFromNetworkId failed, ret=%{public}d", ret);
-        return false;
+        return true;
     }
     return CompareDfsVersion(remoteDfsVersion, givenDfsVersion);
 #else
-    return false;
+    return true;
 #endif
 }
 
