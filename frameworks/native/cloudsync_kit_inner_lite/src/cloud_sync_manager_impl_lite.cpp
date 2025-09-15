@@ -48,7 +48,6 @@ void CloudSyncManagerImplLite::SetDeathRecipient(const sptr<IRemoteObject> &remo
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
             LOGE("service dead");
-            ServiceProxy::InvaildInstance();
             isFirstCall_.clear();
         };
         deathRecipient_ = sptr(new SvcDeathRecipientLite(deathCallback));

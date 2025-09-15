@@ -136,7 +136,6 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     return IserviceProxy::proxy_->GetInstance();
 }
 
-void ServiceProxy::InvaildInstance() {}
 } // FileManagement::CloudSync
 } // OHOS
 #endif // MOCK_SERVICE_PROXY_H
