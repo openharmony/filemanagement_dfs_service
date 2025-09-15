@@ -77,17 +77,27 @@ ohos_shared_library("clouddiskservice_sa") {
     debug = false
   }
   include_dirs = [
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "ipc/include",
+    "monitor/include",
+    "sync_folder/include",
   ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "ipc/src/cloud_disk_service.cpp",
     "ipc/src/cloud_disk_service_callback_manager.cpp",
     "ipc/src/cloud_disk_service_callback_proxy.cpp",
     "ipc/src/cloud_disk_sync_folder.cpp",
     "ipc/src/account_status_listener.cpp",
-    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
-    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "monitor/src/disk_utils.cpp",
+    "monitor/src/disk_monitor.cpp",
+    "sync_folder/src/cloud_disk_service_logfile.cpp",
+    "sync_folder/src/cloud_disk_service_metafile.cpp",
+    "sync_folder/src/cloud_disk_service_syncfolder.cpp",
+    "sync_folder/src/uuid_helper.cpp",
+    "sync_folder/src/convertor.cpp",
   ]
 
   output_values = get_target_outputs(":cloud_disk_service")
@@ -110,6 +120,10 @@ ohos_shared_library("clouddiskservice_sa") {
     "${utils_path}:libdistributedfileutils",
   ]
 
+  if (build_seccomp) {
+    deps += [ "${services_path}/clouddiskservice/seccomp_policy:disk_monitor_seccomp_filter" ]
+  }
+
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
@@ -120,8 +134,11 @@ ohos_shared_library("clouddiskservice_sa") {
     "ipc:ipc_single",
     "samgr:samgr_proxy",
     "safwk:system_ability_fwk",
-    "user_file_service:cloud_disk_manager_kit"
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"

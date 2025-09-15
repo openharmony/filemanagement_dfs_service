@@ -17,6 +17,7 @@
 
 #include <string>
 #include <memory>
+#include <securec.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
