@@ -217,19 +217,21 @@ void DaemonExecute::ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer 
         return;
     }
     std::string srcUri = prepareSessionData->srcUri_;
-    std::string physicalPath  = prepareSessionData->physicalPath_;
-    std::string sessionName  = prepareSessionData->sessionName_;
-    sptr<IDaemon> daemon  = prepareSessionData->daemon_;
+    std::string physicalPath = prepareSessionData->physicalPath_;
+    std::string sessionName = prepareSessionData->sessionName_;
+    sptr<IDaemon> daemon = prepareSessionData->daemon_;
     HmdfsInfo &info = prepareSessionData->info_;
+    std::string srcNetworkId = prepareSessionData->srcNetworkId_;
 
-    prepareSessionBlock->SetValue(PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info));
+    prepareSessionBlock->SetValue(PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, srcNetworkId));
 }
 
 int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
                                            std::string &physicalPath,
                                            const std::string &sessionName,
                                            const sptr<IDaemon> &daemon,
-                                           HmdfsInfo &info)
+                                           HmdfsInfo &info,
+                                           const std::string &srcNetworkId)
 {
     LOGI("PrepareSessionInner begin.");
     auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
@@ -243,7 +245,7 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
         LOGI("authority is media or docs");
         physicalPath = "??" + info.dstPhysicalPath;
     }
-    auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
+    auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName, srcNetworkId);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
         SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);

@@ -319,11 +319,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_CheckIfGetSession_0100, TestSize.Level
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
     int32_t fd = -1; // -1: fd
-    bool ret = pool->CheckIfGetSession(fd);
+    bool isServer = false;
+    bool ret = pool->CheckIfGetSession(fd, isServer);
     EXPECT_EQ(ret, false);
 
     pool->usrSpaceSessionPool_.push_back(session);
-    ret = pool->CheckIfGetSession(fd);
+    ret = pool->CheckIfGetSession(fd, isServer);
     EXPECT_EQ(ret, true);
     GTEST_LOG_(INFO) << "SessionPoolTest_CheckIfGetSession_0100 end";
 }

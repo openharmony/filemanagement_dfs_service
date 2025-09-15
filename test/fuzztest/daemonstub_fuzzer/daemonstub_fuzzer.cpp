@@ -99,7 +99,24 @@ public:
         return 0;
     }
 
+    int32_t RequestSendFileACL(const std::string &srcUri,
+                               const std::string &dstPath,
+                               const std::string &remoteDeviceId,
+                               const std::string &sessionName,
+                               const AccountInfo &callerAccountInfo) override
+    {
+        return 0;
+    }
+
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override
+    {
+        return 0;
+    }
+
+    int32_t GetRemoteCopyInfoACL(const std::string &srcUri,
+                                 bool &isFile,
+                                 bool &isDir,
+                                 const AccountInfo &callerAccountInfo) override
     {
         return 0;
     }

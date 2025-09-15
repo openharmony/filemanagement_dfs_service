@@ -24,7 +24,7 @@ namespace DistributedFile {
 
 class RemoteFileCopyManager {
 public:
-    static std::shared_ptr<RemoteFileCopyManager> GetInstance();
+    static RemoteFileCopyManager &GetInstance();
     int32_t RemoteCopy(const std::string &srcUri, const std::string &destUri, const sptr<IFileTransListener> &listener,
         const int32_t userId, const std::string &copyPath);
     int32_t RemoteCancel(const std::string &srcUri, const std::string &destUri);
@@ -38,7 +38,6 @@ private:
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
     bool IsFile(const std::string &path);
 private:
-    static std::shared_ptr<RemoteFileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
 };
@@ -46,5 +45,5 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
- 
+
 #endif // DISTRIBUTED_REMOTE_FILE_COPY_MANAGER_H

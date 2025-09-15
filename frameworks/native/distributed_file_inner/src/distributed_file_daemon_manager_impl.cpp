@@ -255,17 +255,17 @@ int32_t DistributedFileDaemonManagerImpl::IsDirectory(const std::string &uri, bo
 int32_t DistributedFileDaemonManagerImpl::Copy(const std::string &srcUri,
     const std::string &destUri, ProcessCallback processCallback)
 {
-    return FileCopyManager::GetInstance()->Copy(srcUri, destUri, processCallback);
+    return FileCopyManager::GetInstance().Copy(srcUri, destUri, processCallback);
 }
 
 int32_t DistributedFileDaemonManagerImpl::Cancel(const std::string &srcUri, const std::string &destUri)
 {
-    return FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    return FileCopyManager::GetInstance().Cancel(srcUri, destUri);
 }
 
 int32_t DistributedFileDaemonManagerImpl::Cancel()
 {
-    return FileCopyManager::GetInstance()->Cancel();
+    return FileCopyManager::GetInstance().Cancel();
 }
 } // namespace DistributedFile
 } // namespace Storage

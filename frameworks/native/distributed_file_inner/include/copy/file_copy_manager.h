@@ -67,8 +67,8 @@ struct FileInfos {
 
 class FileCopyManager final {
 public:
+    static FileCopyManager &GetInstance();
     using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
-    static std::shared_ptr<FileCopyManager> GetInstance();
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
     int32_t Cancel(const std::string &srcUri, const std::string &destUri, const bool isKeepFiles = false);
     int32_t Cancel(const bool isKeepFiles = false);
@@ -76,7 +76,6 @@ public:
     int32_t ExecLocal(std::shared_ptr<FileInfos> infos);
 
 private:
-    static std::shared_ptr<FileCopyManager> instance_;
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
 

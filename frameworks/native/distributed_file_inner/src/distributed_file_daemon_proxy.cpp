@@ -387,6 +387,63 @@ int32_t DistributedFileDaemonProxy::RequestSendFile(const std::string &srcUri,
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::RequestSendFileACL(const std::string &srcUri,
+                                                       const std::string &dstPath,
+                                                       const std::string &remoteDeviceId,
+                                                       const std::string &sessionName,
+                                                       const AccountInfo &callerAccountInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(dstPath)) {
+        LOGE("Failed to send dstPath");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(remoteDeviceId)) {
+        LOGE("Failed to send remoteDeviceId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(sessionName)) {
+        LOGE("Failed to send sessionName");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteInt32(callerAccountInfo.userId_)) {
+        LOGE("Failed to send userId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(callerAccountInfo.accountId_)) {
+        LOGE("Failed to send accountId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(callerAccountInfo.networkId_)) {
+        LOGE("Failed to send networkId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL), data,
+        reply, option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+
 int32_t DistributedFileDaemonProxy::GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
 {
     MessageParcel data;
@@ -408,6 +465,61 @@ int32_t DistributedFileDaemonProxy::GetRemoteCopyInfo(const std::string &srcUri,
     auto ret = remote->SendRequest(
         static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO), data, reply,
         option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadBool(isFile)) {
+        LOGE("read isFile failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.ReadBool(isDir)) {
+        LOGE("read isDir failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("read res failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    return ret;
+}
+
+int32_t DistributedFileDaemonProxy::GetRemoteCopyInfoACL(const std::string &srcUri,
+                                                         bool &isFile,
+                                                         bool &isDir,
+                                                         const AccountInfo &callerAccountInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteInt32(callerAccountInfo.userId_)) {
+        LOGE("Failed to send userId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(callerAccountInfo.accountId_)) {
+        LOGE("Failed to send accountId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(callerAccountInfo.networkId_)) {
+        LOGE("Failed to send networkId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL), data,
+        reply, option);
     if (ret != 0) {
         LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;

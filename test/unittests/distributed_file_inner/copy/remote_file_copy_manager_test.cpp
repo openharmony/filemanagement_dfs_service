@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "copy/remote_file_copy_manager.h"
 
@@ -39,7 +39,8 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 }
 } // namespace OHOS::AppFileService
 
-namespace OHOS::Storage::DistributedFile::Test {
+namespace OHOS::Test {
+using namespace OHOS::Storage::DistributedFile;
 using namespace OHOS::FileManagement;
 using namespace testing;
 using namespace testing::ext;
@@ -83,10 +84,10 @@ void RemoteFileCopyManagerTest::TearDown(void)
 }
 
 /**
-* @tc.name: RemoteFileCopyManager_Copy_0001
-* @tc.desc: The execution of the Copy failed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
+ * @tc.name: RemoteFileCopyManager_Copy_0001
+ * @tc.desc: The execution of the Copy failed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
  */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Level0)
 {
@@ -98,20 +99,20 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Le
 
     sptr<IFileTransListener> listenerCallback;
 
-    auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy("", localUri, listenerCallback, userId, copyPath);
+    auto ret = RemoteFileCopyManager::GetInstance().RemoteCopy("", localUri, listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(localUri, "", listenerCallback, userId, copyPath);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCopy(localUri, "", listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy("", "", listenerCallback, userId, copyPath);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCopy("", "", listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, EINVAL);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0001 create dir err";
     }
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(remoteUri, "", listenerCallback, userId, copyPath);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCopy(remoteUri, "", listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, EINVAL);
     if (!ForceRemoveDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0001 remove dir err";
@@ -120,10 +121,10 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0001, TestSize.Le
 }
 
 /**
-* @tc.name: RemoteFileCopyManager_Copy_0002
-* @tc.desc: The execution of the Copy succeed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
+ * @tc.name: RemoteFileCopyManager_Copy_0002
+ * @tc.desc: The execution of the Copy succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
  */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Level0)
 {
@@ -136,20 +137,20 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
 
     sptr<IFileTransListener> listenerCallback;
     int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
-    ASSERT_TRUE(fd != -1) <<"Failed to open file in RemoteFileCopyManager_Copy_0002!" << errno;
+    ASSERT_TRUE(fd != -1) << "Failed to open file in RemoteFileCopyManager_Copy_0002!" << errno;
     close(fd);
 
-    auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCopy(srcUri, destUri, listenerCallback, userId, copyPath);
+    auto ret = RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, destUri, listenerCallback, userId, copyPath);
     EXPECT_EQ(ret, ENOENT);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0002 End";
 }
 
 /**
-* @tc.name: RemoteFileCopyManager_RemoteCancel_0001
-* @tc.desc: The execution of the cancel succeed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
+ * @tc.name: RemoteFileCopyManager_RemoteCancel_0001
+ * @tc.desc: The execution of the cancel succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
  */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoteCancel_0001, TestSize.Level0)
 {
@@ -158,37 +159,37 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoteCancel_0001, Tes
     infos1->srcUri = "srcUri1";
     infos1->destUri = "destUri1";
     infos1->transListener = nullptr;
-    infos1->localListener = std::make_shared<FileCopyLocalListener>("",
-        true, [](uint64_t processSize, uint64_t totalSize) -> void {});
+    infos1->localListener =
+        std::make_shared<FileCopyLocalListener>("", true, [](uint64_t processSize, uint64_t totalSize) -> void {});
     std::string srcUri = "srcUri1";
     std::string destUri = "destUri3";
 
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
-    auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, destUri);
+    RemoteFileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos1);
+    auto ret = RemoteFileCopyManager::GetInstance().RemoteCancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
     srcUri = "srcUri2";
     destUri = "destUri1";
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, destUri);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
 
     srcUri = "srcUri2";
     destUri = "destUri2";
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, destUri);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
 
     srcUri = "srcUri1";
     destUri = "destUri1";
-    ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoteCancel(srcUri, destUri);
+    ret = RemoteFileCopyManager::GetInstance().RemoteCancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_RemoteCancel_0001 End";
 }
 
 /**
-* @tc.name: RemoteFileCopyManager_RemoveFileInfos_0001
-* @tc.desc: RemoveFileInfos
-* @tc.type: FUNC
-* @tc.require: I7TDJK
-*/
+ * @tc.name: RemoteFileCopyManager_RemoveFileInfos_0001
+ * @tc.desc: RemoveFileInfos
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoveFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_RemoveFileInfos_0001 Start";
@@ -201,31 +202,31 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_RemoveFileInfos_0001, 
     infos2->destUri = "destUri2";
     infos3->srcUri = "srcUri1";
     infos3->destUri = "destUri2";
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.clear();
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->AddFileInfos(infos1);
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->AddFileInfos(infos2);
-    auto len = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.size();
+    RemoteFileCopyManager::GetInstance().FileInfosVec_.clear();
+    RemoteFileCopyManager::GetInstance().AddFileInfos(infos1);
+    RemoteFileCopyManager::GetInstance().AddFileInfos(infos2);
+    auto len = RemoteFileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 2); // 2: vector size
 
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoveFileInfos(infos2);
-    len = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.size();
+    RemoteFileCopyManager::GetInstance().RemoveFileInfos(infos2);
+    len = RemoteFileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 1); // 1: vector size
 
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoveFileInfos(infos3);
-    len = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.size();
+    RemoteFileCopyManager::GetInstance().RemoveFileInfos(infos3);
+    len = RemoteFileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 1); // 1: vector size
 
-    Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->RemoveFileInfos(infos1);
-    len = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->FileInfosVec_.size();
+    RemoteFileCopyManager::GetInstance().RemoveFileInfos(infos1);
+    len = RemoteFileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 0); // 0: vector size
 }
 
 /**
-* @tc.name: RemoteFileCopyManager_CreateFileInfos_0001
-* @tc.desc: CreateFileInfos
-* @tc.type: FUNC
-* @tc.require: I7TDJK
-*/
+ * @tc.name: RemoteFileCopyManager_CreateFileInfos_0001
+ * @tc.desc: CreateFileInfos
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 Start";
@@ -233,23 +234,23 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
     infos->srcUri = "";
     int32_t userId = 100;
     string copyPath = "/data/storage/el2/distributedfiles/123412345/test.txt";
-    int32_t ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->CreateFileInfos("", "", infos, userId, copyPath);
+    int32_t ret = RemoteFileCopyManager::GetInstance().CreateFileInfos("", "", infos, userId, copyPath);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 End";
 }
 
 /**
-* @tc.name: FileCopyManager_Cancel_0001
-* @tc.desc: The execution of the cancel succeed.
-* @tc.type: FUNC
-* @tc.require: I7TDJK
+ * @tc.name: FileCopyManager_Cancel_0001
+ * @tc.desc: The execution of the cancel succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
  */
 HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_IsMediaUri_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_IsMediaUri_0001 Start";
     string srcUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
-    int32_t ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance()->IsMediaUri(srcUri);
+    int32_t ret = RemoteFileCopyManager::GetInstance().IsMediaUri(srcUri);
     EXPECT_EQ(ret, false);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_IsMediaUri_0001 End";
 }
-}
+} // namespace OHOS::Test
