@@ -66,6 +66,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   include_dirs = [
     "include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "${utils_path}/cloud_disk/include",
     "${utils_path}/dentry/include",
     "${utils_path}/log/include",
@@ -84,6 +85,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfileutils_lite",
   ]
