@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ void SessionPool::ReleaseSession(const int32_t fd)
     lock_guard lock(sessionPoolLock_);
     LOGI("ReleaseSession start, fd=%{public}d", fd);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetHandle() == fd) {
+        if ((*iter) != nullptr && (*iter)->GetHandle() == fd) {
             (*iter)->Release();
             iter = usrSpaceSessionPool_.erase(iter);
             break;
@@ -53,7 +53,7 @@ bool SessionPool::CheckIfGetSession(const int32_t fd, bool &isServer)
     lock_guard lock(sessionPoolLock_);
     std::shared_ptr<BaseSession> session = nullptr;
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetHandle() == fd) {
+        if ((*iter) != nullptr && (*iter)->GetHandle() == fd) {
             session = *iter;
             break;
         }
@@ -79,7 +79,7 @@ bool SessionPool::FindSocketId(int32_t socketId)
 {
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetSessionId() == socketId) {
+        if ((*iter) != nullptr && (*iter)->GetSessionId() == socketId) {
             return true;
         }
     }
@@ -92,7 +92,12 @@ void SessionPool::ReleaseSession(const std::string &cid, bool isReleaseAll)
     std::vector<std::shared_ptr<BaseSession>> sessions;
     LOGI("ReleaseSession, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
-        if ((*iter)->GetCid() != cid || ((*iter)->IsFromServer() && !isReleaseAll)) {
+        if ((*iter) == nullptr) {
+            LOGE("Value is nullptr");
+            ++iter;
+            continue;
+        }
+        if (((*iter)->GetCid() != cid || ((*iter)->IsFromServer() && !isReleaseAll))) {
             ++iter;
             continue;
         }
@@ -116,7 +121,7 @@ bool SessionPool::FindCid(const std::string &cid)
 {
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetCid() == cid) {
+        if ((*iter) != nullptr && (*iter)->GetCid() == cid) {
             return true;
         }
     }
@@ -131,7 +136,9 @@ void SessionPool::ReleaseAllSession()
     }
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
-        talker_->SinkOfflineCmdToKernel((*iter)->GetCid());
+        if (*iter != nullptr) {
+            talker_->SinkOfflineCmdToKernel((*iter)->GetCid());
+        }
         /* device offline, session release by softbus */
         iter = usrSpaceSessionPool_.erase(iter);
     }

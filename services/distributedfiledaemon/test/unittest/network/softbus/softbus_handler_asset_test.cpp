@@ -25,7 +25,6 @@
 #include "mock_other_method.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "socket_mock.h"
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -646,6 +645,33 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_RemoveFile_0100, TestS
     EXPECT_NE(ret, 0);
     softBusHandlerAsset.RemoveFile(fileName, true);
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_RemoveFile_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GetSocketIdFromAssetObj_0100
+ * @tc.desc: Verify the GetSocketIdFromAssetObj function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GetSocketIdFromAssetObj_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GetSocketIdFromAssetObj_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    std::string peerNetworkId = "test";
+
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
+    assetObj->dstNetworkId_ = peerNetworkId;
+    softBusHandlerAsset.assetObjMap_.emplace(0, nullptr);
+    auto ret = softBusHandlerAsset.GetSocketIdFromAssetObj(peerNetworkId);
+    EXPECT_EQ(ret.size(), 0);
+
+    softBusHandlerAsset.assetObjMap_.emplace(1, assetObj);
+    ret = softBusHandlerAsset.GetSocketIdFromAssetObj(peerNetworkId);
+    EXPECT_EQ(ret.size(), 1);
+    ASSERT_TRUE(ret.size() == 1) << "GetSocketIdFromAssetObj size failed!";
+    EXPECT_EQ(ret[0], 1);
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GetSocketIdFromAssetObj_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

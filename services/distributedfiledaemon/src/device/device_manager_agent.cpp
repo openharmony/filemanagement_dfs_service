@@ -145,7 +145,11 @@ void DeviceManagerAgent::QuitGroup(shared_ptr<MountPoint> smp)
         throw runtime_error(ss.str());
     }
 
-    it->second->StopActor();
+    if (it->second != nullptr) {
+        it->second->StopActor();
+    } else {
+        LOGE("QuitGroup NetworkAgentTemplate is nullptr");
+    }
     mpToNetworks_.erase(smp->GetID());
     LOGI("quit group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
@@ -222,15 +226,13 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
-        LOGI("OnDeviceOffline end");
+        LOGE("OnDeviceOffline end, cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
-        LOGI("OnDeviceOffline end");
+        LOGE("OnDeviceOffline end, cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
         return;
     }
 
@@ -239,9 +241,14 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         UMountDfsDocs(networkId, networkId.substr(0, VALID_MOUNT_PATH_LEN), true);
     }
 
-    auto cmd2 = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
-        &NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs, info);
-    it->second->Recv(move(cmd2));
+    auto cmd2 = make_unique<DfsuCmd<NetworkAgentTemplate, const std::string>>(
+        &NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs, info.cid_);
+    if (it->second != nullptr) {
+        it->second->Recv(move(cmd2));
+    } else {
+        LOGE("OnDeviceOffline NetworkAgentTemplate is nullptr");
+        return;
+    }
 
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
@@ -251,19 +258,17 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     auto localNetworkId = GetLocalDeviceInfo().GetCid();
     if (userId == INVALID_USER_ID) {
         LOGE("DeviceManagerAgent::GetCurrentUserId Fail");
-    }
-    GetStorageManager();
-    if (storageMgrProxy_ == nullptr) {
-        LOGE("storageMgrProxy_ is null");
         return;
     }
-    ret = storageMgrProxy_->UMountDisShareFile(userId, localNetworkId);
+    auto storageMgrProxy = GetStorageManager();
+    if (storageMgrProxy == nullptr) {
+        LOGE("storageMgrProxy is null");
+        return;
+    }
+    ret = storageMgrProxy->UMountDisShareFile(userId, localNetworkId);
     if (ret != NO_ERROR) {
         LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
-    } else {
-        LOGI("UMountDisShareFile success");
     }
-
     LOGI("OnDeviceOffline end");
 }
 
@@ -277,7 +282,11 @@ void DeviceManagerAgent::ClearCount(const DistributedHardware::DmDeviceInfo &dev
         LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
         return;
     }
-    it->second->DisconnectDeviceByP2P(info);
+    if (it->second != nullptr) {
+        it->second->DisconnectDeviceByP2P(info.cid_);
+    } else {
+        LOGE("ClearCount NetworkAgentTemplate is nullptr");
+    }
 }
 
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -306,7 +315,12 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
         &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-    it->second->Recv(move(cmd));
+    if (it->second != nullptr) {
+        it->second->Recv(move(cmd));
+    } else {
+        LOGE("OnDeviceP2POnline NetworkAgentTemplate is nullptr");
+        return P2P_FAILED;
+    }
     LOGI("OnDeviceP2POnline end networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     return P2P_SUCCESS;
 }
@@ -327,9 +341,14 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network type is null!",  Utils::GetAnonyString(info.cid_).c_str());
         return P2P_FAILED;
     }
-    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
-        &NetworkAgentTemplate::DisconnectDeviceByP2P, info);
-    it->second->Recv(move(cmd));
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const std::string>>(
+        &NetworkAgentTemplate::DisconnectDeviceByP2P, info.cid_);
+    if (it->second != nullptr) {
+        it->second->Recv(move(cmd));
+    } else {
+        LOGE("OnDeviceP2POffline it->second is nullptr");
+        return P2P_FAILED;
+    }
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceP2POffline end");
@@ -391,28 +410,22 @@ int32_t DeviceManagerAgent::GetCurrentUserId()
     return userIds[0];
 }
 
-void DeviceManagerAgent::GetStorageManager()
+sptr<StorageManager::IStorageManager> DeviceManagerAgent::GetStorageManager()
 {
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         LOGE("GetSystemAbilityManager filed");
-        return;
+        return nullptr;
     }
 
     auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
     if (storageObj == nullptr) {
         LOGE("filed to get STORAGE_MANAGER_MANAGER_ID proxy");
-        return;
-    }
-
-    storageMgrProxy_ = iface_cast<StorageManager::IStorageManager>(storageObj);
-    if (storageMgrProxy_ == nullptr) {
-        LOGE("filed to get STORAGE_MANAGER_MANAGER_ID proxy!");
-        return;
+        return nullptr;
     }
 
     LOGI("GetStorageManager end.");
-    return;
+    return iface_cast<StorageManager::IStorageManager>(storageObj);
 }
 
 void DeviceManagerAgent::AddNetworkId(uint32_t tokenId, const std::string &networkId)
@@ -480,7 +493,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
 {
     if (networkId.empty() || deviceId.empty()) {
         LOGE("NetworkId or DeviceId is empty");
-        return INVALID_USER_ID;
+        return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = NO_ERROR;
     if (MountDfsCountOnly(deviceId)) {
@@ -491,15 +504,15 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
     int32_t userId = GetCurrentUserId();
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
-        return INVALID_USER_ID;
+        return FileManagement::ERR_BAD_VALUE;
     }
     currentUserId_ = userId;
-    GetStorageManager();
-    if (storageMgrProxy_ == nullptr) {
-        LOGE("storageMgrProxy_ is null");
-        return INVALID_USER_ID;
+    auto storageMgrProxy = GetStorageManager();
+    if (storageMgrProxy == nullptr) {
+        LOGE("storageMgrProxy is null");
+        return FileManagement::ERR_BAD_VALUE;
     }
-    ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
+    ret = storageMgrProxy->MountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("MountDfsDocs fail, ret = %{public}d", ret);
     } else {
@@ -517,24 +530,24 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         Utils::GetAnonyString(networkId).c_str(), Utils::GetAnonyString(deviceId).c_str());
     if (networkId.empty() || deviceId.empty()) {
         LOGE("NetworkId or DeviceId is empty");
-        return INVALID_USER_ID;
+        return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = NO_ERROR;
     if (UMountDfsCountOnly(deviceId, needClear)) {
-        LOGE("do not need umount");
+        LOGW("do not need umount");
         return ret;
     }
     int32_t userId = currentUserId_;
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
-        return INVALID_USER_ID;
+        return FileManagement::ERR_BAD_VALUE;
     }
-    GetStorageManager();
-    if (storageMgrProxy_ == nullptr) {
-        LOGE("storageMgrProxy_ is null");
-        return INVALID_USER_ID;
+    auto storageMgrProxy = GetStorageManager();
+    if (storageMgrProxy == nullptr) {
+        LOGE("storageMgrProxy is null");
+        return FileManagement::ERR_BAD_VALUE;
     }
-    ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
+    ret = storageMgrProxy->UMountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
     } else {

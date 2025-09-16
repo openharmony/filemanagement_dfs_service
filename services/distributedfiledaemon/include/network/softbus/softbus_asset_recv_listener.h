@@ -49,9 +49,9 @@ private:
     static int32_t GetCurrentUserId();
     static bool MoveAsset(const std::vector<std::string> &fileList, bool isSingleFile);
     static bool RemoveAsset(const std::string &file);
-    static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+    static constexpr char SERVICE_NAME[] = "ohos.storage.distributedfile.daemon";
     static inline std::string path_;
-    static inline std::mutex mtx_;
+    static std::mutex mtx_;
 };
 } // namespace DistributedFile
 } // namespace Storage

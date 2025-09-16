@@ -43,7 +43,7 @@ int32_t AssetRecvCallbackStub::OnRemoteRequest(uint32_t code,
     }
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
-        LOGE("Cannot response request %{public}d: unknown tranction", code);
+        LOGE("Cannot response request %{public}d: unknown transaction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return (this->*(interfaceIndex->second))(data, reply);

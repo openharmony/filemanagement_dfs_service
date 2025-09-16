@@ -44,7 +44,7 @@ private:
                                  const std::string &sessionName);
     void ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer &event);
     int32_t PrepareSessionInner(const std::string &srcUri,
-                                std::string &physicalPath,
+                                const std::string &physicalPath,
                                 const std::string &sessionName,
                                 const sptr<IDaemon> &daemon,
                                 HmdfsInfo &info,

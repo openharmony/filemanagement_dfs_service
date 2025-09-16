@@ -117,7 +117,7 @@ SoftBusHandler &SoftBusHandler::GetInstance()
 }
 
 int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, const std::string &sessionName,
-    DFS_CHANNEL_ROLE role, const std::string physicalPath)
+    DFS_CHANNEL_ROLE role, const std::string &physicalPath)
 {
     if (packageName.empty() || sessionName.empty() || physicalPath.empty()) {
         LOGI("The parameter is empty");
@@ -248,8 +248,12 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
         LOGE("remote device cannot read this files");
         return FileManagement::ERR_BAD_VALUE;
     }
+    if (fileList.size() > MAX_SIZE) {
+        LOGE("The length of src file lists is more than 500");
+        return FileManagement::ERR_BAD_VALUE;
+    }
     const char *src[MAX_SIZE] = {};
-    for (size_t i = 0; i < fileList.size() && fileList.size() < MAX_SIZE; i++) {
+    for (size_t i = 0; i < fileList.size(); i++) {
         src[i] = fileList.at(i).c_str();
     }
 
@@ -259,7 +263,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
         return FileManagement::ERR_BAD_VALUE;
     }
     const char *dst[MAX_SIZE] = {};
-    for (size_t i = 0; i < fileNameList.size() && fileList.size() < MAX_SIZE; i++) {
+    for (size_t i = 0; i < fileNameList.size(); i++) {
         dst[i] = fileNameList.at(i).c_str();
     }
 

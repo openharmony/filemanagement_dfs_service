@@ -125,23 +125,23 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
 {
     LOGI("Begin OpenP2PConnection");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[HandleOpenP2PConnection] DATASYNC permission denied");
+        LOGE("DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source device id failed, ret is %{public}d", ret);
+        LOGE("strcpy for source device id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     ret = strcpy_s(deviceInfo.deviceName, DM_MAX_DEVICE_NAME_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source device name failed, ret is %{public}d", ret);
+        LOGE("strcpy for source device name failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source network id failed, ret is %{public}d", ret);
+        LOGE("strcpy for source network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     deviceInfo.deviceTypeId = data.ReadUint16();
@@ -158,23 +158,23 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
 {
     LOGI("Begin CloseP2PConnection");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
-        LOGE("[HandleCloseP2PConnection] DATASYNC permission denied");
+        LOGE("DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source device id failed, ret is %{public}d", ret);
+        LOGE("strcpy for source device id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     ret = strcpy_s(deviceInfo.deviceName, DM_MAX_DEVICE_NAME_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source device name failed, ret is %{public}d", ret);
+        LOGE("strcpy for source device name failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {
-        LOGE("strcpy for source network id failed, ret is %{public}d", ret);
+        LOGE("strcpy for source network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return -1;
     }
     deviceInfo.deviceTypeId = data.ReadUint16();

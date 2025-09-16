@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ public:
     virtual ~ISoftBusHandlerMock() = default;
 
     virtual int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName,
-                                        DFS_CHANNEL_ROLE role, const std::string physicalPath) = 0;
+                                        DFS_CHANNEL_ROLE role, const std::string &physicalPath) = 0;
     virtual int32_t OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
                                 const std::string &peerDevId, int32_t &socketId) = 0;
     virtual int32_t CopySendFile(int32_t socketId,
@@ -44,7 +44,7 @@ public:
 class SoftBusHandlerMock : public ISoftBusHandlerMock {
 public:
     MOCK_METHOD4(CreateSessionServer, int32_t(const std::string &packageName, const std::string &sessionName,
-                                              DFS_CHANNEL_ROLE role, const std::string physicalPath));
+                                              DFS_CHANNEL_ROLE role, const std::string &physicalPath));
     MOCK_METHOD4(OpenSession, int32_t(const std::string &mySessionName, const std::string &peerSessionName,
                                       const std::string &peerDevId, int32_t &socketId));
     MOCK_METHOD4(CopySendFile, int32_t(int32_t socketId,

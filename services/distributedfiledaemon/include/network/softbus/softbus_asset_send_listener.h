@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ public:
     static void DisConnectByAllConnect(const std::string &peerNetworkId);
 
 private:
-    static inline std::recursive_mutex mtx_;
+    static std::recursive_mutex mtx_;
     static std::map<std::string, std::pair<std::string, bool>> taskIsSingleFileMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
 };

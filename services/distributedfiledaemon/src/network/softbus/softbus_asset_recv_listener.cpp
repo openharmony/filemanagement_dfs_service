@@ -33,6 +33,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+
+std::mutex SoftbusAssetRecvListener::mtx_;
 const std::string HMDFS_PATH = "/mnt/hmdfs/{userId}/account/device_view/local/data/";
 const std::string USRT_ID_FLAG = "{userId}";
 const std::string TEMP_DIR = "ASSET_TEMP/";
@@ -384,7 +386,7 @@ void SoftbusAssetRecvListener::DisConnectByAllConnect(const std::string &peerNet
     for (auto socketId : socketIds) {
         auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
         if (assetObj == nullptr) {
-            LOGE("OnSendAssetError  get assetObj is nullptr");
+            LOGE("OnSendAssetError get assetObj is nullptr, socket: %{public}d", socketId);
             continue;
         }
         AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(

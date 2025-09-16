@@ -165,7 +165,6 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware:
         LOGE("%{public}s", ss.str().c_str());
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    LOGI("Open p2p connection Success");
     return reply.ReadInt32();
 }
 
@@ -217,7 +216,6 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
         LOGE("%{public}s", ss.str().c_str());
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    LOGI("Close p2p connection Success");
     return reply.ReadInt32();
 }
 
@@ -254,8 +252,13 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &netwo
         LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx success.");
-    return reply.ReadInt32();
+    ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        LOGE("DistributedFileDaemonProxy::OpenP2PConnectionEx failed ret = %{public}d", ret);
+        return ret;
+    }
+    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx Success.");
+    return ret;
 }
 
 int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &networkId)
@@ -284,8 +287,13 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &netw
         LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    LOGI("DistributedFileDaemonProxy::Close p2p connection Success");
-    return reply.ReadInt32();
+    ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        LOGE("DistributedFileDaemonProxy::CloseP2PConnectionEx failed ret = %{public}d", ret);
+        return ret;
+    }
+    LOGI("DistributedFileDaemonProxy::CloseP2PConnectionEx Success.");
+    return ret;
 }
 
 int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,

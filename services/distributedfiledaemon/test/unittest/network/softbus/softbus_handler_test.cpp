@@ -25,7 +25,9 @@
 
 #include "dfs_error.h"
 #include "mock_other_method.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_file_receive_listener.h"
+#include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "socket_mock.h"
 #include "utils_directory.h"
@@ -41,6 +43,33 @@ const string TEST_NETWORKID_TWO = "45656596896323232";
 const string TEST_NETWORKID_THREE = "45656596896323233";
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
+std::string g_getRealPath = "";
+std::vector<std::string> g_fileList = {};
+bool g_compareTrue = false;
+std::vector<std::string> g_fileNameList = {};
+}
+namespace OHOS::Storage::DistributedFile {
+    std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
+    {
+        return g_getRealPath;
+    }
+    bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, const std::vector<std::string> &paths)
+    {
+        return g_compareTrue;
+    }
+
+    std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<std::string> &fileList,
+        const std::string &path, const std::string &dstPath)
+    {
+        return g_fileNameList;
+    }
+}
+
+namespace OHOS::Storage::DistributedFile::Utils {
+std::vector<std::string> GetFilePath(const std::string &name)
+{
+    return g_fileList;
+}
 }
 
 namespace OHOS {
@@ -651,6 +680,38 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0200
         EXPECT_TRUE(true);
     }
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSessionWithSessionName_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_CopySendFile_0100
+ * @tc.desc: Verify the CloseSession.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CopySendFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CopySendFile_0100 start";
+    auto ret = SoftBusHandler::GetInstance().CopySendFile(0, "", "", "");
+    EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);
+
+    g_getRealPath = "test";
+    ret = SoftBusHandler::GetInstance().CopySendFile(0, "", "", "");
+    EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);
+
+    g_fileList.emplace_back("realpath");
+    ret = SoftBusHandler::GetInstance().CopySendFile(0, "", "", "");
+    EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);
+
+    g_compareTrue = true;
+    std::vector<std::string> testVec(501, "test");
+    g_fileList = testVec;
+    ret = SoftBusHandler::GetInstance().CopySendFile(0, "", "", "");
+    EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);
+
+    g_fileList.resize(1); // 1: file count
+    ret = SoftBusHandler::GetInstance().CopySendFile(0, "", "", "");
+    EXPECT_EQ(ret, FileManagement::ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CopySendFile_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
