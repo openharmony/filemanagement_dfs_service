@@ -127,6 +127,8 @@ CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env
 
 void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
 {
+    LOGD("OnComplete state: %{public}d, error: %{public}d", static_cast<int32_t>(msg->state_),
+        static_cast<int32_t>(msg->error_));
     auto cloudSyncCallback = msg->cloudSyncCallback_.lock();
     if (cloudSyncCallback == nullptr || cloudSyncCallback->cbOnRef_ == nullptr) {
         LOGE("cloudSyncCallback->cbOnRef_ is nullptr");
@@ -210,6 +212,7 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(SyncType type, SyncPromptState st
 
 void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
 {
+    LOGD("OnOptimizeProcess state: %{public}d, progress: %{public}d", static_cast<int32_t>(state), progress);
     napi_env env = env_;
     auto task = [this, env, state, progress] () {
         if (!cbOnRef_) {
@@ -1197,6 +1200,7 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
 int32_t ChangeListenerNapi::SendEvent(UvChangeMsg *msg)
 {
     auto task = [msg]() {
+        LOGD("Start SendEvent");
         // js thread
         napi_env env = msg->env_;
         napi_handle_scope scope = nullptr;
