@@ -27,7 +27,6 @@ public:
     ~CloudDaemonServiceProxy() override {}
 
     static sptr<ICloudDaemon> GetInstance();
-    static void InvaildInstance();
 
     int32_t StartFuse(int32_t userId, int32_t devFd, const string &path) override;
 

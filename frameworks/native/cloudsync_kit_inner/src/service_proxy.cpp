@@ -30,17 +30,19 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
 {
     LOGD("getinstance");
     unique_lock<mutex> lock(instanceMutex_);
-    if (serviceProxy_ != nullptr) {
-        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
-            return serviceProxy_;
-        }
-    }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         LOGE("Samgr is nullptr");
         return nullptr;
     }
+    auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+    if (object != nullptr) {
+        LOGI("SA check successfully");
+        serviceProxy_ = iface_cast<ICloudSyncService>(object);
+        return serviceProxy_;
+    }
+
     sptr<ServiceProxyLoadCallback> cloudSyncLoadCallback = new ServiceProxyLoadCallback();
     if (cloudSyncLoadCallback == nullptr) {
         LOGE("cloudSyncLoadCallback is nullptr");
@@ -60,14 +62,8 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
         LOGE("Load CloudSynd SA timeout");
         return nullptr;
     }
+    LOGI("Load successfully");
     return serviceProxy_;
-}
-
-void ServiceProxy::InvaildInstance()
-{
-    LOGI("invalid instance");
-    unique_lock<mutex> lock(instanceMutex_);
-    serviceProxy_ = nullptr;
 }
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
@@ -77,11 +73,8 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{private}s", systemAbilityId,
          (remoteObject == nullptr ? "false" : "true"));
     unique_lock<mutex> lock(proxyMutex_);
-    if (serviceProxy_ != nullptr) {
-        LOGE("CloudSync SA proxy has been loaded");
-    } else {
-        serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
-    }
+    serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+
     isLoadSuccess_.store(true);
     proxyConVar_.notify_one();
 }
