@@ -305,7 +305,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest007, TestSize.Level1
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
 
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RunTaskForBundleTest007 FAILED";
@@ -330,7 +330,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest008, TestSize.Level1
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
 
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RunTaskForBundleTest008 FAILED";
@@ -435,6 +435,153 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest012, TestSize.Level1
         GTEST_LOG_(INFO) << "RunTaskForBundleTest012 FAILED";
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest012 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest013
+ * @tc.desc: Verify the RunTaskForBundle function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest013 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce([](const int32_t userId,
+            const std::string &bundleName, std::map<std::string, std::string> &param) {
+            param["validDays"] = "30";
+            param["dataAgingPolicy"] = "1";
+            return E_OK;
+        });
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest013 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest013 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest014
+ * @tc.desc: Verify the RunTaskForBundle function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest014 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce(Return(E_CLOUD_SDK));
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_EQ(ret, E_CLOUD_SDK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest014 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest014 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest015
+ * @tc.desc: Verify the RunTaskForBundle function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest015 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce([](const int32_t userId,
+            const std::string &bundleName, std::map<std::string, std::string> &param) {
+            param["dataAgingPolicy"] = "0";
+            return E_OK;
+        });
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest015 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest015 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest016
+ * @tc.desc: Verify the RunTaskForBundle function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest016 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce([](const int32_t userId,
+            const std::string &bundleName, std::map<std::string, std::string> &param) {
+            param["validDays"] = "30";
+            return E_OK;
+        });
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest016 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest016 end";
+}
+
+/**
+ * @tc.name: RunTaskForBundleTest017
+ * @tc.desc: Verify the RunTaskForBundle function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest017 start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
+        shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);
+        CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce([](const int32_t userId,
+            const std::string &bundleName, std::map<std::string, std::string> &param) {
+            param["validDays"] = "invaid int32_t value";
+            return E_OK;
+        });
+        int32_t ret = task->RunTaskForBundle(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RunTaskForBundleTest017 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RunTaskForBundleTest017 end";
 }
 
 /*

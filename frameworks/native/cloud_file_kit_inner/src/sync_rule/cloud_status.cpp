@@ -29,24 +29,17 @@ int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const in
         return E_NULLPTR;
     }
 
-    int32_t ret = instance->GetCloudUserInfo(userId, userInfo_);
+    int32_t ret = instance->GetCloudUserInfo(bundleName, userId, userInfo_);
     if (ret != E_OK) {
         LOGE("GetCloudUserInfo failed");
         return ret;
     }
 
     bool switchStatus = false;
-    SwitchStatus curSwitch = SettingsDataManager::GetSwitchStatusByCache();
-    if (bundleName == HDC_BUNDLE_NAME) {
-        switchStatus = curSwitch == SwitchStatus::AI_FAMILY;
-    } else if (bundleName == GALLERY_BUNDLE_NAME) {
-        switchStatus = curSwitch == SwitchStatus::CLOUD_SPACE;
-    } else {
-        ret = instance->GetAppSwitchStatus(bundleName, userId, switchStatus);
-        if (ret != E_OK) {
-            LOGE("GetAppSwitchStatus failed");
-            return ret;
-        }
+    ret = instance->GetAppSwitchStatus(bundleName, userId, switchStatus);
+    if (ret != E_OK) {
+        LOGE("GetAppSwitchStatus failed");
+        return ret;
     }
     /* insert key-value */
     appSwitches_.insert(std::make_pair(bundleName, switchStatus));

@@ -348,7 +348,7 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundl
     }
 
     if (AccountStatus::IsNeedCleanCache()) {
-        auto ret = instance->CleanCloudUserInfo(userId);
+        auto ret = instance->CleanCloudUserInfo(userId, bundleName);
         if (ret != 0) {
             return nullptr;
         }
