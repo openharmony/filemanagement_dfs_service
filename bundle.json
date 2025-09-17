@@ -20,6 +20,7 @@
       ],
       "features": [
         "dfs_service_feature_enable_cloud_adapter",
+        "dfs_service_feature_enable_cloud_disk",
         "dfs_service_feature_enable_dist_file_daemon"
       ],
       "adapted_system_type": [
@@ -72,7 +73,8 @@
           "os_account",
           "power_manager",
           "libfuse",
-          "zlib"
+          "zlib",
+          "user_file_service"
         ],
         "third_party": []
       },

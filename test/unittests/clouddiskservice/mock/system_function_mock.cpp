@@ -45,3 +45,10 @@ int dirfd(DIR *d)
 {
     return Assistant::ins->dirfd(d);
 }
+
+extern "C" {
+int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
+{
+    return Assistant::ins->setxattr(path, name, value, size, flags);
+}
+}

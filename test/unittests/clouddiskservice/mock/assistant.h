@@ -30,6 +30,7 @@ public:
         const char *pathname) = 0;
     virtual DIR *opendir(const char *path) = 0;
     virtual int dirfd(DIR *d) = 0;
+    virtual int setxattr(const char *path, const char *name, const void *value, size_t size, int flags) = 0;
 };
 
 class AssistantMock : public Assistant {
@@ -39,6 +40,7 @@ public:
     MOCK_METHOD5(fanotify_mark, int(int, unsigned, unsigned long long, int, const char *));
     MOCK_METHOD1(opendir, DIR *(const char *));
     MOCK_METHOD1(dirfd, int(DIR *));
+    MOCK_METHOD5(setxattr, int(const char *, const char *, const void *, size_t, int));
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 
