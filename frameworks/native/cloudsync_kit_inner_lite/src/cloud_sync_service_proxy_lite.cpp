@@ -150,7 +150,7 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
 int32_t CloudSyncServiceProxy::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
     const std::string &bundleName)
 {
-return E_OK;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
@@ -197,6 +197,12 @@ int32_t CloudSyncServiceProxy::ResetCursor(bool flag, const std::string &bundleN
 int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId,
                                                const std::string &bundleName,
                                                bool status)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::RemovedClean(const std::string &bundleName,
+                                            int32_t userId)
 {
     return E_OK;
 }

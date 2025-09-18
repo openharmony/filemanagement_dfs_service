@@ -84,6 +84,7 @@ public:
     MOCK_METHOD2(ReplaceFileWithHistoryVersion, int32_t(const std::string &uri, const std::string &versionUri));
     MOCK_METHOD2(IsFileConflict, int32_t(const std::string &uri, bool &isConflict));
     MOCK_METHOD1(ClearFileConflict, int32_t(const std::string &uri));
+    MOCK_METHOD2(RemovedClean, int32_t(const std::string &bundleName, int32_t userId));
 };
 }
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK

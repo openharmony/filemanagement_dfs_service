@@ -43,6 +43,21 @@ int32_t CloudSyncManagerImplLite::TriggerSync(const std::string &bundleName, con
     return CloudSyncServiceProxy->TriggerSyncInner(bundleName, userId);
 }
 
+int32_t CloudSyncManagerImplLite::RemovedClean(const std::string &bundleName, int32_t userId)
+{
+    if (bundleName.empty() || userId < MIN_USER_ID) {
+        LOGE("RemovedClean parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->RemovedClean(bundleName, userId);
+}
+
 void CloudSyncManagerImplLite::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     if (!isFirstCall_.test_and_set()) {
