@@ -34,7 +34,7 @@ int32_t CloudDiskServiceCallbackStub::OnRemoteRequest(uint32_t code,
                                                       MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
-        return E_INTERNAL_ERROR;
+        return E_TRY_AGAIN;
     }
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {

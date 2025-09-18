@@ -204,6 +204,7 @@ ohos_shared_library("libdistributedfiledentry") {
 
 config("utils_lite_public_config") {
   include_dirs = [
+    "clouddiskservice/include",
     "dentry/include",
     "inner_api",
     "ioctl/include",

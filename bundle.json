@@ -20,6 +20,7 @@
       ],
       "features": [
         "dfs_service_feature_enable_cloud_adapter",
+        "dfs_service_feature_enable_cloud_disk",
         "dfs_service_feature_enable_dist_file_daemon"
       ],
       "adapted_system_type": [
@@ -72,7 +73,8 @@
           "os_account",
           "power_manager",
           "libfuse",
-          "zlib"
+          "zlib",
+          "user_file_service"
         ],
         "third_party": []
       },
@@ -82,6 +84,7 @@
           "fwk_group": [],
           "service_group": [
             "//foundation/filemanagement/dfs_service:services_target",
+            "//foundation/filemanagement/dfs_service:clouddiskservice_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloud_file_kit_inner_target",
@@ -90,6 +93,7 @@
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/ani:ani_package",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/src:ohclouddiskmanager",
             "//foundation/filemanagement/dfs_service/adapter/cloud_adapter_example:cloud_adapter_example_target"
           ]
         },
@@ -106,6 +110,20 @@
                 "cloud_sync_common.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_disk_common.h",
+                "cloud_disk_service_callback.h",
+                "cloud_disk_service_manager.h",
+                "cloud_disk_service_task_manager.h",
+                "i_cloud_disk_service_callback.h",
+                "svc_death_recipient.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/clouddiskservice_kit_inner"
             }
           },
           {
@@ -140,6 +158,15 @@
             "header": {
               "header_files": [],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/src:ohclouddiskmanager",
+            "header": {
+              "header_files": [
+                "oh_cloud_disk_manager.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/include"
             }
           },
           {

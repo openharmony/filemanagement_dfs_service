@@ -25,10 +25,10 @@ namespace OHOS::FileManagement::CloudDiskService {
 
 class CloudDiskServiceSyncFolder {
 public:
-    static int32_t RegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex, const std::string &path);
-    static int32_t UnRegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex);
-    static void RegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex);
-    static void UnRegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex);
+    static int32_t RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path);
+    static int32_t UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex);
+    static void RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
+    static void UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
     static int32_t GetSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t start,
                                         const uint64_t count, struct ChangesResult &changesResult);
     static int32_t SetSyncFolderChanges(const struct EventInfo &eventInfos);
