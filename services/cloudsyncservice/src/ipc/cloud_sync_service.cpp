@@ -1078,7 +1078,10 @@ int32_t CloudSyncService::BatchCleanFile(const std::vector<CleanFileInfoObj> &fi
 
     std::vector<CleanFileInfo> cleanFilesInfo;
     for (const auto &obj : fileInfo) {
-        CleanFileInfo tmpFileInfo{obj.cloudId, obj.size, obj.modifiedTime, obj.path, obj.fileName, obj.attachment};
+        CleanFileInfo tmpFileInfo{
+            obj.size, obj.modifiedTime, obj.fileSourceType, obj.cloudId, obj.path, obj.fileName,
+            obj.storagePath, obj.attachment
+        };
         cleanFilesInfo.emplace_back(tmpFileInfo);
     }
 

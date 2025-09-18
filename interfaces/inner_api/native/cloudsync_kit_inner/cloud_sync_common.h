@@ -176,20 +176,24 @@ struct AssetInfoObj : public Parcelable {
 };
 
 struct CleanFileInfo {
+    int64_t size{0};
+    int64_t modifiedTime{0};
+    int32_t fileSourceType{0};
     std::string cloudId;
-    int64_t size;
-    int64_t modifiedTime;
     std::string path;
     std::string fileName;
+    std::string storagePath;
     std::vector<std::string> attachment;
 };
 
 struct  CleanFileInfoObj : public Parcelable {
+    int64_t size{0};
+    int64_t modifiedTime{0};
+    int32_t fileSourceType{0};
     std::string cloudId;
-    int64_t size;
-    int64_t modifiedTime;
     std::string path;
     std::string fileName;
+    std::string storagePath;
     std::vector<std::string> attachment;
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
@@ -197,11 +201,13 @@ struct  CleanFileInfoObj : public Parcelable {
 
     CleanFileInfoObj() = default;
     CleanFileInfoObj(const CleanFileInfo &FileInfo)
-        : cloudId(FileInfo.cloudId),
-          size(FileInfo.size),
+        : size(FileInfo.size),
           modifiedTime(FileInfo.modifiedTime),
+          fileSourceType(FileInfo.fileSourceType),
+          cloudId(FileInfo.cloudId),
           path(FileInfo.path),
           fileName(FileInfo.fileName),
+          storagePath(FileInfo.storagePath),
           attachment(FileInfo.attachment)
     {
     }
