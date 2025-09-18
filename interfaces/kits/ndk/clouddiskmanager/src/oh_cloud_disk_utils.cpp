@@ -21,6 +21,6 @@ CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode)
     if (iter != innerToNErrTable.end()) {
         return iter->second;
     } else {
-        return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
 }

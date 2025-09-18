@@ -123,7 +123,7 @@ static uint32_t GetCurrentLine(int fd)
             LOGE("load page failed");
             return 0;
         }
-        if (logGroup->nsl[0].timestamp != 0) {
+        if (logGroup->nsl[0].timestamp == 0) {
             UnlockCurrentPage(fd, i);
             break;
         } else if (logGroup->nsl[0].line != startLine + offset) {
@@ -576,7 +576,7 @@ int32_t LogFileMgr::PraseRequest(const int32_t userId, const uint32_t syncFolder
     return ret;
 }
 
-int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex, const std::string &path)
+int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path)
 {
     auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
     logFile->SetSyncFolderPath(path);
@@ -597,7 +597,7 @@ int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint64_t sync
     return E_OK;
 }
 
-int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex)
+int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LogFileKey key(userId, syncFolderIndex);
@@ -614,7 +614,7 @@ int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint64_t sy
     return E_OK;
 }
 
-void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -628,7 +628,7 @@ void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint64_t 
     logFile->StartCallback();
 }
 
-void LogFileMgr::UnRegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void LogFileMgr::UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
     logFile->StopCallback();

@@ -13,16 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
-#define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
-
-#include <cstddef>
-#include <cstdint>
-
-#include "oh_cloud_disk_error_code.h"
-
 /**
- * @addtogroup CloudDiskManager
+ * @addtogroup CloudDisk
  * @{
  *
  * @brief Provides APIs and error code for managing cloud disks.
@@ -35,11 +27,21 @@
  * @file oh_cloud_disk_manager.h
  *
  * @brief Provides APIs for managing cloud disks.
+ *
  * @library libohclouddiskmanager.so
+ * @kit CoreFileKit
  * @syscap SystemCapability.FileManagement.CloudDiskManager
  * @since 21
  * @version 1.0
  */
+
+#ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
+#define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
+
+#include <cstddef>
+#include <cstdint>
+
+#include "oh_cloud_disk_error_code.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,9 +49,11 @@ extern "C" {
 
 /**
  * @brief Enumerates the synchronization states of a cloud disk.
- * @since 21
  *
  * This enumeration defines the possible states during cloud disk synchronization.
+ *
+ * @since 21
+ *
  */
 typedef enum CloudDisk_SyncState {
     /**
@@ -180,10 +184,11 @@ typedef struct CloudDisk_FileSyncState {
 
 /**
  * @brief Defines the data structure for a single file change event in the sync folder.
- * @since 21
  *
  * This structure contains detailed information about a file change, including its unique ID,
  * parent ID, relative path, change type, file size, and timestamps.
+ *
+ * @since 21
  */
 typedef struct CloudDisk_ChangeData {
     /**
@@ -224,10 +229,11 @@ typedef struct CloudDisk_ChangeData {
 
 /**
  * @brief Represents the result of querying file changes in a sync folder.
- * @since 21
  *
  * This structure contains the incremental change data for files in a sync folder,
  * including the next update sequence number, end-of-log flag, and an array of change data items.
+ *
+ * @since 21
  */
 typedef struct CloudDisk_ChangesResult {
     /**
@@ -242,18 +248,19 @@ typedef struct CloudDisk_ChangesResult {
     /**
      * The number of change data items in the array.
      */
-    size_t length{0};
+    size_t bufferLength{0};
     /**
      * The array of file change data items.
      */
-    CloudDisk_ChangeData dataDatas[];
+    CloudDisk_ChangeData changeDatas[];
 } CloudDisk_ChangesResult;
 
 /**
  * @brief Represents a failed file in a synchronization operation.
- * @since 21
  *
  * This structure contains the file path information and the specific error reason for the failure.
+ *
+ * @since 21
  */
 typedef struct CloudDisk_FailedList {
     /**
@@ -268,10 +275,11 @@ typedef struct CloudDisk_FailedList {
 
 /**
  * @brief Represents the result of a file synchronization operation.
- * @since 21
  *
  * This structure contains the absolute path of the file, the synchronization result,
  * and either the sync state or the error reason depending on the operation outcome.
+ *
+ * @since 21
  */
 typedef struct CloudDisk_ResultList {
     /**
@@ -282,7 +290,7 @@ typedef struct CloudDisk_ResultList {
      * Indicates whether the synchronization operation was successful.
      * If true, syncState is valid; if false, errorReason is valid.
      */
-    bool isSuccess;
+    bool isSuccess{false};
     /**
      * The synchronization state of the file. Valid only if isSuccess is true.
      */
@@ -351,20 +359,21 @@ typedef struct CloudDisk_SyncFolder {
  *
  * @param syncFolderPath Indicates the sync folder path information.
  * @param callback Indicates the callback function to be registered.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the callback function is registered successfully;
+ * @return Returns {@link CLOUD_DISK_OK} if the callback function is registered successfully;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode
     OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
-                                          void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                           const CloudDisk_ChangeData changeDatas[], size_t length));
+                                           void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                            const CloudDisk_ChangeData changeDatas[],
+                                                            size_t bufferLength));
 
 /**
  * @brief Unregisters a callback function for sync folder changes.
  *
  * @param syncFolderPath Indicates the sync folder path information.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the callback function is unregistered successfully;
+ * @return Returns {@link CLOUD_DISK_OK} if the callback function is unregistered successfully;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -377,7 +386,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_Syn
  * @param startUsn Indicates the start update sequence number.
  * @param count Indicates the number of files.
  * @param changesResult Indicates the result of querying file changes. For details, see {@link CloudDisk_ChangesResult}.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the callback function is unregistered successfully;
+ * @return Returns {@link CLOUD_DISK_OK} if the callback function is unregistered successfully;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -392,17 +401,17 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolder
  * @param syncFolderPath Indicates the sync folder path information.
  * @param fileSyncStates The array of {@link CloudDisk_FileSyncState} specifying the file paths and their target sync
  * <br> states.
- * @param length The number of files to set.
+ * @param bufferLength The number of files to set.
  * @param failedLists Output parameter. Returns a pointer to an array of {@link CloudDisk_FailedList} for files that
  * <br> failed to set.
  * @param failedCount Output parameter. Returns the number of failed files in {@link failedLists}.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> otherwise, returns an error code defined in {@link oh_cloud_disk_error_code.h}.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_FileSyncState fileSyncStates[],
-                                                   size_t length,
+                                                   size_t bufferLength,
                                                    CloudDisk_FailedList **failedLists,
                                                    size_t *failedCount);
 
@@ -411,17 +420,17 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
  *
  * @param syncFolderPath Indicates the sync folder path information.
  * @param paths The array of file paths to query.
- * @param length The number of file paths in the array.
+ * @param bufferLength The number of file paths in the array.
  * @param resultLists Output parameter. Returns a pointer to an array of {@link CloudDisk_ResultList} containing the
  * <br> query results.
  * @param resultCount Output parameter. Returns the number of results in {@link resultLists}.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the query is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
  * <br> otherwise, returns an error code defined in {@link oh_cloud_disk_error_code.h}.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo paths[],
-                                                   size_t length,
+                                                   size_t bufferLength,
                                                    CloudDisk_ResultList **resultLists,
                                                    size_t *resultCount);
 
@@ -429,7 +438,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
  * @brief Registers a sync folder.
  *
  * @param syncFolder Indicates the sync folder.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -439,7 +448,7 @@ CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *
  * @brief Unregisters a sync folder.
  *
  * @param syncFolderPath Indicates the sync folder path.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -449,7 +458,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolder
  * @brief Activates a sync folder.
  *
  * @param syncFolderPath Indicates the sync folder path.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -459,7 +468,7 @@ CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath
  * @brief Deactivates a sync folder.
  *
  * @param syncFolderPath Indicates the sync folder path.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
@@ -470,12 +479,11 @@ CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPa
  *
  * @param syncFolders Output parameter. Returns the array of {@link CloudDisk_SyncFolder} to store the sync folders.
  * @param count Output parameter. Returns the number of sync folders.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
-CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders,
-                                                size_t *count);
+CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders, size_t *count);
 
 /**
  * @brief Updates the display name of a sync folder.
@@ -483,14 +491,14 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
  * @param syncFolderPath Indicates the sync folder path.
  * @param customAlias Indicates the user-defined alias.
  * @param customAliasLength Indicates the length of the customAlias.
- * @return Returns {@link CLOUD_DISK_ERR_OK} if the operation is successful;
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
  * @since 21
  */
-CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                   const char *customAlias,
-                                                   size_t customAliasLength);
+CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(
+    const CloudDisk_SyncFolderPath syncFolderPath, const char *customAlias, size_t customAliasLength);
 #ifdef __cplusplus
-}
+};
 #endif
+/** @} */
 #endif // FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
