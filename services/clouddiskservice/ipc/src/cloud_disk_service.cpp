@@ -26,7 +26,9 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_task_manager.h"
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
+#endif
 #include "cloud_disk_sync_folder.h"
 #include "iremote_object.h"
 #include "system_ability_definition.h"
@@ -66,6 +68,7 @@ void CloudDiskService::PublishSA()
 
 void CloudDiskService::OnStart()
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin to start service");
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         LOGI("CloudDiskService has already started");
@@ -104,6 +107,7 @@ void CloudDiskService::OnStart()
     state_ = ServiceRunningState::STATE_RUNNING;
 
     LOGI("Start service successfully");
+#endif
 }
 
 void CloudDiskService::OnStop()
@@ -541,11 +545,15 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         LOGE("Get path failed");
         return E_INVALID_ARG;
     }
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().UnregisterForSa(pathRemove);
     if (ret != E_OK) {
         LOGE("UnregisterForSa failed, ret:%{public}d", ret);
         return ret;
     }
+#else
+    int32_t ret = E_OK;
+#endif
 
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(path, std::to_string(userId), pathRemove)) {
         LOGE("Get path failed");
