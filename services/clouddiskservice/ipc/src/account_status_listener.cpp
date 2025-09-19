@@ -17,9 +17,11 @@
 
 #include <fcntl.h>
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_comm.h"
-#include "cloud_disk_sync_folder.h"
 #include "cloud_disk_sync_folder_manager.h"
+#endif
+#include "cloud_disk_sync_folder.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 
@@ -36,6 +38,7 @@ AccountStatusSubscriber::AccountStatusSubscriber(const EventFwk::CommonEventSubs
 
 void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto action = eventData.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STARTED) {
         LOGI("OnStartUser!");
@@ -62,6 +65,7 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
             DiskMonitor::GetInstance().StartMonitor(eventData.GetCode());
         }
     }
+#endif
 }
 
 AccountStatusListener::~AccountStatusListener()
