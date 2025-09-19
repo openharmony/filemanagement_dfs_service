@@ -20,6 +20,10 @@ namespace OHOS::FileManagement::CloudDiskService {
 
 enum CloudDiskServiceErrCode : uint32_t {
     E_OK = 0,
+    E_GET_TOKEN_INFO_ERROR,
+    E_OSACCOUNT,
+    E_PATH_NOT_EXIST,
+
     E_INVALID_ARG = 34400001,
     E_SYNC_FOLDER_PATH_UNAUTHORIZED,
     E_IPC_FAILED,

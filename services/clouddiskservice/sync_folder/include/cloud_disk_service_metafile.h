@@ -41,7 +41,7 @@ constexpr uint32_t BYTE_PER_SLOT = 16;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 4;
 constexpr uint32_t RECORD_ID_LEN = 16;
 constexpr uint32_t DENTRYFILE_NAME_LEN = 16;
-const std::string ROOT_PARENTDENTRYFILE = ".";
+const std::string ROOT_PARENTDENTRYFILE = std::string(DENTRYFILE_NAME_LEN, '.');
 
 #pragma pack(push, 1)
 struct CloudDiskServiceDentry {
@@ -74,14 +74,8 @@ struct CloudDiskServiceDcacheHeader {
 #pragma pack(pop)
 
 struct MetaBase {
-    MetaBase(const std::string &nameOrRecordId, const bool isName)
-    {
-        if (isName) {
-            name = nameOrRecordId;
-        } else {
-            recordId = nameOrRecordId;
-        }
-    }
+    MetaBase(const std::string &name) : name(name) {}
+    MetaBase(const std::string &recordId, const uint32_t hash) : hash(hash), recordId(recordId) {}
     MetaBase(const std::string &name, const std::string &recordId) : name(name), recordId(recordId) {}
     MetaBase() = default;
 
@@ -101,16 +95,17 @@ public:
     using CloudDiskServiceMetaFileCallBack = std::function<void(MetaBase &)>;
     explicit CloudDiskServiceMetaFile(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode);
 
-    int32_t DoCreate(const MetaBase &base);
-    int32_t DoRemove(const MetaBase &base, std::string &recordId);
-    int32_t DoFlush(const MetaBase &base, std::string &recordId);
-    int32_t DoUpdate(const MetaBase &base, std::string &recordId);
-    int32_t DoRenameOld(const MetaBase &base, std::string &recordId);
-    int32_t DoRenameNew(const MetaBase &base, std::string &recordId);
+    int32_t DoCreate(const MetaBase &base, unsigned long &bidx, uint32_t &bitPos);
+    int32_t DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
+    int32_t DoFlush(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
+    int32_t DoUpdate(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
+    int32_t DoRenameOld(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
+    int32_t DoRenameNew(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
     int32_t DoRename(MetaBase &metaBase, const std::string &newName,
         std::shared_ptr<CloudDiskServiceMetaFile> newMetaFile);
     int32_t DoLookupByName(MetaBase &base);
     int32_t DoLookupByRecordId(MetaBase &base, uint8_t revalidate);
+    int32_t DoLookupByOffset(MetaBase &base, const unsigned long bidx, const uint32_t bitPos);
 
     int32_t DecodeDentryHeader();
     int32_t GenericDentryHeader();

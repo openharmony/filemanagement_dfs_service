@@ -207,7 +207,7 @@ void CloudDiskServiceLogFile::SetSyncFolderPath(const std::string &path)
 }
 
 int32_t CloudDiskServiceLogFile::GenerateLogBlock(const struct EventInfo &eventInfo, const uint64_t parentInode,
-                                                  const std::string &childRecordId, const std::string &parentRecordId,
+                                                  const struct LogGenerateCtx &ctx, const std::string &parentRecordId,
                                                   uint64_t &line)
 {
     struct LogBlock logBlock;
@@ -216,12 +216,9 @@ int32_t CloudDiskServiceLogFile::GenerateLogBlock(const struct EventInfo &eventI
     logBlock.parentInode = parentInode;
     logBlock.hash = CloudDisk::CloudFileUtils::DentryHash(eventInfo.name);
     logBlock.operationType = static_cast<uint8_t>(eventInfo.operateType);
-    auto ret = memcpy_s(logBlock.recordId, RECORD_ID_LEN, childRecordId.c_str(), RECORD_ID_LEN);
-    if (ret != 0) {
-        LOGE("memcpy_s recordId failed, errno = %{public}d", errno);
-        return -1;
-    }
-    ret = memcpy_s(logBlock.parentRecordId, RECORD_ID_LEN, parentRecordId.c_str(), RECORD_ID_LEN);
+    logBlock.bidx = ctx.bidx;
+    logBlock.bitPos = ctx.bitPos;
+    auto ret = memcpy_s(logBlock.parentRecordId, RECORD_ID_LEN, parentRecordId.c_str(), parentRecordId.length());
     if (ret != 0) {
         LOGE("memcpy_s parentRecordId failed, errno = %{public}d", errno);
         return -1;
@@ -333,18 +330,17 @@ int32_t CloudDiskServiceLogFile::ProduceLog(const struct EventInfo &eventInfo)
     auto parentMetaFile = MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId_, syncFolderIndex_,
                                                                                  parentStat.st_ino);
 
-    std::string childRecordId;
-    ret = ProductLogForOperate(parentMetaFile, eventInfo.path, eventInfo.name, childRecordId,
-                               eventInfo.operateType);
+    struct LogGenerateCtx ctx;
+    ret = ProductLogForOperate(parentMetaFile, eventInfo.path, eventInfo.name, ctx, eventInfo.operateType);
     if (ret != 0) {
         LOGE("create log failed");
         return ret;
     }
 
     uint64_t line = 0;
-    GenerateLogBlock(eventInfo, parentStat.st_ino, childRecordId, parentMetaFile->selfRecordId_, line);
+    GenerateLogBlock(eventInfo, parentStat.st_ino, ctx, parentMetaFile->selfRecordId_, line);
     if (needCallback_) {
-        GenerateChangeData(eventInfo, line, childRecordId, parentMetaFile->selfRecordId_);
+        GenerateChangeData(eventInfo, line, ctx.recordId, parentMetaFile->selfRecordId_);
     }
 
     if (eventInfo.operateType == OperationType::CREATE) {
@@ -377,23 +373,19 @@ int32_t CloudDiskServiceLogFile::PraseLog(const uint64_t line, ChangeData &data,
     ret = MetaFileMgr::GetInstance().GetRelativePath(parentMetaFile, relativePath);
     if (ret != 0) {
         LOGE("get relative path failed");
+    }
+
+    MetaBase mBase;
+    ret = parentMetaFile->DoLookupByOffset(mBase, logBlock.bidx, logBlock.bitPos);
+    if (ret != 0) {
+        LOGE("lookup by offset failed");
         return ret;
     }
 
-    uint8_t revalidate = VALIDATE;
-    if (logBlock.operationType == static_cast<uint8_t>(OperationType::DELETE) ||
-        logBlock.operationType == static_cast<uint8_t>(OperationType::MOVE_FROM)) {
-            revalidate = INVALIDATE;
-        }
-    std::string recordId = std::string(reinterpret_cast<const char *>(logBlock.recordId), RECORD_ID_LEN);
-    std::string parentRecordId = std::string(reinterpret_cast<const char *>(logBlock.parentRecordId), RECORD_ID_LEN);
-    MetaBase mBase(recordId, false);
-    auto metaFile = parentMetaFile->DoLookupByRecordId(mBase, revalidate);
-
     data.updateSequenceNumber = logBlock.line;
-    data.fileId = recordId;
-    data.parentFileId = parentRecordId;
-    data.relativePath = relativePath + "/" + mBase.name;
+    data.fileId = mBase.recordId;
+    data.parentFileId = std::string(reinterpret_cast<const char *>(logBlock.parentRecordId), RECORD_ID_LEN);
+    data.relativePath = relativePath + mBase.name;
     data.operationType = static_cast<OperationType>(logBlock.operationType);
     data.size = mBase.size;
     data.mtime = mBase.mtime;
@@ -403,19 +395,19 @@ int32_t CloudDiskServiceLogFile::PraseLog(const uint64_t line, ChangeData &data,
 
 int32_t CloudDiskServiceLogFile::ProductLogForOperate(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
                                                       const std::string &path, const std::string &name,
-                                                      std::string &childRecordId, OperationType operationType)
+                                                      struct LogGenerateCtx &ctx, OperationType operationType)
 {
     switch (operationType) {
         case OperationType::CREATE:
-            return ProduceCreateLog(parentMetaFile, path, name, childRecordId);
+            return ProduceCreateLog(parentMetaFile, path, name, ctx);
         case OperationType::DELETE:
-            return ProduceUnlinkLog(parentMetaFile, name, childRecordId);
+            return ProduceUnlinkLog(parentMetaFile, name, ctx);
         case OperationType::MOVE_FROM:
-            return ProduceRenameOldLog(parentMetaFile, name, childRecordId);
+            return ProduceRenameOldLog(parentMetaFile, name, ctx);
         case OperationType::MOVE_TO:
-            return ProduceRenameNewLog(parentMetaFile, path, name, childRecordId);
+            return ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         case OperationType::CLOSE_WRITE:
-            return ProduceCloseAndWriteLog(parentMetaFile, path, name, childRecordId);
+            return ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
         case OperationType::SYNC_FOLDER_INVALID:
         case OperationType::OPERATION_MAX:
             return EINVAL;
@@ -424,11 +416,11 @@ int32_t CloudDiskServiceLogFile::ProductLogForOperate(const std::shared_ptr<Clou
 
 int32_t CloudDiskServiceLogFile::ProduceCreateLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
                                                   const std::string &path, const std::string &name,
-                                                  std::string &childRecordId)
+                                                  struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceCreateLog");
-    childRecordId = UuidHelper::GenerateUuidOnly();
-    MetaBase mBase(name, childRecordId);
+    ctx.recordId = UuidHelper::GenerateUuidOnly();
+    MetaBase mBase(name, ctx.recordId);
 
     struct stat childStat;
     if (stat((path + "/" + name).c_str(), &childStat) != 0) {
@@ -439,7 +431,7 @@ int32_t CloudDiskServiceLogFile::ProduceCreateLog(const std::shared_ptr<CloudDis
     mBase.atime = childStat.st_atime;
     mBase.mtime = childStat.st_mtime;
     mBase.size = childStat.st_size;
-    auto ret = parentMetaFile->DoCreate(mBase);
+    auto ret = parentMetaFile->DoCreate(mBase, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("create failed");
         return -1;
@@ -450,18 +442,18 @@ int32_t CloudDiskServiceLogFile::ProduceCreateLog(const std::shared_ptr<CloudDis
     }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId_, syncFolderIndex_, childStat.st_ino);
     metaFile->parentDentryFile_ = parentMetaFile->selfInode_;
-    metaFile->selfRecordId_ = childRecordId;
+    metaFile->selfRecordId_ = ctx.recordId;
     metaFile->selfHash_ = CloudDisk::CloudFileUtils::DentryHash(name);
     metaFile->GenericDentryHeader();
     return E_OK;
 }
 
 int32_t CloudDiskServiceLogFile::ProduceUnlinkLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
-                                                  const std::string &name, std::string &childRecordId)
+                                                  const std::string &name, struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceUnlinkLog");
-    MetaBase mBase(name, true);
-    auto ret = parentMetaFile->DoRemove(mBase, childRecordId);
+    MetaBase mBase(name);
+    auto ret = parentMetaFile->DoRemove(mBase, ctx.recordId, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("remove failed");
         return -1;
@@ -470,25 +462,25 @@ int32_t CloudDiskServiceLogFile::ProduceUnlinkLog(const std::shared_ptr<CloudDis
 }
 
 int32_t CloudDiskServiceLogFile::ProduceRenameOldLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
-                                                     const std::string &name, std::string &childRecordId)
+                                                     const std::string &name, struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceRenameOldLog");
-    MetaBase mBase(name, true);
-    auto ret = parentMetaFile->DoRenameOld(mBase, childRecordId);
+    MetaBase mBase(name);
+    auto ret = parentMetaFile->DoRenameOld(mBase, ctx.recordId, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("renameold failed");
         return -1;
     }
-    renameRecordId_ = childRecordId;
+    renameRecordId_ = ctx.recordId;
     return E_OK;
 }
 
 int32_t CloudDiskServiceLogFile::ProduceRenameNewLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
                                                      const std::string &path, const std::string &name,
-                                                     std::string &childRecordId)
+                                                     struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceRenameNewLog");
-    MetaBase mBase(name, true);
+    MetaBase mBase(name);
     struct stat childStat;
     if (stat((path + "/" + name).c_str(), &childStat) != 0) {
         LOGE("stat child failed for %{public}d", errno);
@@ -498,19 +490,19 @@ int32_t CloudDiskServiceLogFile::ProduceRenameNewLog(const std::shared_ptr<Cloud
     mBase.atime = childStat.st_atime;
     mBase.mtime = childStat.st_mtime;
     mBase.size = childStat.st_size;
-    auto ret = parentMetaFile->DoRenameNew(mBase, renameRecordId_);
+    auto ret = parentMetaFile->DoRenameNew(mBase, renameRecordId_, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("renamenew failed");
         return -1;
     }
-    childRecordId = renameRecordId_;
+    ctx.recordId = renameRecordId_;
 
     if (!S_ISDIR(childStat.st_mode)) {
         return E_OK;
     }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId_, syncFolderIndex_, childStat.st_ino);
     metaFile->parentDentryFile_ = parentMetaFile->selfInode_;
-    metaFile->selfRecordId_ = childRecordId;
+    metaFile->selfRecordId_ = ctx.recordId;
     metaFile->selfHash_ = CloudDisk::CloudFileUtils::DentryHash(name);
     metaFile->GenericDentryHeader();
     return E_OK;
@@ -518,10 +510,10 @@ int32_t CloudDiskServiceLogFile::ProduceRenameNewLog(const std::shared_ptr<Cloud
 
 int32_t CloudDiskServiceLogFile::ProduceCloseAndWriteLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
                                                          const std::string &path, const std::string &name,
-                                                         std::string &childRecordId)
+                                                         struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceCloseAndWriteLog");
-    MetaBase mBase(name, true);
+    MetaBase mBase(name);
     struct stat childStat;
     if (stat((path + "/" + name).c_str(), &childStat) != 0) {
         LOGE("stat child failed for %{public}d", errno);
@@ -531,7 +523,7 @@ int32_t CloudDiskServiceLogFile::ProduceCloseAndWriteLog(const std::shared_ptr<C
     mBase.atime = childStat.st_atime;
     mBase.mtime = childStat.st_mtime;
     mBase.size = childStat.st_size;
-    auto ret = parentMetaFile->DoUpdate(mBase, childRecordId);
+    auto ret = parentMetaFile->DoUpdate(mBase, ctx.recordId, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("update failed");
         return -1;
@@ -568,7 +560,7 @@ int32_t LogFileMgr::PraseRequest(const int32_t userId, const uint32_t syncFolder
             nextUsn = line;
             break;
         } else {
-            break;
+            continue;
         }
     }
     if (ret == E_OK) {
