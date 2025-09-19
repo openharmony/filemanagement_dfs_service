@@ -39,7 +39,8 @@ std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFi
     return metaFile;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                           uint32_t &bitPos)
 {
     if (recordId == "") {
         return E_OK;
@@ -48,7 +49,8 @@ int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &re
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                              uint32_t &bitPos)
 {
     if (recordId == "") {
         return E_OK;
@@ -57,7 +59,8 @@ int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string 
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                              uint32_t &bitPos)
 {
     if (recordId == "") {
         return E_OK;
@@ -75,7 +78,8 @@ int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaF
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                           uint32_t &bitPos)
 {
     if (recordId == "") {
         return E_OK;
@@ -89,7 +93,7 @@ int32_t CloudDiskServiceMetaFile::GenericDentryHeader()
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base)
+int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base, unsigned long &bidx, uint32_t &bitPos)
 {
     if (base.name == "") {
         return E_OK;
@@ -99,6 +103,11 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base)
 }
 
 int32_t CloudDiskServiceMetaFile::DoLookupByRecordId(MetaBase &base, uint8_t revalidate)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskServiceMetaFile::DoLookupByOffset(MetaBase &base, unsigned long bidx, uint32_t bitPos)
 {
     return E_OK;
 }

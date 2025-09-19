@@ -41,7 +41,7 @@ struct DcacheLookupCtx {
     std::string name{};
     std::string recordId{};
     uint32_t hash{0};
-    uint32_t bidx{0};
+    unsigned long bidx{0};
     uint32_t bitPos{0};
     std::unique_ptr<CloudDiskServiceDentryGroup> page{nullptr};
 };
@@ -194,7 +194,7 @@ static CloudDiskServiceDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx, boo
         return de;
     }
 
-    uint32_t bidx = GetBucketaddr(level, ctx->hash % nbucket) * BUCKET_BLOCKS;
+    unsigned long bidx = GetBucketaddr(level, ctx->hash % nbucket) * BUCKET_BLOCKS;
     uint32_t endBlock = bidx + BUCKET_BLOCKS;
 
     for (; bidx < endBlock; bidx++) {
@@ -377,7 +377,7 @@ int32_t CloudDiskServiceMetaFile::GenericDentryHeader()
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base)
+int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base, unsigned long &bidx, uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -400,8 +400,6 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base)
         (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
         return EEXIST;
     }
-    uint32_t bitPos = 0;
-    unsigned long bidx = 0;
     CloudDiskServiceDentryGroup dentryBlk = {0};
     uint32_t namehash = 0;
     auto ret = GetCreateInfo(base, bitPos, namehash, bidx, dentryBlk);
@@ -427,7 +425,8 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base)
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                           uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -457,10 +456,13 @@ int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &re
     if (ret) {
         return ret;
     }
+    bidx = ctx.bidx;
+    bitPos = ctx.bitPos;
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                          uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -476,10 +478,9 @@ int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &rec
         return ENOENT;
     }
 
-    uint32_t bitPos = (de - ctx.page->nsl);
     uint32_t slots = GetDentrySlots(de->namelen);
     for (uint32_t i = 0; i < slots; i++) {
-        BitOps::ClearBit(bitPos + i, ctx.page->bitmap);
+        BitOps::ClearBit(ctx.bitPos + i, ctx.page->bitmap);
     }
 
     off_t ipos = GetDentryGroupPos(ctx.bidx);
@@ -493,10 +494,13 @@ int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &rec
     if (ret) {
         return ret;
     }
+    bidx = ctx.bidx;
+    bitPos = ctx.bitPos;
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                           uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -529,10 +533,13 @@ int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &re
     if (ret) {
         return ret;
     }
+    bidx = ctx.bidx;
+    bitPos = ctx.bitPos;
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                              uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -562,10 +569,13 @@ int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string 
     if (ret) {
         return ret;
     }
+    bidx = ctx.bidx;
+    bitPos = ctx.bitPos;
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId)
+int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+                                              uint32_t &bitPos)
 {
     if (fd_ < 0) {
         LOGE("bad metafile fd");
@@ -588,8 +598,6 @@ int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string 
         (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
         return EEXIST;
     }
-    uint32_t bitPos = 0;
-    unsigned long bidx = 0;
     CloudDiskServiceDentryGroup dentryBlk = {0};
     uint32_t namehash = 0;
     auto ret = GetCreateInfo(base, bitPos, namehash, bidx, dentryBlk);
@@ -620,18 +628,20 @@ int32_t CloudDiskServiceMetaFile::DoRename(MetaBase &metaBase, const std::string
 {
     std::string oldName = metaBase.name;
     metaBase.name = newName;
-    auto ret = newMetaFile->DoCreate(metaBase);
+    unsigned long bidx;
+    uint32_t bitPos;
+    auto ret = newMetaFile->DoCreate(metaBase, bidx, bitPos);
     if (ret != 0) {
         LOGE("create dentry failed, ret = %{public}d", ret);
         return ret;
     }
     metaBase.name = oldName;
     std::string childRecordId;
-    ret = DoRemove(metaBase, childRecordId);
+    ret = DoRemove(metaBase, childRecordId, bidx, bitPos);
     if (ret != 0) {
         LOGE("remove dentry failed, ret = %{public}d", ret);
         metaBase.name = newName;
-        (void)newMetaFile->DoFlush(metaBase, childRecordId);
+        (void)newMetaFile->DoFlush(metaBase, childRecordId, bidx, bitPos);
         return ret;
     }
     return E_OK;
@@ -678,7 +688,7 @@ int32_t CloudDiskServiceMetaFile::DoLookupByRecordId(MetaBase &base, uint8_t rev
     if (de == nullptr) {
         de = ((revalidate & INVALIDATE) == 0) ? nullptr : FindDentry(&ctx, true, INVALIDATE);
         if (de == nullptr) {
-            LOGE("find dentry by id failed");
+            LOGD("find dentry by id failed");
             return ENOENT;
         }
     }
@@ -690,6 +700,32 @@ int32_t CloudDiskServiceMetaFile::DoLookupByRecordId(MetaBase &base, uint8_t rev
     base.atime = de->atime;
     base.mtime = de->mtime;
     base.name = std::string(reinterpret_cast<const char *>(ctx.page->fileName[ctx.bitPos]), de->namelen);
+    return E_OK;
+}
+
+int32_t CloudDiskServiceMetaFile::DoLookupByOffset(MetaBase &base, const unsigned long bidx, const uint32_t bitPos)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::unique_lock<std::mutex> lock(mtx_);
+    struct DcacheLookupCtx ctx;
+    ctx.fd = fd_;
+    auto dentryBlk = FindDentryPage(bidx, &ctx);
+    if (dentryBlk == nullptr) {
+        return ENOENT;
+    }
+    CloudDiskServiceDentry *de = &(dentryBlk->nsl[bitPos]);
+
+    base.mode = de->mode;
+    base.hash = de->hash;
+    base.size = de->size;
+    base.atime = de->atime;
+    base.mtime = de->mtime;
+    base.name = std::string(reinterpret_cast<const char *>(dentryBlk->fileName[bitPos]), de->namelen);
+    base.recordId = std::string(reinterpret_cast<const char *>(de->recordId), RECORD_ID_LEN);
     return E_OK;
 }
 
@@ -783,16 +819,17 @@ int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaF
         uint64_t inode = Convertor::ConvertFromHex(pMetaFile->parentDentryFile_);
         auto parentMetaFile = GetCloudDiskServiceMetaFile(userId, syncFolderIndex, inode);
 
-        MetaBase mBase(pMetaFile->selfRecordId_, false);
-        int32_t ret = parentMetaFile->DoLookupByRecordId(mBase, VALIDATE | INVALIDATE);
+        MetaBase mBase(pMetaFile->selfRecordId_, pMetaFile->selfHash_);
+        int32_t ret = parentMetaFile->DoLookupByRecordId(mBase, VALIDATE);
         if (ret != 0) {
-            LOGE("lookup by id failed");
-            return -1;
+            path = "";
+            return E_PATH_NOT_EXIST;
         }
 
-        path = "/" + mBase.name + path;
+        path = mBase.name + "/" + path;
         pMetaFile = parentMetaFile;
     }
+    path = "/" + path;
     return E_OK;
 }
 

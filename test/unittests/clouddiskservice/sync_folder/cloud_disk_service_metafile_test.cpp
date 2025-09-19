@@ -263,7 +263,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest001, TestSize.Level1)
         MetaBase base;
         base.name = "test_name";
         base.recordId = "record_123";
-        auto ret = mFile.DoCreate(base);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -288,7 +290,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest002, TestSize.Level1)
         MetaBase base;
         base.name = longName;
         base.recordId = "record_123";
-        auto ret = mFile.DoCreate(base);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, ENAMETOOLONG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -316,10 +320,12 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest003, TestSize.Level1)
         base.mtime = 0;
         base.size = 1024;
         base.mode = 0644;
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
-        auto ret = mFile.DoCreate(base);
+        auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -347,9 +353,11 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest004, TestSize.Level1)
         base.mtime = 0;
         base.size = 1024;
         base.mode = 0644;
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
-        auto ret = mFile.DoCreate(base);
+        auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -377,10 +385,12 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest005, TestSize.Level1)
         base.mtime = 0;
         base.size = 1024;
         base.mode = 0644;
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(1));
-        auto ret = mFile.DoCreate(base);
+        auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -403,7 +413,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRemoveTest001, TestSize.Level1)
         mFile.fd_.Reset(-1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRemove(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRemove(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -426,7 +438,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRemoveTest002, TestSize.Level1)
         mFile.fd_.Reset(1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRemove(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRemove(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -449,7 +463,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoFlushTest001, TestSize.Level1)
         mFile.fd_.Reset(-1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRemove(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRemove(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -472,7 +488,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoFlushTest002, TestSize.Level1)
         mFile.fd_.Reset(1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRemove(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRemove(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -495,7 +513,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoUpdateTest001, TestSize.Level1)
         mFile.fd_.Reset(-1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoUpdate(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoUpdate(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -518,7 +538,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoUpdateTest002, TestSize.Level1)
         mFile.fd_.Reset(1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoUpdate(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoUpdate(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -541,7 +563,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest001, TestSize.Level1)
         mFile.fd_.Reset(-1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRenameOld(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRenameOld(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -564,7 +588,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest002, TestSize.Level1)
         mFile.fd_.Reset(1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRenameOld(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRenameOld(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -587,7 +613,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest001, TestSize.Level1)
         mFile.fd_.Reset(-1);
         MetaBase base;
         string recordId = "record_123";
-        auto ret = mFile.DoRenameNew(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -612,7 +640,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest002, TestSize.Level1)
         string longName(1000, 'a');
         base.name = longName;
         string recordId = "record_123";
-        auto ret = mFile.DoRenameNew(base, recordId);
+        unsigned long bidx;
+        uint32_t bitPos;
+        auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENAMETOOLONG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -636,10 +666,12 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest003, TestSize.Level1)
         MetaBase base;
         base.name = "test_name";
         string recordId = "record_123";
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
-        auto ret = mFile.DoRenameNew(base, recordId);
+        auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -663,10 +695,12 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest004, TestSize.Level1)
         MetaBase base;
         base.name = "test_name";
         string recordId = "record_123";
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(1));
-        auto ret = mFile.DoRenameNew(base, recordId);
+        auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -690,9 +724,11 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest005, TestSize.Level1)
         MetaBase base;
         base.name = "test_name";
         string recordId = "record_123";
+        unsigned long bidx;
+        uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
-        auto ret = mFile.DoRenameNew(base, recordId);
+        auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -840,6 +876,80 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByRecordIdTest002, TestSize.Level
         GTEST_LOG_(INFO) << "DoLookupByRecordIdTest002 ERROR";
     }
     GTEST_LOG_(INFO) << "DoLookupByRecordIdTest002 End";
+}
+
+/**
+ * @tc.name: DoLookupByOffset001
+ * @tc.desc: Verify the DoLookupByOffset function when fd is invalid
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupByOffset001 Start";
+    try {
+        CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(-1);
+        MetaBase base;
+        unsigned long bidx = 0;
+        uint32_t bitPos = 0;
+        auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoLookupByOffset001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupByOffset001 End";
+}
+
+/**
+ * @tc.name: DoLookupByOffset002
+ * @tc.desc: Verify the DoLookupByOffset function when dentryPage not found
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupByOffset002 Start";
+    try {
+        CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(1);
+        MetaBase base;
+        unsigned long bidx = 0;
+        uint32_t bitPos = 0;
+        auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
+        EXPECT_EQ(ret, ENOENT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoLookupByOffset002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupByOffset002 End";
+}
+
+/**
+ * @tc.name: DoLookupByOffset003
+ * @tc.desc: Verify the DoLookupByOffset function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupByOffset003 Start";
+    try {
+        CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(1);
+        MetaBase base;
+        unsigned long bidx = 0;
+        uint32_t bitPos = 0;
+        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
+        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
+        auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoLookupByOffset003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupByOffset003 End";
 }
 
 /**
@@ -1171,7 +1281,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetRelativePathTest002, TestSize.Level1)
         metaFile->parentDentryFile_ = "123";
         string path = "/test";
         auto ret = mgr.GetRelativePath(metaFile, path);
-        EXPECT_EQ(ret, -1);
+        EXPECT_EQ(ret, E_PATH_NOT_EXIST);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetRelativePathTest002 ERROR";

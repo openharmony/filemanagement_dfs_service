@@ -260,9 +260,13 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateLogBlockTest001, TestSize.Level1)
         uint64_t parentInode = 1;
         string childRecordId = "childRecordId";
         string parentRecordId = "parentRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        ctx.bidx = 0;
+        ctx.bitPos = 0;
         uint64_t line = 1;
         int32_t res =
-            logFile_->GenerateLogBlock(eventInfo, parentInode, childRecordId, parentRecordId, line);
+            logFile_->GenerateLogBlock(eventInfo, parentInode, ctx, parentRecordId, line);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -632,6 +636,29 @@ HWTEST_F(CloudDiskServiceLogFileTest, PraseLogTest003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PraseLogTest004
+ * @tc.desc: Verify the PraseLog function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, PraseLogTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PraseLogTest004 start";
+    try {
+        logFile_->userId_ = 1;
+        logFile_->currentLine_ = 2;
+        uint64_t line = 1;
+        ChangeData data;
+        bool isEof = true;
+        auto res = logFile_->PraseLog(line, data, isEof);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PraseLogTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "PraseLogTest004 end";
+}
+
+/**
  * @tc.name: ProductLogForOperateTest001
  * @tc.desc: Verify the ProductLogForOperate function
  * @tc.type: FUNC
@@ -646,8 +673,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest001, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::CREATE;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest001 failed";
@@ -670,8 +699,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest002, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::DELETE;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest002 failed";
@@ -694,8 +725,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest003, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::MOVE_FROM;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest003 failed";
@@ -718,8 +751,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest004, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::MOVE_TO;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest004 failed";
@@ -742,8 +777,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest005, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::CLOSE_WRITE;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest005 failed";
@@ -766,8 +803,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest006, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::SYNC_FOLDER_INVALID;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest006 failed";
@@ -790,8 +829,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest007, TestSize.Leve
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         OperationType operator1 = OperationType::OPERATION_MAX;
-        logFile_->ProductLogForOperate(parentMetaFile, path, name, childRecordId, operator1);
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProductLogForOperateTest007 failed";
@@ -814,11 +855,13 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest001, TestSize.Level1)
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce([&]() {
             errno = ENOENT;
             return 1;
         });
-        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -842,8 +885,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest002, TestSize.Level1)
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -867,10 +912,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest003, TestSize.Level1)
         string path = "path";
         string name = "";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         struct stat statInfo;
         statInfo.st_ino = S_IFREG;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
-        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -894,10 +941,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest004, TestSize.Level1)
         string path = "path";
         string name = "";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         struct stat statInfo;
         statInfo.st_ino = S_IFDIR;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
-        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -920,7 +969,9 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest001, TestSize.Level1)
             make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "childRecordId";
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, childRecordId);
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -943,7 +994,9 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
             make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "";
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, childRecordId);
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -966,7 +1019,9 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest001, TestSize.Level
             make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "childRecordId";
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, childRecordId);
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -989,7 +1044,9 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest002, TestSize.Level
             make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "";
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, childRecordId);
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1013,11 +1070,13 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest001, TestSize.Level
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce([&]() {
             errno = ENOENT;
             return 1;
         });
-        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1042,8 +1101,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest002, TestSize.Level
         string name = "name";
         string childRecordId = "childRecordId";
         logFile_->renameRecordId_ = "renameRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1067,11 +1128,13 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest003, TestSize.Level
         string path = "path";
         string name = "name";
         string childRecordId = "";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         logFile_->renameRecordId_ = "";
         struct stat statInfo;
         statInfo.st_ino = S_IFREG;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
-        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1095,10 +1158,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest004, TestSize.Level
         string path = "path";
         string name = "name";
         string childRecordId = "";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         struct stat statInfo;
         statInfo.st_ino = S_IFDIR;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
-        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1122,11 +1187,13 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest001, TestSize.L
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce([&]() {
             errno = ENOENT;
             return 1;
         });
-        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1150,8 +1217,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest002, TestSize.L
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1175,8 +1244,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest003, TestSize.L
         string path = "path";
         string name = "name";
         string childRecordId = "";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, childRecordId);
+        auto res = logFile_->ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
