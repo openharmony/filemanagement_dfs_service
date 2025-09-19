@@ -14,6 +14,267 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+ohos_unittest("cloud_disk_service_static_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "ipc/cloud_disk_service_static_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/clouddiskservice/ipc/src",
+    "${services_path}/clouddiskservice/ipc/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${services_path}/clouddiskservice/sync_folder/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddiskservice/monitor/include",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/utils/ioctl/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "e2fsprogs:libext2_uuid",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "json:nlohmann_json_static",
+    "common_event_service:cesfwk_innerkits",
+    "safwk:system_ability_fwk",
+    "ipc:ipc_single",
+    "ability_runtime:ability_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("service_account_status_listener_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_manager_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "ipc/account_status_listener_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/clouddiskservice/ipc/include",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${services_path}/clouddiskservice/monitor/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/sync_folder/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/utils/ioctl/include",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "e2fsprogs:libext2_uuid",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "json:nlohmann_json_static",
+    "common_event_service:cesfwk_innerkits",
+    "ability_runtime:ability_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_disk_service_callback_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
+    "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_syncfolder.cpp",
+    "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_logfile.cpp",
+    "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
+    "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
+    "ipc/cloud_disk_service_callback_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/clouddiskservice_kit_inner",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/inner_api",
+    "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/utils/include",
+    "${utils_path}/system/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/sync_folder/include",
+    "${services_path}/clouddiskservice/monitor/include",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/utils/ioctl/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${distributedfile_path}/utils/dentry/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "ffrt:libffrt",
+    "json:nlohmann_json_static",
+    "e2fsprogs:libext2_uuid",
+    "ability_runtime:ability_manager",
+    "hisysevent:libhisysevent",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_disk_service_callback_proxy_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "ipc/cloud_disk_service_callback_proxy_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/clouddiskservice_kit_inner",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/utils/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/inner_api",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_disk_sync_folder_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
+    "ipc/cloud_disk_sync_folder_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/utils/include",
+    "${services_path}/clouddiskservice/monitor/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/dentry/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ffrt:libffrt",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("disk_monitor_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -82,6 +343,67 @@ ohos_unittest("disk_utils_test") {
     "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskService\"",
   ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_disk_service_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
+    "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "ipc/cloud_disk_service_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/monitor/include",
+    "${services_path}/clouddiskservice/sync_folder/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/utils/ioctl/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "e2fsprogs:libext2_uuid",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+    "ffrt:libffrt",
+    "ipc:ipc_single",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "safwk:system_ability_fwk",
+    "ability_runtime:ability_manager",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
 
   use_exceptions = true
 }
@@ -359,6 +681,15 @@ ohos_unittest("uuid_helper_test") {
 group("clouddisk_service_test") {
   testonly = true
   deps = [
+    ":cloud_disk_service_logfile_test",
+    ":cloud_disk_service_logfile_static_test",
+    ":cloud_disk_service_metafile_test",
+    ":cloud_disk_service_metafile_static_test",
+    ":convertor_test",
+    ":uuid_helper_test",
+    ":cloud_disk_service_callback_manager_test",
+    ":cloud_disk_service_callback_proxy_test",
+    ":cloud_disk_sync_folder_test",
     ":disk_monitor_test",
     ":disk_utils_test",
     ":cloud_disk_service_logfile_test",
@@ -367,4 +698,12 @@ group("clouddisk_service_test") {
     ":convertor_test",
     ":uuid_helper_test",
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    deps = [
+      ":cloud_disk_service_static_test",
+      ":service_account_status_listener_test",
+      ":cloud_disk_service_test",
+  ]
+  }
 }

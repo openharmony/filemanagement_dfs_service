@@ -47,6 +47,13 @@ int dirfd(DIR *d)
     return Assistant::ins->dirfd(d);
 }
 
+extern "C" {
+int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
+{
+    return Assistant::ins->setxattr(path, name, value, size, flags);
+}
+}
+
 int fstat(int fd, struct stat *buf)
 {
     return Assistant::ins->fstat(fd, buf);
@@ -78,3 +85,4 @@ int FileRangeLock::FilePosLock(int fd, off_t offset, size_t size, int type)
     return Assistant::ins->FilePosLock(fd, offset, size, type);
 }
 } // namespace OHOS::FileManagement
+
