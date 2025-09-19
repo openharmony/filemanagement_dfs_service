@@ -82,7 +82,6 @@ void CloudSyncService::PreInit()
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
-    packageStatusListener_ = make_shared<PackageStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::Init()
@@ -256,41 +255,12 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::POWER_CONNECT_TRIGGER);
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
-    } else if (reason == "usual.event.PACKAGE_REMOVED") {
-        HandlePackageRemoved(startReason);
     }
 
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
         taskRunner->StartTask();
     }
-}
-
-void CloudSyncService::HandlePackageRemoved(const SystemAbilityOnDemandReason& startReason)
-{
-    std::string bundleName;
-    std::string userId;
-    auto extraData = startReason.GetExtraData().GetWant();
-    auto iter = extraData.find("bundleName");
-    if (iter != extraData.end()) {
-        bundleName = iter->second;
-    } else {
-        LOGE("Cant find bundleName");
-        return;
-    }
-    iter = extraData.find("userId");
-    if (iter != extraData.end()) {
-        userId = iter->second;
-    } else {
-        LOGE("Cant find userId");
-        return;
-    }
-    int32_t userIdNum = std::atoi(userId.c_str());
-    if (userIdNum < 0 || (userIdNum == 0 && userId != "0")) {
-        LOGE("Get UserId Failed!");
-        return;
-    }
-    packageStatusListener_->RemovedClean(bundleName, userIdNum);
 }
 
 void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
@@ -300,7 +270,6 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->Start();
         batteryStatusListener_->Start();
         screenStatusListener_->Start();
-        packageStatusListener_->Start();
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         auto sessionManager = make_shared<SessionManager>();
         sessionManager->Init();
@@ -395,6 +364,42 @@ static int32_t CheckPermissions(const string &permission, bool isSystemApp)
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
+    return E_OK;
+}
+
+int32_t CloudSyncService::HandleRemovedClean(const string &bundleName, int32_t userId)
+{
+    LOGI("RemovedClean Start");
+    int ret = CloudStatus::ChangeAppSwitch(bundleName, userId, false);
+    if (ret != 0) {
+        LOGE("CloudStatus ChangeAppSwitch failed, ret: %{public}d", ret);
+        return ret;
+    }
+    ret = dataSyncManager_->TriggerStopSync(bundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
+    if (ret != 0) {
+        LOGE("DataSyncerManager Trigger Stopsync failed, ret: %{public}d", ret);
+        return ret;
+    }
+    ret = dataSyncManager_->ChangeAppSwitch(bundleName, userId, false);
+    if (ret != 0) {
+        LOGE("DataSyncerManager ChangeAppSwitch failed, ret: %{public}d", ret);
+        return ret;
+    }
+    ret = dataSyncManager_->CleanCloudFile(userId, bundleName, CLEAR_DATA);
+    if (ret != 0) {
+        LOGE("CleanCloudFile failed, ret: %{public}d", ret);
+        return ret;
+    }
+    LOGI("RemovedClean Complete");
+    return E_OK;
+}
+
+int32_t CloudSyncService::RemovedClean(const string &bundleName, int32_t userId)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, false));
+    ffrt::submit([bundleName, userId, this] {
+        HandleRemovedClean(bundleName, userId);
+    });
     return E_OK;
 }
 
@@ -1078,7 +1083,10 @@ int32_t CloudSyncService::BatchCleanFile(const std::vector<CleanFileInfoObj> &fi
 
     std::vector<CleanFileInfo> cleanFilesInfo;
     for (const auto &obj : fileInfo) {
-        CleanFileInfo tmpFileInfo{obj.cloudId, obj.size, obj.modifiedTime, obj.path, obj.fileName, obj.attachment};
+        CleanFileInfo tmpFileInfo{
+            obj.size, obj.modifiedTime, obj.fileSourceType, obj.cloudId, obj.path, obj.fileName,
+            obj.storagePath, obj.attachment
+        };
         cleanFilesInfo.emplace_back(tmpFileInfo);
     }
 

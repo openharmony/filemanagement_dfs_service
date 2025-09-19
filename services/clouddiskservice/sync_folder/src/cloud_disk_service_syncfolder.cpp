@@ -25,23 +25,23 @@
 
 namespace OHOS::FileManagement::CloudDiskService {
 
-int32_t CloudDiskServiceSyncFolder::RegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex,
+int32_t CloudDiskServiceSyncFolder::RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex,
                                                        const std::string &path)
 {
     return LogFileMgr::GetInstance().RegisterSyncFolder(userId, syncFolderIndex, path);
 }
 
-int32_t CloudDiskServiceSyncFolder::UnRegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex)
+int32_t CloudDiskServiceSyncFolder::UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex)
 {
     return LogFileMgr::GetInstance().UnRegisterSyncFolder(userId, syncFolderIndex);
 }
 
-void CloudDiskServiceSyncFolder::RegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void CloudDiskServiceSyncFolder::RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     LogFileMgr::GetInstance().RegisterSyncFolderChanges(userId, syncFolderIndex);
 }
 
-void CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     LogFileMgr::GetInstance().UnRegisterSyncFolderChanges(userId, syncFolderIndex);
 }

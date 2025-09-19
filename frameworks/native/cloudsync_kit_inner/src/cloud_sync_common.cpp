@@ -642,23 +642,75 @@ AssetInfoObj *AssetInfoObj::Unmarshalling(Parcel &parcel)
 
 bool CleanFileInfoObj::ReadFromParcel(Parcel &parcel)
 {
-    parcel.ReadString(cloudId);
-    parcel.ReadInt64(size);
-    parcel.ReadInt64(modifiedTime);
-    parcel.ReadString(path);
-    parcel.ReadString(fileName);
-    parcel.ReadStringVector(&attachment);
+    if (!parcel.ReadInt64(size)) {
+        LOGE("failed to read size");
+        return false;
+    }
+    if (!parcel.ReadInt64(modifiedTime)) {
+        LOGE("failed to read modifiedTime");
+        return false;
+    }
+    if (!parcel.ReadInt32(fileSourceType)) {
+        LOGE("failed to read fileSourceType");
+        return false;
+    }
+    if (!parcel.ReadString(cloudId)) {
+        LOGE("failed to read cloudId");
+        return false;
+    }
+    if (!parcel.ReadString(path)) {
+        LOGE("failed to read path");
+        return false;
+    }
+    if (!parcel.ReadString(fileName)) {
+        LOGE("failed to read fileName");
+        return false;
+    }
+    if (!parcel.ReadString(storagePath)) {
+        LOGE("failed to read storagePath");
+        return false;
+    }
+    if (!parcel.ReadStringVector(&attachment)) {
+        LOGE("failed to read attachment");
+        return false;
+    }
     return true;
 }
 
 bool CleanFileInfoObj::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(cloudId);
-    parcel.WriteInt64(size);
-    parcel.WriteInt64(modifiedTime);
-    parcel.WriteString(path);
-    parcel.WriteString(fileName);
-    parcel.WriteStringVector(attachment);
+    if (!parcel.WriteInt64(size)) {
+        LOGE("failed to write size");
+        return false;
+    }
+    if (!parcel.WriteInt64(modifiedTime)) {
+        LOGE("failed to write modifiedTime");
+        return false;
+    }
+    if (!parcel.WriteInt32(fileSourceType)) {
+        LOGE("failed to write fileSourceType");
+        return false;
+    }
+    if (!parcel.WriteString(cloudId)) {
+        LOGE("failed to write cloudId");
+        return false;
+    }
+    if (!parcel.WriteString(path)) {
+        LOGE("failed to write path");
+        return false;
+    }
+    if (!parcel.WriteString(fileName)) {
+        LOGE("failed to write fileName");
+        return false;
+    }
+    if (!parcel.WriteString(storagePath)) {
+        LOGE("failed to write storagePath");
+        return false;
+    }
+    if (!parcel.WriteStringVector(attachment)) {
+        LOGE("failed to write attachment");
+        return false;
+    }
     return true;
 }
 

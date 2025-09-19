@@ -24,7 +24,7 @@
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
 
 const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
-    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_ERR_OK},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_OK},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_INVALID_ARG, CLOUD_DISK_INVALID_ARG},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_SYNC_FOLDER_PATH_UNAUTHORIZED,
         CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED},
@@ -50,7 +50,7 @@ const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_INVALID_CHANGE_SEQUENCE,
         CLOUD_DISK_INVALID_CHANGE_SEQUENCE},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_TRY_AGAIN, CLOUD_DISK_TRY_AGAIN},
-    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_INTERNAL_ERROR, CLOUD_DISK_INTERNAL_ERROR},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_ALLOWED, CLOUD_DISK_NOT_ALLOWED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_SUPPORTED, CLOUD_DISK_NOT_SUPPORTED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED, 
         CLOUD_DISK_PERMISSION_DENIED},

@@ -108,10 +108,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest001, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         std::string accountId = "";
         bool status = false;
-        std::string bundleName = "com.ohos.photos";
+        std::string bundleName = "";
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
 
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
         EXPECT_EQ(ret, E_OK);
@@ -135,10 +135,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest002, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         std::string accountId = "";
         bool status = false;
-        std::string bundleName = "com.ohos.ailife";
+        std::string bundleName = "";
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
 
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
         EXPECT_EQ(ret, E_OK);
@@ -162,10 +162,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest003, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         std::string accountId = "";
         bool status = false;
-        std::string bundleName = "com.ohos.xxxxxx";
+        std::string bundleName = "";
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
 
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
         EXPECT_EQ(ret, E_OK);
@@ -1625,6 +1625,221 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
     }
     GTEST_LOG_(INFO) << "DownloadFilesTest003 end";
+}
+
+/**
+ * @tc.name: RemovedCleanTest001
+ * @tc.desc: Verify the RemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, RemovedCleanTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovedCleanTest001 start";
+    try {
+        string bundleName = "test.bundle.name";
+        int32_t userId = 1;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->RemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RemovedCleanTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "RemovedCleanTest001 end";
+}
+
+/**
+ * @tc.name: RemovedCleanTest002
+ * @tc.desc: Verify the RemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, RemovedCleanTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovedCleanTest002 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 2;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->RemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RemovedCleanTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "RemovedCleanTest002 end";
+}
+
+/**
+ * @tc.name: RemovedCleanTest003
+ * @tc.desc: Verify the RemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, RemovedCleanTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovedCleanTest003 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 1;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->RemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RemovedCleanTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "RemovedCleanTest003 end";
+}
+
+/**
+ * @tc.name: RemovedCleanTest004
+ * @tc.desc: Verify the RemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, RemovedCleanTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovedCleanTest004 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 3;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->RemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RemovedCleanTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "RemovedCleanTest004 end";
+}
+
+/**
+ * @tc.name: RemovedCleanTest005
+ * @tc.desc: Verify the RemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, RemovedCleanTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovedCleanTest005 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 4;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        auto ret = servicePtr_->RemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "RemovedCleanTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "RemovedCleanTest005 end";
+}
+
+/**
+ * @tc.name: HandleRemovedCleanTest001
+ * @tc.desc: Verify the HandleRemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest001 start";
+    try {
+        string bundleName = "test.bundle.name";
+        int32_t userId = 1;
+        auto ret = servicePtr_->HandleRemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "HandleRemovedCleanTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest001 end";
+}
+
+/**
+ * @tc.name: HandleRemovedCleanTest002
+ * @tc.desc: Verify the HandleRemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest002 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 2;
+        auto ret = servicePtr_->HandleRemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "HandleRemovedCleanTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest002 end";
+}
+
+/**
+ * @tc.name: HandleRemovedCleanTest003
+ * @tc.desc: Verify the HandleRemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest003 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 1;
+        auto ret = servicePtr_->HandleRemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "HandleRemovedCleanTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest003 end";
+}
+
+/**
+ * @tc.name: HandleRemovedCleanTest004
+ * @tc.desc: Verify the HandleRemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest004 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 3;
+        auto ret = servicePtr_->HandleRemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "HandleRemovedCleanTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest004 end";
+}
+
+/**
+ * @tc.name: HandleRemovedCleanTest005
+ * @tc.desc: Verify the HandleRemovedClean function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest005 start";
+    try {
+        string bundleName = "";
+        int32_t userId = 4;
+        auto ret = servicePtr_->HandleRemovedClean(bundleName, userId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "HandleRemovedCleanTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleRemovedCleanTest005 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

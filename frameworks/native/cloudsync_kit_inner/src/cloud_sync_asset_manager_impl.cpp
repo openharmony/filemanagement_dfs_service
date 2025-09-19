@@ -140,7 +140,6 @@ void CloudSyncAssetManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &rem
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
             LOGE("service died. Died remote obj");
-            ServiceProxy::InvaildInstance();
             isCallbackRegistered_.clear();
             isFirstCall_.clear();
         };

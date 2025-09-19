@@ -1091,12 +1091,13 @@ HWTEST_F(CloudSyncCommonTest, UnmarshallingTest2, TestSize.Level1)
     try {
         auto Info = make_shared<CleanFileInfoObj>();
         Parcel parcel;
-        bool returnValues[3] = {true, true, true};
+        bool returnValues[4] = {true, true, true, true};
         int callCount = 0;
 
-        EXPECT_CALL(*parcel_, ReadString(_)).Times(3).WillRepeatedly(Invoke([&]() {
+        EXPECT_CALL(*parcel_, ReadString(_)).Times(4).WillRepeatedly(Invoke([&]() {
             return returnValues[callCount++];
         }));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, ReadStringVector(_)).WillOnce(Return(true));
         auto res = Info->Unmarshalling(parcel);
@@ -1106,6 +1107,182 @@ HWTEST_F(CloudSyncCommonTest, UnmarshallingTest2, TestSize.Level1)
         GTEST_LOG_(INFO) << " UnmarshallingTest2 FAILED";
     }
     GTEST_LOG_(INFO) << "UnmarshallingTest2 End";
+}
+
+/*
+ * @tc.name: CleanFileInfoObj_ReadFromParcelTest001
+ * @tc.desc: Verify the CleanFileInfoObj_ReadFromParcel function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, CleanFileInfoObj_ReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_ReadFromParcelTest001 Start";
+    try {
+        CleanFileInfoObj cleanfileInfo;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        auto res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanFileInfoObj_ReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_ReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: CleanFileInfoObj_ReadFromParcelTest002
+ * @tc.desc: Verify the CleanFileInfoObj_ReadFromParcel function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, CleanFileInfoObj_ReadFromParcelTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_ReadFromParcelTest002 Start";
+    try {
+        CleanFileInfoObj cleanfileInfo;
+        Parcel parcel;
+        bool returnValues1[4] = {true, true, true, false};
+        int callCount1 = 0;
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).Times(4).WillRepeatedly(Invoke([&]() {
+            return returnValues1[callCount1++];
+        }));
+        auto res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        bool returnValues2[4] = {true, true, true, true};
+        int callCount2 = 0;
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).Times(4).WillRepeatedly(Invoke([&]() {
+            return returnValues2[callCount2++];
+        }));
+        EXPECT_CALL(*parcel_, ReadStringVector(_)).WillOnce(Return(false));
+        res = cleanfileInfo.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanFileInfoObj_ReadFromParcelTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_ReadFromParcelTest002 End";
+}
+
+/*
+ * @tc.name: CleanFileInfoObj_MarshallingTest001
+ * @tc.desc: Verify the CleanFileInfoObj_Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, CleanFileInfoObj_MarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_MarshallingTest001 Start";
+    try {
+        CleanFileInfoObj cleanfileInfo;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        auto res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanFileInfoObj_MarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_MarshallingTest001 End";
+}
+
+/*
+ * @tc.name: CleanFileInfoObj_MarshallingTest002
+ * @tc.desc: Verify the CleanFileInfoObj_Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, CleanFileInfoObj_MarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_MarshallingTest002 Start";
+    try {
+        CleanFileInfoObj cleanfileInfo;
+        Parcel parcel;
+        bool returnValues1[4] = {true, true, true, false};
+        int callCount1 = 0;
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).Times(4).WillRepeatedly(Invoke([&]() {
+            return returnValues1[callCount1++];
+        }));
+        auto res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        bool returnValues2[4] = {true, true, true, true};
+        int callCount2 = 0;
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).Times(4).WillRepeatedly(Invoke([&]() {
+            return returnValues2[callCount2++];
+        }));
+        EXPECT_CALL(*parcel_, WriteStringVector(_)).WillOnce(Return(false));
+        res = cleanfileInfo.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanFileInfoObj_MarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanFileInfoObj_MarshallingTest002 End";
 }
 
 /*

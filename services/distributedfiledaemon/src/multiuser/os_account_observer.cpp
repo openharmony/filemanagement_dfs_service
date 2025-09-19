@@ -28,7 +28,6 @@ namespace DistributedFile {
 using namespace std;
 namespace {
 static const std::string SAME_ACCOUNT = "account";
-const int32_t INVALID_USER_ID = -1;
 } // namespace
 
 OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)

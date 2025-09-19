@@ -122,6 +122,12 @@ public:
                          const std::string &dstPath,
                          const std::string &remoteDeviceId,
                          const std::string &sessionName));
+    MOCK_METHOD5(RequestSendFileACL,
+                 int32_t(const std::string &srcUri,
+                         const std::string &dstPath,
+                         const std::string &remoteDeviceId,
+                         const std::string &sessionName,
+                         const AccountInfo &callerAccountInfo));
     MOCK_METHOD5(PrepareSession,
                  int32_t(const std::string &srcUri,
                          const std::string &dstUri,
@@ -131,6 +137,8 @@ public:
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
     MOCK_METHOD2(CancelCopyTask, int32_t(const std::string &srcUri, const std::string &dstUri));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
+    MOCK_METHOD4(GetRemoteCopyInfoACL,
+                 int32_t(const std::string &srcUri, bool &isFile, bool &isDir, const AccountInfo &callerAccountInfo));
     MOCK_METHOD3(PushAsset, int32_t(int32_t userId,
                                     const sptr<AssetObj> &assetObj,
                                     const sptr<IAssetSendCallback> &sendCallback));
@@ -180,6 +188,7 @@ void DaemonStubSupPTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
     g_checkCallerPermissionTrue = true;
+    UID = DATA_UID;
 }
 
 void DaemonStubSupPTest::TearDown(void)
@@ -875,5 +884,192 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleIsSameAccountDevice, TestSize.Le
     ret = daemonStub_->HandleIsSameAccountDevice(data, reply);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleIsSameAccountDevice End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleRequestSendFileACLTest_0001
+ * @tc.desc: Verify the HandleRequestSendFileACL function (read failures)
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileACLTest_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileACLTest_0001 Start";
+    MessageParcel data;
+    MessageParcel reply;
+
+    g_getCallingUidTrue = true;
+    // Test srcUri read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    auto ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test dstPath read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test dstDeviceId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test sessionName read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(false));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test userId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileACLTest_0001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleRequestSendFileACLTest_0002
+ * @tc.desc: Verify the HandleRequestSendFileACL function (success cases)
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileACLTest_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileACLTest_0002 Start";
+    MessageParcel data;
+    MessageParcel reply;
+
+    g_getCallingUidTrue = true;
+    // Test accountId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    auto ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test networkId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test success path
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, RequestSendFileACL(_, _, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    // Test RequestSendFileACL returns error
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, RequestSendFileACL(_, _, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleRequestSendFileACL(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileACLTest_0002 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleGetRemoteCopyInfoACLTest_0001
+ * @tc.desc: Verify the HandleGetRemoteCopyInfoACL function (read failures)
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoACLTest_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoACLTest_0001 Start";
+    MessageParcel data;
+    MessageParcel reply;
+
+    g_getCallingUidTrue = true;
+    // Test srcUri read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    auto ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test userId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test accountId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    // Test networkId read failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoACLTest_0001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleGetRemoteCopyInfoACLTest_0002
+ * @tc.desc: Verify the HandleGetRemoteCopyInfoACL function (write and success cases)
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoACLTest_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoACLTest_0002 Start";
+    MessageParcel data;
+    MessageParcel reply;
+
+    g_getCallingUidTrue = true;
+    // Test isFile write failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+    auto ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    // Test isDir write failure
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    // Test success path
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    // Test GetRemoteCopyInfoACL returns error
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleGetRemoteCopyInfoACL(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoACLTest_0002 End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

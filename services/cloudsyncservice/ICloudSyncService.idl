@@ -67,6 +67,7 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void StartDowngrade([in] String bundleName, [in] IRemoteObject downloadCallback);
     void StopDowngrade([in] String bundleName);
     void GetCloudFileInfo([in] String bundleName, [out] CloudFileInfo cloudFileInfo);
+    void RemovedClean([in] String bundleName, [in] int userId);
     // file version
     void GetHistoryVersionList([in] String uri, [in] int versionNumLimit,
                                [out] HistoryVersion[] historyVersionList);

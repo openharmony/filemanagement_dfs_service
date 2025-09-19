@@ -30,7 +30,11 @@ bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t
 
 int32_t CloudStatus::ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool appSwitchStatus)
 {
-    return E_OK;
+    if (bundleName == "") {
+        return E_OK;
+    } else {
+        return 1;
+    }
 }
 
 bool CloudStatus::IsAccountIdChanged(const std::string &accountId)

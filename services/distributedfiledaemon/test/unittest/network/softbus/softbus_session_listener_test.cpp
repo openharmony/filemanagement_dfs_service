@@ -241,7 +241,6 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetFileName_0100
     rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test/test1/t1.txt", "/data/test");
     EXPECT_EQ(rltList.size(), 1);
     EXPECT_EQ(rltList[0], "t1.txt");
-
     rltList.clear();
     rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test/test1/t1.txt", "??data/test/test1/t2.txt");
     EXPECT_EQ(rltList.size(), 1);

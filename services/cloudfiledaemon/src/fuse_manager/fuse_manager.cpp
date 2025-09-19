@@ -1919,8 +1919,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
             free(str);
 #pragma clang diagnostic pop
         });
-        se = fuse_session_new(&args, &cloudDiskFuseOps,
-                              sizeof(cloudDiskFuseOps), &cloudDiskData);
+        se = fuse_session_new(&args, &cloudDiskFuseOps, sizeof(cloudDiskFuseOps), &cloudDiskData);
         if (se == nullptr) {
             LOGE("cloud disk fuse_session_new error");
             return -EINVAL;
@@ -1940,6 +1939,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         data.se = se;
         data.photoBundleName = system::GetParameter(PHOTOS_KEY, "");
         SettingDataHelper::GetInstance().SetUserData(&data);
+        SettingDataHelper::GetInstance().UpdateActiveBundle();
         config.max_idle_threads = MAX_IDLE_THREADS;
     }
     LOGI("fuse_session_new success, userId: %{public}d", userId);

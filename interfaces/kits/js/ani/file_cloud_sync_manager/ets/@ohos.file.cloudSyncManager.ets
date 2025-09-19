@@ -211,10 +211,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.changeAppCloudSwitchInner(accountId, bundleName, status);
                 return 0;
             }, accountId, bundleName, status);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -233,12 +233,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.changeAppCloudSwitchInner(accountId, bundleName, status);
             return 0;
         }, accountId, bundleName, status);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -252,10 +252,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.notifyDataChangeInner(accountId, bundleName);
                 return 0;
             }, accountId, bundleName);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -268,12 +268,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.notifyDataChangeInner(accountId, bundleName);
             return 0;
         }, accountId, bundleName);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -287,10 +287,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.enableCloudInner(accountId, switches);
                 return 0;
             }, accountId, switches);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -303,12 +303,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.enableCloudInner(accountId, switches);
             return 0;
         }, accountId, switches);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -321,10 +321,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.disableCloudInner(accountId);
                 return 0;
             }, accountId);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -336,12 +336,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.disableCloudInner(accountId);
             return 0;
         }, accountId);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -355,10 +355,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.cleanInner(accountId, appActions);
                 return 0;
             }, accountId, appActions);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -371,12 +371,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.cleanInner(accountId, appActions);
             return 0;
         }, accountId, appActions);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -390,10 +390,10 @@ export default namespace cloudSyncManager  {
                 StaticFunction.notifyEventChangeInner(userId, extraData);
                 return 0;
             }, userId, extraData);
-            promise.then<void>((): void => {
+            promise.then<void, void>((): void => {
                 resolve(undefined);
-            }, (e: BusinessError<void>): void => {
-                reject(e);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
             });
         });
     }
@@ -406,12 +406,12 @@ export default namespace cloudSyncManager  {
             StaticFunction.notifyEventChangeInner(userId, extraData);
             return 0;
         }, userId, extraData);
-        promise.then<void>((): void => {
+        promise.then<void, void>((): void => {
             let e = new BusinessError<void>();
             e.code = 0;
             callback(e, undefined);
-        }, (e: BusinessError<void>): void => {
-            callback(e, undefined);
+        }, (e: Error): void => {
+            callback(e as BusinessError<void>, undefined);
         });
     }
 }

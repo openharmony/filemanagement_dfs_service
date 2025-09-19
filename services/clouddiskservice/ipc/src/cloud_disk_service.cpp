@@ -145,7 +145,7 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
     int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
-        return E_INTERNAL_ERROR;
+        return E_TRY_AGAIN;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
@@ -191,7 +191,7 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
     int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
-        return E_INTERNAL_ERROR;
+        return E_TRY_AGAIN;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
@@ -237,7 +237,7 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
     int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
-        return E_INTERNAL_ERROR;
+        return E_TRY_AGAIN;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
@@ -511,10 +511,6 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(bundleName, syncFolderIndex);
-
-    if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() == 0) {
-        DiskMonitor::GetInstance().StopMonitor();
-    }
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
                                                                        unregisterSyncFolder)) {
         LOGE("Get unregisterSyncFolder failed");
@@ -561,7 +557,7 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
     SyncFolderValue syncFolderValue;
     if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue)) {
         LOGE("No such index");
-        return E_INTERNAL_ERROR;
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);

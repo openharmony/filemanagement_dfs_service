@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/xattr.h>
 
+#include "disk_monitor.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -47,6 +48,10 @@ void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
     auto item = syncFolderMap.find(syncFolderIndex);
     if (item != syncFolderMap.end()) {
         syncFolderMap.erase(syncFolderIndex);
+    }
+    if (syncFolderMap.size() == 0) {
+        LOGI("stopMonitor");
+        DiskMonitor::GetInstance().StopMonitor();
     }
 }
 

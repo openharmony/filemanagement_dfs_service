@@ -75,6 +75,12 @@ public:
                          const std::string &dstPath,
                          const std::string &remoteDeviceId,
                          const std::string &sessionName));
+    MOCK_METHOD5(RequestSendFileACL,
+                 int32_t(const std::string &srcUri,
+                         const std::string &dstPath,
+                         const std::string &remoteDeviceId,
+                         const std::string &sessionName,
+                         const AccountInfo &callerAccountInfo));
     MOCK_METHOD5(PrepareSession,
                  int32_t(const std::string &srcUri,
                          const std::string &dstUri,
@@ -84,6 +90,8 @@ public:
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
     MOCK_METHOD2(CancelCopyTask, int32_t(const std::string &srcUri, const std::string &dstUri));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
+    MOCK_METHOD4(GetRemoteCopyInfoACL,
+                 int32_t(const std::string &srcUri, bool &isFile, bool &isDir, const AccountInfo &callerAccountInfo));
 
     MOCK_METHOD3(PushAsset,
                  int32_t(int32_t userId,

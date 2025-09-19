@@ -150,6 +150,7 @@ enum DFSErrCode {
     ERR_CHECKOUT_COUNT,
 
     ERR_NULLPTR,
+    ERR_ACL_FAILED,
 
     /* dfs version */
     ERR_DFS_VERSION_BASE = 1000,

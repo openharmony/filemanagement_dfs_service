@@ -30,6 +30,14 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) = 0;
+    /**
+     * @brief 卸载清理
+     *
+     * @param bundleName 应用包名
+     * @param userId 用户ID
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t RemovedClean(const std::string &bundleName, int32_t userId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

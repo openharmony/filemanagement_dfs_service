@@ -24,6 +24,7 @@
 #include "hmdfs_info.h"
 #include "iremote_broker.h"
 #include "i_file_dfs_listener.h"
+#include "network/softbus/softbus_permission_check.h"
 #include "remote_file_share.h"
 
 namespace OHOS {
@@ -50,8 +51,17 @@ public:
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,
                                     const std::string &sessionName) = 0;
+    virtual int32_t RequestSendFileACL(const std::string &srcUri,
+                                       const std::string &dstPath,
+                                       const std::string &remoteDeviceId,
+                                       const std::string &sessionName,
+                                       const AccountInfo &callerAccountInfo) = 0;
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
     virtual int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) = 0;
+    virtual int32_t GetRemoteCopyInfoACL(const std::string &srcUri,
+                                         bool &isFile,
+                                         bool &isDir,
+                                         const AccountInfo &callerAccountInfo) = 0;
 
     virtual int32_t PushAsset(int32_t userId,
                               const sptr<AssetObj> &assetObj,

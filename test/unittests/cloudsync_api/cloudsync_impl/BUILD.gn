@@ -122,6 +122,50 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_sync_manager_impl_lite_test") {
+
+  module_out_path = "dfs_service/dfs_service"
+
+  public_configs =
+    [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
+    "cloud_sync_manager_impl_lite_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [ 
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "dfs_service:cloudsync_kit_inner",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -544,6 +588,7 @@ group("cloudsync_impl_test") {
     ":cloud_sync_callback_stub_test",
     ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
+    ":cloud_sync_manager_impl_lite_test",
     ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
     ":download_asset_callback_client_test",

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "ipc/i_file_dfs_listener.h"
+#include "single_instance.h"
 
 namespace OHOS {
 namespace Storage {
@@ -50,11 +51,8 @@ enum Status {
 };
 
 class ConnectCount final {
+    DECLARE_SINGLE_INSTANCE(ConnectCount);
 public:
-    ConnectCount() = default;
-    ~ConnectCount() = default;
-    static std::shared_ptr<ConnectCount> GetInstance();
-
     void AddConnect(uint32_t callingTokenId, const std::string &networkId, sptr<IFileDfsListener> &listener);
     bool CheckCount(const std::string &networkId);
     void RemoveAllConnect();
@@ -69,7 +67,6 @@ public:
     void NotifyFileStatusChange(const std::string &networkId,
         const int32_t status, const std::string &path, StatusType type);
 private:
-    static std::shared_ptr<ConnectCount> instance_;
     std::recursive_mutex connectMutex_;
     std::unordered_set<std::shared_ptr<Connect>> connectList_;
     std::recursive_mutex fileConnectMutex_;
