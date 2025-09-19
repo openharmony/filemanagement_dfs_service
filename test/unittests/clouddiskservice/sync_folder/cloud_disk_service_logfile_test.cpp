@@ -330,6 +330,27 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest002, TestSize.Level1
 }
 
 /**
+ * @tc.name: GenerateChangeDataForInvalid001
+ * @tc.desc: Verify the GenerateChangeDataForInvalid function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataForInvalid001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataForInvalid001 start";
+    try {
+        EventInfo eventInfo;
+        logFile_->changeDatas_.clear();
+        logFile_->GenerateChangeDataForInvalid(eventInfo);
+        EXPECT_EQ(logFile_->changeDatas_.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataForInvalid001 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataForInvalid001 end";
+}
+
+/**
  * @tc.name: FillChildForDirTest001
  * @tc.desc: Verify the FillChildForDir function
  * @tc.type: FUNC

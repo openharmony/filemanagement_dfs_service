@@ -100,6 +100,7 @@ private:
                              const std::string &childRecordId, const std::string &parentRecordId, uint64_t &line);
     int32_t GenerateChangeData(const struct EventInfo &eventInfo, uint64_t line,
                                const std::string &childRecordId, const std::string &parentRecordId);
+    void GenerateChangeDataForInvalid(const struct EventInfo &eventInfo);
 
     int32_t userId_;
     uint32_t syncFolderIndex_;

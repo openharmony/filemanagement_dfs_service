@@ -232,6 +232,16 @@ int32_t CloudDiskServiceLogFile::GenerateLogBlock(const struct EventInfo &eventI
     return E_OK;
 }
 
+void CloudDiskServiceLogFile::GenerateChangeDataForInvalid(const struct EventInfo &eventInfo)
+{
+    std::lock_guard<std::mutex> lock(vectorMtx_);
+    struct ChangeData changeData{};
+    changeData.operationType = eventInfo.operateType;
+    changeData.timeStamp = eventInfo.timestamp;
+    changeDatas_.push_back(changeData);
+    CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
+}
+
 int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &eventInfo, uint64_t line,
                                                     const std::string &childRecordId, const std::string &parentRecordId)
 {
@@ -322,6 +332,7 @@ int32_t CloudDiskServiceLogFile::ProduceLog(const struct EventInfo &eventInfo)
 
     int32_t ret = 0;
     if (eventInfo.operateType == OperationType::SYNC_FOLDER_INVALID) {
+        GenerateChangeDataForInvalid(eventInfo);
         ret = CloudDiskServiceManager::GetInstance().UnregisterForSa(eventInfo.path + "/" + eventInfo.name);
         if (ret != 0) {
             return ret;
