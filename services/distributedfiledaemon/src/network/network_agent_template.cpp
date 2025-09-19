@@ -111,7 +111,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
 void NetworkAgentTemplate::DisconnectAllDevices()
 {
     sessionPool_.ReleaseAllSession();
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
 }
 
 // for closeP2P
@@ -126,11 +126,11 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), true);
-    ConnectCount::GetInstance()->NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
-    ConnectCount::GetInstance()->RemoveConnect(info.GetCid());
-    ConnectCount::GetInstance()->NotifyFileStatusChange(info.GetCid(), Status::DEVICE_OFFLINE,
-                                                        info.GetCid().substr(0, VALID_MOUNT_PATH_LEN),
-                                                        StatusType::CONNECTION_STATUS);
+    ConnectCount::GetInstance().NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance().RemoveConnect(info.GetCid());
+    ConnectCount::GetInstance().NotifyFileStatusChange(info.GetCid(), Status::DEVICE_OFFLINE,
+                                                       info.GetCid().substr(0, VALID_MOUNT_PATH_LEN),
+                                                       StatusType::CONNECTION_STATUS);
 }
 
 // softbus offline, allConnect offline, hmdfs never has socket
@@ -145,10 +145,10 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 void NetworkAgentTemplate::CloseSessionForOneDeviceInner(std::string cid)
 {
     sessionPool_.ReleaseSession(cid, true);
-    ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
-    ConnectCount::GetInstance()->NotifyFileStatusChange(
+    ConnectCount::GetInstance().NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance().NotifyFileStatusChange(
         cid, Status::DEVICE_OFFLINE, cid.substr(0, VALID_MOUNT_PATH_LEN), StatusType::CONNECTION_STATUS);
-    ConnectCount::GetInstance()->RemoveConnect(cid);
+    ConnectCount::GetInstance().RemoveConnect(cid);
 }
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
@@ -184,7 +184,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     bool isServer = false;
     bool ifGetSession = sessionPool_.CheckIfGetSession(fd, isServer);
     sessionPool_.ReleaseSession(fd);
-    if (ifGetSession && ConnectCount::GetInstance()->CheckCount(cidStr)) {
+    if (ifGetSession && ConnectCount::GetInstance().CheckCount(cidStr)) {
         // for client
         GetSession(cidStr);
     } else {
@@ -207,8 +207,8 @@ void NetworkAgentTemplate::GetSession(const string &cid)
         }
         LOGE("reget session failed");
         sessionPool_.SinkOffline(cid);
-        ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
-        ConnectCount::GetInstance()->RemoveConnect(cid);
+        ConnectCount::GetInstance().NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+        ConnectCount::GetInstance().RemoveConnect(cid);
         DeviceManagerAgent::GetInstance()->UMountDfsDocs(cid, cid.substr(0, VALID_MOUNT_PATH_LEN), true);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());

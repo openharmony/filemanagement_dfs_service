@@ -199,13 +199,13 @@ HWTEST_F(SoftbusAgentSupTest, SoftbusAgentSupTest_GetSessionProcessInner_0100, T
     auto session = make_shared<SoftbusSession>(1, "testNetworkId");
     session->SetFromServer(false);
     agent->sessionPool_.AddSessionToPool(session);
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
     agent->GetSessionProcessInner(param);
     EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
 
     sptr<IFileDfsListener> listener = nullptr;
     agent->sessionPool_.AddSessionToPool(session);
-    ConnectCount::GetInstance()->AddConnect(1, "testNetworkId", listener);
+    ConnectCount::GetInstance().AddConnect(1, "testNetworkId", listener);
     agent->GetSessionProcessInner(param);
     EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
 

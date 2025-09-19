@@ -80,23 +80,23 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level0)
     string localUri = "/data/test/test.txt";
     string dstUri = "/data/test/test.txt";
 
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, listener_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy("", localUri, listener_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(localUri, "", listener_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", "", listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy("", "", listener_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(localUri, dstUri, listener_);
     EXPECT_EQ(ret, EINVAL);
 
     string remoteUri = "/data/test/Copy/?networkid=/";
     if (!ForceCreateDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 create dir err";
     }
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(remoteUri, "", listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(remoteUri, "", listener_);
     EXPECT_EQ(ret, EINVAL);
     if (!ForceRemoveDirectory(remoteUri)) {
         GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 remove dir err";
@@ -121,7 +121,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level0)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0002!" << errno;
     close(fd);
 
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, listener_);
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     ASSERT_EQ(remove(dstPath.c_str()), 0);
@@ -145,7 +145,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level0)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0003!" << errno;
     close(fd);
 
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, listener_);
     EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
@@ -168,7 +168,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0004, TestSize.Level0)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0004!" << errno;
     close(fd);
 
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, listener_);
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     ASSERT_EQ(remove(destPath.c_str()), 0);
@@ -187,16 +187,16 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0005, TestSize.Level0)
     string localUri = "/data/test/test.txt";
     string dstUri = "/data/test/test.txt";
 
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy("", localUri, emptyCallback_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy("", localUri, emptyCallback_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, "", listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(localUri, "", listener_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(localUri, dstUri, listener_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(localUri, dstUri, emptyCallback_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(localUri, dstUri, emptyCallback_);
     EXPECT_EQ(ret, EINVAL);
 
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0005 End";
@@ -216,10 +216,10 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0006, TestSize.Level0)
     string srcPath = "/storage/media/100/local/files/Docs/1.txt";
 
     EXPECT_TRUE(OHOS::RemoveFile(srcPath));
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, emptyCallback_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, emptyCallback_);
     EXPECT_EQ(ret, EINVAL);
 
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener_);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, listener_);
     EXPECT_EQ(ret, ENOENT);
 
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0006 End";
@@ -239,7 +239,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0007, TestSize.Level0)
     string srcPath = "/storage/External/mtp/1.txt";
 
     EXPECT_TRUE(OHOS::RemoveFile(srcPath));
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, emptyCallback_);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcUri, destUri, emptyCallback_);
     EXPECT_EQ(ret, EINVAL);
 
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0007 End";
@@ -259,14 +259,14 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0001, TestSize.Level0)
     string srcpath = "/storage/media/100/local/files/Docs/11.txt";
     string destpath = "/storage/media/100/local/files/Docs/dest11.txt";
     // infos is nullptr
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(nullptr);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(nullptr);
     EXPECT_EQ(ret, EINVAL);
 
     auto infos = std::make_shared<FileInfos>();
     infos->srcUri = srcuri;
     infos->destUri = desturi;
     // infos localListener is nullptr
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, EINVAL);
 
     infos->srcUriIsFile = true;
@@ -275,18 +275,18 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0001, TestSize.Level0)
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, listener_);
     // srcPath and destPath is same
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, EINVAL);
 
     infos->destPath = destpath;
     // src file not exist
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, ENOENT);
 
     int fd = open(srcpath.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_ExecLocal_0001" << errno;
     close(fd);
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, E_OK);
     EXPECT_TRUE(std::filesystem::exists("/storage/media/100/local/files/Docs/dest11.txt"));
     ASSERT_EQ(remove(srcpath.c_str()), 0);
@@ -295,7 +295,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0001, TestSize.Level0)
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, emptyCallback_);
     // src file not exist, callback is nullptr
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, ENOENT);
     ASSERT_EQ(remove(destpath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0001 End";
@@ -317,7 +317,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0002, TestSize.Level0)
     string destpath = "/storage/media/100/local/files/Docs/dstaa11/";
     std::error_code errCode;
     if (!std::filesystem::exists(srcpath, errCode) && errCode.value() == E_OK) {
-        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(srcpath);
         if (res != E_OK) {
             GTEST_LOG_(INFO) <<"Failed to mkdir";
         }
@@ -333,16 +333,16 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0002, TestSize.Level0)
     ProcessCallback processCallback = [](uint64_t processSize, uint64_t totalSize) -> void {};
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     // destpath not exist
     EXPECT_EQ(ret, ENOENT);
 
     if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
-        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(destpath);
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
         EXPECT_EQ(res, E_OK);
     }
     // dir copy to dir
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, 0);
 
     ASSERT_EQ(remove(srcpath.c_str()), 0);
@@ -365,7 +365,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0003, TestSize.Level0)
     string destpath = "/storage/media/100/local/files/Docs/dstaa12/";
     std::error_code errCode;
     if (!std::filesystem::exists(srcpath, errCode) && errCode.value() == E_OK) {
-        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(srcpath);
         if (res != E_OK) {
             GTEST_LOG_(INFO) <<"Failed to mkdir";
         }
@@ -383,7 +383,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0003, TestSize.Level0)
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
     // srcUriIsFile is true, destpath not exist
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_NE(ret, E_OK);
     ASSERT_EQ(ForceRemoveDirectory(srcpath), true);
     if (!ForceRemoveDirectory(destpath)) {
@@ -417,10 +417,10 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0004, TestSize.Level0)
         infos->srcUriIsFile, processCallback);
 
     if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
-        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(destpath);
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
         EXPECT_EQ(res, E_OK);
     }
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     // src path not exist
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(ForceRemoveDirectory(destpath.c_str()), true);
@@ -446,7 +446,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0005, TestSize.Level0)
 
     std::error_code errCode;
     if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
-        int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(destpath);
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
         ASSERT_EQ(res, E_OK);
     }
 
@@ -459,7 +459,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0005, TestSize.Level0)
     infos->destPath = destpath;
     infos->srcUriIsFile = true;
     // file to dir
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(srcpath.c_str()), 0);
     EXPECT_TRUE(ForceRemoveDirectory(destpath));
@@ -488,7 +488,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0006, TestSize.Level0)
         infos->srcUriIsFile, listener_);
 
     // destpath is invalid
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
     EXPECT_EQ(ret, ENOENT);
     GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0006 End";
 }
@@ -512,7 +512,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0001, TestSize.Level
     EXPECT_TRUE(std::filesystem::exists(infos->destPath));
 
     // 调用 DeleteResFile
-    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    Storage::DistributedFile::FileCopyManager::GetInstance().DeleteResFile(infos);
 
     // 验证文件是否被删除
     EXPECT_FALSE(std::filesystem::exists(infos->destPath));
@@ -537,7 +537,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0002, TestSize.Level
     EXPECT_FALSE(std::filesystem::exists(infos->destPath));
 
     // 调用 DeleteResFile
-    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    Storage::DistributedFile::FileCopyManager::GetInstance().DeleteResFile(infos);
 
     // 验证文件仍然不存在
     EXPECT_FALSE(std::filesystem::exists(infos->destPath));
@@ -574,7 +574,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level
     };
 
     // 调用 DeleteResFile
-    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    Storage::DistributedFile::FileCopyManager::GetInstance().DeleteResFile(infos);
 
     // 验证文件和目录是否被删除
     EXPECT_FALSE(std::filesystem::exists("/data/test/file1.txt"));
@@ -583,7 +583,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0003, TestSize.Level
 
     // 调用 DeleteResFile
     infos->localListener = nullptr;
-    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    Storage::DistributedFile::FileCopyManager::GetInstance().DeleteResFile(infos);
     GTEST_LOG_(INFO) << "FileCopyManager_DeleteResFile_0003 End";
 }
 
@@ -609,7 +609,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_DeleteResFile_0004, TestSize.Level
     };
 
     // 调用 DeleteResFile
-    Storage::DistributedFile::FileCopyManager::GetInstance()->DeleteResFile(infos);
+    Storage::DistributedFile::FileCopyManager::GetInstance().DeleteResFile(infos);
 
     // 验证文件和目录仍然不存在
     EXPECT_FALSE(std::filesystem::exists("/data/test/nonexistent_file.txt"));
@@ -637,7 +637,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0001, TestSize.Level0)
     int32_t srcFd = -1;
 
     // Call the OpenSrcFile function
-    int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
+    int ret = Storage::DistributedFile::FileCopyManager::GetInstance().OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate the file descriptor is opened successfully
     EXPECT_EQ(ret, 1);
@@ -667,7 +667,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0002, TestSize.Level0)
     std::ofstream(infos->srcPath).close();
 
     // Call the OpenSrcFile function
-    int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
+    int ret = Storage::DistributedFile::FileCopyManager::GetInstance().OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate the file descriptor is opened successfully
     EXPECT_EQ(ret, 1);
@@ -696,7 +696,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0003, TestSize.Level0)
 
     // Call the OpenSrcFile function
     int32_t srcFd = -1;
-    int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
+    int ret = Storage::DistributedFile::FileCopyManager::GetInstance().OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate that the function fails when file does not exist
     EXPECT_NE(ret, 0);  // Expect error code
@@ -727,7 +727,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_OpenSrcFile_0004, TestSize.Level0)
 
     // Call the OpenSrcFile function
     int32_t srcFd = -1;
-    int ret = Storage::DistributedFile::FileCopyManager::GetInstance()->OpenSrcFile(infos->srcPath, infos, srcFd);
+    int ret = Storage::DistributedFile::FileCopyManager::GetInstance().OpenSrcFile(infos->srcPath, infos, srcFd);
 
     // Validate the file descriptor is opened successfully
     EXPECT_EQ(ret, 0);
@@ -750,7 +750,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CheckOrCreateLPath_0001, TestSize.
     GTEST_LOG_(INFO) << "FileCopyManager_CheckOrCreateLPath_0001 Start";
 
     std::string destPath = "";
-    int32_t ret = Storage::DistributedFile::FileCopyManager::GetInstance()->CheckOrCreatePath(destPath);
+    int32_t ret = Storage::DistributedFile::FileCopyManager::GetInstance().CheckOrCreatePath(destPath);
     EXPECT_EQ(ret, FILE_NOT_FOUND);
 
     GTEST_LOG_(INFO) << "FileCopyManager_CheckOrCreateLPath_0001 End";
@@ -774,22 +774,22 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RemoveFileInfos_0001, TestSize.Lev
     infos2->destUri = "destUri2";
     infos3->srcUri = "srcUri1";
     infos3->destUri = "destUri2";
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.clear();
-    Storage::DistributedFile::FileCopyManager::GetInstance()->AddFileInfos(infos1);
-    Storage::DistributedFile::FileCopyManager::GetInstance()->AddFileInfos(infos2);
-    auto len = Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.size();
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.clear();
+    Storage::DistributedFile::FileCopyManager::GetInstance().AddFileInfos(infos1);
+    Storage::DistributedFile::FileCopyManager::GetInstance().AddFileInfos(infos2);
+    auto len = Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 2); // 2: vector size
 
-    Storage::DistributedFile::FileCopyManager::GetInstance()->RemoveFileInfos(infos2);
-    len = Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.size();
+    Storage::DistributedFile::FileCopyManager::GetInstance().RemoveFileInfos(infos2);
+    len = Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 1); // 1: vector size
 
-    Storage::DistributedFile::FileCopyManager::GetInstance()->RemoveFileInfos(infos3);
-    len = Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.size();
+    Storage::DistributedFile::FileCopyManager::GetInstance().RemoveFileInfos(infos3);
+    len = Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 1); // 1: vector size
 
-    Storage::DistributedFile::FileCopyManager::GetInstance()->RemoveFileInfos(infos1);
-    len = Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.size();
+    Storage::DistributedFile::FileCopyManager::GetInstance().RemoveFileInfos(infos1);
+    len = Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.size();
     EXPECT_EQ(len, 0); // 0: vector size
 }
 
@@ -805,7 +805,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0
     auto infos = std::make_shared<FileInfos>();
     std::string srcPath = "";
     std::string dstPath = "";
-    auto res = Storage::DistributedFile::FileCopyManager::GetInstance()->RecurCopyDir(srcPath, dstPath, infos);
+    auto res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
     EXPECT_EQ(res, E_OK);
 
     srcPath = "/data/test/RecurCopyDir/src/";
@@ -831,11 +831,11 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0
     }
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->RecurCopyDir(srcPath, dstPath, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
     EXPECT_EQ(res, E_OK);
 
     dstPath = dstPath + "dir/dir1/dir2";
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->RecurCopyDir(srcPath, dstPath, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
     EXPECT_EQ(res, ENOENT);
 
     std::string rootPath = "/data/test/RecurCopyDir";
@@ -859,17 +859,17 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level0)
     std::string dstPath = "/data/test/CopySubDir/dst";
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    auto res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopySubDir(srcPath, dstPath, infos);
+    auto res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos);
     EXPECT_EQ(res, ENOENT);
 
     if (!ForceCreateDirectory(dstPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 create dir err" << dstPath;
     }
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopySubDir(srcPath, dstPath, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos);
     EXPECT_EQ(res, E_OK);
 
     std::string tmpDstDir = dstPath + "/dir";
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopySubDir(srcPath, tmpDstDir, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, tmpDstDir, infos);
     EXPECT_EQ(res, E_OK);
     std::string rootPath = "/data/test/CopySubDir";
     if (!ForceRemoveDirectory(rootPath)) {
@@ -892,18 +892,18 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level0)
     std::string dstPath = "/data/test/CopyDirFunc/dst";
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    auto res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopyDirFunc(srcPath, dstPath, infos);
+    auto res = Storage::DistributedFile::FileCopyManager::GetInstance().CopyDirFunc(srcPath, dstPath, infos);
     EXPECT_EQ(res, EINVAL);
 
     std::string tmpSrcPath = "/test/CopyDirFunc/";
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopyDirFunc(tmpSrcPath, dstPath, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopyDirFunc(tmpSrcPath, dstPath, infos);
     EXPECT_EQ(res, ENOENT);
 
     srcPath += "src";
     if (!ForceCreateDirectory(dstPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_CopyDirFunc_0001 create dir err" << dstPath;
     }
-    res = Storage::DistributedFile::FileCopyManager::GetInstance()->CopyDirFunc(srcPath, dstPath, infos);
+    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopyDirFunc(srcPath, dstPath, infos);
     EXPECT_EQ(res, E_OK);
     std::string rootPath = "/data/test/CopyDirFunc";
     if (!ForceRemoveDirectory(rootPath)) {
@@ -933,9 +933,9 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0001, TestSize.Level0)
     infos2->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback_));
     infos2->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos2);
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel();
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos1);
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos2);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel();
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0001 End";
 }
@@ -958,8 +958,8 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0002, TestSize.Level0)
     std::string srcUri = "srcUri1";
     std::string destUri = "destUri1";
 
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri, true);
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos1);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(srcUri, destUri, true);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0002 End";
 }
@@ -985,9 +985,9 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0003, TestSize.Level0)
     infos2->transListener = sptr(new (std::nothrow) TransListener("/data/test/test.txt", emptyCallback_));
     infos2->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos2);
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(true);
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos1);
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos2);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(true);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0003 End";
 }
@@ -1010,24 +1010,24 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Cancel_0004, TestSize.Level0)
     std::string srcUri = "srcUri1";
     std::string destUri = "destUri3";
 
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.emplace_back(infos1);
-    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.emplace_back(infos1);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
     srcUri = "srcUri2";
     destUri = "destUri1";
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
 
     srcUri = "srcUri2";
     destUri = "destUri2";
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
 
     srcUri = "srcUri1";
     destUri = "destUri1";
-    ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+    ret = Storage::DistributedFile::FileCopyManager::GetInstance().Cancel(srcUri, destUri);
     EXPECT_EQ(ret, E_OK);
-    Storage::DistributedFile::FileCopyManager::GetInstance()->FileInfosVec_.clear();
+    Storage::DistributedFile::FileCopyManager::GetInstance().FileInfosVec_.clear();
     GTEST_LOG_(INFO) << "FileCopyManager_Cancel_0004 End";
 }
 
@@ -1042,7 +1042,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
     GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001";
     string srcpath = "/storage/media/100/local/files/Docs/bb/";
     std::error_code errCode;
-    int res = Storage::DistributedFile::FileCopyManager::GetInstance()->MakeDir(srcpath);
+    int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(srcpath);
     EXPECT_EQ(res, E_OK);
     ASSERT_EQ(ForceRemoveDirectory(srcpath.c_str()), true);
     GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001 End";

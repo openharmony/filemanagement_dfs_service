@@ -399,7 +399,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_001, TestSize.Leve
     ASSERT_NE(daemonExecute_, nullptr);
     // Test case 1: CreateSessionServer fails
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info),
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, "networkId"),
               E_SOFTBUS_SESSION_FAILED);
 
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_001 end";
@@ -423,7 +423,8 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_002, TestSize.Leve
     ASSERT_NE(daemonExecute_, nullptr);
     // Test case 2: CreateSessionServer success but daemon is nullptr
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_INVAL_ARG_NAPI);
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, "networkId"),
+              E_INVAL_ARG_NAPI);
 
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_002 end";
 }
@@ -447,7 +448,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_003, TestSize.Leve
     ASSERT_NE(daemonExecute_, nullptr);
     // Test case 3: CreateSessionServer succeeds, but authority is not media or docs
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, "networkId"), E_OK);
 
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_003 end";
 }
@@ -473,7 +474,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_PrepareSessionInner_004, TestSize.Leve
     // Test case 4: CreateSessionServer succeeds, authority is media or docs, but Copy fails
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
 
-    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info), E_OK);
+    EXPECT_EQ(daemonExecute_->PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, "networkId"), E_OK);
     GTEST_LOG_(INFO) << "DaemonExecute_PrepareSessionInner_004 end";
 }
 
@@ -532,7 +533,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_003, TestSize.Le
 
     // // Initialize the PrepareSessionData
     auto prepareSessionData =
-        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info, nullBlock);
+        std::make_shared<PrepareSessionData>(srcUri, physicalPath, sessionName, daemon, info, nullBlock, "networkId");
 
     // Initialize InnerEvent
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData);
@@ -561,7 +562,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_004, TestSize.Le
 
     // Initialize PrepareSessionData
     auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
-                                                                   info, prepareSessionBlock);
+                                                                   info, prepareSessionBlock, "networkId");
 
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
 
@@ -593,7 +594,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Le
 
     // Initialize PrepareSessionData
     auto prepareSessionData = std::make_shared<PrepareSessionData>("test_uri", "test_path", "test_session", daemon,
-                                                                   info, prepareSessionBlock);
+                                                                   info, prepareSessionBlock, "networkId");
 
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
 

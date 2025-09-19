@@ -20,47 +20,55 @@ namespace OHOS::FileManagement {
 using namespace std;
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->CheckCallerPermission(permissionName);
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->CheckCallerPermission(permissionName);
 }
 
 bool DfsuAccessTokenHelper::CheckPermission(uint32_t tokenId, const std::string &permissionName)
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->CheckPermission(tokenId, permissionName);
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->CheckPermission(tokenId, permissionName);
 }
 
 int32_t DfsuAccessTokenHelper::GetCallerBundleName(std::string &bundleName)
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->GetCallerBundleName(bundleName);
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->GetCallerBundleName(bundleName);
 }
 
 int32_t DfsuAccessTokenHelper::GetBundleNameByToken(uint32_t tokenId, std::string &bundleName)
 {
     return FileManagement::CloudDiskService::DfsuAccessToken::
-           dfsuAccessToken->GetBundleNameByToken(tokenId, bundleName);
+        dfsuAccessToken->GetBundleNameByToken(tokenId, bundleName);
 }
 bool DfsuAccessTokenHelper::IsSystemApp()
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->IsSystemApp();
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->IsSystemApp();
 }
 
 int32_t DfsuAccessTokenHelper::GetUserId()
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->GetUserId();
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->GetUserId();
 }
 
 int32_t DfsuAccessTokenHelper::GetPid()
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->GetPid();
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->GetPid();
 }
 
 bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uri)
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->CheckUriPermission(uri);
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->CheckUriPermission(uri);
 }
 
 int32_t DfsuAccessTokenHelper::GetAccountId(int32_t &userId)
 {
-    return FileManagement::CloudDiskService::DfsuAccessToken::dfsuAccessToken->GetAccountId(userId);
+    return FileManagement::CloudDiskService::DfsuAccessToken::
+        dfsuAccessToken->GetAccountId(userId);
 }
 
 } // namespace OHOS::FileManagement

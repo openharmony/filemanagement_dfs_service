@@ -13,24 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_ERROR_CODE_H
-#define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_ERROR_CODE_H
-
 /**
- * @addtogroup CloudDiskManager
+ * @addtogroup CloudDisk
  * @{
  *
  * @brief Provides APIs and error code for managing cloud disks.
  * @since 21
+ * @version 1.0
  */
 
 /**
  * @file oh_cloud_disk_error_code.h
  *
  * @brief Provides the definitions of cloud disk manager error codes.
+ *
+ * @library libohclouddiskmanager.so
+ * @kit CoreFileKit
  * @syscap SystemCapability.FileManagement.CloudDiskManager
  * @since 21
+ * @version 1.0
  */
+
+#ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_ERROR_CODE_H
+#define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_ERROR_CODE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,11 +49,15 @@ typedef enum CloudDisk_ErrorCode {
     /**
      * @error Operation completed successfully.
      */
-    CLOUD_DISK_ERR_OK = 0,
+    CLOUD_DISK_OK = 0,
     /**
      * @error Permission verification failed.
      */
     CLOUD_DISK_PERMISSION_DENIED = 201,
+    /**
+     * @error Device not supported.
+     */
+    CLOUD_DISK_NOT_SUPPORTED = 801,
     /**
      * @error Invalid input parameter.
      */
@@ -106,16 +115,13 @@ typedef enum CloudDisk_ErrorCode {
      */
     CLOUD_DISK_TRY_AGAIN = 34400014,
     /**
-     * @error Internal error occurred.
+     * @error Cloud disk is not allowed on this device.
      */
-    CLOUD_DISK_INTERNAL_ERROR = 34400015,
-    /**
-     * @error Cloud disk not support.
-     */
-    CLOUD_DISK_NOT_SUPPORTED = 34400016,
+    CLOUD_DISK_NOT_ALLOWED = 34400015,
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus
 }
 #endif
+/** @} */
 #endif // FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_ERROR_CODE_H

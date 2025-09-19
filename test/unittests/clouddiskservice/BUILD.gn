@@ -289,6 +289,7 @@ ohos_unittest("disk_monitor_test") {
   include_dirs = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${distributedfile_path}/test/unittests/clouddiskservice/monitor/mock_monitor",
+    "${distributedfile_path}/utils/dentry/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${utils_path}/log/include",
   ]
@@ -324,6 +325,7 @@ ohos_unittest("disk_utils_test") {
 
   include_dirs = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/dentry/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${utils_path}/log/include",
   ]
@@ -690,7 +692,11 @@ group("clouddisk_service_test") {
     ":cloud_disk_sync_folder_test",
     ":disk_monitor_test",
     ":disk_utils_test",
-    "
+    ":cloud_disk_service_logfile_test",
+    ":cloud_disk_service_metafile_test",
+    ":cloud_disk_service_metafile_static_test",
+    ":convertor_test",
+    ":uuid_helper_test",
   ]
 
   if (dfs_service_feature_enable_cloud_disk) {

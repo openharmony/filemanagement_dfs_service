@@ -48,6 +48,7 @@
 #include "softbus_session_pool.h"
 #include "system_ability_definition.h"
 #include "system_ability_manager_client_mock.h"
+#include "securec.h"
 
 namespace {
 bool g_isLocalItDevice = false;
@@ -69,6 +70,9 @@ OHOS::Storage::DistributedFile::DfsVersion g_dfsVersion;
 bool g_isRemoteDfsVersionLowerThanGiven = false;
 int32_t g_getDeviceStatus = 0;
 int32_t g_putDeviceStatus = 0;
+bool g_checkSrcPermission = true;
+bool g_getLocalAccountInfo = true;
+bool g_checkSinkPermission = true;
 } // namespace
 
 namespace {
@@ -105,14 +109,6 @@ int32_t DeviceProfileAdapter::GetDeviceStatus(const std::string &networkId, bool
     return g_getDeviceStatus;
 }
 
-bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(
-    const std::string &remoteNetworkId,
-    const DfsVersion &thresholdDfsVersion,
-    VersionPackageName packageName)
-{
-    return g_isRemoteDfsVersionLowerThanGiven;
-}
-
 int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
 {
     return g_putDeviceStatus;
@@ -121,6 +117,28 @@ int32_t DeviceProfileAdapter::PutDeviceStatus(bool status)
 bool ControlCmdParser::IsLocalItDevice()
 {
     return g_isLocalItDevice;
+}
+
+bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(const std::string &remoteNetworkId,
+                                                            const DfsVersion &givenDfsVersion,
+                                                            VersionPackageName packageName)
+{
+    return g_isRemoteDfsVersionLowerThanGiven;
+}
+
+bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
+{
+    return g_checkSrcPermission;
+}
+
+bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
+{
+    return g_getLocalAccountInfo;
+}
+
+bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccountInfo)
+{
+    return g_checkSinkPermission;
 }
 } // namespace OHOS::Storage::DistributedFile
 
@@ -271,8 +289,6 @@ void DaemonTest::SetUpTestCase(void)
     ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = softBusHandlerAssetMock_;
     softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
-    deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
-    DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
@@ -302,10 +318,6 @@ void DaemonTest::TearDownTestCase(void)
     softBusHandlerAssetMock_ = nullptr;
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
     softBusHandlerMock_ = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
@@ -320,8 +332,6 @@ void DaemonTest::SetUp(void)
     bool runOnCreate = true;
     daemon_ = new (std::nothrow) Daemon(saID, runOnCreate);
     ASSERT_TRUE(daemon_ != nullptr) << "daemon_ assert failed!";
-    g_getDfsVersionFromNetworkId = 0;
-    g_dfsVersion = {0, 0, 0};
     g_isRemoteDfsVersionLowerThanGiven = false;
     g_getDeviceStatus = 0;
     g_putDeviceStatus = 0;
@@ -336,6 +346,15 @@ void DaemonTest::SetUp(void)
     g_isLocalItDevice = false;
     channelManagerMock_ = std::make_shared<ChannelManagerMock>();
     IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
+    deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
+
+    g_getDfsVersionFromNetworkId = 0;
+    g_dfsVersion = {0, 0, 0};
+    g_isRemoteDfsVersionLowerThanGiven = false;
+    g_checkSrcPermission = true;
+    g_getLocalAccountInfo = true;
+    g_checkSinkPermission = true;
 }
 
 void DaemonTest::TearDown(void)
@@ -344,6 +363,8 @@ void DaemonTest::TearDown(void)
     daemon_ = nullptr;
     channelManagerMock_ = nullptr;
     IChannelManagerMock::iChannelManagerMock = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 }
 
 /**
@@ -561,7 +582,7 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
     ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
 
@@ -582,7 +603,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 begin";
     ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), ERR_BAD_VALUE);
 
@@ -603,13 +624,21 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 begin";
     ASSERT_NE(daemon_, nullptr);
     DistributedHardware::DmDeviceInfo deviceInfo;
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    string networkId = "testNetworkId";
+    strcpy_s(deviceInfo.networkId, 96, networkId.c_str());
+
+    ConnectCount::GetInstance().RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_NULLPTR);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_EVENT_HANDLER);
     sleep(1);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((ERR_BAD_VALUE)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_NULLPTR);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_EVENT_HANDLER);
+    sleep(1);
+
+    sptr<IFileDfsListener> nullListener = nullptr;
+    ConnectCount::GetInstance().AddConnect(333, networkId, nullListener);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_OK);
     sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }
@@ -625,7 +654,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo = {.networkId = "test"};
     sptr<IFileDfsListener> remoteReverseObj = nullptr;
-    ConnectCount::GetInstance()->RemoveAllConnect();
+    ConnectCount::GetInstance().RemoveAllConnect();
 
     // g_checkCallerPermission is ok but remote reject
     g_checkCallerPermission = true;
@@ -748,22 +777,30 @@ HWTEST_F(DaemonTest, DaemonTest_RequestSendFile_001, TestSize.Level1)
     g_getCallingNetworkId = "testNetWork1";
     std::vector<DmDeviceInfo> deviceList;
     deviceList.push_back(deviceInfo);
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     daemon_->eventHandler_ = nullptr;
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), E_EVENT_HANDLER);
 
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     EXPECT_EQ(daemon_->RequestSendFile("../srcUri", "", "", ""), E_ILLEGAL_URI);
 
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     EXPECT_EQ(daemon_->RequestSendFile("", "../dstUri", "", ""), E_ILLEGAL_URI);
 
     daemon_->StartEventHandler();
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     EXPECT_EQ(daemon_->RequestSendFile("", "", "", ""), ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFile_001 end";
 }
@@ -909,39 +946,53 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     std::string physicalPath;
     HmdfsInfo info;
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr, "networkId"), E_INVAL_ARG_NAPI);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
 
-    EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon), E_ILLEGAL_URI);
+    EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon, "networkId"), E_ILLEGAL_URI);
 
-    EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon), E_ILLEGAL_URI);
+    EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon, "networkId"), E_ILLEGAL_URI);
+
+    g_checkSrcPermission = false;
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
+
+    g_checkSrcPermission = true;
+    g_getLocalAccountInfo = false;
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
+
+    g_checkSrcPermission = true;
+    g_getLocalAccountInfo = true;
+    EXPECT_CALL(*daemon, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
+
+    g_isRemoteDfsVersionLowerThanGiven = true;
 
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
 
     g_getHapTokenInfo = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_GET_USER_ID);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_USER_ID);
 
     g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
     g_getPhysicalPath = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_GET_PHYSICAL_PATH_FAILED);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
 
     g_getPhysicalPath = E_OK;
     g_checkValidPath = false;
     info.dirExistFlag = false;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_GET_PHYSICAL_PATH_FAILED);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
 
     g_checkValidPath = true;
     g_physicalPath = "test@test/test";
     info.dirExistFlag = true;
     std::string dstUri = "file://com.example.app/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_OK);
+    EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_GetRealPath_001 end";
 }
 
@@ -1066,15 +1117,19 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfo_001, TestSize.Level1)
     (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
         NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
     deviceList.push_back(deviceInfo);
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return(""));
     bool isSrcFile = false;
     bool srcIsDir = false;
     EXPECT_EQ(daemon_->GetRemoteCopyInfo("", isSrcFile, srcIsDir), E_SOFTBUS_SESSION_FAILED);
 
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+#endif
     EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return("test"));
     EXPECT_EQ(daemon_->GetRemoteCopyInfo("", isSrcFile, srcIsDir), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfo_001 end";
@@ -1147,40 +1202,50 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 begin";
-    ASSERT_NE(daemon_, nullptr);
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
-        .WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->Copy("", "", nullptr, ""), E_GET_DEVICE_ID);
 
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
-        .WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->Copy("", "", nullptr, ""), E_INVAL_ARG_NAPI);
+    EXPECT_EQ(daemon_->Copy("", "", nullptr, "", "networkId"), E_INVAL_ARG_NAPI);
 
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
-        .WillOnce(Return(E_OK));
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->Copy("", "", daemon, ""), E_SA_LOAD_FAILED);
-
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _))
-        .WillOnce(Return(E_OK));
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->Copy("", "", daemon, ""), E_OK);
 
     string srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt";
     string destPath = "/storage/media/100/local/files/Docs/aa1/";
-    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, "", "networkId"), E_INVAL_ARG);
 
     srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt?networkid=123456";
-    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, "", "networkId"), E_INVAL_ARG);
 
     srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
     destPath = "/storage/media/100/local/files/Docs/../aa1/";
-    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, "", "networkId"), E_INVAL_ARG);
 
     destPath = "/storage/media/100/local/files/Docs/../aa1/?networkid=123456";
-    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, ""), E_INVAL_ARG);
+    EXPECT_EQ(daemon_->Copy(srcUri, destPath, daemon, "", "networkId"), E_INVAL_ARG);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), E_GET_DEVICE_ID);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(E_OK));
+    g_checkSrcPermission = false;
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), ERR_ACL_FAILED);
+
+    g_checkSrcPermission = true;
+    g_getLocalAccountInfo = false;
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), ERR_ACL_FAILED);
+
+    g_checkSrcPermission = true;
+    g_getLocalAccountInfo = true;
+    EXPECT_CALL(*daemon, RequestSendFileACL(_, _, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), E_SA_LOAD_FAILED);
+
+    g_isRemoteDfsVersionLowerThanGiven = true;
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), E_SA_LOAD_FAILED);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_EQ(daemon_->Copy("", "", daemon, "", "networkId"), E_OK);
+
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 end";
 }
 
@@ -1692,7 +1757,7 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_001, TestSize.Level1)
     EXPECT_EQ(result, E_OK);
 
     // Verify listener was added
-    EXPECT_TRUE(ConnectCount::GetInstance()->RmFileConnect(instanceId));
+    EXPECT_TRUE(ConnectCount::GetInstance().RmFileConnect(instanceId));
 
     GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_001 end";
 }
@@ -2014,5 +2079,48 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_005, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_005 end";
 }
 
+/**
+ * @tc.name: DaemonTest_RequestSendFileACL_001
+ * @tc.desc: verify RequestSendFileACL.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RequestSendFileACL_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 begin";
+
+    AccountInfo accountInfo;
+    g_checkSinkPermission = false;
+    EXPECT_EQ(daemon_->RequestSendFileACL("", "", "", "", accountInfo), ERR_ACL_FAILED);
+
+    g_checkSinkPermission = true;
+    EXPECT_NE(daemon_->RequestSendFileACL("", "", "", "", accountInfo), ERR_ACL_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetRemoteCopyInfoACL_001
+ * @tc.desc: verify GetRemoteCopyInfoACL.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetRemoteCopyInfoACL_001 begin";
+
+    AccountInfo accountInfo;
+    bool isSrcFile = false;
+    bool srcIsDir = false;
+
+    g_checkSinkPermission = false;
+    EXPECT_EQ(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
+
+    g_checkSinkPermission = true;
+    EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return("test"));
+    EXPECT_NE(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
+}
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

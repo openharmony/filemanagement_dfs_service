@@ -39,7 +39,6 @@ static const std::string MEDIA_AUTHORITY = "media";
 static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string FILE_SCHEMA = "file://";
 static const std::string FILE_SEPARATOR = "/";
-std::shared_ptr<RemoteFileCopyManager> RemoteFileCopyManager::instance_ = nullptr;
 
 static std::string GetBundleName(const std::string &uri)
 {
@@ -89,6 +88,12 @@ static int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gi
     return E_OK;
 }
 
+RemoteFileCopyManager &RemoteFileCopyManager::GetInstance()
+{
+    static RemoteFileCopyManager instance;
+    return instance;
+}
+
 bool RemoteFileCopyManager::IsMediaUri(const std::string &uriPath)
 {
     Uri uri(uriPath);
@@ -115,15 +120,6 @@ static std::string GetFileName(const std::string &path)
         return "";
     }
     return path.substr(pos + 1);
-}
-
-std::shared_ptr<RemoteFileCopyManager> RemoteFileCopyManager::GetInstance()
-{
-    static std::once_flag once;
-    std::call_once(once, []() {
-        RemoteFileCopyManager::instance_ = std::make_shared<RemoteFileCopyManager>();
-    });
-    return instance_;
 }
 
 void RemoteFileCopyManager::AddFileInfos(std::shared_ptr<FileInfos> infos)
@@ -223,7 +219,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
         LOGE("CreateFileInfos failed,ret= %{public}d", ret);
         return ret;
     }
-    std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback = 
+    std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback =
         [&listener](uint64_t processSize, uint64_t totalSize) -> void {
         if (processSize != totalSize) {
             listener->OnFileReceive(totalSize, processSize);
@@ -231,7 +227,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
     };
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
-    auto result = FileCopyManager::GetInstance()->ExecLocal(infos);
+    auto result = FileCopyManager::GetInstance().ExecLocal(infos);
     if (ChangeOwnerRecursive(infos->destPath, infos->callingUid, infos->callingUid) != 0) {
         LOGE("ChangeOwnerRecursive failed, calling uid= %{public}d", infos->callingUid);
     }

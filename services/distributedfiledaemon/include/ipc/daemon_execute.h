@@ -47,7 +47,8 @@ private:
                                 std::string &physicalPath,
                                 const std::string &sessionName,
                                 const sptr<IDaemon> &daemon,
-                                HmdfsInfo &info);
+                                HmdfsInfo &info,
+                                const std::string &srcNetworkId);
 private:
     std::string GetZipName(const std::string &relativePath);
     std::vector<std::string> GetFileList(const std::vector<std::string> &uris,

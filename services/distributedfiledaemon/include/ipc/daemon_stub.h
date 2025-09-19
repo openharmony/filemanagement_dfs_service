@@ -45,7 +45,9 @@ private:
     int32_t HandleCancelCopyTask(MessageParcel &data, MessageParcel &reply);
     int32_t HandleInnerCancelCopyTask(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRequestSendFile(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleRequestSendFileACL(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleGetRemoteCopyInfoACL(MessageParcel &data, MessageParcel &reply);
 
     int32_t HandlePushAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply);

@@ -22,16 +22,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::shared_ptr<ConnectCount> ConnectCount::instance_ = nullptr;
 static const int32_t ON_STATUS_OFFLINE = 13900046;
-std::shared_ptr<ConnectCount> ConnectCount::GetInstance()
-{
-    static std::once_flag once;
-    std::call_once(once, [&]() {
-        instance_ = std::make_shared<ConnectCount>();
-    });
-    return instance_;
-}
+IMPLEMENT_SINGLE_INSTANCE(ConnectCount);
 
 void ConnectCount::AddConnect(uint32_t callingTokenId, const std::string &networkId, sptr<IFileDfsListener> &listener)
 {

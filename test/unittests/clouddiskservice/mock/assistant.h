@@ -31,6 +31,17 @@ public:
     virtual DIR *opendir(const char *path) = 0;
     virtual int dirfd(DIR *d) = 0;
     virtual int setxattr(const char *path, const char *name, const void *value, size_t size, int flags) = 0;
+    virtual int fstat(int fd, struct stat *buf) = 0;
+    virtual int ftruncate(int fd, off_t length) = 0;
+
+    // file_utils
+    virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
+    virtual int64_t WriteFile(int fd, const void *data, off_t offset, size_t size) = 0;
+    virtual int FilePosLock(int fd, off_t offset, size_t size, int type) = 0;
+
+    virtual int access(const char *name, int type) = 0;
+    virtual struct dirent* readdir(DIR* d) = 0;
+    virtual int MockStat(const char* path, struct stat* buf);
 };
 
 class AssistantMock : public Assistant {
@@ -41,6 +52,17 @@ public:
     MOCK_METHOD1(opendir, DIR *(const char *));
     MOCK_METHOD1(dirfd, int(DIR *));
     MOCK_METHOD5(setxattr, int(const char *, const char *, const void *, size_t, int));
+    MOCK_METHOD2(fstat, int(int, struct stat *));
+    MOCK_METHOD2(ftruncate, int(int, off_t));
+
+    // file_utils
+    MOCK_METHOD4(ReadFile, int64_t(int fd, off_t offset, size_t size, void *data));
+    MOCK_METHOD4(WriteFile, int64_t(int fd, const void *data, off_t offset, size_t size));
+    MOCK_METHOD4(FilePosLock, int(int fd, off_t offset, size_t size, int type));
+
+    MOCK_METHOD2(access, int(const char *, int));
+    MOCK_METHOD1(readdir, struct dirent*(DIR*));
+    MOCK_METHOD2(MockStat, int(const char*, struct stat*));
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

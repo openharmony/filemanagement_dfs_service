@@ -55,6 +55,7 @@ ohos_unittest("device_info_test") {
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -326,63 +327,6 @@ ohos_unittest("kernel_talker_test") {
   module_out_path = module_output_path
 
   sources = [ "network/kernel_talker_test.cpp" ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:sandbox_helper_native",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
-    "eventhandler:libeventhandler",
-    "file_api:securitylabel",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "ipc:ipc_single",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-    "zlib:shared_libz",
-  ]
-
-  defines = [ "private=public" ]
-
-  if (support_same_account) {
-    defines += [ "SUPPORT_SAME_ACCOUNT" ]
-  }
-}
-
-ohos_unittest("session_pool_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  module_out_path = module_output_path
-
-  sources = [ "network/session_pool_test.cpp" ]
 
   configs = [
     ":module_private_config",

@@ -18,6 +18,7 @@
 #include <cerrno>
 #include <dirent.h>
 #include <fcntl.h>
+#include <securec.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -123,7 +124,7 @@ static uint32_t GetCurrentLine(int fd)
             LOGE("load page failed");
             return 0;
         }
-        if (logGroup->nsl[0].timestamp != 0) {
+        if (logGroup->nsl[0].timestamp == 0) {
             UnlockCurrentPage(fd, i);
             break;
         } else if (logGroup->nsl[0].line != startLine + offset) {
@@ -227,7 +228,7 @@ int32_t CloudDiskServiceLogFile::GenerateLogBlock(const struct EventInfo &eventI
     }
     WriteLogFile(logBlock);
     line = logBlock.line;
-    LOGD("Generate log line:%{public}lu, operationType:%{public}d", line, logBlock.operationType);
+    LOGD("Generate log line:%{public}llu, operationType:%{public}d", line, logBlock.operationType);
     return E_OK;
 }
 
@@ -258,7 +259,7 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
 
     changeData.timeStamp = eventInfo.timestamp;
     changeDatas_.push_back(changeData);
-    LOGD("Generate changedata line:%{public}lu, operationType:%{public}d, size:%{public}zu", line,
+    LOGD("Generate changedata line:%{public}llu, operationType:%{public}d, size:%{public}zu", line,
         static_cast<uint8_t>(changeData.operationType), changeDatas_.size());
     if (changeDatas_.size() >= MAX_CHANGEDATAS_SIZE) {
         CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
@@ -356,7 +357,7 @@ int32_t CloudDiskServiceLogFile::ProduceLog(const struct EventInfo &eventInfo)
 int32_t CloudDiskServiceLogFile::PraseLog(const uint64_t line, ChangeData &data, bool &isEof)
     __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
-    LOGD("prase line:%{public}lu, currentline:%{public}lu", line, currentLine_.load());
+    LOGD("prase line:%{public}llu, currentline:%{public}llu", line, currentLine_.load());
     if (line == currentLine_.load()) {
         isEof = true;
         return E_OK;
@@ -576,7 +577,7 @@ int32_t LogFileMgr::PraseRequest(const int32_t userId, const uint32_t syncFolder
     return ret;
 }
 
-int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex, const std::string &path)
+int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path)
 {
     auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
     logFile->SetSyncFolderPath(path);
@@ -597,7 +598,7 @@ int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint64_t sync
     return E_OK;
 }
 
-int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex)
+int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     LogFileKey key(userId, syncFolderIndex);
@@ -614,7 +615,7 @@ int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint64_t sy
     return E_OK;
 }
 
-void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -628,7 +629,7 @@ void LogFileMgr::RegisterSyncFolderChanges(const int32_t userId, const uint64_t 
     logFile->StartCallback();
 }
 
-void LogFileMgr::UnRegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex)
+void LogFileMgr::UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex)
 {
     auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
     logFile->StopCallback();

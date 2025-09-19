@@ -83,30 +83,29 @@ public:
 void DistributedFileDaemonProxyTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+}
+
+void DistributedFileDaemonProxyTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+}
+
+void DistributedFileDaemonProxyTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
     mock_ = sptr(new DaemonServiceMock());
     proxy_ = make_shared<DistributedFileDaemonProxy>(mock_);
     messageParcelMock_ = make_shared<MessageParcelMock>();
     MessageParcelMock::messageParcel = messageParcelMock_;
 }
 
-void DistributedFileDaemonProxyTest::TearDownTestCase(void)
+void DistributedFileDaemonProxyTest::TearDown(void)
 {
-    GTEST_LOG_(INFO) << "TearDownTestCase";
+    GTEST_LOG_(INFO) << "TearDown";
     mock_ = nullptr;
     proxy_ = nullptr;
     messageParcelMock_ = nullptr;
     MessageParcelMock::messageParcel = nullptr;
-}
-
-void DistributedFileDaemonProxyTest::SetUp(void)
-{
-    ASSERT_TRUE(mock_ != nullptr);
-    GTEST_LOG_(INFO) << "SetUp";
-}
-
-void DistributedFileDaemonProxyTest::TearDown(void)
-{
-    GTEST_LOG_(INFO) << "TearDown";
 }
 
 /**
@@ -885,27 +884,27 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFrom
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_INVAL_ARG), Return(true)));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
     ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
@@ -930,7 +929,7 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFrom
 
     g_context = "aa";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
     auto ret = proxy_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
@@ -938,7 +937,7 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetDfsUrisDirFrom
 
     g_context = "1";
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
     g_readBatchUris = E_INVAL_ARG;
@@ -1287,5 +1286,228 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_IsSameAccountDevi
     ret = proxy_->IsSameAccountDevice("networkId", isSameAccount);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_IsSameAccountDevice End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_RequestSendFileACL_0100
+ * @tc.desc: Verify RequestSendFileACL for parameter serialization failures.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_RequestSendFileACL_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RequestSendFileACL_0100 Start";
+    AccountInfo accountInfo{123, 0, "account_id", "network_id"};
+
+    // Test WriteInterfaceToken failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(false));
+    auto ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test WriteString(srcUri) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(dstPath) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(2).WillOnce(Return(true)).WillOnce(Return(false));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(remoteDeviceId) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(sessionName) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(4).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(false));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteInt32(userId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(4).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(accountId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(5).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(networkId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(6).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RequestSendFileACL_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_RequestSendFileACL_0200
+ * @tc.desc: Verify RequestSendFileACL for remote object, IPC, and reply read failures, and success case.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_RequestSendFileACL_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RequestSendFileACL_0200 Start";
+    AccountInfo accountInfo{123, 0, "account_id", "network_id"};
+
+    // Test remote object null
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    auto ret = testProxy->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test SendRequest failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(6).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test success case
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(6).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).Times(1).WillOnce(Return(E_OK));
+    ret = proxy_->RequestSendFileACL("uri", "path", "deviceId", "test", accountInfo);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RequestSendFileACL_0200 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_GetRemoteCopyInfoACL_0100
+ * @tc.desc: Verify GetRemoteCopyInfoACL for parameter serialization failures.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetRemoteCopyInfoACL_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetRemoteCopyInfoACL_0100 Start";
+    AccountInfo accountInfo{123, 0, "account_id", "network_id"};
+    bool isFile = false;
+    bool isDir = false;
+
+    // Test WriteInterfaceToken failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(false));
+    auto ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test WriteString(srcUri) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteInt32(userId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(accountId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(2).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test WriteString(networkId_) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillOnce(Return(true)).WillOnce(Return(true))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetRemoteCopyInfoACL_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_GetRemoteCopyInfoACL_0200
+ * @tc.desc: Verify GetRemoteCopyInfoACL for remote object, IPC, and reply read failures, and success case.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetRemoteCopyInfoACL_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetRemoteCopyInfoACL_0200 Start";
+    AccountInfo accountInfo{123, 0, "account_id", "network_id"};
+    bool isFile = false;
+    bool isDir = false;
+
+    // Test remote object null
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    auto ret = testProxy->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test SendRequest failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    // Test ReadBool(isFile) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test ReadBool(isDir) failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).Times(2).WillOnce(Return(true)).WillOnce(Return(false));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test ReadInt32 failure
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).Times(2).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).Times(1).WillOnce(Return(false));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test success case
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).Times(2).WillOnce(DoAll(SetArgReferee<0>(true), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(false), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).Times(1).WillOnce(Return(true));
+    ret = proxy_->GetRemoteCopyInfoACL("uri", isFile, isDir, accountInfo);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(isFile);
+    EXPECT_FALSE(isDir);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetRemoteCopyInfoACL_0200 End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

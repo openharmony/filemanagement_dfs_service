@@ -23,7 +23,7 @@
 #include "ipc_skeleton.h"
 #include "securec.h"
 #include "utils_log.h"
-
+#include <unordered_set>
 
 namespace OHOS {
 namespace Storage {
@@ -89,6 +89,12 @@ void DaemonStub::InitDFileFunction()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE)] =
         &DaemonStub::HandleIsSameAccountDevice;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL)] =
+        &DaemonStub::HandleGetRemoteCopyInfoACL;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL)] =
+        &DaemonStub::HandleRequestSendFileACL;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -96,10 +102,14 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return DFS_DAEMON_DESCRIPTOR_IS_EMPTY;
     }
-    if (code != static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE) &&
-        code != static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO) &&
-        !IPCSkeleton::IsLocalCalling()) {
-        LOGE("function is only allowed to be called locally.");
+    static const std::unordered_set<uint32_t> remoteAllowedCodes = {
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE),
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO),
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL),
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL)};
+
+    if (remoteAllowedCodes.find(code) == remoteAllowedCodes.end() && !IPCSkeleton::IsLocalCalling()) {
+        LOGE("Function is only allowed to be called locally, code: %{public}u", code);
         return E_ALLOW_LOCAL_CALL_ONLY;
     }
     auto iter = opToInterfaceMap_.find(code);
@@ -286,6 +296,51 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
     return res;
 }
 
+int32_t DaemonStub::HandleRequestSendFileACL(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleRequestSendFileACL");
+    std::string srcUri;
+    if (!data.ReadString(srcUri)) {
+        LOGE("read srcUri failed");
+        return E_IPC_READ_FAILED;
+    }
+    std::string dstPath;
+    if (!data.ReadString(dstPath)) {
+        LOGE("read dstPath failed");
+        return E_IPC_READ_FAILED;
+    }
+    std::string dstDeviceId;
+    if (!data.ReadString(dstDeviceId)) {
+        LOGE("read remoteDeviceId failed");
+        return E_IPC_READ_FAILED;
+    }
+    std::string sessionName;
+    if (!data.ReadString(sessionName)) {
+        LOGE("read sessionName failed");
+        return E_IPC_READ_FAILED;
+    }
+    AccountInfo callerAccountInfo;
+    if (!data.ReadInt32(callerAccountInfo.userId_)) {
+        LOGE("read userId failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!data.ReadString(callerAccountInfo.accountId_)) {
+        LOGE("read accountId failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!data.ReadString(callerAccountInfo.networkId_)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto res = RequestSendFileACL(srcUri, dstPath, dstDeviceId, sessionName, callerAccountInfo);
+    if (!reply.WriteInt32(res)) {
+        LOGE("write result to reply failed.");
+        return E_IPC_READ_FAILED;
+    }
+    LOGD("End HandleRequestSendFileACL, ret = %{public}d.", res);
+    return res;
+}
+
 int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleGetRemoteCopyInfo");
@@ -314,6 +369,46 @@ int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &
         return E_IPC_READ_FAILED;
     }
     LOGD("End GetRemoteCopyInfo, ret = %{public}d.", res);
+    return res;
+}
+
+int32_t DaemonStub::HandleGetRemoteCopyInfoACL(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleGetRemoteCopyInfoACL");
+    std::string srcUri;
+    AccountInfo callerAccountInfo;
+    if (!data.ReadString(srcUri)) {
+        LOGE("read srcUri failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!data.ReadInt32(callerAccountInfo.userId_)) {
+        LOGE("read userId failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!data.ReadString(callerAccountInfo.accountId_)) {
+        LOGE("read accountId failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!data.ReadString(callerAccountInfo.networkId_)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    bool isFile = false;
+    bool isDir = false;
+    auto res = GetRemoteCopyInfoACL(srcUri, isFile, isDir, callerAccountInfo);
+    if (!reply.WriteBool(isFile)) {
+        LOGE("Write isFile failed");
+        return E_IPC_WRITE_FAILED;
+    }
+    if (!reply.WriteBool(isDir)) {
+        LOGE("Write isDir failed");
+        return E_IPC_WRITE_FAILED;
+    }
+    if (!reply.WriteInt32(res)) {
+        LOGE("Write res failed");
+        return E_IPC_WRITE_FAILED;
+    }
+    LOGD("End GetRemoteCopyInfoACL, ret = %{public}d.", res);
     return res;
 }
 

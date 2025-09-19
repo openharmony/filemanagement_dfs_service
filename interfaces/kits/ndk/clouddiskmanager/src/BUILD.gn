@@ -43,8 +43,16 @@ ohos_shared_library("ohclouddiskmanager") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
-    "user_file_service:cloud_disk_manager_kit",
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines = [ "SUPPORT_CLOUD_DISK_SERVICE" ]
+  }
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
+
   output_extension = "so"
   relative_install_dir = "ndk"
   part_name = "dfs_service"

@@ -16,6 +16,7 @@
 
 #include <cinttypes>
 
+#include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_sync_folder.h"
 #include "dfsu_access_token_helper.h"
 #include "utils_log.h"
@@ -58,18 +59,7 @@ void CloudDiskServiceCallbackManager::AddCallback(
         }
         for (auto item : syncFolderIndex) {
             callbackIndexMap_.erase(item);
-            std::string syncFolderSync = "";
-            if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderByIndex(item, syncFolderSync)) {
-                LOGE("Get syncFolder failed");
-                return;
-            }
-            std::string toRemovePath;
-            if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(
-                syncFolderSync, std::to_string(userId), toRemovePath)) {
-                LOGE("Get physicalPath failed");
-                return;
-            }
-            CloudDiskSyncFolder::GetInstance().RemoveXattr(toRemovePath, FILE_SYNC_STATE);
+            CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(userId, item);
         }
     };
     auto death = sptr(new SvcDeathRecipient(deathCb));

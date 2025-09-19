@@ -103,6 +103,7 @@ public:
     MOCK_METHOD2(ReplaceFileWithHistoryVersion, int32_t(const string &uri, const string &versionUri));
     MOCK_METHOD2(IsFileConflict, int32_t(const string &uri, bool &isConflict));
     MOCK_METHOD1(ClearFileConflict, int32_t(const string &uri));
+    MOCK_METHOD2(RemovedClean, ErrCode(const std::string& bundleName, int32_t userId));
 
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,
@@ -136,7 +137,6 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     return IserviceProxy::proxy_->GetInstance();
 }
 
-void ServiceProxy::InvaildInstance() {}
 } // FileManagement::CloudSync
 } // OHOS
 #endif // MOCK_SERVICE_PROXY_H

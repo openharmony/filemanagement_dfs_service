@@ -114,6 +114,7 @@ void SessionPool::ReleaseSession(const std::string &cid, bool isReleaseAll)
 
 bool SessionPool::FindCid(const std::string &cid)
 {
+    lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
         if ((*iter)->GetCid() == cid) {
             return true;

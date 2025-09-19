@@ -127,10 +127,10 @@ public:
     int32_t PraseRequest(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t start,
                          const uint64_t count, struct ChangesResult &changesResult);
 
-    int32_t RegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex, const std::string &path);
-    int32_t UnRegisterSyncFolder(const int32_t userId, const uint64_t syncFolderIndex);
-    void RegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex);
-    void UnRegisterSyncFolderChanges(const int32_t userId, const uint64_t syncFolderIndex);
+    int32_t RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path);
+    int32_t UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex);
+    void RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
+    void UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
 
 private:
     LogFileMgr() = default;

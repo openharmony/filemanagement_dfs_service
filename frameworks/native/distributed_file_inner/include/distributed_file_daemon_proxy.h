@@ -52,7 +52,19 @@ public:
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
+    // for ACL verification after 6.0 version
+    int32_t RequestSendFileACL(const std::string &srcUri,
+                               const std::string &dstPath,
+                               const std::string &dstDeviceId,
+                               const std::string &sessionName,
+                               const AccountInfo &callerAccountInfo) override;
+
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
+    // for ACL verification after 6.0 version
+    int32_t GetRemoteCopyInfoACL(const std::string &srcUri,
+                                 bool &isFile,
+                                 bool &isDir,
+                                 const AccountInfo &callerAccountInfo) override;
 
     int32_t PushAsset(int32_t userId,
                       const sptr<AssetObj> &assetObj,

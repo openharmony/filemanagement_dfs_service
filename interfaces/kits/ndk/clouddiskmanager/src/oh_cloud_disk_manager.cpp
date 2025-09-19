@@ -25,6 +25,9 @@
 #include "cloud_disk_common.h"
 #include "cloud_disk_service_callback.h"
 #include "cloud_disk_service_manager.h"
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_sync_folder_manager.h"
+#endif
 #include "oh_cloud_disk_utils.h"
 #include "utils_log.h"
 
@@ -72,7 +75,7 @@ class CloudDiskServiceCallbackImpl : public CloudDiskServiceCallback {
 public:
     using OnChangeDataCallback =
         function<void(const CloudDisk_SyncFolderPath syncFolderPath, const CloudDisk_ChangeData changeDatas[],
-                      size_t length)>;
+                      size_t bufferLength)>;
     explicit CloudDiskServiceCallbackImpl(OnChangeDataCallback callback)
         : callback_(callback) {};
     void OnChangeData(const std::string &syncFolder, const std::vector<ChangeData> &changeData) override;
@@ -100,8 +103,8 @@ void CloudDiskServiceCallbackImpl::OnChangeData(const std::string &syncFolder,
         return;
     }
     CloudDisk_SyncFolderPath syncFolderPath = {.value = path, .length = syncFolder.length()};
-    CloudDisk_ChangeData *dataDatas = new (std::nothrow) CloudDisk_ChangeData[changeData.size()];
-    if (dataDatas == nullptr) {
+    CloudDisk_ChangeData *changeDatas = new (std::nothrow) CloudDisk_ChangeData[changeData.size()];
+    if (changeDatas == nullptr) {
         LOGE("Failed to allocate memory for changeDatas");
         delete[] syncFolderPath.value;
         syncFolderPath.value = nullptr;
@@ -127,15 +130,16 @@ void CloudDiskServiceCallbackImpl::OnChangeData(const std::string &syncFolder,
         data.size = item.size;
         data.mtime = item.mtime;
         data.timeStamp = item.timeStamp;
-        dataDatas[length++] = data;
+        changeDatas[length++] = data;
     }
-    callback_(syncFolderPath, dataDatas, length);
+    callback_(syncFolderPath, changeDatas, length);
 }
 
 CloudDisk_ErrorCode
     OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
                                            void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                            const CloudDisk_ChangeData changeDatas[], size_t length))
+                                                            const CloudDisk_ChangeData changeDatas[],
+                                                            size_t bufferLength))
 {
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
@@ -146,8 +150,8 @@ CloudDisk_ErrorCode
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     auto callbackInner = [callback](const CloudDisk_SyncFolderPath syncFolderPath,
-        const CloudDisk_ChangeData changeDatas[], size_t length) {
-        callback(syncFolderPath, changeDatas, length);
+        const CloudDisk_ChangeData changeDatas[], size_t bufferLength) {
+        callback(syncFolderPath, changeDatas, bufferLength);
     };
     shared_ptr<CloudDiskServiceCallback> callbackImpl = make_shared<CloudDiskServiceCallbackImpl>(callbackInner);
     int32_t ret = CloudDiskServiceManager::GetInstance().RegisterSyncFolderChanges(
@@ -156,7 +160,7 @@ CloudDisk_ErrorCode
         LOGE("Register sync folder change failed, ret: %{public}d", ret);
         return ConvertToErrorCode(ret);
     }
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath)
@@ -171,7 +175,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_Syn
         LOGE("Unegister sync folder change failed, ret: %{public}d", ret);
         return ConvertToErrorCode(ret);
     }
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
@@ -194,9 +198,9 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolder
                                                        sizeof(CloudDisk_ChangeData) * changesRes.changesData.size());
     if (*changesResult == nullptr) {
         LOGE("Failed to allocate memory for changesResult");
-        return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
-    (*changesResult)->length = 0;
+    (*changesResult)->bufferLength = 0;
     (*changesResult)->nextUsn = changesRes.nextUsn;
     (*changesResult)->isEof = changesRes.isEof;
     for (auto &item : changesRes.changesData) {
@@ -216,14 +220,14 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolder
         data.size = item.size;
         data.mtime = item.mtime;
         data.timeStamp = item.timeStamp;
-        (*changesResult)->dataDatas[(*changesResult)->length++] = data;
+        (*changesResult)->changeDatas[(*changesResult)->bufferLength++] = data;
     }
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_FileSyncState fileSyncStates[],
-                                                   size_t length,
+                                                   size_t bufferLength,
                                                    CloudDisk_FailedList **failedLists,
                                                    size_t *failedCount)
 {
@@ -232,7 +236,7 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     vector<FileSyncState> syncStatesVec;
-    for (size_t i = 0; i < length; ++i) {
+    for (size_t i = 0; i < bufferLength; ++i) {
         FileSyncState state;
         state.path = string(fileSyncStates[i].filePathInfo.value, fileSyncStates[i].filePathInfo.length);
         state.state = static_cast<SyncState>(fileSyncStates[i].syncState);
@@ -248,12 +252,12 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
     *failedCount = failedVec.size();
     if (*failedCount == 0) {
         *failedLists = nullptr;
-        return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
     }
     *failedLists = new (std::nothrow) CloudDisk_FailedList[*failedCount];
     if (*failedLists == nullptr) {
         LOGE("Failed to allocate memory for failedLists");
-        return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
     for (size_t index = 0; index < *failedCount; ++index) {
         (*failedLists)[index].pathInfo.value =
@@ -262,12 +266,12 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
         (*failedLists)[index].pathInfo.length = failedVec[index].path.length();
         (*failedLists)[index].errorReason = static_cast<CloudDisk_ErrorReason>(failedVec[index].error);
     }
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo paths[],
-                                                   size_t length,
+                                                   size_t bufferLength,
                                                    CloudDisk_ResultList **resultLists,
                                                    size_t *resultCount)
 {
@@ -276,7 +280,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     vector<string> pathVec;
-    for (size_t i = 0; i < length; ++i) {
+    for (size_t i = 0; i < bufferLength; ++i) {
         if (!IsValidPathInfo(paths[i].value, paths[i].length)) {
             LOGE("Invalid argument, paths[%{public}zu] is nullptr", i);
             return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -293,12 +297,12 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
     *resultCount = resultVec.size();
     if (*resultCount == 0) {
         *resultLists = nullptr;
-        return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
     }
     *resultLists = new (std::nothrow) CloudDisk_ResultList[*resultCount];
     if (*resultLists == nullptr) {
         LOGE("Failed to allocate memory for resultLists");
-        return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
     for (size_t index = 0; index < *resultCount; ++index) {
         (*resultLists)[index].pathInfo.value =
@@ -309,11 +313,12 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
         (*resultLists)[index].syncState = static_cast<CloudDisk_SyncState>(resultVec[index].state);
         (*resultLists)[index].errorReason = static_cast<CloudDisk_ErrorReason>(resultVec[index].error);
     }
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (syncFolder == nullptr) {
         LOGE("Invalid argument, syncFolder is nullptr");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -340,10 +345,14 @@ CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *
     int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().Register(folder);
     LOGI("Register sync folder, ret: %{public}d", ret);
     return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -353,10 +362,14 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolder
         string(syncFolderPath.value, syncFolderPath.length));
     LOGI("Unregister sync folder, ret: %{public}d", ret);
     return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -366,9 +379,13 @@ CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath
         string(syncFolderPath.value, syncFolderPath.length));
     LOGI("Active sync folder, ret: %{public}d", ret);
     return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -378,8 +395,12 @@ CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPa
         string(syncFolderPath.value, syncFolderPath.length));
     LOGI("Deactive sync folder, ret: %{public}d", ret);
     return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
 CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders, size_t *count)
 {
     if (syncFolders == nullptr || count == nullptr) {
@@ -395,7 +416,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
     *syncFolders = new (std::nothrow) CloudDisk_SyncFolder[folderVec.size()];
     if (*syncFolders == nullptr) {
         LOGE("Memory allocation failed for syncFolders");
-        return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
     for (size_t i = 0; i < folderVec.size(); ++i) {
         (*syncFolders)[i].path.value = AllocField(folderVec[i].path_.c_str(), folderVec[i].path_.length());
@@ -406,7 +427,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
             delete[] (*syncFolders);
             *syncFolders = nullptr;
             LOGE("Memory allocation failed for path");
-            return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+            return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
         }
         (*syncFolders)[i].path.length = folderVec[i].path_.length();
         (*syncFolders)[i].state = static_cast<CloudDisk_SyncFolderState>(folderVec[i].state_);
@@ -422,31 +443,44 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
             delete[] (*syncFolders);
             *syncFolders = nullptr;
             LOGE("Memory allocation failed for displayName");
-            return CloudDisk_ErrorCode::CLOUD_DISK_INTERNAL_ERROR;
+            return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
         }
         (*syncFolders)[i].displayNameInfo.customAliasLength = folderVec[i].displayName_.length();
     }
     *count = folderVec.size();
     LOGI("Get sync folders success, count: %{public}zu", *count);
-    return CloudDisk_ErrorCode::CLOUD_DISK_ERR_OK;
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
+#else
+CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders, size_t *count)
+{
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+}
+#endif
 
 CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const char *customAlias,
                                                    size_t customAliasLength)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
 
-    if (!IsValidPathInfo(customAlias, customAliasLength)) {
-        LOGE("Invalid argument, name is invalid");
+    if (customAlias != nullptr && strnlen(customAlias, customAliasLength + 1) != customAliasLength) {
+        LOGE("Invalid argument, customAlias is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
-
+    std::string customAliasStr = "";
+    if (customAlias != nullptr) {
+        customAliasStr = string(customAlias, customAliasLength);
+    }
     int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().UpdateDisplayName(
-        string(syncFolderPath.value, syncFolderPath.length), string(customAlias, customAliasLength));
+        string(syncFolderPath.value, syncFolderPath.length), customAliasStr);
     LOGI("Update display name, ret: %{public}d", ret);
     return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }

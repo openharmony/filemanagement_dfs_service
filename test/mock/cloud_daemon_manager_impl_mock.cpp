@@ -41,7 +41,6 @@ void CloudDaemonManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remote
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
         LOGE("service died. Died remote obj");
-        CloudDaemonServiceProxy::InvaildInstance();
         isFirstCall_.clear();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));

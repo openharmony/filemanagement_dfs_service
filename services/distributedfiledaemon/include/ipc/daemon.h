@@ -25,6 +25,7 @@
 #include "daemon_eventhandler.h"
 #include "daemon_execute.h"
 #include "daemon_stub.h"
+#include "device/device_profile_adapter.h"
 #include "dm_device_info.h"
 #include "file_trans_listener_proxy.h"
 #include "hmdfs_info.h"
@@ -80,7 +81,18 @@ public:
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
+    // for ACL verification after 6.0.1 version
+    int32_t RequestSendFileACL(const std::string &srcUri,
+                               const std::string &dstPath,
+                               const std::string &dstDeviceId,
+                               const std::string &sessionName,
+                               const AccountInfo &callerAccountInfo) override;
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
+    // for ACL verification after 6.0.1 version
+    int32_t GetRemoteCopyInfoACL(const std::string &srcUri,
+                                 bool &isFile,
+                                 bool &isDir,
+                                 const AccountInfo &callerAccountInfo) override;
 
     int32_t PushAsset(int32_t userId,
                       const sptr<AssetObj> &assetObj,
@@ -95,7 +107,8 @@ public:
     static int32_t Copy(const std::string &srcUri,
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,
-                        const std::string &sessionName);
+                        const std::string &sessionName,
+                        const std::string &srcNetworkId);
     int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
     int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
     int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;
@@ -121,12 +134,17 @@ private:
                         const std::string &dstUri,
                         std::string &physicalPath,
                         HmdfsInfo &info,
-                        const sptr<IDaemon> &daemon);
+                        const sptr<IDaemon> &daemon,
+                        const std::string &networkId);
     int32_t CheckCopyRule(std::string &physicalPath,
                           const std::string &dstUri,
                           HapTokenInfo &hapTokenInfo,
                           const bool &isSrcFile,
                           HmdfsInfo &info);
+    int32_t HandleDestinationPathAndPermissions(const std::string &dstUri,
+                                                bool isSrcFile,
+                                                HmdfsInfo &info,
+                                                std::string &physicalPath);
     int32_t SendDfsDelayTask(const std::string &networkId);
     void RemoveDfsDelayTask(const std::string &networkId);
     void DisconnectDevice(const std::string networkId);

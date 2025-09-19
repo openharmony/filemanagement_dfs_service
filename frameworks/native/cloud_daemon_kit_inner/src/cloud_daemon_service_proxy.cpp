@@ -74,11 +74,6 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
 {
     LOGI("getinstance");
     unique_lock<mutex> lock(proxyMutex_);
-    if (serviceProxy_ != nullptr) {
-        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
-            return serviceProxy_;
-        }
-    }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
@@ -100,10 +95,4 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
     return serviceProxy_;
 }
 
-void CloudDaemonServiceProxy::InvaildInstance()
-{
-    LOGI("invalid instance");
-    unique_lock<mutex> lock(proxyMutex_);
-    serviceProxy_ = nullptr;
-}
 } // namespace OHOS::FileManagement::CloudFile

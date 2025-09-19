@@ -82,7 +82,6 @@ void DiskMonitor::InitStatus(int32_t userId)
     isRunning_ = true;
     syncFolderPrefix_ = DATA_SERVICE_EL2 + to_string(userId) + HMDFS_DOCS;
     for (auto &it : BLOCK_DIRS) {
-        LOGI("add block item: %{public}d %{public}s", userId, it.c_str());
         blockList_.push_back(DATA_SERVICE_EL2 + to_string(userId) + HMDFS_DOCS + it);
     }
 }
