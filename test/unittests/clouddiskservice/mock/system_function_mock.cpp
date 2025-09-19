@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "assistant.h"
+#include "file_utils.h"
 #include <sys/fanotify.h>
 
 using namespace OHOS::FileManagement::CloudDiskService;
@@ -45,3 +46,35 @@ int dirfd(DIR *d)
 {
     return Assistant::ins->dirfd(d);
 }
+
+int fstat(int fd, struct stat *buf)
+{
+    return Assistant::ins->fstat(fd, buf);
+}
+
+int ftruncate(int fd, off_t length)
+{
+    return Assistant::ins->ftruncate(fd, length);
+}
+
+struct dirent* readdir(DIR* d)
+{
+    return Assistant::ins->readdir(d);
+}
+
+namespace OHOS::FileManagement {
+int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
+{
+    return Assistant::ins->ReadFile(fd, offset, size, data);
+}
+
+int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size)
+{
+    return Assistant::ins->WriteFile(fd, data, offset, size);
+}
+
+int FileRangeLock::FilePosLock(int fd, off_t offset, size_t size, int type)
+{
+    return Assistant::ins->FilePosLock(fd, offset, size, type);
+}
+} // namespace OHOS::FileManagement
