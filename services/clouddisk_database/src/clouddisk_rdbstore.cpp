@@ -146,6 +146,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     config_.SetPath(databasePath);
     config_.SetReadConSize(CONNECT_SIZE);
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
+    config_.SetWalLimitSize(RDB_WAL_LIMIT_SIZE);
     errCode = 0;
     CloudDiskDataCallBack rdbDataCallBack;
     rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
