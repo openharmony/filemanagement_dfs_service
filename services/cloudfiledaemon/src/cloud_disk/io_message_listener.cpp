@@ -188,7 +188,7 @@ HiSysEventParam CreateParam(const std::string name, HiSysEventParamType type, st
     param.name[sizeof(param.name) - 1] = '\0';
     param.t = type;
     param.v.array = data.data();
-    param.arraySize = static_cast<int>(data.size());
+    param.arraySize = data.size();
     return param;
 }
 
@@ -204,19 +204,19 @@ void IoMessageManager::Report()
     }
     auto charIoBundleName = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_BUNDLE_NAME>(targetVectors));
     HiSysEventParam params[] = {
-        CreateParam("time", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
-        CreateParam("BundleName", HISYSEVENT_STRING_ARRAY, charIoBundleName),
-        CreateParam("ReadCharDiff", HISYSEVENT_INT64_ARRAY,
+        CreateParam("TIME", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
+        CreateParam("BUNDLENAME", HISYSEVENT_STRING_ARRAY, charIoBundleName),
+        CreateParam("READCHAR", HISYSEVENT_INT64_ARRAY,
             GetVector<Int64Vector, VectorIndex::IO_READ_CHAR_DIFF>(targetVectors)),
-        CreateParam("SyscReadDiff", HISYSEVENT_INT64_ARRAY,
+        CreateParam("SYSCR", HISYSEVENT_INT64_ARRAY,
             GetVector<Int64Vector, VectorIndex::IO_SYSC_READ_DIFF>(targetVectors)),
-        CreateParam("ReadBytesDiff", HISYSEVENT_INT64_ARRAY,
+        CreateParam("READBYTES", HISYSEVENT_INT64_ARRAY,
             GetVector<Int64Vector, VectorIndex::IO_READ_BYTES_DIFF>(targetVectors)),
-        CreateParam("SyscOpenDiff", HISYSEVENT_INT64_ARRAY,
+        CreateParam("SYSCOPEN", HISYSEVENT_INT64_ARRAY,
             GetVector<Int64Vector, VectorIndex::IO_SYSC_OPEN_DIFF>(targetVectors)),
-        CreateParam("SyscStatDiff", HISYSEVENT_INT64_ARRAY,
+        CreateParam("SYSCSTAT", HISYSEVENT_INT64_ARRAY,
             GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
-        CreateParam("Result", HISYSEVENT_DOUBLE_ARRAY,
+        CreateParam("RESULT", HISYSEVENT_DOUBLE_ARRAY,
             GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
     };
 
