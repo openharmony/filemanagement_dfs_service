@@ -91,9 +91,7 @@ export default namespace cloudSync {
         start(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StartInner());
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
@@ -113,10 +111,8 @@ export default namespace cloudSync {
 
         stop(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StopInner());
-            promise.then((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+            promise.then<void, void>((): void => {
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
@@ -152,20 +148,20 @@ export default namespace cloudSync {
     };
 
     export interface DownloadProgress {
-        taskId: number;
+        taskId: long;
         state: State;
-        processed: number;
-        size: number;
+        processed: long;
+        size: long;
         uri: string;
         error: DownloadErrorType;
     }
 
     export class DownloadProgressInner implements DownloadProgress {
         constructor(
-            taskId: number,
+            taskId: long,
             state: State,
-            processed: number,
-            size: number,
+            processed: long,
+            size: long,
             uri: string,
             error: DownloadErrorType
         ) {
@@ -176,10 +172,10 @@ export default namespace cloudSync {
             this.uri = uri;
             this.error = error;
         }
-        taskId: number;
+        taskId: long;
         public state: State;
-        processed: number;
-        size: number;
+        processed: long;
+        size: long;
         uri: string;
         error: DownloadErrorType;
     };
@@ -189,12 +185,12 @@ export default namespace cloudSync {
             loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
         }
         state: State;
-        taskId: number;
-        successfulCount: number;
-        failedCount: number;
-        totalCount: number;
-        downloadedSize: number;
-        totalSize: number;
+        taskId: long;
+        successfulCount: int;
+        failedCount: int;
+        totalCount: int;
+        downloadedSize: long;
+        totalSize: long;
         errType: DownloadErrorType;
 
         private nativePtr: long = 0;
@@ -244,9 +240,7 @@ export default namespace cloudSync {
         start(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
@@ -267,9 +261,7 @@ export default namespace cloudSync {
         stop(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StopInner(uri), uri);
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
@@ -393,9 +385,7 @@ export default namespace cloudSync {
         start(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StartInner());
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
@@ -415,42 +405,37 @@ export default namespace cloudSync {
 
         stop(callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((): int => this.StopInner());
-            promise.then((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+            promise.then<void, void>((): void => {
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
         }
 
-        getLastSyncTime(): Promise<number> {
-            return new Promise<number>((resolve: (result: number) => void,
+        getLastSyncTime(): Promise<long> {
+            return new Promise<long>((resolve: (result: long) => void,
                 reject: (e: BusinessError<void>) => void): void => {
-                let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+                let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
                 promise.then<void, void>((ret: NullishType): void => {
-                    resolve(ret as Number);
+                    resolve(ret as long);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
                 });
             });
         }
 
-        getLastSyncTime(callback: AsyncCallback<number>): void {
-            let promise = taskpool.execute((): number => this.GallerySyncGetLastSyncTime());
+        getLastSyncTime(callback: AsyncCallback<long>): void {
+            let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
             promise.then<void, void>((ret: NullishType): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, ret as Number);
+                callback(null, ret as long);
             }, (e: Error): void => {
-                let num: number = 0;
-                callback(e as BusinessError<void>, num);
+                callback(e as BusinessError<void>, undefined);
             });
         }
 
         native FileSyncStart(): void;
         native FileSyncStop(): void;
-        native GallerySyncGetLastSyncTime(): number;
+        native GallerySyncGetLastSyncTime(): long;
 
         StartInner(): int {
             this.FileSyncStart();
@@ -496,27 +481,25 @@ export default namespace cloudSync {
         start(uri: string, callback: AsyncCallback<void>): void {
             let promise = taskpool.execute((uri: string): int => this.StartInner(uri), uri);
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
         }
 
-        startBatch(uris: Array<string>, fileType?: DownloadFileType): Promise<number> {
+        startBatch(uris: Array<string>, fileType?: DownloadFileType): Promise<long> {
             let fieldKey: DownloadFileType = DownloadFileType.CONTENT;
             if (fileType !== undefined) {
                 fieldKey = fileType;
             }
-            return new Promise<number>((resolve: (result: number) => void,
-                reject: (e: BusinessError) => void): number => {
-                let promise = taskpool.execute((uris: Array<string>, fieldKey: DownloadFileType): number =>
+            return new Promise<long>((resolve: (result: long) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((uris: Array<string>, fieldKey: DownloadFileType): long =>
                     this.CloudFileCacheStartBatch(uris, fieldKey), uris, fieldKey);
-                promise.then<number>((ret: number): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as long);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -545,36 +528,34 @@ export default namespace cloudSync {
                 return this.StopInner(uri, clean);
             }, uri, clean);
             promise.then<void, void>((): void => {
-                let e = new BusinessError<void>();
-                e.code = 0;
-                callback(e, undefined);
+                callback(null, undefined);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
             });
         }
 
-        stopBatch(downloadId: number, needClean?: boolean): Promise<void> {
+        stopBatch(downloadId: long, needClean?: boolean): Promise<void> {
             let clean: boolean = false;
             if (needClean !== undefined) {
                 clean = needClean;
             }
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
-                let promise = taskpool.execute((downloadId: number, clean: boolean): number => {
+                let promise = taskpool.execute((downloadId: long, clean: boolean): int => {
                     return this.StopBatchInner(downloadId, clean);
                 }, downloadId, clean);
-                promise.then<void>((): void => {
+                promise.then<void, void>((): void => {
                     resolve(undefined);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
         native CloudFileCacheStart(uri: string): void;
         native CloudFileCacheStop(uri: string, clean: boolean): void;
-        native CloudFileCacheStartBatch(uris: Array<string>, fieldKey: DownloadFileType): number;
-        native CloudFileCacheStopBatch(downloadId: number, clean: boolean): void;
+        native CloudFileCacheStartBatch(uris: Array<string>, fieldKey: DownloadFileType): long;
+        native CloudFileCacheStopBatch(downloadId: long, clean: boolean): void;
         native cleanCache(uri: string): void;
         native cleanFileCache(uri: string): void;
 
@@ -586,7 +567,7 @@ export default namespace cloudSync {
             this.CloudFileCacheStop(uri, clean);
             return 0;
         }
-        StopBatchInner(downloadId: number, clean: boolean): int {
+        StopBatchInner(downloadId: long, clean: boolean): int {
             this.CloudFileCacheStopBatch(downloadId, clean);
             return 0;
         }
@@ -601,36 +582,36 @@ export default namespace cloudSync {
 
     export interface OptimizeSpaceProgress {
         state: OptimizeState;
-        progress: number;
+        progress: int;
     }
 
     export class OptimizeSpaceProgressInner implements OptimizeSpaceProgress {
         constructor(
             state: OptimizeState,
-            progress: number
+            progress: int
         ) {
             this.state = state;
             this.progress = progress;
         }
         state: OptimizeState;
-        progress: number;
+        progress: int;
     }
 
     export interface OptimizeSpaceParam {
-        totalSize: number;
-        agingDays: number;
+        totalSize: long;
+        agingDays: int;
     }
 
     export class OptimizeSpaceParamInner implements OptimizeSpaceParam {
         constructor(
-            totalSize: number,
-            agingDays: number
+            totalSize: long,
+            agingDays: int
         ) {
             this.totalSize = totalSize;
             this.agingDays = agingDays;
         }
-        totalSize: number;
-        agingDays: number;
+        totalSize: long;
+        agingDays: int;
     }
 
     class StaticFunction {
@@ -663,7 +644,7 @@ export default namespace cloudSync {
 
     export function getFileSyncState(uri: Array<string>): Promise<Array<FileSyncState>> {
         let promise = new Promise<Array<FileSyncState>>((resolve, reject) => {
-            let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+            let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
             Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
                 let res: Array<FileSyncState> = re.map((result: int) => {
                     return result as FileSyncState;
@@ -677,17 +658,14 @@ export default namespace cloudSync {
     }
 
     export function getFileSyncState(uri: Array<string>, callback: AsyncCallback<Array<FileSyncState>>): void {
-        let promises = uri.map((v: string): Promise<int> => {return getPromiseFileSyncState(v)});
+        let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
         Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
             let res: Array<FileSyncState> = re.map((result: int) => {
                 return result as FileSyncState;
             });
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, res);
+            callback(null, res);
         }).catch((e: Error): void => {
-            let res: Array<FileSyncState> = new Array<FileSyncState>();
-            callback(e as BusinessError<void>, res);
+            callback(e as BusinessError<void>, undefined);
         });
     }
 
@@ -751,8 +729,8 @@ export default namespace cloudSync {
     }
 
     export interface HistoryVersion {
-        editedTime: number;
-        fileSize: number;
+        editedTime: long;
+        fileSize: long;
         versionId: string;
         originalFileName: string;
         sha256: string;
@@ -761,8 +739,8 @@ export default namespace cloudSync {
 
     class HistoryVersionInner implements HistoryVersion {
         constructor(
-            editedTime: number,
-            fileSize: number,
+            editedTime: long,
+            fileSize: long,
             versionId: string,
             originalFileName: string,
             sha256: string,
@@ -775,8 +753,8 @@ export default namespace cloudSync {
             this.sha256 = sha256;
             this.autoResolved = autoResolved;
         }
-        public editedTime: number;
-        public fileSize: number;
+        public editedTime: long;
+        public fileSize: long;
         public versionId: string;
         public originalFileName: string;
         public sha256: string;
@@ -785,14 +763,14 @@ export default namespace cloudSync {
 
     export interface VersionDownloadProgress {
         state: State;
-        progress: number;
+        progress: int;
         errType: DownloadErrorType;
     }
 
     class VersionDownloadProgressInner implements VersionDownloadProgress {
         constructor(
             state: State,
-            progress: number,
+            progress: int,
             errType: DownloadErrorType
         ) {
             this.state = state;
@@ -800,7 +778,7 @@ export default namespace cloudSync {
             this.errType = errType;
         }
         public state: State;
-        public progress: number;
+        public progress: int;
         public errType: DownloadErrorType;
     }
 
@@ -817,19 +795,19 @@ export default namespace cloudSync {
             }
         }
 
-        getHistoryVersionList(uri: string, versionNumLimit: number): Promise<Array<HistoryVersion>> {
+        getHistoryVersionList(uri: string, versionNumLimit: int): Promise<Array<HistoryVersion>> {
             return new Promise<Array<HistoryVersion>>((resolve: (result: Array<HistoryVersion>) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((
                     uriIn: string,
-                    versionNumLimitIn: number
+                    versionNumLimitIn: int
                 ): Array<HistoryVersion> => {
                     return this.getHistoryVersionListInner(uriIn, versionNumLimitIn);
                 }, uri, versionNumLimit);
-                promise.then<Array<HistoryVersion>>((ret: Array<HistoryVersion>): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as Array<HistoryVersion>);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -844,10 +822,10 @@ export default namespace cloudSync {
                 ): string => {
                     return this.downloadHistoryVersionInner(uriIn, versionIdIn, callbackIn);
                 }, uri, versionId, callback);
-                promise.then<string>((ret: string): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as string);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -861,10 +839,10 @@ export default namespace cloudSync {
                     this.replaceFileWithHistoryVersionInner(originalUriIn, versionUriIn);
                     return 0;
                 }, originalUri, versionUri);
-                promise.then<void>((ret: undefined): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(undefined);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -877,10 +855,10 @@ export default namespace cloudSync {
                 ): boolean => {
                     return this.isFileConflictInner(uriIn);
                 }, uri);
-                promise.then<boolean>((ret: boolean): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as boolean);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -894,15 +872,15 @@ export default namespace cloudSync {
                     this.clearFileConflictInner(uriIn);
                     return 0;
                 }, uri);
-                promise.then<void>((ret: undefined): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(undefined);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
 
-        native getHistoryVersionListInner(uri: string, versionNumLimit: number): Array<HistoryVersion>;
+        native getHistoryVersionListInner(uri: string, versionNumLimit: int): Array<HistoryVersion>;
         native downloadHistoryVersionInner(uri: string, versionId: string, callback: Callback<VersionDownloadProgress>): string;
         native replaceFileWithHistoryVersionInner(originalUri: string, versionUri: string): void;
         native isFileConflictInner(uri: string): boolean;

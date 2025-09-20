@@ -39,17 +39,9 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
 
 void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object object)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", static_cast<int32_t>(ret));
-        ErrorHandler::Throw(env, ENOMEM);
-        return;
-    }
-    Type clsName = Builder::BuildClass("CloudFileCache");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", static_cast<int32_t>(ret));
         ErrorHandler::Throw(env, ENOMEM);
@@ -179,12 +171,10 @@ void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani
     }
 }
 
-ani_double CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env,
-                                                       ani_object object,
-                                                       ani_array_ref uriList,
-                                                       ani_enum_item fileType)
+ani_long CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env, ani_object object,
+    ani_array_ref uriList, ani_enum_item fileType)
 {
-    ani_double errResult = 0;
+    ani_long errResult = 0;
     auto [ret, urisInput] = ANIUtils::AniToStringArray(env, uriList);
     if (!ret) {
         ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
@@ -213,7 +203,7 @@ ani_double CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env,
         return errResult;
     }
 
-    return static_cast<ani_double>(data.GetData().value());
+    return data.GetData().value();
 }
 
 void CloudFileCacheAni::CloudFileCacheStop(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean)
@@ -244,7 +234,7 @@ void CloudFileCacheAni::CloudFileCacheStop(ani_env *env, ani_object object, ani_
 
 void CloudFileCacheAni::CloudFileCacheStopBatch(ani_env *env,
                                                 ani_object object,
-                                                ani_double taskId,
+                                                ani_long taskId,
                                                 ani_boolean needClean)
 {
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
@@ -256,7 +246,7 @@ void CloudFileCacheAni::CloudFileCacheStopBatch(ani_env *env,
 
     bool needCleanInput = needClean;
 
-    auto data = cloudFileCache->DoStop(static_cast<int64_t>(taskId), needCleanInput);
+    auto data = cloudFileCache->DoStop(taskId, needCleanInput);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache do stop failed, ret = %{public}d", err.GetErrNo());

@@ -56,22 +56,22 @@ export default namespace cloudSyncManager  {
     }
 
     export interface CloudFileInfo {
-        cloudFileCount: number;
-        cloudFileTotalSize: number;
-        localFileCount: number;
-        localFileTotalSize: number;
-        bothFileCount: number;
-        bothFileTotalSize: number;
+        cloudFileCount: int;
+        cloudFileTotalSize: long;
+        localFileCount: int;
+        localFileTotalSize: long;
+        bothFileCount: int;
+        bothFileTotalSize: long;
     }
 
     class CloudFileInfoInner implements CloudFileInfo {
         constructor(
-            cloudFileCount: number,
-            cloudFileTotalSize: number,
-            localFileCount: number,
-            localFileTotalSize: number,
-            bothFileCount: number,
-            bothFileTotalSize: number
+            cloudFileCount: int,
+            cloudFileTotalSize: long,
+            localFileCount: int,
+            localFileTotalSize: long,
+            bothFileCount: int,
+            bothFileTotalSize: long
         ) {
             this.cloudFileCount = cloudFileCount;
             this.cloudFileTotalSize = cloudFileTotalSize;
@@ -80,22 +80,22 @@ export default namespace cloudSyncManager  {
             this.bothFileCount = bothFileCount;
             this.bothFileTotalSize = bothFileTotalSize;
         }
-        cloudFileCount: number;
-        cloudFileTotalSize: number;
-        localFileCount: number;
-        localFileTotalSize: number;
-        bothFileCount: number;
-        bothFileTotalSize: number;
+        cloudFileCount: int;
+        cloudFileTotalSize: long;
+        localFileCount: int;
+        localFileTotalSize: long;
+        bothFileCount: int;
+        bothFileTotalSize: long;
     }
 
     export class DownloadProgress {
         constructor(
             state: DownloadState,
-            successfulCount: number,
-            failedCount: number,
-            totalCount: number,
-            downloadedSize: number,
-            totalSize: number,
+            successfulCount: int,
+            failedCount: int,
+            totalCount: int,
+            downloadedSize: long,
+            totalSize: long,
             stopReason: DownloadStopReason
         ) {
             this.state = state;
@@ -107,11 +107,11 @@ export default namespace cloudSyncManager  {
             this.stopReason = stopReason;
         }
         state: DownloadState;
-        successfulCount: number;
-        failedCount: number;
-        totalCount: number;
-        downloadedSize: number;
-        totalSize: number;
+        successfulCount: int;
+        failedCount: int;
+        totalCount: int;
+        downloadedSize: long;
+        totalSize: long;
         stopReason: DownloadStopReason;
     }
 
@@ -130,12 +130,12 @@ export default namespace cloudSyncManager  {
 
         getCloudFileInfo(): Promise<CloudFileInfo> {
             return new Promise<CloudFileInfo>((resolve: (result: CloudFileInfo) => void,
-                reject: (e: BusinessError<void>) => void): CloudFileInfo => {
+                reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): CloudFileInfo => this.getCloudFileInfoInner());
-                promise.then<CloudFileInfo>((ret: CloudFileInfo): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(ret as CloudFileInfo);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -149,10 +149,10 @@ export default namespace cloudSyncManager  {
                     this.startDownloadInner(callbackIn);
                     return 0;
                 }, callback);
-                promise.then<void>((ret: undefined): void => {
-                resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(undefined);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -161,10 +161,10 @@ export default namespace cloudSyncManager  {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.stopDownloadInner());
-                promise.then<void>((ret: undefined): void => {
-                    resolve(ret);
-                }, (e: BusinessError<void>): void => {
-                    reject(e);
+                promise.then<void, void>((ret: NullishType): void => {
+                    resolve(undefined);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
                 });
             });
         }
@@ -197,7 +197,7 @@ export default namespace cloudSyncManager  {
         static native enableCloudInner(accountId: string, switches: Record<string, boolean>): void;
         static native disableCloudInner(accountId: string): void;
         static native cleanInner(accountId: string, appActions: Record<string, Action>): void;
-        static native notifyEventChangeInner(userId: number, extraData: ExtraData): void;
+        static native notifyEventChangeInner(userId: int, extraData: ExtraData): void;
     };
 
     export function changeAppCloudSwitch(accountId: string, bundleName: string, status: boolean): Promise<void> {
@@ -234,9 +234,7 @@ export default namespace cloudSyncManager  {
             return 0;
         }, accountId, bundleName, status);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });
@@ -269,9 +267,7 @@ export default namespace cloudSyncManager  {
             return 0;
         }, accountId, bundleName);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });
@@ -304,9 +300,7 @@ export default namespace cloudSyncManager  {
             return 0;
         }, accountId, switches);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });
@@ -337,9 +331,7 @@ export default namespace cloudSyncManager  {
             return 0;
         }, accountId);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });
@@ -372,19 +364,17 @@ export default namespace cloudSyncManager  {
             return 0;
         }, accountId, appActions);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });
     }
 
-    export function notifyDataChange(userId: number, extraData: ExtraData): Promise<void> {
+    export function notifyDataChange(userId: int, extraData: ExtraData): Promise<void> {
         return new Promise<void>((resolve: (result: undefined) => void,
             reject: (e: BusinessError) => void): void => {
             let promise = taskpool.execute((
-                userId: number,
+                userId: int,
                 extraData: ExtraData
             ): int => {
                 StaticFunction.notifyEventChangeInner(userId, extraData);
@@ -398,18 +388,16 @@ export default namespace cloudSyncManager  {
         });
     }
 
-    export function notifyDataChange(userId: number, extraData: ExtraData, callback: AsyncCallback<void>): void {
+    export function notifyDataChange(userId: int, extraData: ExtraData, callback: AsyncCallback<void>): void {
         let promise = taskpool.execute((
-            userId: number,
+            userId: int,
             extraData: ExtraData
         ): int => {
             StaticFunction.notifyEventChangeInner(userId, extraData);
             return 0;
         }, userId, extraData);
         promise.then<void, void>((): void => {
-            let e = new BusinessError<void>();
-            e.code = 0;
-            callback(e, undefined);
+            callback(null, undefined);
         }, (e: Error): void => {
             callback(e as BusinessError<void>, undefined);
         });

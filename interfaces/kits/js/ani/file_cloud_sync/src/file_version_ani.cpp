@@ -127,7 +127,7 @@ static ani_status GetHistoryArray(ani_env *env, const std::vector<HistoryVersion
     }
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
-    std::string argSign = Builder::BuildSignatureDescriptor({Builder::BuildDouble(), Builder::BuildDouble(),
+    std::string argSign = Builder::BuildSignatureDescriptor({Builder::BuildLong(), Builder::BuildLong(),
         Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String"),
         Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
     ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
@@ -191,7 +191,7 @@ void FileVersionAni::FileVersionConstructor(ani_env *env, ani_object object)
 }
 
 ani_ref FileVersionAni::FileVersionGetHistoryVersionList(ani_env *env, ani_object object,
-    ani_string uri, ani_double numLimit)
+    ani_string uri, ani_int numLimit)
 {
     if (numLimit <= 0) {
         ErrorHandler::Throw(env, EINVAL);

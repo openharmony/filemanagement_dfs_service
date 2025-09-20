@@ -56,7 +56,7 @@ ani_status VersionDownloadCallbackAniImpl::GetDownloadProgress(ani_env *env,
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
     std::string argSign = Builder::BuildSignatureDescriptor({
-        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"), Builder::BuildDouble(),
+        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"), Builder::BuildInt(),
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadErrorType")
     });
     ani_status ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
@@ -84,8 +84,8 @@ ani_status VersionDownloadCallbackAniImpl::GetDownloadProgress(ani_env *env,
         LOGE("get ani enum fail.");
         return ret;
     }
-    ani_double process = (static_cast<ani_double>(progress.downloadedSize) / progress.totalSize) * PERCENT;
-    ret = env->Object_New(cls, ctor, &pg, stateEnumItem, static_cast<ani_double>(process), ErrorEnumItem);
+    ani_long process = (static_cast<ani_long>(progress.downloadedSize) / progress.totalSize) * PERCENT;
+    ret = env->Object_New(cls, ctor, &pg, stateEnumItem, static_cast<ani_int>(process), ErrorEnumItem);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
         return ret;

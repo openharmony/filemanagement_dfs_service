@@ -76,7 +76,7 @@ private:
             LOGE("Cannot create ani error object. ret = %{public}d", status);
             return status;
         }
-        status = env->Object_SetPropertyByName_Double(obj, "code", static_cast<ani_double>(code));
+        status = env->Object_SetPropertyByName_Int(obj, "code", code);
         if (status != ANI_OK) {
             LOGE("Object_SetPropertyByName_Double : %{public}d", status);
             return status;

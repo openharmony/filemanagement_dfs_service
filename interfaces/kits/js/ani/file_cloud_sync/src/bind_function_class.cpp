@@ -30,17 +30,9 @@ using namespace arkts::ani_signature;
 
 static ani_status BindContextOnGallery(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("GallerySync");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.GallerySync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -71,17 +63,9 @@ static ani_status BindContextOnGallery(ani_env *env)
 
 static ani_status BindContextOnMultiDlProgress(ani_env *env)
 {
-    ani_namespace ns{};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("MultiDownloadProgress");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.MultiDownloadProgress");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -107,17 +91,9 @@ static ani_status BindContextOnMultiDlProgress(ani_env *env)
 
 static ani_status BindContextOnCloudFileCache(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("CloudFileCache");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -129,6 +105,10 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string sbSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
+    std::string startBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("escompat.Array"),
+        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
+    std::string stopBatchSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildLong(), Builder::BuildBoolean()});
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
@@ -143,6 +123,10 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCache)},
         ani_native_function{"cleanFileCache", sSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCache)},
+        ani_native_function{"CloudFileCacheStartBatch", startBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartBatch)},
+        ani_native_function{"CloudFileCacheStopBatch", stopBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopBatch)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -156,17 +140,9 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
 
 static ani_status BindContextOnFileSync(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("FileSync");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -176,7 +152,7 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string onOffSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
-    std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildDouble());
+    std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
@@ -200,17 +176,9 @@ static ani_status BindContextOnFileSync(ani_env *env)
 
 static ani_status BindContextOnStaticFunction(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("StaticFunction");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.StaticFunction");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -241,9 +209,9 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
             reinterpret_cast<void *>(CloudSyncAni::StopOptimizeStorage)},
     };
 
-    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    ret = env->Class_BindStaticNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
-        LOGE("bind native method failed. ret = %{public}d", ret);
+        LOGE("bind static native method failed. ret = %{public}d", ret);
         return ret;
     };
 
@@ -252,17 +220,9 @@ static ani_status BindContextOnStaticFunction(ani_env *env)
 
 static ani_status BindContextOnDownload(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("Download");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.Download");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -303,7 +263,7 @@ static ani_status BindContextOnFileVersion(ani_env *env)
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
     std::string getHisListSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String"),
-        Builder::BuildDouble()}, Builder::BuildClass("escompat.Array"));
+        Builder::BuildInt()}, Builder::BuildClass("escompat.Array"));
     std::string downloadHisVerSign = Builder::BuildSignatureDescriptor({
         Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String"),
         Builder::BuildFunctionalObject(1, false)}, Builder::BuildClass("std.core.String"));

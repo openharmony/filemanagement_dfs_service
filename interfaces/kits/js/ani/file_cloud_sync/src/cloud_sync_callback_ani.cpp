@@ -148,16 +148,9 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
             LOGE("crete local scope failed. ret = %{public}d", ret);
             return;
         }
-        ani_namespace ns {};
-        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-        if (ret != ANI_OK) {
-            LOGE("find namespace failed. ret = %{public}d", ret);
-            return;
-        }
-        Type clsName = Builder::BuildClass("SyncProgressInner");
+        Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.SyncProgressInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+        ret = tmpEnv->FindClass(clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
             return;
@@ -356,16 +349,9 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
         if (tmpListener.changeInfo.uris_.empty()) {
             return;
         }
-        ani_namespace ns {};
-        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-        if (ret != ANI_OK) {
-            LOGE("find namespace failed. ret = %{public}d", ret);
-            return;
-        }
-        Type clsName = Builder::BuildClass("ChangeDataInner");
+        Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.ChangeDataInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+        ret = tmpEnv->FindClass(clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
             return;
@@ -420,14 +406,14 @@ ani_status CloudOptimizeCallbackAniImpl::GetOptimProgress(
 
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
-    std::string ctSign = Builder::BuildSignatureDescriptor({optimizeStateSign, Builder::BuildDouble()});
+    std::string ctSign = Builder::BuildSignatureDescriptor({optimizeStateSign, Builder::BuildInt()});
     ret = env->Class_FindMethod(cls, ct.c_str(), ctSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
         return ret;
     }
 
-    ret = env->Object_New(cls, ctor, &data, optimizeStateTypeEnumItem, static_cast<double>(progress));
+    ret = env->Object_New(cls, ctor, &data, optimizeStateTypeEnumItem, progress);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
         return ret;

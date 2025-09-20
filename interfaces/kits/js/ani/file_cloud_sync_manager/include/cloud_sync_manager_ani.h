@@ -30,7 +30,7 @@ public:
     static void EnableCloud(ani_env *env, ani_class clazz, ani_string accoutId, ani_object record);
     static void DisableCloud(ani_env *env, ani_class clazz, ani_string accoutId);
     static void Clean(ani_env *env, ani_class clazz, ani_string accoutId, ani_object record);
-    static void NotifyEventChange(ani_env *env, ani_class clazz, ani_double userId, ani_object extraData);
+    static void NotifyEventChange(ani_env *env, ani_class clazz, ani_int userId, ani_object extraData);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_ANI_H
