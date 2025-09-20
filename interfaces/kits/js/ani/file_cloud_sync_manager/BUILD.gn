@@ -24,6 +24,7 @@ config("ani_config") {
 }
 
 ohos_shared_library("cloud_sync_manager_ani") {
+  shlib_type = "ani"
   public_configs = [ ":ani_config" ]
   sources = [
     "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",

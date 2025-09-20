@@ -89,12 +89,12 @@ static ani_status SetEnumErrType(ani_env *env, const ani_class &cls, ani_object 
 static ani_status SetProperties(ani_env *env, const ani_class &cls, ani_object &pg, MultiDlProgressCore *progressCore)
 {
     vector<pair<string_view, ani_double>> numProperties = {
-        {TAKSKID_SETTER, ani_double(static_cast<double>(progressCore->GetTaskId()))},
-        {SUCC_COUNT_SETTER, ani_double(static_cast<double>(progressCore->GetDownloadedNum()))},
-        {FAILED_COUNT_SETTER, ani_double(static_cast<double>(progressCore->GetFailedNum()))},
-        {TOTAL_COUNT_SETTER, ani_double(static_cast<double>(progressCore->GetTotalNum()))},
-        {DOWNLOAD_SIZE_SETTER, ani_double(static_cast<double>(progressCore->GetDownloadedSize()))},
-        {TOTAL_SIZE_SETTER, ani_double(static_cast<double>(progressCore->GetTotalSize()))},
+        {TAKSKID_SETTER, progressCore->GetTaskId()},
+        {SUCC_COUNT_SETTER, static_cast<ani_int>(progressCore->GetDownloadedNum())},
+        {FAILED_COUNT_SETTER, static_cast<ani_int>(progressCore->GetFailedNum())},
+        {TOTAL_COUNT_SETTER, static_cast<ani_int>(progressCore->GetTotalNum())},
+        {DOWNLOAD_SIZE_SETTER, progressCore->GetDownloadedSize()},
+        {TOTAL_SIZE_SETTER, progressCore->GetTotalSize()},
     };
     ani_status ret;
     for (auto iter : numProperties) {

@@ -26,17 +26,9 @@ using namespace arkts::ani_signature;
 
 static ani_status BindContextOnCloudSyncManager(ani_env *env)
 {
-    ani_namespace ns {};
-    Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSyncManager.cloudSyncManager");
-    ani_status ret = env->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-    if (ret != ANI_OK) {
-        LOGE("find namespace failed. ret = %{public}d", ret);
-        return ret;
-    }
-
-    Type clsName = Builder::BuildClass("StaticFunction");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.StaticFunction");
     ani_class cls;
-    ret = env->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {
         LOGE("find class failed. ret = %{public}d", ret);
         return ret;
@@ -49,7 +41,7 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
         {Builder::BuildClass("std.core.String"), Builder::BuildClass("escompat.Record")});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string deSign = Builder::BuildSignatureDescriptor({
-        Builder::BuildDouble(),
+        Builder::BuildInt(),
         Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.ExtraData")});
     std::array methods = {
         ani_native_function { "changeAppCloudSwitchInner", ssbSign.c_str(),
@@ -65,9 +57,9 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
             reinterpret_cast<void *>(CloudSyncManagerAni::NotifyEventChange) },
     };
 
-    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    ret = env->Class_BindStaticNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
-        LOGE("bind native method failed. ret = %{public}d", ret);
+        LOGE("bind static native method failed. ret = %{public}d", ret);
         return ret;
     };
 

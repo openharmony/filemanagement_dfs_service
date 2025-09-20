@@ -27,12 +27,10 @@ public:
     static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
     static void CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt);
     static void CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri);
-    static ani_double CloudFileCacheStartBatch(ani_env *env,
-                                               ani_object object,
-                                               ani_array_ref uriList,
-                                               ani_enum_item fileType);
+    static ani_long CloudFileCacheStartBatch(ani_env *env, ani_object object,
+        ani_array_ref uriList, ani_enum_item fileType);
     static void CloudFileCacheStop(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean);
-    static void CloudFileCacheStopBatch(ani_env *env, ani_object object, ani_double taskId, ani_boolean needClean);
+    static void CloudFileCacheStopBatch(ani_env *env, ani_object object, ani_long taskId, ani_boolean needClean);
     static void CloudFileCacheCleanCache(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
 };

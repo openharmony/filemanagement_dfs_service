@@ -62,8 +62,8 @@ ani_object DowngradeCallbackAniImpl::ConvertToObject(ani_env *env, const Downgra
     string ct = Builder::BuildConstructorName();
     string argSign = Builder::BuildSignatureDescriptor({
         Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadState"),
-        Builder::BuildDouble(), Builder::BuildDouble(), Builder::BuildDouble(),
-        Builder::BuildDouble(), Builder::BuildDouble(),
+        Builder::BuildInt(), Builder::BuildInt(), Builder::BuildInt(),
+        Builder::BuildLong(), Builder::BuildLong(),
         Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadStopReason")});
     ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
     if (ret != ANI_OK) {

@@ -109,8 +109,8 @@ ani_ref DowngradeDownloadAni::DowngradeDownloadGetCloudFileInfo(ani_env *env, an
     ani_method ctor;
     string ct = Builder::BuildConstructorName();
     string argSign = Builder::BuildSignatureDescriptor({
-        Builder::BuildDouble(), Builder::BuildDouble(), Builder::BuildDouble(),
-        Builder::BuildDouble(), Builder::BuildDouble(), Builder::BuildDouble()
+        Builder::BuildInt(), Builder::BuildLong(), Builder::BuildInt(),
+        Builder::BuildLong(), Builder::BuildInt(), Builder::BuildLong()
     });
     ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
     if (ret != ANI_OK) {

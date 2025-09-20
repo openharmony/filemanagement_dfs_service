@@ -49,8 +49,8 @@ ani_object SingleProgressAni::ConvertToObject(ani_env *env)
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
     std::string argSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildDouble(), Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"), Builder::BuildDouble(),
-         Builder::BuildDouble(), Builder::BuildClass("std.core.String"),
+        {Builder::BuildLong(), Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.State"), Builder::BuildLong(),
+         Builder::BuildLong(), Builder::BuildClass("std.core.String"),
          Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadErrorType")});
     ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
     if (ret != ANI_OK) {
@@ -76,8 +76,8 @@ ani_object SingleProgressAni::ConvertToObject(ani_env *env)
     env->Enum_GetEnumItemByIndex(downloadErrorEnum, errorType_, &downloadErrorEnumItem);
     env->Enum_GetEnumItemByIndex(stateEnum, state_, &stateEnumItem);
     ani_object pg;
-    ret = env->Object_New(cls, ctor, &pg, static_cast<double>(taskId_), stateEnumItem,
-                          static_cast<double>(downloadedSize_), static_cast<double>(totalSize_), uri,
+    ret = env->Object_New(cls, ctor, &pg, taskId_, stateEnumItem,
+                          downloadedSize_, totalSize_, uri,
                           downloadErrorEnumItem);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);

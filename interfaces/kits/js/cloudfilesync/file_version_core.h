@@ -33,10 +33,6 @@ public:
     FsResult<void> ClearFileConflict(const std::string &uri);
     FileVersionCore() {};
     ~FileVersionCore() = default;
-
-private:
-    // std::shared_ptr<CloudSyncCallbackMiddle> callback_;
-    // std::unique_ptr<BundleEntity> bundleEntity;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_VERSION_CORE_H

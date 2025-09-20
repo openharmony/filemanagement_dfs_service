@@ -23,7 +23,7 @@ class FileVersionAni final {
 public:
     static void FileVersionConstructor(ani_env *env, ani_object object);
     static ani_ref FileVersionGetHistoryVersionList(ani_env *env, ani_object object,
-        ani_string uri, ani_double numLimit);
+        ani_string uri, ani_int numLimit);
     static ani_string FileVersionDownloadHistoryVersion(ani_env *env, ani_object object,
         ani_string uri, ani_string versionId, ani_object fun);
     static void FileVersionReplaceFileWithHistoryVersion(ani_env *env, ani_object object,
@@ -32,4 +32,4 @@ public:
     static void FileVersionClearFileConflict(ani_env *env, ani_object object, ani_string uri);
 };
 } // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_FILE_VERSION_ANI_H
+#endif // OHOS_FILEMGMT_FILE_VERSION_ANI_H
