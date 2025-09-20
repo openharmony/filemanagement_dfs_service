@@ -93,6 +93,7 @@ void DowngradeDlCallbackImpl::UpdateDownloadProgress(const DowngradeProgress &pr
 
 void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progress)
 {
+    LOGD("Start OnDownloadProcess");
     UpdateDownloadProgress(progress);
     std::shared_ptr<DowngradeDlCallbackImpl> callbackImpl = shared_from_this();
     napi_status status = napi_send_event(
