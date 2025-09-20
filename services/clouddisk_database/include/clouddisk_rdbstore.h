@@ -118,6 +118,7 @@ private:
     NativeRdb::RdbStoreConfig config_{""};
     const int32_t CONNECT_SIZE = 8;
     std::string bundleName_;
+    const int64_t RDB_WAL_LIMIT_SIZE = 0x40000000;
     int32_t userId_{0};
     std::string tableName_ = FileColumn::FILES_TABLE;
     std::mutex rdbMutex_;
