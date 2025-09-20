@@ -122,15 +122,8 @@ void FileSyncAni::FileSyncConstructor1(ani_env *env, ani_object object, ani_stri
     }
 }
 
-void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
@@ -139,14 +132,14 @@ void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_string evt, an
     }
 
     ani_ref cbOnRef;
-    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
-    auto data = fileSync->DoOn(event, callback);
+    auto data = fileSync->DoOn(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("file sync do on failed, ret = %{public}d", err.GetErrNo());
@@ -154,7 +147,7 @@ void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_string evt, an
     }
 }
 
-void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -165,20 +158,13 @@ void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_string evt, 
     }
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = fileSync->DoOff(event, callback);
+    auto data = fileSync->DoOff(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("file sync do off failed, ret = %{public}d", err.GetErrNo());
@@ -186,22 +172,15 @@ void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_string evt, 
     }
 }
 
-void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object, ani_string evt)
+void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = fileSync->DoOff(event);
+    auto data = fileSync->DoOff(EVENT_TYPE);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("file sync do off failed, ret = %{public}d", err.GetErrNo());

@@ -37,15 +37,13 @@ static ani_status BindContextOnGallery(ani_env *env)
     }
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
-    std::string onOffSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildClass("std.core.String"), Builder::BuildFunctionalObject(1, false)});
-    std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudSyncAni::CloudSyncConstructor)},
-        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn)},
-        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff0)},
-        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1)},
+        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff0)},
+        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncOff1)},
         ani_native_function{"GallerySyncStart", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStart)},
         ani_native_function{"GallerySyncStop", vSign.c_str(), reinterpret_cast<void *>(CloudSyncAni::CloudSyncStop)},
     };
@@ -70,17 +68,19 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
     }
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
-    std::string onOffSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildClass("std.core.String"), Builder::BuildFunctionalObject(1, false)});
+    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string sbSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
-        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOn)},
-        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0)},
-        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1)},
+        ani_native_function{"onProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0)},
+        ani_native_function{"offProgress", vSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1)},
         ani_native_function{"CloudFileCacheStart", sSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStart)},
         ani_native_function{"CloudFileCacheStop", sbSign.c_str(),
@@ -109,16 +109,15 @@ static ani_status BindContextOnFileSync(ani_env *env)
     }
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
-    std::string onOffSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildClass("std.core.String"), Builder::BuildFunctionalObject(1, false)});
+    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
-        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
-        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0)},
-        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1)},
+        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0)},
+        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1)},
         ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStart)},
         ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStop)},
         ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
@@ -187,15 +186,15 @@ static ani_status BindContextOnDownload(ani_env *env)
     }
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
-    std::string onOffSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildClass("std.core.String"), Builder::BuildFunctionalObject(1, false)});
+    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudDownloadAni::DownloadConstructor)},
-        ani_native_function{"on", onOffSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadOn)},
-        ani_native_function{"off", onOffSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadOff0)},
-        ani_native_function{"off", sSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadOff1)},
+        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudDownloadAni::DownloadOff0)},
+        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadOff1)},
         ani_native_function{"DownloadStart", sSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadStart)},
         ani_native_function{"DownloadStop", sSign.c_str(), reinterpret_cast<void *>(CloudDownloadAni::DownloadStop)},
     };

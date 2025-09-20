@@ -75,27 +75,16 @@ void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object objec
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     ani_ref cbOnRef;
-    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    std::shared_ptr<CloudDownloadCallbackAniImpl> callback = nullptr;
-    if (event == "progress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
-    } else if (event == "multiProgress") {
-        callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef, true);
-    }
+    std::shared_ptr<CloudDownloadCallbackAniImpl> callback =
+        std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
@@ -103,7 +92,7 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudFileCache->DoOn(event, callback);
+    auto data = cloudFileCache->DoOn(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache do on failed, ret = %{public}d", err.GetErrNo());
@@ -111,7 +100,7 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -121,20 +110,13 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
     }
     auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudFileCache->DoOff(event, callback);
+    auto data = cloudFileCache->DoOff(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache do off failed, ret = %{public}d", err.GetErrNo());
@@ -142,22 +124,15 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudFileCache->DoOff(event);
+    auto data = cloudFileCache->DoOff(EVENT_TYPE);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache do off failed, ret = %{public}d", err.GetErrNo());
