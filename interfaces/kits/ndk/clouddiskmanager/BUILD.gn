@@ -22,7 +22,7 @@ ohos_ndk_library("libohclouddiskmanager") {
   ndk_description_file = "./liboh_cloud_disk_manager.ndk.json"
   system_capability = "SystemCapability.FileManagement.CloudDiskManager"
   system_capability_headers = [
-    "filemanagement/clouddiskmanager/oh_cloud_disk_error_code.h",
+    "filemanagement/clouddiskmanager/cloud_disk_error_code.h",
     "filemanagement/clouddiskmanager/oh_cloud_disk_manager.h",
   ]
 }
@@ -30,7 +30,7 @@ ohos_ndk_library("libohclouddiskmanager") {
 ohos_ndk_headers("oh_cloud_disk_manager") {
   dest_dir = "${ndk_headers_out_dir}/filemanagement/clouddiskmanager"
   sources = [
-    "./include/oh_cloud_disk_error_code.h",
+    "./include/cloud_disk_error_code.h",
     "./include/oh_cloud_disk_manager.h",
   ]
 }

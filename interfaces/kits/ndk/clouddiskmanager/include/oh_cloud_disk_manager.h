@@ -41,7 +41,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "oh_cloud_disk_error_code.h"
+#include "cloud_disk_error_code.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -360,7 +360,7 @@ typedef struct CloudDisk_SyncFolder {
  * @param syncFolderPath Indicates the sync folder path information.
  * @param callback Indicates the callback function to be registered.
  * @return Returns {@link CLOUD_DISK_OK} if the callback function is registered successfully;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode
@@ -374,7 +374,7 @@ CloudDisk_ErrorCode
  *
  * @param syncFolderPath Indicates the sync folder path information.
  * @return Returns {@link CLOUD_DISK_OK} if the callback function is unregistered successfully;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath);
@@ -387,7 +387,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_Syn
  * @param count Indicates the number of files.
  * @param changesResult Indicates the result of querying file changes. For details, see {@link CloudDisk_ChangesResult}.
  * @return Returns {@link CLOUD_DISK_OK} if the callback function is unregistered successfully;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
@@ -406,7 +406,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolder
  * <br> failed to set.
  * @param failedCount Output parameter. Returns the number of failed files in {@link failedLists}.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> otherwise, returns an error code defined in {@link oh_cloud_disk_error_code.h}.
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
@@ -425,7 +425,7 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
  * <br> query results.
  * @param resultCount Output parameter. Returns the number of results in {@link resultLists}.
  * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
- * <br> otherwise, returns an error code defined in {@link oh_cloud_disk_error_code.h}.
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPath syncFolderPath,
@@ -439,7 +439,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
  *
  * @param syncFolder Indicates the sync folder.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder);
@@ -449,7 +449,7 @@ CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *
  *
  * @param syncFolderPath Indicates the sync folder path.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
@@ -459,7 +459,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolder(const CloudDisk_SyncFolder
  *
  * @param syncFolderPath Indicates the sync folder path.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
@@ -469,7 +469,7 @@ CloudDisk_ErrorCode OH_CloudDisk_ActiveSyncFolder(const CloudDisk_SyncFolderPath
  *
  * @param syncFolderPath Indicates the sync folder path.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPath syncFolderPath);
@@ -480,7 +480,7 @@ CloudDisk_ErrorCode OH_CloudDisk_DeactiveSyncFolder(const CloudDisk_SyncFolderPa
  * @param syncFolders Output parameter. Returns the array of {@link CloudDisk_SyncFolder} to store the sync folders.
  * @param count Output parameter. Returns the number of sync folders.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolders, size_t *count);
@@ -492,7 +492,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
  * @param customAlias Indicates the user-defined alias.
  * @param customAliasLength Indicates the length of the customAlias.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
- * <br> returns an error code defined in {@link oh_cloud_disk_error_code.h} otherwise.
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
 CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(

@@ -19,7 +19,7 @@
 #include <unordered_map>
 
 #include "cloud_disk_service_error.h"
-#include "oh_cloud_disk_error_code.h"
+#include "cloud_disk_error_code.h"
 
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
 
