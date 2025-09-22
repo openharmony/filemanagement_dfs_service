@@ -20,5 +20,6 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer:DaemonStubFuzzTest",
     "${distributedfile_path}/test/fuzztest/ffrttimer_fuzzer:FfrtTimerFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
+    "${distributedfile_path}/test/fuzztest/ohclouddiskmanagerndk_fuzzer:OHCloudDiskManagerNDKFuzzTest",
   ]
 }
