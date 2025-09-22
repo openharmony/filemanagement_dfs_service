@@ -142,8 +142,7 @@ private:
     bool MountDfsCountOnly(const std::string &deviceId);
     bool UMountDfsCountOnly(const std::string &deviceId, bool needClear);
     int32_t GetCurrentUserId();
-    void GetStorageManager();
-    sptr<StorageManager::IStorageManager> storageMgrProxy_;
+    sptr<StorageManager::IStorageManager> GetStorageManager();
 
     // deviceid(Network 16) -> MountCountInfo
     std::mutex mountDfsCountMutex_;

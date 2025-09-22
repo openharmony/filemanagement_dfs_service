@@ -24,6 +24,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+std::recursive_mutex SoftBusAssetSendListener::mtx_;
+
 std::map<std::string, std::pair<std::string, bool>> SoftBusAssetSendListener::taskIsSingleFileMap_;
 void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
 {
@@ -59,7 +61,7 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_OK);
-    SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
+    SoftBusHandlerAsset::GetInstance().CloseAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], GetIsZipFile(taskId));
     RemoveFileMap(taskId);
@@ -83,7 +85,7 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
-    SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
+    SoftBusHandlerAsset::GetInstance().CloseAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], GetIsZipFile(taskId));
     RemoveFileMap(taskId);
@@ -101,7 +103,7 @@ void SoftBusAssetSendListener::DisConnectByAllConnect(const std::string &peerNet
         }
         auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
         AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
-        SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
+        SoftBusHandlerAsset::GetInstance().CloseAssetBind(socketId);
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         auto it = taskIsSingleFileMap_.find(taskId);
         if (it != taskIsSingleFileMap_.end()) {
@@ -122,7 +124,7 @@ void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason 
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
-    SoftBusHandlerAsset::GetInstance().closeAssetBind(sessionId);
+    SoftBusHandlerAsset::GetInstance().CloseAssetBind(sessionId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     auto it = taskIsSingleFileMap_.find(taskId);
     if (it != taskIsSingleFileMap_.end()) {

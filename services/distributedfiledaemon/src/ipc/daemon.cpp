@@ -214,11 +214,13 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     auto ret = ConnectionCount(deviceInfo);
     if (ret == E_OK) {
         ConnectCount::GetInstance().AddConnect(callingTokenId, deviceInfo.networkId, listener);
+        LOGI("OpenP2PConnection Success %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     } else {
         if (ret == ERR_CHECKOUT_COUNT) {
             ConnectCount::GetInstance().RemoveConnect(callingTokenId, deviceInfo.networkId);
         }
         CleanUp(deviceInfo);
+        LOGE("OpenP2PConnection failed %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     }
     return ret;
 }
@@ -231,6 +233,7 @@ int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &devi
     auto networkId = std::string(deviceInfo.networkId);
     ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
     CleanUp(deviceInfo);
+    LOGI("Close P2P Connection Success networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     return 0;
 }
 
@@ -357,8 +360,8 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != NO_ERROR) {
-        LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d", res);
+    if (res != 0) {
+        LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return E_INVAL_ARG_NAPI;
     }
 
@@ -404,8 +407,8 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     }
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != NO_ERROR) {
-        LOGE("strcpy failed, res = %{public}d", res);
+    if (res != 0) {
+        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return E_INVAL_ARG_NAPI;
     }
     ConnectCount::GetInstance().RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
@@ -498,7 +501,7 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
-        LOGE("strcpy failed, res = %{public}d", res);
+        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return ERR_BAD_VALUE;
     }
     OpenP2PConnection(deviceInfo);
@@ -912,7 +915,7 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
         DistributedHardware::DmDeviceInfo deviceInfo{};
         auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, it->c_str());
         if (res != 0) {
-            LOGE("strcpy failed, res = %{public}d", res);
+            LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
             return;
         }
         if (!ConnectCount::GetInstance().CheckCount(*it)) {
@@ -1044,7 +1047,7 @@ void Daemon::DisconnectDevice(const std::string networkId)
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (ret != 0) {
-        LOGE("strcpy for network id failed, ret is %{public}d", ret);
+        LOGE("strcpy for network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return;
     }
     LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
@@ -1116,7 +1119,7 @@ int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
             std::string networkId = mountInfo.second.networkId_;
             auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
             if (res != NO_ERROR) {
-                LOGE("strcpy failed, res = %{public}d", res);
+                LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
                 return E_INVAL_ARG_NAPI;
             }
             for (const auto &ele : mountInfo.second.callingCountMap_) {
@@ -1209,8 +1212,8 @@ void Daemon::DisconnectByRemote(const string &networkId)
     }
     DistributedHardware::DmDeviceInfo deviceInfo{};
     res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != NO_ERROR) {
-        LOGE("strcpy failed, res = %{public}d", res);
+    if (res != 0) {
+        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return;
     }
     ConnectCount::GetInstance().RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);

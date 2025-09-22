@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -160,7 +160,7 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
     }
     int num = scandir(SYS_HMDFS_PATH.c_str(), &(pNameList->namelist), FilterFunc, alphasort);
     if (num < 0) {
-        LOGE("Failed to scandir.");
+        LOGE("Failed to scandir, errno = %{public}d", errno);
         return false;
     }
     pNameList->direntNum = num;

@@ -47,7 +47,7 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
     .deviceId = "testdevid",
     .deviceName = "testdevname",
     .deviceTypeId = 1,
-    .networkId = "testNetWork",
+    .networkId = "testNetwork",
     .extraData = R"({"OS_TYPE":10})",
 };
 
@@ -218,6 +218,14 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, Te
         DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
         DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase(NETWORKID_TWO);
         DeviceManagerAgent::GetInstance()->cidNetworkType_.erase(NETWORKID_TWO);
+
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ NETWORKID_TWO, nullptr });
+        DeviceManagerAgent::GetInstance()->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
+        DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
+        EXPECT_NE(DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.size(), 0);
+        EXPECT_NE(DeviceManagerAgent::GetInstance()->cidNetworkType_.size(), 0);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.clear();
+        DeviceManagerAgent::GetInstance()->cidNetworkType_.clear();
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << e.what();
         res = false;
@@ -433,6 +441,14 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POnline_0200, 
         devicePtr->cidNetworkType_.insert({ testNetWorkId, NETWORKTYPE_NONE_WIFI });
         ret = devicePtr->OnDeviceP2POnline(deviceInfo);
         EXPECT_EQ(ret, 0);
+
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillRepeatedly(Return(0));
+        devicePtr->cidNetTypeRecord_[testNetWorkId] = nullptr;
+        ret = devicePtr->OnDeviceP2POnline(deviceInfo);
+        EXPECT_EQ(ret, DeviceManagerAgent::P2PErrCode::P2P_FAILED);
+        EXPECT_EQ(devicePtr->cidNetTypeRecord_.size(), 1);
+        EXPECT_EQ(devicePtr->cidNetworkType_.size(), 1);
         devicePtr->cidNetTypeRecord_.erase(testNetWorkId);
         devicePtr->cidNetworkType_.erase(testNetWorkId);
     } catch (const exception &e) {
@@ -524,6 +540,15 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0300,
         if (iterType != devicePtr->cidNetworkType_.end()) {
             res = false;
         }
+
+        devicePtr->cidNetTypeRecord_.insert({NETWORKID_TWO, nullptr});
+        devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
+        ret = devicePtr->OnDeviceP2POffline(deviceInfo);
+        EXPECT_EQ(ret, DeviceManagerAgent::P2PErrCode::P2P_FAILED);
+        EXPECT_NE(devicePtr->cidNetTypeRecord_.size(), 0);
+        EXPECT_NE(devicePtr->cidNetworkType_.size(), 0);
+        devicePtr->cidNetTypeRecord_.clear();
+        devicePtr->cidNetworkType_.clear();
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << e.what();
         res = false;
@@ -649,14 +674,13 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0300, TestSize
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0300 start";
     bool res = true;
-
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
     try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         DeviceManagerAgent::GetInstance()->JoinGroup(smp);
         DeviceManagerAgent::GetInstance()->JoinGroup(smp);
-        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
     } catch (const exception &e) {
         EXPECT_EQ(string(e.what()), "Failed to join group: Mountpoint existed");
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
         res = false;
     }
 
@@ -699,8 +723,14 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0200, TestSize
     bool res = true;
 
     try {
-        shared_ptr<MountPoint> nullwmp;
-        DeviceManagerAgent::GetInstance()->QuitGroup(nullwmp);
+        DeviceManagerAgent::GetInstance()->mpToNetworks_.clear();
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        DeviceManagerAgent::GetInstance()->mpToNetworks_.emplace(smp->GetID(), nullptr);
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
+        EXPECT_EQ(DeviceManagerAgent::GetInstance()->mpToNetworks_.size(), 0);
+
+        shared_ptr<MountPoint> nullsmp;
+        DeviceManagerAgent::GetInstance()->QuitGroup(nullsmp);
     } catch (const exception &e) {
         EXPECT_EQ(string(e.what()), "Failed to quit group: Received empty mountpoint");
         res = false;
@@ -1384,6 +1414,38 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QueryRelatedGroups_0100,
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QueryRelatedGroups_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_ClearCount_0100
+ * @tc.desc: Verify the ClearCount function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ClearCount_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ClearCount_0100 start";
+    bool res = true;
+
+    try {
+        std::string networkId(deviceInfo.networkId);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ networkId, nullptr });
+        DeviceManagerAgent::GetInstance()->ClearCount(deviceInfo);
+        EXPECT_EQ(DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.size(), 1);
+
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_[networkId] = agent1;
+        DeviceManagerAgent::GetInstance()->ClearCount(deviceInfo);
+        EXPECT_EQ(DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.size(), 1);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.clear();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ClearCount_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

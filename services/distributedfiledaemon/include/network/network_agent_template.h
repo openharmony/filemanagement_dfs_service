@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,8 +58,8 @@ public:
     void Stop();
     void ConnectOnlineDevices();
     void DisconnectAllDevices();
-    void DisconnectDeviceByP2P(const DeviceInfo info);
-    void DisconnectDeviceByP2PHmdfs(const DeviceInfo info);
+    void DisconnectDeviceByP2P(const std::string networkId);
+    void DisconnectDeviceByP2PHmdfs(const std::string networkId);
     void AcceptSession(std::shared_ptr<BaseSession> session, const std::string backStage);
     void ConnectDeviceByP2PAsync(const DeviceInfo info);
     bool FindSocketId(int32_t socketId);

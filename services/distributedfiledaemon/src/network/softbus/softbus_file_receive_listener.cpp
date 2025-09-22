@@ -94,10 +94,10 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
 void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info)
 {
     LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
-    bindSuccess.store(false);
+    bindSuccess_.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
     std::unique_lock<std::shared_mutex> lock(rwMtx_);
-    bindSuccess.store(true);
+    bindSuccess_.store(true);
     cv_.notify_all();
 }
 
@@ -119,7 +119,7 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
     std::shared_lock<std::shared_mutex> lock(rwMtx_);
     cv_.wait_for(lock, std::chrono::milliseconds(WAIT_TIME_MS),
-        [] { return SoftBusFileReceiveListener::bindSuccess.load(); });
+        [] { return SoftBusFileReceiveListener::bindSuccess_.load(); });
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

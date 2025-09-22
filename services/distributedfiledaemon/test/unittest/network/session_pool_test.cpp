@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -164,7 +164,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0101, TestSize.Level1)
         auto size = pool->usrSpaceSessionPool_.size();
         pool->talker_ = nullptr;
         pool->HoldSession(session, "Server");
-        EXPECT_EQ(pool->usrSpaceSessionPool_.size(), size + 1);
+        EXPECT_EQ(pool->usrSpaceSessionPool_.size(), size);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -189,12 +189,20 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0100, TestSize.Level
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
     std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
-    pool->usrSpaceSessionPool_.push_back(session);
+    pool->usrSpaceSessionPool_.push_back(nullptr);
     pool->ReleaseSession(0);
     EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: session size
 
     pool->ReleaseSession(-1); // -1: session fd
-    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0); // 0: session size
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: session size
+
+    pool->usrSpaceSessionPool_.push_back(session);
+    pool->ReleaseSession(0);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 2); // 2: session size
+
+    pool->ReleaseSession(-1); // -1: session fd
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: session size
+    pool->usrSpaceSessionPool_.clear();
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 end";
 }
 
@@ -211,6 +219,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
     weak_ptr<MountPoint> wmp = smp;
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(nullptr);
 
     std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
@@ -226,7 +235,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
     session2->SetFromServer(false);
     pool->usrSpaceSessionPool_.push_back(session2);
     bool ifReleaseService = false;
-    size_t len = 3; // 3: session size;
+    size_t len = 4; // 4: session size;
 
     pool->ReleaseSession("test", ifReleaseService);
     EXPECT_EQ(pool->usrSpaceSessionPool_.size(), len);
@@ -239,10 +248,11 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
 
     ifReleaseService = true;
     pool->ReleaseSession(peerDeviceId, ifReleaseService);
-    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0); // 1: remove one
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: sessionId size
     pool->talker_ = nullptr;
     pool->ReleaseSession(peerDeviceId, ifReleaseService);
-    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 0);
+    EXPECT_EQ(pool->usrSpaceSessionPool_.size(), 1); // 1: sessionId size
+    pool->usrSpaceSessionPool_.clear();
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 end";
 }
 
@@ -262,6 +272,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
     std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
     pool->usrSpaceSessionPool_.push_back(session);
+    pool->usrSpaceSessionPool_.push_back(nullptr);
 
     bool res = true;
     try {
@@ -272,6 +283,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
     }
 
     EXPECT_TRUE(res == true);
+    EXPECT_TRUE(pool->usrSpaceSessionPool_.size() == 0);
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseAllSession_0100 end";
 }
 
@@ -387,13 +399,42 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_FindSocketId_0100, TestSize.Level1)
     weak_ptr<MountPoint> wmp = smp;
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(nullptr);
+    bool ret = pool->FindSocketId(TEST_SESSION_ID);
+    EXPECT_EQ(ret, false);
+
     pool->usrSpaceSessionPool_.push_back(session);
-    bool ret = pool->FindSocketId(-1); // -1: session id
+    ret = pool->FindSocketId(-1); // -1: session id
     EXPECT_EQ(ret, false);
 
     ret = pool->FindSocketId(TEST_SESSION_ID);
     EXPECT_EQ(ret, true);
     GTEST_LOG_(INFO) << "SessionPoolTest_FindSocketId_0100 end";
+}
+
+/**
+ * @tc.name: SessionPoolTest_FindCid_0100
+ * @tc.desc: Verify the FindCid function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_FindCid_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindCid_0100 start";
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+    pool->usrSpaceSessionPool_.push_back(nullptr);
+    pool->usrSpaceSessionPool_.push_back(session);
+    bool ret = pool->FindCid("test");
+    EXPECT_EQ(ret, false);
+
+    ret = pool->FindCid(peerDeviceId);
+    EXPECT_EQ(ret, true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindCid_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

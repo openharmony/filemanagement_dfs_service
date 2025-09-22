@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -114,22 +114,24 @@ void NetworkAgentTemplate::DisconnectAllDevices()
     ConnectCount::GetInstance().RemoveAllConnect();
 }
 
-// for closeP2P
-void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
+ // for closeP2P
+void NetworkAgentTemplate::DisconnectDeviceByP2P(const std::string networkId)
 {
-    LOGI("CloseP2P, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    sessionPool_.ReleaseSession(info.GetCid(), false);
+    LOGI("CloseP2P, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
+    sessionPool_.ReleaseSession(networkId, false);
+    LOGI("CloseP2P, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
+    sessionPool_.ReleaseSession(networkId, false);
 }
 
 // dm device offline
-void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
+void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const std::string networkId)
 {
-    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    sessionPool_.ReleaseSession(info.GetCid(), true);
-    ConnectCount::GetInstance().NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
-    ConnectCount::GetInstance().RemoveConnect(info.GetCid());
-    ConnectCount::GetInstance().NotifyFileStatusChange(info.GetCid(), Status::DEVICE_OFFLINE,
-                                                       info.GetCid().substr(0, VALID_MOUNT_PATH_LEN),
+    LOGI("DeviceOffline, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
+    sessionPool_.ReleaseSession(networkId, true);
+    ConnectCount::GetInstance().NotifyRemoteReverseObj(networkId, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance().RemoveConnect(networkId);
+    ConnectCount::GetInstance().NotifyFileStatusChange(networkId, Status::DEVICE_OFFLINE,
+                                                       networkId.substr(0, VALID_MOUNT_PATH_LEN),
                                                        StatusType::CONNECTION_STATUS);
 }
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -111,6 +111,11 @@ int32_t AssetAdapterSaClient::RemoveListener(const sptr<IAssetRecvCallback> &lis
     LOGI("Sa client remove listener enter.");
     std::lock_guard<std::mutex> lock(eventMutex_);
     for (auto iter = listeners_.begin(); iter != listeners_.end();) {
+        if (*iter == nullptr) {
+            LOGE("IAssetRecvCallback is nullptr");
+            ++iter;
+            continue;
+        }
         if ((*iter)->AsObject() == listener->AsObject()) {
             iter = listeners_.erase(iter);
         } else {

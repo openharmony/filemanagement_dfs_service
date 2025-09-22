@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -149,15 +149,15 @@ void DaemonExecute::ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer
         return;
     }
 
-    auto requestSendFileBlock  = requestSendFileData->requestSendFileBlock_;
+    auto requestSendFileBlock = requestSendFileData->requestSendFileBlock_;
     if (requestSendFileBlock == nullptr) {
         LOGE("requestSendFileBlock is nullptr.");
         return;
     }
     std::string srcUri = requestSendFileData->srcUri_;
-    std::string dstPath  = requestSendFileData->dstPath_;
-    std::string dstDeviceId  = requestSendFileData->dstDeviceId_;
-    std::string sessionName  = requestSendFileData->sessionName_;
+    std::string dstPath = requestSendFileData->dstPath_;
+    std::string dstDeviceId = requestSendFileData->dstDeviceId_;
+    std::string sessionName = requestSendFileData->sessionName_;
     if (srcUri.empty() || dstDeviceId.empty() || sessionName.empty()) {
         LOGE("params empty. %{public}s, %{public}s", sessionName.c_str(), Utils::GetAnonyString(dstDeviceId).c_str());
         requestSendFileBlock->SetValue(ERR_BAD_VALUE);
@@ -216,18 +216,16 @@ void DaemonExecute::ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer 
         LOGE("prepareSessionBlock is nullptr.");
         return;
     }
-    std::string srcUri = prepareSessionData->srcUri_;
-    std::string physicalPath = prepareSessionData->physicalPath_;
-    std::string sessionName = prepareSessionData->sessionName_;
-    sptr<IDaemon> daemon = prepareSessionData->daemon_;
-    HmdfsInfo &info = prepareSessionData->info_;
-    std::string srcNetworkId = prepareSessionData->srcNetworkId_;
-
-    prepareSessionBlock->SetValue(PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info, srcNetworkId));
+    prepareSessionBlock->SetValue(PrepareSessionInner(prepareSessionData->srcUri_,
+                                                      prepareSessionData->physicalPath_,
+                                                      prepareSessionData->sessionName_,
+                                                      prepareSessionData->daemon_,
+                                                      prepareSessionData->info_,
+                                                      prepareSessionData->srcNetworkId_));
 }
 
 int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
-                                           std::string &physicalPath,
+                                           const std::string &physicalPath,
                                            const std::string &sessionName,
                                            const sptr<IDaemon> &daemon,
                                            HmdfsInfo &info,
@@ -240,12 +238,12 @@ int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
         LOGE("CreateSessionServer failed, socketId = %{public}d", socketId);
         return E_SOFTBUS_SESSION_FAILED;
     }
-    physicalPath.clear();
+    std::string tmpPhysicalPath;
     if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
         LOGI("authority is media or docs");
-        physicalPath = "??" + info.dstPhysicalPath;
+        tmpPhysicalPath = "??" + info.dstPhysicalPath;
     }
-    auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName, srcNetworkId);
+    auto ret = Daemon::Copy(srcUri, tmpPhysicalPath, daemon, sessionName, srcNetworkId);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
         SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
@@ -337,7 +335,7 @@ void DaemonExecute::HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &
 {
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
-    SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
+    SoftBusHandlerAsset::GetInstance().CloseAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     SoftBusAssetSendListener::RemoveFileMap(taskId);
 }

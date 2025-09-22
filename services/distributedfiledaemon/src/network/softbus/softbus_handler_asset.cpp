@@ -225,9 +225,9 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
     return E_OK;
 }
 
-void SoftBusHandlerAsset::closeAssetBind(int32_t socketId)
+void SoftBusHandlerAsset::CloseAssetBind(int32_t socketId)
 {
-    LOGI("closeAssetBind Enter.");
+    LOGI("CloseAssetBind Enter.");
     Shutdown(socketId);
     auto assetObj = GetAssetObj(socketId);
     if (assetObj == nullptr) {
@@ -279,6 +279,10 @@ std::vector<int32_t> SoftBusHandlerAsset::GetSocketIdFromAssetObj(const std::str
     std::vector<int32_t> socketIdVec;
     std::lock_guard<std::mutex> lock(assetObjMapMutex_);
     for (auto iter = assetObjMap_.begin(); iter != assetObjMap_.end(); ++iter) {
+        if (iter->second == nullptr) {
+            LOGE("AssetObj is nullptr");
+            continue;
+        }
         if (iter->second->dstNetworkId_ == peerNetworkId) {
             socketIdVec.push_back(iter->first);
         }

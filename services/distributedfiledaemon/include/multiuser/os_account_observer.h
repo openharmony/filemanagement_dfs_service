@@ -39,7 +39,8 @@ private:
     void RemoveMPInfo(const int id);
     void AddMPInfo(const int id, const std::string &relativePath);
     int32_t GetCurrentUserId();
-
+    void OnEventUserSwitched(int32_t userId);
+    void OnEventUserUnlocked(int32_t userId);
     std::mutex serializer_;
     std::unordered_map<int, std::vector<std::shared_ptr<MountPoint>>> mountPoints_;
     int curUsrId_ { -1 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,10 +89,22 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_OnReceiveEvent_0100, TestS
             std::string data(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
             EventFwk::CommonEventData eventData(want, code, data);
             g_subScriber->OnReceiveEvent(eventData);
+            EXPECT_EQ(g_subScriber->curUsrId_, USER_ID);
 
+            g_subScriber->curUsrId_ = USER_ID;
+            g_subScriber->OnReceiveEvent(eventData);
+            EXPECT_EQ(g_subScriber->curUsrId_, USER_ID);
+
+            g_subScriber->needAddUserId_.store(-1); // -1: default value
             std::string data1(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
-            EventFwk::CommonEventData eventData1(want, code, data);
+            want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+            EventFwk::CommonEventData eventData1(want, code, data1);
             g_subScriber->OnReceiveEvent(eventData1);
+            EXPECT_EQ(g_subScriber->needAddUserId_.load(), -1); // -1: default value
+
+            g_subScriber->needAddUserId_.store(USER_ID);
+            g_subScriber->OnReceiveEvent(eventData1);
+            EXPECT_EQ(g_subScriber->needAddUserId_.load(), -1); // -1: default value
         }
     } catch (const std::exception &e) {
         res = false;

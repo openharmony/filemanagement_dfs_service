@@ -68,31 +68,12 @@ void OsAccountObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 {
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
+    int32_t userId = eventData.GetCode();
     LOGI("AccountSubscriber: OnReceiveEvent action:%{public}s.", action.c_str());
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        int32_t id = eventData.GetCode();
-        LOGI("user id changed to %{public}d", id);
-        lock_guard<mutex> lock(serializer_);
-        if (curUsrId_ != -1 && curUsrId_ != id) {
-            // first stop curUsrId_ network
-            RemoveMPInfo(curUsrId_);
-        } else if (curUsrId_ != -1 && curUsrId_ == id) {
-            return;
-        }
-
-        // then start new network
-        curUsrId_ = id;
-        AddMPInfo(id, SAME_ACCOUNT);
-        LOGI("user id %{public}d, add network done", curUsrId_);
+        OnEventUserSwitched(userId);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
-        int32_t id = eventData.GetCode();
-        LOGI("user id: %{public}d unlocked", id);
-        lock_guard<mutex> lock(serializer_);
-        if (needAddUserId_.load() == id) {
-            LOGI("user id: %{public}d now begin to join group", id);
-            AddMPInfo(id, SAME_ACCOUNT);
-        }
-        needAddUserId_.store(-1);
+        OnEventUserUnlocked(userId);
     } else {
         LOGE("no expect action");
     }
@@ -124,6 +105,34 @@ int32_t OsAccountObserver::GetCurrentUserId()
         return INVALID_USER_ID;
     }
     return userIds[0];
+}
+
+void OsAccountObserver::OnEventUserSwitched(const int32_t userId)
+{
+    LOGI("user id changed to %{public}d", userId);
+    lock_guard<mutex> lock(serializer_);
+    if (curUsrId_ != -1 && curUsrId_ != userId) {
+        // first stop curUsrId_ network
+        RemoveMPInfo(curUsrId_);
+    } else if (curUsrId_ != -1 && curUsrId_ == userId) {
+        return;
+    }
+
+    // then start new network
+    curUsrId_ = userId;
+    AddMPInfo(userId, SAME_ACCOUNT);
+    LOGI("user id %{public}d, add network done", curUsrId_);
+}
+
+void OsAccountObserver::OnEventUserUnlocked(const int32_t userId)
+{
+    LOGI("user id: %{public}d unlocked", userId);
+    lock_guard<mutex> lock(serializer_);
+    if (needAddUserId_.load() == userId) {
+        LOGI("user id: %{public}d now begin to join group", userId);
+        AddMPInfo(userId, SAME_ACCOUNT);
+    }
+    needAddUserId_.store(-1);
 }
 } // namespace DistributedFile
 } // namespace Storage

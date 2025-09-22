@@ -129,9 +129,9 @@ int32_t DeviceManagerAgent::GetCurrentUserId()
     return 0;
 }
 
-void DeviceManagerAgent::GetStorageManager()
+sptr<StorageManager::IStorageManager> DeviceManagerAgent::GetStorageManager()
 {
-    return;
+    return nullptr;
 }
 
 void DeviceManagerAgent::AddNetworkId(uint32_t tokenId, const std::string &networkId)
@@ -299,9 +299,8 @@ void DeviceManagerAgent::OnRemoteDied()
 
 DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 {
-    DeviceInfo deviceInfo;
     if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return deviceInfo;
+        return localDeviceInfo_;
     }
     return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetLocalDeviceInfo();
 }

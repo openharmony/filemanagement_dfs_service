@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -38,7 +38,7 @@ std::string SoftBusHandler::GetSessionName(int32_t sessionId)
 }
 
 int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, const std::string &sessionName,
-                                            DFS_CHANNEL_ROLE role, const std::string physicalPath)
+                                            DFS_CHANNEL_ROLE role, const std::string &physicalPath)
 {
     if (ISoftBusHandlerMock::iSoftBusHandlerMock_ == nullptr) {
         return -1;
