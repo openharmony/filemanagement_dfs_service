@@ -114,10 +114,10 @@ static int32_t FillLogGroup(struct LogGroup &logGroup, const struct LogBlock &lo
     return E_OK;
 }
 
-static uint32_t GetCurrentLine(int fd)
+static uint64_t GetCurrentLine(int fd)
 {
-    uint32_t startLine = 0;
-    uint32_t offset = 0;
+    uint64_t startLine = 0;
+    uint64_t offset = 0;
     for (uint32_t i = 0; i < LOGGROUP_MAX; i++) {
         auto logGroup = LoadCurrentPage(fd, i);
         if (logGroup == nullptr) {
@@ -137,6 +137,46 @@ static uint32_t GetCurrentLine(int fd)
         }
     }
     return startLine + offset;
+}
+
+static bool GetReversal(int fd, uint64_t line)
+{
+    // line is greater than LOG_COUNT_MAX, reversal is enabled by default
+    if (line > LOG_COUNT_MAX) {
+        return true;
+    }
+    auto logGroup = LoadCurrentPage(fd, LOGGROUP_MAX - 1);
+    if (logGroup == nullptr) {
+        return false;
+    }
+    // line is less than LOG_COUNT_MAX, the last log's timestamp is 0 means no reversal; otherwise, reverasl is assumed.
+    bool reversal = logGroup->nsl[LOGBLOCK_PER_GROUP - 1].timestamp != 0;
+    UnlockCurrentPage(fd, LOGGROUP_MAX - 1);
+    return reversal;
+}
+
+uint64_t CloudDiskServiceLogFile::GetStartLine()
+    __attribute__((no_sanitize("unsigned-integer-overflow")))
+{
+    if (currentLine_ <= LOG_COUNT_MAX && !reversal_) {
+        return 0;
+    }
+
+    uint64_t line = currentLine_ - 1;
+    return (line & ~LOG_INDEX_MASK) - LOG_COUNT_MAX + LOGBLOCK_PER_GROUP;
+}
+
+bool CloudDiskServiceLogFile::CheckLineIsValid(const uint64_t line)
+{
+    uint64_t startLine = GetStartLine();
+    if (line >= startLine && line < currentLine_) {
+        return true;
+    }
+    if (!reversal_ || currentLine_ >= LOG_COUNT_MAX) {
+        return false;
+    }
+
+    return line >= startLine || line < currentLine_;
 }
 
 int32_t CloudDiskServiceLogFile::WriteLogFile(const struct LogBlock &logBlock)
@@ -194,6 +234,7 @@ CloudDiskServiceLogFile::CloudDiskServiceLogFile(const int32_t userId, const uin
     if (access(logFilePath_.c_str(), F_OK) == 0) {
         fd_ = UniqueFd{open(logFilePath_.c_str(), O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
         currentLine_ = GetCurrentLine(fd_);
+        reversal_ = GetReversal(fd_, currentLine_);
     } else {
         fd_ = UniqueFd{open(logFilePath_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
         ftruncate(fd_, LOGGROUP_SIZE * LOGGROUP_MAX + LOGGROUP_HEADER);
@@ -368,7 +409,7 @@ int32_t CloudDiskServiceLogFile::PraseLog(const uint64_t line, ChangeData &data,
     if (line == currentLine_.load()) {
         isEof = true;
         return E_OK;
-    } else if (currentLine_.load() - line >= LOG_COUNT_MAX) {
+    } else if (!CheckLineIsValid(line)) {
         return E_INVALID_CHANGE_SEQUENCE;
     }
 
@@ -558,10 +599,14 @@ int32_t LogFileMgr::ProduceRequest(const struct EventInfo &eventInfo)
 int32_t LogFileMgr::PraseRequest(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t start,
                                  const uint64_t count, struct ChangesResult &changesResult)
 {
-    int32_t ret;
+    int32_t ret = E_OK;
     uint64_t nextUsn = start + count;
     auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
-    for (uint64_t line = start; line < start + count; line++) {
+    uint64_t startLine = start;
+    if (startLine == 0) {
+        startLine = logFile->GetStartLine();
+    }
+    for (uint64_t line = startLine; line < startLine + count; line++) {
         struct ChangeData changeData;
         ret = logFile->PraseLog(line, changeData, changesResult.isEof);
         if (ret == E_OK && !changesResult.isEof) {

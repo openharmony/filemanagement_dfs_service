@@ -85,6 +85,7 @@ public:
     void StopCallback();
 
     int32_t OnDataChange();
+    uint64_t GetStartLine();
 
 private:
     int32_t ProductLogForOperate(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
@@ -108,6 +109,7 @@ private:
     int32_t GenerateChangeData(const struct EventInfo &eventInfo, uint64_t line,
                                const std::string &childRecordId, const std::string &parentRecordId);
     void GenerateChangeDataForInvalid(const struct EventInfo &eventInfo);
+    bool CheckLineIsValid(const uint64_t line);
 
     int32_t userId_;
     uint32_t syncFolderIndex_;
@@ -118,6 +120,7 @@ private:
     UniqueFd fd_;
 
     std::atomic<uint64_t> currentLine_;
+    std::atomic<bool> reversal_;
 
     std::mutex vectorMtx_;
     std::vector<struct ChangeData> changeDatas_;

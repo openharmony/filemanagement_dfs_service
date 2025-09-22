@@ -326,4 +326,70 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetCurrentLineTest001, TestSize.Leve
     }
     GTEST_LOG_(INFO) << "GetCurrentLineTest001 end";
 }
+
+/**
+ * @tc.name: GetReversalTest001
+ * @tc.desc: Verify the GetReversal function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetReversalTest001 start";
+    try {
+        int fd = 1;
+        uint64_t line = 0;
+        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
+        bool res = GetReversal(fd, line);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetReversalTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetReversalTest001 end";
+}
+
+/**
+ * @tc.name: GetReversalTest002
+ * @tc.desc: Verify the GetReversal function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetReversalTest002 start";
+    try {
+        int fd = 1;
+        uint64_t line = 0;
+        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
+        bool res = GetReversal(fd, line);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetReversalTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetReversalTest002 end";
+}
+
+/**
+ * @tc.name: GetReversalTest003
+ * @tc.desc: Verify the GetReversal function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetReversalTest003 start";
+    try {
+        int fd = 1;
+        uint64_t line = LOG_COUNT_MAX + 1;
+        bool res = GetReversal(fd, line);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetReversalTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetReversalTest003 end";
+}
 }
