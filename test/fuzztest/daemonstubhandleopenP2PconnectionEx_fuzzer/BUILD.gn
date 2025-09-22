@@ -18,7 +18,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_fuzztest("DaemonStubHandleOpenP2PConnectionExFuzzTest") {
   module_out_path = "dfs_service/dfs_service_daemon"
-  fuzz_config_file = "${distributedfile_path}/test/fuzztest/daemonstub_handleopenP2PconnectionEx_fuzzer"
+  fuzz_config_file = "${distributedfile_path}/test/fuzztest/daemonstubhandleopenP2PconnectionEx_fuzzer"
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
@@ -31,7 +31,7 @@ ohos_fuzztest("DaemonStubHandleOpenP2PConnectionExFuzzTest") {
   ]
   sources = [
     "${distributedfile_path}/services/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${distributedfile_path}/test/fuzztest/daemonstub_handleopenP2PconnectionEx_fuzzer/daemonstub_handleopenP2PconnectionEx_fuzzer.cpp",
+    "${distributedfile_path}/test/fuzztest/daemonstubhandleopenP2PconnectionEx_fuzzer/daemonstub_handleopenP2PconnectionEx_fuzzer.cpp",
   ]
   defines = [ "DFS_LOG_TAG = \"dfs_service\"" ]
   deps = [
