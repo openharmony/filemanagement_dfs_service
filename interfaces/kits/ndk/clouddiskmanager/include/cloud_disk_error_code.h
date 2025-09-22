@@ -23,7 +23,7 @@
  */
 
 /**
- * @file oh_cloud_disk_error_code.h
+ * @file cloud_disk_error_code.h
  *
  * @brief Provides the definitions of cloud disk manager error codes.
  *
