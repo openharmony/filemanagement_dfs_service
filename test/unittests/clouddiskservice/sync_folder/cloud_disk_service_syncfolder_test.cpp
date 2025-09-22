@@ -111,7 +111,7 @@ HWTEST_F(CloudDiskServiceSyncFolderTest, RegisterSyncFolderChangesTest001, TestS
 
 /**
  * @tc.name: UnRegisterSyncFolderChangesTest001
- * @tc.desc: Verify the RegisterSyncFolderChanges function
+ * @tc.desc: Verify the UnRegisterSyncFolderChanges function
  * @tc.type: FUNC
  * @tc.require: NA
  */

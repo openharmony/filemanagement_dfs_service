@@ -26,7 +26,17 @@ public:
     static sptr<ICloudDiskService> GetInstance();
     static void InvalidInstance();
 
+    class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
+    public:
+        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+
+        std::condition_variable proxyConVar_;
+        std::atomic<bool> isLoadSuccess_{false};
+    };
+
 private:
+    static inline std::mutex proxyMutex_;
     static inline std::mutex instanceMutex_;
     static inline sptr<ICloudDiskService> serviceProxy_;
 };

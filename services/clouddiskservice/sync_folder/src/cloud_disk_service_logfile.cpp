@@ -676,4 +676,10 @@ int32_t LogFileMgr::OnDataChange()
     return E_OK;
 }
 
+void LogFileMgr::CloudDiskServiceClearAll()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    LogFiles_.clear();
+}
+
 } // namespace OHOS::FileManagement::CloudDiskService

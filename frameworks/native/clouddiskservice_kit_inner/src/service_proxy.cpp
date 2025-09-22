@@ -24,16 +24,12 @@
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
+constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
 sptr<ICloudDiskService> ServiceProxy::GetInstance()
 {
     LOGD("getinstance");
     unique_lock<mutex> lock(instanceMutex_);
-    if (serviceProxy_ != nullptr) {
-        if (serviceProxy_->AsObject() != nullptr && !serviceProxy_->AsObject()->IsObjectDead()) {
-            return serviceProxy_;
-        }
-    }
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
@@ -42,17 +38,54 @@ sptr<ICloudDiskService> ServiceProxy::GetInstance()
     }
 
     auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID);
-    if (object == nullptr) {
-        LOGE("CloudDiskService::Connect object == nullptr");
-        return nullptr;
+    if (object != nullptr) {
+        LOGI("SA check successfully");
+        serviceProxy_ = iface_cast<ICloudDiskService>(object);
+        return serviceProxy_;
     }
 
-    serviceProxy_ = iface_cast<ICloudDiskService>(object);
-    if (serviceProxy_ == nullptr) {
-        LOGE("CloudDiskService::Connect service == nullptr");
+    sptr<ServiceProxyLoadCallback> cloudDiskLoadCallback = new ServiceProxyLoadCallback();
+    if (cloudDiskLoadCallback == nullptr) {
+        LOGE("cloudDiskLoadCallback is nullptr");
+        return nullptr;
+    }
+    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID, cloudDiskLoadCallback);
+    if (ret != E_OK) {
+        LOGE("Failed to Load systemAbility, systemAbilityId:%{public}d, ret code:%{public}d",
+             FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID, ret);
+        return nullptr;
+    }
+    unique_lock<mutex> proxyLock(proxyMutex_);
+    auto waitStatus = cloudDiskLoadCallback->proxyConVar_.wait_for(
+        proxyLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        [cloudDiskLoadCallback]() { return cloudDiskLoadCallback->isLoadSuccess_.load(); });
+    if (!waitStatus) {
+        LOGE("Load CloudSync SA timeout");
         return nullptr;
     }
     return serviceProxy_;
+}
+
+void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId,
+    const sptr<IRemoteObject> &remoteObject)
+{
+    LOGI("Load CloudDiskService SA success,systemAbilityId:%{public}d, remoteObj result:%{private}s", systemAbilityId,
+         (remoteObject == nullptr ? "false" : "true"));
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = iface_cast<ICloudDiskService>(remoteObject);
+
+    isLoadSuccess_.store(true);
+    proxyConVar_.notify_one();
+}
+
+void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+{
+    LOGI("Load CloudDiskService SA failed,systemAbilityId:%{public}d", systemAbilityId);
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = nullptr;
+    isLoadSuccess_.store(false);
+    proxyConVar_.notify_one();
 }
 
 void ServiceProxy::InvalidInstance()

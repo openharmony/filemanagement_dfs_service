@@ -23,7 +23,6 @@
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
-using namespace std;
 
 class CloudDiskServiceManagerMock final : public CloudDiskServiceManager {
 public:

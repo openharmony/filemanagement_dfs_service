@@ -367,7 +367,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest001, TestSize.Level1)
  */
 HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FindInBlockIdTest001 Start";
+    GTEST_LOG_(INFO) << "FindInBlockTest001 Start";
     try {
         CloudDiskServiceDentryGroup dentryBlk;
         auto ctx = std::make_shared<DcacheLookupCtx>();
@@ -443,9 +443,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindDentryTest001, TestSize.Level1)
         FindDentry(ctx.get());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FindDentryTest002 ERROR";
+        GTEST_LOG_(INFO) << "FindDentryTest001 ERROR";
     }
-    GTEST_LOG_(INFO) << "FindDentryTest002 End";
+    GTEST_LOG_(INFO) << "FindDentryTest001 End";
 }
 
 /**

@@ -21,9 +21,13 @@
 #include "cloud_disk_comm.h"
 #include "cloud_disk_sync_folder_manager.h"
 #endif
+#include "cloud_disk_service_callback_manager.h"
+#include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_sync_folder.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 #include "utils_log.h"
 
@@ -31,24 +35,23 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 
-AccountStatusSubscriber::AccountStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
-    : EventFwk::CommonEventSubscriber(subscribeInfo)
-{
-}
+using namespace AccountSA;
 
-void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
+void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-    auto action = eventData.GetWant().GetAction();
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STARTED) {
-        LOGI("OnStartUser!");
+    auto state = data.state;
+    auto userId = data.toId;
+    LOGI("OnStateChanged state:%{public}d", state);
+    if (state == OsAccountState::SWITCHED) {
+        LOGI("Switched user");
+        DiskMonitor::GetInstance().StopMonitor();
+        CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
+        CloudDiskServiceCallbackManager::GetInstance().ClearMap();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
 
         std::vector<FileManagement::SyncFolderExt> syncFolders;
         OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
-        int32_t userId = DfsuAccessTokenHelper::GetUserId();
-        if (userId == 0) {
-            DfsuAccessTokenHelper::GetAccountId(userId);
-        }
         for (auto item : syncFolders) {
             std::string path;
             if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path)) {
@@ -62,10 +65,29 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
             CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
         }
         if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
-            DiskMonitor::GetInstance().StartMonitor(eventData.GetCode());
+            DiskMonitor::GetInstance().StartMonitor(userId);
         }
     }
+    if (state == OsAccountState::STOPPED) {
+        LOGI("Stopped user");
+        UnloadSa();
+    }
 #endif
+}
+
+void AccountStatusSubscriber::UnloadSa()
+{
+    DiskMonitor::GetInstance().StopMonitor();
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        LOGE("get samgr failed");
+        return;
+    }
+    int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID);
+    if (ret != ERR_OK) {
+        LOGE("remove system ability failed");
+        return;
+    }
 }
 
 AccountStatusListener::~AccountStatusListener()
@@ -75,23 +97,20 @@ AccountStatusListener::~AccountStatusListener()
 
 void AccountStatusListener::Start()
 {
-    /* subscribe Account login, logout, Package remove and Datashare ready */
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_STARTED);
-    EventFwk::CommonEventSubscribeInfo info(matchingSkills);
-    commonEventSubscriber_ = std::make_shared<AccountStatusSubscriber>(info);
-    auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
-    LOGI("Subscriber end, SubscribeResult = %{public}d", subRet);
+    std::set<OsAccountState> states = {OsAccountState::STOPPED, OsAccountState::SWITCHED};
+    OsAccountSubscribeInfo subscribeInfo(states);
+    osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo);
+    ErrCode errCode = OsAccountManager::SubscribeOsAccount(osAccountSubscriber_);
+    LOGI("account subscribe errCode:%{public}d", errCode);
 }
 
 void AccountStatusListener::Stop()
 {
-    if (commonEventSubscriber_ != nullptr) {
-        EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventSubscriber_);
-        commonEventSubscriber_ = nullptr;
+    if (osAccountSubscriber_!= nullptr) {
+        ErrCode errCode = OsAccountManager::UnsubscribeOsAccount(osAccountSubscriber_);
+        osAccountSubscriber_ = nullptr;
     }
 }
-
 } // namespace CloudDiskService
 } // namespace FileManagement
 } // namespace OHOS

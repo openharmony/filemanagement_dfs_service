@@ -139,6 +139,7 @@ public:
     int32_t UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex);
     void RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
     void UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
+    void CloudDiskServiceClearAll();
 
 private:
     LogFileMgr() = default;

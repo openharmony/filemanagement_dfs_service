@@ -61,7 +61,6 @@ ohos_shared_library("clouddiskservice_kit_inner") {
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_manager.cpp",
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_task_manager.cpp",
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/service_proxy.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
@@ -89,7 +88,6 @@ ohos_shared_library("clouddiskservice_kit_inner") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_single",
-    "memmgr:memmgrclient",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

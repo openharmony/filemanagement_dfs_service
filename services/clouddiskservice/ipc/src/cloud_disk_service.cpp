@@ -25,12 +25,13 @@
 #include "cloud_disk_service_callback_manager.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
-#include "cloud_disk_service_task_manager.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
 #include "cloud_disk_sync_folder.h"
+#include "dfsu_access_token_helper.h"
 #include "iremote_object.h"
+#include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -40,6 +41,7 @@ namespace CloudDiskService {
 using namespace std;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
+const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 
 namespace {
@@ -105,6 +107,7 @@ void CloudDiskService::OnStart()
         DiskMonitor::GetInstance().StartMonitor(userId);
     }
     state_ = ServiceRunningState::STATE_RUNNING;
+    UnloadSa();
 
     LOGI("Start service successfully");
 #endif
@@ -153,19 +156,16 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
         LOGE("SyncFolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
-
-    TaskKey taskKey;
-    taskKey.bundleName = bundleName;
-    taskKey.syncChronousRootPath = path;
-    CloudDiskServiceTaskManager::GetInstance().StartTask(taskKey, TaskType::REGISTER_TASK);
 
     auto callback = iface_cast<ICloudDiskServiceCallback>(remoteObject);
 
-    if (!CloudDiskServiceCallbackManager::GetInstance().RigisterSyncFolderMap(bundleName, syncFolderIndex, callback)) {
+    if (!CloudDiskServiceCallbackManager::GetInstance().RegisterSyncFolderMap(bundleName, syncFolderIndex, callback)) {
         return E_LISTENER_ALREADY_REGISTERED;
     }
 
@@ -199,9 +199,11 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
         LOGE("SyncFolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     if (!CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderForChangesMap(
@@ -210,11 +212,6 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
     }
 
     CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(userId, syncFolderIndex);
-
-    TaskKey taskKey;
-    taskKey.bundleName = bundleName;
-    taskKey.syncChronousRootPath = path;
-    CloudDiskServiceTaskManager::GetInstance().CompleteTask(taskKey, TaskType::REGISTER_TASK);
     LOGI("End UnregisterSyncFolderChangesInner");
     return E_OK;
 #else
@@ -229,6 +226,11 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin GetSyncFolderChangesInner");
+
+    if (count > GET_SYNC_FOLDER_CHANGE_MAX) {
+        LOGE("Invalid argument");
+        return E_INVALID_ARG;
+    }
 
     int32_t userId = DfsuAccessTokenHelper::GetUserId();
     std::string path;
@@ -245,9 +247,11 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
         LOGE("SyncFolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     ret = CloudDiskServiceSyncFolder::GetSyncFolderChanges(userId, syncFolderIndex, startUsn, count, changesResult);
@@ -328,10 +332,19 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
+    std::string bundleName = "";
+    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
         LOGE("SyncFolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     FailedList failed;
@@ -416,10 +429,19 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
+    std::string bundleName = "";
+    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
         LOGE("SyncFolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     ResultList getResult;
@@ -451,13 +473,8 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(registerSyncFolder);
     if (CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
         LOGE("Syncfolder is exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
-
-    TaskKey taskKey;
-    taskKey.bundleName = bundleName;
-    taskKey.syncChronousRootPath = registerSyncFolder;
-    CloudDiskServiceTaskManager::GetInstance().StartTask(taskKey, TaskType::REGISTER_TASK);
 
     int32_t ret = CloudDiskServiceSyncFolder::RegisterSyncFolder(userId, syncFolderIndex, registerSyncFolder);
     if (ret != E_OK) {
@@ -474,8 +491,6 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
     syncFolderValue.path = registerSyncFolder;
 
     CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
-
-    CloudDiskServiceTaskManager::GetInstance().CompleteTask(taskKey, TaskType::REGISTER_TASK);
     LOGI("End RegisterSyncFolderInner");
     return E_OK;
 #else
@@ -499,13 +514,8 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
     if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
         LOGE("Syncfolder is not exist");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
-
-    TaskKey taskKey;
-    taskKey.bundleName = bundleName;
-    taskKey.syncChronousRootPath = unregisterSyncFolder;
-    CloudDiskServiceTaskManager::GetInstance().StartTask(taskKey, TaskType::REGISTER_TASK);
 
     int32_t ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
     if (ret != E_OK) {
@@ -515,6 +525,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(bundleName, syncFolderIndex);
+
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
                                                                        unregisterSyncFolder)) {
         LOGE("Get unregisterSyncFolder failed");
@@ -522,8 +533,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     }
 
     CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolder, FILE_SYNC_STATE);
-
-    CloudDiskServiceTaskManager::GetInstance().CompleteTask(taskKey, TaskType::REGISTER_TASK);
+    UnloadSa();
     LOGI("End UnregisterSyncFolderInner");
     return E_OK;
 #else
@@ -545,15 +555,12 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         LOGE("Get path failed");
         return E_INVALID_ARG;
     }
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
+
     int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().UnregisterForSa(pathRemove);
     if (ret != E_OK) {
         LOGE("UnregisterForSa failed, ret:%{public}d", ret);
         return ret;
     }
-#else
-    int32_t ret = E_OK;
-#endif
 
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(path, std::to_string(userId), pathRemove)) {
         LOGE("Get path failed");
@@ -565,11 +572,12 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
     SyncFolderValue syncFolderValue;
     if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue)) {
         LOGE("No such index");
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+        return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(syncFolderValue.bundleName, syncFolderIndex);
+    UnloadSa();
     return ret;
 #else
     return E_NOT_SUPPORTED;
@@ -580,6 +588,23 @@ void CloudDiskService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     accountStatusListener_->Start();
+}
+
+void CloudDiskService::UnloadSa()
+{
+    if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() == 0) {
+        DiskMonitor::GetInstance().StopMonitor();
+        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (samgrProxy == nullptr) {
+            LOGE("get samgr failed");
+            return;
+        }
+        int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID);
+        if (ret != ERR_OK) {
+            LOGE("remove system ability failed");
+            return;
+        }
+    }
 }
 } // namespace CloudDiskService
 } // namespace FileManagement

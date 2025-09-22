@@ -582,7 +582,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest001, TestSize.Level1)
  */
 HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DoRenameOldTest001 Start";
+    GTEST_LOG_(INFO) << "DoRenameOldTest002 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
         mFile.fd_.Reset(1);

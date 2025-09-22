@@ -60,6 +60,7 @@ public:
     ErrCode UnregisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path) override;
 
     int32_t UnregisterForSaInner(const std::string &path) override;
+    void UnloadSa();
 
 private:
     CloudDiskService();

@@ -24,7 +24,6 @@ using namespace std;
 void CloudDiskServiceCallbackProxy::OnChangeData(const std::string &sandboxPath,
                                                  const std::vector<ChangeData> &changeData)
 {
-    LOGI("Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -55,7 +54,6 @@ void CloudDiskServiceCallbackProxy::OnChangeData(const std::string &sandboxPath,
         LOGE("Failed to send out the requeset, ret:%{public}d", ret);
         return;
     }
-    LOGI("End");
     return;
 }
 } // namespace OHOS::FileManagement::CloudDiskService
