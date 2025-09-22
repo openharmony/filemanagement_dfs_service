@@ -538,7 +538,7 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest001, TestSize.Le
  */
 HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 start";
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 start";
     try {
         CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
         string path = "/storage/Users/otherUser/testfile.txt";
@@ -586,7 +586,7 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathByPhysicalPathTest001, TestSize.L
  */
 HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathByPhysicalPathTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "PathToMntPathByPhysicalPathTest001 start";
+    GTEST_LOG_(INFO) << "PathToMntPathByPhysicalPathTest002 start";
     try {
         CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
         string path = "/data/service/el2/123456/hmdfs/account/files/Docs/testfile.txt";
@@ -634,7 +634,7 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToSandboxPathByPhysicalPathTest001, TestSi
  */
 HWTEST_F(CloudDiskSyncFolderTest, PathToSandboxPathByPhysicalPathTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "PathToSandboxPathByPhysicalPathTest001 start";
+    GTEST_LOG_(INFO) << "PathToSandboxPathByPhysicalPathTest002 start";
     try {
         CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
         string path = "/data/service/el2/123456/hmdfs/account/files/Docs/testfile.txt";
@@ -648,6 +648,26 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToSandboxPathByPhysicalPathTest002, TestSi
         GTEST_LOG_(INFO) << "PathToSandboxPathByPhysicalPathTest002 failed";
     }
     GTEST_LOG_(INFO) << "PathToSandboxPathByPhysicalPathTest002 end";
+}
+
+/**
+ * @tc.name: ClearMapTest001
+ * @tc.desc: Verify the ClearMap function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ClearMapTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearMapTest001 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        syncFolder.ClearMap();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ClearMapTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ClearMapTest001 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
