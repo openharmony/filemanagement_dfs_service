@@ -743,7 +743,7 @@ static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data
         }
     }
     cInode->sessionRefCount++;
-    LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
+    LOGD("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
     return 0;
 }
 
@@ -1128,7 +1128,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     }
     wSesLock.unlock();
 
-    LOGI("release end");
+    LOGD("release end");
     fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
     fuse_reply_err(req, 0);
 }
@@ -1398,7 +1398,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         memInfo->flags = PG_READAHEAD;
         cInode->readCacheMap[cacheIndex] = memInfo;
         isReading = false;
-        LOGI("To do read cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
+        LOGD("To do read cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     }
     wSesLock.unlock();
     if (isReading && !CheckAndWait(pid, cInode, readArgs->offset)) {
@@ -1663,7 +1663,7 @@ static bool DoReadSlice(fuse_req_t req,
         }
     }
 
-    LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
+    LOGD("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
     if (needCheck && !CheckAndWait(pid, cInode, readArgs->offset)) {
         fuse_reply_err(req, ENETUNREACH);
         return false;

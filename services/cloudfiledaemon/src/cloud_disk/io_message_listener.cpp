@@ -99,7 +99,7 @@ void IoMessageManager::RecordDataToFile(const string &path)
             << dataToWrite.syscopenDiff << ","
             << dataToWrite.syscstatDiff << ","
             << dataToWrite.result << "\n";
-    LOGI("Write io data success");
+    LOGD("Write io data success");
 }
 
 static vector<const char*> ConvertToCStringArray(const vector<string>& vec)
