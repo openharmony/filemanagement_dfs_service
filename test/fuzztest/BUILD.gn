@@ -18,6 +18,11 @@ group("dfs_service_fuzztest") {
   deps = [
     "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer:CloudDaemonStubFuzzTest",
     "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer:DaemonStubFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_handleopenP2Pconnection_fuzzer:DaemonStubHandleOpenP2PConnectionFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_handlecloseP2Pconnection_fuzzer:DaemonStubHandleCloseP2PConnectionFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_handlepreparesession_fuzzer:DaemonStubHandlePrepareSessionFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_handlerequestsendfile_fuzzer:DaemonStubHandleRequestSendFileFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_handleopenP2PconnectionEx_fuzzer:DaemonStubHandleOpenP2PConnectionExFuzzTest",
     "${distributedfile_path}/test/fuzztest/ffrttimer_fuzzer:FfrtTimerFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
   ]
