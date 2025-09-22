@@ -19,6 +19,7 @@
 
 #include "cloud_daemon_statistic.h"
 #include "cloud_file_utils.h"
+#include "cloud_sync_manager_lite.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "account_status.h"
@@ -150,6 +151,7 @@ void AccountStatusSubscriber::RemovedClean(const EventFwk::CommonEventData &even
         LOGE("Node is Null!");
         return;
     }
+    CloudSync::CloudSyncManagerLite::GetInstance().RemovedClean(bundleName, userId);
     std::string localIdKey = std::to_string(node->parent) + node->fileName;
     int64_t key = static_cast<int64_t>(childSt.st_ino);
     FileOperationsHelper::PutCloudDiskInode(data, node, node->refCount, key);

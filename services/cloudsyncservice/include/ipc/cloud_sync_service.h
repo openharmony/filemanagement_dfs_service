@@ -29,7 +29,6 @@
 #include "i_cloud_sync_callback.h"
 #include "svc_death_recipient.h"
 #include "sync_rule/battery_status_listener.h"
-#include "sync_rule/package_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
 #include "sync_rule/user_status_listener.h"
 
@@ -42,6 +41,8 @@ public:
     virtual ~CloudSyncService() = default;
     int32_t CallbackEnter(uint32_t code) override;
     int32_t CallbackExit(uint32_t code, int32_t result) override;
+    int32_t HandleRemovedClean(const std::string &bundleName, int32_t userId);
+    ErrCode RemovedClean(const std::string &bundleName, int32_t userId) override;
     ErrCode UnRegisterCallbackInner(const std::string &bundleName = "") override;
     ErrCode UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
     ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
@@ -120,7 +121,6 @@ private:
     void PreInit();
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
-    void HandlePackageRemoved(const SystemAbilityOnDemandReason &startReason);
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
     void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
     void CovertBundleName(std::string &bundleName);
@@ -141,7 +141,6 @@ private:
     std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     std::shared_ptr<UserStatusListener> userStatusListener_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
-    std::shared_ptr<PackageStatusListener> packageStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;
     std::shared_ptr<FileTransferManager> fileTransferManager_;
     sptr<SvcDeathRecipient> deathRecipient_;
