@@ -1567,4 +1567,112 @@ HWTEST_F(LogFileMgrTest, OnDataChangeTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnDataChangeTest001 end";
 }
+
+/**
+ * @tc.name: GetStartLineTest001
+ * @tc.desc: Verify the GetStartLine function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GetStartLineTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetStartLineTest001 start";
+    try {
+        logFile_->currentLine_ = 0;
+        logFile_->reversal_ = false;
+        uint64_t res = logFile_->GetStartLine();
+        EXPECT_EQ(res, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetStartLineTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetStartLineTest001 end";
+}
+
+/**
+ * @tc.name: GetStartLineTest002
+ * @tc.desc: Verify the GetStartLine function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GetStartLineTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetStartLineTest002 start";
+    try {
+        logFile_->currentLine_ = LOG_COUNT_MAX + 1;
+        logFile_->reversal_ = false;
+        uint64_t res = logFile_->GetStartLine();
+        EXPECT_EQ(res, 64);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetStartLineTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetStartLineTest002 end";
+}
+
+/**
+ * @tc.name: CheckLineIsValidTest001
+ * @tc.desc: Verify the CheckLineIsValid function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest001 start";
+    try {
+        logFile_->currentLine_ = 10;
+        logFile_->reversal_ = false;
+        uint64_t line = 1;
+        bool res = logFile_->CheckLineIsValid(line);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckLineIsValidTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest001 end";
+}
+
+/**
+ * @tc.name: CheckLineIsValidTest002
+ * @tc.desc: Verify the CheckLineIsValid function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest002 start";
+    try {
+        logFile_->currentLine_ = 0;
+        logFile_->reversal_ = false;
+        uint64_t line = 1;
+        bool res = logFile_->CheckLineIsValid(line);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckLineIsValidTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest002 end";
+}
+
+/**
+ * @tc.name: CheckLineIsValidTest003
+ * @tc.desc: Verify the CheckLineIsValid function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest003 start";
+    try {
+        logFile_->currentLine_ = 0;
+        logFile_->reversal_ = true;
+        uint64_t line = 1;
+        bool res = logFile_->CheckLineIsValid(line);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckLineIsValidTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckLineIsValidTest003 end";
+}
 }
