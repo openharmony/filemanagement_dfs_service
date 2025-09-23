@@ -177,51 +177,6 @@ public:
     }
 };
 
-void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                     const uint8_t *data,
-                                     size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                      const uint8_t *data,
-                                      size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                       const uint8_t *data,
-                                       size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
 void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                         const uint8_t *data,
                                         size_t size)
@@ -237,38 +192,9 @@ void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
 void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                   const uint8_t *data,
-                                   size_t size)
-{
-    OHOS::UID = DAEMON_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -549,11 +475,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandlePrepareSessionFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleRequestSendFileFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleOpenP2PConnectionExFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, data, size);
