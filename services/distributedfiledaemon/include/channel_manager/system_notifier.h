@@ -19,8 +19,6 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
-#include <unistd.h>
-#include <vector>
 
 namespace OHOS {
 namespace Storage {
