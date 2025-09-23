@@ -43,7 +43,7 @@ static void SwapMemory()
 {
     std::FILE *file = fopen("/proc/self/reclaim", "r+");
     if (file == nullptr) {
-        LOGE("Failed to open reclaim, errno:%{public}d", errno);
+        LOGD("Failed to open reclaim, errno:%{public}d", errno);
         return;
     }
     std::string content = "1";
