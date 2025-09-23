@@ -29,6 +29,7 @@ public:
     static CloudSyncManagerImplLite &GetInstance();
 
     int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) override;
+    int32_t RemovedClean(const std::string &bundleName, int32_t userId) override;
 
 private:
     CloudSyncManagerImplLite() = default;

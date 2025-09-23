@@ -17,6 +17,9 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_unittest("fuse_manager_test") {
   module_out_path = "dfs_service/dfs_service"
 
+  public_configs =
+    [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
@@ -232,12 +235,18 @@ ohos_unittest("cloud_daemon_statistic_test") {
 ohos_unittest("cloud_daemon_test") {
   module_out_path = "dfs_service/dfs_service"
 
+  public_configs =
+    [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
     "cloud_daemon_test.cpp",
     "mock/system_function_mock.cpp",
     "mock/fuse_assistant.cpp",
@@ -263,6 +272,7 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${clouddisk_database_path}/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/test/unittests/services_daemon/mock",
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
     "${distributedfile_path}/interfaces/inner_api/native",
@@ -329,12 +339,18 @@ ohos_unittest("cloud_daemon_test") {
 ohos_unittest("cloud_daemon_nomock_test") {
   module_out_path = "dfs_service/dfs_service"
 
+  public_configs =
+    [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
     "cloud_daemon_nomock_test.cpp",
   ]
 
@@ -357,6 +373,7 @@ ohos_unittest("cloud_daemon_nomock_test") {
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${clouddisk_database_path}/include",
     "${distributedfile_path}/test/unittests/services_daemon/mock",
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
