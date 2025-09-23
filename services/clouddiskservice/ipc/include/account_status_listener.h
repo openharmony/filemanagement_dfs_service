@@ -17,9 +17,9 @@
 #define CLOUD_DISK_SERVICE_ACCOUNT_STATUS_LISTENER_H
 
 #include "cloud_file_utils.h"
-#include "common_event_subscriber.h"
-#include "dfsu_access_token_helper.h"
 #include "disk_monitor.h"
+#include "os_account_manager.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -32,14 +32,15 @@ public:
     void Stop();
 
 private:
-    std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
+    std::shared_ptr<AccountSA::OsAccountSubscriber> osAccountSubscriber_ = nullptr;
 };
 
-class AccountStatusSubscriber : public EventFwk::CommonEventSubscriber {
+class AccountStatusSubscriber : public AccountSA::OsAccountSubscriber {
 public:
-    AccountStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
+    AccountStatusSubscriber(const AccountSA::OsAccountSubscribeInfo &info) : OsAccountSubscriber(info) {};
     ~AccountStatusSubscriber() override {}
-    void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
+    void OnStateChanged(const AccountSA::OsAccountStateData &data) override;
+    void UnloadSa();
 };
 } // namespace CloudDiskService
 } // namespace FileManagement

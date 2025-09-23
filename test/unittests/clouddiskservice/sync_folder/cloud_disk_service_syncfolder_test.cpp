@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cloud_disk_service_syncfolder.cpp"
+#include "cloud_disk_service_syncfolder.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -111,7 +111,7 @@ HWTEST_F(CloudDiskServiceSyncFolderTest, RegisterSyncFolderChangesTest001, TestS
 
 /**
  * @tc.name: UnRegisterSyncFolderChangesTest001
- * @tc.desc: Verify the RegisterSyncFolderChanges function
+ * @tc.desc: Verify the UnRegisterSyncFolderChanges function
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -169,5 +169,24 @@ HWTEST_F(CloudDiskServiceSyncFolderTest, SetSyncFolderChangesTest001, TestSize.L
         GTEST_LOG_(INFO) << "SetSyncFolderChangesTest001 failed";
     }
     GTEST_LOG_(INFO) << "SetSyncFolderChangesTest001 end";
+}
+
+/**
+ * @tc.name: CloudDiskServiceClearAllTest001
+ * @tc.desc: Verify the CloudDiskServiceClearAll function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceSyncFolderTest, CloudDiskServiceClearAllTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudDiskServiceClearAllTest001 start";
+    try {
+        CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudDiskServiceClearAllTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CloudDiskServiceClearAllTest001 end";
 }
 }

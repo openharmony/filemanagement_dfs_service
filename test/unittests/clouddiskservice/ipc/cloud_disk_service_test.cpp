@@ -27,7 +27,6 @@
 #include "cloud_disk_service_callback_manager.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
-#include "cloud_disk_service_task_manager.h"
 #include "cloud_disk_sync_folder.h"
 #include "dfsu_access_token_helper_mock.h"
 #include "utils_log.h"

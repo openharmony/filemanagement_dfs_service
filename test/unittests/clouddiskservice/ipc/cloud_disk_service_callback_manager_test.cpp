@@ -97,7 +97,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, AddCallbackTest001, TestSize.Level
         string bundleName = "com.test.example";
         uint32_t syncFolderIndex = 1;
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        bool result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_TRUE(result);
         callbackManager.AddCallback(bundleName, callback);
         callbackManager.AddCallback(bundleName, callback);
@@ -172,7 +172,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest002, TestSize.Leve
         vector<ChangeData> changeData = {data};
         string bundleName = "com.test.example";
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         callbackManager.OnChangeData(syncFolderIndex, changeData);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -208,7 +208,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest003, TestSize.Leve
         value.bundleName = bundleName;
         value.path = "/data/service/el2/123/hmdfs/account/files/Docs/testfile.txt";
         syncFolder.AddSyncFolder(syncFolderIndex, value);
-        callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         callbackManager.OnChangeData(syncFolderIndex, changeData);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -244,7 +244,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest004, TestSize.Leve
         value.bundleName = bundleName;
         value.path = "/data/service/el2/123/Docs/testfile.txt";
         syncFolder.AddSyncFolder(syncFolderIndex, value);
-        callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         callbackManager.OnChangeData(syncFolderIndex, changeData);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -254,31 +254,31 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest004, TestSize.Leve
 }
 
 /**
- * @tc.name: RigisterSyncFolderMapTest001
- * @tc.desc: Verify the RigisterSyncFolderMap function
+ * @tc.name: RegisterSyncFolderMapTest001
+ * @tc.desc: Verify the RegisterSyncFolderMap function
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(CloudDiskServiceCallbackManagerTest, RigisterSyncFolderMapTest001, TestSize.Level1)
+HWTEST_F(CloudDiskServiceCallbackManagerTest, RegisterSyncFolderMapTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "RigisterSyncFolderMapTest001 start";
+    GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest001 start";
     try {
         CloudDiskServiceCallbackManager callbackManager;
         string bundleName = "com.test.example";
         uint32_t syncFolderIndex = 1;
         uint32_t syncFolderIndexNew = 2;
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        bool result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_TRUE(result);
-        result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_FALSE(result);
-        result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndexNew, callback);
+        result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndexNew, callback);
         EXPECT_TRUE(result);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RigisterSyncFolderMapTest001 failed";
+        GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest001 failed";
     }
-    GTEST_LOG_(INFO) << "RigisterSyncFolderMapTest001 end";
+    GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest001 end";
 }
 
 /**
@@ -295,7 +295,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderMapTest001, Te
         string bundleName = "com.test.example";
         uint32_t syncFolderIndex = 3;
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        bool result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_TRUE(result);
         EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 1);
         callbackManager.UnregisterSyncFolderMap(bundleName, syncFolderIndex);
@@ -321,7 +321,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderForChangesMapT
         string bundleName = "com.test.example";
         uint32_t syncFolderIndex = 4;
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        bool result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_TRUE(result);
         EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 1);
         auto ret = callbackManager.UnregisterSyncFolderForChangesMap(bundleName, syncFolderIndex);
@@ -350,7 +350,7 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderForChangesMapT
         uint32_t syncFolderIndex = 5;
         uint32_t syncFolderIndex_notExists = 6;
         sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
-        bool result = callbackManager.RigisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
         EXPECT_TRUE(result);
         EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 1);
         auto ret = callbackManager.UnregisterSyncFolderForChangesMap(bundleName, syncFolderIndex_notExists);
@@ -364,6 +364,26 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderForChangesMapT
         GTEST_LOG_(INFO) << "UnregisterSyncFolderForChangesMapTest002 failed";
     }
     GTEST_LOG_(INFO) << "UnregisterSyncFolderForChangesMapTest002 end";
+}
+
+/**
+ * @tc.name: ClearMapTest001
+ * @tc.desc: Verify the ClearMap function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, ClearMapTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearMapTest001 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        callbackManager.ClearMap();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ClearMapTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ClearMapTest001 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService

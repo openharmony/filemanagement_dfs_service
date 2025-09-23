@@ -124,6 +124,7 @@ ohos_shared_library("clouddiskservice_sa") {
     deps += [ "${services_path}/clouddiskservice/seccomp_policy:disk_monitor_seccomp_filter" ]
   }
 
+  shlib_type = "sa"
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
@@ -132,6 +133,7 @@ ohos_shared_library("clouddiskservice_sa") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_single",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

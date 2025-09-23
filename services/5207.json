@@ -4,9 +4,16 @@
         {
             "name": 5207,
             "libpath": "libclouddiskservice_sa.z.so",
-            "run-on-create": true,
+            "run-on-create": false,
             "distributed": false,
-            "dump-level": 1
+            "dump-level": 1,
+            "start-on-demand": {
+                "commonevent": [
+                    {
+                        "name": "usual.event.USER_UNLOCKED"
+                    }
+                ]
+            }
 	    }
     ]
 }

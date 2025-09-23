@@ -49,10 +49,6 @@ void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
     if (item != syncFolderMap.end()) {
         syncFolderMap.erase(syncFolderIndex);
     }
-    if (syncFolderMap.size() == 0) {
-        LOGI("stopMonitor");
-        DiskMonitor::GetInstance().StopMonitor();
-    }
 }
 
 int32_t CloudDiskSyncFolder::GetSyncFolderSize()
@@ -201,6 +197,12 @@ bool CloudDiskSyncFolder::PathToSandboxPathByPhysicalPath(const std::string &pat
     }
     realpath = replacementPath + path.substr(physicalPath.length());
     return true;
+}
+
+void CloudDiskSyncFolder::ClearMap()
+{
+    unique_lock<mutex> lock(mutex_);
+    syncFolderMap.clear();
 }
 } // namespace CloudDiskService
 } // namespace FileManagement

@@ -32,6 +32,7 @@ public:
     static int32_t GetSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t start,
                                         const uint64_t count, struct ChangesResult &changesResult);
     static int32_t SetSyncFolderChanges(const struct EventInfo &eventInfos);
+    static void CloudDiskServiceClearAll();
 };
 
 } // namespace OHOS::FileManagement::CloudDiskService

@@ -119,7 +119,6 @@
                 "cloud_disk_common.h",
                 "cloud_disk_service_callback.h",
                 "cloud_disk_service_manager.h",
-                "cloud_disk_service_task_manager.h",
                 "i_cloud_disk_service_callback.h",
                 "svc_death_recipient.h"
               ],

@@ -26,13 +26,14 @@ class CloudDiskServiceCallbackManager final : public NoCopyable {
 public:
     using TaskId = uint64_t;
     static CloudDiskServiceCallbackManager &GetInstance();
-    bool RigisterSyncFolderMap(std::string &bundleName,
-                            uint32_t syncFolderIndex,
-                            const sptr<ICloudDiskServiceCallback> &callback);
+    bool RegisterSyncFolderMap(std::string &bundleName,
+                               uint32_t syncFolderIndex,
+                               const sptr<ICloudDiskServiceCallback> &callback);
     void UnregisterSyncFolderMap(const std::string &bundleName, uint32_t syncFolderIndex);
     bool UnregisterSyncFolderForChangesMap(std::string &bundleName, uint32_t syncFolderIndex);
     void AddCallback(const std::string &bundleName, const sptr<ICloudDiskServiceCallback> &callback);
     void OnChangeData(const uint32_t syncFolderIndex, const std::vector<ChangeData> &changeData);
+    void ClearMap();
 
     struct CallbackValue {
         sptr<ICloudDiskServiceCallback> callback;

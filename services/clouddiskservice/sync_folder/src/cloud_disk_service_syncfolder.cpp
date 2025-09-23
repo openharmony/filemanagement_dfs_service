@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 
 #include "cloud_disk_service_logfile.h"
+#include "cloud_disk_service_metafile.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 
@@ -56,6 +57,12 @@ int32_t CloudDiskServiceSyncFolder::GetSyncFolderChanges(const int32_t userId, c
 int32_t CloudDiskServiceSyncFolder::SetSyncFolderChanges(const struct EventInfo &eventInfo)
 {
     return LogFileMgr::GetInstance().ProduceRequest(eventInfo);
+}
+
+void CloudDiskServiceSyncFolder::CloudDiskServiceClearAll()
+{
+    LogFileMgr::GetInstance().CloudDiskServiceClearAll();
+    MetaFileMgr::GetInstance().CloudDiskServiceClearAll();
 }
 
 } // namespace OHOS::FileManagement::CloudDiskService
