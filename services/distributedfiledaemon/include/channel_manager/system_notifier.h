@@ -16,13 +16,10 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 
-#include "pixel_map.h"
-#include <iostream>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
 #include <unistd.h>
-#include <utility>
 #include <vector>
 
 namespace OHOS {
@@ -32,38 +29,19 @@ namespace DistributedFile {
 class SystemNotifier final {
 public:
     ~SystemNotifier() = default;
-    static SystemNotifier &GetInstance()
-    {
-        static SystemNotifier instance;
-        return instance;
-    }
+    static SystemNotifier &GetInstance();
 
-    int32_t CreateLocalLiveView(const std::string &networkId);
     int32_t CreateNotification(const std::string &networkId);
     int32_t DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote = true);
-    int32_t DestroyNotifyByNotificationId(int32_t notifyId);
     void ClearAllConnect();
     int32_t GetNotificationMapSize();
 
 private:
-    SystemNotifier();
-    bool GetPixelMap(const std::string &path, std::shared_ptr<Media::PixelMap> &pixelMap);
     int32_t GenerateNextNotificationId();
-
     int32_t DisconnectByNetworkId(const std::string &networkId);
     std::string GetRemoteDeviceName(const std::string &networkId);
 
-    void UpdateResourceMap(const std::string &resourcePath);
-    void UpdateResourceMapByLanguage();
-
-    template<typename... Args>
-    std::string GetKeyValue(const std::string &key, Args &&... args);
-
 private:
-    std::shared_ptr<Media::PixelMap> capsuleIconPixelMap_{};
-    std::shared_ptr<Media::PixelMap> notificationIconPixelMap_{};
-    std::shared_ptr<Media::PixelMap> buttonIconPixelMap_{};
-
     // networkId -> notificationId
     std::shared_mutex mutex_;
     std::map<std::string, int32_t> notificationMap_;

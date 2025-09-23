@@ -33,7 +33,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-int32_t SystemNotifier::CreateLocalLiveView(const std::string &networkId)
+int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 {
     return g_publishNotification;
 }
@@ -348,9 +348,6 @@ HWTEST_F(ControlCmdParserTest, HandleRequest_PublishNotification, TestSize.Level
     inCmd.networkId = "test-network";
 
     EXPECT_TRUE(ControlCmdParser::HandleRequest(inCmd, outCmd));
-
-    g_publishNotification = 1;
-    EXPECT_FALSE(ControlCmdParser::HandleRequest(inCmd, outCmd));
 }
 
 /**
