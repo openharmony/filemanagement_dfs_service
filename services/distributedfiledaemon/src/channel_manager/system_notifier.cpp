@@ -78,14 +78,14 @@ int32_t SystemNotifier::DisconnectByNetworkId(const std::string &networkId)
     ControlCmd request;
     request.msgType = CMD_ACTIVE_DISCONNECT;
     std::string srcNetworkId;
-    int32_t result = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(SERVICE_NAME, srcNetworkId);
-    if (result != E_OK || srcNetworkId.empty()) {
+    int32_t ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(SERVICE_NAME, srcNetworkId);
+    if (ret != E_OK || srcNetworkId.empty()) {
         LOGE("Failed to get local device network ID.");
         return ERR_BAD_VALUE;
     }
     request.networkId = srcNetworkId;
 
-    int32_t ret = ChannelManager::GetInstance().NotifyClient(networkId, request);
+    ret = ChannelManager::GetInstance().NotifyClient(networkId, request);
     LOGI("DisconnectByNetworkId end. networkId = %{public}.6s ,ret = %{public}d", networkId.c_str(), ret);
     return ret;
 }
