@@ -25,7 +25,6 @@
 namespace OHOS {
 bool LoadStringFromFile(const std::string& filePath, std::string& content)
 {
-    content = g_loadStringFromFile;
     return true;
 }
 }
