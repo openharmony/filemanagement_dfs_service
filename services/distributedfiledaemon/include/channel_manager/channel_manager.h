@@ -26,11 +26,9 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace OHOS {
 namespace Storage {

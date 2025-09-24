@@ -132,7 +132,7 @@ bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &ou
 bool ControlCmdParser::PublishNotification(const ControlCmd &inCmd, ControlCmd &outCmd)
 {
     LOGI("publishNotification networkId = %{public}.6s", inCmd.networkId.c_str());
-    auto ret = SystemNotifier::GetInstance().CreateLocalLiveView(inCmd.networkId);
+    auto ret = SystemNotifier::GetInstance().CreateNotification(inCmd.networkId);
     if (ret != E_OK) {
         LOGE("Failed to publish notification. ret: %{public}d", ret);
         return false;
