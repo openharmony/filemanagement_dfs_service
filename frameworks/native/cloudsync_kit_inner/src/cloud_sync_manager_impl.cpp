@@ -218,8 +218,10 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
             isFirstCall_.clear();
             return ret;
         }
-        callback_ = callback;
-        SubscribeListener();
+        {
+            unique_lock<mutex> lock(callbackMutex_);
+            callback_ = callback;
+        }
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 
@@ -621,11 +623,20 @@ int32_t CloudSyncManagerImpl::DownloadThumb()
 
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
+    if (remoteObject == nullptr) {
+        LOGW("remoteObject is nullptr");
+        return;
+    }
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
             LOGE("service died.");
-            if (callback_) {
-                callback_->OnDeathRecipient();
+            std::shared_ptr<CloudSyncCallback> callbackTemp;
+            {
+                unique_lock<mutex> lock(callbackMutex_);
+                callbackTemp = callback_;
+            }
+            if (callbackTemp) {
+                callbackTemp->OnDeathRecipient();
             }
             isFirstCall_.clear();
         };
@@ -737,7 +748,12 @@ void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
         auto ret = samgr->UnSubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("unsubscribed to systemAbility ret %{public}d", ret);
     }
-    if (callback_ != nullptr) {
+    bool hasCallback = false;
+    {
+        unique_lock<mutex> callbackLock(callbackMutex_);
+        hasCallback = (callback_ != nullptr);
+    }
+    if (hasCallback) {
         listener_ = new SystemAbilityStatusChange(bundleName);
         auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("subscribed to systemAbility ret %{public}d", ret);
@@ -754,8 +770,13 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string 
         return false;
     }
     bool hasCallback = false;
-    if (callback_ != nullptr) {
-        auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callback_));
+    std::shared_ptr<CloudSyncCallback> callbackTemp;
+    {
+        unique_lock<mutex> lock(callbackMutex_);
+        callbackTemp = callback_;
+    }
+    if (callbackTemp != nullptr) {
+        auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callbackTemp));
         if (callback == nullptr ||
             cloudSyncServiceProxy->RegisterCallbackInner(callback, bundleName) != E_OK) {
             LOGW("register callback failed, try time is %{public}d", retryCount);
