@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "handleinnercancelcopytask_fuzzer.h"
+#include "handleclosep2pconnectionex_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -32,19 +32,19 @@
 #include "token_setproc.h"
 
 namespace OHOS {
-constexpr pid_t DATA_UID = 3012;
-pid_t g_uid = 1009;
+constexpr pid_t UID = 1009;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
 #endif
 pid_t IPCSkeleton::GetCallingUid()
 {
-    return g_uid;
+    return UID;
 }
 }
 
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
+
 class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
@@ -173,17 +173,14 @@ public:
         return 0;
     }
 };
-
-void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
+void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                        const uint8_t *data,
+                                        size_t size)
 {
-    OHOS::g_uid = DATA_UID;
-    uint32_t code =
-    static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    int len = size >> 1;
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -231,6 +228,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, data, size);
     return 0;
 }

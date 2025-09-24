@@ -77,12 +77,12 @@ void SetAccessTokenPermission()
     };
     tokenId = GetAccessTokenId(&infoInstance);
     if (tokenId == 0) {
-        LOGE("Get Acess Token Id Failed");
+        LOGE("Get Access Token Id Failed");
         return;
     }
     int ret = SetSelfTokenID(tokenId);
     if (ret != 0) {
-        LOGE("Set Acess Token Id Failed");
+        LOGE("Set Access Token Id Failed");
         return;
     }
     ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();

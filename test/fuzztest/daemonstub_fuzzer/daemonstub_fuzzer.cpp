@@ -32,9 +32,7 @@
 #include "token_setproc.h"
 
 namespace OHOS {
-constexpr pid_t DATA_UID = 3012;
-constexpr pid_t DAEMON_UID = 1009;
-static pid_t UID = DAEMON_UID;
+constexpr pid_t UID = 1009;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
 #endif
@@ -176,87 +174,9 @@ public:
     }
 };
 
-void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                        const uint8_t *data,
-                                        size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
 void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                     const uint8_t *data,
-                                     size_t size)
-{
-    OHOS::UID = DAEMON_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    OHOS::UID = DATA_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                        const uint8_t *data,
-                                        size_t size)
-{
-    OHOS::UID = DATA_UID;
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                          const uint8_t *data,
-                                          size_t size)
-{
-    OHOS::UID = DATA_UID;
-    uint32_t code =
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
@@ -395,12 +315,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandlePushAssetFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleGetDfsSwitchStatus(daemonStubPtr, data, size);
     OHOS::HandleUpdateDfsSwitchStatus(daemonStubPtr, data, size);
     OHOS::HandleGetConnectedDeviceList(daemonStubPtr, data, size);

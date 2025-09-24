@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef DAEMONSTUBWRITEURIBYRAWDATA_FUZZER_H
-#define DAEMONSTUBWRITEURIBYRAWDATA_FUZZER_H
+#ifndef DAEMONSTUB_FUZZER_H
+#define DAEMONSTUB_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "daemonstubwriteuribyrawdata_fuzzer.h"
+#define FUZZ_PROJECT_NAME "handlepushasset_fuzzer"
 
 #endif
