@@ -31,5 +31,10 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/handlegetdfsurisdirfromlocal_fuzzer:HandleGetDfsUrisDirFromLocalFuzzTest",
     "${distributedfile_path}/test/fuzztest/ohclouddiskmanagerndk_fuzzer:OHCloudDiskManagerNDKFuzzTest",
     "${distributedfile_path}/test/fuzztest/readbatchuribyrawdata_fuzzer:ReadBatchUriByRawDataFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handleclosep2pconnectionex_fuzzer:HandleCloseP2PConnectionExFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handlegetremotecopyinfo_fuzzer:HandleGetRemoteCopyInfoFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handlepushasset_fuzzer:HandlePushAssetFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handleregisterrecvcallback_fuzzer:HandleRegisterRecvCallbackFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handleunregisterrecvcallback_fuzzer:HandleUnRegisterRecvCallbackFuzzTest",
   ]
 }

@@ -33,7 +33,7 @@
 
 namespace OHOS {
 const pid_t PASTEBOARDUSERID = 3816;
-static pid_t g_uid = 1009;
+pid_t g_uid = 1009;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
 #endif

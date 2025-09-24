@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "handleinnercancelcopytask_fuzzer.h"
+#include "handlegetremotecopyinfo_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -32,7 +32,7 @@
 #include "token_setproc.h"
 
 namespace OHOS {
-constexpr pid_t DATA_UID = 3012;
+constexpr pid_t DAEMON_UID = 1009;
 pid_t g_uid = 1009;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
@@ -45,6 +45,7 @@ pid_t IPCSkeleton::GetCallingUid()
 
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
+
 class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
@@ -173,17 +174,15 @@ public:
         return 0;
     }
 };
-
-void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
+void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     const uint8_t *data,
+                                     size_t size)
 {
-    OHOS::g_uid = DATA_UID;
-    uint32_t code =
-    static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
+    OHOS::g_uid = DAEMON_UID;
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    int len = size >> 1;
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -231,6 +230,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
