@@ -6,7 +6,8 @@
             "libpath": "libclouddiskservice_sa.z.so",
             "run-on-create": true,
             "distributed": false,
-            "dump-level": 1
+            "dump-level": 1,
+            "min_hdi_proxy_version": [],
 	    }
     ]
 }
