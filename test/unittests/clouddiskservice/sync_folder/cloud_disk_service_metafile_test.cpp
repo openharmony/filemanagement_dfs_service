@@ -582,7 +582,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest001, TestSize.Level1)
  */
 HWTEST_F(CloudDiskServiceMetafileTest, DoRenameOldTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DoRenameOldTest001 Start";
+    GTEST_LOG_(INFO) << "DoRenameOldTest002 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
         mFile.fd_.Reset(1);
@@ -950,6 +950,32 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset003, TestSize.Level1)
         GTEST_LOG_(INFO) << "DoLookupByOffset003 ERROR";
     }
     GTEST_LOG_(INFO) << "DoLookupByOffset003 End";
+}
+
+/**
+ * @tc.name: DoLookupByOffset004
+ * @tc.desc: Verify the DoLookupByOffset function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupByOffset004 Start";
+    try {
+        CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(1);
+        MetaBase base;
+        unsigned long bidx = 0;
+        uint32_t bitPos = DENTRY_PER_GROUP;
+        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
+        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
+        auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoLookupByOffset004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupByOffset004 End";
 }
 
 /**

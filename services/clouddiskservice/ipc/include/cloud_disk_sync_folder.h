@@ -44,6 +44,7 @@ public:
     bool PathToMntPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath);
     bool PathToSandboxPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath);
     std::unordered_map<uint32_t, SyncFolderValue> GetSyncFolderMap();
+    void ClearMap();
 
 private:
     std::unordered_map<uint32_t, SyncFolderValue> syncFolderMap;

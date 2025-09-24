@@ -717,6 +717,9 @@ int32_t CloudDiskServiceMetaFile::DoLookupByOffset(MetaBase &base, const unsigne
     if (dentryBlk == nullptr) {
         return ENOENT;
     }
+    if (bitPos >= DENTRY_PER_GROUP) {
+        return EINVAL;
+    }
     CloudDiskServiceDentry *de = &(dentryBlk->nsl[bitPos]);
 
     base.mode = de->mode;

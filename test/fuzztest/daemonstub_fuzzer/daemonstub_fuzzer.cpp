@@ -34,7 +34,6 @@
 namespace OHOS {
 constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
-const pid_t PASTEBOARDUSERID = 3816;
 static pid_t UID = DAEMON_UID;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
@@ -268,85 +267,6 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleGetDfsUrisDirFromLocalFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                          const uint8_t *data,
-                                          size_t size)
-{
-    OHOS::UID = PASTEBOARDUSERID;
-    uint32_t code =
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
-{
-    OHOS::UID = DATA_UID;
-    uint32_t code =
-    static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    int len = size >> 1;
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void WriteUriByRawDataFuzzTest(const uint8_t *data, size_t size)
-{
-    MessageParcel datas;
-    std::vector<std::string> uriVec { std::string(reinterpret_cast<const char *>(data), size) };
-
-    IpcWrapper::WriteUriByRawData(datas, uriVec);
-    IpcWrapper::WriteBatchUris(datas, uriVec);
-
-    void* buf = nullptr;
-    if (IpcWrapper::GetData(buf, size, data)) {
-        free(buf);
-        buf = nullptr;
-    }
-}
-
-void ReadBatchUriByRawDataFuzzTest(const uint8_t *data, size_t size)
-{
-    MessageParcel datas;
-    std::vector<std::string> uriVec;
-
-    datas.WriteInt32(0);
-    IpcWrapper::ReadBatchUriByRawData(datas, uriVec);
-
-    datas.WriteInt32(1);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-
-    IpcWrapper::ReadBatchUriByRawData(datas, uriVec);
-}
-
-void ReadBatchUrisFuzzTest(const uint8_t *data, size_t size)
-{
-    MessageParcel datas;
-    std::vector<std::string> uriVec;
-
-    datas.WriteUint32(0);
-    IpcWrapper::ReadBatchUris(datas, uriVec);
-
-    datas.WriteUint32(1);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-
-    IpcWrapper::ReadBatchUris(datas, uriVec);
-}
-
 void HandleGetDfsSwitchStatus(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_DFS_SWITCH_STATUS);
@@ -481,18 +401,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandlePushAssetFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleGetDfsUrisDirFromLocalFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleInnerCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
-
     OHOS::HandleGetDfsSwitchStatus(daemonStubPtr, data, size);
     OHOS::HandleUpdateDfsSwitchStatus(daemonStubPtr, data, size);
     OHOS::HandleGetConnectedDeviceList(daemonStubPtr, data, size);
     OHOS::HandleRegisterFileDfsListener(daemonStubPtr, data, size);
     OHOS::HandleUnregisterFileDfsListener(daemonStubPtr, data, size);
     OHOS::HandleIsSameAccountDevice(daemonStubPtr, data, size);
-
-    OHOS::WriteUriByRawDataFuzzTest(data, size);
-    OHOS::ReadBatchUriByRawDataFuzzTest(data, size);
-    OHOS::ReadBatchUrisFuzzTest(data, size);
     return 0;
 }

@@ -23,8 +23,13 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/daemonstubhandlepreparesession_fuzzer:DaemonStubHandlePrepareSessionFuzzTest",
     "${distributedfile_path}/test/fuzztest/daemonstubhandlerequestsendfile_fuzzer:DaemonStubHandleRequestSendFileFuzzTest",
     "${distributedfile_path}/test/fuzztest/daemonstubhandleopenP2PconnectionEx_fuzzer:DaemonStubHandleOpenP2PConnectionExFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstubreadbatchuris_fuzzer:DaemonStubReadBatchUrisFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstubwriteuribyrawdata_fuzzer:DaemonStubWriteUriByRawDataFuzzTest",
     "${distributedfile_path}/test/fuzztest/ffrttimer_fuzzer:FfrtTimerFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handleinnercancelcopytask_fuzzer:HandleInnerCancelCopyTaskFuzzTest",
+    "${distributedfile_path}/test/fuzztest/handlegetdfsurisdirfromlocal_fuzzer:HandleGetDfsUrisDirFromLocalFuzzTest",
     "${distributedfile_path}/test/fuzztest/ohclouddiskmanagerndk_fuzzer:OHCloudDiskManagerNDKFuzzTest",
+    "${distributedfile_path}/test/fuzztest/readbatchuribyrawdata_fuzzer:ReadBatchUriByRawDataFuzzTest",
   ]
 }

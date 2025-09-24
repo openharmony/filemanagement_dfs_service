@@ -218,11 +218,11 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest001 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "path";
+        fileSyncStates.path = "testpath";
         int32_t userId = 1;
         FailedList failed;
         auto res = SetFileSyncStates(fileSyncStates, userId, failed);
-        EXPECT_FALSE(res);
+        EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetFileSyncStatesTest001 failed";

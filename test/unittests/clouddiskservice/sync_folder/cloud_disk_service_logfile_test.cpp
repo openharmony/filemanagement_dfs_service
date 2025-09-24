@@ -98,7 +98,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, WriteLogFileTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "WriteLogFileTest002 start";
     try {
         LogBlock logBlock;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).Times(2).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).Times(2).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Return(4096));
         int32_t res = logFile_->WriteLogFile(logBlock);
         EXPECT_EQ(res, E_OK);
@@ -228,7 +228,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest001, TestSize.L
  */
 HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "CloudDiskServiceLogFileTest001 start";
+    GTEST_LOG_(INFO) << "CloudDiskServiceLogFileTest002 start";
     try {
         uint32_t userId = 3;
         uint32_t syncFolderIndex = 4;
@@ -362,7 +362,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataForInvalid001, TestSize.
  */
 HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FillChildForDirTest002 start";
+    GTEST_LOG_(INFO) << "FillChildForDirTest001 start";
     try {
         string path = "path";
         uint64_t timestamp = 1;
@@ -915,7 +915,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest003, TestSize.Level1)
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
         struct stat statInfo;
-        statInfo.st_ino = S_IFREG;
+        statInfo.st_mode = S_IFREG;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
         auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
@@ -944,7 +944,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest004, TestSize.Level1)
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
         struct stat statInfo;
-        statInfo.st_ino = S_IFDIR;
+        statInfo.st_mode = S_IFDIR;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
         auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
@@ -988,7 +988,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest001, TestSize.Level1)
  */
 HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ProduceUnlinkLogTest001 start";
+    GTEST_LOG_(INFO) << "ProduceUnlinkLogTest002 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
             make_shared<CloudDiskServiceMetaFile>(0, 0, 0);

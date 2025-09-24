@@ -32,8 +32,8 @@ CloudDiskServiceCallbackManager &CloudDiskServiceCallbackManager::GetInstance()
     return instance;
 }
 
-void CloudDiskServiceCallbackManager::AddCallback(
-    const std::string &bundleName, const sptr<ICloudDiskServiceCallback> &callback)
+void CloudDiskServiceCallbackManager::AddCallback(const std::string &bundleName,
+                                                  const sptr<ICloudDiskServiceCallback> &callback)
 {
     unique_lock<mutex> lock(callbackMutex_);
     if (callbackAppMap_[bundleName].callback != nullptr) {
@@ -66,8 +66,8 @@ void CloudDiskServiceCallbackManager::AddCallback(
     remoteObject->AddDeathRecipient(death);
 }
 
-void CloudDiskServiceCallbackManager::OnChangeData(
-    const uint32_t syncFolderIndex, const std::vector<ChangeData> &changeData)
+void CloudDiskServiceCallbackManager::OnChangeData(const uint32_t syncFolderIndex,
+                                                   const std::vector<ChangeData> &changeData)
 {
     unique_lock<mutex> lock(callbackMutex_);
     auto item = callbackIndexMap_.find(syncFolderIndex);
@@ -85,16 +85,17 @@ void CloudDiskServiceCallbackManager::OnChangeData(
         DfsuAccessTokenHelper::GetAccountId(userId);
     }
     std::string sandboxPath;
-    if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(
-        syncFolderSync, std::to_string(userId), sandboxPath)) {
+    if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(syncFolderSync, std::to_string(userId),
+                                                                            sandboxPath)) {
         LOGE("Get path failed");
         return;
     }
     item->second->OnChangeData(sandboxPath, changeData);
 }
 
-bool CloudDiskServiceCallbackManager::RigisterSyncFolderMap(
-    std::string &bundleName, uint32_t syncFolderIndex, const sptr<ICloudDiskServiceCallback> &callback)
+bool CloudDiskServiceCallbackManager::RegisterSyncFolderMap(std::string &bundleName,
+                                                            uint32_t syncFolderIndex,
+                                                            const sptr<ICloudDiskServiceCallback> &callback)
 {
     unique_lock<mutex> lock(callbackMutex_);
     auto item = callbackIndexMap_.find(syncFolderIndex);
@@ -133,8 +134,8 @@ void CloudDiskServiceCallbackManager::UnregisterSyncFolderMap(const std::string 
     }
 }
 
-bool CloudDiskServiceCallbackManager::UnregisterSyncFolderForChangesMap(
-    std::string &bundleName, uint32_t syncFolderIndex)
+bool CloudDiskServiceCallbackManager::UnregisterSyncFolderForChangesMap(std::string &bundleName,
+                                                                        uint32_t syncFolderIndex)
 {
     unique_lock<mutex> lock(callbackMutex_);
     auto it = callbackIndexMap_.find(syncFolderIndex);
@@ -155,6 +156,13 @@ bool CloudDiskServiceCallbackManager::UnregisterSyncFolderForChangesMap(
         vec.erase(pos);
     }
     return true;
+}
+
+void CloudDiskServiceCallbackManager::ClearMap()
+{
+    unique_lock<mutex> lock(callbackMutex_);
+    callbackAppMap_.clear();
+    callbackIndexMap_.clear();
 }
 
 } // namespace OHOS::FileManagement::CloudDiskService
