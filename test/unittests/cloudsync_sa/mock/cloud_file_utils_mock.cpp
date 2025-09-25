@@ -40,7 +40,7 @@ bool CloudFileUtils::IsDotDotdot(const std::string &name)
     return name == "." || name == "..";
 }
 
-void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
+void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num, bool caseSense)
 {
 }
 
@@ -48,7 +48,7 @@ void CloudFileUtils::TeaTransform(uint32_t buf[4], uint32_t const in[])
 {
 }
 
-uint32_t CloudFileUtils::DentryHash(const std::string &inputStr)
+uint32_t CloudFileUtils::DentryHash(const std::string &inputStr, bool caseSense)
 {
     return 0;
 }

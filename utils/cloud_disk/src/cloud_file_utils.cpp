@@ -52,7 +52,7 @@ bool CloudFileUtils::IsDotDotdot(const std::string &name)
     return name == "." || name == "..";
 }
 
-void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
+void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num, bool caseSense)
 {
     const int32_t shift8 = 8;
     const int32_t shift16 = 16;
@@ -67,7 +67,7 @@ void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int
         if ((i % sizeof(int)) == 0) {
             val = pad;
         }
-        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
+        uint8_t c = static_cast<uint8_t>(caseSense ? msg[i] : tolower(msg[i]));
         val = c + (val << shift8);
         if ((i % mod) == three) {
             *buf++ = val;
@@ -106,7 +106,7 @@ void CloudFileUtils::TeaTransform(uint32_t buf[4], uint32_t const in[]) __attrib
     buf[1] += b1;
 }
 
-uint32_t CloudFileUtils::DentryHash(const std::string &inputStr)
+uint32_t CloudFileUtils::DentryHash(const std::string &inputStr, bool caseSense)
 {
     if (IsDotDotdot(inputStr)) {
         return 0;
@@ -121,7 +121,7 @@ uint32_t CloudFileUtils::DentryHash(const std::string &inputStr)
 
     bool loopFlag = true;
     while (loopFlag) {
-        Str2HashBuf(p, len, in, bufLen);
+        Str2HashBuf(p, len, in, bufLen, caseSense);
         TeaTransform(buf, in);
 
         if (len <= hashWidth) {
