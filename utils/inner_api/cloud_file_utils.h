@@ -75,9 +75,9 @@ public:
     static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);
     static bool ClearCache(const std::string &dfsPath, const std::string &cloudPath);
-    static uint32_t DentryHash(const std::string &cloudId);
+    static uint32_t DentryHash(const std::string &cloudId, bool caseSense = false);
     static void TeaTransform(uint32_t buf[4], uint32_t const in[]);
-    static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num);
+    static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num, bool caseSense);
     static bool IsDotDotdot(const std::string &name);
     static void ChangeUid(int32_t userId, const std::string &bundleName, uint32_t mode, const std::string &path);
     static void ChangeUidByCloudId(int32_t userId, const std::string &bundleName,

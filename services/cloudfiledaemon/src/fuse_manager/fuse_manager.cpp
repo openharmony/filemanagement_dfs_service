@@ -472,7 +472,7 @@ static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struct stat *stbuf)
 {
     string inoKey = ino->mBase->cloudId + ino->mBase->name;
-    stbuf->st_ino = static_cast<fuse_ino_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey));
+    stbuf->st_ino = static_cast<fuse_ino_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey, true));
     stbuf->st_uid = OID_USER_DATA_RW;
     stbuf->st_gid = OID_USER_DATA_RW;
     stbuf->st_mtime = static_cast<int64_t>(ino->mBase->mtime);
@@ -514,7 +514,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         return err;
     }
     string inoKey = mBase.cloudId + mBase.name;
-    uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey));
+    uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey, true));
     child = FindNode(data, cloudId);
     if (!child) {
         child = make_shared<CloudInode>();
@@ -595,7 +595,7 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
             LOGW("PutNode directory inode, path is %{public}s", GetAnonyString(node->path).c_str());
         }
         string inoKey = node->mBase->cloudId + node->mBase->name;
-        uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey));
+        uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(inoKey, true));
         wLock.lock();
         data->inodeCache.erase(cloudId);
         wLock.unlock();

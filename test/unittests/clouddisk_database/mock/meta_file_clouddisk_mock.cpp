@@ -155,7 +155,7 @@ static bool IsDotDotdot(const std::string &name)
     return name == "." || name == "..";
 }
 
-static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
+static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num, bool caseSense)
 {
     uint32_t pad = static_cast<uint32_t>(len) | (static_cast<uint32_t>(len) << 8);
     pad |= pad << 16; /* hash pad length 16 */
@@ -166,7 +166,7 @@ static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
         if ((i % sizeof(int)) == 0) {
             val = pad;
         }
-        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
+        uint8_t c = static_cast<uint8_t>(caseSense ? msg[i] : tolower(msg[i]));
         val = c + (val << 8); /* hash shift size 8 */
         if ((i % 4) == 3) {   /* msg size 4, shift when 3 */
             *buf++ = val;
@@ -203,7 +203,7 @@ static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no
     buf[1] += b1;
 }
 
-static uint32_t DentryHash(const std::string &name)
+static uint32_t DentryHash(const std::string &name, bool caseSense = false)
 {
     if (IsDotDotdot(name)) {
         return 0;
@@ -224,7 +224,7 @@ static uint32_t DentryHash(const std::string &name)
 
     bool loopFlag = true;
     while (loopFlag) {
-        Str2HashBuf(p, len, in, bufLen);
+        Str2HashBuf(p, len, in, bufLen, caseSense);
         TeaTransform(buf, in);
 
         if (len <= hashWidth) {
