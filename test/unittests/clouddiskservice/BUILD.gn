@@ -431,6 +431,7 @@ ohos_unittest("cloud_disk_service_logfile_static_test") {
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/monitor/include",
     "${services_path}/clouddiskservice/utils/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${distributedfile_path}/utils/inner_api",
@@ -499,6 +500,7 @@ ohos_unittest("cloud_disk_service_logfile_test") {
     "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${services_path}/clouddiskservice/monitor/include",
     "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/monitor/include",
     "${services_path}/clouddiskservice/utils/include",
     "${distributedfile_path}/utils/inner_api",
     "${distributedfile_path}/utils/dentry/include",
@@ -550,6 +552,7 @@ ohos_unittest("cloud_disk_service_metafile_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/utils/include",
   ]
@@ -590,6 +593,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/sync_folder/src",
     "${services_path}/clouddiskservice/utils/include",
@@ -698,15 +702,6 @@ group("clouddisk_service_test") {
     ":cloud_disk_sync_folder_test",
     ":disk_monitor_test",
     ":disk_utils_test",
-    ":cloud_disk_service_logfile_test",
-    ":cloud_disk_service_metafile_test",
-    ":cloud_disk_service_metafile_static_test",
-    ":cloud_disk_service_callback_manager_test",
-    ":cloud_disk_sync_folder_test",
-    ":disk_monitor_test",
-    ":disk_utils_test",
-    ":convertor_test",
-    ":uuid_helper_test",
   ]
 
   if (dfs_service_feature_enable_cloud_disk) {

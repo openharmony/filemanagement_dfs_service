@@ -20,9 +20,9 @@
 
 #include "cloud_disk_sync_folder.h"
 #include "cloud_disk_sync_folder_manager_mock.h"
+#include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "common_event_data.h"
 #include "dfsu_access_token_helper_mock.h"
 #include "if_system_ability_manager_mock.h"
 #include "system_ability_manager_client_mock.h"
@@ -90,12 +90,11 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
     try {
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = SWITCHED;
-        std::vector<FileManagement::SyncFolderExt> syncFolders;
-        FileManagement::SyncFolderExt ext1;
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt ext1;
         ext1.path_ = "path";
         syncFolders.push_back(ext1);
-        OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock& mockManager =
-            OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock::GetInstance();
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
         EXPECT_TRUE(true);
@@ -118,12 +117,11 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest002, TestSize.Level1)
     try {
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = SWITCHED;
-        std::vector<FileManagement::SyncFolderExt> syncFolders;
-        FileManagement::SyncFolderExt ext1;
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt ext1;
         ext1.path_ = "/storage/Users/currentUser/Download/test";
         syncFolders.push_back(ext1);
-        OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock& mockManager =
-            OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock::GetInstance();
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
         EXPECT_TRUE(true);
@@ -146,9 +144,8 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest003, TestSize.Level1)
     try {
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = SWITCHED;
-        std::vector<FileManagement::SyncFolderExt> syncFolders;
-        OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock& mockManager =
-            OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock::GetInstance();
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
         EXPECT_TRUE(true);
@@ -171,9 +168,8 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest004, TestSize.Level1)
     try {
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = STOPPED;
-        std::vector<FileManagement::SyncFolderExt> syncFolders;
-        OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock& mockManager =
-            OHOS::FileManagement::Test::CloudDiskSyncFolderManagerMock::GetInstance();
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
         EXPECT_TRUE(true);
@@ -335,4 +331,4 @@ HWTEST_F(AccountStatusListenerTest, StopTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "StopTest002 end";
 }
-}
+} // namespace OHOS::FileManagement::CloudDiskService::Test

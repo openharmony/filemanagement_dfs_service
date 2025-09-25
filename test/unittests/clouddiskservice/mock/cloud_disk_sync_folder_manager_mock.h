@@ -16,15 +16,53 @@
 #ifndef TEST_UNITTEST_CLOUD_DISK_SYNC_FOLDER_MANAGER_MOCK_H
 #define TEST_UNITTEST_CLOUD_DISK_SYNC_FOLDER_MANAGER_MOCK_H
 
-#include "cloud_disk_sync_folder_manager.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace OHOS::FileManagement::Test {
+namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+
+enum class State {
+    INACTIVE,
+    ACTIVE,
+    MAX_VALUE
+};
+
+struct SyncFolder {
+    std::string path_;
+    State state_ { State::INACTIVE };
+    uint32_t displayNameResId_ { 0 }; // 0: default resId value
+    std::string displayName_;
+
+    SyncFolder() = default;
+    SyncFolder(const std::string &path, State state, uint32_t resId, const std::string &displayName)
+        :path_(path), state_(state), displayNameResId_(resId), displayName_(displayName) {}
+};
+
+struct SyncFolderExt : SyncFolder {
+    std::string bundleName_;
+
+    SyncFolderExt() = default;
+    SyncFolderExt(const std::string &path,
+        State state, uint32_t resId, const std::string &displayName, const std::string &bundleName)
+        :SyncFolder(path, state, resId, displayName), bundleName_(bundleName) {}
+};
+
+class CloudDiskSyncFolderManager {
+public:
+    static CloudDiskSyncFolderManager &GetInstance();
+    virtual int32_t Register(const SyncFolder rootInfo) = 0;
+    virtual int32_t Unregister(const std::string path) = 0;
+    virtual int32_t Active(const std::string path) = 0;
+    virtual int32_t Deactive(const std::string path) = 0;
+    virtual int32_t GetSyncFolders(std::vector<SyncFolder> &syncFolders) = 0;
+    virtual int32_t UpdateDisplayName(const std::string path, const std::string displayName) = 0;
+    // function for sa
+    virtual int32_t UnregisterForSa(const std::string path) = 0;
+    virtual int32_t GetAllSyncFoldersForSa(std::vector<SyncFolderExt> &syncFolderExts) = 0;
+};
 
 class CloudDiskSyncFolderManagerMock : public CloudDiskSyncFolderManager {
 public:

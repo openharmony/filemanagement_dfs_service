@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 #include "assistant.h"
-#include "file_utils.h"
+
 #include <sys/fanotify.h>
+
+#include "file_utils.h"
 
 using namespace OHOS::FileManagement::CloudDiskService;
 
@@ -78,11 +80,6 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
 int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size)
 {
     return Assistant::ins->WriteFile(fd, data, offset, size);
-}
-
-int FileRangeLock::FilePosLock(int fd, off_t offset, size_t size, int type)
-{
-    return Assistant::ins->FilePosLock(fd, offset, size, type);
 }
 } // namespace OHOS::FileManagement
 

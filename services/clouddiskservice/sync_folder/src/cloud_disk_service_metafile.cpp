@@ -116,13 +116,8 @@ static std::unique_ptr<CloudDiskServiceDentryGroup> FindDentryPage(uint64_t inde
     auto dentryBlk = std::make_unique<CloudDiskServiceDentryGroup>();
 
     off_t pos = GetDentryGroupPos(index);
-    auto ret = FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_WRLCK);
-    if (ret) {
-        return nullptr;
-    }
     ssize_t size = FileUtils::ReadFile(ctx->fd, pos, DENTRYGROUP_SIZE, dentryBlk.get());
     if (size != DENTRYGROUP_SIZE) {
-        (void)FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return nullptr;
     }
     return dentryBlk;
@@ -212,8 +207,6 @@ static CloudDiskServiceDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx, boo
             ctx->page = std::move(dentryBlk);
             break;
         }
-        off_t pos = GetDentryGroupPos(bidx);
-        (void)FileRangeLock::FilePosLock(ctx->fd, pos, DENTRYGROUP_SIZE, F_UNLCK);
     }
     ctx->bidx = bidx;
     return de;
@@ -326,13 +319,9 @@ CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId, const u
 
 int32_t CloudDiskServiceMetaFile::DecodeDentryHeader()
 {
-    auto ret = FileRangeLock::FilePosLock(fd_, 0, DENTRYGROUP_HEADER, F_WRLCK);
-    if (ret) {
-        return ret;
-    }
     struct CloudDiskServiceDcacheHeader header;
+    std::unique_lock<std::mutex> lock(mtx_);
     ssize_t size = FileUtils::ReadFile(fd_, 0, sizeof(CloudDiskServiceDcacheHeader), &header);
-    (void)FileRangeLock::FilePosLock(fd_, 0, DENTRYGROUP_HEADER, F_UNLCK);
     if (size != sizeof(CloudDiskServiceDcacheHeader)) {
         return size;
     }
@@ -364,12 +353,8 @@ int32_t CloudDiskServiceMetaFile::GenericDentryHeader()
     }
     header.selfHash = selfHash_;
 
-    ret = FileRangeLock::FilePosLock(fd_, 0, DENTRYGROUP_HEADER, F_WRLCK);
-    if (ret) {
-        return ret;
-    }
+    std::unique_lock<std::mutex> lock(mtx_);
     ssize_t size = FileUtils::WriteFile(fd_, &header, 0, sizeof(CloudDiskServiceDcacheHeader));
-    (void)FileRangeLock::FilePosLock(fd_, 0, DENTRYGROUP_HEADER, F_UNLCK);
     if (size != sizeof(CloudDiskServiceDcacheHeader)) {
         return size;
     }
@@ -397,7 +382,6 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base, unsigned long &
     CloudDiskServiceDentry *de = FindDentry(&ctx);
     if (de != nullptr) {
         LOGE("this name dentry is exist");
-        (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
         return EEXIST;
     }
     CloudDiskServiceDentryGroup dentryBlk = {0};
@@ -409,18 +393,12 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base, unsigned long &
     off_t pos = GetDentryGroupPos(bidx);
     if (!CreateDentry(dentryBlk, base, namehash, bitPos, base.recordId)) {
         LOGI("CreateDentry fail, stop write.");
-        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
     }
     int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
     if (size != DENTRYGROUP_SIZE) {
         LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
-        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
-    }
-    ret = FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     return E_OK;
 }
@@ -449,12 +427,7 @@ int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &re
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(struct CloudDiskServiceDentryGroup));
     if (size != sizeof(struct CloudDiskServiceDentryGroup)) {
         LOGE("write failed, ret = %{public}zd", size);
-        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
-    }
-    auto ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     bidx = ctx.bidx;
     bitPos = ctx.bitPos;
@@ -487,12 +460,7 @@ int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &rec
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(CloudDiskServiceDentryGroup));
     if (size != sizeof(CloudDiskServiceDentryGroup)) {
         LOGE("WriteFile failed!, ret = %{public}zd", size);
-        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
-    }
-    auto ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     bidx = ctx.bidx;
     bitPos = ctx.bitPos;
@@ -526,12 +494,7 @@ int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &re
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(struct CloudDiskServiceDentryGroup));
     if (size != sizeof(struct CloudDiskServiceDentryGroup)) {
         LOGE("write failed, ret = %{public}zd", size);
-        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
-    }
-    auto ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     bidx = ctx.bidx;
     bitPos = ctx.bitPos;
@@ -562,12 +525,7 @@ int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string 
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(struct CloudDiskServiceDentryGroup));
     if (size != sizeof(struct CloudDiskServiceDentryGroup)) {
         LOGE("write failed, ret = %{public}zd", size);
-        (void)FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
         return EIO;
-    }
-    auto ret = FileRangeLock::FilePosLock(fd_, ipos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     bidx = ctx.bidx;
     bitPos = ctx.bitPos;
@@ -595,7 +553,6 @@ int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string 
     CloudDiskServiceDentry *de = FindDentry(&ctx);
     if (de != nullptr) {
         LOGE("this name dentry is exist");
-        (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
         return EEXIST;
     }
     CloudDiskServiceDentryGroup dentryBlk = {0};
@@ -607,18 +564,12 @@ int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string 
     off_t pos = GetDentryGroupPos(bidx);
     if (!CreateDentry(dentryBlk, base, namehash, bitPos, recordId)) {
         LOGI("CreateDentry fail, stop write.");
-        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
     }
     int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
     if (size != DENTRYGROUP_SIZE) {
         LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
-        (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         return EINVAL;
-    }
-    ret = FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     return E_OK;
 }
@@ -662,7 +613,6 @@ int32_t CloudDiskServiceMetaFile::DoLookupByName(MetaBase &base)
         LOGD("find dentry failed");
         return ENOENT;
     }
-    (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
 
     base.mode = de->mode;
     base.hash = de->hash;
@@ -692,7 +642,6 @@ int32_t CloudDiskServiceMetaFile::DoLookupByRecordId(MetaBase &base, uint8_t rev
             return ENOENT;
         }
     }
-    (void)FileRangeLock::FilePosLock(fd_, GetDentryGroupPos(ctx.bidx), DENTRYGROUP_SIZE, F_UNLCK);
 
     base.mode = de->mode;
     base.hash = de->hash;
@@ -750,12 +699,7 @@ int32_t CloudDiskServiceMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &
         }
         for (; bidx < endBlock; bidx++) {
             off_t pos = GetDentryGroupPos(bidx);
-            ret = FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_WRLCK);
-            if (ret) {
-                return ret;
-            }
             if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
-                (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
                 return ENOENT;
             }
             bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
@@ -763,7 +707,6 @@ int32_t CloudDiskServiceMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &
                 found = true;
                 break;
             }
-            (void)FileRangeLock::FilePosLock(fd_, pos, DENTRYGROUP_SIZE, F_UNLCK);
         }
         ++level;
     }

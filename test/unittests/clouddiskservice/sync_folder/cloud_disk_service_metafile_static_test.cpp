@@ -16,8 +16,8 @@
 #include <gtest/gtest.h>
 
 #include "assistant.h"
+#include "cloud_disk_common.h"
 #include "cloud_disk_service_error.h"
-
 #include "cloud_disk_service_metafile.cpp"
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -277,12 +277,11 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindDentryPageTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FindDentryPageTest001 Start";
     try {
-        uint64_t index = 0;
+        uint64_t index = 1;
         auto ctx = std::make_shared<DcacheLookupCtx>();
         auto dentryBlk = std::make_unique<CloudDiskServiceDentryGroup>();
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
         auto ret = FindDentryPage(index, ctx.get());
-        EXPECT_EQ(ret, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "FindDentryPageTest001 ERROR";
@@ -303,38 +302,14 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindDentryPageTest002, TestSize.Level1)
         uint64_t index = 1;
         auto ctx = std::make_shared<DcacheLookupCtx>();
         auto dentryBlk = std::make_unique<CloudDiskServiceDentryGroup>();
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
-        auto ret = FindDentryPage(index, ctx.get());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FindDentryPageTest002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "FindDentryPageTest002 End";
-}
-
-/**
- * @tc.name: FindDentryPageTest003
- * @tc.desc: Verify the FindDentryPage function
- * @tc.type: FUNC
- * @tc.require: NA
- */
-HWTEST_F(CloudDiskServiceMetafileTest, FindDentryPageTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FindDentryPageTest003 Start";
-    try {
-        uint64_t index = 1;
-        auto ctx = std::make_shared<DcacheLookupCtx>();
-        auto dentryBlk = std::make_unique<CloudDiskServiceDentryGroup>();
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).Times(2).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(1));
         auto ret = FindDentryPage(index, ctx.get());
         EXPECT_EQ(ret, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FindDentryPageTest003 ERROR";
+        GTEST_LOG_(INFO) << "FindDentryPageTest002 ERROR";
     }
-    GTEST_LOG_(INFO) << "FindDentryPageTest003 End";
+    GTEST_LOG_(INFO) << "FindDentryPageTest002 End";
 }
 
 /**
@@ -418,7 +393,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, InLevelTest002, TestSize.Level1)
         shared_ptr<DcacheLookupCtx> ctx = make_shared<DcacheLookupCtx>();
         bool byId = true;
         uint8_t revalidate = 0;
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).Times(2).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(1));
         auto ret = InLevel(level, ctx.get(), byId, revalidate);
         EXPECT_EQ(ret, nullptr);

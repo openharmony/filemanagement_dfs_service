@@ -18,6 +18,8 @@
 #include <gtest/gtest.h>
 
 #include "assistant.h"
+#include "cloud_disk_common.h"
+#include "file_utils.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -69,8 +71,8 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetLogFileByPathTest001, TestSize.Le
         uint32_t syncFolderIndex = 1;
         string res = GetLogFileByPath(userId, syncFolderIndex);
         string str =
-             "/data/service/el2/1/hmdfs/cache/account_cache/dentry_cache/"
-             "clouddisk_service_cache/0000000000000001/history.log";
+            "/data/service/el2/1/hmdfs/cache/account_cache/dentry_cache/"
+            "clouddisk_service_cache/0000000000000001/history.log";
         EXPECT_EQ(res, str);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -134,7 +136,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, LoadCurrentPageTest001, TestSize.Lev
     try {
         int fd = 1;
         uint32_t bucket = 1;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
         auto res = LoadCurrentPage(fd, bucket);
         EXPECT_EQ(res, nullptr);
     } catch (...) {
@@ -156,8 +157,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, LoadCurrentPageTest002, TestSize.Lev
     try {
         int fd = 1;
         uint32_t bucket = 1;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(0))
-                                                       .WillOnce(Return(1));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Return(1));
         auto res = LoadCurrentPage(fd, bucket);
         EXPECT_EQ(res, nullptr);
@@ -180,7 +179,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, LoadCurrentPageTest003, TestSize.Lev
     try {
         int fd = 1;
         uint32_t bucket = 1;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Return(LOGGROUP_SIZE));
         auto res = LoadCurrentPage(fd, bucket);
         EXPECT_NE(res, nullptr);
@@ -189,26 +187,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, LoadCurrentPageTest003, TestSize.Lev
         GTEST_LOG_(INFO) << "LoadCurrentPageTest003 failed";
     }
     GTEST_LOG_(INFO) << "LoadCurrentPageTest003 end";
-}
-
-/**
- * @tc.name: UnlockCurrentPageTest001
- * @tc.desc: Verify the UnlockCurrentPage function
- * @tc.type: FUNC
- * @tc.require: NA
- */
-HWTEST_F(CloudDiskServiceLogFileStaticTest, UnlockCurrentPageTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnlockCurrentPageTest001 start";
-    try {
-        int fd = 1;
-        uint32_t bucket = 1;
-        UnlockCurrentPage(fd, bucket);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UnlockCurrentPageTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "UnlockCurrentPageTest001 end";
 }
 
 /**
@@ -248,38 +226,13 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, SyncCurrentPageTest002, TestSize.Lev
         int fd = 1;
         uint32_t line = 1;
         EXPECT_CALL(*insMock_, WriteFile(_, _, _, _)).WillOnce(Return(LOGGROUP_SIZE));
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
         auto res = SyncCurrentPage(logGroup, fd, line);
-        EXPECT_EQ(res, 1);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SyncCurrentPageTest002 failed";
     }
     GTEST_LOG_(INFO) << "SyncCurrentPageTest002 end";
-}
-
-/**
- * @tc.name: SyncCurrentPageTest003
- * @tc.desc: Verify the SyncCurrentPage function
- * @tc.type: FUNC
- * @tc.require: NA
- */
-HWTEST_F(CloudDiskServiceLogFileStaticTest, SyncCurrentPageTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SyncCurrentPageTest003 start";
-    try {
-        LogGroup logGroup;
-        int fd = 1;
-        uint32_t line = 1;
-        EXPECT_CALL(*insMock_, WriteFile(_, _, _, _)).WillOnce(Return(LOGGROUP_SIZE));
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(0));
-        auto res = SyncCurrentPage(logGroup, fd, line);
-        EXPECT_EQ(res, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SyncCurrentPageTest003 failed";
-    }
-    GTEST_LOG_(INFO) << "SyncCurrentPageTest003 end";
 }
 
 /**
@@ -316,8 +269,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetCurrentLineTest001, TestSize.Leve
     GTEST_LOG_(INFO) << "GetCurrentLineTest001 start";
     try {
         int fd = 1;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1))
-            .WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
         GetCurrentLine(fd);
     } catch (...) {
@@ -339,7 +290,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest001, TestSize.Level1)
     try {
         int fd = 1;
         uint64_t line = 0;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
         bool res = GetReversal(fd, line);
         EXPECT_EQ(res, false);
@@ -362,7 +312,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest002, TestSize.Level1)
     try {
         int fd = 1;
         uint64_t line = 0;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
         bool res = GetReversal(fd, line);
         EXPECT_EQ(res, false);
     } catch (...) {
@@ -392,4 +341,4 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, GetReversalTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetReversalTest003 end";
 }
-}
+} // namespace OHOS::FileManagement::CloudDiskService::Test

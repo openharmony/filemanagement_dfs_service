@@ -16,6 +16,7 @@
 #define TEST_UNITTEST_CLOUD_DISK_SERVICE_ASSISTANT_H
 
 #include <dirent.h>
+#include <unistd.h>
 #include <gmock/gmock.h>
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -37,7 +38,6 @@ public:
     // file_utils
     virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
     virtual int64_t WriteFile(int fd, const void *data, off_t offset, size_t size) = 0;
-    virtual int FilePosLock(int fd, off_t offset, size_t size, int type) = 0;
 
     virtual int access(const char *name, int type) = 0;
     virtual struct dirent* readdir(DIR* d) = 0;
@@ -56,9 +56,8 @@ public:
     MOCK_METHOD2(ftruncate, int(int, off_t));
 
     // file_utils
-    MOCK_METHOD4(ReadFile, int64_t(int fd, off_t offset, size_t size, void *data));
-    MOCK_METHOD4(WriteFile, int64_t(int fd, const void *data, off_t offset, size_t size));
-    MOCK_METHOD4(FilePosLock, int(int fd, off_t offset, size_t size, int type));
+    MOCK_METHOD4(ReadFile, int64_t(int, off_t, size_t, void *));
+    MOCK_METHOD4(WriteFile, int64_t(int, const void *, off_t, size_t));
 
     MOCK_METHOD2(access, int(const char *, int));
     MOCK_METHOD1(readdir, struct dirent*(DIR*));
