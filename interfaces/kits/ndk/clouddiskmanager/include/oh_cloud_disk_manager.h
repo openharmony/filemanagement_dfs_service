@@ -67,7 +67,7 @@ typedef enum CloudDisk_SyncState {
     /**
      * The cloud disk synchronization completed successfully.
      */
-    SYNC_SUCCESSED = 2,
+    SYNC_SUCCEEDED = 2,
     /**
      * The cloud disk synchronization failed.
      */
@@ -363,11 +363,10 @@ typedef struct CloudDisk_SyncFolder {
  * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
-CloudDisk_ErrorCode
-    OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
-                                           void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                            const CloudDisk_ChangeData changeDatas[],
-                                                            size_t bufferLength));
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
+    void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
+                     const CloudDisk_ChangeData changeDatas[],
+                     size_t bufferLength));
 
 /**
  * @brief Unregisters a callback function for sync folder changes.

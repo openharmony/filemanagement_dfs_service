@@ -1,11 +1,11 @@
 [
     {
         "first_introduced": "21",
-        "name": "OH_CloudDisk_RegisterSyncFolderChange"
+        "name": "OH_CloudDisk_RegisterSyncFolderChanges"
     },
     {
         "first_introduced": "21",
-        "name": "OH_CloudDisk_UnregisterSyncFolderChange"
+        "name": "OH_CloudDisk_UnregisterSyncFolderChanges"
     },
     {
         "first_introduced": "21",
