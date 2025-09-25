@@ -22,9 +22,9 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudSyncAni final {
 public:
     static void CloudSyncConstructor(ani_env *env, ani_object object);
-    static void CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudSyncOff1(ani_env *env, ani_object object, ani_string evt);
+    static void CloudSyncOn(ani_env *env, ani_object object, ani_object fun);
+    static void CloudSyncOff0(ani_env *env, ani_object object, ani_object fun);
+    static void CloudSyncOff1(ani_env *env, ani_object object);
     static void CloudSyncStart(ani_env *env, ani_object object);
     static void CloudSyncStop(ani_env *env, ani_object object);
     static void OptimizeStorage(ani_env *env, ani_class clazz);

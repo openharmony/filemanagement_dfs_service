@@ -75,7 +75,7 @@ void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -85,20 +85,13 @@ void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string ev
     }
     auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudDownload->DoOn(event, callback);
+    auto data = cloudDownload->DoOn(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud download do on failed, ret = %{public}d", err.GetErrNo());
@@ -106,7 +99,7 @@ void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string ev
     }
 }
 
-void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -116,20 +109,13 @@ void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string 
     }
     auto callback = std::make_shared<CloudDownloadCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudDownload->DoOff(event, callback);
+    auto data = cloudDownload->DoOff(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud download do off failed, ret = %{public}d", err.GetErrNo());
@@ -137,22 +123,15 @@ void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string 
     }
 }
 
-void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudDownload = CloudDownloadUnwrap(env, object);
     if (cloudDownload == nullptr) {
         LOGE("Cannot wrap cloudDownload.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudDownload->DoOff(event);
+    auto data = cloudDownload->DoOff(EVENT_TYPE);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud download do off failed, ret = %{public}d", err.GetErrNo());

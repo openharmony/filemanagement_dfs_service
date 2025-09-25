@@ -54,8 +54,6 @@ export default namespace cloudSync {
         public error: ErrorType;
     }
 
-    export type GallerySyncCallback = (pg: SyncProgress) => void;
-
     export class GallerySync {
         static {
             loadLibrary("cloud_sync_ani");
@@ -69,11 +67,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: GallerySyncCallback): void;
+        native onProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string, callback: GallerySyncCallback): void;
+        native offProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -183,8 +181,6 @@ export default namespace cloudSync {
         error: DownloadErrorType;
     };
 
-    export type DownloadcCallback = (pg: DownloadProgress) => void;
-
     export class Download {
         static {
             loadLibrary("cloud_sync_ani");
@@ -198,11 +194,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: DownloadcCallback): void;
+        native onProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string, callback: DownloadcCallback): void;
+        native offProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(uri: string): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -315,11 +311,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: Callback<SyncProgress>): void;
+        native onProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string, callback: Callback<SyncProgress>): void;
+        native offProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -418,11 +414,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: Callback<DownloadProgress>): void;
+        native onProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string, callback: Callback<DownloadProgress>): void;
+        native offProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(uri: string): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,

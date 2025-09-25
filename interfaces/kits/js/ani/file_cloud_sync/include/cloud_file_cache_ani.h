@@ -23,9 +23,9 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudFileCacheAni final {
 public:
     static void CloudFileCacheConstructor(ani_env *env, ani_object object);
-    static void CloudFileCacheOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt);
+    static void CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun);
+    static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun);
+    static void CloudFileCacheOff1(ani_env *env, ani_object object);
     static void CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheStop(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean);
     static void CloudFileCacheCleanCache(ani_env *env, ani_object object, ani_string uri);
