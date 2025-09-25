@@ -79,7 +79,8 @@ void CloudSyncManagerImplTest::SetUpTestCase(void)
     proxy_ = std::make_shared<MockServiceProxy>();
     IserviceProxy::proxy_ = proxy_;
     serviceProxy_ = sptr(new CloudSyncServiceMock());
-    CloudSyncManagerImpl::GetInstance().isFirstCall_.test_and_set();
+    saMgr_ = sptr(new ISystemAbilityManagerMock());
+    ISystemAbilityManagerClient::smc = saMgrClient_;
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -90,11 +91,13 @@ void CloudSyncManagerImplTest::TearDownTestCase(void)
     saMgrClient_ = nullptr;
     proxy_ = nullptr;
     serviceProxy_ = nullptr;
+    saMgr_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
 void CloudSyncManagerImplTest::SetUp(void)
 {
+    CloudSyncManagerImpl::GetInstance().isFirstCall_.test_and_set();
     std::cout << "SetUp" << std::endl;
 }
 
@@ -170,14 +173,14 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: StartSyncTest003
+ * @tc.name: StartSyncTest002
  * @tc.desc: Verify the StartSync function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    GTEST_LOG_(INFO) << "StartSyncTest002 Start";
     try {
         bool forceFlag = true;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
@@ -189,9 +192,81 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+        GTEST_LOG_(INFO) << "StartSyncTest002 FAILED";
     }
-    GTEST_LOG_(INFO) << "StartSyncTest End";
+    GTEST_LOG_(INFO) << "StartSyncTest002 End";
+}
+
+/**
+ * @tc.name: StartSyncTest003
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest003 Start";
+    try {
+        bool forceFlag = true;
+        shared_ptr<CloudSyncCallback> callback = nullptr;
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest003 End";
+}
+
+/**
+ * @tc.name: StartSyncTest004
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest004 Start";
+    try {
+        bool forceFlag = true;
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest004 End";
+}
+
+/**
+ * @tc.name: StartSyncTest005
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest005 Start";
+    try {
+        bool forceFlag = true;
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest005 End";
 }
 
 /**
@@ -704,22 +779,63 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyDataChangeTest, TestSize.Level1)
 }
 
 /*
- * @tc.name: SetDeathRecipientTest
+ * @tc.name: SetDeathRecipientTest001
  * @tc.desc: Verify the SetDeathRecipient function.
  * @tc.type: FUNC
  * @tc.require: ICEU6Z
  */
-HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest001 Start";
     try {
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetDeathRecipientTest FAILED";
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest001 End";
+}
+
+/*
+ * @tc.name: SetDeathRecipientTest002
+ * @tc.desc: Verify the SetDeathRecipient function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest002 Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest002 End";
+}
+
+/*
+ * @tc.name: SetDeathRecipientTest003
+ * @tc.desc: Verify the SetDeathRecipient function.
+ * @tc.type: FUNC
+ * @tc.require: ICEU6Z
+ */
+HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest003 Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest003 End";
 }
 
 HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest2, TestSize.Level1)
@@ -758,13 +874,97 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest002, TestSize.Level1)
     EXPECT_EQ(res, E_EXCEED_MAX_SIZE);
 }
 
-HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest, TestSize.Level1)
+/*
+ * @tc.name: ResetProxyCallbackTest001
+ * @tc.desc: proxy 为 空.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest001, TestSize.Level1)
 {
-    uint32_t retryCount = 3;
-    string bundleName = "testBundle";
-    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-    auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
-    EXPECT_EQ(res, false);
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest001 Start";
+    try {
+        uint32_t retryCount = 3;
+        string bundleName = "testBundle";
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest001 End";
+}
+
+/*
+ * @tc.name: ResetProxyCallbackTest002
+ * @tc.desc: proxy 不为空，但callback_为空
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest002 Start";
+    try {
+        uint32_t retryCount = 3;
+        string bundleName = "testBundle";
+        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest002 End";
+}
+
+/*
+ * @tc.name: ResetProxyCallbackTest002
+ * @tc.desc: proxy 不为空，但callback_ 不为空, RegisterCallbackInner返回异常
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest003 Start";
+    try {
+        uint32_t retryCount = 3;
+        string bundleName = "testBundle";
+        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest003 End";
+}
+
+/*
+ * @tc.name: ResetProxyCallbackTest004
+ * @tc.desc: proxy 不为空，但callback_ 不为空，RegisterCallbackInner 返回正常
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest004 Start";
+    try {
+        uint32_t retryCount = 3;
+        string bundleName = "testBundle";
+        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetProxyCallbackTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetProxyCallbackTest004 End";
 }
 
 /*
@@ -926,6 +1126,50 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
         GTEST_LOG_(INFO) << " SubscribeListenerTest1 FAILED";
     }
     GTEST_LOG_(INFO) << "SubscribeListenerTest1 End";
+}
+
+/*
+ * @tc.name: SubscribeListener002
+ * @tc.desc: Verify the SubscribeListener function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, SubscribeListener002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SubscribeListener002 Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
+        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SubscribeListener002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SubscribeListener002 End";
+}
+
+/*
+ * @tc.name: SubscribeListener003
+ * @tc.desc: Verify the SubscribeListener function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, SubscribeListener003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SubscribeListener003 Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
+        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
+        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SubscribeListener003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SubscribeListener003 End";
 }
 
 /*
