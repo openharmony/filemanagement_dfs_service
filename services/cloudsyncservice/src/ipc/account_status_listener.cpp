@@ -33,7 +33,7 @@ using namespace AccountSA;
 
 void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 {
-    if (state == OsAccountState::STOPPING) {
+    if (data.state == OsAccountState::STOPPING) {
         LOGI("Stopped user");
         UnloadSa();
     }
@@ -62,7 +62,7 @@ AccountStatusListener::~AccountStatusListener()
 
 void AccountStatusListener::Start()
 {
-    std::set<OsAccountState> states = {OsAccountState::STOPPING;
+    std::set<OsAccountState> states = {OsAccountState::STOPPING};
     OsAccountSubscribeInfo subscribeInfo(states);
     osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo);
     ErrCode errCode = OsAccountManager::SubscribeOsAccount(osAccountSubscriber_);

@@ -46,7 +46,7 @@ void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event
 UserStatusListener::UserStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
-    accountStatusListener_ = make_shared<AccountStatusListener>();
+    accountStatusListener_ = std::make_shared<AccountStatusListener>();
 }
 
 UserStatusListener::~UserStatusListener()
