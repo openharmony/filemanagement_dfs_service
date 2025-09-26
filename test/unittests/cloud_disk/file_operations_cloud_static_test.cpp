@@ -584,4 +584,53 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest003, TestSize.Level
     }
     GTEST_LOG_(INFO) << "HandleCloudReopenTest003 end";
 }
+
+/**
+ * @tc.name: CallBackTest001
+ * @tc.desc: Verify the CallBack function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CallBackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallBackTest001 start";
+    try {
+        fuse_session *se = nullptr;
+        fuse_ino_t parentIno = 0;
+        fuse_ino_t childIno = 0;
+        string childName = "";
+        FuseInvalData *fuseInvalData = new FuseInvalData(se, parentIno, childIno, childName);
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillOnce(Return(0));
+        CallBack(static_cast<void *>(fuseInvalData));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CallBackTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CallBackTest001 end";
+}
+
+/**
+ * @tc.name: CallBackTest002
+ * @tc.desc: Verify the CallBack function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CallBackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallBackTest002 start";
+    try {
+        fuse_session *se = nullptr;
+        fuse_ino_t parentIno = 0;
+        fuse_ino_t childIno = 0;
+        string childName = "";
+        FuseInvalData *fuseInvalData = new FuseInvalData(se, parentIno, childIno, childName);
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillOnce(Return(0));
+        CallBack(static_cast<void *>(fuseInvalData));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CallBackTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "CallBackTest002 end";
+}
 }
