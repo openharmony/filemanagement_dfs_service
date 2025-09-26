@@ -74,11 +74,12 @@ void UserStatusListener::Start()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
-    accountStatusListener_->Start();
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<UserStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
     LOGI("Subscriber end, SubscribeResult = %{public}d", subRet);
+
+    accountStatusListener_->Start();
 }
 
 void UserStatusListener::Stop()

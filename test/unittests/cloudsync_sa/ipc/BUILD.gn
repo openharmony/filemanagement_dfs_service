@@ -14,6 +14,49 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+ohos_unittest("cloudsync_sa_account_status_listener_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/account_status_listener.cpp",
+    "account_status_listener_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "ability_runtime:ability_manager",
+    "common_event_service:cesfwk_innerkits",
+    "c_utils:utils",
+    "e2fsprogs:libext2_uuid",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_service_test") {
   module_out_path = "dfs_service/dfs_service"
   public_configs =
@@ -219,6 +262,7 @@ ohos_unittest("download_asset_callback_proxy_test") {
 group("cloudsync_sa_ipc_test") {
   testonly = true
   deps = [
+    ":cloudsync_sa_account_status_listener_test",
     ":cloud_sync_service_test",
     ":download_asset_callback_manager_test",
     ":download_asset_callback_proxy_test",
