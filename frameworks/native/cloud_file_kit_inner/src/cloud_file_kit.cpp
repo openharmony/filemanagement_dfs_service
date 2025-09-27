@@ -33,7 +33,7 @@ bool CloudFileKit::RegisterCloudInstance(CloudFileKit *instance)
     return true;
 }
 
-int32_t CloudFileKit::GetCloudUserInfo(const int32_t userId, CloudUserInfo &userInfo)
+int32_t CloudFileKit::GetCloudUserInfo(const std::string &bundleName, const int32_t userId, CloudUserInfo &userInfo)
 {
     userInfo.enableCloud = true;
     return E_OK;
@@ -68,7 +68,7 @@ int32_t CloudFileKit::GetAppConfigParams(const int32_t userId,
     return E_OK;
 }
 
-int32_t CloudFileKit::CleanCloudUserInfo(const int32_t userId)
+int32_t CloudFileKit::CleanCloudUserInfo(const int32_t userId, const std::string &bundleName)
 {
     return E_OK;
 }
@@ -99,7 +99,7 @@ std::shared_ptr<CloudSyncHelper> CloudFileKit::GetCloudSyncHelper(const int32_t 
     return make_shared<CloudSyncHelper>(userId, bundleName);
 }
 
-std::string CloudFileKit::GetPrepareTraceId(const int32_t userId)
+std::string CloudFileKit::GetPrepareTraceId(const int32_t userId, const std::string &bundleName)
 {
     return "";
 }

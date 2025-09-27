@@ -973,14 +973,14 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode,
     readStat.UpdateBundleName(bundleName);
 }
 
-static string GetPrepareTraceId(int32_t userId)
+static string GetPrepareTraceId(int32_t userId, const std::string &bundleName)
 {
     string prepareTraceId;
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
         LOGE("get cloud file helper instance failed");
     } else {
-        prepareTraceId = instance->GetPrepareTraceId(userId);
+        prepareTraceId = instance->GetPrepareTraceId(userId, bundleName);
         LOGI("get new prepareTraceId %{public}s", prepareTraceId.c_str());
     }
     return prepareTraceId;
@@ -999,7 +999,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId, IsHdc(data));
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    string prepareTraceId = GetPrepareTraceId(data->userId);
+    string prepareTraceId = GetPrepareTraceId(data->userId, data->activeBundle);
 
     LOGI("%{public}d %{public}d %{public}d open %{public}s", pid, req->ctx.pid, req->ctx.uid,
          GetAnonyString(CloudPath(data, ino)).c_str());

@@ -31,7 +31,7 @@ __attribute__((used)) static bool g_isInit =
 
 using namespace std;
 
-int32_t CloudFileKitImpl::GetCloudUserInfo(const int32_t userId, CloudUserInfo &userInfo)
+int32_t CloudFileKitImpl::GetCloudUserInfo(const std::string &bundleName, const int32_t userId, CloudUserInfo &userInfo)
 {
     userInfo.enableCloud = true;
     return E_OK;
@@ -103,7 +103,7 @@ std::shared_ptr<CloudDatabase> CloudFileKitImpl::GetCloudDatabase(const int32_t 
     return cloudDatabase_;
 }
 
-std::string CloudFileKitImpl::GetPrepareTraceId(const int32_t userId)
+std::string CloudFileKitImpl::GetPrepareTraceId(const int32_t userId, const std::string &bundleName)
 {
     return "";
 }

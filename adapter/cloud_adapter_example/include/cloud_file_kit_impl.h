@@ -22,7 +22,7 @@
 namespace OHOS::FileManagement::CloudFile {
 class CloudFileKitImpl final : public CloudFileKit {
 public:
-    int32_t GetCloudUserInfo(const int32_t userId, CloudUserInfo &userInfo) override;
+    int32_t GetCloudUserInfo(const std::string &bundleName, const int32_t userId, CloudUserInfo &userInfo) override;
     std::pair<uint64_t, uint64_t> GetSpaceInfo(const int32_t userId, const std::string& bundleName) override;
     int32_t GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus) override;
     int32_t ResolveNotificationEvent(const int32_t userId,
@@ -35,7 +35,7 @@ public:
                                                                     const std::string &bundleName) override;
     std::shared_ptr<CloudDatabase> GetCloudDatabase(const int32_t userId, const std::string &bundleName) override;
     std::shared_ptr<CloudSyncHelper> GetCloudSyncHelper(const int32_t userId, const std::string &bundleName) override;
-    std::string GetPrepareTraceId(const int32_t userId) override;
+    std::string GetPrepareTraceId(const int32_t userId, const std::string &bundleName) override;
 
 private:
     std::mutex dataSyncManagerMutex_;

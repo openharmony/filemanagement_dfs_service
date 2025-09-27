@@ -33,7 +33,7 @@ public:
     API_EXPORT static bool RegisterCloudInstance(CloudFileKit *instance);
 
     virtual ~CloudFileKit() = default;
-    virtual int32_t GetCloudUserInfo(const int32_t userId, CloudUserInfo &userInfo);
+    virtual int32_t GetCloudUserInfo(const std::string &bundleName, const int32_t userId, CloudUserInfo &userInfo);
     virtual std::pair<uint64_t, uint64_t> GetSpaceInfo(const int32_t userId, const std::string &bundleName);
     virtual int32_t GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus);
     virtual int32_t ResolveNotificationEvent(const int32_t userId,
@@ -43,7 +43,7 @@ public:
     virtual int32_t GetAppConfigParams(const int32_t userId,
                                        const std::string &bundleName,
                                        std::map<std::string, std::string> &param);
-    virtual int32_t CleanCloudUserInfo(const int32_t userId);
+    virtual int32_t CleanCloudUserInfo(const int32_t userId, const std::string &bundleName);
     virtual int32_t OnUploadAsset(const int32_t userId, const std::string &request, std::string &result);
 
     virtual std::shared_ptr<DataSyncManager> GetDataSyncManager();
@@ -51,7 +51,7 @@ public:
     virtual std::shared_ptr<CloudAssetsDownloader> GetCloudAssetsDownloader(const int32_t userId,
                                                                             const std::string &bundleName);
     virtual std::shared_ptr<CloudSyncHelper> GetCloudSyncHelper(const int32_t userId, const std::string &bundleName);
-    virtual std::string GetPrepareTraceId(const int32_t userId);
+    virtual std::string GetPrepareTraceId(const int32_t userId, const std::string &bundleName);
     virtual void Release(int32_t userId);
 
 private:
