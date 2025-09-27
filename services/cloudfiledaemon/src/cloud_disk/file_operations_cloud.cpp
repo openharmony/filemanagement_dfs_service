@@ -72,6 +72,7 @@ namespace {
     static const unsigned int CATCH_TIMEOUT_S = 4;
     static const std::chrono::seconds READ_TIMEOUT_S = 16s;
     static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
+    static const uint64_t INVAL_TIMEOUT_MS = 5;
 }
 
 const int32_t MAX_SIZE = 4096;
@@ -80,14 +81,34 @@ struct CloudDiskCopy {
     char destPath[MAX_SIZE];
 };
 
+struct FuseInvalData {
+    fuse_session *se;
+    fuse_ino_t parentIno;
+    fuse_ino_t childIno;
+    string childName;
+
+    FuseInvalData(fuse_session *seVal, fuse_ino_t parentInoVal, fuse_ino_t childInoVal, const string &childNameVal)
+        : se(seVal), parentIno(parentInoVal), childIno(childInoVal), childName(childNameVal) {}
+};
+
+static void CallBack(void *data)
+{
+    FuseInvalData *fuseInvalData = static_cast<FuseInvalData *>(data);
+    if (fuse_lowlevel_notify_inval_entry(fuseInvalData->se, fuseInvalData->parentIno,
+                                         fuseInvalData->childName.c_str(), fuseInvalData->childName.size())) {
+        fuse_lowlevel_notify_inval_inode(fuseInvalData->se, fuseInvalData->childIno, 0, 0);
+    }
+
+    delete fuseInvalData;
+}
+
 static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
 {
-    auto task = [se, parentIno, childIno, childName] {
-        if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
-            fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
-        }
-    };
-    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt_qos_background));
+    FuseInvalData *fuseInvalData = new (nothrow) FuseInvalData(se, parentIno, childIno, childName);
+    if (fuseInvalData == nullptr) {
+        return;
+    }
+    ffrt_timer_start(ffrt_qos_background, INVAL_TIMEOUT_MS, static_cast<void *>(fuseInvalData), CallBack, false);
 }
 
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,

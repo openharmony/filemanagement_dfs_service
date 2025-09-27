@@ -92,3 +92,13 @@ int fuse_reply_ioctl(fuse_req_t req, int result, const void *buf, size_t size)
 {
     return Assistant::ins->fuse_reply_ioctl(req, result, buf, size);
 }
+
+int fuse_lowlevel_notify_inval_entry(struct fuse_session *se, fuse_ino_t parent, const char *name, size_t namelen)
+{
+    return Assistant::ins->fuse_lowlevel_notify_inval_entry(se, parent, name, namelen);
+}
+
+int fuse_lowlevel_notify_inval_inode(struct fuse_session *se, fuse_ino_t ino, off_t off, off_t len)
+{
+    return Assistant::ins->fuse_lowlevel_notify_inval_inode(se, ino, off, len);
+}
