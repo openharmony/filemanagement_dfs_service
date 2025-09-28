@@ -135,7 +135,9 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
     int32_t userId = 100;
     string copyPath = "/data/storage/el2/distributedfiles/123412345";
 
-    sptr<IFileTransListener> listenerCallback;
+    sptr<TransListener> transListener (new (std::nothrow) TransListener(destUri, emptyCallback_));
+    ASSERT_TRUE(transListener != nullptr);
+    sptr<IFileTransListener> listenerCallback = iface_cast<IFileTransListener>(transListener);
     int fd = open(srcPath.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "Failed to open file in RemoteFileCopyManager_Copy_0002!" << errno;
     close(fd);
@@ -144,6 +146,27 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
     EXPECT_EQ(ret, ENOENT);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0002 End";
+}
+
+/**
+ * @tc.name: RemoteFileCopyManager_Copy_0003
+ * @tc.desc: The execution of the Copy succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0003 Start";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/dest1.txt";
+    string srcPath = "/storage/media/100/local/files/Docs/1.txt";
+    int32_t userId = 100;
+    string copyPath = "/data/storage/el2/distributedfiles/123412345";
+
+    sptr<IFileTransListener> listenerCallback;
+    auto ret = RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, destUri, listenerCallback, userId, copyPath);
+    EXPECT_EQ(ret, EINVAL);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0003 End";
 }
 
 /**

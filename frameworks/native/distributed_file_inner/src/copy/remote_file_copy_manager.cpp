@@ -205,7 +205,8 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
     const sptr<IFileTransListener> &listener, const int32_t userId, const std::string &copyPath)
 {
     LOGI("RemoteCopy start");
-    if (srcUri.empty() || destUri.empty()) {
+    if (srcUri.empty() || destUri.empty() || listener == nullptr) {
+        LOGE("invalid input param");
         return EINVAL;
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
@@ -221,9 +222,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
     }
     std::function<void(uint64_t processSize, uint64_t totalSize)> processCallback =
         [&listener](uint64_t processSize, uint64_t totalSize) -> void {
-        if (processSize != totalSize) {
-            listener->OnFileReceive(totalSize, processSize);
-        }
+        listener->OnFileReceive(totalSize, processSize);
     };
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
