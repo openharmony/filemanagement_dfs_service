@@ -54,7 +54,7 @@ public:
     void TearDown();
     static inline std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_ = nullptr;
     static inline sptr<ISystemAbilityManagerMock> saMgr_ = nullptr;
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
+    static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
     static inline sptr<CloudSyncService> servicePtr_ = nullptr;
     static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
 };
@@ -67,15 +67,15 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     saMgrClient_ = make_shared<SystemAbilityManagerClientMock>();
     ISystemAbilityManagerClient::smc = saMgrClient_;
     servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
-    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
-    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
+    dfsuAccessToken_ = make_shared<CloudDiskServiceAccessTokenMock>();
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     dfsBatterySrvClient_ = make_shared<BatterySrvClientMock>();
     BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
 {
-    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = nullptr;
     ISystemAbilityManagerClient::smc = nullptr;
     dfsuAccessToken_ = nullptr;
     saMgrClient_ = nullptr;

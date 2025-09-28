@@ -18,7 +18,7 @@
 
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_sync_folder.h"
-#include "dfsu_access_token_helper.h"
+#include "cloud_disk_service_access_token.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -53,9 +53,9 @@ void CloudDiskServiceCallbackManager::AddCallback(const std::string &bundleName,
             syncFolderIndex = it->second.syncFolderIndexs;
             callbackAppMap_.erase(it);
         }
-        int32_t userId = DfsuAccessTokenHelper::GetUserId();
+        int32_t userId = CloudDiskServiceAccessToken::GetUserId();
         if (userId == 0) {
-            DfsuAccessTokenHelper::GetAccountId(userId);
+            CloudDiskServiceAccessToken::GetAccountId(userId);
         }
         for (auto item : syncFolderIndex) {
             callbackIndexMap_.erase(item);
@@ -80,9 +80,9 @@ void CloudDiskServiceCallbackManager::OnChangeData(const uint32_t syncFolderInde
         LOGE("Get syncFolder failed");
         return;
     }
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
-        DfsuAccessTokenHelper::GetAccountId(userId);
+        CloudDiskServiceAccessToken::GetAccountId(userId);
     }
     std::string sandboxPath;
     if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(syncFolderSync, std::to_string(userId),

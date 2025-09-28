@@ -22,6 +22,7 @@
 #include <sys/xattr.h>
 #include <thread>
 
+#include "cloud_disk_service_access_token.h"
 #include "cloud_disk_service_callback_manager.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
@@ -29,7 +30,6 @@
 #include "cloud_disk_sync_folder_manager.h"
 #endif
 #include "cloud_disk_sync_folder.h"
-#include "dfsu_access_token_helper.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -86,9 +86,9 @@ void CloudDiskService::OnStart()
 
     std::vector<FileManagement::SyncFolderExt> syncFolders;
     OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
-        DfsuAccessTokenHelper::GetAccountId(userId);
+        CloudDiskServiceAccessToken::GetAccountId(userId);
     }
     for (const auto &item : syncFolders) {
         std::string path;
@@ -123,7 +123,7 @@ void CloudDiskService::OnStop()
 
 static int32_t CheckPermissions(const string &permission, bool isSystemApp)
 {
-    if (!permission.empty() && !DfsuAccessTokenHelper::CheckCallerPermission(permission)) {
+    if (!permission.empty() && !CloudDiskServiceAccessToken::CheckCallerPermission(permission)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -141,7 +141,7 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
         return E_INVALID_ARG;
     }
 
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
         LOGE("Get path failed");
@@ -149,7 +149,7 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
     }
 
     std::string bundleName = "";
-    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -184,7 +184,7 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin UnregisterSyncFolderChangesInner");
 
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
         LOGE("Get path failed");
@@ -192,7 +192,7 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
     }
 
     std::string bundleName = "";
-    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -232,7 +232,7 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
         return E_INVALID_ARG;
     }
 
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
         LOGE("Get path failed");
@@ -240,7 +240,7 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
     }
 
     std::string bundleName = "";
-    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -324,7 +324,7 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
 
     std::string path;
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
@@ -333,7 +333,7 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
     }
 
     std::string bundleName = "";
-    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -421,7 +421,7 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
 
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
@@ -430,7 +430,7 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
     }
 
     std::string bundleName = "";
-    int32_t ret = DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -545,9 +545,9 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     std::string pathRemove;
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
-        DfsuAccessTokenHelper::GetAccountId(userId);
+        CloudDiskServiceAccessToken::GetAccountId(userId);
     }
 
     if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(path,

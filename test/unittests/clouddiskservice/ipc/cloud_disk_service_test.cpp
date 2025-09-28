@@ -28,7 +28,7 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_sync_folder.h"
-#include "dfsu_access_token_helper_mock.h"
+#include "cloud_disk_service_access_token_mock.h"
 #include "utils_log.h"
 
 namespace {
@@ -65,7 +65,7 @@ public:
     void SetUp();
     void TearDown();
     static inline sptr<CloudDiskService> cloudDiskService_;
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
+    static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
 };
 
 void CloudDiskServiceTest::SetUpTestCase(void)
@@ -75,7 +75,7 @@ void CloudDiskServiceTest::SetUpTestCase(void)
     bool runOnCreate = true;
     cloudDiskService_ = new (std::nothrow) CloudDiskService(saID, runOnCreate);
     ASSERT_TRUE(cloudDiskService_ != nullptr) << "cloudDiskService_ assert failed!";
-    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
+    dfsuAccessToken_ = make_shared<CloudDiskServiceAccessTokenMock>();
 }
 
 void CloudDiskServiceTest::TearDownTestCase(void)

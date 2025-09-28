@@ -39,7 +39,7 @@ public:
    static inline std::shared_ptr<DfsuAccessToken> dfsuAccessToken = nullptr;
 };
 
-class DfsuAccessTokenMock : public DfsuAccessToken {
+class CloudDiskServiceAccessTokenMock : public DfsuAccessToken {
 public:
     MOCK_METHOD1(CheckCallerPermission, bool(const std::string &permissionName));
     MOCK_METHOD1(GetCallerBundleName, int32_t(std::string &bundleName));

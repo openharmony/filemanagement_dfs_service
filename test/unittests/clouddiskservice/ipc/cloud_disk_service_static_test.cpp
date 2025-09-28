@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "assistant.h"
-#include "dfsu_access_token_helper_mock.h"
+#include "cloud_disk_service_access_token_mock.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -32,15 +32,15 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_;
+    static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_;
     static inline shared_ptr<AssistantMock> insMock_;
 };
 
 void CloudDiskServiceStaticTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
-    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
+    dfsuAccessToken_ = make_shared<CloudDiskServiceAccessTokenMock>();
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     insMock_ = make_shared<AssistantMock>();
     Assistant::ins = insMock_;
 }
@@ -48,7 +48,7 @@ void CloudDiskServiceStaticTest::SetUpTestCase(void)
 void CloudDiskServiceStaticTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = nullptr;
     dfsuAccessToken_ = nullptr;
     Assistant::ins = nullptr;
     insMock_ = nullptr;
