@@ -17,10 +17,10 @@
 #include <gtest/gtest.h>
 
 #include "assistant.h"
-#include "convertor.h"
+#include "cloud_disk_common.h"
 #include "cloud_disk_service_error.h"
-
 #include "cloud_disk_service_metafile.h"
+#include "convertor.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
@@ -72,7 +72,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DecodeDentryHeaderTest001, TestSize.Level
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
         size_t headerSize = sizeof(CloudDiskServiceDcacheHeader);
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(headerSize));
         auto ret = mFile.DecodeDentryHeader();
         EXPECT_EQ(ret, E_OK);
@@ -94,9 +93,9 @@ HWTEST_F(CloudDiskServiceMetafileTest, DecodeDentryHeaderTest002, TestSize.Level
     GTEST_LOG_(INFO) << "DecodeDentryHeaderTest002 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillOnce(Return(2));
         auto ret = mFile.DecodeDentryHeader();
-        EXPECT_EQ(ret, 1);
+        EXPECT_EQ(ret, 2);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DecodeDentryHeaderTest002 ERROR";
@@ -161,13 +160,17 @@ HWTEST_F(CloudDiskServiceMetafileTest, GenericDentryHeaderTest003, TestSize.Leve
     GTEST_LOG_(INFO) << "GenericDentryHeaderTest003 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.parentDentryFile_ = "parent_file";
+        mFile.selfRecordId_ = "record_123";
+        mFile.selfHash_ = 0x12345678;
         struct stat mockStat = {
-            .st_size = DENTRYGROUP_HEADER,
+            .st_size = 1,
         };
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, ftruncate(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(123));
         auto ret = mFile.GenericDentryHeader();
-        EXPECT_EQ(ret, 1);
+        EXPECT_EQ(ret, 123);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GenericDentryHeaderTest003 ERROR";
@@ -186,36 +189,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, GenericDentryHeaderTest004, TestSize.Leve
     GTEST_LOG_(INFO) << "GenericDentryHeaderTest004 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
-        mFile.parentDentryFile_ = "parent_file";
-        mFile.selfRecordId_ = "record_123";
-        mFile.selfHash_ = 0x12345678;
-        struct stat mockStat = {
-            .st_size = 1,
-        };
-        EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
-        EXPECT_CALL(*insMock, ftruncate(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(123));
-        auto ret = mFile.GenericDentryHeader();
-        EXPECT_EQ(ret, 123);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GenericDentryHeaderTest004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "GenericDentryHeaderTest004 End";
-}
-
-/**
- * @tc.name: GenericDentryHeaderTest005
- * @tc.desc: Verify the GenericDentryHeader function
- * @tc.type: FUNC
- * @tc.require: NA
- */
-HWTEST_F(CloudDiskServiceMetafileTest, GenericDentryHeaderTest005, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GenericDentryHeaderTest005 Start";
-    try {
-        CloudDiskServiceMetaFile mFile(100, 1, 123);
         string parentDentryFileStr = "parent_file";
         string selfRecordIdStr = "record_123";
         auto selfHashNum = 0x12345678;
@@ -230,22 +203,20 @@ HWTEST_F(CloudDiskServiceMetafileTest, GenericDentryHeaderTest005, TestSize.Leve
         copy(parentDentryFileStr.begin(),
              min(parentDentryFileStr.end(), parentDentryFileStr.begin() + DENTRYFILE_NAME_LEN),
              header.parentDentryfile);
-        copy(selfRecordIdStr.begin(),
-             min(selfRecordIdStr.end(), selfRecordIdStr.begin() + RECORD_ID_LEN),
+        copy(selfRecordIdStr.begin(), min(selfRecordIdStr.end(), selfRecordIdStr.begin() + RECORD_ID_LEN),
              header.selfRecordId);
         header.selfHash = selfHashNum;
-        
+
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _))
             .WillOnce(Return(static_cast<int64_t>(sizeof(CloudDiskServiceDcacheHeader))));
         auto ret = mFile.GenericDentryHeader();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GenericDentryHeaderTest005 ERROR";
+        GTEST_LOG_(INFO) << "GenericDentryHeaderTest004 ERROR";
     }
-    GTEST_LOG_(INFO) << "GenericDentryHeaderTest005 End";
+    GTEST_LOG_(INFO) << "GenericDentryHeaderTest004 End";
 }
 
 /**
@@ -323,7 +294,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest003, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
         auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, E_OK);
@@ -356,7 +326,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest004, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
@@ -388,7 +357,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoCreateTest005, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(1));
         auto ret = mFile.DoCreate(base, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
@@ -669,7 +637,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest003, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(DENTRYGROUP_SIZE));
         auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, E_OK);
@@ -698,7 +665,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest004, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, WriteFile(_, _, _, _)).WillOnce(Return(1));
         auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
@@ -727,7 +693,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameNewTest005, TestSize.Level1)
         unsigned long bidx;
         uint32_t bitPos;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(1));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoRenameNew(base, recordId, bidx, bitPos);
         EXPECT_EQ(ret, ENOENT);
     } catch (...) {
@@ -752,7 +717,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest001, TestSize.Level1)
         string recordId = "record_123";
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
-        EXPECT_EQ(ret, ENOENT);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DoRenameTest001 ERROR";
@@ -775,9 +740,8 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest002, TestSize.Level1)
         string recordId = "record_123";
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
-        EXPECT_EQ(ret, ENOENT);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DoRenameTest002 ERROR";
@@ -830,7 +794,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByNameTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DoLookupByNameTest002 End";
 }
-
 
 /**
  * @tc.name: DoLookupByRecordIdTest001
@@ -942,7 +905,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset003, TestSize.Level1)
         unsigned long bidx = 0;
         uint32_t bitPos = 0;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -968,7 +930,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByOffset004, TestSize.Level1)
         unsigned long bidx = 0;
         uint32_t bitPos = DENTRY_PER_GROUP;
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoLookupByOffset(base, bidx, bitPos);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -998,7 +959,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCreateInfoTest001, TestSize.Level1)
         CloudDiskServiceDentryGroup dentryBlk;
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.GetCreateInfo(base, bitPos, nameHash, bidx, dentryBlk);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -1055,9 +1015,8 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCreateInfoTest003, TestSize.Level1)
         unsigned long bidx = 0;
         CloudDiskServiceDentryGroup dentryBlk;
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(-1));
         auto ret = mFile.GetCreateInfo(base, bitPos, nameHash, bidx, dentryBlk);
-        EXPECT_EQ(ret, -1);
+        EXPECT_EQ(ret, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetCreateInfoTest003 ERROR";
@@ -1084,7 +1043,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCreateInfoTest004, TestSize.Level1)
         unsigned long bidx = 0;
         CloudDiskServiceDentryGroup dentryBlk;
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.GetCreateInfo(base, bitPos, nameHash, bidx, dentryBlk);
         EXPECT_EQ(ret, ENOENT);
@@ -1182,8 +1140,8 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetMetaFileMgrInstanceTest001, TestSize.L
 {
     GTEST_LOG_(INFO) << "GetMetaFileMgrInstanceTest001 Start";
     try {
-        MetaFileMgr& instance1 = MetaFileMgr::GetInstance();
-        MetaFileMgr& instance2 = MetaFileMgr::GetInstance();
+        MetaFileMgr &instance1 = MetaFileMgr::GetInstance();
+        MetaFileMgr &instance2 = MetaFileMgr::GetInstance();
         EXPECT_EQ(&instance1, &instance2);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1202,7 +1160,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCloudDiskServiceMetaFileTest001, TestS
 {
     GTEST_LOG_(INFO) << "GetCloudDiskServiceMetaFileTest001 Start";
     try {
-        MetaFileMgr& mgr = MetaFileMgr::GetInstance();
+        MetaFileMgr &mgr = MetaFileMgr::GetInstance();
         mgr.metaFiles_.clear();
         mgr.metaFileList_.clear();
         uint32_t userId = 1001;
@@ -1229,7 +1187,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCloudDiskServiceMetaFileTest002, TestS
 {
     GTEST_LOG_(INFO) << "GetCloudDiskServiceMetaFileTest002 Start";
     try {
-        MetaFileMgr& mgr = MetaFileMgr::GetInstance();
+        MetaFileMgr &mgr = MetaFileMgr::GetInstance();
         mgr.metaFiles_.clear();
         mgr.metaFileList_.clear();
         uint32_t userId = 1001;
@@ -1243,7 +1201,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetCloudDiskServiceMetaFileTest002, TestS
             shared_ptr<CloudDiskServiceMetaFile> mFile =
                 make_shared<CloudDiskServiceMetaFile>(tempUserId, tempSyncFolderIndex, tempInode);
             MetaFileKey key(tempUserId,
-                Convertor::ConvertToHex(tempSyncFolderIndex) + Convertor::ConvertToHex(tempInode));
+                            Convertor::ConvertToHex(tempSyncFolderIndex) + Convertor::ConvertToHex(tempInode));
             mgr.metaFileList_.emplace_back(key, mFile);
             auto it = prev(mgr.metaFileList_.end());
             mgr.metaFiles_[key] = it;
@@ -1269,7 +1227,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetRelativePathTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetRelativePathTest001 Start";
     try {
-        MetaFileMgr& mgr = MetaFileMgr::GetInstance();
+        MetaFileMgr &mgr = MetaFileMgr::GetInstance();
         mgr.metaFiles_.clear();
         mgr.metaFileList_.clear();
         uint32_t userId = 1001;
@@ -1297,7 +1255,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, GetRelativePathTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetRelativePathTest002 Start";
     try {
-        MetaFileMgr& mgr = MetaFileMgr::GetInstance();
+        MetaFileMgr &mgr = MetaFileMgr::GetInstance();
         mgr.metaFiles_.clear();
         mgr.metaFileList_.clear();
         uint32_t userId = 1001;

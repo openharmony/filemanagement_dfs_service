@@ -15,14 +15,13 @@
 
 #include "file_utils.h"
 
+#include <cerrno>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "dfs_error.h"
 #include "utils_log.h"
-#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace FileManagement {

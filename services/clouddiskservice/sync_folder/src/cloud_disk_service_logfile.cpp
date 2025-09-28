@@ -66,22 +66,11 @@ static std::unique_ptr<LogGroup> LoadCurrentPage(int fd, uint32_t bucket)
 {
     auto logGroup = std::make_unique<LogGroup>();
     off_t pos = GetBucketaddr(bucket);
-    auto ret = FileRangeLock::FilePosLock(fd, pos, LOGGROUP_SIZE, F_WRLCK);
-    if (ret) {
-        return nullptr;
-    }
     ssize_t size = FileUtils::ReadFile(fd, pos, LOGGROUP_SIZE, logGroup.get());
     if (size != LOGGROUP_SIZE) {
-        (void)FileRangeLock::FilePosLock(fd, pos, LOGGROUP_SIZE, F_UNLCK);
         return nullptr;
     }
     return logGroup;
-}
-
-static void UnlockCurrentPage(int fd, uint32_t bucket)
-{
-    off_t pos = GetBucketaddr(bucket);
-    (void)FileRangeLock::FilePosLock(fd, pos, LOGGROUP_SIZE, F_UNLCK);
 }
 
 static int32_t SyncCurrentPage(LogGroup &logGroup, int fd, uint32_t bucket)
@@ -90,12 +79,7 @@ static int32_t SyncCurrentPage(LogGroup &logGroup, int fd, uint32_t bucket)
     int size = FileUtils::WriteFile(fd, &logGroup, pos, LOGGROUP_SIZE);
     if (size != LOGGROUP_SIZE) {
         LOGD("WriteFile failed, size %{public}d != %{public}d", size, LOGGROUP_SIZE);
-        (void)FileRangeLock::FilePosLock(fd, pos, LOGGROUP_SIZE, F_UNLCK);
         return EINVAL;
-    }
-    auto ret = FileRangeLock::FilePosLock(fd, pos, LOGGROUP_SIZE, F_UNLCK);
-    if (ret) {
-        return ret;
     }
     return E_OK;
 }
@@ -125,15 +109,12 @@ static uint64_t GetCurrentLine(int fd)
             return 0;
         }
         if (logGroup->nsl[0].timestamp == 0) {
-            UnlockCurrentPage(fd, i);
             break;
         } else if (logGroup->nsl[0].line != startLine + offset) {
-            UnlockCurrentPage(fd, i);
             break;
         } else {
             startLine = logGroup->nsl[0].line;
             offset = logGroup->logBlockCnt;
-            UnlockCurrentPage(fd, i);
         }
     }
     return startLine + offset;
@@ -151,7 +132,6 @@ static bool GetReversal(int fd, uint64_t line)
     }
     // line is less than LOG_COUNT_MAX, the last log's timestamp is 0 means no reversal; otherwise, reverasl is assumed.
     bool reversal = logGroup->nsl[LOGBLOCK_PER_GROUP - 1].timestamp != 0;
-    UnlockCurrentPage(fd, LOGGROUP_MAX - 1);
     return reversal;
 }
 
@@ -185,6 +165,7 @@ int32_t CloudDiskServiceLogFile::WriteLogFile(const struct LogBlock &logBlock)
     uint32_t offset;
     GetBucketAndOffset(logBlock.line, bucket, offset);
 
+    std::lock_guard<std::mutex> lock(fileMtx_);
     auto logGroup = LoadCurrentPage(fd_, bucket);
     if (logGroup == nullptr) {
         LOGE("load page failed");
@@ -201,13 +182,13 @@ int32_t CloudDiskServiceLogFile::ReadLogFile(const uint64_t line, struct LogBloc
     uint32_t offset;
     GetBucketAndOffset(line, bucket, offset);
 
+    std::lock_guard<std::mutex> lock(fileMtx_);
     auto logGroup = LoadCurrentPage(fd_, bucket);
     if (logGroup == nullptr) {
         LOGE("load page failed");
         return -1;
     }
     logBlock = logGroup->nsl[offset];
-    UnlockCurrentPage(fd_, bucket);
     return E_OK;
 }
 
@@ -396,8 +377,7 @@ int32_t CloudDiskServiceLogFile::ProduceLog(const struct EventInfo &eventInfo)
     }
 
     if (eventInfo.operateType == OperationType::CREATE) {
-        ffrt::submit(
-            [eventInfo, this] { FillChildForDir(eventInfo.path + "/" + eventInfo.name, eventInfo.timestamp); });
+        FillChildForDir(eventInfo.path + "/" + eventInfo.name, eventInfo.timestamp);
     }
     return E_OK;
 }

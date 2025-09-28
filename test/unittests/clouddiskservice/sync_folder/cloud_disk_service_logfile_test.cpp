@@ -19,7 +19,9 @@
 #include <gtest/gtest.h>
 
 #include "assistant.h"
+#include "cloud_disk_common.h"
 #include "cloud_disk_service_manager_mock.h"
+#include "file_utils.h"
 
 #define stat(path, buf) OHOS::FileManagement::CloudDiskService::Assistant::ins->MockStat(path, buf)
 #define access OHOS::FileManagement::CloudDiskService::Assistant::ins->access
@@ -77,7 +79,6 @@ HWTEST_F(CloudDiskServiceLogFileTest, WriteLogFileTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "WriteLogFileTest001 start";
     try {
         LogBlock logBlock;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
         int32_t res = logFile_->WriteLogFile(logBlock);
         EXPECT_EQ(res, -1);
     } catch (...) {
@@ -98,8 +99,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, WriteLogFileTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "WriteLogFileTest002 start";
     try {
         LogBlock logBlock;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).Times(2).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Return(4096));
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
         int32_t res = logFile_->WriteLogFile(logBlock);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -121,9 +121,8 @@ HWTEST_F(CloudDiskServiceLogFileTest, ReadLogFileTest001, TestSize.Level1)
     try {
         uint64_t line = 1;
         LogBlock logBlock;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillOnce(Return(1));
         int32_t res = logFile_->ReadLogFile(line, logBlock);
-        EXPECT_EQ(res, -1);
+        EXPECT_EQ(res, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadLogFileTest001 failed";
@@ -143,7 +142,6 @@ HWTEST_F(CloudDiskServiceLogFileTest, ReadLogFileTest002, TestSize.Level1)
     try {
         uint64_t line = 1;
         LogBlock logBlock;
-        EXPECT_CALL(*insMock_, FilePosLock(_, _, _, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
         int32_t res = logFile_->ReadLogFile(line, logBlock);
         EXPECT_EQ(res, E_OK);
@@ -208,8 +206,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest001, TestSize.L
         uint32_t userId = 1;
         uint32_t syncFolderIndex = 2;
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(0));
-        shared_ptr<CloudDiskServiceLogFile> logFile =
-            make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
+        shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
         EXPECT_FALSE(logFile->needCallback_);
@@ -233,8 +230,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest002, TestSize.L
         uint32_t userId = 3;
         uint32_t syncFolderIndex = 4;
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(1));
-        shared_ptr<CloudDiskServiceLogFile> logFile =
-            make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
+        shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
         EXPECT_FALSE(logFile->needCallback_);
@@ -265,8 +261,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateLogBlockTest001, TestSize.Level1)
         ctx.bidx = 0;
         ctx.bitPos = 0;
         uint64_t line = 1;
-        int32_t res =
-            logFile_->GenerateLogBlock(eventInfo, parentInode, ctx, parentRecordId, line);
+        int32_t res = logFile_->GenerateLogBlock(eventInfo, parentInode, ctx, parentRecordId, line);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -291,8 +286,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest001, TestSize.Level1
         string parentRecordId = "parentRecordId";
         logFile_->changeDatas_.clear();
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(1));
-        int32_t res =
-            logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -300,7 +294,6 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest001, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "GenerateChangeDataTest001 end";
 }
-
 
 /**
  * @tc.name: GenerateChangeDataTest002
@@ -322,8 +315,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest002, TestSize.Level1
             logFile_->changeDatas_.push_back(changeData);
         }
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        int32_t res =
-            logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
         EXPECT_EQ(res, E_OK);
         EXPECT_TRUE(logFile_->changeDatas_.empty());
     } catch (...) {
@@ -370,8 +362,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest001, TestSize.Level1)
             errno = ENOENT;
             return 1;
         });
-        int32_t res =
-            logFile_->FillChildForDir(path, timestamp);
+        int32_t res = logFile_->FillChildForDir(path, timestamp);
         EXPECT_EQ(res, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -395,8 +386,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest002, TestSize.Level1)
         struct stat statInfo;
         statInfo.st_mode = S_IFREG;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
-        int32_t res =
-            logFile_->FillChildForDir(path, timestamp);
+        int32_t res = logFile_->FillChildForDir(path, timestamp);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -424,8 +414,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest003, TestSize.Level1)
             errno = ENOENT;
             return nullptr;
         });
-        int32_t res =
-            logFile_->FillChildForDir(path, timestamp);
+        int32_t res = logFile_->FillChildForDir(path, timestamp);
         EXPECT_EQ(res, ENOENT);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -509,7 +498,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceLogTest002, TestSize.Level1)
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::SYNC_FOLDER_INVALID;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        CloudDiskServiceManagerMock& mock = CloudDiskServiceManagerMock::GetInstance();
+        CloudDiskServiceManagerMock &mock = CloudDiskServiceManagerMock::GetInstance();
         EXPECT_CALL(mock, UnregisterForSa(_)).WillOnce(Return(1));
         auto res = logFile_->ProduceLog(eventInfo);
         EXPECT_EQ(res, 1);
@@ -533,7 +522,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceLogTest003, TestSize.Level1)
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::SYNC_FOLDER_INVALID;
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
-        CloudDiskServiceManagerMock& mock = CloudDiskServiceManagerMock::GetInstance();
+        CloudDiskServiceManagerMock &mock = CloudDiskServiceManagerMock::GetInstance();
         EXPECT_CALL(mock, UnregisterForSa(_)).WillOnce(Return(0));
         auto res = logFile_->ProduceLog(eventInfo);
         EXPECT_EQ(res, E_OK);
@@ -668,8 +657,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest001, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -694,8 +682,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest002, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -720,8 +707,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest003, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest003 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -746,8 +732,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest004, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest004 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -772,8 +757,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest005, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest005 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -798,8 +782,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest006, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest006 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -824,8 +807,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest007, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ProductLogForOperateTest007 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -850,8 +832,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceCreateLogTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -880,8 +861,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceCreateLogTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -907,8 +887,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceCreateLogTest003 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "";
         string childRecordId = "childRecordId";
@@ -936,8 +915,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceCreateLogTest004 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "";
         string childRecordId = "childRecordId";
@@ -965,8 +943,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
@@ -990,8 +967,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "";
         struct LogGenerateCtx ctx;
@@ -1015,8 +991,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest001, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
@@ -1040,8 +1015,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest002, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string name = "name";
         string childRecordId = "";
         struct LogGenerateCtx ctx;
@@ -1065,8 +1039,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest001, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameNewLogTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -1095,8 +1068,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest002, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameNewLogTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -1123,8 +1095,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest003, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameNewLogTest003 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "";
@@ -1153,8 +1124,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest004, TestSize.Level
 {
     GTEST_LOG_(INFO) << "ProduceRenameNewLogTest004 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "";
@@ -1182,8 +1152,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest001, TestSize.L
 {
     GTEST_LOG_(INFO) << "ProduceCloseAndWriteLogTest001 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -1212,8 +1181,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest002, TestSize.L
 {
     GTEST_LOG_(INFO) << "ProduceCloseAndWriteLogTest002 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
@@ -1239,8 +1207,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest003, TestSize.L
 {
     GTEST_LOG_(INFO) << "ProduceCloseAndWriteLogTest003 start";
     try {
-        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile =
-            make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
         string path = "path";
         string name = "name";
         string childRecordId = "";
@@ -1300,7 +1267,7 @@ HWTEST_F(LogFileMgrTest, GetInstanceTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest001 start";
     try {
-        LogFileMgr& instance1 = LogFileMgr::GetInstance();
+        LogFileMgr &instance1 = LogFileMgr::GetInstance();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetInstanceTest001 failed";
@@ -1675,4 +1642,4 @@ HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CheckLineIsValidTest003 end";
 }
-}
+} // namespace OHOS::FileManagement::CloudDiskService::Test

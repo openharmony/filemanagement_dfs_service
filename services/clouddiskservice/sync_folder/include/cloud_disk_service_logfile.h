@@ -122,6 +122,7 @@ private:
     std::atomic<uint64_t> currentLine_;
     std::atomic<bool> reversal_;
 
+    std::mutex fileMtx_;
     std::mutex vectorMtx_;
     std::vector<struct ChangeData> changeDatas_;
 };
