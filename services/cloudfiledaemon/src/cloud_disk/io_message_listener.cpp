@@ -35,7 +35,7 @@ const string IO_FILE_NAME = "io_message.csv";
 const string IO_NEED_REPORT_PREFIX = "wait_report_";
 const int32_t TYPE_FRONT = 2;
 const int32_t TYPE_BACKGROUND = 4;
-const int32_t MAX_IO_FILE_SIZE = 128 * 1024;
+const int32_t MAX_IO_FILE_SIZE = 16 * 1024;
 const size_t MAX_RECORD_IN_FILE = 10000;
 const size_t MAX_IO_REPORT_NUMBER = 100;
 
