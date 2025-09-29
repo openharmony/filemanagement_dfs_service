@@ -21,7 +21,7 @@
 #include "cloud_disk_service_callback_mock.h"
 #include "cloud_disk_sync_folder.h"
 #include "dfs_error.h"
-#include "dfsu_access_token_helper_mock.h"
+#include "cloud_disk_service_access_token_mock.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -37,7 +37,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessTokenMock_ = nullptr;
+    static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessTokenMock_ = nullptr;
 };
 
 void CloudDiskServiceCallbackManagerTest::SetUpTestCase(void)
@@ -53,8 +53,8 @@ void CloudDiskServiceCallbackManagerTest::TearDownTestCase(void)
 void CloudDiskServiceCallbackManagerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    dfsuAccessTokenMock_ = make_shared<DfsuAccessTokenMock>();
-    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessTokenMock_;
+    dfsuAccessTokenMock_ = make_shared<CloudDiskServiceAccessTokenMock>();
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessTokenMock_;
 }
 
 void CloudDiskServiceCallbackManagerTest::TearDown(void)

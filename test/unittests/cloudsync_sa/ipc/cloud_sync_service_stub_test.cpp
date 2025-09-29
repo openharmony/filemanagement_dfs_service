@@ -92,19 +92,19 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
+    static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
 };
 
 void CloudSyncServiceStubTest::SetUpTestCase(void)
 {
-    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
-    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
+    dfsuAccessToken_ = make_shared<CloudDiskServiceAccessTokenMock>();
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     std::cout << "SetUpTestCase" << std::endl;
 }
 
 void CloudSyncServiceStubTest::TearDownTestCase(void)
 {
-    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    CloudDiskServiceAccessTokenMock::dfsuAccessToken = nullptr;
     dfsuAccessToken_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }

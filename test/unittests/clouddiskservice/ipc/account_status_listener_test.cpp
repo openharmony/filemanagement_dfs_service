@@ -23,7 +23,6 @@
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "dfsu_access_token_helper_mock.h"
 #include "if_system_ability_manager_mock.h"
 #include "system_ability_manager_client_mock.h"
 
@@ -41,7 +40,6 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<AccountStatusSubscriber> subscriber_;
-    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_;
     static inline shared_ptr<SystemAbilityManagerClientMock> smc_ = nullptr;
     static inline shared_ptr<ISystemAbilityManagerMock> samgr = make_shared<ISystemAbilityManagerMock>();
 };
@@ -54,8 +52,6 @@ void AccountStatusSubscriberTest::SetUpTestCase(void)
     SystemAbilityManagerClient::GetInstance().systemAbilityManager_ = sptr<ISystemAbilityManager>(samgr.get());
     OsAccountSubscribeInfo subscribeInfo;
     subscriber_ = make_shared<AccountStatusSubscriber>(subscribeInfo);
-    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
-    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
 }
 
 void AccountStatusSubscriberTest::TearDownTestCase(void)
@@ -66,8 +62,6 @@ void AccountStatusSubscriberTest::TearDownTestCase(void)
     samgr = nullptr;
     SystemAbilityManagerClient::GetInstance().systemAbilityManager_ = nullptr;
     subscriber_ = nullptr;
-    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
-    dfsuAccessToken_ = nullptr;
 }
 
 void AccountStatusSubscriberTest::SetUp(void)

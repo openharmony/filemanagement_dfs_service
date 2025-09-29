@@ -90,6 +90,7 @@ ohos_shared_library("clouddiskservice_sa") {
     "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
     "ipc/src/account_status_listener.cpp",
     "ipc/src/cloud_disk_service.cpp",
+    "ipc/src/cloud_disk_service_access_token.cpp",
     "ipc/src/cloud_disk_service_callback_manager.cpp",
     "ipc/src/cloud_disk_service_callback_proxy.cpp",
     "ipc/src/cloud_disk_sync_folder.cpp",
@@ -118,7 +119,7 @@ ohos_shared_library("clouddiskservice_sa") {
     ":cloud_disk_service",
     ":libcloud_disk_service_proxy",
     "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   if (build_seccomp) {
@@ -127,6 +128,8 @@ ohos_shared_library("clouddiskservice_sa") {
 
   shlib_type = "sa"
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "e2fsprogs:libext2_uuid",

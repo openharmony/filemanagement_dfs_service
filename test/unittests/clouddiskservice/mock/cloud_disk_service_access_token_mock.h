@@ -13,45 +13,41 @@
  * limitations under the License.
  */
 
-#ifndef DFSU_ACCESS_TOKEN_HELPER_MOCK
-#define DFSU_ACCESS_TOKEN_HELPER_MOCK
+#ifndef CLOUD_DISK_SERVICE_ACCESS_TOKEN_MOCK_H
+#define CLOUD_DISK_SERVICE_ACCESS_TOKEN_MOCK_H
 
 #include <gmock/gmock.h>
 #include <string>
 
-#include "dfsu_access_token_helper.h"
+#include "cloud_disk_service_access_token.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 
-class DfsuAccessToken {
+class CloudDiskServiceAccessTokenVirtual {
 public:
     virtual bool CheckCallerPermission(const std::string &permissionName);
     virtual int32_t GetCallerBundleName(std::string &bundleName);
     virtual bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
-    virtual bool CheckUriPermission(const std::string &uri);
     virtual int32_t GetBundleNameByToken(uint32_t tokenId, std::string &bundleName);
-    virtual bool IsSystemApp();
     virtual int32_t GetUserId();
-    virtual int32_t GetPid();
     virtual int32_t GetAccountId(int32_t &userId);
+    virtual bool IsUserVerifyed(const int32_t userId);
 
 public:
-   DfsuAccessToken() = default;
-   virtual ~DfsuAccessToken() = default;
-   static inline std::shared_ptr<DfsuAccessToken> dfsuAccessToken = nullptr;
+   CloudDiskServiceAccessTokenVirtual() = default;
+   virtual ~CloudDiskServiceAccessTokenVirtual() = default;
+   static inline std::shared_ptr<CloudDiskServiceAccessTokenVirtual> dfsuAccessToken = nullptr;
 };
 
-class DfsuAccessTokenMock : public DfsuAccessToken {
+class CloudDiskServiceAccessTokenMock : public CloudDiskServiceAccessTokenVirtual {
 public:
     MOCK_METHOD1(CheckCallerPermission, bool(const std::string &permissionName));
     MOCK_METHOD1(GetCallerBundleName, int32_t(std::string &bundleName));
     MOCK_METHOD2(CheckPermission, bool(uint32_t tokenId, const std::string &permissionName));
-    MOCK_METHOD1(CheckUriPermission, bool(const std::string &uri));
     MOCK_METHOD2(GetBundleNameByToken, int32_t(uint32_t tokenId, std::string &bundleName));
-    MOCK_METHOD0(IsSystemApp, bool());
     MOCK_METHOD0(GetUserId, int32_t());
-    MOCK_METHOD0(GetPid, int32_t());
     MOCK_METHOD1(GetAccountId, int32_t(int32_t &userId));
+    MOCK_METHOD1(IsUserVerifyed, bool(const int32_t userId));
 };
 
 }

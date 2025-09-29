@@ -18,7 +18,7 @@ ohos_unittest("cloud_disk_service_static_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
@@ -83,7 +83,6 @@ ohos_unittest("service_account_status_listener_test") {
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_manager_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
@@ -139,7 +138,7 @@ ohos_unittest("cloud_disk_service_callback_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
@@ -357,7 +356,7 @@ ohos_unittest("cloud_disk_service_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
@@ -413,6 +412,48 @@ ohos_unittest("cloud_disk_service_test") {
 
   use_exceptions = true
 }
+
+ohos_unittest("cloud_disk_service_access_token_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/accesstoken_kit_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/os_account_manager_mock.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_access_token.cpp",
+    "ipc/cloud_disk_service_access_token_test.cpp",
+    "${utils_path}/log/src/utils_log.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/clouddiskservice/ipc/include",
+    "ipc/include",
+  ]
+
+  deps = [
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskService\"",
+  ]
+
+  use_exceptions = true
+}
+
 
 ohos_unittest("cloud_disk_service_logfile_static_test") {
   module_out_path = "dfs_service/dfs_service"
@@ -489,7 +530,7 @@ ohos_unittest("cloud_disk_service_logfile_test") {
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_metafile_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/dfsu_access_token_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "sync_folder/cloud_disk_service_logfile_test.cpp",
   ]
@@ -691,6 +732,7 @@ ohos_unittest("uuid_helper_test") {
 group("clouddisk_service_test") {
   testonly = true
   deps = [
+    ":cloud_disk_service_access_token_test",
     ":cloud_disk_service_logfile_test",
     ":cloud_disk_service_logfile_static_test",
     ":cloud_disk_service_metafile_test",
