@@ -19,7 +19,6 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <system_error>
-
 #include <unistd.h>
 
 #include "dfs_error.h"
