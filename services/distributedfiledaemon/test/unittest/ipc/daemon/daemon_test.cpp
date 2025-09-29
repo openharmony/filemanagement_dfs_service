@@ -623,22 +623,20 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 begin";
     ASSERT_NE(daemon_, nullptr);
-    DistributedHardware::DmDeviceInfo deviceInfo;
     string networkId = "testNetworkId";
-    strcpy_s(deviceInfo.networkId, 96, networkId.c_str());
 
     ConnectCount::GetInstance().RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_EVENT_HANDLER);
+    EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
     sleep(1);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((ERR_BAD_VALUE)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_EVENT_HANDLER);
+    EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
     sleep(1);
 
     sptr<IFileDfsListener> nullListener = nullptr;
     ConnectCount::GetInstance().AddConnect(333, networkId, nullListener);
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_OK);
+    EXPECT_EQ(daemon_->CleanUp(networkId), E_OK);
     sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }
@@ -920,10 +918,15 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     file.close();
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
-    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
+    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC，但是当前无连接
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), ERR_BAD_VALUE);
+
+    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
+    auto connect = std::make_shared<Connect>(123456789, NETWORKID_TWO, 1, nullptr);
+    ConnectCount::GetInstance().connectList_.insert(connect);
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
 
-    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
+    // 测试用例 7: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 清理

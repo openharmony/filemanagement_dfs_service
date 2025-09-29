@@ -53,12 +53,13 @@ enum Status {
 class ConnectCount final {
     DECLARE_SINGLE_INSTANCE(ConnectCount);
 public:
-    void AddConnect(uint32_t callingTokenId, const std::string &networkId, sptr<IFileDfsListener> &listener);
+    void AddConnect(uint32_t callingTokenId, const std::string &networkId, const sptr<IFileDfsListener> &listener);
     bool CheckCount(const std::string &networkId);
     void RemoveAllConnect();
     std::vector<std::string> RemoveConnect(uint32_t callingTokenId);
     void RemoveConnect(const std::string &networkId);
     void RemoveConnect(uint32_t callingTokenId, const std::string &networkId);
+    void DecreaseConnectCount(uint32_t callingTokenId, const std::string &networkId);
     std::vector<std::string> GetNetworkIds(uint32_t callingTokenId);
     void NotifyRemoteReverseObj(const std::string &networkId, int32_t status);
     int32_t FindCallingTokenIdForListerner(const sptr<IRemoteObject> &listener, uint32_t &callingTokenId);

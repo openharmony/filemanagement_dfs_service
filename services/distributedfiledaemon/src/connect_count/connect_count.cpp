@@ -25,7 +25,9 @@ namespace DistributedFile {
 static const int32_t ON_STATUS_OFFLINE = 13900046;
 IMPLEMENT_SINGLE_INSTANCE(ConnectCount);
 
-void ConnectCount::AddConnect(uint32_t callingTokenId, const std::string &networkId, sptr<IFileDfsListener> &listener)
+void ConnectCount::AddConnect(uint32_t callingTokenId,
+                              const std::string &networkId,
+                              const sptr<IFileDfsListener> &listener)
 {
     std::lock_guard lock(connectMutex_);
     for (auto &connect : connectList_) {
@@ -96,6 +98,22 @@ void ConnectCount::RemoveConnect(uint32_t callingTokenId, const std::string &net
         }
         iter++;
     }
+}
+
+void ConnectCount::DecreaseConnectCount(uint32_t callingTokenId, const std::string &networkId)
+{
+    std::lock_guard lock(connectMutex_);
+    for (auto it = connectList_.begin(); it != connectList_.end(); ++it) {
+        if ((*it)->callingTokenId == callingTokenId && (*it)->networkId == networkId) {
+            if ((*it)->num == 1) {
+                connectList_.erase(it);
+            } else {
+                (*it)->num--;
+            }
+            return;
+        }
+    }
+    LOGW("not found networkId %{public}.6s", networkId.c_str());
 }
 
 std::vector<std::string> ConnectCount::GetNetworkIds(uint32_t callingTokenId)
