@@ -32,16 +32,11 @@ namespace OHOS {
 
 std::string GetFileNameFromFullPath(const char *str);
 
-#define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
-#define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
-#define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
+#define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%{public}s:" fmt, __FUNCTION__,  ##__VA_ARGS__)
+#define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "%{public}s:" fmt, __FUNCTION__,  ##__VA_ARGS__)
+#define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "%{public}s:" fmt, __FUNCTION__,  ##__VA_ARGS__)
 
 std::string GetAnonyString(const std::string &value);
 std::string GetAnonyInt32(const int32_t value);
