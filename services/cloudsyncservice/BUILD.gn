@@ -114,6 +114,7 @@ ohos_shared_library("cloudsync_sa") {
     "include",
     "include/cycle_task",
     "include/cycle_task/tasks",
+    "include/ipc",
     "include/transport",
     "include/transport/softbus",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
@@ -141,6 +142,7 @@ ohos_shared_library("cloudsync_sa") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "src/ipc/account_status_listener.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
@@ -223,6 +225,7 @@ ohos_static_library("cloudsync_sa_static") {
     "include",
     "include/cycle_task",
     "include/cycle_task/tasks",
+    "include/ipc",
     "include/transport",
     "include/transport/softbus",
     "${clouddisk_database_path}/include",

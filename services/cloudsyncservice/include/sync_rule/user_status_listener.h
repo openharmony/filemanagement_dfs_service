@@ -19,6 +19,7 @@
 #include <mutex>
 #include <vector>
 
+#include "account_status_listener.h"
 #include "common_event_subscriber.h"
 #include "data_sync_manager.h"
 #include "i_user_status_observer.h"
@@ -33,13 +34,13 @@ public:
     void AddObserver(std::shared_ptr<IUserStatusObserver> observer);
     void NotifyUserUnlocked();
     void DoCleanVideoCache();
-    void DoUnloadSA();
 
 private:
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
     std::mutex obsVecMutex_;
     std::vector<std::shared_ptr<IUserStatusObserver>> observers_;
     std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
+    std::shared_ptr<AccountStatusListener> accountStatusListener_ = nullptr;
 };
 
 class UserStatusSubscriber : public EventFwk::CommonEventSubscriber {

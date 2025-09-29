@@ -469,12 +469,14 @@ ohos_unittest("user_status_listener_test") {
   }
   module_out_path = "dfs_service/dfs_service"
   sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/ipc/account_status_listener.cpp",
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "user_status_listener_test.cpp",
   ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${services_path}/cloudsyncservice/include/transport/softbus",
     "${innerkits_native_path}/cloudsync_kit_inner",
@@ -501,6 +503,7 @@ ohos_unittest("user_status_listener_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
