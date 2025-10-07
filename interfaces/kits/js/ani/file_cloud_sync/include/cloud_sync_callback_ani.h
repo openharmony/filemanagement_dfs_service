@@ -140,8 +140,9 @@ class CloudOptimizeCallbackAniImpl : public CloudOptimizeCallbackMiddle,
                                   public std::enable_shared_from_this<CloudOptimizeCallbackAniImpl> {
 public:
     CloudOptimizeCallbackAniImpl(ani_env *env, ani_ref fun) : env_(env), cbOnRef_(fun) {}
-    ~CloudOptimizeCallbackAniImpl() = default;
+    ~CloudOptimizeCallbackAniImpl();
     void OnOptimizeProcess(const OptimizeState state, const int32_t progress) override;
+    void DeleteReference();
 
 private:
     ani_status GetOptimProgress(ani_env *env, OptimizeState state, int32_t progress, ani_class cls, ani_object &data);

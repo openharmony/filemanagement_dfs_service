@@ -194,6 +194,7 @@ public:
     CloudOptimizeCallbackImpl(napi_env env, LibN::NVal callbcakVal) : env_(env), cbOnRef_(callbcakVal) {}
     ~CloudOptimizeCallbackImpl() = default;
     void OnOptimizeProcess(const OptimizeState state, const int32_t progress) override;
+    void DeleteReference();
 
 private:
     napi_env env_ = nullptr;;

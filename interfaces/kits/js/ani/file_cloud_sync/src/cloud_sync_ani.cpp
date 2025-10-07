@@ -254,6 +254,8 @@ void CloudSyncAni::StartOptimizeStorage(ani_env *env, ani_class clazz, ani_objec
 
     auto data = CloudSyncCore::DoStartOptimizeStorage(optimizeOptions, callback);
     if (!data.IsSuccess()) {
+        // Delete reference
+        callback->DeleteReference();
         const auto &err = data.GetError();
         LOGE("cloud sync do StopOptimizeStorage failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
