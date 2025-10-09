@@ -205,22 +205,24 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+    uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
+    string networkId = string(deviceInfo.networkId);
+    LOGI("OpenP2PConnection networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
+         Utils::GetAnonyNumber(callingTokenId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
-    RemoveDfsDelayTask(deviceInfo.networkId);
-    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
+    RemoveDfsDelayTask(networkId);
     sptr<IFileDfsListener> listener = nullptr;
-    auto ret = ConnectionCount(deviceInfo);
+    int32_t ret = ConnectionCount(deviceInfo);
     if (ret == E_OK) {
-        ConnectCount::GetInstance().AddConnect(callingTokenId, deviceInfo.networkId, listener);
-        LOGI("OpenP2PConnection Success %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+        LOGI("OpenP2PConnection Success %{public}s", Utils::GetAnonyString(networkId).c_str());
+        ConnectCount::GetInstance().AddConnect(callingTokenId, networkId, listener);
     } else {
         if (ret == ERR_CHECKOUT_COUNT) {
-            ConnectCount::GetInstance().RemoveConnect(callingTokenId, deviceInfo.networkId);
+            ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
         }
-        CleanUp(deviceInfo);
-        LOGE("OpenP2PConnection failed %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+        LOGE("OpenP2PConnection failed %{public}s", Utils::GetAnonyString(networkId).c_str());
+        CleanUp(networkId);
     }
     return ret;
 }
@@ -228,12 +230,13 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
 int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    LOGI("Close P2P Connection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
-    auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    auto networkId = std::string(deviceInfo.networkId);
+    string networkId = string(deviceInfo.networkId);
+    uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
+    LOGI("CloseP2PConnection networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
+         Utils::GetAnonyNumber(callingTokenId).c_str());
     ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
-    CleanUp(deviceInfo);
-    LOGI("Close P2P Connection Success networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+    CleanUp(networkId);
+    LOGI("Close P2P Connection Success networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
     return 0;
 }
 
@@ -272,10 +275,9 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     return ret;
 }
 
-int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t Daemon::CleanUp(const std::string &networkId)
 {
-    LOGI("CleanUp start");
-    auto networkId = std::string(deviceInfo.networkId);
+    LOGI("CleanUp start, networkId is %{public}.6s", networkId.c_str());
     if (!ConnectCount::GetInstance().CheckCount(networkId)) {
         auto ret = SendDfsDelayTask(networkId);
         LOGI("Close P2P Connection");
@@ -368,7 +370,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     int32_t ret = ConnectionAndMount(deviceInfo, networkId, remoteReverseObj);
     if (ret != NO_ERROR) {
         LOGE("ConnectionAndMount ret is %{public}d", ret);
-        CleanUp(deviceInfo);
+        CleanUp(networkId);
         return E_CONNECTION_FAILED;
     }
     LOGI("Daemon::OpenP2PConnectionEx end");
@@ -405,14 +407,8 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
             LOGI("NotifyRemoteCancelNotification ret is %{public}d", res);
         }
     }
-    DistributedHardware::DmDeviceInfo deviceInfo{};
-    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != 0) {
-        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-        return E_INVAL_ARG_NAPI;
-    }
     ConnectCount::GetInstance().RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
-    int32_t ret = CleanUp(deviceInfo);
+    int32_t ret = CleanUp(networkId);
     if (ret != NO_ERROR) {
         LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
         return E_CONNECTION_FAILED;
@@ -498,16 +494,16 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         LOGE("Path is forbidden");
         return ERR_BAD_VALUE;
     }
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != 0) {
-        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
+    if (!ConnectCount::GetInstance().CheckCount(networkId)) {
+        LOGE("has not connect to this network %{public}.6s", networkId.c_str());
         return ERR_BAD_VALUE;
     }
-    OpenP2PConnection(deviceInfo);
+    RemoveDfsDelayTask(networkId);
+    ConnectCount::GetInstance().AddConnect(IPCSkeleton::GetCallingTokenID(), networkId, nullptr);
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
         listener, QueryActiveUserId(), info.copyPath);
-    CloseP2PConnection(deviceInfo);
+    ConnectCount::GetInstance().DecreaseConnectCount(IPCSkeleton::GetCallingTokenID(), networkId);
+    CleanUp(networkId);
     LOGI("InnerCopy end, ret = %{public}d", ret);
     return ret;
 }
@@ -1115,17 +1111,11 @@ int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
         std::unordered_map<std::string, MountCountInfo> allMountInfo =
             DeviceManagerAgent::GetInstance()->GetAllMountInfo();
         for (const auto &mountInfo : allMountInfo) {
-            DistributedHardware::DmDeviceInfo deviceInfo{};
             std::string networkId = mountInfo.second.networkId_;
-            auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-            if (res != NO_ERROR) {
-                LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-                return E_INVAL_ARG_NAPI;
-            }
             for (const auto &ele : mountInfo.second.callingCountMap_) {
                 ConnectCount::GetInstance().RemoveConnect(ele.first, networkId);
             }
-            ret = CleanUp(deviceInfo);
+            ret = CleanUp(networkId);
             if (ret != NO_ERROR) {
                 LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
                 return E_CONNECTION_FAILED;
@@ -1210,14 +1200,8 @@ void Daemon::DisconnectByRemote(const string &networkId)
         LOGE("[UMountDfsDocs] failed");
         return;
     }
-    DistributedHardware::DmDeviceInfo deviceInfo{};
-    res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
-    if (res != 0) {
-        LOGE("strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-        return;
-    }
     ConnectCount::GetInstance().RemoveConnect(IPCSkeleton::GetCallingTokenID(), networkId);
-    int32_t ret = CleanUp(deviceInfo);
+    int32_t ret = CleanUp(networkId);
     if (ret != NO_ERROR) {
         LOGE("DisconnectByRemote disconnection failed.");
         return;

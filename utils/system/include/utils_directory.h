@@ -16,13 +16,14 @@
 #ifndef UTILS_DIRECTORY_H
 #define UTILS_DIRECTORY_H
 
-#include <string>
-#include <sys/types.h>
-#include <vector>
 #include <cstring>
-#include <unistd.h>
 #include <dirent.h>
 #include <iostream>
+#include <string>
+#include <sys/types.h>
+#include <type_traits>
+#include <unistd.h>
+#include <vector>
 
 #include "nlohmann/json.hpp"
 
@@ -84,6 +85,14 @@ void RadarDotsSendFile(const std::string funcName, const std::string &sessionNam
     const std::string &peerSssionName, int32_t errCode, StageRes state);
 
 std::string GetAnonyString(const std::string &value);
+
+template<typename T>
+std::string GetAnonyNumber(const T value)
+{
+    static_assert(std::is_arithmetic_v<T>, "T must be an arithmetic type");
+    std::string tmpStr = std::to_string(value);
+    return GetAnonyString(tmpStr);
+}
 
 void ForceCreateDirectory(const std::string &path);
 void ForceCreateDirectory(const std::string &path, mode_t mode);
