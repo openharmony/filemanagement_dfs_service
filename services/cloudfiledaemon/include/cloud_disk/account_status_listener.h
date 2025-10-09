@@ -36,6 +36,7 @@ class AccountStatusSubscriber : public EventFwk::CommonEventSubscriber {
 public:
     AccountStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     ~AccountStatusSubscriber() override {}
+    bool IsCloudSyncEnabled(const int32_t userId, const std::string &bundleName);
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
     void RemovedClean(const EventFwk::CommonEventData &eventData);
 };

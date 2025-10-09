@@ -23,13 +23,13 @@ ohos_unittest("account_status_listener_test") {
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/ioctl/include",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner",
     "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "${services_path}/cloudfiledaemon/include/",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/include/fuse_manager/",
     "${services_path}/cloudfiledaemon/include/ipc/",
     "${services_path}/cloudfiledaemon/include/utils/",
+    "mock",
   ]
 
   sources = [
@@ -40,6 +40,8 @@ ohos_unittest("account_status_listener_test") {
     "${services_path}/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
     "account_status_listener_test.cpp",
+    "mock/data_syncer_rdb_store.cpp",
+    "mock/result_set.cpp",
   ]
 
   deps = [

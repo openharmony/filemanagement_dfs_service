@@ -17,12 +17,14 @@
 
 #include <fcntl.h>
 
+#include "account_status.h"
 #include "cloud_daemon_statistic.h"
 #include "cloud_file_utils.h"
 #include "cloud_sync_manager_lite.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "account_status.h"
+#include "data_syncer_rdb_store.h"
+#include "dfs_error.h"
 #include "file_operations_base.h"
 #include "file_operations_helper.h"
 #include "fuse_manager.h"
@@ -114,6 +116,24 @@ void AccountStatusListener::Stop()
     }
 }
 
+bool AccountStatusSubscriber::IsCloudSyncEnabled(const int32_t userId, const std::string &bundleName)
+{
+    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    int32_t ret = CloudSync::DataSyncerRdbStore::GetInstance().QueryCloudSync(userId, bundleName, resultSet);
+    if (ret != E_OK || resultSet == nullptr) {
+        LOGE("DataSyncerRdbStore Query failed, ret: %{public}d", ret);
+        return false;
+    }
+    int32_t rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    if (ret != E_OK || rowCount < 0) {
+        LOGE("Get Row Count failed, ret: %{public}d, rowCount: %{public}d", ret, rowCount);
+        return false;
+    }
+
+    return rowCount == 1;
+}
+
 void AccountStatusSubscriber::RemovedClean(const EventFwk::CommonEventData &eventData)
 {
     auto bundleName = eventData.GetWant().GetBundle();
@@ -124,6 +144,11 @@ void AccountStatusSubscriber::RemovedClean(const EventFwk::CommonEventData &even
         return;
     }
     userId = userId / BASE_USER_RANGE;
+    if (IsCloudSyncEnabled(userId, bundleName)) {
+        LOGI("remove clean bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+        CloudSync::CloudSyncManagerLite::GetInstance().RemovedClean(bundleName, userId);
+    }
+
     struct fuse_session *se = nullptr;
     struct stat childSt {};
     struct stat parentSt {};
@@ -151,7 +176,6 @@ void AccountStatusSubscriber::RemovedClean(const EventFwk::CommonEventData &even
         LOGE("Node is Null!");
         return;
     }
-    CloudSync::CloudSyncManagerLite::GetInstance().RemovedClean(bundleName, userId);
     std::string localIdKey = std::to_string(node->parent) + node->fileName;
     int64_t key = static_cast<int64_t>(childSt.st_ino);
     FileOperationsHelper::PutCloudDiskInode(data, node, node->refCount, key);
