@@ -218,10 +218,13 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest001 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "testpath";
+        fileSyncStates.path = "/a/b/c";
+        string syncFolder = "/a/b/";
+        fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
-        auto res = SetFileSyncStates(fileSyncStates, userId, failed);
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(0));
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -241,11 +244,11 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest002 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "";
-        fileSyncStates.state = static_cast<SyncState>(6);
+        fileSyncStates.path = "/a/b/c";
+        string syncFolder = "/a/d";
         int32_t userId = 1;
         FailedList failed;
-        auto res = SetFileSyncStates(fileSyncStates, userId, failed);
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -265,12 +268,12 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest003 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "";
-        fileSyncStates.state = SyncState::SYNCING;
+        fileSyncStates.path = "/a/b/c";
+        string syncFolder = "/a/b";
+        fileSyncStates.state = static_cast<SyncState>(6);
         int32_t userId = 1;
         FailedList failed;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
-        auto res = SetFileSyncStates(fileSyncStates, userId, failed);
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -290,18 +293,45 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest004 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "";
+        fileSyncStates.path = "/a/b/c";
+        string syncFolder = "/a/b";
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(0));
-        auto res = SetFileSyncStates(fileSyncStates, userId, failed);
-        EXPECT_TRUE(res);
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
+        EXPECT_FALSE(res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetFileSyncStatesTest004 failed";
     }
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest004 end";
+}
+
+/**
+ * @tc.name: SetFileSyncStatesTest005
+ * @tc.desc: Verify the SetFileSyncStates function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetFileSyncStatesTest005 start";
+    try {
+        FileSyncState fileSyncStates;
+        fileSyncStates.path = "/a/b/c";
+        string syncFolder = "";
+        fileSyncStates.state = SyncState::SYNCING;
+        int32_t userId = 1;
+        FailedList failed;
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetFileSyncStatesTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "SetFileSyncStatesTest005 end";
 }
 
 /**
@@ -314,14 +344,59 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStateTest001 start";
     try {
-        string path = "path";
+        string path = "/a/b/c";
+        string syncFolder = "/a/d/";
         int32_t userId = 1;
-        auto res = GetFileSyncState(path, userId);
-        EXPECT_EQ(res.error, ErrorReason::NO_SUCH_FILE);
+        auto res = GetFileSyncState(path, userId, syncFolder);
+        EXPECT_EQ(res.error, ErrorReason::INVALID_ARGUMENT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetFileSyncStateTest001 failed";
     }
     GTEST_LOG_(INFO) << "GetFileSyncStateTest001 end";
+}
+
+/**
+ * @tc.name: GetFileSyncStateTest002
+ * @tc.desc: Verify the GetFileSyncState function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileSyncStateTest002 start";
+    try {
+        string path = "/a/b/c";
+        string syncFolder = "/a/c";
+        int32_t userId = 1;
+        auto res = GetFileSyncState(path, userId, syncFolder);
+        EXPECT_EQ(res.isSuccess, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileSyncStateTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetFileSyncStateTest002 end";
+}
+
+/**
+ * @tc.name: GetFileSyncStateTest003
+ * @tc.desc: Verify the GetFileSyncState function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileSyncStateTest003 start";
+    try {
+        string path = "/a/b/c";
+        string syncFolder = "";
+        int32_t userId = 1;
+        auto res = GetFileSyncState(path, userId, syncFolder);
+        EXPECT_EQ(res.isSuccess, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileSyncStateTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetFileSyncStateTest003 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

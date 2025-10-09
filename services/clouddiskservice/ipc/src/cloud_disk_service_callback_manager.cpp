@@ -47,6 +47,7 @@ void CloudDiskServiceCallbackManager::AddCallback(const std::string &bundleName,
     auto remoteObject = callback->AsObject();
     auto deathCb = [this, bundleName](const wptr<IRemoteObject> &obj) {
         LOGE("client died");
+        unique_lock<mutex> lock(callbackMutex_);
         std::vector<uint32_t> syncFolderIndex;
         auto it = callbackAppMap_.find(bundleName);
         if (it != callbackAppMap_.end()) {
