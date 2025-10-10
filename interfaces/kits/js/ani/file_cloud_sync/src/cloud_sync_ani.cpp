@@ -16,6 +16,7 @@
 #include "cloud_sync_ani.h"
 
 #include "ani_utils.h"
+#include "cloud_file_utils.h"
 #include "cloud_sync_callback_ani.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -261,6 +262,34 @@ void CloudSyncAni::StopOptimizeStorage(ani_env *env, ani_class clazz)
     }
 }
 
+static bool CheckIsValidUri(Uri uri)
+{
+    string scheme = uri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return false;
+    }
+    string uriString = uri.ToString();
+    string sandboxPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
+    char realPath[PATH_MAX + 1] { '\0' };
+    if (sandboxPath.length() > PATH_MAX) {
+        LOGE("sandboxPath length is too long.");
+        return false;
+    }
+    if (realpath(sandboxPath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
+        return false;
+    }
+    if (strncmp(realPath, sandboxPath.c_str(), sandboxPath.size()) != 0) {
+        LOGE("sandboxPath is not equal to realPath");
+        return false;
+    }
+    if (sandboxPath.find("/data/storage/el2/cloud") == string::npos) {
+        LOGE("not surported uri");
+        return false;
+    }
+    return true;
+}
+
 ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string path)
 {
     string filePath;
@@ -271,6 +300,12 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
         return static_cast<int32_t>(ret);
     }
     auto data = CloudSyncCore::DoGetFileSyncState(filePath);
+
+    Uri fileUri(filePath);
+    if (!CheckIsValidUri(fileUri)) {
+        LOGE("uri illegally crossess, uri is %{public}s", GetAnonyString(filePath).c_str());
+        ErrorHandler::Throw(env, JsErrCode::E_INVALID_URI);
+    }
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync do GetFileSyncState failed, ret = %{public}d", err.GetErrNo());
@@ -289,6 +324,11 @@ ani_int CloudSyncAni::GetCoreFileSyncState(ani_env *env, ani_class clazz, ani_st
         ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
         return static_cast<int32_t>(ret);
     }
+    Uri fileUri(filePath);
+    if (!CheckIsValidUri(fileUri)) {
+        LOGE("uri illegally crossess, uri is %{public}s", GetAnonyString(filePath).c_str());
+        ErrorHandler::Throw(env, JsErrCode::E_INVALID_URI);
+    }
     auto data = CloudSyncCore::DoGetCoreFileSyncState(filePath);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
@@ -297,33 +337,6 @@ ani_int CloudSyncAni::GetCoreFileSyncState(ani_env *env, ani_class clazz, ani_st
         return err.GetErrNo();
     }
     return static_cast<ani_int>(data.GetData().value());
-}
-
-static bool CheckIsValidUri(Uri uri)
-{
-    string scheme = uri.GetScheme();
-    if (scheme != FILE_SCHEME) {
-        return false;
-    }
-    string sandboxPath = uri.GetPath();
-    char realPath[PATH_MAX + 1] { '\0' };
-    if (sandboxPath.length() > PATH_MAX) {
-        LOGE("sandboxPath length is too long.");
-        return false;
-    }
-    if (realpath(sandboxPath.c_str(), realPath) == nullptr) {
-        LOGE("realpath failed with %{public}d", errno);
-        return false;
-    }
-    if (strncmp(realPath, sandboxPath.c_str(), sandboxPath.size()) != 0) {
-        LOGE("sandboxPath is not equal to realPath");
-        return false;
-    }
-    if (sandboxPath.find("/data/storage/el2/cloud") != 0) {
-        LOGE("not surported uri");
-        return false;
-    }
-    return true;
 }
 
 int32_t CloudSyncAni::RegisterToObs(const RegisterParams &registerParams)

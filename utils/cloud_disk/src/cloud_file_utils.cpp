@@ -43,6 +43,7 @@ namespace {
     static const uint64_t DELTA_DISK = 0x9E3779B9;
     static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
     static const int32_t OID_DFS = 1009;
+    static const int32_t FILE_INDEX = 7; // index of uri head
 }
 
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
@@ -448,6 +449,23 @@ void CloudFileUtils::ChangeUidByPath(const std::string &path, mode_t mode, uid_t
         }
     }
 }
+
+string CloudFileUtils::GetPathFromUri(const std::string &uriString)
+{
+    string path = uriString.substr(FILE_INDEX);
+    size_t pathStart = 0;
+    size_t length = path.length();
+    while (pathStart < length) {
+        char ch = path.at(pathStart);
+        if (ch == '/') {
+            break;
+        }
+        pathStart++;
+    }
+ 
+    return path.substr(pathStart);
+}
+
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

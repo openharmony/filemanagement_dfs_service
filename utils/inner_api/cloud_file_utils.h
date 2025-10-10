@@ -84,6 +84,7 @@ public:
         const std::string &cloudId, uint32_t mode, uid_t uid);
     static void ChangeUidByPath(const std::string &path, mode_t mode, uid_t uid);
     static const std::string TMP_SUFFIX;
+    static std::string GetPathFromUri(const std::string &uriString);
 private:
     static bool EndsWith(const std::string &fullString, const std::string &ending);
 };

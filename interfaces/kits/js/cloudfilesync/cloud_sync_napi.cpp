@@ -18,6 +18,7 @@
 #include <sys/xattr.h>
 
 #include "async_work.h"
+#include "cloud_file_utils.h"
 #include "cloud_sync_manager.h"
 #include "cloud_sync_napi.h"
 #include "dfs_error.h"
@@ -477,7 +478,8 @@ static bool CheckIsValidUri(Uri uri)
     if (scheme != FILE_SCHEME) {
         return false;
     }
-    string sandboxPath = uri.GetPath();
+    string uriString = uri.ToString();
+    string sandboxPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
     char realPath[PATH_MAX + 1]{'\0'};
     if (realpath(sandboxPath.c_str(), realPath) == nullptr) {
         LOGE("realpath failed with %{public}d", errno);
@@ -857,6 +859,10 @@ static tuple<int32_t, int32_t> GetxattrErr()
 tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
 {
     Uri fileUri(uri);
+    string scheme = fileUri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return { E_ILLEGAL_URI, -1 };
+    }
     char resolvedPath[PATH_MAX] = {'\0'};
 
     if (!CheckIsValidUri(fileUri)) {
@@ -864,7 +870,8 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
         return { E_ILLEGAL_URI, -1 };
     }
 
-    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
+    string uriString = fileUri.ToString();
+    if (realpath(CloudDisk::CloudFileUtils::GetPathFromUri(uriString).c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
@@ -906,6 +913,10 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
 tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &uri)
 {
     Uri fileUri(uri);
+    string scheme = fileUri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return { E_ILLEGAL_URI, -1 };
+    }
     char resolvedPath[PATH_MAX] = {'\0'};
 
     if (!CheckIsValidUri(fileUri)) {
@@ -913,7 +924,8 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &ur
         return { E_ILLEGAL_URI, -1 };
     }
 
-    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
+    string uriString = fileUri.ToString();
+    if (realpath(CloudDisk::CloudFileUtils::GetPathFromUri(uriString).c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         return { LibN::USER_FILE_MANAGER_SYS_CAP_TAG + E_URIM, -1 };
     }
@@ -1139,6 +1151,10 @@ napi_value CloudSyncNapi::GetCoreFileSyncState(napi_env env, napi_callback_info 
     }
 
     Uri fileUri(string(uri.get()));
+    string scheme = fileUri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return nullptr;
+    }
 
     if (!CheckIsValidUri(fileUri)) {
         LOGE("Path illegally crossess");
@@ -1148,7 +1164,8 @@ napi_value CloudSyncNapi::GetCoreFileSyncState(napi_env env, napi_callback_info 
 
     char resolvedPath[PATH_MAX] = {'\0'};
 
-    if (realpath(fileUri.GetPath().c_str(), resolvedPath) == nullptr) {
+    string uriString = fileUri.ToString();
+    if (realpath(CloudDisk::CloudFileUtils::GetPathFromUri(uriString).c_str(), resolvedPath) == nullptr) {
         LOGE("get realPath failed");
         NError(Convert2JsErrNum(E_INVALID_URI)).ThrowErr(env);
         return nullptr;
