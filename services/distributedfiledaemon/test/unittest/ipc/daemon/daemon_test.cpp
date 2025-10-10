@@ -2077,7 +2077,7 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_005, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
-    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+    EXPECT_EQ(result, E_CONNECTION_FAILED);
 
     GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_005 end";
 }

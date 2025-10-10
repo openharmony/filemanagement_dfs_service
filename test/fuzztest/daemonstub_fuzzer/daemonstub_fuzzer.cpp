@@ -19,17 +19,18 @@
 #include <cstring>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "copy/ipc_wrapper.h"
 #include "daemon_stub.h"
+#include "dfsu_access_token_helper.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
 #include "message_option.h"
 #include "message_parcel.h"
-#include "securec.h"
-#include "accesstoken_kit.h"
-#include "utils_log.h"
 #include "nativetoken_kit.h"
+#include "securec.h"
 #include "token_setproc.h"
+#include "utils_log.h"
 
 namespace OHOS {
 constexpr pid_t UID = 1009;
@@ -40,7 +41,14 @@ pid_t IPCSkeleton::GetCallingUid()
 {
     return UID;
 }
+} // namespace OHOS
+
+namespace OHOS::FileManagement {
+bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
+{
+    return true;
 }
+} // namespace OHOS::FileManagement
 
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
@@ -307,6 +315,33 @@ void SetAccessTokenPermission()
         return;
     }
 }
+
+void HandleRequestSendFileACLFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleGetRemoteCopyInfoACLFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
+{
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -322,5 +357,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::HandleRegisterFileDfsListener(daemonStubPtr, data, size);
     OHOS::HandleUnregisterFileDfsListener(daemonStubPtr, data, size);
     OHOS::HandleIsSameAccountDevice(daemonStubPtr, data, size);
+    OHOS::HandleRequestSendFileACLFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleGetRemoteCopyInfoACLFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
