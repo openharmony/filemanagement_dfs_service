@@ -16,10 +16,10 @@
 #ifndef OHOS_FILEMGMT_DATA_SYNCER_RDB_STORE_H
 #define OHOS_FILEMGMT_DATA_SYNCER_RDB_STORE_H
 
+#include "cloud_sync_constants.h"
+#include "data_sync_const.h"
 #include "rdb_open_callback.h"
 #include "rdb_store.h"
-#include "sync_state_manager.h"
-#include "cloud_sync_constants.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class DataSyncerRdbStore {

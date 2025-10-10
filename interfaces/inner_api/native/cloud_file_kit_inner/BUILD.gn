@@ -167,6 +167,7 @@ ohos_shared_library("cloudfile_kit_core") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_sync_helper.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
   ]
 
@@ -187,6 +188,7 @@ ohos_shared_library("cloudfile_kit_core") {
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
+    "relational_store:native_rdb",
   ]
 
   deps = [ "${utils_path}:libdistributedfileutils_lite" ]
