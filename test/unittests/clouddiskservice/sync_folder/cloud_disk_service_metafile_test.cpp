@@ -713,9 +713,11 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoRenameTest001 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(1);
         MetaBase base;
         string recordId = "record_123";
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
+        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(DENTRYGROUP_SIZE));
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -736,12 +738,15 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoRenameTest002 Start";
     try {
         CloudDiskServiceMetaFile mFile(100, 1, 123);
+        mFile.fd_.Reset(1);
         MetaBase base;
-        string recordId = "record_123";
+        base.name = "record_123";
+        string longName(1000, 'a');
+        string recordId = longName;
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
         EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
-        EXPECT_EQ(ret, EINVAL);
+        EXPECT_EQ(ret, ENAMETOOLONG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DoRenameTest002 ERROR";

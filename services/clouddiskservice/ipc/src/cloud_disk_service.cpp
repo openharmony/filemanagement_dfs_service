@@ -77,13 +77,6 @@ void CloudDiskService::OnStart()
         return;
     }
 
-    try {
-        PublishSA();
-        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-    } catch (const exception &e) {
-        LOGE("%{public}s", e.what());
-    }
-
     std::vector<FileManagement::SyncFolderExt> syncFolders;
     OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
@@ -101,6 +94,13 @@ void CloudDiskService::OnStart()
         syncFolderValue.path = path;
         uint32_t syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+    }
+
+    try {
+        PublishSA();
+        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
     }
 
     if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
@@ -148,6 +148,11 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
         return E_INVALID_ARG;
     }
 
+    if (access(path.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     std::string bundleName = "";
     int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
@@ -189,6 +194,11 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
     if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
         LOGE("Get path failed");
         return E_INVALID_ARG;
+    }
+
+    if (access(path.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
 
     std::string bundleName = "";
@@ -239,6 +249,11 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
         return E_INVALID_ARG;
     }
 
+    if (access(path.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     std::string bundleName = "";
     int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
@@ -285,7 +300,8 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t &userId, FailedList &failed)
+static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t &userId, FailedList &failed,
+    const string &syncFolder)
 {
     std::string setXattrPath;
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
@@ -293,6 +309,16 @@ static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t &user
         LOGE("Get path failed");
         failed.path = fileSyncStates.path;
         failed.error = ErrorReason::NO_SUCH_FILE;
+        return false;
+    }
+    string actualSyncFolder = syncFolder;
+    if (!syncFolder.empty() && syncFolder.back() != '/') {
+        actualSyncFolder += "/";
+    }
+    if (fileSyncStates.path.compare(0, actualSyncFolder.size(), actualSyncFolder) != 0) {
+        LOGE("path does not match the syncFolder");
+        failed.path = fileSyncStates.path;
+        failed.error = ErrorReason::INVALID_ARGUMENT;
         return false;
     }
     uint8_t state = static_cast<uint8_t>(fileSyncStates.state);
@@ -332,6 +358,11 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
+    if (access(path.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     std::string bundleName = "";
     int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
@@ -349,7 +380,7 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
 
     FailedList failed;
     for (auto &item : fileSyncStates) {
-        if (!SetFileSyncStates(item, userId, failed)) {
+        if (!SetFileSyncStates(item, userId, failed, syncFolder)) {
             failedList.push_back(failed);
         }
     }
@@ -361,7 +392,7 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
 #endif
 }
 
-static ResultList GetFileSyncState(const std::string &path, int32_t &userId)
+static ResultList GetFileSyncState(const std::string &path, int32_t &userId, const string &syncFolder)
 {
     ResultList getResult;
     getResult.isSuccess = false;
@@ -371,6 +402,16 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId)
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId), getXattrPath)) {
         LOGE("Get path failed");
         getResult.error = ErrorReason::NO_SUCH_FILE;
+        return getResult;
+    }
+
+    string actualSyncFolder = syncFolder;
+    if (!syncFolder.empty() && syncFolder.back() != '/') {
+        actualSyncFolder += "/";
+    }
+    if (path.compare(0, actualSyncFolder.size(), actualSyncFolder) != 0) {
+        LOGE("path does not match the syncFolder");
+        getResult.error = ErrorReason::INVALID_ARGUMENT;
         return getResult;
     }
 
@@ -429,6 +470,11 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
         return E_INVALID_ARG;
     }
 
+    if (access(path.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     std::string bundleName = "";
     int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
@@ -446,7 +492,7 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
 
     ResultList getResult;
     for (auto &item : pathArray) {
-        getResult = GetFileSyncState(item, userId);
+        getResult = GetFileSyncState(item, userId, syncFolder);
         resultList.push_back(getResult);
     }
 
@@ -470,10 +516,15 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
         return E_INVALID_ARG;
     }
 
+    if (access(registerSyncFolder.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(registerSyncFolder);
     if (CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
         LOGE("Syncfolder is exist");
-        return E_SYNC_FOLDER_NOT_REGISTERED;
+        return E_OK;
     }
 
     int32_t ret = CloudDiskServiceSyncFolder::RegisterSyncFolder(userId, syncFolderIndex, registerSyncFolder);
@@ -511,10 +562,15 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
         return E_INVALID_ARG;
     }
 
+    if (access(unregisterSyncFolder.c_str(), E_OK) != 0) {
+        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
     if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
         LOGE("Syncfolder is not exist");
-        return E_SYNC_FOLDER_NOT_REGISTERED;
+        return E_OK;
     }
 
     int32_t ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
