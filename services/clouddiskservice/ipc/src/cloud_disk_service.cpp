@@ -522,11 +522,6 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(registerSyncFolder);
-    if (CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
-        LOGE("Syncfolder is exist");
-        return E_OK;
-    }
-
     int32_t ret = CloudDiskServiceSyncFolder::RegisterSyncFolder(userId, syncFolderIndex, registerSyncFolder);
     if (ret != E_OK) {
         LOGE("RegisterSyncFolder failed");
@@ -568,11 +563,6 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
-    if (!CloudDiskSyncFolder::GetInstance().CheckSyncFolder(syncFolderIndex)) {
-        LOGE("Syncfolder is not exist");
-        return E_OK;
-    }
-
     int32_t ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
     if (ret != E_OK) {
         LOGE("UnRegisterSyncFolder failed");
