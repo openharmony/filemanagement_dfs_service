@@ -15,6 +15,7 @@
 #include "network/softbus/softbus_handler_asset.h"
 
 #include <fcntl.h>
+#include <fstream>
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
 #include <memory>
@@ -22,6 +23,7 @@
 
 #include "device_manager_impl_mock.h"
 #include "dfs_error.h"
+#include "directory_ex.h"
 #include "mock_other_method.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "socket_mock.h"
@@ -672,6 +674,88 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GetSocketIdFromAssetOb
     ASSERT_TRUE(ret.size() == 1) << "GetSocketIdFromAssetObj size failed!";
     EXPECT_EQ(ret[0], 1);
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GetSocketIdFromAssetObj_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_ExtractFile_0100
+ * @tc.desc: Verify the GetSocketIdFromAssetObj function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_ExtractFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    std::vector<std::string> fileList;
+    std::string relativePath = "/data/local/tmp/assetTest/";
+    std::string testPath = relativePath + "testDir";
+    std::string zipFileName = relativePath + "1.zip";
+    if (!ForceCreateDirectory(testPath.c_str())) {
+        GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0100 ForceCreateDirectory failed!";
+    }
+    std::string testFileName = testPath + "/1.txt";
+    std::ofstream file;
+    file.open(testFileName.c_str(), std::ios_base::app);
+    ASSERT_TRUE(file.is_open()) << "SoftBusHandlerAssetTest_ExtractFile_0100 file.open failed!";
+    file << "testContext1";
+    file.close();
+    fileList.emplace_back(testFileName);
+    auto ret = softBusHandlerAsset.CompressFile(fileList, relativePath, zipFileName);
+    if (!ForceRemoveDirectoryBMS(testPath)) {
+        GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0100 ForceRemoveDirectoryBMS testPath failed!";
+    }
+    EXPECT_EQ(ret, 0);
+
+    unzFile unZipFile = unzOpen64(zipFileName.c_str());
+    ASSERT_TRUE(unZipFile != nullptr) << "SoftBusHandlerAssetTest_ExtractFile_0100 unZipFile assert failed!";
+
+    std::string result = softBusHandlerAsset.ExtractFile(unZipFile, relativePath);
+    unzClose(unZipFile);
+    EXPECT_EQ(result, testFileName);
+    if (!ForceRemoveDirectoryBMS(relativePath)) {
+        GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0100 ForceRemoveDirectoryBMS relativePath failed!";
+    }
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_ExtractFile_0200
+ * @tc.desc: Verify the GetSocketIdFromAssetObj function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_ExtractFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0200 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    std::vector<std::string> fileList;
+    std::string relativePath = "/data/local/tmp/assetTest/";
+    std::string testPath = relativePath + "testDir";
+    std::string zipFileName = relativePath + "2.zip";
+    if (!ForceCreateDirectory(testPath.c_str())) {
+        GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0200 ForceCreateDirectory failed!";
+    }
+    std::string testFileName = testPath + "/../2.txt";
+    std::ofstream file;
+    file.open(testFileName.c_str(), std::ios_base::app);
+    ASSERT_TRUE(file.is_open()) << "SoftBusHandlerAssetTest_ExtractFile_0200 file.open failed!";
+    file << "testContext2";
+    file.close();
+    fileList.emplace_back(testFileName);
+    auto ret = softBusHandlerAsset.CompressFile(fileList, relativePath, zipFileName);
+    remove(testFileName.c_str());
+    EXPECT_EQ(ret, 0);
+
+    unzFile unZipFile = unzOpen64(zipFileName.c_str());
+    ASSERT_TRUE(unZipFile != nullptr) << "SoftBusHandlerAssetTest_ExtractFile_0200 unZipFile assert failed!";
+
+    std::string result = softBusHandlerAsset.ExtractFile(unZipFile, relativePath);
+    unzClose(unZipFile);
+    EXPECT_EQ(result, "");
+    if (!ForceRemoveDirectoryBMS(relativePath)) {
+        GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0200 ForceRemoveDirectoryBMS relativePath failed!";
+    }
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0200 end";
 }
 } // namespace Test
 } // namespace DistributedFile

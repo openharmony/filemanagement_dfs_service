@@ -24,6 +24,7 @@
 
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "copy/file_size_utils.h"
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
@@ -600,6 +601,10 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
         LOGE("file path error");
         return "";
     }
+    if (!FileSizeUtils::IsFilePathValid(filenameWithPath)) {
+        LOGE("path is forbidden");
+        return "";
+    }
     std::string filenameWithoutPath = filenameWithPath.substr(pos + 1);
 
     if (!IsDir(filenameWithPath)) {
@@ -611,7 +616,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     std::fstream file;
     file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
     if (!file.is_open()) {
-        LOGE("open zip file fail");
+        LOGE("open zip file fail, errno: %{public}d", errno);
         return "";
     }
     const size_t pageSize =  { getpagesize() };
