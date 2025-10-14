@@ -915,14 +915,14 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     g_isFolder = false;
     std::ofstream file(g_physicalPath);
     ASSERT_TRUE(file.good()) << "创建测试文件失败";
-    file.close();	
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);	
+    file.close();
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
-    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC	
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);	
+    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
 
-    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC	
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);	
+    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 清理
     if (std::filesystem::exists(g_physicalPath)) {
