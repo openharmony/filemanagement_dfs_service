@@ -38,17 +38,21 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "i_file_trans_listener.h"
+#include "ipc/daemon.h"
 #include "ipc_skeleton.h"
+#include "iremote_object.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
+#include "remote_file_share.h"
 #include "sandbox_helper.h"
+#include "securec.h"
 #include "softbus_handler_asset_mock.h"
 #include "softbus_handler_mock.h"
 #include "softbus_session_listener_mock.h"
 #include "softbus_session_pool.h"
 #include "system_ability_definition.h"
 #include "system_ability_manager_client_mock.h"
-#include "securec.h"
+#include "utils_log.h"
 
 namespace {
 bool g_isLocalItDevice = false;
@@ -84,6 +88,9 @@ const std::string NETWORKID_ONE = "testNetWork1";
 const std::string NETWORKID_TWO = "testNetWork2";
 OHOS::DistributedHardware::DmDeviceInfo deviceInfo;
 constexpr int32_t ERR_DP_CAN_NOT_FIND = 98566199;
+int32_t g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+constexpr pid_t PASTE_BOARD_UID = 3816;
+constexpr pid_t UDMF_UID = 3012;
 } // namespace
 
 namespace OHOS::Storage::DistributedFile {
@@ -187,6 +194,16 @@ bool CommonEventManager::UnSubscribeCommonEvent(const std::shared_ptr<CommonEven
     return g_unSubscribeCommonEvent;
 }
 } // namespace OHOS::EventFwk
+
+namespace OHOS::AppFileService::ModuleRemoteFileShare {
+int32_t RemoteFileShare::GetDfsUrisDirFromLocal(
+    const std::vector<std::string> &uriList,
+    const int32_t &userId,
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    return g_getDfsUrisDirFromLocal;
+}
+} // namespace OHOS::AppFileService::ModuleRemoteFileShare
 
 namespace OHOS {
 namespace DistributedHardware {
@@ -365,6 +382,157 @@ void DaemonTest::TearDown(void)
     IChannelManagerMock::iChannelManagerMock = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
+}
+
+/**
+ * @tc.name: OnStopTest
+ * @tc.desc: Verify the OnStop function
+ * @tc.type: FUNC
+ * @tc.require: issueI7M6L1
+ */
+HWTEST_F(DaemonTest, OnStopTest, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "OnStop Start";
+
+    // testcase 1
+    daemon_->state_ = ServiceRunningState::STATE_NOT_START;
+    daemon_->registerToService_ = false;
+    EXPECT_NO_THROW(daemon_->OnStop());
+
+    GTEST_LOG_(INFO) << "OnStop End";
+}
+
+/**
+ * @tc.name: DaemonTest_PublishSA_0100
+ * @tc.desc: Verify the PublishSA function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 start";
+
+    // testcase 1
+    daemon_->registerToService_ = true;
+    daemon_->PublishSA();
+    EXPECT_TRUE(daemon_->registerToService_);
+
+    GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_OnStart_0100
+ * @tc.desc: Verify the OnStart function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_OnStart_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_OnStart_0100 start";
+
+    // testcase 1
+    daemon_->state_ = ServiceRunningState::STATE_RUNNING;
+    daemon_->OnStart();
+    EXPECT_EQ(daemon_->state_, ServiceRunningState::STATE_RUNNING);
+
+    GTEST_LOG_(INFO) << "DaemonTest_OnStart_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_OnRemoveSystemAbility_0100
+ * @tc.desc: Verify the OnRemoveSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 start";
+
+    // testcase 1
+    EXPECT_NO_THROW(daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID + 1, ""));
+
+    // testcase 2
+    daemon_->subScriber_ = nullptr;
+    EXPECT_NO_THROW(daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, ""));
+
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_PrepareSession_0100
+ * @tc.desc: Verify the PrepareSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI90MOB
+ */
+HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 start";
+
+    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+    const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+    const std::string srcDeviceId = "testSrcDeviceId";
+    auto listener = sptr<IRemoteObject>(new FileTransListenerMock());
+    const std::string copyPath = "tmpDir";
+    const std::string sessionName = "DistributedDevice0";
+    HmdfsInfo fileInfo = {
+        .copyPath = copyPath,
+        .dirExistFlag = false,
+        .sessionName = sessionName,
+    };
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo),
+              FileManagement::E_SA_LOAD_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetDfsUrisDirFromLocal_0100
+ * @tc.desc: Verify the GetDfsUrisDirFromLocal function.
+ * @tc.type: FUNC
+ * @tc.require: issueI90MOB
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetDfsUrisDirFromLocal_0100, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsUrisDirFromLocal_0100 start";
+    std::vector<std::string> uriList;
+    int32_t userId = 100;
+    std::string normalUri = "file://docs/data/storage/el2/cloud";
+    std::string errUri = "file://docs/data/storage/../el2/cloud";
+    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
+    g_getCallingUid = -1;
+    auto ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
+
+    g_getCallingUid = PASTE_BOARD_UID;
+    uriList.emplace_back(normalUri);
+    uriList.emplace_back(errUri);
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, FileManagement::E_ILLEGAL_URI);
+
+    uriList.erase(uriList.begin() + 1); // 1: errUri
+    g_getDfsUrisDirFromLocal = FileManagement::E_INVAL_ARG;
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, FileManagement::E_INVAL_ARG);
+
+    g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, OHOS::FileManagement::E_OK);
+
+    g_getCallingUid = UDMF_UID;
+    uriList.emplace_back(errUri);
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, FileManagement::E_ILLEGAL_URI);
+
+    uriList.erase(uriList.begin() + 1); // 1: errUri
+    g_getDfsUrisDirFromLocal = FileManagement::E_INVAL_ARG;
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, FileManagement::E_INVAL_ARG);
+
+    g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
+    ret = daemon_->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+    EXPECT_EQ(ret, OHOS::FileManagement::E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_GetDfsUrisDirFromLocal_0100 end";
 }
 
 /**
@@ -918,15 +1086,10 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     file.close();
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
-    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC，但是当前无连接
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), ERR_BAD_VALUE);
-
-    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
-    auto connect = std::make_shared<Connect>(123456789, NETWORKID_TWO, 1, nullptr);
-    ConnectCount::GetInstance().connectList_.insert(connect);
+    // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
 
-    // 测试用例 7: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
+    // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
     // 清理

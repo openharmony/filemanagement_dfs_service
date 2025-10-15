@@ -494,10 +494,6 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         LOGE("Path is forbidden");
         return ERR_BAD_VALUE;
     }
-    if (!ConnectCount::GetInstance().CheckCount(networkId)) {
-        LOGE("has not connect to this network %{public}.6s", networkId.c_str());
-        return ERR_BAD_VALUE;
-    }
     RemoveDfsDelayTask(networkId);
     ConnectCount::GetInstance().AddConnect(IPCSkeleton::GetCallingTokenID(), networkId, nullptr);
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
