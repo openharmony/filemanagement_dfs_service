@@ -128,7 +128,8 @@ public:
     {
         GTEST_LOG_(INFO) << "ChannelManagerTest TearDown";
         // 先确保所有异步操作完成
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        const int SLEEP_DURATION = 200;
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION));
         ChannelManager::GetInstance().DeInit();
         SocketMock::dfsSocket = nullptr;
         socketMock_ = nullptr;
