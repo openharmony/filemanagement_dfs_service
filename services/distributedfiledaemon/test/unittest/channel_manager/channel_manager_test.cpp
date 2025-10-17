@@ -20,8 +20,8 @@
 #include "control_cmd_parser.h"
 #include "device_manager.h"
 #include "dfs_error.h"
-#include "network/softbus/softbus_permission_check.h"
 #include "socket_mock.h"
+#include "softbus_permission_check_mock.h"
 #include "system_notifier.h"
 #include "utils_log.h"
 #include <nlohmann/json.hpp>
@@ -29,63 +29,22 @@
 #include <thread>
 
 namespace {
-int32_t g_mockSocket = -1;
-bool g_checkSrcPermission = true;
-bool g_setAccessInfoToSocket = true;
-bool g_transCallerInfo = true;
-bool g_fillLocalInfo = true;
+constexpr int32_t DEFAULT_USER_ID = 100;
 
+int32_t g_mockSocket = -1;
 int g_callSerializeToJsonTimes = 0;
 bool g_resSerializeToJson = true;
-bool g_isSameAccount = true;
 } // namespace
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
-{
-    GTEST_LOG_(INFO) << "enter mock CheckSrcPermission";
-    return g_checkSrcPermission;
-}
-
-bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId)
-{
-    GTEST_LOG_(INFO) << "enter mock SetAccessInfoToSocket";
-    return g_setAccessInfoToSocket;
-}
-
-bool SoftBusPermissionCheck::TransCallerInfo(SocketAccessInfo *callerInfo,
-                                             AccountInfo &callerAccountInfo,
-                                             const std::string &networkId)
-{
-    GTEST_LOG_(INFO) << "enter mock TransCallerInfo";
-    return g_transCallerInfo;
-}
-
-bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
-{
-    GTEST_LOG_(INFO) << "enter mock FillLocalInfo";
-    return g_fillLocalInfo;
-}
-
-bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccountInfo)
-{
-    GTEST_LOG_(INFO) << "enter mock CheckSinkPermission";
-    return true;
-}
-
 bool ControlCmdParser::SerializeToJson(const ControlCmd &cmd, std::string &outJsonStr)
 {
     GTEST_LOG_(INFO) << "enter mock SerializeToJson";
     g_callSerializeToJsonTimes++;
     return g_resSerializeToJson;
-}
-
-bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
-{
-    return g_isSameAccount;
 }
 
 namespace Test {
@@ -114,14 +73,25 @@ public:
         GTEST_LOG_(INFO) << "ChannelManagerTest SetUp";
         socketMock_ = make_shared<SocketMock>();
         SocketMock::dfsSocket = socketMock_;
+
+        // 创建 SoftBusPermissionCheck 的 Mock 对象
+        softBusPermissionCheckMock_ = std::make_shared<SoftBusPermissionCheckMock>();
+        ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock = softBusPermissionCheckMock_;
+
+        // 设置默认的 Mock 行为
+        EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, FillLocalInfo(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, CheckSinkPermission(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, IsSameAccount(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, GetLocalAccountInfo(_))
+            .WillRepeatedly(DoAll(SetArgReferee<0>(AccountInfo{}), Return(true)));
+        EXPECT_CALL(*softBusPermissionCheckMock_, GetCurrentUserId()).WillRepeatedly(Return(DEFAULT_USER_ID));
+
         g_mockSocket = -1;
-        g_checkSrcPermission = true;
-        g_setAccessInfoToSocket = true;
-        g_transCallerInfo = true;
-        g_fillLocalInfo = true;
         g_callSerializeToJsonTimes = 0;
         g_resSerializeToJson = true;
-        g_isSameAccount = true;
     }
 
     void TearDown(void)
@@ -133,10 +103,13 @@ public:
         ChannelManager::GetInstance().DeInit();
         SocketMock::dfsSocket = nullptr;
         socketMock_ = nullptr;
+        ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock = nullptr;
+        softBusPermissionCheckMock_ = nullptr;
     }
 
 private:
     static inline shared_ptr<SocketMock> socketMock_ = nullptr;
+    static inline shared_ptr<SoftBusPermissionCheckMock> softBusPermissionCheckMock_ = nullptr;
     static inline std::string defaultNetworkId = "networkId-1";
     static inline void InitChannelManager()
     {
@@ -233,19 +206,18 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnNegotiate2_001, TestSize.Level
     SocketAccessInfo socketAccessInfo2;
 
     // Test success case
-    g_transCallerInfo = true;
-    g_fillLocalInfo = true;
+    EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillOnce(Return(true));
+    EXPECT_CALL(*softBusPermissionCheckMock_, FillLocalInfo(_)).WillOnce(Return(true));
     EXPECT_TRUE(ChannelManager::GetInstance().OnNegotiate2(100, peerSocketInfo, &socketAccessInfo, &socketAccessInfo2));
 
     // Test TransCallerInfo failure case
-    g_transCallerInfo = false;
-    g_fillLocalInfo = true;
+    EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillOnce(Return(false));
     EXPECT_FALSE(
         ChannelManager::GetInstance().OnNegotiate2(100, peerSocketInfo, &socketAccessInfo, &socketAccessInfo2));
 
     // Test FillLocalInfo failure case
-    g_transCallerInfo = true;
-    g_fillLocalInfo = false;
+    EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillOnce(Return(true));
+    EXPECT_CALL(*softBusPermissionCheckMock_, FillLocalInfo(_)).WillOnce(Return(false));
     EXPECT_FALSE(
         ChannelManager::GetInstance().OnNegotiate2(100, peerSocketInfo, &socketAccessInfo, &socketAccessInfo2));
 
@@ -263,7 +235,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_CreateClientChannel_001, TestSiz
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_001 start";
 
     // Test permission check failure path
-    g_checkSrcPermission = false;
+    EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_)).WillOnce(Return(false));
     EXPECT_EQ(ChannelManager::GetInstance().CreateClientChannel(defaultNetworkId), ERR_CHECK_PERMISSION_FAILED);
 
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_001 end";
@@ -298,7 +270,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_CreateClientChannel_003, TestSiz
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_003 start";
 
     // Test access info setting failure path
-    g_setAccessInfoToSocket = false;
+    EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_)).WillOnce(Return(false));
     int32_t expectedSocketId = 1;
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(expectedSocketId));
     EXPECT_EQ(ChannelManager::GetInstance().CreateClientChannel(defaultNetworkId), ERR_BAD_VALUE);
