@@ -50,16 +50,21 @@ public:
                                            const sptr<CloudSync::ICloudSyncCallback> &callback);
     virtual void UnRegisterCloudSyncCallback(const std::string &bundleName, const std::string &callerBundleName);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
+    virtual int32_t StartFileCache(const BundleNameUserInfo &bundleNameUserInfo,
+                                   const std::vector<std::string> &uriVec,
+                                   int64_t &downloadId,
+                                   int32_t fieldkey,
+                                   const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+                                   int32_t timeout = -1);
     virtual int32_t StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                      const std::vector<std::string> &uriVec,
+                                      const std::string &uri,
                                       int64_t &downloadId,
-                                      int32_t fieldkey,
-                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
-                                      int32_t timeout = -1);
-    virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
-                                     int64_t downloadId,
-                                     bool needClean,
-                                     int32_t timeout = -1);
+                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
+    virtual int32_t StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
+                                  int64_t downloadId,
+                                  bool needClean,
+                                  int32_t timeout = -1);
+    virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo, int64_t downloadId, bool needClean);
     virtual int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     virtual int32_t StartOptimizeStorage(const BundleNameUserInfo &bundleNameUserInfo,

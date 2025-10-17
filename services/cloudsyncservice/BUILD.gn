@@ -231,7 +231,6 @@ ohos_static_library("cloudsync_sa_static") {
     "${clouddisk_database_path}/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
   ]
 
   cycle_task = [

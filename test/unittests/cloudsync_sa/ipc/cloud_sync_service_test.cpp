@@ -1386,17 +1386,14 @@ HWTEST_F(CloudSyncServiceTest, StartFileCacheTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFileCacheTest001 start";
     try {
         EXPECT_NE(servicePtr_, nullptr);
-        string uri;
+        string uri = "file://media/xxx";
         int64_t downloadId = 0;
         int32_t fieldkey = 0;
         int32_t timeout = -1;
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
-        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(-1));
         auto ret = servicePtr_->StartFileCache({uri}, downloadId, fieldkey, callback, timeout);
-        EXPECT_EQ(ret, E_BROKEN_IPC);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "StartFileCacheTest001 failed";
@@ -1415,16 +1412,15 @@ HWTEST_F(CloudSyncServiceTest, StartFileCacheTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFileCacheTest002 start";
     try {
         EXPECT_NE(servicePtr_, nullptr);
-        string uri;
+        std::vector<std::string> uris{"file://media/xxx"};
         int64_t downloadId = 0;
         int32_t fieldkey = 0;
         int32_t timeout = -1;
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
         EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
-        auto ret = servicePtr_->StartFileCache({uri}, downloadId, fieldkey, downloadCallback, timeout);
+        auto ret = servicePtr_->StartFileCache(uris, downloadId, fieldkey, downloadCallback, timeout);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_FALSE(true);
@@ -1503,7 +1499,6 @@ HWTEST_F(CloudSyncServiceTest, StopFileCacheTest001, TestSize.Level1)
         int64_t downloadId = 0;
         bool needClean = false;
         int32_t timeout = -1;
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
         EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));

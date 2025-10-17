@@ -824,17 +824,9 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
                                          const sptr<IRemoteObject> &downloadCallback,
                                          int32_t timeout)
 {
-    LOGI("Begin StartFileCache");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
-        for (auto &uri : uriVec) {
-            if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
-                LOGE("permission denied");
-                return E_ILLEGAL_URI;
-            }
-        }
-    }
+    LOGI("Begin StartFileCache, uris size: %{public}zu", uriVec.size());
     BundleNameUserInfo bundleNameUserInfo;
-    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
     if (ret != E_OK) {
         LOGE("GetBundleNameUserInfo failed.");
         return ret;
@@ -846,7 +838,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         // Common error code for single and batch download task.
         return E_BROKEN_IPC;
     }
-    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
+    ret = dataSyncManager_->StartFileCache(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
     LOGI("End StartFileCache, ret: %{public}d", ret);
     return ret;
 }
@@ -868,9 +860,8 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &uri,
         LOGE("Invalid downloadCallback, not a valid ICloudDownloadCallback.");
         return E_INVAL_ARG;
     }
-    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, {uri}, downloadId, FieldKey::FIELDKEY_CONTENT,
-                                              downloadCb);
-    LOGI("End StartDownloadFile");
+    ret = dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uri, downloadId, downloadCb);
+    LOGI("End StartDownloadFile, ret: %{public}d", ret);
     return ret;
 }
 
@@ -893,15 +884,13 @@ int32_t CloudSyncService::StopDownloadFile(int64_t downloadId, bool needClean)
 int32_t CloudSyncService::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     LOGI("Begin StopFileCache");
-    RETURN_ON_ERR(CheckPermissions(PERM_AUTH_URI, false));
-
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);
     if (ret != E_OK) {
         return ret;
     }
 
-    ret = dataSyncManager_->StopDownloadFile(bundleNameUserInfo, downloadId, needClean, timeout);
+    ret = dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
     LOGI("End StopFileCache, ret: %{public}d", ret);
     return ret;
 }
