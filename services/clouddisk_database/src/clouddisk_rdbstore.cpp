@@ -21,6 +21,7 @@
 #include <sstream>
 #include <functional>
 
+#include "cloud_file_fault_event.h"
 #include "cloud_pref_impl.h"
 #include "clouddisk_db_const.h"
 #include "clouddisk_notify.h"
@@ -803,8 +804,10 @@ int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
         LOGE("get nullptr result set");
         return E_RDB;
     }
-    if (resultSet->GoToNextRow() != E_OK) {
-        LOGE("getRowId result set go to next row failed");
+    auto ret = resultSet->GoToNextRow();
+    if (ret != E_OK) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::GETEXTATTR,
+        CloudFile::FaultType::QUERY_DATABASE, ret, "getRowId result set go to next row failed"});
         return E_RDB;
     }
     CloudDiskRdbUtils::GetLong(FileColumn::ROW_ID, rowId, resultSet);
@@ -1061,12 +1064,13 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
-        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
-        return ret;
+        return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+            CloudFile::FaultType::DATABASE, ret, "rdbstore begin transaction failed"});
     }
     ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
     if (ret != E_OK) {
-        LOGE("get rowId and position fail, ret %{public}d", ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+        CloudFile::FaultType::QUERY_DATABASE, ret, "get rowId and position fail"});
         return E_RDB;
     }
     ValuesBucket setXAttr;
@@ -1080,14 +1084,15 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
     int32_t changedRows = -1;
     std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
     if (ret != E_OK) {
-        LOGE("set xAttr location fail, ret %{public}d", ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+        CloudFile::FaultType::MODIFY_DATABASE, ret, "set xAttr recycle fail"});
         return E_RDB;
     }
     struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
     ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, restoreInfo);
     if (ret != E_OK) {
-        LOGE("recycle set dentryfile failed, ret = %{public}d", ret);
-        return ret;
+        return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+            CloudFile::FaultType::MODIFY_DATABASE, ret, "recycle set dentryfile failed"});
     }
     rdbTransaction.Finish();
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
