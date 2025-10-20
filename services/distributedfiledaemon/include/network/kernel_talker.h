@@ -90,6 +90,7 @@ private:
     void PollRun();
     void HandleAllNotify(int fd);
     void NotifyHandler(NotifyParam &param);
+    uint8_t GetSecurityMode();
 
     std::weak_ptr<MountPoint> mountPoint_;
     std::mutex cmdMutex_;

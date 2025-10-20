@@ -15,7 +15,9 @@
 
 #include "network/kernel_talker.h"
 #include "device/device_manager_agent.h"
+#include "dfs_error.h"
 #include "network/devsl_dispatcher.h"
+#include "os_account_manager.h"
 #include "securec.h"
 #include "utils_log.h"
 
@@ -29,6 +31,10 @@ constexpr int POLL_TIMEOUT_MS = 200;
 constexpr int NONE_EVENT = -1;
 constexpr int READ_EVENT = 1;
 constexpr int TIME_OUT_EVENT = 0;
+constexpr int RESEVERD_SIZE = 17;
+constexpr uint8_t NORMAL_MODE = 0;
+constexpr uint8_t IT_SECURITY_MODE = 1;
+const std::string CONSTRAINT_PARAM = "constraint.distributed.transmission.outgoing";
 
 struct UpdateSocketParam {
     int32_t cmd;
@@ -37,6 +43,13 @@ struct UpdateSocketParam {
     uint8_t status;
     uint8_t masterKey[KEY_MAX_LEN];
     uint8_t cid[CID_MAX_LEN];
+} __attribute__((packed));
+
+struct UpdateSocketParamV2 {
+    struct UpdateSocketParam param_v1;
+    uint8_t version;
+    uint8_t security_mode;
+    uint8_t reserved[RESEVERD_SIZE];
 } __attribute__((packed));
 
 struct UpdateDevslParam {
@@ -70,6 +83,24 @@ enum Notify {
     NOTIFY_CNT,
 };
 
+uint8_t KernelTalker::GetSecurityMode()
+{
+    int32_t userId = SoftBusPermissionCheck::GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        LOGE("Get current userid failed");
+        return NORMAL_MODE;
+    }
+    bool isSecurityMode = false;
+    ErrCode err =
+        AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, CONSTRAINT_PARAM, isSecurityMode);
+    if (err != FileManagement::E_OK) {
+        LOGE("CheckOsAccountConstraintEnabled failed, err=%{public}d", err);
+        return NORMAL_MODE;
+    }
+    LOGI("CheckOsAccountConstraintEnabled success, isSecurityMode=%{public}d", isSecurityMode);
+    return isSecurityMode ? IT_SECURITY_MODE : NORMAL_MODE;
+}
+
 void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const std::string backStage)
 {
     if (session == nullptr) {
@@ -83,7 +114,6 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
         Utils::GetAnonyString(cid).c_str(), socketFd);
 
     uint8_t status = (backStage == "Server" ? SOCKET_STAT_ACCEPT : SOCKET_STAT_OPEN);
-
     UpdateSocketParam cmd = {
         .cmd = CMD_UPDATE_SOCKET,
         .newfd = socketFd,
@@ -97,7 +127,13 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
     if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), cid.size())) {
         return;
     }
-    SetCmd(cmd);
+    uint8_t securityMode = GetSecurityMode();
+    UpdateSocketParamV2 newcmd = {
+        .param_v1 = cmd,
+        .version = 0,
+        .security_mode = securityMode,
+    };
+    SetCmd(newcmd);
     int32_t remoteDevsl = DevslDispatcher::GetDeviceDevsl(cid);
     SinkDevslTokernel(cid, remoteDevsl);
 }
