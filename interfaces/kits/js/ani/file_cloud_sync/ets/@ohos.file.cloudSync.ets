@@ -367,7 +367,7 @@ export default namespace cloudSync {
             return new Promise<long>((resolve: (result: long) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as long);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -377,7 +377,7 @@ export default namespace cloudSync {
 
         getLastSyncTime(callback: AsyncCallback<long>): void {
             let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
-            promise.then<void, void>((ret: NullishType): void => {
+            promise.then<void, void>((ret: Any): void => {
                 let e = new BusinessError<void>();
                 e.code = 0;
                 callback(e, ret as long);
@@ -548,7 +548,7 @@ export default namespace cloudSync {
                 return StaticFunction.getFileSyncStateInner(uri);
             }, uri);
 
-            taskPool.then((result: NullishType): void => {
+            taskPool.then((result: Any): void => {
                 resolve(result as int);
             }, (error: Error): void => {
                 reject(error as BusinessError<void>);
