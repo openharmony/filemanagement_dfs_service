@@ -512,6 +512,7 @@ static int32_t DoCloudOpen(fuse_req_t req, struct fuse_file_info *fi,
 
 static void ErasePathCache(string path, CloudDiskFuseData *data)
 {
+    std::unique_lock<std::shared_mutex> lck(data->readSessionLock);
     if (data->readSessionCache.find(path) != data->readSessionCache.end()) {
         data->readSessionCache.erase(path);
     }
@@ -521,15 +522,21 @@ static void HandleNewSession(struct CloudDiskFuseData *data, const struct Sessio
     shared_ptr<CloudDiskFile> filePtr, shared_ptr<CloudDatabase> database)
 {
     string path = sessionParam.path;
+    std::unique_lock<std::shared_mutex> rwLock(data->readSessionLock, std::defer_lock);
+    rwLock.lock();
     if (data->readSessionCache.find(path) != data->readSessionCache.end()) {
         filePtr->readSession = data->readSessionCache[path];
+        rwLock.unlock();
         return;
     }
+    rwLock.unlock();
     filePtr->readSession = database->NewAssetReadSession(data->userId, "file",
         sessionParam.cloudId, sessionParam.assets, path);
+    rwLock.lock();
     if (filePtr->readSession) {
         data->readSessionCache[path] = filePtr->readSession;
     }
+    rwLock.unlock();
 }
 
 static int32_t GetNewSession(shared_ptr<CloudDiskInode> inoPtr,
