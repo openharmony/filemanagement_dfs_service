@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,18 @@
 #ifndef OHOS_DFS_SERVICE_MESSAGE_PARCEL_MOCK_H
 #define OHOS_DFS_SERVICE_MESSAGE_PARCEL_MOCK_H
 
+#include <gmock/gmock.h>
 #include <memory>
 #include <string>
-#include <gmock/gmock.h>
 
-#include "message_parcel.h"
 #include "iremote_broker.h"
+#include "message_parcel.h"
 
 namespace OHOS::Storage::DistributedFile {
 class DfsMessageParcel {
 public:
     virtual ~DfsMessageParcel() = default;
+
 public:
     virtual bool WriteInterfaceToken(std::u16string name) = 0;
     virtual std::u16string ReadInterfaceToken() = 0;
@@ -54,6 +55,9 @@ public:
     virtual bool WriteRawData(const void *data, size_t size) = 0;
     virtual const void *ReadRawData(size_t size) = 0;
     virtual uint32_t ReadUint32() = 0;
+    virtual uint32_t ReadUint16() = 0;
+    virtual const char *ReadCString() = 0;
+
 public:
     static inline std::shared_ptr<DfsMessageParcel> messageParcel = nullptr;
 };
@@ -85,8 +89,10 @@ public:
     MOCK_METHOD1(WriteStringVector, bool(const std::vector<std::string> &val));
     MOCK_METHOD1(WriteUint32, bool(uint32_t value));
     MOCK_METHOD2(WriteRawData, bool(const void *data, size_t size));
-    MOCK_METHOD1(ReadRawData, const void*(size_t size));
+    MOCK_METHOD1(ReadRawData, const void *(size_t size));
     MOCK_METHOD0(ReadUint32, uint32_t());
+    MOCK_METHOD0(ReadUint16, uint32_t());
+    MOCK_METHOD0(ReadCString, const char *());
 };
-}
+} // namespace OHOS::Storage::DistributedFile
 #endif

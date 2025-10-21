@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "iremote_broker.h"
+
 #include "message_parcel_mock.h"
+#include "iremote_broker.h"
 
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
 
-Parcelable::Parcelable() : Parcelable(false)
-{}
+Parcelable::Parcelable() : Parcelable(false) {}
 
 Parcelable::Parcelable(bool asRemote)
 {
@@ -268,5 +268,23 @@ uint32_t Parcel::ReadUint32()
     }
     std::cout << "ReadUint32 mock failed, messageParcel is nullptr" << std::endl;
     return 1; // : default value
+}
+
+uint16_t Parcel::ReadUint16()
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->ReadUint16();
+    }
+    std::cout << "ReadUint16 mock failed, messageParcel is nullptr" << std::endl;
+    return 1; // : default value
+}
+
+const char *Parcel::ReadCString()
+{
+    if (DfsMessageParcel::messageParcel) {
+        return DfsMessageParcel::messageParcel->ReadCString();
+    }
+    std::cout << "ReadCString mock failed, messageParcel is nullptr" << std::endl;
+    return nullptr; // : default value
 }
 } // namespace OHOS

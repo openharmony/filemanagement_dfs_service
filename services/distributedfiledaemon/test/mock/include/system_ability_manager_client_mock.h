@@ -17,7 +17,7 @@
 
 #include <gmock/gmock.h>
 #include "iservice_registry.h"
-#include "mock/if_system_ability_manager_mock.h"
+#include "if_system_ability_manager_mock.h"
 
 namespace OHOS {
 namespace Storage {
