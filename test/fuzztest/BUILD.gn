@@ -36,5 +36,9 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/handlepushasset_fuzzer:HandlePushAssetFuzzTest",
     "${distributedfile_path}/test/fuzztest/handleregisterrecvcallback_fuzzer:HandleRegisterRecvCallbackFuzzTest",
     "${distributedfile_path}/test/fuzztest/handleunregisterrecvcallback_fuzzer:HandleUnRegisterRecvCallbackFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandlecancelcopytask_fuzzer:DaemonStubHandleCancelCopyTaskFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandlegetconnecteddevicelist_fuzzer:DaemonStubHandleGetConnectedDeviceListFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandlegetdfsswitchstatus_fuzzer:DaemonStubHandleGetDfsSwitchStatusFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandleupdatedfsswitchstatus_fuzzer:DaemonStubHandleUpdateDfsSwitchStatusFuzzTest",
   ]
 }
