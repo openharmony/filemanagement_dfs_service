@@ -59,7 +59,7 @@ static void GetBucketAndOffset(const uint64_t line, uint32_t &bucket, uint32_t &
 
 static off_t GetBucketaddr(const uint32_t bucket)
 {
-    return (static_cast<off_t>(bucket) << LOGGROUP_SIZE_SHIFT) + LOGGROUP_HEADER;
+    return (static_cast<off_t>(bucket << LOGGROUP_SIZE_SHIFT)) + LOGGROUP_HEADER;
 }
 
 static std::unique_ptr<LogGroup> LoadCurrentPage(int fd, uint32_t bucket)
@@ -282,8 +282,8 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
         changeData.size = 0;
         changeData.mtime = 0;
     } else {
-        changeData.size = childStat.st_size;
-        changeData.mtime = childStat.st_mtime;
+        changeData.size = static_cast<uint64_t>(childStat.st_size);
+        changeData.mtime = static_cast<uint64_t>(childStat.st_mtime);
     }
 
     changeData.timeStamp = eventInfo.timestamp;
@@ -460,9 +460,9 @@ int32_t CloudDiskServiceLogFile::ProduceCreateLog(const std::shared_ptr<CloudDis
         return errno;
     }
     mBase.mode = childStat.st_mode;
-    mBase.atime = childStat.st_atime;
-    mBase.mtime = childStat.st_mtime;
-    mBase.size = childStat.st_size;
+    mBase.atime = static_cast<uint64_t>(childStat.st_atime);
+    mBase.mtime = static_cast<uint64_t>(childStat.st_mtime);
+    mBase.size = static_cast<uint64_t>(childStat.st_size);
     auto ret = parentMetaFile->DoCreate(mBase, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("create failed");
@@ -519,9 +519,9 @@ int32_t CloudDiskServiceLogFile::ProduceRenameNewLog(const std::shared_ptr<Cloud
         return errno;
     }
     mBase.mode = childStat.st_mode;
-    mBase.atime = childStat.st_atime;
-    mBase.mtime = childStat.st_mtime;
-    mBase.size = childStat.st_size;
+    mBase.atime = static_cast<uint64_t>(childStat.st_atime);
+    mBase.mtime = static_cast<uint64_t>(childStat.st_mtime);
+    mBase.size = static_cast<uint64_t>(childStat.st_size);
     auto ret = parentMetaFile->DoRenameNew(mBase, renameRecordId_, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("renamenew failed");
@@ -552,9 +552,9 @@ int32_t CloudDiskServiceLogFile::ProduceCloseAndWriteLog(const std::shared_ptr<C
         return errno;
     }
     mBase.mode = childStat.st_mode;
-    mBase.atime = childStat.st_atime;
-    mBase.mtime = childStat.st_mtime;
-    mBase.size = childStat.st_size;
+    mBase.atime = static_cast<uint64_t>(childStat.st_atime);
+    mBase.mtime = static_cast<uint64_t>(childStat.st_mtime);
+    mBase.size = static_cast<uint64_t>(childStat.st_size);
     auto ret = parentMetaFile->DoUpdate(mBase, ctx.recordId, ctx.bidx, ctx.bitPos);
     if (ret != 0) {
         LOGE("update failed");
