@@ -37,7 +37,7 @@ private:
     bool InitFanotify();
     void InitStatus(int32_t userId);
     void CollectEvents();
-    void HandleEvents(int32_t mountFd, char eventsBuf[], size_t dataLen);
+    void HandleEvents(int32_t mountFd, char eventsBuf[], ssize_t dataLen);
     void EventProcess(struct fanotify_event_metadata *metaData, const std::string &filePath);
     // events handle
     void HandleCreate(const std::string &filePath);

@@ -134,7 +134,7 @@ void DiskMonitor::CollectEvents()
     }
 }
 
-void DiskMonitor::HandleEvents(int32_t mountFd, char eventsBuf[], size_t dataLen)
+void DiskMonitor::HandleEvents(int32_t mountFd, char eventsBuf[], ssize_t dataLen)
 {
     for (struct fanotify_event_metadata *metaData = reinterpret_cast<struct fanotify_event_metadata *>(eventsBuf);
          FAN_EVENT_OK(metaData, dataLen); metaData = FAN_EVENT_NEXT(metaData, dataLen)) {
