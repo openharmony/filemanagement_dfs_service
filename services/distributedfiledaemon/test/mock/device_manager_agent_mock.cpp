@@ -19,10 +19,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
-const int32_t FIRST = 1;
-const int32_t SECOND = 2;
-const int32_t THIRD = 3;
-const int32_t FOURTH = 4;
 DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this,
     std::numeric_limits<uint32_t>::max()) {}
 
@@ -63,11 +59,6 @@ void DeviceManagerAgent::OfflineAllDevice()
     return;
 }
 
-void DeviceManagerAgent::ReconnectOnlineDevices()
-{
-    return;
-}
-
 std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless)
 {
     return nullptr;
@@ -78,22 +69,7 @@ int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
     return 0;
 }
 
-bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
-{
-    return true;
-}
-
-void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    return;
-}
-
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    return;
-}
-
-void DeviceManagerAgent::ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     return;
 }
@@ -134,39 +110,6 @@ sptr<StorageManager::IStorageManager> DeviceManagerAgent::GetStorageManager()
     return nullptr;
 }
 
-void DeviceManagerAgent::AddNetworkId(uint32_t tokenId, const std::string &networkId)
-{
-    return;
-}
-
-void DeviceManagerAgent::RemoveNetworkId(uint32_t tokenId)
-{
-    return;
-}
-
-void DeviceManagerAgent::RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId)
-{
-    return;
-}
-
-void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId)
-{
-    return;
-}
-
-void DeviceManagerAgent::ClearNetworkId()
-{
-    return;
-}
-
-std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t tokenId)
-{
-    if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return {};
-    }
-    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetNetworkIds(tokenId);
-}
-
 int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
     const std::string &deviceId, const uint32_t callingTokenId)
 {
@@ -195,57 +138,6 @@ void DeviceManagerAgent::RemoveMountDfsCount(const std::string &mountPath)
     return;
 }
 
-void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
-{
-    return;
-}
-
-int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj)
-{
-    if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return -1;
-    }
-    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->AddRemoteReverseObj(callingTokenId, remoteReverseObj);
-}
-
-int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
-{
-    if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return -1;
-    }
-    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->RemoveRemoteReverseObj(clear, callingTokenId);
-}
-
-int32_t DeviceManagerAgent::FindListenerByObject(const wptr<IRemoteObject> &remote,
-                                                 uint32_t &tokenId, sptr<IFileDfsListener> &listener)
-{
-    if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return -1;
-    }
-    auto ret = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->FindListenerByObject(remote, tokenId, listener);
-    switch (ret) {
-        case FIRST:
-            tokenId = 0;
-            listener = nullptr;
-            break;
-        case SECOND:
-            tokenId = 1;
-            listener = nullptr;
-            break;
-        case THIRD:
-            tokenId = 0;
-            listener = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetDfsListener();
-            break;
-        case FOURTH:
-            tokenId = 1;
-            listener = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetDfsListener();
-            break;
-        default:
-            break;
-    }
-    return 0;
-}
-
 std::string DeviceManagerAgent::GetDeviceIdByNetworkId(const std::string &networkId)
 {
     if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
@@ -260,16 +152,6 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 }
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
-{
-    return;
-}
-
-bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
-{
-    return true;
-}
-
-void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     return;
 }
@@ -303,14 +185,6 @@ DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
         return localDeviceInfo_;
     }
     return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetLocalDeviceInfo();
-}
-
-vector<DeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
-{
-    if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
-        return {};
-    }
-    return IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetRemoteDevicesInfo();
 }
 
 void DeviceManagerAgent::RegisterToExternalDm()

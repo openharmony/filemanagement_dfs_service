@@ -34,16 +34,6 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
     return ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_->GetFileName(fileList, path, dstPath);
 }
 
-void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
-{
-    return;
-}
-
-void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
-{
-    return;
-}
-
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 {
     return "";
@@ -52,11 +42,6 @@ std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 {
     return "test";
-}
-
-std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
-{
-    return "";
 }
 
 std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)

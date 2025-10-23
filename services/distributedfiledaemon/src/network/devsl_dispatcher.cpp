@@ -26,10 +26,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::map<std::string, std::vector<std::weak_ptr<KernelTalker>>> DevslDispatcher::talkersMap_;
-std::map<std::string, std::string> DevslDispatcher::idMap_;
 std::mutex DevslDispatcher::mutex;
-std::mutex DevslDispatcher::devslMapMutex_;
 std::map<std::string, int32_t> DevslDispatcher::devslMap_;
 
 int32_t DevslDispatcher::Start()
@@ -56,75 +53,6 @@ DEVSLQueryParams DevslDispatcher::MakeDevslQueryParams(const std::string &udid)
     queryParams.udidLen = udid.size();
 
     return queryParams;
-}
-
-uint32_t DevslDispatcher::DevslGetRegister(const std::string &cid, std::weak_ptr<KernelTalker> talker)
-{
-    std::string udid;
-    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid, udid);
-
-    std::lock_guard<std::mutex> lock(mutex);
-    DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
-    int status = DATASL_GetHighestSecLevelAsync(&queryParams, &DevslDispatcher::DevslGottonCallback);
-    if (status != 0) {
-        LOGE("devsl dispatcher register callback error %{public}d", status);
-        return 0;
-    }
-
-    idMap_[udid] = cid;
-    auto iter = talkersMap_.find(udid);
-    if (iter == talkersMap_.end()) {
-        std::vector<std::weak_ptr<KernelTalker>> talkers;
-        talkers.push_back(talker);
-        talkersMap_.emplace(udid, talkers);
-    } else {
-        iter->second.push_back(talker);
-    }
-
-    return 0;
-}
-
-void DevslDispatcher::DevslGottonCallbackAsync(const std::string udid, uint32_t devsl)
-{
-    std::lock_guard<std::mutex> lock(mutex);
-
-    auto it = talkersMap_.find(udid);
-    if (it == talkersMap_.end()) {
-        LOGE("devsl dispatcher callback, there is no talker");
-        return;
-    }
-
-    for (auto talker : it->second) {
-        auto realTalker = talker.lock();
-        if (!realTalker) {
-            continue;
-        }
-
-        auto iter = idMap_.find(udid);
-        if (iter != idMap_.end()) {
-            realTalker->SinkDevslTokernel(iter->second, devsl);
-        }
-    }
-
-    talkersMap_.erase(it);
-}
-
-void DevslDispatcher::DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t result, uint32_t levelInfo)
-{
-    LOGI("devsl dispatcher callback");
-    if (result != 0) {
-        levelInfo = DATA_SEC_LEVEL1;
-        LOGE("devsl dispatcher dsl get callback result : %{public}d", result);
-    }
-    if (queryParams == nullptr) {
-        LOGE("queryParams is nullptr.");
-        return;
-    }
-    std::string udid(reinterpret_cast<char *>(queryParams->udid), queryParams->udidLen);
-    std::thread callbackThread =
-        std::thread([udid, levelInfo]() { DevslGottonCallbackAsync(udid, levelInfo); });
-    callbackThread.detach();
 }
 
 int32_t DevslDispatcher::GetSecurityLabel(const std::string &path)

@@ -175,23 +175,6 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetLocalUri_0100
 }
 
 /**
- * @tc.name: SoftBusSessionListenerTest_GetSandboxPath_0100
- * @tc.desc: test GetSandboxPath function.
- * @tc.type: FUNC
- * @tc.require: I9JKYU
- */
-HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetSandboxPath_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_GetSandboxPath_0100 start";
-    string sandboxPath = SoftBusSessionListener::GetSandboxPath(TEST_URI);
-    EXPECT_EQ(sandboxPath, "");
-    string testUri2 = "file://com.demo.a/distributedfiles/.remote_share/data/test/el2/base/files/test.txt";
-    sandboxPath = SoftBusSessionListener::GetSandboxPath(testUri2);
-    EXPECT_EQ(sandboxPath, "data/test/el2/base/files/test.txt");
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_GetSandboxPath_0100 end";
-}
-
-/**
  * @tc.name: SoftBusSessionListenerTest_GetRealPath_0100
  * @tc.desc: test GetRealPath function.
  * @tc.type: FUNC
@@ -246,100 +229,6 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetFileName_0100
     EXPECT_EQ(rltList.size(), 1);
     EXPECT_EQ(rltList[0], "t2.txt");
     GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_GetFileName_0100 end";
-}
-
-/**
- * @tc.name: SoftBusSessionListenerTest_OnSessionOpened_0100
- * @tc.desc: test OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: I9JKYU
- */
-HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_OnSessionOpened_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0100 start";
-    PeerSocketInfo info;
-    int32_t sessionId = 1;
-    string sessionName1 = "sessionName1";
-    info.name = const_cast<char*>(sessionName1.c_str());
-    info.networkId = const_cast<char*>(TEST_NETWORKID.c_str());
-    g_mockGetTrustedDeviceList = true;
-    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName1);
-    SoftBusSessionListener::OnSessionOpened(sessionId, info);
-
-    SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = sessionId,
-                                                 .srcUri = "file://com.demo.a/test/1",
-                                                 .dstPath = "/data/test/1"};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
-    SoftBusSessionListener::OnSessionOpened(sessionId, info);
-
-    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName1);
-    string netWorkId = "?networkid=454553656565656656";
-    sessionInfo1.srcUri = TEST_URI + netWorkId;
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
-    SoftBusSessionListener::OnSessionOpened(sessionId, info);
-    EXPECT_NE(SoftBusSessionPool::GetInstance().sessionMap_.find(sessionName1),
-        SoftBusSessionPool::GetInstance().sessionMap_.end());
-
-    string fileStr = TEST_PATH + "/test.txt";
-    int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
-    ASSERT_TRUE(fd != -1) << "SoftBusSessionListenerTest_OnSessionOpened_0100 Create File Failed!";
-    close(fd);
-    EXPECT_CALL(*socketMock_, SendFile(_, _, _, _)).WillOnce(Return(-1));
-    SoftBusSessionListener::OnSessionOpened(sessionId, info);
-    EXPECT_EQ(SoftBusSessionPool::GetInstance().sessionMap_.find(sessionName1),
-        SoftBusSessionPool::GetInstance().sessionMap_.end());
-
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
-    EXPECT_CALL(*socketMock_, SendFile(_, _, _, _)).WillOnce(Return(0));
-    SoftBusSessionListener::OnSessionOpened(sessionId, info);
-    EXPECT_EQ(SoftBusSessionPool::GetInstance().sessionMap_.find(sessionName1),
-        SoftBusSessionPool::GetInstance().sessionMap_.end());
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0100 end";
-}
-
-/**
- * @tc.name: SoftBusSessionListenerTest_OnSessionOpened_0200
- * @tc.desc: test OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: I9JKYU
- */
-HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_OnSessionOpened_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0200 start";
-    PeerSocketInfo info;
-    int32_t sessionId = 1;
-    string sessionName1 = "sessionName1";
-    info.name = const_cast<char*>(sessionName1.c_str());
-    info.networkId = const_cast<char*>(TEST_NETWORKID.c_str());
-    g_mockGetTrustedDeviceList = false;
-    bool res = true;
-    try {
-        SoftBusSessionListener::OnSessionOpened(sessionId, info);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionOpened_0200 end";
-}
-
-/**
- * @tc.name: SoftBusSessionListenerTest_OnSessionClosed_0100
- * @tc.desc: test OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: I9JKYU
- */
-HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_OnSessionClosed_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionClosed_0100 start";
-    ShutdownReason reason = SHUTDOWN_REASON_LOCAL;
-    int32_t sessionId = 1;
-    SoftBusHandler::clientSessNameMap_.insert(make_pair(sessionId, "test"));
-    SoftBusSessionListener::OnSessionClosed(sessionId, reason);
-
-    EXPECT_EQ(SoftBusHandler::clientSessNameMap_.find(sessionId),
-        SoftBusHandler::clientSessNameMap_.end());
-    GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_OnSessionClosed_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

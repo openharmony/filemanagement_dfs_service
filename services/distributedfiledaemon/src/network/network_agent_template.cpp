@@ -27,10 +27,8 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
-constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
-constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 constexpr int32_t VALID_MOUNT_PATH_LEN = 16;
 } // namespace
 
@@ -43,7 +41,6 @@ void NetworkAgentTemplate::Start()
     LOGI("Start Enter");
     JoinDomain();
     kernerlTalker_->CreatePollThread();
-    ConnectOnlineDevices();
 }
 
 void NetworkAgentTemplate::Stop()
@@ -63,49 +60,6 @@ void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
     LOGI("ConnectDeviceByP2PAsync Enter");
     std::this_thread::sleep_for(std::chrono::milliseconds(OPEN_SESSSION_DELAY_TIME));
     OpenSession(info, LINK_TYPE_P2P);
-}
-
-void NetworkAgentTemplate::ConnectOnlineDevices()
-{
-    string pkgName = IDaemon::SERVICE_NAME;
-    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-
-    auto dma = DeviceManagerAgent::GetInstance();
-    auto infos = dma->GetRemoteDevicesInfo();
-    LOGI("Have %{public}zu devices Online", infos.size());
-    for (const auto &info : infos) {
-        if (info.GetExtraData().empty()) {
-            LOGE("extraData is empty.");
-            return;
-        }
-        nlohmann::json entraDataJson = nlohmann::json::parse(info.GetExtraData(), nullptr, false);
-        if (entraDataJson.is_discarded()) {
-            LOGE("entraDataJson parse failed.");
-            return;
-        }
-        if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
-            LOGE("error json int32_t param.");
-            return;
-        }
-        int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
-        if (osType != DEVICE_OS_TYPE_OH) {
-            LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
-                Utils::GetAnonyString(info.GetCid()).c_str(), osType);
-            return;
-        }
-
-        int32_t networkType;
-        int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, info.GetCid(), networkType);
-        if (errCode) {
-            LOGE("failed to get network type by network id errCode = %{public}d", errCode);
-            continue;
-        }
-        if (!(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
-            LOGI("not wifi network networkType = %{public}d == %{public}d", networkType,
-                 1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
-            continue;
-        }
-    }
 }
 
 void NetworkAgentTemplate::DisconnectAllDevices()

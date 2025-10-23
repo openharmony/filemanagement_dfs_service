@@ -46,8 +46,6 @@ namespace DistributedFile {
 namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
-constexpr int PEER_TO_PEER_GROUP = 256;
-constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
 const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
@@ -166,16 +164,6 @@ void DeviceManagerAgent::OfflineAllDevice()
     }
 }
 
-void DeviceManagerAgent::ReconnectOnlineDevices()
-{
-    unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (auto [ignore, net] : cidNetTypeRecord_) {
-        if (net == nullptr) {
-            continue;
-        }
-    }
-}
-
 std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless)
 {
     LOGI("enter: isAccountless %{public}d", isAccountless);
@@ -202,20 +190,6 @@ int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
     }
 
     return networkType;
-}
-
-bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
-{
-    if ((networkType == -1) ||
-        !(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
-        return false;
-    }
-
-    return true;
-}
-
-void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
 }
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -270,23 +244,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
     }
     LOGI("OnDeviceOffline end");
-}
-
-void DeviceManagerAgent::ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    LOGI("ClearCount networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
-    DeviceInfo info(deviceInfo);
-    unique_lock<mutex> lock(mpToNetworksMutex_);
-    auto it = cidNetTypeRecord_.find(info.cid_);
-    if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
-        return;
-    }
-    if (it->second != nullptr) {
-        it->second->DisconnectDeviceByP2P(info.cid_);
-    } else {
-        LOGE("ClearCount NetworkAgentTemplate is nullptr");
-    }
 }
 
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -428,65 +385,6 @@ sptr<StorageManager::IStorageManager> DeviceManagerAgent::GetStorageManager()
     return iface_cast<StorageManager::IStorageManager>(storageObj);
 }
 
-void DeviceManagerAgent::AddNetworkId(uint32_t tokenId, const std::string &networkId)
-{
-    LOGI("DeviceManagerAgent::AddNetworkId, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    networkIdMap_[tokenId].insert(networkId);
-}
-
-void DeviceManagerAgent::RemoveNetworkId(uint32_t tokenId)
-{
-    LOGI("DeviceManagerAgent::RemoveNetworkId start");
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    networkIdMap_.erase(tokenId);
-}
-
-void DeviceManagerAgent::RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId)
-{
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    auto it = networkIdMap_.find(tokenId);
-    if (it != networkIdMap_.end()) {
-        (it->second).erase(networkId);
-        if (it->second.empty()) {
-            networkIdMap_.erase(it);
-        }
-        LOGI("DeviceManagerAgent::RemoveNetworkIdByOne success, networkId: %{public}s",
-            Utils::GetAnonyString(networkId).c_str());
-    }
-}
-
-void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId)
-{
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    if (networkId.empty()) {
-        LOGE("networkId is empty");
-        return;
-    }
-    for (auto it = networkIdMap_.begin(); it != networkIdMap_.end();) {
-        it->second.erase(networkId);
-        if (it->second.empty()) {
-            it = networkIdMap_.erase(it);
-        } else {
-            ++it;
-        }
-        LOGI("RemoveNetworkIdForAllToken, networkId: %{public}s",
-            Utils::GetAnonyString(networkId).c_str());
-    }
-}
-
-void DeviceManagerAgent::ClearNetworkId()
-{
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    networkIdMap_.clear();
-}
-
-std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t tokenId)
-{
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    return networkIdMap_[tokenId];
-}
-
 int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
                                          const std::string &deviceId,
                                          const uint32_t callingTokenId)
@@ -603,67 +501,6 @@ void DeviceManagerAgent::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &devi
     }
 }
 
-void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
-{
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
-    for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
-        auto onstatusReverseProxy = it->second;
-        if (onstatusReverseProxy == nullptr) {
-            LOGI("get onstatusReverseProxy fail");
-            return;
-        }
-        onstatusReverseProxy->OnStatus(networkId, status, "", 0);
-        LOGI("NotifyRemoteReverseObj, deviceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
-    }
-}
-
-int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj)
-{
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
-    auto it = appCallConnect_.find(callingTokenId);
-    if (it != appCallConnect_.end()) {
-        LOGE("AddRemoteReverseObj fail");
-        return FileManagement::E_INVAL_ARG;
-    }
-    appCallConnect_[callingTokenId] = remoteReverseObj;
-    LOGI("DeviceManagerAgent::AddRemoteReverseObj::add new value suceess");
-    return FileManagement::E_OK;
-}
-
-int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
-{
-    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj called");
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
-    if (clear) {
-        appCallConnect_.clear();
-        return FileManagement::E_OK;
-    }
-
-    auto it = appCallConnect_.find(callingTokenId);
-    if (it == appCallConnect_.end()) {
-        LOGE("RemoveRemoteReverseObj fail");
-        return FileManagement::E_INVAL_ARG;
-    }
-    appCallConnect_.erase(it);
-    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj end");
-    return FileManagement::E_OK;
-}
-
-int32_t DeviceManagerAgent::FindListenerByObject(const wptr<IRemoteObject> &remote,
-                                                 uint32_t &tokenId, sptr<IFileDfsListener>& listener)
-{
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
-    for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
-        if (remote != (it->second)->AsObject()) {
-            continue;
-        }
-        tokenId = it->first;
-        listener = it->second;
-        return FileManagement::E_OK;
-    }
-    return FileManagement::E_INVAL_ARG;
-}
-
 std::string DeviceManagerAgent::GetDeviceIdByNetworkId(const std::string &networkId)
 {
     LOGI("DeviceManagerAgent::GetDeviceIdByNetworkId called");
@@ -713,23 +550,6 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
         cidNetTypeRecord_.insert({ networkId, network });
         cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
     }
-}
-
-bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
-{
-    // because of there no same_account, only for test, del later
-    LOGI("SAME_ACCOUNT_MARK val is %{public}d", system::GetBoolParameter(SAME_ACCOUNT_MARK, false));
-    if (system::GetBoolParameter(SAME_ACCOUNT_MARK, false) == true) { // isaccountless == false
-        LOGI("SAME_ACCOUNT_MARK val is true(same account)");
-        return false;
-    } else { // isaccountless == true
-        return true;
-    }
-
-    if (group.groupType == PEER_TO_PEER_GROUP || group.groupType == ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
-        return true;
-    }
-    return false;
 }
 
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -851,25 +671,6 @@ void DeviceManagerAgent::OnRemoteDied()
 DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 {
     return localDeviceInfo_;
-}
-
-vector<DeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
-{
-    string extra = "";
-    string pkgName = IDaemon::SERVICE_NAME;
-    vector<DistributedHardware::DmDeviceInfo> deviceList;
-
-    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    int errCode = deviceManager.GetTrustedDeviceList(pkgName, extra, deviceList);
-    if (errCode) {
-        ThrowException(errCode, "Failed to get info of remote devices");
-    }
-
-    vector<DeviceInfo> res;
-    for (const auto &item : deviceList) {
-        res.push_back(DeviceInfo(item));
-    }
-    return res;
 }
 
 void DeviceManagerAgent::RegisterToExternalDm()

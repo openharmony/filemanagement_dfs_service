@@ -40,8 +40,6 @@ using namespace testing;
 
 const std::string NETWORKID_ONE = "45656596896323231";
 const std::string NETWORKID_TWO = "45656596896323232";
-constexpr int32_t NETWORKTYPE_WITH_WIFI = 2;
-constexpr int32_t NETWORKTYPE_NONE_WIFI = 4;
 constexpr int USER_ID = 100;
 static const string SAME_ACCOUNT = "account";
 
@@ -71,109 +69,6 @@ void SoftbusAgentSupTest::TearDownTestCase(void)
     deviceManagerAgentMock_ = nullptr;
     DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
     deviceManagerImplMock_ = nullptr;
-}
-
-/**
- * @tc.name: SoftbusAgentSupTest_ConnectOnlineDevices_0100
- * @tc.desc: Verify the ConnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(SoftbusAgentSupTest, SoftbusAgentSupTest_ConnectOnlineDevices_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_ConnectOnlineDevices_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool res = true;
-    try {
-        vector<DeviceInfo> infos;
-        DeviceInfo testA;
-        infos.push_back(testA);
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        agent->ConnectOnlineDevices();
-
-        DistributedHardware::DmDeviceInfo nodeInfo{.extraData = "test"};
-        DeviceInfo testB(nodeInfo);
-        infos.clear();
-        infos.push_back(testB);
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        agent->ConnectOnlineDevices();
-
-        nodeInfo.extraData = R"({"OS_TYPE":"test"})";
-        DeviceInfo testC(nodeInfo);
-        infos.clear();
-        infos.push_back(testC);
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        agent->ConnectOnlineDevices();
-
-        nodeInfo.extraData = R"({"OS_TYPE":3})";
-        DeviceInfo testD(nodeInfo);
-        infos.clear();
-        infos.push_back(testD);
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        agent->ConnectOnlineDevices();
-    
-        nodeInfo.extraData = R"({"OS_TYPE":10})";
-        memset_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN, 0, DM_MAX_DEVICE_ID_LEN);
-        (void)memcpy_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
-                NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
-        DeviceInfo testE(nodeInfo);
-        infos.clear();
-        infos.push_back(testE);
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        EXPECT_CALL(*deviceManagerImplMock_, GetNetworkTypeByNetworkId(_, _, _))
-            .WillOnce(Return(ERR_DM_INPUT_PARA_INVALID));
-        agent->ConnectOnlineDevices();
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_ConnectOnlineDevices_0100 end";
-}
-
-/**
- * @tc.name: SoftbusAgentSupTest_ConnectOnlineDevices_0200
- * @tc.desc: Verify the ConnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusAgentSupTest, SoftbusAgentSupTest_ConnectOnlineDevices_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_ConnectOnlineDevices_0200 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    bool res = true;
-    try {
-        vector<DeviceInfo> infos;
-        DistributedHardware::DmDeviceInfo nodeInfo{.networkId = "testNetWork",
-            .extraData = R"({"OS_TYPE":10})"};
-        memset_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN, 0, DM_MAX_DEVICE_ID_LEN);
-        (void)memcpy_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
-                NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
-        DeviceInfo testC(nodeInfo);
-        infos.push_back(testC);
-        memset_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN, 0, DM_MAX_DEVICE_ID_LEN);
-        (void)memcpy_s(nodeInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
-                NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
-        DeviceInfo testD(nodeInfo);
-        infos.push_back(testD);
-
-        EXPECT_CALL(*deviceManagerAgentMock_, GetRemoteDevicesInfo()).WillOnce(Return(infos));
-        EXPECT_CALL(*deviceManagerImplMock_, GetNetworkTypeByNetworkId(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(NETWORKTYPE_WITH_WIFI), Return(DM_OK)))
-            .WillOnce(DoAll(SetArgReferee<2>(NETWORKTYPE_NONE_WIFI), Return(DM_OK)));
-        agent->ConnectOnlineDevices();
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SoftbusAgentSupTest_ConnectOnlineDevices_0200 end";
 }
 
 /**

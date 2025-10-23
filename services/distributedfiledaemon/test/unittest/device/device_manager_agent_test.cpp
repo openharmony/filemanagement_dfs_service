@@ -367,6 +367,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0400, Te
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceChanged_0400 end";
 }
+
 /**
  * @tc.name: DeviceManagerAgentTest_OnDeviceReady_0100
  * @tc.desc: Verify the OnDeviceReady function.
@@ -792,56 +793,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OfflineAllDevice_0200, T
 }
 
 /**
- * @tc.name: DeviceManagerAgentTest_ReconnectOnlineDevices_0100
- * @tc.desc: Verify the ReconnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ReconnectOnlineDevices_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0100 start";
-    bool res = true;
-
-    try {
-        DeviceManagerAgent::GetInstance()->ReconnectOnlineDevices();
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_ReconnectOnlineDevices_0200
- * @tc.desc: Verify the ReconnectOnlineDevices function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ReconnectOnlineDevices_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0200 start";
-    bool res = true;
-
-    try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test1", agent1 });
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test2", nullptr });
-        DeviceManagerAgent::GetInstance()->ReconnectOnlineDevices();
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test1");
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test2");
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0200 end";
-}
-
-/**
  * @tc.name: DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100
  * @tc.desc: Verify the FindNetworkBaseTrustRelation function.
  * @tc.type: FUNC
@@ -952,83 +903,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetNetworkType_0100, Tes
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetNetworkType_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_IsWifiNetworkType_0100
- * @tc.desc: Verify the IsWifiNetworkType function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_IsWifiNetworkType_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsWifiNetworkType_0100 start";
-    bool res = true;
-
-    try {
-        int ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(-1);
-        EXPECT_FALSE(ret);
-        ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(1);
-        EXPECT_FALSE(ret);
-        ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(3);
-        EXPECT_TRUE(ret);
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsWifiNetworkType_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_CheckIsAccountless_0100
- * @tc.desc: Verify the CheckIsAccountless function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_CheckIsAccountless_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0100 start";
-    bool res = true;
-
-    try {
-        GroupInfo group{};
-        g_parameterVaule = false;
-        auto ret = DeviceManagerAgent::GetInstance()->CheckIsAccountless(group);
-        EXPECT_TRUE(ret);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_CheckIsAccountless_0200
- * @tc.desc: Verify the CheckIsAccountless function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_CheckIsAccountless_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0200 start";
-    bool res = true;
-
-    try {
-        GroupInfo group{};
-        g_parameterVaule = true;
-        auto ret = DeviceManagerAgent::GetInstance()->CheckIsAccountless(group);
-        EXPECT_FALSE(ret);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0200 end";
 }
 
 /**
@@ -1195,57 +1069,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetLocalDeviceInfo_0100,
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetLocalDeviceInfo_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_GetRemoteDevicesInfo_0100
- * @tc.desc: Verify the GetRemoteDevicesInfo function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0100 start";
-    bool res = true;
-
-    try {
-        std::vector<DmDeviceInfo> deviceList;
-        deviceList.push_back(deviceInfo);
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
-        auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
-        EXPECT_NE(info.size(), 0);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_GetRemoteDevicesInfo_0200
- * @tc.desc: Verify the GetRemoteDevicesInfo function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0200 start";
-    bool res = true;
-
-    try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(-1));
-        auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
-        EXPECT_NE(info.size(), 0);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_FALSE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0200 end";
 }
 
 /**
@@ -1416,37 +1239,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QueryRelatedGroups_0100,
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QueryRelatedGroups_0100 end";
 }
 
-/**
- * @tc.name: DeviceManagerAgentTest_ClearCount_0100
- * @tc.desc: Verify the ClearCount function.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ClearCount_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ClearCount_0100 start";
-    bool res = true;
-
-    try {
-        std::string networkId(deviceInfo.networkId);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ networkId, nullptr });
-        DeviceManagerAgent::GetInstance()->ClearCount(deviceInfo);
-        EXPECT_EQ(DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.size(), 1);
-
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_[networkId] = agent1;
-        DeviceManagerAgent::GetInstance()->ClearCount(deviceInfo);
-        EXPECT_EQ(DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.size(), 1);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.clear();
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ClearCount_0100 end";
-}
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
