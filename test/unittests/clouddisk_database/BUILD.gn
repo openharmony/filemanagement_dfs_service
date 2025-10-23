@@ -122,7 +122,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
 
   clouddisk_database = [
     "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_rdbstore.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
@@ -132,6 +131,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
 
   include_dirs = [
     "${services_path}/clouddisk_database/include",
+    "${services_path}/clouddisk_database/src",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudfiledaemon/include",

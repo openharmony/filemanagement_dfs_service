@@ -698,17 +698,34 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFile,
-    MetaBase &metaBase, int32_t status)
+static int32_t UpdateValueBuckets(const MetaBase &metaBase, const string &filePath,
+    int32_t status, ValuesBucket &fileInfo, int64_t &fileSize)
 {
-    ValuesBucket fileInfo;
-    if (metaBase.fileType == FILE_TYPE_THUMBNAIL) {
-        fileInfo.PutInt(FileColumn::THM_FLAG, status);
-    } else {
-        fileInfo.PutInt(FileColumn::LCD_FLAG, status);
+    struct stat statInfo{};
+    auto res = stat(filePath.c_str(), &statInfo);
+    if (res != E_OK) {
+        LOGE("filePath %{public}s is invalid, errno=%{public}d", GetAnonyString(filePath).c_str(), errno);
+        return res;
     }
+    fileSize = static_cast<int64_t>(statInfo.st_size);
+    auto flagColumnName = metaBase.fileType == FILE_TYPE_THUMBNAIL ? FileColumn::THM_FLAG : FileColumn::LCD_FLAG;
+    auto sizeColumnName = metaBase.fileType == FILE_TYPE_THUMBNAIL ? FileColumn::THM_SIZE : FileColumn::LCD_SIZE;
+    fileInfo.PutInt(flagColumnName, status);
+    fileInfo.PutInt(sizeColumnName, static_cast<int64_t>(statInfo.st_size));
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFile,
+    MetaBase &metaBase, int32_t status, const string &filePath)
+{
     string srcCloudId;
     auto res = GetSrcCloudId(metaBase.cloudId, srcCloudId);
+    if (res != E_OK) {
+        return res;
+    }
+    ValuesBucket fileInfo;
+    int64_t fileSize = 0;
+    res = UpdateValueBuckets(metaBase, filePath, status, fileInfo, fileSize);
     if (res != E_OK) {
         return res;
     }
@@ -728,14 +745,16 @@ int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFil
     }
     ValuesBucket thmFileInfo;
     thmFileInfo.PutInt(FileColumn::POSITION, static_cast<int32_t>(ThumbPosition::THM_IN_LOCAL));
+    thmFileInfo.PutLong(FileColumn::FILE_SIZE, fileSize);
     NativeRdb::AbsRdbPredicates thmPredicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
     thmPredicates.EqualTo(FileColumn::CLOUD_ID, metaBase.cloudId);
     std::tie(ret, changedRows) = transaction->Update(thmFileInfo, thmPredicates);
     if (ret != E_OK) {
         LOGE("database update thumbnail file info failed, ret = %{public}d", ret);
     }
-    auto callback = [&metaBase] (MetaBase &m) {
+    auto callback = [&metaBase, &fileSize] (MetaBase &m) {
         m.position = static_cast<uint8_t>(ThumbPosition::THM_IN_LOCAL);
+        m.size = static_cast<uint64_t>(fileSize);
     };
     ret = metaFile->DoChildUpdate(metaBase.name, callback);
     if (ret != E_OK) {
