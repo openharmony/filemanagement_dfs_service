@@ -12,24 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "handleclosep2pconnectionex_fuzzer.h"
+#include "handleissameaccountdevice_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "copy/ipc_wrapper.h"
 #include "daemon_stub.h"
+#include "dfsu_access_token_helper.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
 #include "message_option.h"
 #include "message_parcel.h"
-#include "securec.h"
-#include "accesstoken_kit.h"
-#include "utils_log.h"
 #include "nativetoken_kit.h"
+#include "securec.h"
 #include "token_setproc.h"
+#include "utils_log.h"
 
 namespace OHOS {
 constexpr pid_t UID = 1009;
@@ -40,7 +41,14 @@ pid_t IPCSkeleton::GetCallingUid()
 {
     return UID;
 }
+} // namespace OHOS
+
+namespace OHOS::FileManagement {
+bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
+{
+    return true;
 }
+} // namespace OHOS::FileManagement
 
 namespace OHOS {
 using namespace OHOS::Storage::DistributedFile;
@@ -173,17 +181,17 @@ public:
         return 0;
     }
 };
-void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                        const uint8_t *data,
-                                        size_t size)
+
+void HandleIsSameAccountDevice(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE);
     MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data, size);
     datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
 
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
@@ -206,12 +214,12 @@ void SetAccessTokenPermission()
     };
     tokenId = GetAccessTokenId(&infoInstance);
     if (tokenId == 0) {
-        LOGE("Get Acess Token Id Failed");
+        LOGE("Get Access Token Id Failed");
         return;
     }
     int ret = SetSelfTokenID(tokenId);
     if (ret != 0) {
-        LOGE("Set Acess Token Id Failed");
+        LOGE("Set Access Token Id Failed");
         return;
     }
     ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
@@ -220,6 +228,7 @@ void SetAccessTokenPermission()
         return;
     }
 }
+
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -228,6 +237,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleIsSameAccountDevice(daemonStubPtr, data, size);
     return 0;
 }

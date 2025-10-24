@@ -203,7 +203,7 @@ void SetAccessTokenPermission()
         .dcaps = nullptr,
         .perms = perms,
         .acls = nullptr,
-        .processName = "distributdFileDaemonstubFuzzer",
+        .processName = "distributedFileDaemonstubFuzzer",
         .aplStr = "system_basic",
     };
     tokenId = GetAccessTokenId(&infoInstance);
