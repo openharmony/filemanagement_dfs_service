@@ -40,5 +40,9 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandlegetconnecteddevicelist_fuzzer:DaemonStubHandleGetConnectedDeviceListFuzzTest",
     "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandlegetdfsswitchstatus_fuzzer:DaemonStubHandleGetDfsSwitchStatusFuzzTest",
     "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/daemonstubhandleupdatedfsswitchstatus_fuzzer:DaemonStubHandleUpdateDfsSwitchStatusFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/handleunregisterfiledfslistener_fuzzer:HandleUnregisterFileDfsListenerFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/handleissameaccountdevice_fuzzer:HandleIsSameAccountDeviceFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/handlerequestsendfileacl_fuzzer:HandleRequestSendFileAclFuzzTest",
+    "${distributedfile_path}/test/fuzztest/distributedfiledaemonfuzztest/handlegetremotecopyinfoacl_fuzzer:HandleGetRemoteCopyInfoAclFuzzTest",
   ]
 }

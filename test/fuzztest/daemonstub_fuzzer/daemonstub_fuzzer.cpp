@@ -197,35 +197,6 @@ void HandleRegisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, co
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleUnregisterFileDfsListener(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    uint32_t code =
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UNREGISTER_FILE_DFS_LISTENER);
-    MessageParcel datas;
-    MessageParcel reply;
-    MessageOption option;
-
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleIsSameAccountDevice(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE);
-    MessageParcel datas;
-    MessageParcel reply;
-    MessageOption option;
-
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
 void SetAccessTokenPermission()
 {
     uint64_t tokenId;
@@ -239,7 +210,7 @@ void SetAccessTokenPermission()
         .dcaps = nullptr,
         .perms = perms,
         .acls = nullptr,
-        .processName = "distributdFileDaemonstubFuzzer",
+        .processName = "distributedFileDaemonstubFuzzer",
         .aplStr = "system_basic",
     };
     tokenId = GetAccessTokenId(&infoInstance);
@@ -258,33 +229,6 @@ void SetAccessTokenPermission()
         return;
     }
 }
-
-void HandleRequestSendFileACLFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
-
-void HandleGetRemoteCopyInfoACLFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
-{
-    uint32_t code =
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL);
-    MessageParcel datas;
-    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
-}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -294,9 +238,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
     OHOS::HandleRegisterFileDfsListener(daemonStubPtr, data, size);
-    OHOS::HandleUnregisterFileDfsListener(daemonStubPtr, data, size);
-    OHOS::HandleIsSameAccountDevice(daemonStubPtr, data, size);
-    OHOS::HandleRequestSendFileACLFuzzTest(daemonStubPtr, data, size);
-    OHOS::HandleGetRemoteCopyInfoACLFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
