@@ -105,6 +105,7 @@ bool IpcWrapper::ReadBatchUriByRawData(MessageParcel &data, std::vector<std::str
     MessageParcel tempParcel;
     if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
         LOGE("failed to parseFrom");
+        free(buffer);
         return false;
     }
     tempParcel.ReadStringVector(&uriVec);
