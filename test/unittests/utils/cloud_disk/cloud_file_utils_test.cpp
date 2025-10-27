@@ -329,4 +329,109 @@ HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUidByPath, TestSize.Level1)
         GTEST_LOG_(INFO) << "CloudFileUtils_ChangeUidByPath ERROR.";
     }
 }
+
+/**
+ * @tc.name: GetPathFromUri001
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, GetPathFromUri001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPathFromUri001 Start.";
+    try {
+    std::string uriString = "file://com.ohos.camera/data/test/file.txt";
+    std::string expectedPath = "/data/test/file.txt";
+    std::string actualPath = CloudFileUtils::GetPathFromUri(uriString);
+
+    EXPECT_EQ(expectedPath, actualPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetPathFromUri001 ERROR.";
+    }
+}
+ 
+/**
+ * @tc.name: GetPathFromUri002
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, GetPathFromUri002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPathFromUri002 Start.";
+    try {
+    std::string uriString = "file://com.ohos.camera/data/test/.txt";
+    std::string expectedPath = "/data/test/.txt";
+    std::string actualPath = CloudFileUtils::GetPathFromUri(uriString);
+
+    EXPECT_EQ(expectedPath, actualPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetPathFromUri002 ERROR.";
+    }
+}
+ 
+/**
+ * @tc.name: GetPathFromUri003
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, GetPathFromUri003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPathFromUri003 Start.";
+    try {
+    std::string uriString = "file:///data";
+    std::string expectedPath = "/data";
+    std::string actualPath = CloudFileUtils::GetPathFromUri(uriString);
+
+    EXPECT_EQ(expectedPath, actualPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetPathFromUri003 ERROR.";
+    }
+}
+
+/**
+ * @tc.name: GetPathFromUri004
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, GetPathFromUri004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPathFromUri004 Start.";
+    try {
+    std::string uriString = "file://com.ohos.camera/";
+    std::string expectedPath = "/";
+    std::string actualPath = CloudFileUtils::GetPathFromUri(uriString);
+
+    EXPECT_EQ(expectedPath, actualPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetPathFromUri004 ERROR.";
+    }
+}
+
+/**
+ * @tc.name: GetPathFromUri005
+ * @tc.desc: Verify ChangeUidByPath for path.
+ * @tc.type: FUNC
+ * @tc.require: ICTBV2
+ */
+HWTEST_F(CloudFileUtilsTest, GetPathFromUri005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPathFromUri005 Start.";
+    try {
+    std::string uriString = "file://com.ohos.camera";
+    std::string expectedPath = "";
+    std::string actualPath = CloudFileUtils::GetPathFromUri(uriString);
+ 
+    EXPECT_EQ(expectedPath, actualPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetPathFromUri005 ERROR.";
+    }
+}
 } // OHOS

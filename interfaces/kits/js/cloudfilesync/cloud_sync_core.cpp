@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/xattr.h>
 
+#include "cloud_file_utils.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "uri.h"
@@ -27,6 +28,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 const int32_t E_PARAMS = 401;
 const int32_t AGING_DAYS = 30;
+const string FILE_SCHEME = "file";
 
 const string &CloudSyncCore::GetBundleName() const
 {
@@ -166,7 +168,12 @@ FsResult<void> CloudSyncCore::DoStopOptimizeStorage()
 FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
 {
     Uri uri(path);
-    string sandBoxPath = uri.GetPath();
+    string scheme = uri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    string uriString = uri.ToString();
+    string sandBoxPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
     string xattrKey = "user.cloud.filestatus";
 
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);
@@ -196,7 +203,12 @@ FsResult<int32_t> CloudSyncCore::DoGetFileSyncState(string path)
 FsResult<int32_t> CloudSyncCore::DoGetCoreFileSyncState(string path)
 {
     Uri uri(path);
-    string sandBoxPath = uri.GetPath();
+    string scheme = uri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return FsResult<int32_t>::Error(EINVAL);
+    }
+    string uriString = uri.ToString();
+    string sandBoxPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
     string xattrKey = "user.cloud.filestatus";
 
     auto xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), nullptr, 0);

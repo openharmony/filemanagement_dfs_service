@@ -890,7 +890,8 @@ static string ConvertUriToSrcPath(const string &uriStr)
         return "/";
     }
     const string sandboxPrefix = "/data/storage/el2/cloud";
-    string filePath = uri.GetPath().substr(sandboxPrefix.length());
+    string uriString = uri.ToString();
+    string filePath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString).substr(sandboxPrefix.length());
     size_t pos = filePath.rfind("/");
     filePath = pos == 0 ? "/" : filePath.substr(0, pos);
     return filePath;
