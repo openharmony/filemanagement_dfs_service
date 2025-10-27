@@ -222,6 +222,7 @@ public:
     virtual shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &, int, RdbOpenCallback &, int &) = 0;
     virtual int DeleteRdbStore(const std::string &) = 0;
     virtual std::string GetDefaultDatabasePath(const std::string &, const std::string &, int &) = 0;
+    virtual int MockStat(const char* path, struct stat* buf) = 0;
 };
 
 class AssistantMock : public Assistant {
@@ -229,6 +230,7 @@ public:
     MOCK_METHOD4(GetRdbStore, shared_ptr<RdbStore>(const RdbStoreConfig &, int, RdbOpenCallback &, int &));
     MOCK_METHOD1(DeleteRdbStore, int(const std::string &));
     MOCK_METHOD3(GetDefaultDatabasePath, std::string(const std::string &, const std::string &, int &));
+    MOCK_METHOD2(MockStat, int(const char*, struct stat*));
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
 #endif

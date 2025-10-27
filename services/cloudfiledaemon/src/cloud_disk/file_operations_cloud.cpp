@@ -449,7 +449,7 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
             if (ret == EOK) {
                 DatabaseManager &databaseManager = DatabaseManager::GetInstance();
                 auto rdbstore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-                rdbstore->UpdateTHMStatus(metaFile, metaBase, CloudSync::DOWNLOADED_THM);
+                rdbstore->UpdateTHMStatus(metaFile, metaBase, CloudSync::DOWNLOADED_THM, path);
             } else {
                 LOGE("path rename failed, tmpPath:%{public}s, errno:%{public}d",
                     GetAnonyString(tmpPath).c_str(), errno);

@@ -99,7 +99,8 @@ public:
     void TriggerSyncForWrite(const std::string &fileName, const std::string &parentCloudId);
     int32_t HandleRenameValue(NativeRdb::ValuesBucket &rename, int32_t position, uint8_t noNeedUpload,
         const CacheNode &oldNode, const CacheNode &newNode);
-    int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status);
+    int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status,
+        const std::string &filePath);
 
     void DatabaseRestore();
 
