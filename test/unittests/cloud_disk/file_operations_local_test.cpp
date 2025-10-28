@@ -331,6 +331,7 @@ HWTEST_F(FileOperationsLocalTest, ReadDirTest002, TestSize.Level1)
         off_t off = 0;
         struct fuse_file_info fi;
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(0));
         
         fileoperationslocal_->ReadDir(req, ino, size, off, &fi);
         EXPECT_TRUE(true);
@@ -388,6 +389,7 @@ HWTEST_F(FileOperationsLocalTest, ReadDirTest004, TestSize.Level1)
         off_t off = 0;
         struct fuse_file_info fi;
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(0));
         
         fileoperationslocal_->ReadDir(req, ino, size, off, &fi);
         EXPECT_TRUE(true);
