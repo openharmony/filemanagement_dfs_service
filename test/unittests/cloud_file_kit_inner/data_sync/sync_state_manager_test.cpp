@@ -633,8 +633,8 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_007, TestSize.Level1)
         std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
         ISystem::system_ = systemMock;
         uint64_t curTime = GetCurrentTimeStampMs() - TWELVE_HOURS_MILLISECOND;
-        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillOnce(Return(std::to_string(curTime)));
-        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillRepeatedly(Return(std::to_string(curTime)));
+        EXPECT_CALL(*systemMock, SetParameter(_, _)).WillRepeatedly(Return(true));
         SyncStateManager syncStateManager;
         bool ret = syncStateManager.CheckMediaLibCleaning();
         EXPECT_EQ(ret, false);
