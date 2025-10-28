@@ -79,43 +79,27 @@ public:
     void InitDeviceInfos();
     int32_t IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo);
 
-    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
 
-    void ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);
-    int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
-    int32_t RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId);
-    void NotifyRemoteReverseObj(const std::string &networkId, int32_t status);
-    int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
-        sptr<IFileDfsListener>& listener);
     std::string GetDeviceIdByNetworkId(const std::string &networkId);
     int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId, const uint32_t callingTokenId);
     int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
-    void AddNetworkId(uint32_t tokenId, const std::string &networkId);
-    void RemoveNetworkId(uint32_t tokenId);
-    void RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId);
-    void RemoveNetworkIdForAllToken(const std::string &networkId);
-    void ClearNetworkId();
     void IncreaseMountDfsCount(const std::string &networkId,
                                const std::string &mountPath,
                                const uint32_t callingTokenId);
     void RemoveMountDfsCount(const std::string &mountPath);
     void GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList);
-    std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId);
 
     void OfflineAllDevice();
-    void ReconnectOnlineDevices();
     void OnRemoteDied() override;
 
     DeviceInfo &GetLocalDeviceInfo();
-    std::vector<DeviceInfo> GetRemoteDevicesInfo();
     std::unordered_map<std::string, MountCountInfo> GetAllMountInfo();
-    std::mutex appCallConnectMutex_;
-    std::unordered_map<uint32_t, sptr<IFileDfsListener>> appCallConnect_;
 
 private:
     void StartInstance() override;
@@ -126,10 +110,8 @@ private:
     void UnregisterFromExternalDm();
 
     int32_t GetNetworkType(const std::string &cid);
-    bool IsWifiNetworkType(int32_t networkType);
 
     void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
-    bool CheckIsAccountless(const GroupInfo &group);
     std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless);
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
     std::mutex mpToNetworksMutex_;
@@ -147,8 +129,6 @@ private:
     // deviceid(Network 16) -> MountCountInfo
     std::mutex mountDfsCountMutex_;
     std::unordered_map<std::string, MountCountInfo> mountDfsCount_;
-    std::mutex networkIdMapMutex_;
-    std::unordered_map<uint32_t, std::unordered_set<std::string>> networkIdMap_;
 
     int32_t currentUserId_ = -1;
 };

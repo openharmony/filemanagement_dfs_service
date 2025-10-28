@@ -25,16 +25,12 @@ namespace Storage {
 namespace DistributedFile {
 class SoftBusSessionListener {
 public:
-    static void OnSessionOpened(int32_t sessionId, PeerSocketInfo info);
-    static void OnSessionClosed(int32_t sessionId, ShutdownReason reason);
     static std::string GetBundleName(const std::string &uri);
     static std::string GetRealPath(const std::string &srcUri);
     static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path,
                                                 const std::string &dstPath);
 private:
     static int32_t QueryActiveUserId();
-
-    static std::string GetSandboxPath(const std::string &uri);
     static std::string GetLocalUri(const std::string &uri);
 };
 } // namespace DistributedFile

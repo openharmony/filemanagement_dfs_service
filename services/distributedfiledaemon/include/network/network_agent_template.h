@@ -56,7 +56,6 @@ public:
     virtual ~NetworkAgentTemplate() {}
     void Start();
     void Stop();
-    void ConnectOnlineDevices();
     void DisconnectAllDevices();
     void DisconnectDeviceByP2P(const std::string networkId);
     void DisconnectDeviceByP2PHmdfs(const std::string networkId);

@@ -30,17 +30,12 @@ public:
     virtual int32_t IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
-    virtual int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj) = 0;
-    virtual int32_t RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId) = 0;
-    virtual int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
-                                         sptr<IFileDfsListener> &listener) = 0;
     virtual std::string GetDeviceIdByNetworkId(const std::string &networkId) = 0;
     virtual int32_t MountDfsDocs(const std::string &networkId,
         const std::string &deviceId, const uint32_t callingTokenId) = 0;
     virtual int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear) = 0;
     virtual std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId) = 0;
     virtual DeviceInfo &GetLocalDeviceInfo() = 0;
-    virtual std::vector<DeviceInfo> GetRemoteDevicesInfo() = 0;
     virtual sptr<IFileDfsListener> GetDfsListener() = 0;
     virtual std::unordered_map<std::string, MountCountInfo> GetAllMountInfo() = 0;
 

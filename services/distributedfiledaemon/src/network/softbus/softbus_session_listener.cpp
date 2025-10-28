@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-constexpr size_t MAX_SIZE = 500;
 constexpr int32_t DEFAULT_USER_ID = 100;
 const std::string FILE_SCHEMA = "file://";
 const std::string DOCS = "docs";
@@ -73,65 +72,6 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
     return tmp;
 }
 
-void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
-{
-    LOGI("OnSessionOpened sessionId = %{public}d", sessionId);
-    if (!SoftBusPermissionCheck::IsSameAccount(info.networkId)) {
-        LOGI("The source and sink device is not same account, not support.");
-        Shutdown(sessionId);
-        return;
-    }
-    std::string sessionName = info.name;
-    SoftBusSessionPool::SessionInfo sessionInfo;
-    auto ret = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
-    if (!ret) {
-        LOGE("GetSessionInfo failed");
-        return;
-    }
-
-    std::string physicalPath = GetRealPath(sessionInfo.srcUri);
-    if (physicalPath.empty()) {
-        LOGE("GetRealPath failed");
-        return;
-    }
-
-    auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
-    if (fileList.empty()) {
-        LOGE("GetFilePath failed or file is empty");
-        return;
-    }
-
-    const char *src[MAX_SIZE] = {};
-    for (size_t i = 0; i < fileList.size() && fileList.size() < MAX_SIZE; i++) {
-        src[i] = fileList.at(i).c_str();
-    }
-
-    auto fileNameList = GetFileName(fileList, physicalPath, sessionInfo.dstPath);
-    if (fileNameList.empty()) {
-        LOGE("GetFileName failed or file is empty");
-        return;
-    }
-    const char *dst[MAX_SIZE] = {};
-    for (size_t i = 0; i < fileNameList.size() && fileList.size() < MAX_SIZE; i++) {
-        dst[i] = fileNameList.at(i).c_str();
-    }
-    LOGI("Enter SendFile.");
-    ret = ::SendFile(sessionId, src, dst, static_cast<uint32_t>(fileList.size()));
-    if (ret != E_OK) {
-        LOGE("SendFile failed, sessionId = %{public}d", sessionId);
-    }
-    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
-}
-
-void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
-{
-    (void)reason;
-    std::string sessionName = "";
-    sessionName = SoftBusHandler::GetSessionName(sessionId);
-    LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
-}
-
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 {
     auto pos = uri.find(NETWORK_ID);
@@ -156,15 +96,6 @@ std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
         return "";
     }
     return tmpUri.substr(0, bundleNamePos);
-}
-
-std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
-{
-    auto pos = uri.find(DISTRIBUTED_PATH);
-    if (pos == std::string::npos) {
-        return "";
-    }
-    return uri.substr(pos + DISTRIBUTED_PATH.size());
 }
 
 std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
