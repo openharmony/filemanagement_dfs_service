@@ -30,8 +30,8 @@ std::string Convertor::ConvertToHex(uint64_t value)
 
     for (int i = 0; i < length; i++) {
         --p;
-        int digit = value & 0xF;
-        *p = digit < base ? '0' + digit : 'a' + digit - base;
+        uint64_t digit = value & 0xF;
+        *p = static_cast<char>(digit < base ? '0' + digit : 'a' + digit - base);
         value >>= offset;
     }
 

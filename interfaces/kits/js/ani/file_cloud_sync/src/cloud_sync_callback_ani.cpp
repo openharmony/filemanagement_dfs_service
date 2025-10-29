@@ -423,12 +423,13 @@ ani_status CloudOptimizeCallbackAniImpl::GetOptimProgress(
 
 void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
 {
-    auto task = [this, state, progress]() {
-        if (!cbOnRef_) {
+    std::shared_ptr<CloudOptimizeCallbackAniImpl> callbackImpl = shared_from_this();
+    auto task = [callbackImpl, state, progress]() {
+        if (callbackImpl == nullptr || callbackImpl->cbOnRef_ == nullptr) {
             LOGE("cbOnRef_ is nullptr");
             return;
         }
-        ani_env *tmpEnv = env_;
+        ani_env *tmpEnv = callbackImpl->env_;
         ani_size nr_refs = ANI_SCOPE_SIZE;
         ani_status ret = tmpEnv->CreateLocalScope(nr_refs);
         if (ret != ANI_OK) {
@@ -444,22 +445,21 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
             return;
         }
         ani_object optimProgressData;
-        ret = GetOptimProgress(tmpEnv, state, progress, cls, optimProgressData);
+        ret = callbackImpl->GetOptimProgress(tmpEnv, state, progress, cls, optimProgressData);
         if (ret != ANI_OK) {
             LOGE("GetOptimProgress failed. ret = %{public}d", ret);
             tmpEnv->DestroyLocalScope();
             return;
         }
-        ani_ref ref_;
-        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbOnRef_);
+        ani_ref ref;
+        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(callbackImpl->cbOnRef_);
         std::vector<ani_ref> vec = { optimProgressData };
-        ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
+        ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref);
         if (ret != ANI_OK) {
             LOGE("ani call function failed. ret = %{public}d", ret);
         }
         if (state != OptimizeState::OPTIMIZE_RUNNING) {
-            tmpEnv->GlobalReference_Delete(cbOnRef_);
-            cbOnRef_ = nullptr;
+            callbackImpl->DeleteReference();
         }
         ret = tmpEnv->DestroyLocalScope();
         if (ret != ANI_OK) {
@@ -471,11 +471,16 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
     }
 }
 
-CloudOptimizeCallbackAniImpl::~CloudOptimizeCallbackAniImpl()
+void CloudOptimizeCallbackAniImpl::DeleteReference()
 {
     if (cbOnRef_ != nullptr && env_ != nullptr) {
         env_->GlobalReference_Delete(cbOnRef_);
         cbOnRef_ = nullptr;
     }
+}
+
+CloudOptimizeCallbackAniImpl::~CloudOptimizeCallbackAniImpl()
+{
+    DeleteReference();
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -281,7 +281,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
-static tuple<int32_t, bool, int32_t> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
+static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
 {
     bool succ = true;
     bool needClean = false;
