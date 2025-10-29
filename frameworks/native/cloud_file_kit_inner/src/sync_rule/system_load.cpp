@@ -74,7 +74,7 @@ void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
             LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
             TaskStateManager::GetInstance().StartTask();
-            dataSyncManager_->DownloadThumb();
+            dataSyncManager_->TriggerDownloadThumb();
         }
     }
 }
