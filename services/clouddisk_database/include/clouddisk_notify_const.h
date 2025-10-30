@@ -66,6 +66,7 @@ struct NotifyParamService {
     std::string cloudId = "";
     NotifyType notifyType = NotifyType::NOTIFY_NONE;
     CacheNode node;
+    std::string oldUri = "";
 };
 
 struct ParamServiceOther {

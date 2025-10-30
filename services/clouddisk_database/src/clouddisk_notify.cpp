@@ -295,23 +295,18 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
         LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
         return;
     }
-    NotifyData inNotifyData;
     NotifyData notifyData;
     CacheNode curNode{paramService.cloudId};
     if (rdbStore->GetCurNode(paramService.cloudId, curNode) == E_OK &&
         rdbStore->GetNotifyUri(curNode, notifyData.uri) == E_OK) {
         notifyData.type = NotifyType::NOTIFY_MODIFIED;
         notifyData.isDir = curNode.isDir == TYPE_DIR_STR;
-        if (paramService.notifyType == NotifyType::NOTIFY_NONE &&
-            rdbStore->GetNotifyData(paramService.node, inNotifyData) == E_OK) {
-            if (inNotifyData.uri != notifyData.uri) {
-                notifyData.type = NotifyType::NOTIFY_DELETED;
-                inNotifyData.type = NotifyType::NOTIFY_RENAMED;
-            }
+        if (paramService.notifyType == NotifyType::NOTIFY_NONE && notifyData.uri != paramService.oldUri) {
+            notifyData.extraUri = paramService.oldUri;
+            notifyData.type = NotifyType::NOTIFY_RENAMED;
         }
     }
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
-    CloudDiskNotify::GetInstance().AddNotify(inNotifyData);
 }
 
 static void HandleUpdateRecycle(const NotifyParamService &paramService, const ParamServiceOther &paramOthers)
@@ -415,8 +410,9 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
 
 void CloudDiskNotify::AddNotify(const NotifyData &notifyData)
 {
-    LOGD("push cur notify into list type: %{public}d, uri: %{public}s, isDir: %{public}d", notifyData.type,
-         GetAnonyString(notifyData.uri).c_str(), notifyData.isDir);
+    LOGD("push cur notify into list type: %{public}d, uri: %{public}s, isDir: %{public}d, extraUri: %{public}s",
+        notifyData.type, GetAnonyString(notifyData.uri).c_str(), notifyData.isDir,
+        GetAnonyString(notifyData.extraUri).c_str());
     if (notifyData.type == NotifyType::NOTIFY_NONE) {
         return;
     }

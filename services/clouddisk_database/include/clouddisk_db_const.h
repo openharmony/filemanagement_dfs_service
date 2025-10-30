@@ -54,7 +54,7 @@ struct NotifyData {
     bool isDir = false;
     NotifyType type = NotifyType::NOTIFY_NONE;
     bool isLocalOperation = false;
-    std::string extraUri = "";
+    std::string extraUri = ""; //存储变更前uri
 };
 
 struct CacheNode {
