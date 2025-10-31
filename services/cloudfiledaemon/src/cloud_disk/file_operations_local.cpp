@@ -177,6 +177,7 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READDIR,
             CloudFile::FaultType::FILE, errno, "opendir error " + std::to_string(errno) + ", path: " +
             GetAnonyString(path)});
+        fuse_reply_err(req, errno);
         return;
     }
 
@@ -188,23 +189,19 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
             continue;
         }
 
-        string childPath = FileOperationsHelper::GetCloudDiskLocalPath(data->userId,
-            entry->d_name);
-        int64_t key = FileOperationsHelper::FindLocalId(data, std::to_string(ino) +
-            entry->d_name);
+        string childPath = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, entry->d_name);
+        int64_t key = FileOperationsHelper::FindLocalId(data, std::to_string(ino) + entry->d_name);
         auto childPtr = FileOperationsHelper::FindCloudDiskInode(data, key);
         if (childPtr == nullptr) {
-            childPtr = FileOperationsHelper::GenerateCloudDiskInode(data, ino,
-                entry->d_name, childPath.c_str());
+            childPtr = FileOperationsHelper::GenerateCloudDiskInode(data, ino, entry->d_name, childPath.c_str());
         }
         if (childPtr == nullptr) {
             continue;
         }
         FileOperationsHelper::AddDirEntry(req, entryData, len, entry->d_name, childPtr);
     }
-    FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
     closedir(dir);
-    return;
+    FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
 }
 
 static void CleanCache(fuse_req_t req)
