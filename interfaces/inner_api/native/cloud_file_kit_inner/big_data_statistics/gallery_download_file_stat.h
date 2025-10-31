@@ -14,6 +14,7 @@
  */
 #ifndef OHOS_CLOUD_FILE_SERVICE_GALLERY_DOWNLOAD_FILE_STAT_H
 #define OHOS_CLOUD_FILE_SERVICE_GALLERY_DOWNLOAD_FILE_STAT_H
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -68,6 +69,7 @@ private:
     void HandleBundleName(const DownloadFileStatInfo &info);
 
     DownloadFileStatInfo stat_;
+    std::mutex mutex_;
 };
 } // CloudFile
 } // FileManagement
