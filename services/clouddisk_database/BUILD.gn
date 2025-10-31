@@ -78,6 +78,7 @@ ohos_shared_library("clouddisk_database") {
 
   deps = [
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
   ]
@@ -88,6 +89,7 @@ ohos_shared_library("clouddisk_database") {
     "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_single",
     "json:nlohmann_json_static",
