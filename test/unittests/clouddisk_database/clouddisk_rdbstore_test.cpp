@@ -1493,7 +1493,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SourcePathSetValueTest6, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest1, TestSize.Level1)
 {
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "notnum";
@@ -1510,7 +1510,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest1, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest2, TestSize.Level1)
 {
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "0";
@@ -1534,7 +1534,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest2, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest3, TestSize.Level1)
 {
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "1";
@@ -1558,7 +1558,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest3, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest4, TestSize.Level1)
 {
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "-1";
@@ -1672,7 +1672,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RestoreUpdateRdbTest3, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest1, TestSize.Level1)
 {
-    const std::string name = "";
+    std::string name = "";
     const std::string parentCloudId = "";
     const std::string cloudId = "100";
     bool preCount = true;
@@ -1694,7 +1694,7 @@ HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest1, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest2, TestSize.Level1)
 {
-    const std::string name = "";
+    std::string name = "";
     const std::string parentCloudId = "";
     const std::string cloudId = "100";
     bool preCount = true;
@@ -1723,7 +1723,7 @@ HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest2, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, HandleRestoreXattrTest3, TestSize.Level1)
 {
-    const std::string name = "";
+    std::string name = "";
     const std::string parentCloudId = "";
     const std::string cloudId = "100";
     bool preCount = true;
@@ -3125,7 +3125,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest1, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = CLOUD_FILE_LOCATION;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -3143,7 +3143,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest2, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = CLOUD_CLOUD_RECYCLE_XATTR;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -3161,7 +3161,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest3, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = IS_FAVORITE_XATTR;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -3179,7 +3179,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest4, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = CLOUD_EXT_ATTR;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -3197,7 +3197,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest5, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = CLOUD_HAS_THM;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -3216,7 +3216,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest6, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = CLOUD_CLOUD_ID_XATTR;
     const std::string value = "notnum";
-    const std::string name = "test";
+    std::string name = "test";
     const std::string parentCloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
@@ -4580,7 +4580,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest005, TestSize.Level1)
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(-1));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, -1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UpdateTHMStatusTest005 failed";
