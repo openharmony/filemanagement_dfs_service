@@ -536,4 +536,393 @@ HWTEST_F(FuseManagerStaticTest, UpdateReadStatTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "UpdateReadStatTest002 End";
 }
+
+/**
+ * @tc.name: HasCache001
+ * @tc.desc: cInode is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache001 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache001 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache001 End";
+}
+
+/**
+ * @tc.name: HasCache002
+ * @tc.desc: cInode->readSession is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache002 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        data.inodeCache.insert({100, cloudInode});
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache002 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache002 End";
+}
+
+/**
+ * @tc.name: HasCache003
+ * @tc.desc: ioctlData is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache003 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache003 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache003 End";
+}
+
+/**
+ * @tc.name: HasCache004
+ * @tc.desc: ioctlData->offset < 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache004 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset = -1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache004 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache004 End";
+}
+
+/**
+ * @tc.name: HasCache005
+ * @tc.desc: ioctlData->offset > cInode->mBase->size
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache005 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 10;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset = 11;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache005 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache005 End";
+}
+
+/**
+ * @tc.name: HasCache006
+ * @tc.desc: ioctlData->readSize < 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache006 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 10;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset = 0;
+        ioctlData.readSize = -1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache006 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache006 End";
+}
+
+/**
+ * @tc.name: HasCache007
+ * @tc.desc: 1. ioctlData->offset + MAX_READ_SIZE < cInode->mBase->size
+ *           2. IsPageCached(cInode, headIndex)->IsVideoType(cInode->mBase->name) false
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache007 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 3 * MAX_READ_SIZE;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset = 0;
+        ioctlData.readSize = 1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache007 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache007 End";
+}
+
+/**
+ * @tc.name: HasCache008
+ * @tc.desc: 1. ioctlData->offset + MAX_READ_SIZE >= cInode->mBase->size
+ *           2. IsPageCached(cInode, headIndex)->IsVideoType(cInode->mBase->name) false
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache008 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 3 * MAX_READ_SIZE;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset = 2 * MAX_READ_SIZE;
+        ioctlData.readSize = 1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache008 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache008 End";
+}
+
+/**
+ * @tc.name: HasCache009
+ * @tc.desc: 1. ioctlData->offset + MAX_READ_SIZE < cInode->mBase->size
+ *           2. IsPageCached(cInode, headIndex)->NOT_CACHE
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache009 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+        cloudInode->mBase->size = 3 * MAX_READ_SIZE;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        int filePageSize = static_cast<int32_t>(cloudInode->mBase->size / MAX_READ_SIZE + 1);
+        CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
+        std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
+        cloudInode->cacheFileIndex = std::move(mp);
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset =  0;
+        ioctlData.readSize = 1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache009 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache009 End";
+}
+
+/**
+ * @tc.name: HasCache0010
+ * @tc.desc: 1. ioctlData->offset + MAX_READ_SIZE < cInode->mBase->size
+ *           2. IsPageCached(cInode, headIndex)->HAS_CACHED IsPageCached(cInode, tailIndex)->NOT_CACHE
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache0010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache0010 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+        cloudInode->mBase->size = 3 * MAX_READ_SIZE;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        int filePageSize = static_cast<int32_t>(cloudInode->mBase->size / MAX_READ_SIZE + 1);
+        CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
+        std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
+        cloudInode->cacheFileIndex = std::move(mp);
+        cloudInode->cacheFileIndex.get()[0] = HAS_CACHED;
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset =  0;
+        ioctlData.readSize = 1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache0010 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache0010 End";
+}
+
+/**
+ * @tc.name: HasCache0011
+ * @tc.desc: 1. ioctlData->offset + MAX_READ_SIZE < cInode->mBase->size
+ *           2. IsPageCached(cInode, headIndex)->HAS_CACHED IsPageCached(cInode, tailIndex)->HAS_CACHED
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache0011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache0011 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+        cloudInode->mBase->size = 3 * MAX_READ_SIZE;
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        int filePageSize = static_cast<int32_t>(cloudInode->mBase->size / MAX_READ_SIZE + 1);
+        CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
+        std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
+        cloudInode->cacheFileIndex = std::move(mp);
+        cloudInode->cacheFileIndex.get()[0] = HAS_CACHED;
+        cloudInode->cacheFileIndex.get()[1] = HAS_CACHED;
+
+        HmdfsHasCache ioctlData;
+        ioctlData.offset =  0;
+        ioctlData.readSize = 1;
+        inBuf = &ioctlData;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_ioctl(_, _, _, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache0011 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache0011 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test

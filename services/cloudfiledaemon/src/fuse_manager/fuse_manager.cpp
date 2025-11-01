@@ -1157,6 +1157,14 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
+static bool IsPageCached(shared_ptr<CloudInode> cInode, int64_t pageIndex)
+{
+    if (!IsVideoType(cInode->mBase->name)) {
+        return false;
+    }
+    return cInode->cacheFileIndex.get()[pageIndex] == HAS_CACHED;
+}
+
 static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
@@ -1169,15 +1177,21 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
     }
 
     const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(inBuf);
-    if (!ioctlData || ioctlData->offset < 0 || ioctlData->readSize < 0) {
+    if (!ioctlData || ioctlData->offset < 0 || ioctlData->offset > cInode->mBase->size || ioctlData->readSize < 0) {
         fuse_reply_err(req, EINVAL);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
             FaultType::WARNING, EINVAL, "invalid argument in ioctl"});
         return;
     }
     int64_t headIndex = ioctlData->offset / MAX_READ_SIZE;
-    int64_t tailIndex = (ioctlData->offset + ioctlData->readSize - 1) / MAX_READ_SIZE;
-    if (cInode->IsReadFinished(headIndex) && cInode->IsReadFinished(tailIndex)) {
+    int64_t tailIndex = headIndex;
+    if (ioctlData->offset + MAX_READ_SIZE < cInode->mBase->size) {
+        tailIndex = (ioctlData->offset + MAX_READ_SIZE) / MAX_READ_SIZE;
+    } else {
+        tailIndex = cInode->mBase->size / MAX_READ_SIZE;
+    }
+    if (IsPageCached(cInode, headIndex) && IsPageCached(cInode, tailIndex)) {
+        LOGD("Has cached pages: %{public}ld %{public}ld", static_cast<long>(headIndex), static_cast<long>(tailIndex));
         fuse_reply_ioctl(req, 0, NULL, 0);
     } else {
         fuse_reply_err(req, EIO);
