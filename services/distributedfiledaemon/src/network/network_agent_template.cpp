@@ -73,8 +73,6 @@ void NetworkAgentTemplate::DisconnectDeviceByP2P(const std::string networkId)
 {
     LOGI("CloseP2P, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
     sessionPool_.ReleaseSession(networkId, false);
-    LOGI("CloseP2P, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
-    sessionPool_.ReleaseSession(networkId, false);
 }
 
 // dm device offline

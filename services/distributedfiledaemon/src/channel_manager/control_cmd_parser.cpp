@@ -125,7 +125,10 @@ bool ControlCmdParser::CheckAllowConnect(const ControlCmd &inCmd, ControlCmd &ou
 {
     outCmd.msgType = ControlCmdType::CMD_MSG_RESPONSE;
     outCmd.msgId = inCmd.msgId;
-    outCmd.msgBody = IsLocalItDevice() || SystemNotifier::GetInstance().GetNotificationMapSize() > 0 ? "true" : "false";
+    outCmd.msgBody = IsLocalItDevice() || (SystemNotifier::GetInstance().GetNotificationMapSize() > 0 &&
+                                           !SystemNotifier::GetInstance().IsNetworkIdConnected(inCmd.networkId))
+                         ? "true"
+                         : "false";
     return true;
 }
 
