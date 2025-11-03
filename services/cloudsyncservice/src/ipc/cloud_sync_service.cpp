@@ -184,6 +184,8 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
         AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
         AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
+        mode_t mode = 0002;
+        umask(mode);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
