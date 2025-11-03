@@ -45,7 +45,10 @@ int32_t DistributedFileDaemonManagerImpl::OpenP2PConnection(const DistributedHar
 
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    return distributedFileDaemonProxy->OpenP2PConnection(deviceInfo);
+    openP2PConnectionSem_.acquire();
+    int32_t res = distributedFileDaemonProxy->OpenP2PConnection(deviceInfo);
+    openP2PConnectionSem_.release();
+    return res;
 }
 
 int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -67,7 +70,10 @@ int32_t DistributedFileDaemonManagerImpl::OpenP2PConnectionEx(const std::string 
         LOGE("proxy is null.");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    return distributedFileDaemonProxy->OpenP2PConnectionEx(networkId, remoteReverseObj);
+    openP2PConnectionExSem_.acquire();
+    int32_t res = distributedFileDaemonProxy->OpenP2PConnectionEx(networkId, remoteReverseObj);
+    openP2PConnectionExSem_.release();
+    return res;
 }
 
 int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string &networkId)

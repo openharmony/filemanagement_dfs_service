@@ -89,6 +89,7 @@ constexpr int32_t DEFAULT_DP_CANNOTFIND_VALUE = -1;
 constexpr const char* HMDFS_FATH = "/storage/hmdfs/";
 constexpr DfsVersion FILEMANAGER_VERSION = {6, 0, 1};
 constexpr int32_t MIN_NETWORKID_LENGTH = 16;
+constexpr int32_t MAX_IPC_THREAD_NUM = 32;
 } // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -145,6 +146,7 @@ void Daemon::OnStart()
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
         umask(DEFAULT_UMASK);
         AllConnectManager::GetInstance().InitAllConnectManager();
+        IPCSkeleton::SetMaxWorkThreadNum(MAX_IPC_THREAD_NUM);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }

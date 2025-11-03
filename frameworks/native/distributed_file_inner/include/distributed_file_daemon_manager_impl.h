@@ -24,10 +24,12 @@
 #include "ipc/i_file_dfs_listener.h"
 #include "nocopyable.h"
 #include "refbase.h"
+#include <semaphore>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+constexpr int32_t MAX_CONCURRENT_NUM = 3;
 class DistributedFileDaemonManagerImpl final : public DistributedFileDaemonManager, public NoCopyable {
 public:
     static DistributedFileDaemonManagerImpl &GetInstance();
@@ -68,6 +70,8 @@ public:
     int32_t IsSameAccountDevice(const std::string &networkId, bool &isSameAccount) override;
 private:
     DistributedFileDaemonManagerImpl() = default;
+    std::counting_semaphore<MAX_CONCURRENT_NUM> openP2PConnectionSem_ { MAX_CONCURRENT_NUM };
+    std::counting_semaphore<MAX_CONCURRENT_NUM> openP2PConnectionExSem_ { MAX_CONCURRENT_NUM };
 };
 } // namespace DistributedFile
 } // namespace Storage
