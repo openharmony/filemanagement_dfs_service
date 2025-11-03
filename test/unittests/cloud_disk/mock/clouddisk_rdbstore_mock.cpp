@@ -125,7 +125,7 @@ int32_t CloudDiskRdbStore::GetParentCloudId(const std::string &cloudId, std::str
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
+int32_t CloudDiskRdbStore::RecycleSetXattr(std::string &name, const std::string &parentCloudId,
     const std::string &cloudId, const std::string &value)
 {
     return E_OK;
@@ -179,7 +179,7 @@ int32_t CloudDiskRdbStore::ExtAttributeSetXattr(const std::string &cloudId, cons
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-    const std::string &name, const std::string &parentCloudId)
+    std::string &name, const std::string &parentCloudId)
 {
     if (value == "") {
         return 1;

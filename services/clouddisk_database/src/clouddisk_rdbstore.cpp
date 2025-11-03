@@ -966,7 +966,7 @@ static int32_t UpdateParent(const int32_t userId, const string &bundleName, cons
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
+int32_t CloudDiskRdbStore::RecycleSetXattr(std::string &name, const std::string &parentCloudId,
     const std::string &cloudId, const std::string &value)
 {
     bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
@@ -1032,7 +1032,7 @@ int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct 
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &parentCloudId, const string &cloudId)
+int32_t CloudDiskRdbStore::HandleRestoreXattr(string &name, const string &parentCloudId, const string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     int64_t rowId = 0;
@@ -1071,6 +1071,7 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &
         return ret;
     }
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    name = newName;
     return E_OK;
 }
 
@@ -1479,7 +1480,7 @@ int32_t CloudDiskRdbStore::ExtAttributeSetXattr(const std::string &cloudId, cons
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-    const std::string &name, const std::string &parentCloudId)
+    std::string &name, const std::string &parentCloudId)
 {
     int32_t num = CheckXattr(key);
     int32_t ret;

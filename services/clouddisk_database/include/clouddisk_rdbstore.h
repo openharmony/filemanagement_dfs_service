@@ -53,11 +53,11 @@ public:
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
         const CacheNode &node = {}, const std::string &extAttrKey = "");
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-        const std::string &name = "", const std::string &parentCloudId = "");
+        std::string &name, const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload);
     int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
-    int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
+    int32_t RecycleSetXattr(std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
@@ -80,7 +80,7 @@ public:
     int32_t GetSourcePath(const std::string &attr, const std::string &parentCloudId, std::string &sourcePath);
     int32_t SourcePathSetValue(const std::string &cloudId, const std::string &attr, NativeRdb::ValuesBucket &setXattr);
     int32_t HandleRecycleXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
-    int32_t HandleRestoreXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
+    int32_t HandleRestoreXattr(std::string &name, const std::string &parentCloudId, const std::string &cloudId);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);

@@ -1176,7 +1176,8 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
     }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, value);
+    string nameStr = name;
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, value, nameStr);
     if (err != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName, CloudFile::FaultOperation::SETEXTATTR,
             CloudFile::FaultType::MODIFY_DATABASE, err, "set cloud is favorite xattr fail, err = " +
@@ -1204,7 +1205,8 @@ void HandleHasTHM(fuse_req_t req, fuse_ino_t ino, const char *name,
     }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, name, value);
+    string nameStr = name;
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, name, value, nameStr);
     if (err != 0) {
         std::string errMsg = "set has thm fail " + to_string(err);
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{inoPtr->bundleName, CloudFile::FaultOperation::SETATTR,
@@ -1227,7 +1229,8 @@ void HandleExtAttribute(fuse_req_t req, fuse_ino_t ino, const char *name, const 
     }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, value, name);
+    string nameStr = name;
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, value, nameStr);
     if (err != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName, CloudFile::FaultOperation::SETEXTATTR,
             CloudFile::FaultType::MODIFY_DATABASE, err, "set cloud ext attr fail, err = " + std::to_string(err)});
