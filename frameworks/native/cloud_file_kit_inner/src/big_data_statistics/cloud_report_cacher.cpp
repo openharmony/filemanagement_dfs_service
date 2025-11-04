@@ -115,7 +115,7 @@ void CloudReportCacher::Report(const string &bundleName, const int scheduleType)
             terminateEvent.faultType_ = static_cast<uint32_t>(FaultType::CLOUD_SYNC_ERROR);
         }
     }
-    terminateEvent.message_ = jsonArr.dump();
+    terminateEvent.message_ = jsonArr.dump(-1, ' ', false, nlohmann::detail::error_handler_t::ignore);
     ReportFaultInfo(terminateEvent, bundleName, reportInfo->scenarioCode_);
     reportInfo->events_.clear();
 }

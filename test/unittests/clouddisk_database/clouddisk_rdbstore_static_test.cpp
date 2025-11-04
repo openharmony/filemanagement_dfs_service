@@ -248,4 +248,56 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttributeSetValueTest1, TestSize.Level1
     int32_t result = ExtAttributeSetValue(jsonValue, key, value, xattrList);
     EXPECT_EQ(result, E_OK);
 }
+
+/**
+ * @tc.name: ConvertUriToSrcPathTest001
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest1, TestSize.Level1)
+{
+    string uri = "file:///data/storage/el2/cloud/a/b/c";
+    string expectResult = "/a/b";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
+
+/**
+ * @tc.name: ConvertUriToSrcPathTest002
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest2, TestSize.Level1)
+{
+    string uri = "files:///data/storage/el2/cloud/a/b/c";
+    string expectResult = "/";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
+
+/**
+ * @tc.name: ConvertUriToSrcPathTest003
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest3, TestSize.Level1)
+{
+    string uri = "file:///a/b/c";
+    string expectResult = "/";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
+
+/**
+ * @tc.name: ConvertUriToSrcPathTest004
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest4, TestSize.Level1)
+{
+    string uri = "file:///data/storage/el2/cloud/a";
+    string expectResult = "/";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
