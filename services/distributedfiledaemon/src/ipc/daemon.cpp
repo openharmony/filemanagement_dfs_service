@@ -1251,6 +1251,14 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
     ControlCmd response;
     request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
 
+    std::string srcNetId;
+    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
+    if (ret != FileManagement::ERR_OK) {
+        LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
+        return ret;
+    }
+    request.networkId = srcNetId;
+
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
     if (ret != ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);

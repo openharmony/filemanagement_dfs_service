@@ -15,19 +15,22 @@
 
 #include "channel_manager.h"
 #include "control_cmd_parser.h"
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "system_notifier.h"
-#include "dfs_error.h"
 #include "device_manager.h"
+#include "device_manager_impl_mock.h"
+#include "dfs_error.h"
+#include "system_notifier.h"
 #include "utils_log.h"
 
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+
 namespace OHOS {
-bool LoadStringFromFile(const std::string& filePath, std::string& content)
+bool LoadStringFromFile(const std::string &filePath, std::string &content)
 {
     return true;
 }
-}
+} // namespace OHOS
 
 namespace OHOS {
 namespace Storage {
@@ -62,6 +65,7 @@ public:
 public:
     static inline std::string testNetworkId = "test-network-id";
     static inline int32_t testNotificationId = 1001;
+    static inline std::shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
 };
 
 void SystemNotifierTest::SetUpTestCase(void)
@@ -77,11 +81,15 @@ void SystemNotifierTest::TearDownTestCase(void)
 void SystemNotifierTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
 void SystemNotifierTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    deviceManagerImplMock_ = nullptr;
+    DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
 }
 
 /**
@@ -188,7 +196,7 @@ HWTEST_F(SystemNotifierTest, MultipleNotifications_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "MultipleNotifications_001 end";
 }
 
-}  // namespace Test
-}  // namespace DistributedFile
-}  // namespace Storage
-}  // namespace OHOS
+} // namespace Test
+} // namespace DistributedFile
+} // namespace Storage
+} // namespace OHOS

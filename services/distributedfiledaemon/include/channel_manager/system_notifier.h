@@ -16,6 +16,7 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SYSTEM_NOTIFIER_H
 
+#include <map>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
@@ -33,6 +34,7 @@ public:
     int32_t DestroyNotifyByNetworkId(const std::string &networkId, bool needNotifyRemote = true);
     void ClearAllConnect();
     int32_t GetNotificationMapSize();
+    bool IsNetworkIdConnected(const std::string &networkId);
 
 private:
     int32_t GenerateNextNotificationId();

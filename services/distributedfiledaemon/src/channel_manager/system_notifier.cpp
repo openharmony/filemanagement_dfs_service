@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include "system_notifier.h"
 #include "channel_manager.h"
 #include "device_manager.h"
 #include "dfs_error.h"
-#include "system_notifier.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -118,7 +118,7 @@ void SystemNotifier::ClearAllConnect()
     for (const auto &pair : notificationMap_) {
         needClearItems.push_back(pair.first);
     }
-    for (const auto &networkId :needClearItems) {
+    for (const auto &networkId : needClearItems) {
         // donot disconncetbyremote
         DestroyNotifyByNetworkId(networkId, false);
     }
@@ -130,6 +130,12 @@ int32_t SystemNotifier::GetNotificationMapSize()
     return notificationMap_.size();
 }
 
+bool SystemNotifier::IsNetworkIdConnected(const std::string &networkId)
+{
+    LOGI("IsNetworkIdConnected enter, networkId is %{public}.6s", networkId.c_str());
+    std::shared_lock<std::shared_mutex> readLock(mutex);
+    return notificationMap_.find(networkId) != notificationMap_.end();
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

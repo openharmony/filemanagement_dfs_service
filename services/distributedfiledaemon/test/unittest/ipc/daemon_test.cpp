@@ -1706,8 +1706,13 @@ HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
     g_isRemoteDfsVersionLowerThanGiven = true;
     EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_VERSION_NOT_SUPPORT);
 
-    // Test SendRequest failed
+    // Test getLocalNetworkId failed
     g_isRemoteDfsVersionLowerThanGiven = false;
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
+
+    // Test SendRequest failed
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
     EXPECT_CALL(*channelManagerMock_, CreateClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
