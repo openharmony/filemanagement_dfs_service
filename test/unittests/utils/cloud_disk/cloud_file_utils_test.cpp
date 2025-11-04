@@ -312,7 +312,7 @@ HWTEST_F(CloudFileUtilsTest, CloudFileUtils_ChangeUidByPath, TestSize.Level1)
         EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(-1));
         CloudFileUtils::ChangeUidByPath(path, mode, uid);
 
-        EXPECT_CALL(*insMock_, chmod(_, _)).Times(3).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, chmod(_, _)).Times(1).WillOnce(Return(0));
         EXPECT_CALL(*insMock_, chown(_, _, _)).WillOnce(Return(-1));
         CloudFileUtils::ChangeUidByPath(path, mode, uid);
 
