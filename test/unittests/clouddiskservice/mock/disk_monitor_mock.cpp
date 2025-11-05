@@ -45,7 +45,7 @@ void DiskMonitor::CollectEvents()
 {
 }
 
-void DiskMonitor::HandleEvents(int32_t mountFd, char eventsBuf[], ssize_t dataLen)
+void DiskMonitor::HandleEvents(int32_t mountFd, char eventsBuf[], size_t dataLen)
 {
 }
 

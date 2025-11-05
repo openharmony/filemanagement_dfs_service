@@ -194,13 +194,17 @@ int32_t CloudDiskServiceLogFile::ReadLogFile(const uint64_t line, struct LogBloc
 
 int32_t CloudDiskServiceLogFile::OnDataChange()
 {
-    std::lock_guard<std::mutex> lock(vectorMtx_);
-
-    if (changeDatas_.empty()) {
-        return E_OK;
+    std::vector<ChangeData> tmpDatas;
+    uint32_t syncFolderIndex = 0;
+    {
+        std::lock_guard<std::mutex> lock(vectorMtx_);
+        if (changeDatas_.empty()) {
+            return E_OK;
+        }
+        changeDatas_.swap(tmpDatas);
     }
-    CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
-    changeDatas_.clear();
+    syncFolderIndex = syncFolderIndex_;
+    CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex, tmpDatas);
 
     return E_OK;
 }

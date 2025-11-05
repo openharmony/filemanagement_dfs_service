@@ -336,6 +336,7 @@ int32_t CloudDiskServiceMetaFile::DecodeDentryHeader()
 int32_t CloudDiskServiceMetaFile::GenericDentryHeader()
 {
     struct stat fileStat;
+    std::unique_lock<std::mutex> lock(mtx_);
     int err = fstat(fd_, &fileStat);
     if (err < 0) {
         return EINVAL;
@@ -353,7 +354,6 @@ int32_t CloudDiskServiceMetaFile::GenericDentryHeader()
     }
     header.selfHash = selfHash_;
 
-    std::unique_lock<std::mutex> lock(mtx_);
     ssize_t size = FileUtils::WriteFile(fd_, &header, 0, sizeof(CloudDiskServiceDcacheHeader));
     if (size != sizeof(CloudDiskServiceDcacheHeader)) {
         return size;
