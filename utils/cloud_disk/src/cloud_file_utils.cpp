@@ -47,6 +47,7 @@ namespace {
 }
 
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
+const int32_t FILE_PERMISSION_MASK = 0777;
 
 bool CloudFileUtils::IsDotDotdot(const std::string &name)
 {
@@ -408,7 +409,7 @@ void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, uint32_
     string baseDir = GetLocalBaseDir(bundleName, userId);
     struct stat baseInfo{};
     if (stat(baseDir.c_str(), &baseInfo) != 0) {
-        LOGD("chmod and chown stat failed, err is %{public}d", errno);
+        LOGE("chmod and chown stat failed, err is %{public}d", errno);
         return;
     }
     uid_t bundleUid = baseInfo.st_uid;
@@ -426,26 +427,26 @@ void CloudFileUtils::ChangeUidByCloudId(int32_t userId, const std::string &bundl
 void CloudFileUtils::ChangeUidByPath(const std::string &path, mode_t mode, uid_t uid)
 {
     if (uid == 0) {
-        LOGD("uid is not allowed.");
+        LOGE("uid is not allowed.");
         return;
     }
 
     struct stat baseInfo{};
     if (stat(path.c_str(), &baseInfo) != 0) {
-        LOGD("chmod and chown stat failed, err is %{public}d", errno);
+        LOGE("chmod and chown stat failed, err is %{public}d", errno);
         return;
     }
 
-    if (baseInfo.st_mode != mode) {
+    if ((baseInfo.st_mode & FILE_PERMISSION_MASK) != mode) {
         if (chmod(path.c_str(), mode) != 0) {
-            LOGD("chmod failed, err is %{public}d", errno);
+            LOGE("chmod failed, err is %{public}d", errno);
             return;
         }
     }
 
     if (baseInfo.st_uid != uid) {
         if (chown(path.c_str(), uid, OID_DFS) != 0) {
-            LOGD("chown failed, err is %{public}d", errno);
+            LOGE("chown failed, err is %{public}d", errno);
         }
     }
 }
