@@ -43,6 +43,8 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
     std::string deSign = Builder::BuildSignatureDescriptor({
         Builder::BuildInt(),
         Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.ExtraData")});
+    std::string getLoListSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String"),
+        Builder::BuildInt()}, Builder::BuildClass("escompat.Array"));
     std::array methods = {
         ani_native_function { "changeAppCloudSwitchInner", ssbSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::ChangeAppCloudSwitch) },
@@ -55,6 +57,8 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
         ani_native_function { "cleanInner", srSign.c_str(), reinterpret_cast<void *>(CloudSyncManagerAni::Clean) },
         ani_native_function { "notifyEventChangeInner", deSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::NotifyEventChange) },
+        ani_native_function { "getBundlesLocalFilePresentStatusInner", getLoListSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncManagerAni::GetBundlesLocalFilePresentStatus) },
     };
 
     ret = env->Class_BindStaticNativeMethods(cls, methods.data(), methods.size());

@@ -725,4 +725,42 @@ CleanFileInfoObj *CleanFileInfoObj::Unmarshalling(Parcel &parcel)
     return info;
 }
 
+bool LocalFilePresentStatus::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadString(bundleName)) {
+        LOGE("failed to read bundleName");
+        return false;
+    }
+    if (!parcel.ReadBool(isLocalFilePresents)) {
+        LOGE("failed to read isLocalFilePresents");
+        return false;
+    }
+
+    return true;
+}
+
+bool LocalFilePresentStatus::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteString(bundleName)) {
+        LOGE("failed to write bundleName");
+        return false;
+    }
+    if (!parcel.WriteBool(isLocalFilePresents)) {
+        LOGE("failed to write isLocalFilePresents");
+        return false;
+    }
+
+    return true;
+}
+
+LocalFilePresentStatus *LocalFilePresentStatus::Unmarshalling(Parcel &parcel)
+{
+    LocalFilePresentStatus *info = new (std::nothrow) LocalFilePresentStatus();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
 } // namespace OHOS::FileManagement::CloudSync

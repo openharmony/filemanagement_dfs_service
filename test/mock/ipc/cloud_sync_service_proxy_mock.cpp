@@ -67,6 +67,12 @@ int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+    std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
+{
+    return E_OK;
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     serviceProxy_ = iface_cast<ICloudSyncService>(sptr(new CloudSyncServiceMock()));

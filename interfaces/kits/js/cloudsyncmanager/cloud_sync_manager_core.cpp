@@ -97,4 +97,19 @@ FsResult<void> CloudSyncManagerCore::DoClean(const std::string &accountId, const
 
     return FsResult<void>::Success();
 }
+
+FsResult<std::vector<LocalFilePresentStatus>> CloudSyncManagerCore::DoGetLocalFilePresentStatus(
+    const std::vector<std::string> &bundleNames)
+{
+    LOGI("GetLocalFilePresentStatus entrance");
+    std::vector<LocalFilePresentStatus> localFilePresentStatusList;
+    int32_t result =
+        CloudSyncManager::GetInstance().GetBundlesLocalFilePresentStatus(bundleNames, localFilePresentStatusList);
+    if (result != E_OK) {
+        LOGE("GetLocalFilePresentStatus failed. ret = %{public}d", result);
+        return FsResult<std::vector<LocalFilePresentStatus>>::Error(Convert2ErrNum(result));
+    }
+
+    return FsResult<std::vector<LocalFilePresentStatus>>::Success(localFilePresentStatusList);
+}
 } // namespace OHOS::FileManagement::CloudSync

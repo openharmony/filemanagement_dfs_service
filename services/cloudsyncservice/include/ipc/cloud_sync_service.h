@@ -110,6 +110,8 @@ public:
     ErrCode ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
     ErrCode IsFileConflict(const std::string &uri, bool &isConflict) override;
     ErrCode ClearFileConflict(const std::string &uri) override;
+    ErrCode GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+                                             std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

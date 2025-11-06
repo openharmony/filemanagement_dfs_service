@@ -198,6 +198,7 @@ export default namespace cloudSyncManager  {
         static native disableCloudInner(accountId: string): void;
         static native cleanInner(accountId: string, appActions: Record<string, Action>): void;
         static native notifyEventChangeInner(userId: int, extraData: ExtraData): void;
+        static native getBundlesLocalFilePresentStatusInner(bundleNames: Array<string>): Array<LocalFilePresentStatus>;
     };
 
     export function changeAppCloudSwitch(accountId: string, bundleName: string, status: boolean): Promise<void> {
@@ -402,4 +403,39 @@ export default namespace cloudSyncManager  {
             callback(e as BusinessError<void>, undefined);
         });
     }
+
+    export interface LocalFilePresentStatus {
+        bundleName: string;
+        isLocalFilePresent: boolean;
+    }
+
+    class LocalFilePresentStatusInner implements LocalFilePresentStatus {
+        constructor(
+            bundleName: string,
+            isLocalFilePresent: boolean
+        ) {
+            this.bundleName = bundleName;
+            this.isLocalFilePresent = isLocalFilePresent;
+        }
+        public bundleName: string;
+        public isLocalFilePresent: boolean;
+    }
+
+    export function GetBundlesLocalFilePresentStatus(bundleNames: Array<string>): 
+        Promise<Array<LocalFilePresentStatus>> {
+        return new Promise<Array<LocalFilePresentStatus>>((resolve: (result: Array<LocalFilePresentStatus>) => void,
+            reject: (e: BusinessError<void>) => void): void => {
+            let promise = taskpool.execute((
+                bundleNames: Array<string>
+            ): Array<LocalFilePresentStatus> => {
+                return StaticFunction.getBundlesLocalFilePresentStatusInner(bundleNames);
+            }, bundleNames);
+            promise.then<void, void>((ret: NullishType): void => {
+                resolve(ret as Array<LocalFilePresentStatus>);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
+            });
+        });
+    }
+
 }

@@ -103,6 +103,8 @@ public:
     virtual int32_t IsFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
                                    bool &isConflict);
     virtual int32_t ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
+    virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames, const int32_t &userId,
+                                            std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList);
 };
 } // namespace OHOS::FileManagement::CloudFile
 

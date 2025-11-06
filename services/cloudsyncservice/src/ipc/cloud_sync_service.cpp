@@ -1215,4 +1215,15 @@ int32_t CloudSyncService::ClearFileConflict(const std::string &uri)
     LOGI("End ClearFileConflict, ret %{public}d", ret);
     return ret;
 }
+
+int32_t CloudSyncService::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+    std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+
+    int32_t ret = dataSyncManager_->GetBundlesLocalFilePresentStatus(bundleNames, userId, localFilePresentStatusList);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync

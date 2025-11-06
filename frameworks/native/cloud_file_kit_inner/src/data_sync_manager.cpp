@@ -245,4 +245,9 @@ int32_t DataSyncManager::ClearFileConflict(const BundleNameUserInfo &bundleNameU
     return E_OK;
 }
 
+int32_t DataSyncManager::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+    const int32_t &userId, std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudFile

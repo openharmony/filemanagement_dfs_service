@@ -174,6 +174,15 @@ public:
     virtual int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) = 0;
     virtual int32_t IsFileConflict(const std::string &uri, bool &isConflict) = 0;
     virtual int32_t ClearFileConflict(const std::string &uri) = 0;
+    /**
+     * @brief 获取接云应用是否存在未上云本地文件
+     *
+     * @param bundleNames 批量应用包名
+     * @param localFilePresentStatusList 检测结果列表
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+                                                   std::vector<LocalFilePresentStatus> &localFilePresentStatusList) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

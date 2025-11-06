@@ -1028,6 +1028,53 @@ HWTEST_F(CloudSyncServiceProxyTest, BatchCleanFile003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DeleteFilesInner003 End";
 }
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatus001
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus with empty input.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceProxyTest, GetBundlesLocalFilePresentStatus001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus001 Start";
+    std::vector<std::string> bundleNames;
+    std::vector<LocalFilePresentStatus> statusList;
+    int ret = proxy_->GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus001 End";
+}
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatus002
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus with mock failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceProxyTest, GetBundlesLocalFilePresentStatus002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus002 Start";
+    std::vector<std::string> bundleNames = {"com.ohos.photos"};
+    std::vector<LocalFilePresentStatus> statusList;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus002 End";
+}
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatus003
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus with mock success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceProxyTest, GetBundlesLocalFilePresentStatus003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus003 Start";
+    std::vector<std::string> bundleNames = {"com.ohos.photos"};
+    std::vector<LocalFilePresentStatus> statusList;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatus003 End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync {
 } // namespace OHOS

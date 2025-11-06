@@ -32,6 +32,8 @@ public:
         int32_t userId, const std::string &eventId, const std::string &extraData);
     static FsResult<void> DoEnableCloud(const std::string &accountId, const SwitchDataObj &switchData);
     static FsResult<void> DoDisableCloud(const std::string &accountId);
+    static FsResult<std::vector<LocalFilePresentStatus>> DoGetLocalFilePresentStatus(
+        const std::vector<std::string> &bundleNames);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_CORE_H

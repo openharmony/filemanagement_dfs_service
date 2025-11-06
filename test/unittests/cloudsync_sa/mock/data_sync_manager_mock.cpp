@@ -228,6 +228,12 @@ int32_t DataSyncManager::GetCloudFileInfo(const std::string &bundleName, CloudSy
     return E_OK;
 }
 
+int32_t DataSyncManager::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+    const int32_t &userId, std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList)
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
     const int32_t versionNumLimit, std::vector<CloudSync::HistoryVersion> &historyVersionList)
 {

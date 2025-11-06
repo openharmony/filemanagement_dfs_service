@@ -879,4 +879,23 @@ void CloudSyncManagerImpl::CleanGalleryDentryFile(const std::string path)
     const std::string thumbsDir = GetThumbsPath(mediaDir);
     LogAndDelete(thumbsDir, ::remove, "fail to remove thumbsDir");
 }
+
+int32_t CloudSyncManagerImpl::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+    std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    if (bundleNames.empty()) {
+        LOGE("Invalid argument");
+        return EINVAL;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetBundlesLocalFilePresentStatus(bundleNames, localFilePresentStatusList);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync
