@@ -889,9 +889,16 @@ static string ConvertUriToSrcPath(const string &uriStr)
     if (scheme != FILE_SCHEME) {
         return "/";
     }
+
     const string sandboxPrefix = "/data/storage/el2/cloud";
     string uriString = uri.ToString();
-    string filePath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString).substr(sandboxPrefix.length());
+    string uriPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
+    if (uriPath.find(sandboxPrefix) != 0) {
+        LOGE("uriPath invalid: %{public}s", GetAnonyString(uriPath).c_str());
+        return "/";
+    }
+
+    string filePath = uriPath.substr(sandboxPrefix.length());
     size_t pos = filePath.rfind("/");
     filePath = pos == 0 ? "/" : filePath.substr(0, pos);
     return filePath;
