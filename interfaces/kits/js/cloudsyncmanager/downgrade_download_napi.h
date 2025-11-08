@@ -54,6 +54,7 @@ public:
 public:
     napi_ref cbOnRef_;
     napi_env env_;
+    static inline std::string taskName_ = "cloudSyncManager.DownloadProgress";
 
 private:
     void UpdateDownloadProgress(const DowngradeProgress &progress);

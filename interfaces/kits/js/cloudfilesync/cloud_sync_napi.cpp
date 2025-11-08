@@ -190,7 +190,7 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
     };
     preState_ = state;
     preError_ = error;
-    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
+    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate, taskName_.c_str());
     if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
@@ -249,7 +249,7 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
         }
         napi_close_handle_scope(env, scope);
     };
-    auto ret = napi_send_event(env, task, napi_eprio_immediate);
+    auto ret = napi_send_event(env, task, napi_eprio_immediate, taskName_.c_str());
     if  (ret != 0) {
         LOGE("failed to send event, ret: %{public}d", ret);
     }
@@ -412,7 +412,8 @@ napi_value CloudSyncNapi::Start(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Start";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.GallerySync.start";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -442,7 +443,8 @@ napi_value CloudSyncNapi::Stop(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Stop";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.GallerySync.stop";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -796,7 +798,8 @@ napi_value CloudSyncNapi::StartOptimizeStorage(napi_env env, napi_callback_info 
     };
 
     std::string procedureName = "StartOptimizeStorage";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string taskName = "cloudSync.startOptimizeSpace";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -843,7 +846,8 @@ napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "OptimizeStorage";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.optimizeStorage";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -1037,7 +1041,8 @@ napi_value CloudSyncNapi::GetBatchFileSyncState(const napi_env &env, const NFunc
     };
 
     std::string procedureName = "GetFileSyncState";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.getFileSyncState";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -1261,7 +1266,7 @@ int32_t ChangeListenerNapi::SendEvent(UvChangeMsg *msg)
         free(msg->data_);
         delete msg;
     };
-    return napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
+    return napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate, taskName_.c_str());
 }
 
 static napi_status SetValueArray(const napi_env &env, const char *fieldStr, const std::list<Uri> listValue,

@@ -122,6 +122,7 @@ private:
     napi_ref cbOnRef_ = nullptr;
     static CloudSyncState preState_;
     static ErrorType preError_;
+    static inline std::string taskName_ = "cloudSync.SyncProgress";
 };
 
 class ChangeListenerNapi {
@@ -170,6 +171,7 @@ public:
 
 private:
     napi_env env_ = nullptr;
+    static inline std::string taskName_ = "cloudSync.ChangeData";
 };
 
 class CloudNotifyObserver {
@@ -199,6 +201,7 @@ public:
 private:
     napi_env env_ = nullptr;;
     LibN::NRef cbOnRef_;
+    static inline std::string taskName_ = "cloudSync.OptimizeSpaceProgress";
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H

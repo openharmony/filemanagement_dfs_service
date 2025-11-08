@@ -89,7 +89,7 @@ void CloudDlCallbackMiddleNapi::OnDownloadProcess(const DownloadProgressObj &pro
                 callbackImpl->RemoveDownloadInfo(fileCacheInfo->GetTaskId());
             }
         },
-        napi_eprio_immediate);
+        napi_eprio_immediate, taskName_.c_str());
     if (status != napi_ok) {
         LOGE("Failed to execute libuv work queue, status: %{public}d", status);
     }

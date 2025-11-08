@@ -135,7 +135,8 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
     };
 
     string procedureName = "cloudFileDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSync.Download.start";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -275,7 +276,8 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
     };
 
     string procedureName = "cloudFileDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSync.Download.stop";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 

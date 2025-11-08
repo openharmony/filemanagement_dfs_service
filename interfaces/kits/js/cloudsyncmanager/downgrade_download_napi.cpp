@@ -130,7 +130,7 @@ void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progres
             }
             napi_close_handle_scope(env, scope);
         },
-        napi_eprio_immediate);
+        napi_eprio_immediate, taskName_.c_str());
     if (status != napi_ok) {
         LOGE("Failed to execute libuv work queue, status: %{public}d", status);
     }
@@ -211,18 +211,15 @@ napi_value DowngradeDownloadNapi::StartDownload(napi_env env, napi_callback_info
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-
     auto downgradeEntity = NClass::GetEntityOf<DowngradeEntity>(env, funcArg.GetThisVar());
     if (!downgradeEntity) {
         LOGE("Failed to get downgrade entity.");
         NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
         return nullptr;
     }
-
     if (downgradeEntity->callbackImpl == nullptr) {
         downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env, callbackVal.val_);
     }
-
     auto cbExec = [callbackImpl{downgradeEntity->callbackImpl}, bundleName{downgradeEntity->bundleName}]() -> NError {
         if (callbackImpl == nullptr) {
             LOGE("Failed to get download callback");
@@ -237,16 +234,15 @@ napi_value DowngradeDownloadNapi::StartDownload(napi_env env, napi_callback_info
         LOGI("Start downgrade success!");
         return NError(ERRNO_NOERR);
     };
-
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
         return NVal::CreateUndefined(env);
     };
-
     string procedureName = "downgradeDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSyncManager.DowngradeDownload.startDownload";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -279,7 +275,8 @@ napi_value DowngradeDownloadNapi::StopDownload(napi_env env, napi_callback_info 
     };
 
     string procedureName = "downgradeDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSyncManager.DowngradeDownload.stopDownload";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -321,7 +318,8 @@ napi_value DowngradeDownloadNapi::GetCloudFileInfo(napi_env env, napi_callback_i
     };
 
     string procedureName = "downgradeDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::ONE));
+    string taskName = "cloudSyncManager.DowngradeDownload.getCloudFileInfo";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::ONE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 

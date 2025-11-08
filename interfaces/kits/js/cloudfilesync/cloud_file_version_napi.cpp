@@ -140,7 +140,8 @@ napi_value FileVersionNapi::GetHistoryVersionList(napi_env env, napi_callback_in
     };
 
     string procedureName = "fileVersion";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    string taskName = "cloudSync.FileVersion.getHistoryVersionList";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -248,7 +249,8 @@ napi_value FileVersionNapi::DownloadHistoryVersion(napi_env env, napi_callback_i
         return NVal::CreateUTF8String(env, param->versionUri);
     };
     string procedureName = "fileVersion";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::FOUR));
+    string taskName = "cloudSync.FileVersion.downloadHistoryVersion";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::FOUR), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -311,7 +313,8 @@ napi_value FileVersionNapi::ReplaceFileWithHistoryVersion(napi_env env, napi_cal
     };
 
     string procedureName = "fileVersion";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    string taskName = "cloudSync.FileVersion.replaceFileWithHistoryVersion";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -355,7 +358,8 @@ napi_value FileVersionNapi::IsConflict(napi_env env, napi_callback_info info)
     };
 
     string procedureName = "fileVersion";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSync.FileVersion.isFileConflict";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -398,7 +402,8 @@ napi_value FileVersionNapi::ClearFileConflict(napi_env env, napi_callback_info i
     };
 
     string procedureName = "fileVersion";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSync.FileVersion.clearFileConflict";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -499,7 +504,7 @@ void VersionDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &p
         msg->downloadCallback_.lock()->OnComplete(msg);
         delete msg;
     };
-    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate);
+    napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate, taskName_.c_str());
     if (ret != napi_ok) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
         delete msg;
