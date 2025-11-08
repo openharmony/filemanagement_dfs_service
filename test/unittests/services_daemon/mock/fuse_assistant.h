@@ -29,8 +29,8 @@ class FuseAssistant {
 public:
     virtual ~FuseAssistant() = default;
     virtual int fuse_opt_add_arg(struct fuse_args *args, const char *arg) = 0;
-    virtual struct fuse_session* fuse_session_new(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
-        size_t opSize, void *userData) = 0;
+    virtual struct fuse_session* fuse_session_new_versioned(struct fuse_args *args,
+        const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData) = 0;
     virtual void fuse_session_destroy(struct fuse_session *se) = 0;
     virtual int mkdir(const char* path, mode_t mode) = 0;
     virtual int chown(const char *path, uid_t owner, gid_t group) = 0;
@@ -43,8 +43,8 @@ public:
 class FuseAssistantMock : public FuseAssistant {
 public:
     MOCK_METHOD2(fuse_opt_add_arg, int(struct fuse_args *args, const char *arg));
-    MOCK_METHOD4(fuse_session_new, struct fuse_session*(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
-        size_t opSize, void *userData));
+    MOCK_METHOD5(fuse_session_new_versioned, struct fuse_session*(struct fuse_args *args,
+        const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData));
     MOCK_METHOD1(fuse_session_destroy, void(struct fuse_session *se));
     MOCK_METHOD2(mkdir, int(const char* path, mode_t mode));
     MOCK_METHOD3(chown, int(const char * path, uid_t owner, gid_t group));

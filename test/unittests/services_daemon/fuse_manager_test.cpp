@@ -95,7 +95,7 @@ HWTEST_F(FuseManagerTest, StartFuseTest001, TestSize.Level1)
     try {
         std::unique_ptr<struct fuse_session> fs = std::make_unique<struct fuse_session>();
         EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, fuse_session_new(_, _, _, _)).WillOnce(Return(fs.get()));
+        EXPECT_CALL(*insMock_, fuse_session_new_versioned(_, _, _, _, _)).WillOnce(Return(fs.get()));
         EXPECT_CALL(*insMock_, fuse_session_destroy(fs.get())).WillOnce(Return());
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/100/cloud_fuse";
@@ -143,7 +143,7 @@ HWTEST_F(FuseManagerTest, StartFuseTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFuseTest003 start";
     try {
         EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, fuse_session_new(_, _, _, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*insMock_, fuse_session_new_versioned(_, _, _, _, _)).WillOnce(Return(nullptr));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/100/cloud_fuse";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);
@@ -168,7 +168,7 @@ HWTEST_F(FuseManagerTest, StartFuseTest004, TestSize.Level1)
     try {
         std::unique_ptr<struct fuse_session> fs = std::make_unique<struct fuse_session>();
         EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, fuse_session_new(_, _, _, _)).WillOnce(Return(fs.get()));
+        EXPECT_CALL(*insMock_, fuse_session_new_versioned(_, _, _, _, _)).WillOnce(Return(fs.get()));
         EXPECT_CALL(*insMock_, fuse_session_destroy(fs.get())).WillOnce(Return());
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/100/cloud";
@@ -216,7 +216,7 @@ HWTEST_F(FuseManagerTest, StartFuseTest006, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFuseTest006 start";
     try {
         EXPECT_CALL(*insMock_, fuse_opt_add_arg(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, fuse_session_new(_, _, _, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*insMock_, fuse_session_new_versioned(_, _, _, _, _)).WillOnce(Return(nullptr));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         string path = "/mnt/data/100/cloud";
         int ret = fuseManager_->StartFuse(USER_ID, devFd, path);

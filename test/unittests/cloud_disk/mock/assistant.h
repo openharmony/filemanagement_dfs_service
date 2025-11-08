@@ -46,8 +46,8 @@ public:
     virtual int fuse_reply_create(fuse_req_t, const struct fuse_entry_param *, const struct fuse_file_info *) = 0;
     virtual int fuse_reply_ioctl(fuse_req_t, int, const void *, size_t) = 0;
     virtual int fuse_opt_add_arg(struct fuse_args *args, const char *arg) = 0;
-    virtual struct fuse_session* fuse_session_new(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
-        size_t op_size, void *userdata) = 0;
+    virtual struct fuse_session* fuse_session_new_versioned(struct fuse_args *args,
+        const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData) = 0;
     virtual int fuse_lowlevel_notify_inval_entry(struct fuse_session *, fuse_ino_t, const char *, size_t) = 0;
     virtual int fuse_lowlevel_notify_inval_inode(struct fuse_session *, fuse_ino_t, off_t, off_t) = 0;
     
@@ -99,8 +99,8 @@ public:
     MOCK_METHOD3(fuse_reply_create, int(fuse_req_t, const struct fuse_entry_param *, const struct fuse_file_info *));
     MOCK_METHOD4(fuse_reply_ioctl, int(fuse_req_t, int, const void *, size_t));
     MOCK_METHOD2(fuse_opt_add_arg, int(struct fuse_args *args, const char *arg));
-    MOCK_METHOD4(fuse_session_new, struct fuse_session*(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
-        size_t opSize, void *userData));
+    MOCK_METHOD5(fuse_session_new_versioned, struct fuse_session*(struct fuse_args *args,
+        const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData));
     MOCK_METHOD4(fuse_lowlevel_notify_inval_entry, int(struct fuse_session *, fuse_ino_t, const char *, size_t));
     MOCK_METHOD4(fuse_lowlevel_notify_inval_inode, int(struct fuse_session *, fuse_ino_t, off_t, off_t));
 

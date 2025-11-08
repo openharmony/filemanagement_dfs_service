@@ -22,10 +22,10 @@ int fuse_opt_add_arg(struct fuse_args *args, const char *arg)
     return FuseAssistant::ins->fuse_opt_add_arg(args, arg);
 }
 
-struct fuse_session* fuse_session_new(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
-    size_t opSize, void *userData)
+struct fuse_session* fuse_session_new_versioned(struct fuse_args *args, const struct fuse_lowlevel_ops *op,
+    size_t opSize, struct libfuse_version *version, void *userData)
 {
-    return FuseAssistant::ins->fuse_session_new(args, op, opSize, userData);
+    return FuseAssistant::ins->fuse_session_new_versioned(args, op, opSize, version, userData);
 }
 
 void fuse_session_destroy(struct fuse_session *se)
