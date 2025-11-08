@@ -202,13 +202,14 @@ struct CloudInode {
         }
         return false;
     }
-    bool IsReadAhead(int64_t index)
+    bool IsReadAhead(int64_t index, std::shared_ptr<ReadCacheInfo> &readCacheInfo)
     {
         std::shared_lock lock(sessionLock);
         auto it = readCacheMap.find(index);
         if (it == readCacheMap.end()) {
             return false;
         }
+        readCacheInfo = it->second;
         std::unique_lock<std::mutex> flock(it->second->mutex);
         return it->second->flags & PG_READAHEAD;
     }
@@ -1324,8 +1325,8 @@ static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struc
 static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
 {
     int64_t cacheIndex = off / MAX_READ_SIZE;
-    if (cInode->IsReadAhead(cacheIndex)) {
-        auto it = cInode->readCacheMap[cacheIndex];
+    std::shared_ptr<ReadCacheInfo> it;
+    if (cInode->IsReadAhead(cacheIndex, it)) {
         std::unique_lock<std::mutex> lock(it->mutex);
         auto waitStatus = it->cond.wait_for(
             lock, READ_TIMEOUT_S, [&] { return (it->flags & PG_UPTODATE) || CheckReadIsCanceled(pid, cInode); });
@@ -1699,16 +1700,19 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
     }
     // no prefetch when contains O_NOFOLLOW
     unsigned int unflags = static_cast<unsigned int>(flags);
-    if (unflags & O_NOFOLLOW) {
+    if ((unflags & O_NOFOLLOW) || !IsVideoType(params.cInode->mBase->name)) {
         return true;
     }
 
     std::string appId = params.readArgsHead->appId;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    int64_t offset = params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset;
     for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        int64_t cacheIndex = static_cast<int64_t>(
-            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
-        if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+        if ((static_cast<uint64_t>(offset) + i * MAX_READ_SIZE) >= params.cInode->mBase->size) {
+            break;
+        }
+        int64_t cacheIndex = static_cast<int64_t>(offset / MAX_READ_SIZE + i);
+        if (params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
             readStat.UpdateReadInfo(CACHE_SUM);
             continue;
