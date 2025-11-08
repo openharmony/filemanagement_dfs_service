@@ -66,11 +66,12 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
     };
 
     const std::string procedureName = "getLastSyncTime";
+    std::string taskName = "cloudSync.FileSync.getLastSyncTime";
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
         if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_number)) {
             NVal cb(env, funcArg[NARG_POS::FIRST]);
-            return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
+            return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(procedureName, cbExec, cbComplete).val_;
         }
         LOGE("Get napi_number Error");
         NError(EINVAL).ThrowErr(env);
@@ -147,7 +148,8 @@ napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Start";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.FileSync.start";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -177,7 +179,8 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Stop";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSync.FileSync.stop";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 

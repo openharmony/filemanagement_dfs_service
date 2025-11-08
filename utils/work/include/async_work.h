@@ -23,7 +23,8 @@
 namespace OHOS {
 namespace FileManagement {
 namespace LibN {
-    std::unique_ptr<NAsyncWork> GetPromiseOrCallBackWork(napi_env env, const NFuncArg& funcArg, size_t maxArgSize);
+    std::unique_ptr<NAsyncWork> GetPromiseOrCallBackWork(napi_env env, const NFuncArg& funcArg,
+        size_t maxArgSize, const std::string &taskName);
 } // namespace LibN
 } // namespace FileManagement
 } // namespace OHOS

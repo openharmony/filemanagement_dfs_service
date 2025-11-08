@@ -36,33 +36,27 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
-
     bool succ = false;
     std::unique_ptr<char []> accoutId;
     std::unique_ptr<char []> bundleName;
     bool status;
-
     tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
     tie(succ, bundleName, std::ignore) = NVal(env, funcArg[(int)NARG_POS::SECOND]).ToUTF8String();
     if (!succ) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
     tie(succ, status) = NVal(env, funcArg[(int)NARG_POS::THIRD]).ToBool();
     if (!succ) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
     string accoutIdStr(accoutId.get());
     string bundleNameStr(bundleName.get());
-
     auto cbExec = [accoutIdStr, bundleNameStr, status]() -> NError {
         int32_t result = CloudSyncManager::GetInstance().ChangeAppSwitch(accoutIdStr, bundleNameStr, status);
         if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
@@ -77,10 +71,10 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         }
         return { NVal::CreateUndefined(env) };
     };
-
     std::string procedureName = "ChangeAppCloudSwitch";
     NVal thisVar(env, funcArg.GetThisVar());
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::FOUR));
+    std::string taskName = "cloudSyncManager.changeAppCloudSwitch";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::FOUR), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -122,7 +116,8 @@ napi_value NotifyDataChangeInner(napi_env env, NFuncArg &funcArg)
     };
 
     std::string procedureName = "NotifyDataChange";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string taskName = "cloudSyncManager.notifyDataChange";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -145,13 +140,11 @@ napi_value NotifyEventChange(napi_env env, NFuncArg &funcArg)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
     auto argv = NVal(env, funcArg[NARG_POS::SECOND]);
     if (!argv.HasProp("eventId") || !argv.HasProp("extraData")) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
     std::unique_ptr<char []> eventId;
     std::unique_ptr<char []> extraData;
 
@@ -165,7 +158,6 @@ napi_value NotifyEventChange(napi_env env, NFuncArg &funcArg)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    
     string eventIdStr(eventId.get());
     string extraDataStr(extraData.get());
     
@@ -183,9 +175,9 @@ napi_value NotifyEventChange(napi_env env, NFuncArg &funcArg)
         }
         return { NVal::CreateUndefined(env) };
     };
-
     std::string procedureName = "NotifyEventChange";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string taskName = "cloudSyncManager.notifyDataChange";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -240,7 +232,8 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "DisableCloud";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    std::string taskName = "cloudSyncManager.disableCloud";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -322,7 +315,8 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "EnableCloud";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string taskName = "cloudSyncManager.enableCloud";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
@@ -399,7 +393,8 @@ napi_value Clean(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Clean";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string taskName = "cloudSyncManager.clean";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 

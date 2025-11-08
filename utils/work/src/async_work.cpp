@@ -20,7 +20,8 @@ namespace OHOS {
 namespace FileManagement {
 namespace LibN {
 
-std::unique_ptr<NAsyncWork> GetPromiseOrCallBackWork(napi_env env, const NFuncArg &funcArg, size_t maxArgSize)
+std::unique_ptr<NAsyncWork> GetPromiseOrCallBackWork(napi_env env, const NFuncArg &funcArg,
+    size_t maxArgSize, const std::string &taskName)
 {
     std::unique_ptr<NAsyncWork> asyncWork = nullptr;
     NVal thisVar(env, funcArg.GetThisVar());
@@ -29,7 +30,7 @@ std::unique_ptr<NAsyncWork> GetPromiseOrCallBackWork(napi_env env, const NFuncAr
     } else {
         NVal cb(env, funcArg[(int)maxArgSize - 1]);
         if (cb.TypeIs(napi_function)) {
-            asyncWork = std::make_unique<NAsyncWorkCallback>(env, thisVar, cb);
+            asyncWork = std::make_unique<NAsyncWorkCallback>(env, thisVar, cb, taskName);
         } else {
             LOGE("Argument type mismatch");
             NError(E_PARAMS).ThrowErr(env);

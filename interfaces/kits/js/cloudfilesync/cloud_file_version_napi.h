@@ -64,6 +64,7 @@ private:
     static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
+    static inline std::string taskName_ = "cloudSync.VersionDownloadProgress";
 };
 
 struct FileVersionEntity {

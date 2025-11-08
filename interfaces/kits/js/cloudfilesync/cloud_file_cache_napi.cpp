@@ -277,7 +277,8 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
     };
 
     string procedureName = "cloudFileCache";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    string taskName = "cloudSync.CloudFileCache.start";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -344,7 +345,8 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
     };
 
     string procedureName = "cloudFileCache";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize);
+    string taskName = "cloudSync.CloudFileCache.stop";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -422,7 +424,8 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
     };
 
     string procedureName = "cloudFileCache";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize);
+    string taskName = "cloudSync.CloudFileCache.startBatch";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
@@ -469,7 +472,8 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
     };
 
     string procedureName = "cloudFileCache";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize);
+    string taskName = "cloudSync.CloudFileCache.stopBatch";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 

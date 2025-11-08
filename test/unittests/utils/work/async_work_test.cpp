@@ -65,8 +65,9 @@ HWTEST_F(AsyncWorkTest, GetPromiseOrCallBackWorkTest001, TestSize.Level1)
     napi_env env = nullptr;
     napi_callback_info info = nullptr;
     LibN::NFuncArg funcArg(env, info);
+    string taskName = "testFunc";
 
-    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 1);
+    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 1, taskName);
     EXPECT_NE(asyncWork, nullptr);
 }
 
@@ -75,8 +76,9 @@ HWTEST_F(AsyncWorkTest, GetPromiseOrCallBackWorkTest002, TestSize.Level1)
     napi_env env = nullptr;
     napi_callback_info info = nullptr;
     LibN::NFuncArg funcArg(env, info);
+    string taskName = "testFunc";
 
-    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 0);
+    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 0, taskName);
     EXPECT_EQ(asyncWork, nullptr);
 }
 
