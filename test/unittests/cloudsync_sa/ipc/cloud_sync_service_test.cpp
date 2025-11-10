@@ -21,6 +21,7 @@
 #include "cloud_sync_service.h"
 #include "dfsu_access_token_helper_mock.h"
 #include "i_cloud_download_callback_mock.h"
+#include "os_account_manager_mock.h"
 #include "service_callback_mock.h"
 #include "system_ability_manager_client_mock.h"
 
@@ -44,6 +45,8 @@ public:
                 const std::string &bundleName, std::map<std::string, std::string> &param));
     MOCK_METHOD2(GetCloudAssetsDownloader, std::shared_ptr<CloudAssetsDownloader>(const int32_t userId,
                 const std::string &bundleName));
+    MOCK_METHOD2(GetTargetBundleName, int32_t(string &targetBundleName, string &callerBundleName));
+    MOCK_METHOD2(CheckPermissions, int32_t(const string &permission, bool isSystemApp));
 };
 
 class CloudSyncServiceTest : public testing::Test {
@@ -57,6 +60,7 @@ public:
     static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
     static inline sptr<CloudSyncService> servicePtr_ = nullptr;
     static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
+    static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -71,6 +75,8 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     dfsBatterySrvClient_ = make_shared<BatterySrvClientMock>();
     BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
+    OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
+    OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
@@ -83,6 +89,8 @@ void CloudSyncServiceTest::TearDownTestCase(void)
     saMgr_ = nullptr;
     BatterySrvClientMock::dfsBatterySrvClient = nullptr;
     dfsBatterySrvClient_ = nullptr;
+    OsAccountMethodMock_ = nullptr;
+    OsAccountManagerMethod::osMethod_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -140,9 +148,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest002, TestSize.Level1)
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
-
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountType(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(AccountSA::OsAccountType::PRIVATE), Return(0)));
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ChangeAppSwitchTest002 failed";
@@ -167,9 +176,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest003, TestSize.Level1)
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
-
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountType(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(AccountSA::OsAccountType::MAINTENANCE), Return(0)));
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 failed";

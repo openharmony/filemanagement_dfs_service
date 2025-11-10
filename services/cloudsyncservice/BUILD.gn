@@ -142,6 +142,7 @@ ohos_shared_library("cloudsync_sa") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/utils/system/src/account_utils.cpp",
     "src/ipc/account_status_listener.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
@@ -254,6 +255,7 @@ ohos_static_library("cloudsync_sa_static") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/utils/system/src/account_utils.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
