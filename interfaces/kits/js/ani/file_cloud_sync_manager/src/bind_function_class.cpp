@@ -37,7 +37,7 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
     std::string ssSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String")});
     std::string srSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildClass("std.core.String"), Builder::BuildClass("escompat.Record")});
+        {Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.Record")});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string deSign = Builder::BuildSignatureDescriptor({
         Builder::BuildInt(),
