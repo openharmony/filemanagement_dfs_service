@@ -121,7 +121,7 @@ int32_t CloudDiskNotifyUtils::GetCacheNode(const string &cloudId, CacheNode &cac
     lock_guard<mutex> lock(cacheMutex_);
     auto it = cacheMap_.find(cloudId);
     if (it == cacheMap_.end()) {
-        LOGI("Not fount in cache, id: %{public}s", cloudId.c_str());
+        LOGD("Not fount in cache, id: %{public}s", cloudId.c_str());
         return E_INVAL_ARG;
     }
     cacheList_.splice(cacheList_.begin(), cacheList_, it->second);
