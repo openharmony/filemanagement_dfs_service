@@ -120,6 +120,15 @@ int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const std::string &fileName, int64_t &rowId,
+                                            const std::string &parentCloudId)
+{
+    if (cloudId == "mock") {
+        return 1;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GetParentCloudId(const std::string &cloudId, std::string &parentCloudId)
 {
     return E_OK;

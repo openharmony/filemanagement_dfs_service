@@ -1348,7 +1348,7 @@ string GetTimeRecycled(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     return timeRecycled;
 }
 
-string GetRecyclePath(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+static string GetRecyclePath(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
@@ -1358,7 +1358,16 @@ string GetRecyclePath(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     int res = rdbStore->GetRowId(inoPtr->cloudId, rowId);
     if (res != 0) {
         LOGE("local file get recycle path fail");
-        return "null";
+        auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+        if (parentInode == nullptr) {
+            LOGE("parent inode not found");
+            return "null";
+        }
+        int32_t ret = rdbStore->GenerateNewRowId(inoPtr->cloudId, inoPtr->fileName, rowId, parentInode->cloudId);
+        if (ret != 0) {
+            LOGE("GenerateRowId failed , ret is %{public}d", ret);
+            return "null";
+        }
     }
     string recyclePath = LOCAL_PATH_DATA_STORAGE + RECYCLE_NAME + "/" +
         inoPtr->fileName + "_" + to_string(rowId);

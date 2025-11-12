@@ -1666,6 +1666,65 @@ HWTEST_F(CloudDiskRdbStoreTest, RestoreUpdateRdbTest3, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GenerateNewRowId
+ * @tc.desc: Verify the CloudDiskRdbStore::GenerateNewRowId function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest1, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string fileName = "testfile";
+    int64_t rowId = 0;
+    const std::string parentCloudId = "1";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
+    int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: GenerateNewRowId
+ * @tc.desc: Verify the CloudDiskRdbStore::GenerateNewRowId function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest2, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string fileName = "testfile";
+    int64_t rowId = 0;
+    const std::string parentCloudId = "1";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+    int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GenerateNewRowId
+ * @tc.desc: Verify the CloudDiskRdbStore::GenerateNewRowId function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest3, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string fileName = "testfile";
+    int64_t rowId = 0;
+    const std::string parentCloudId = "1";
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(1, transaction)));
+    int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
  * @tc.name: HandleRestoreXattr
  * @tc.desc: Verify the CloudDiskRdbStore::HandleRestoreXattr function
  * @tc.type: FUNC

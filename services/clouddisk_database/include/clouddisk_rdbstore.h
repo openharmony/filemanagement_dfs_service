@@ -101,7 +101,8 @@ public:
         const CacheNode &oldNode, const CacheNode &newNode);
     int32_t UpdateTHMStatus(std::shared_ptr<CloudDiskMetaFile> metaFile, MetaBase &metabase, int32_t status,
         const std::string &filePath);
-
+    int32_t GenerateNewRowId(const std::string &cloudId, const std::string &fileName, int64_t &rowId,
+                             const std::string &parentCloudId);
     void DatabaseRestore();
 
     static const int32_t BATCH_LIMIT_SIZE = 500;

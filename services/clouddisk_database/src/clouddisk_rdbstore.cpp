@@ -1039,6 +1039,47 @@ int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct 
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const std::string &fileName, int64_t &rowId,
+                                            const std::string &parentCloudId)
+{
+    MetaBase metaBase(fileName, cloudId);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int32_t res = metaFile->DoLookup(metaBase);
+    if (res != E_OK) {
+        LOGE("lookup dentry failed, fileName is %{public}s, cloudId is %{public}s, ret = %{public}d",
+            GetAnonyString(fileName).c_str(), GetAnonyString(cloudId).c_str(), res);
+        return ENOENT;
+    }
+    ValuesBucket fileInfo;
+    fileInfo.PutString(FileColumn::CLOUD_ID, cloudId);
+    fileInfo.PutString(FileColumn::ROOT_DIRECTORY, bundleName_);
+    fileInfo.PutString(FileColumn::FILE_NAME, fileName);
+    fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
+    fileInfo.PutLong(FileColumn::FILE_SIZE, static_cast<int64_t>(metaBase.size));
+    fileInfo.PutInt(FileColumn::IS_DIRECTORY, S_ISDIR(metaBase.mode));
+    fileInfo.PutInt(FileColumn::POSITION, static_cast<int32_t>(metaBase.position));
+    fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, static_cast<int64_t>(metaBase.atime));
+    fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, static_cast<int64_t>(metaBase.mtime));
+    fileInfo.PutLong(FileColumn::META_TIME_EDITED, static_cast<int64_t>(metaBase.mtime));
+    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
+    fileInfo.PutInt(FileColumn::NO_NEED_UPLOAD, static_cast<int32_t>(metaBase.noUpload));
+    fileInfo.PutInt(FileColumn::FILE_TYPE, static_cast<int32_t>(metaBase.fileType));
+    fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::UPLOAD_SUCCESS);
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return E_RDB;
+    }
+    std::tie(ret, rowId) = transaction->Insert(FileColumn::FILES_TABLE, fileInfo);
+    if (ret != E_OK) {
+        LOGE("insert new file record in DB failed, ret = %{public}d", ret);
+        return E_RDB;
+    }
+    rdbTransaction.Finish();
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::HandleRestoreXattr(string &name, const string &parentCloudId, const string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
