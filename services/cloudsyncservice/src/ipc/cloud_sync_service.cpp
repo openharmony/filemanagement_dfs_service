@@ -51,6 +51,7 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+constexpr mode_t DEFAULT_UMASK = 0002;
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
@@ -184,8 +185,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
         AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
         AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
-        mode_t mode = 0002;
-        umask(mode);
+        umask(DEFAULT_UMASK);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
