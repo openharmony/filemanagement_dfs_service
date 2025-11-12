@@ -18,6 +18,7 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "battery_status.h"
+#include "ffrt_inner.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -33,16 +34,18 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     auto action = eventData.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY) {
         LOGI("Battery status changed: BATTERY_STATUS_OKAY");
-        listener_->OnStatusNormal();
-        return;
-    }
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
+        ffrt::submit([this]() {
+            listener_->OnStatusNormal();
+        });
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
         LOGI("Charging status changed: discharging");
         BatteryStatus::SetChargingStatus(false);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         LOGI("Charging status changed: charging");
         BatteryStatus::SetChargingStatus(true);
-        listener_->OnPowerConnected();
+        ffrt::submit([this]() {
+            listener_->OnPowerConnected();
+        });
     } else {
         LOGI("OnReceiveEvent action is invalid");
     }

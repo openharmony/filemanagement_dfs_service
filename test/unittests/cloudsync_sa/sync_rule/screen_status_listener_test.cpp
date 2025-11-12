@@ -18,6 +18,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ffrt_inner.h"
 #include "screen_status_listener.h"
 #include "utils_log.h"
 
@@ -117,6 +118,7 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest001, TestSize.Level1)
         auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             screenStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -143,6 +145,7 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
         auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             screenStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -169,6 +172,7 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
         auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             screenStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -195,11 +199,64 @@ HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             screenStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnReceiveEventTest004 failed";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 end";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest005
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto screenStatusListener = std::make_shared<ScreenStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            screenStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_NE(subscriber->listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 end";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest006
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto screenStatusListener = std::make_shared<ScreenStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<ScreenStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            screenStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_NE(subscriber->listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 end";
 }
 }

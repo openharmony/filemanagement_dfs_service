@@ -19,6 +19,7 @@
 #include "battery_status.h"
 #include "system_load.h"
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "parameters.h"
 #include "utils_log.h"
 #include "task_state_manager.h"
@@ -121,6 +122,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 Start";
     try {
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
+        ffrt::wait();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 FAILED";
@@ -136,16 +138,17 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest001, TestSize.Level1)
  */
 HWTEST_F(SytemLoadTest, OnThermalLevelResultTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 Start";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest002 Start";
     try {
         std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
         systemLoadEvent_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 FAILED";
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest002 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 End";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest002 End";
 }
 
 /**
@@ -162,6 +165,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest003, TestSize.Level1)
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnThermalLevelResultTest003 FAILED";
@@ -184,6 +188,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest004, TestSize.Level1)
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         EXPECT_EQ("false", systemLoadThumb);
     } catch (...) {
@@ -208,6 +213,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest005, TestSize.Level1)
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
+        ffrt::wait();
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         EXPECT_EQ("true", systemLoadThumb);
     } catch (...) {
@@ -232,6 +238,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest006, TestSize.Level1)
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         EXPECT_EQ("false", systemLoadThumb);
     } catch (...) {
@@ -256,6 +263,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest007, TestSize.Level1)
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::COOL);
+        ffrt::wait();
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         EXPECT_EQ("false", systemLoadThumb);
     } catch (...) {
@@ -266,25 +274,88 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest007, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnThermalLevelResultTest005
+ * @tc.name: OnThermalLevelResultTest008
  * @tc.desc: Verify the OnThermalLevelResult function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, OnThermalLevelResultTest0010, TestSize.Level1)
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest008, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 Start";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest008 Start";
     try {
         system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadEvent_->SetDataSyncer(dataSyncManager);
         system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 FAILED";
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest008 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnThermalLevelResultTest005 End";
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest008 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest009
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest009 Start";
+    try {
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
+        ffrt::wait();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest009 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest009 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest0010
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest0010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest0010 Start";
+    try {
+        systemLoadEvent_->SetDataSyncer(nullptr);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest0010 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest0010 End";
+}
+
+/**
+ * @tc.name: OnThermalLevelResultTest0011
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest0011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest0011 Start";
+    try {
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        systemLoadEvent_->SetDataSyncer(dataSyncManager);
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::NORMAL);
+        ffrt::wait();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest0011 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest0011 End";
 }
 
 /**
