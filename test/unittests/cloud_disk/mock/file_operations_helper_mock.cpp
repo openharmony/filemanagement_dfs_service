@@ -41,6 +41,7 @@ namespace {
     static const int32_t MOCK5 = 5;
     static const int32_t MOCK6 = 6;
     static const int32_t MOCK7 = 7;
+    static const int32_t MOCK8 = 8;
     static const int32_t MOCKUSERID0 = 100;
     static const int32_t MOCKUSERID1 = 1;
     static const int32_t STATSIZE = 1;
@@ -133,6 +134,9 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
     } else if (key == MOCK7) {
         ptr->parent = MOCK7;
         ptr->stat.st_size = STATSIZE;
+    } else if (key == MOCK8) {
+        ptr->parent = MOCK8;
+        ptr->stat.st_size = TEST_MTIME;
     }
     return ptr;
 }

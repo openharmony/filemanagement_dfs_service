@@ -69,8 +69,9 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
 }
 
 int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::string &parentCloudId,
-    const std::string &cloudId, const unsigned long long &size)
+    const std::string &cloudId, const struct stat *attr, const int valid)
 {
+    const unsigned long long size = attr->st_size;
     if (cloudId == "") {
         return 1;
     } else if (size == 1) {

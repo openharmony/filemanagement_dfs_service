@@ -242,19 +242,10 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::string &parentCloudId,
+int32_t CloudDiskRdbStore::SizeSetAttr(const std::string &fileName, const std::string &parentCloudId,
     const std::string &cloudId, const unsigned long long &size)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty()) {
-        LOGE("cloudId is empty");
-        return E_INVAL_ARG;
-    }
-    if (cloudId == ROOT_CLOUD_ID) {
-        LOGE("cloudId is rootId");
-        return E_INVAL_ARG;
-    }
-
     ValuesBucket setAttr;
     setAttr.PutLong(FileColumn::FILE_SIZE, static_cast<int64_t>(size));
     TransactionOperations rdbTransaction(rdbStore_);
@@ -284,6 +275,75 @@ int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::strin
         return ret;
     }
     rdbTransaction.Finish();
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::MtimeSetAttr(const std::string &fileName, const std::string &parentCloudId,
+    const std::string &cloudId, const unsigned long long &mtime)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    ValuesBucket setAttr;
+    setAttr.PutLong(FileColumn::FILE_TIME_EDITED, static_cast<int64_t>(mtime));
+    setAttr.PutLong(FileColumn::META_TIME_EDITED, static_cast<int64_t>(mtime));
+    setAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
+    int32_t changedRows = -1;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    std::tie(ret, changedRows) = transaction->Update(setAttr, predicates);
+    if (ret != E_OK) {
+        LOGE("setAttr mtime fail, ret: %{public}d, changeRow is %{public}d", ret, changedRows);
+        return E_RDB;
+    }
+
+    MetaBase metaBase(fileName, cloudId);
+    metaBase.mtime = mtime;
+    auto callback = [&metaBase] (MetaBase &m) {
+        m.mtime = metaBase.mtime;
+    };
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    ret = metaFile->DoLookupAndUpdate(fileName, callback);
+    if (ret != E_OK) {
+        LOGE("update new dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    rdbTransaction.Finish();
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::string &parentCloudId,
+    const std::string &cloudId, const struct stat *attr, const int valid)
+{
+    if (cloudId.empty()) {
+        LOGE("cloudId is empty");
+        return E_INVAL_ARG;
+    }
+    if (cloudId == ROOT_CLOUD_ID) {
+        LOGE("cloudId is rootId");
+        return E_INVAL_ARG;
+    }
+    int32_t ret = -1;
+    if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
+        unsigned long long size = attr->st_size;
+        ret = SizeSetAttr(fileName, parentCloudId, cloudId, size);
+        if (ret != E_OK) {
+            LOGE("Setattr size failed, ret = %{public}d", ret);
+            return ret;
+        }
+    }
+    if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_MTIME) {
+        unsigned long long mtime = attr->st_mtime * MILLISECOND_TO_SECOND;
+        ret = MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
+        if (ret != E_OK) {
+            LOGE("Setattr mtime failed, ret = %{public}d", ret);
+            return ret;
+        }
+    }
     return E_OK;
 }
 

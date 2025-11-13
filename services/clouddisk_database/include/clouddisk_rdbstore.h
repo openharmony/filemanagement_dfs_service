@@ -43,7 +43,11 @@ public:
     int32_t LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info);
     int32_t GetAttr(const std::string &cloudId, CloudDiskFileInfo &info);
     int32_t SetAttr(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId,
-        const unsigned long long &size);
+        const struct stat *attr, const int valid);
+    int32_t SizeSetAttr(const std::string &filename, const std::string &parentCloudId,
+        const std::string &cloudId, const unsigned long long &size);
+    int32_t MtimeSetAttr(const std::string &filename, const std::string &parentCloudId,
+        const std::string &cloudId, const unsigned long long &mtime);
     int32_t ReadDir(const std::string &cloudId, std::vector<CloudDiskFileInfo> &infos);
     int32_t MkDir(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &directoryName, bool noNeedUpload);
