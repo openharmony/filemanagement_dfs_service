@@ -925,4 +925,122 @@ HWTEST_F(FuseManagerStaticTest, HasCache0011, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "HasCache0011 End";
 }
+
+/**
+ * @tc.name:CloudReadHelperTest001
+ * @tc.desc: Verify CloudReadHelperTest func
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadHelperTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudReadHelperTest001 Begin";
+    try {
+        fuse_req_t req = new struct fuse_req;
+        req->ctx.pid = 100;
+        pid_t pid = GetPidFromTid(req->ctx.pid);
+        shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+        cInode->readCtlMap.insert({pid, true});
+        size_t size = 0;
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
+        bool ret = CloudReadHelper(req, size, cInode);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudReadHelperTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "CloudReadHelperTest001 End";
+}
+
+/**
+ * @tc.name:CloudReadHelperTest002
+ * @tc.desc: Verify CloudReadHelperTest func
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadHelperTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudReadHelperTest002 Begin";
+    try {
+        fuse_req_t req = new struct fuse_req;
+        req->ctx.pid = 100;
+        pid_t pid = GetPidFromTid(req->ctx.pid);
+        shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+        cInode->readCtlMap.insert({pid, false});
+        size_t size = MAX_READ_SIZE + 1;
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
+        bool ret = CloudReadHelper(req, size, cInode);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudReadHelperTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "CloudReadHelperTest002 End";
+}
+
+/**
+ * @tc.name:CloudReadHelperTest003
+ * @tc.desc: Verify CloudReadHelperTest func
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadHelperTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudReadHelperTest003 Begin";
+    try {
+        fuse_req_t req = new struct fuse_req;
+        req->ctx.pid = 100;
+        pid_t pid = GetPidFromTid(req->ctx.pid);
+        shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+        cInode->readCtlMap.insert({pid, false});
+        size_t size = 0;
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
+        bool ret = CloudReadHelper(req, size, cInode);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudReadHelperTest003 Error";
+    }
+    GTEST_LOG_(INFO) << "CloudReadHelperTest003 End";
+}
+
+/**
+ * @tc.name:GetSessionTest001
+ * @tc.desc: Verify GetSessionTest func
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, GetSessionTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSessionTest001 Begin";
+    try {
+        string path = "test/key/1";
+        struct fuse_session *fuseSession = new struct fuse_session;
+        fuseManager_->sessions_.insert({path, fuseSession});
+
+        struct fuse_session *outFuseSession = fuseManager_->GetSession(path);
+        EXPECT_EQ(outFuseSession, fuseSession);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSessionTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "GetSessionTest001 End";
+}
+
+/**
+ * @tc.name:GetSessionTest002
+ * @tc.desc: Verify GetSessionTest func
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, GetSessionTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSessionTest002 Begin";
+    try {
+        string path = "test/key/2";
+
+        struct fuse_session *outFuseSession = fuseManager_->GetSession(path);
+        EXPECT_EQ(outFuseSession, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSessionTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "GetSessionTest002 End";
+}
+
 } // namespace OHOS::FileManagement::CloudSync::Test
