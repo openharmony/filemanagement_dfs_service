@@ -1118,7 +1118,6 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             string cachePath = VideoCachePath(cInode->path, data);
             if (cachePath == "") {
                 LOGE("cloud release cache path failed");
-                return;
             }
             if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
                          sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
