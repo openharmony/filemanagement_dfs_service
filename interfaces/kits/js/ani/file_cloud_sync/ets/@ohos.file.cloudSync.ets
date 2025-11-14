@@ -55,8 +55,6 @@ export default namespace cloudSync {
         public error: ErrorType;
     }
 
-    export type GallerySyncCallback = (pg: SyncProgress) => void;
-
     export class GallerySync {
         static {
             loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
@@ -70,11 +68,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: GallerySyncCallback): void;
+        native onProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string, callback: GallerySyncCallback): void;
+        native offProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -204,8 +202,6 @@ export default namespace cloudSync {
         native getSuccessfulFiles(): Array<string>;
     };
 
-    export type DownloadcCallback = (pg: DownloadProgress) => void;
-
     export class Download {
         static {
             loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
@@ -219,11 +215,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: DownloadcCallback): void;
+        native onProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string, callback: DownloadcCallback): void;
+        native offProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(uri: string): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -364,11 +360,11 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: Callback<SyncProgress>): void;
+        native onProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string, callback: Callback<SyncProgress>): void;
+        native offProgress(callback: Callback<SyncProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
 
         start(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -416,7 +412,7 @@ export default namespace cloudSync {
             return new Promise<long>((resolve: (result: long) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as long);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -426,7 +422,7 @@ export default namespace cloudSync {
 
         getLastSyncTime(callback: AsyncCallback<long>): void {
             let promise = taskpool.execute((): long => this.GallerySyncGetLastSyncTime());
-            promise.then<void, void>((ret: NullishType): void => {
+            promise.then<void, void>((ret: Any): void => {
                 callback(null, ret as long);
             }, (e: Error): void => {
                 callback(e as BusinessError<void>, undefined);
@@ -460,11 +456,23 @@ export default namespace cloudSync {
             }
         }
 
-        native on(evt: string, callback: Callback<DownloadProgress>): void;
+        native onProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string, callback: Callback<DownloadProgress>): void;
+        native offProgress(callback: Callback<DownloadProgress>): void;
 
-        native off(evt: string): void;
+        native offProgress(): void;
+
+        native onBatchDownload(callback: Callback<MultiDownloadProgress>): void;
+
+        offBatchDownload(callback?: Callback<MultiDownloadProgress>): void {
+            let cbk: Callback<MultiDownloadProgress> = (pg: MultiDownloadProgress) => {};
+            if (callback !== undefined) {
+                cbk = callback;
+            }
+            this.offBatchDownloadInner(cbk);
+        }
+
+        native offBatchDownloadInner(callback: Callback<MultiDownloadProgress>): void
 
         start(uri: string): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
@@ -633,7 +641,7 @@ export default namespace cloudSync {
                 return StaticFunction.getFileSyncStateInner(uri);
             }, uri);
 
-            taskPool.then((result: NullishType): void => {
+            taskPool.then((result: Any): void => {
                 resolve(result as int);
             }, (error: Error): void => {
                 reject(error as BusinessError<void>);

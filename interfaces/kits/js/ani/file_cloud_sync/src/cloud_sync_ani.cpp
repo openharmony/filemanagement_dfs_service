@@ -83,7 +83,7 @@ void CloudSyncAni::CloudSyncConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -94,20 +94,13 @@ void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, 
     }
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
         LOGE("Cannot wrap cloudsync.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudSync->DoOn(event, callback);
+    auto data = cloudSync->DoOn(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync do on failed, ret = %{public}d", err.GetErrNo());
@@ -115,7 +108,7 @@ void CloudSyncAni::CloudSyncOn(ani_env *env, ani_object object, ani_string evt, 
     }
 }
 
-void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_object fun)
 {
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
@@ -126,20 +119,13 @@ void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt
     }
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(env, cbOnRef);
 
-    std::string event;
-    ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
         LOGE("Cannot wrap cloudsync.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudSync->DoOff(event, callback);
+    auto data = cloudSync->DoOff(EVENT_TYPE, callback);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync do off failed, ret = %{public}d", err.GetErrNo());
@@ -147,23 +133,15 @@ void CloudSyncAni::CloudSyncOff0(ani_env *env, ani_object object, ani_string evt
     }
 }
 
-void CloudSyncAni::CloudSyncOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudSyncAni::CloudSyncOff1(ani_env *env, ani_object object)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        LOGE("cloud sync off create global reference failed. ret = %{public}d", ret);
-        ErrorHandler::Throw(env, E_IPCSS);
-        return;
-    }
-
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
         LOGE("Cannot wrap cloudsync.");
         ErrorHandler::Throw(env, E_IPCSS);
         return;
     }
-    auto data = cloudSync->DoOff(event);
+    auto data = cloudSync->DoOff(EVENT_TYPE);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync do off failed, ret = %{public}d", err.GetErrNo());

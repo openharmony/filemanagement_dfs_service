@@ -23,9 +23,9 @@ class FileSyncAni final {
 public:
     static void FileSyncConstructor0(ani_env *env, ani_object object);
     static void FileSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName);
-    static void FileSyncOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void FileSyncOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void FileSyncOff1(ani_env *env, ani_object object, ani_string evt);
+    static void FileSyncOn(ani_env *env, ani_object object, ani_object fun);
+    static void FileSyncOff0(ani_env *env, ani_object object, ani_object fun);
+    static void FileSyncOff1(ani_env *env, ani_object object);
     static void FileSyncStart(ani_env *env, ani_object object);
     static void FileSyncStop(ani_env *env, ani_object object);
     static ani_long FileSyncGetLastSyncTime(ani_env *env, ani_object object);

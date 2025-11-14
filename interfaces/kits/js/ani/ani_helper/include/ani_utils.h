@@ -24,6 +24,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+const std::string EVENT_TYPE = "progress";
+const std::string MULT_EVENT_TYPE = "batchDownload";
 static thread_local std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler;
 
 class ANIUtils {
