@@ -17,6 +17,7 @@
 #include "cloud_daemon_stub.h"
 #include "data_sync_const.h"
 #include "datashare_helper.h"
+#include "os_account_manager.h"
 #include "settings_data_manager.h"
 #include "utils_log.h"
 
@@ -38,10 +39,16 @@ SettingDataHelper &SettingDataHelper::GetInstance()
     return instance_;
 }
 
-void SettingDataHelper::SetUserData(void *data)
+void SettingDataHelper::SetUserData(int32_t userId, void *data)
 {
     lock_guard<mutex> lck(dataMtx_);
-    data_ = data;
+    if (data != nullptr) {
+        dataMap_[userId] = data;
+        return;
+    }
+    if (dataMap_.find(userId) != dataMap_.end()) {
+        dataMap_.erase(userId);
+    }
 }
 
 bool SettingDataHelper::IsDataShareReady()
@@ -106,18 +113,30 @@ bool SettingDataHelper::InitActiveBundle()
     return true;
 }
 
-void SettingDataHelper::UpdateActiveBundle()
+void SettingDataHelper::UpdateActiveBundle(int32_t userId)
 {
     // get latest data
     string bundle = GetActiveBundle();
     // update FuseData
-    SetActiveBundle(bundle);
+    SetActiveBundle(userId, bundle);
 }
 
 void SettingDataHelper::RegisterObserver()
 {
     sptr<SyncSwitchObserver> observer(new (std::nothrow) SyncSwitchObserver());
     SettingsDataManager::RegisterObserver(SYNC_SWITCH_KEY, observer);
+}
+
+bool SettingDataHelper::GetForegroundUser(int32_t &userId)
+{
+    int32_t foregroundLocalId = -1;
+    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(foregroundLocalId);
+    if (ret != 0) {
+        LOGE("Fail to get foregrount os account local id, errorCode = %{public}d", ret);
+        return false;
+    }
+    userId = foregroundLocalId;
+    return true;
 }
 
 void SyncSwitchObserver::OnChange()

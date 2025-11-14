@@ -14,6 +14,7 @@
  */
 #ifndef SETTING_DATA_HELPER_H
 #define SETTING_DATA_HELPER_H
+#include <map>
 #include <mutex>
 #include <string>
 
@@ -32,18 +33,19 @@ public:
 class SettingDataHelper {
 public:
     static SettingDataHelper &GetInstance();
-    void SetUserData(void *data);
+    void SetUserData(int32_t userId, void *data);
     bool InitActiveBundle();
-    void UpdateActiveBundle();
+    void UpdateActiveBundle(int32_t userId = -1);
 
 private:
     std::string GetActiveBundle();
     bool IsDataShareReady();
     void RegisterObserver();
-    void SetActiveBundle(std::string bundle);
+    void SetActiveBundle(int32_t userId, std::string bundle);
+    bool GetForegroundUser(int32_t &userId);
 
 private:
-    void *data_ = nullptr;
+    std::map<int32_t, void *> dataMap_;
     bool isDataShareReady_ = false;
     bool isBundleInited_ = false;
     std::mutex dataMtx_;

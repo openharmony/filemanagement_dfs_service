@@ -106,6 +106,7 @@ ohos_shared_library("cloudfiledaemon") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
