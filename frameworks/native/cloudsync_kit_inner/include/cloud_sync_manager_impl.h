@@ -87,7 +87,10 @@ public:
     int32_t ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri) override;
     int32_t IsFileConflict(const std::string &uri, bool &isConflict) override;
     int32_t ClearFileConflict(const std::string &uri) override;
-
+    /* static func: detect cloud-access app local file present status */
+    int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+                                             std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
+                                           
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         SystemAbilityStatusChange(const std::string &bundleName) : bundleName_(bundleName) {};

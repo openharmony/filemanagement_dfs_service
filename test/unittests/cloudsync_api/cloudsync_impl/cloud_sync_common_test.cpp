@@ -1489,5 +1489,225 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcelTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ReadFromParcelTest002 End";
 }
+
+/*
+ * @tc.name: LocalFilePresentStatusMarshallingTest001
+ * @tc.desc: Verify the LocalFilePresentStatus::Marshalling function with bundleName write failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusMarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest001 Start";
+    try {
+        LocalFilePresentStatus status;
+        status.bundleName = "com.example.app";
+            status.isLocalFilePresents = true;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
+        auto res = status.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest001 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusMarshallingTest002
+ * @tc.desc: Verify the LocalFilePresentStatus::Marshalling function with isLocalFilePresents write failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusMarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest002 Start";
+    try {
+        LocalFilePresentStatus status;
+        status.bundleName = "com.example.app";
+        status.isLocalFilePresents = true;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(false));
+        auto res = status.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest002 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusMarshallingTest003
+ * @tc.desc: Verify the LocalFilePresentStatus::Marshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusMarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest003 Start";
+    try {
+        LocalFilePresentStatus status;
+        status.bundleName = "com.example.app";
+            status.isLocalFilePresents = true;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(true));
+        auto res = status.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusMarshallingTest003 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusUnmarshallingTest001
+ * @tc.desc: Verify the LocalFilePresentStatus::Unmarshalling function with bundleName read failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusUnmarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest001 Start";
+    try {
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        auto res = LocalFilePresentStatus::Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest001 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusUnmarshallingTest002
+ * @tc.desc: Verify the LocalFilePresentStatus::Unmarshalling function with isLocalFilePresents read failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusUnmarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest002 Start";
+    try {
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
+        auto res = LocalFilePresentStatus::Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest002 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusUnmarshallingTest003
+ * @tc.desc: Verify the LocalFilePresentStatus::Unmarshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusUnmarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest003 Start";
+    try {
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(DoAll(SetArgReferee<0>("com.example.app"), Return(true)));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(true), Return(true)));
+        auto res = LocalFilePresentStatus::Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+        if (res != nullptr) {
+            EXPECT_EQ(res->bundleName, "com.example.app");
+            EXPECT_EQ(res->isLocalFilePresents, true);
+            delete res;
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusUnmarshallingTest003 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusReadFromParcelTest001
+ * @tc.desc: Verify the LocalFilePresentStatus::ReadFromParcel function with bundleName read failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest001 Start";
+    try {
+        LocalFilePresentStatus status;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        auto res = status.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: LocalFilePresentStatusReadFromParcelTest002
+ * @tc.desc: Verify the LocalFilePresentStatus::ReadFromParcel function with isLocalFilePresents read failure.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusReadFromParcelTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest002 Start";
+    try {
+        LocalFilePresentStatus status;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
+        auto res = status.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest002 End";
+}
+
+/*
+ * @tc.name: LocalFileExistStatusReadFromParcelTest003
+ * @tc.desc: Verify the LocalFileExistStatus::ReadFromParcel function with success.
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusReadFromParcelTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest003 Start";
+    try {
+        LocalFilePresentStatus status;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(DoAll(SetArgReferee<0>("com.example.app"), Return(true)));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(false), Return(true)));
+        auto res = status.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+        EXPECT_EQ(status.bundleName, "com.example.app");
+        EXPECT_EQ(status.isLocalFilePresents, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest003 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

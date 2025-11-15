@@ -90,6 +90,7 @@ void CloudSyncManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("notifyDataChange", NotifyDataChange),
         DECLARE_NAPI_FUNCTION("enableCloud", EnableCloud),
         DECLARE_NAPI_FUNCTION("disableCloud", DisableCloud),
+        DECLARE_NAPI_FUNCTION("getBundlesLocalFilePresentStatus", GetBundlesLocalFilePresentStatus),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }

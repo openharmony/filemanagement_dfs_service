@@ -1671,5 +1671,72 @@ HWTEST_F(CloudSyncManagerImplTest, GetMediaPathTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetMediaPathTest001 End";
 }
+
+/*
+ * @tc.name: GetBundlesLocalFilePresentStatusTest001
+ * @tc.desc: Verify the GetBundlesLocalFilePresentStatus function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 Start";
+    try {
+        std::vector<std::string> emptyBundles;
+        std::vector<LocalFilePresentStatus> outList;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(emptyBundles, outList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetBundlesLocalFilePresentStatusTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 End";
+}
+
+/*
+ * @tc.name: GetBundlesLocalFilePresentStatusTest002
+ * @tc.desc: Verify the GetBundlesLocalFilePresentStatus function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 Start";
+    try {
+        std::vector<std::string> emptyBundles;
+        std::vector<LocalFilePresentStatus> outList;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(emptyBundles, outList);
+        EXPECT_EQ(res, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetBundlesLocalFilePresentStatusTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 End";
+}
+
+/*
+ * @tc.name: GetBundlesLocalFilePresentStatusTest003
+ * @tc.desc: Verify the GetBundlesLocalFilePresentStatus function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest003 Start";
+    try {
+        std::vector<std::string> NotEmptyBundles = {"com.ohos.test1", "com.ohos.test2"};
+        std::vector<LocalFilePresentStatus> outList;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetBundlesLocalFilePresentStatus(_, _)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(NotEmptyBundles, outList);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetBundlesLocalFilePresentStatusTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest003 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

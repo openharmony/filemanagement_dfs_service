@@ -1311,6 +1311,59 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest002, TestSize.Level
     EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
 }
 
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatusTest001
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus when permission denied.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceStubTest, GetBundlesLocalFilePresentStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 Start";
+    MockService service;
+    MessageParcel data;
+    MessageParcel reply;
+    std::vector<std::string> bundleNames = {"com.ohos.photos"};
+    std::vector<LocalFilePresentStatus> statusList;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+    int ret = service.GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 End";
+}
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatusTest002
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus with invalid argument.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceStubTest, GetBundlesLocalFilePresentStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 Start";
+    MockService service;
+    std::vector<std::string> bundleNames;
+    std::vector<LocalFilePresentStatus> statusList;
+    int ret = service.GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 End";
+}
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatusTest003
+ * @tc.desc: Verify GetBundlesLocalFilePresentStatus with mock success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceStubTest, GetBundlesLocalFilePresentStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest003 Start";
+    MockService service;
+    std::vector<std::string> bundleNames = {"com.ohos.photos"};
+    std::vector<LocalFilePresentStatus> statusList;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(service, GetBundlesLocalFilePresentStatus(_, _)).WillOnce(Return(E_OK));
+    int ret = service.GetBundlesLocalFilePresentStatus(bundleNames, statusList);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest003 End";
+}
+
 HWTEST_F(CloudSyncServiceStubTest, HandleStopFileCacheTest001, TestSize.Level1)
 {
     MockService service;

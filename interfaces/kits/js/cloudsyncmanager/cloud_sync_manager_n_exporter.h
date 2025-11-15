@@ -25,5 +25,6 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info);
 napi_value NotifyEventChange(napi_env env, napi_callback_info info);
 napi_value EnableCloud(napi_env env, napi_callback_info info);
 napi_value DisableCloud(napi_env env, napi_callback_info info);
+napi_value GetBundlesLocalFilePresentStatus(napi_env env, napi_callback_info info);
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_NAPI_H

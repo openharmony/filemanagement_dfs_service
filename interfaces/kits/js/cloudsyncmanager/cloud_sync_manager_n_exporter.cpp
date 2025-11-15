@@ -398,4 +398,69 @@ napi_value Clean(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
+static NVal AsyncCompleteLocalFilePresentStatus(const napi_env &env, const vector<LocalFilePresentStatus> &list)
+{
+    napi_value results = nullptr;
+    napi_status status = napi_create_array(env, &results);
+    if (status != napi_ok) {
+        LOGE("failed to create array for LocalFilePresentStatus");
+        return {env, NError(JsErrCode::E_IPCSS).GetNapiErr(env)};
+    }
+    int32_t index = 0;
+    for (const auto &item : list) {
+        NVal obj = NVal::CreateObject(env);
+        obj.AddProp("bundleName", NVal::CreateUTF8String(env, item.bundleName).val_);
+        obj.AddProp("isLocalFilePresent", NVal::CreateBool(env, item.isLocalFilePresents).val_);
+        status = napi_set_element(env, results, index, obj.val_);
+        if (status != napi_ok) {
+            LOGE("Failed to set element in LocalFilePresentStatus array");
+            return {env, NError(JsErrCode::E_IPCSS).GetNapiErr(env)};
+        }
+        index++;
+    }
+    return {env, results};
+}
+
+napi_value GetBundlesLocalFilePresentStatus(napi_env env, napi_callback_info info)
+{
+    LOGI("Get bundles local file present status");
+    NFuncArg funcArg(env, info);
+
+    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::ONE), static_cast<size_t>(NARG_CNT::TWO))) {
+        NError(JsErrCode::E_INVALID_ARGUMENT).ThrowErr(env);
+        return nullptr;
+    }
+    const uint32_t maxBundleNames = 20;
+    auto [succ, bundleNamesCopy, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToStringArray();
+    if (!succ || size == 0 || size > maxBundleNames) {
+        LOGE("Get bundleNames array parameter failed or invalid size");
+        NError(JsErrCode::E_INVALID_ARGUMENT).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto bundleNamesArray = bundleNamesCopy;
+    auto localFilePresentStatusList = make_shared<std::vector<LocalFilePresentStatus>>();
+
+    auto cbExec = [bundleNamesArray, localFilePresentStatusList] () -> NError {
+        int32_t result = CloudSyncManager::GetInstance().GetBundlesLocalFilePresentStatus(bundleNamesArray,
+                                                                                          *localFilePresentStatusList);
+        if (result != E_OK) {
+            LOGE("Get bundles local file present status failed! ret = %{public}d", result);
+            return NError(Convert2JsErrNum(result));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [localFilePresentStatusList] (napi_env env, NError err) -> NVal {
+        if (err) {
+            return { env, err.GetNapiErr(env) };
+        }
+        return AsyncCompleteLocalFilePresentStatus(env, *localFilePresentStatusList);
+    };
+
+    std::string procedureName = "GetBundlesLocalFilePresentStatus";
+    std::string taskName = "CloudSyncManager.getBundlesLocalFilePresentStatus";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
 } // namespace OHOS::FileManagement::CloudSync

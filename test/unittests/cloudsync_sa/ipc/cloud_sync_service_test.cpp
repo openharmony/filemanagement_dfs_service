@@ -1159,6 +1159,54 @@ HWTEST_F(CloudSyncServiceTest, GetCloudFileInfoTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetBundlesLocalFilePresentStatusTest001
+ * @tc.desc: Verify the GetBundlesLocalFilePresentStatus function when permission denied.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetBundlesLocalFilePresentStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::vector<std::string> bundleNames = {"com.ohos.aaa"};
+        std::vector<CloudSync::LocalFilePresentStatus> localFilePresentStatusList;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->GetBundlesLocalFilePresentStatus(bundleNames, localFilePresentStatusList);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest001 end";
+}
+
+/**
+ * @tc.name: GetBundlesLocalFilePresentStatusTest002
+ * @tc.desc: Verify the GetBundlesLocalFilePresentStatus function when permission allowed and service returns OK.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetBundlesLocalFilePresentStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::vector<std::string> bundleNames = {"com.ohos.aaa"};
+        std::vector<CloudSync::LocalFilePresentStatus> localFilePresentStatusList;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->GetBundlesLocalFilePresentStatus(bundleNames, localFilePresentStatusList);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest002 end";
+}
+
+/**
  * @tc.name: GetHistoryVersionList001
  * @tc.desc: Verify the GetHistoryVersionList function.
  * @tc.type: FUNC

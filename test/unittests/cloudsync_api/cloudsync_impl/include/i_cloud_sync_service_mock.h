@@ -207,6 +207,12 @@ public:
     {
         return E_OK;
     }
+    
+    int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
+        std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

@@ -22,6 +22,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.OptimizeSpaceOptio
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CloudFileInfo;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.HistoryVersion;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.LocalFilePresentStatus;
 option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
@@ -77,4 +78,6 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void ReplaceFileWithHistoryVersion([in] String uri, [in] String versionUri);
     void IsFileConflict([in] String uri, [out] boolean isConflict);
     void ClearFileConflict([in] String uri);
+    void GetBundlesLocalFilePresentStatus([in] String[] bundleNames,
+                                          [out] LocalFilePresentStatus[] localFilePresentStatusList);
 }

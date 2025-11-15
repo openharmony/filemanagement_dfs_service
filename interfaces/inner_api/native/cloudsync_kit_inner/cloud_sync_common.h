@@ -241,5 +241,17 @@ struct CloudFileInfo : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static CloudFileInfo *Unmarshalling(Parcel &parcel);
 };
+
+/*
+ * 包名存储域下本地文件状态信息
+ */
+struct LocalFilePresentStatus : public Parcelable {
+    std::string bundleName;
+    bool isLocalFilePresents{false};
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static LocalFilePresentStatus *Unmarshalling(Parcel &parcel);
+};
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
