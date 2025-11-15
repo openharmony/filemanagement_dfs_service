@@ -21,6 +21,7 @@
 #include "assistant.h"
 #include "dfs_error.h"
 #include "file_operations_cloud.cpp"
+#include "clouddisk_rdbstore_mock.cpp"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -632,5 +633,102 @@ HWTEST_F(FileOperationsCloudStaticTest, CallBackTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "CallBackTest002 failed";
     }
     GTEST_LOG_(INFO) << "CallBackTest002 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest001
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest001 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "mock";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, 1);
+        ret = rdbStore->GenerateNewRowId(inoPtr->cloudId, inoPtr->fileName, rowId, otherCloudId);
+        EXPECT_EQ(ret, 1);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_EQ(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest001 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest002
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest002 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "mock";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, 1);
+        ret = rdbStore->GenerateNewRowId(otherCloudId, inoPtr->fileName, rowId, otherCloudId);
+        EXPECT_EQ(ret, E_OK);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_EQ(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest002 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest003
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest003 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "123";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, E_OK);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_NE(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest003 end";
 }
 }
