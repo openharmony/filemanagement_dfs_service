@@ -133,7 +133,7 @@ int32_t CloudDiskRdbStore::RdbInit()
         LOGE("wait move error");
         return EBUSY;
     }
-    LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
+    LOGD("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
     string baseDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/";
     string customDir = baseDir.append(system::GetParameter(FILEMANAGER_KEY, ""));
     string name = CLOUD_DISK_DATABASE_NAME;
@@ -997,7 +997,7 @@ int32_t CloudDiskRdbStore::CheckIsConflict(const string &name, const string &par
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != E_OK) {
         if (ret == ENOENT) {
-            LOGI("no conflict file at target dir.");
+            LOGD("no conflict file at target dir.");
             return E_OK;
         }
         LOGE("lookup conflict name fail, ret = %{public}d", ret);
@@ -1924,7 +1924,7 @@ int32_t CloudDiskRdbStore::CheckRootIdValid()
         LOGE("get rootId fail");
         return E_INVAL_ARG;
     }
-    LOGI("load rootis succ, rootId: %{public}s", rootId_.c_str());
+    LOGD("load rootis succ, rootId: %{public}s", rootId_.c_str());
     return E_OK;
 }
 

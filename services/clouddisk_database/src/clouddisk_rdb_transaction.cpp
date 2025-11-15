@@ -64,7 +64,7 @@ std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperation
         return make_pair(E_HAS_DB_ERROR, nullptr);
     }
 
-    LOGI("TransactionOperations::Start");
+    LOGD("TransactionOperations::Start");
     int32_t errCode = BeginTransaction(type);
     if (errCode == E_OK) {
         isStart = true;
@@ -79,7 +79,7 @@ void TransactionOperations::Finish()
     }
 
     if (!isFinish) {
-        LOGI("TransactionOperations::Finish");
+        LOGD("TransactionOperations::Finish");
         int32_t ret = TransactionCommit();
         if (ret == E_OK) {
             isFinish = true;
@@ -101,7 +101,7 @@ int32_t TransactionOperations::BeginTransaction(NativeRdb::Transaction::Transact
         LOGE("Pointer rdbStore_ is nullptr. Maybe it didn't init successfully.");
         return E_HAS_DB_ERROR;
     }
-    LOGI("Start transaction");
+    LOGD("Start transaction");
     int curTryTime = 0;
     while (curTryTime < CREATE_TRANSATION_MAX_TRY_TIMES) {
         int32_t errCode = E_OK;
@@ -130,7 +130,7 @@ int32_t TransactionOperations::TransactionCommit()
     if (transaction_ == nullptr) {
         return E_HAS_DB_ERROR;
     }
-    LOGI("Try commit transaction");
+    LOGD("Try commit transaction");
 
     return RetryTransaction(
         [this]() {
