@@ -77,6 +77,7 @@ ohos_unittest("fuse_manager_test") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -313,6 +314,7 @@ ohos_unittest("cloud_daemon_test") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -416,6 +418,7 @@ ohos_unittest("cloud_daemon_nomock_test") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -604,6 +607,7 @@ ohos_unittest("setting_data_helper_test") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 

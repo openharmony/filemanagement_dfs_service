@@ -1909,7 +1909,7 @@ static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &c
         LOGE("get cloudfile helper instance failed");
     }
     // update userdata
-    SettingDataHelper::GetInstance().SetUserData(nullptr);
+    SettingDataHelper::GetInstance().SetUserData(userId, nullptr);
     return ret;
 }
 
@@ -1957,8 +1957,8 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         data.userId = userId;
         data.se = se;
         data.photoBundleName = system::GetParameter(PHOTOS_KEY, "");
-        SettingDataHelper::GetInstance().SetUserData(&data);
-        SettingDataHelper::GetInstance().UpdateActiveBundle();
+        SettingDataHelper::GetInstance().SetUserData(userId, &data);
+        SettingDataHelper::GetInstance().UpdateActiveBundle(userId);
         config.max_idle_threads = MAX_IDLE_THREADS;
     }
     LOGI("fuse_session_new success, userId: %{public}d", userId);
@@ -1982,15 +1982,21 @@ FuseManager &FuseManager::GetInstance()
     return instance_;
 }
 
-void SettingDataHelper::SetActiveBundle(string bundle)
+void SettingDataHelper::SetActiveBundle(int32_t userId, string bundle)
 {
     lock_guard<mutex> lck(dataMtx_);
-    if (data_ == nullptr) {
-        LOGI("FuseData is null, no need update");
+    int32_t curUserId = userId;
+    if (curUserId < 0 && !GetForegroundUser(curUserId)) {
+        LOGE("Get foregrount user fail, do not update bundle");
         return;
     }
-    struct FuseData *data = static_cast<struct FuseData *>(data_);
-    LOGI("reset database, old: %{public}s new: %{public}s", data->activeBundle.c_str(), bundle.c_str());
+    auto it = dataMap_.find(curUserId);
+    if (it == dataMap_.end()) {
+        LOGW("FuseData(%{public}d) is not find, no need update", curUserId);
+        return;
+    }
+    struct FuseData *data = static_cast<struct FuseData *>(it->second);
+    LOGI("reset database, %{public}d %{public}s -> %{public}s", curUserId, data->activeBundle.c_str(), bundle.c_str());
     if (data->activeBundle != bundle) {
         data->activeBundle = bundle;
         data->database = nullptr;

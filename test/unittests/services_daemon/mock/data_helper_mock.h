@@ -20,6 +20,7 @@
 
 #include "datashare_helper.h"
 #include "settings_data_manager.h"
+#include "os_account_manager.h"
 
 namespace OHOS::FileManagement::CloudFile {
 using namespace OHOS::DataShare;
@@ -110,6 +111,21 @@ public:
     MOCK_METHOD0(Create, std::pair<int, std::shared_ptr<DataShareHelper>>());
     MOCK_METHOD0(GetSwitchStatus, SwitchStatus());
     MOCK_METHOD0(QuerySwitchStatus, int32_t());
+};
+
+class IOsAccountManager {
+public:
+    IOsAccountManager() = default;
+    virtual ~IOsAccountManager() = default;
+    virtual ErrCode GetForegroundOsAccountLocalId(int32_t &localId) = 0;
+
+public:
+    static inline std::shared_ptr<IOsAccountManager> ins = nullptr;
+};
+
+class OsAccountManagerMock : public IOsAccountManager {
+public:
+    MOCK_METHOD1(GetForegroundOsAccountLocalId, ErrCode(int32_t &));
 };
 } // namespace OHOS::FileManagement::CloudFile
 #endif

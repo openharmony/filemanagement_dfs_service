@@ -43,3 +43,11 @@ void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::D
     return;
 }
 } // namespace OHOS::FileManagement::CloudSync
+
+namespace OHOS {
+using namespace OHOS::FileManagement::CloudFile;
+ErrCode AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(int32_t &localId)
+{
+    return IOsAccountManager::ins->GetForegroundOsAccountLocalId(localId);
+}
+} // namespace OHOS

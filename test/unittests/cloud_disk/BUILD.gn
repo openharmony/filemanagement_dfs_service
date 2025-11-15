@@ -69,6 +69,7 @@ ohos_unittest("account_status_listener_test") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
