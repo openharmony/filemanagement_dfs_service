@@ -38,7 +38,7 @@ constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
 static pid_t UID = DAEMON_UID;
 bool g_writeBatchUrisTrue = true;
-int32_t g_readBatchUris = true;
+int32_t g_readBatchUris = OHOS::FileManagement::E_OK;
 } // namespace
 
 namespace OHOS {
@@ -927,9 +927,18 @@ HWTEST_F(DaemonStubTest, DaemonStubHandlePushAssetTest003, TestSize.Level0)
     g_checkCallerPermissionTrue = true;
 
     // Test case: ReadParcelable returns nullptr (AssetObj read failure)
-    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    ASSERT_NE(messageParcelMock_, nullptr) << "DaemonStubHandlePushAssetTest003 messageParcelMock_ is nullptr";
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(-1), Return(true))); // -1: Invalid userId
 
     auto ret = daemonStub_->HandlePushAsset(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test case: ReadParcelable returns nullptr (AssetObj read failure)
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(100), Return(true))); // 100: Valid userId
+
+    ret = daemonStub_->HandlePushAsset(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DaemonStubHandlePushAssetTest003 End";
 }

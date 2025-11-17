@@ -33,14 +33,14 @@ struct AccountInfo {
 
 class SoftBusPermissionCheck {
 public:
-    static bool CheckSrcPermission(const std::string &sinkNetworkId);
+    static bool CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId = INVALID_USER_ID);
     static bool CheckSinkPermission(const AccountInfo &callerAccountInfo);
-    static bool GetLocalAccountInfo(AccountInfo &localAccountInfo);
+    static bool GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId = INVALID_USER_ID);
     static int32_t GetCurrentUserId();
     static bool TransCallerInfo(SocketAccessInfo *callerInfo,
         AccountInfo &callerAccountInfo, const std::string &networkId);
     static bool FillLocalInfo(SocketAccessInfo *localInfo);
-    static bool SetAccessInfoToSocket(const int32_t sessionId);
+    static bool SetAccessInfoToSocket(const int32_t sessionId, int32_t userId = INVALID_USER_ID);
     static bool IsSameAccount(const std::string &networkId);
 private:
     static bool CheckSrcIsSameAccount(const std::string &sinkNetworkId, const AccountInfo &localAccountInfo);

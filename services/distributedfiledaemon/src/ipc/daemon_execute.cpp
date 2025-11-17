@@ -95,7 +95,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
 void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetObj)
 {
     int32_t socketId;
-    auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId);
+    auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId, userId);
     if (ret != E_OK) {
         LOGE("ExecutePushAsset AssetBind failed, ret %{public}d", ret);
         auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;

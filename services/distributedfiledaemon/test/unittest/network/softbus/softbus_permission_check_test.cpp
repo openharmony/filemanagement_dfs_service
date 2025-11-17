@@ -233,6 +233,55 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
 }
 
 /**
+ * @tc.name: SoftbusPermissionCheckTest_GetLocalAccountInfo_002
+ * @tc.desc: Verify the GetLocalAccountInfo function.
+ * @tc.type: FUNC
+ * @tc.require: IC987N
+ */
+HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountInfo_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_002 start";
+    AccountInfo localAccountInfo;
+    int32_t testUserId = 100; // 100: test userId
+    bool res = false;
+#ifdef SUPPORT_SAME_ACCOUNT
+    AccountSA::OhosAccountInfo osAccountInfo;
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(INVALID_USER_ID)));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    osAccountInfo.uid_ = ""; // accountinfo uid = ""
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    osAccountInfo.uid_ = "test";
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(INVALID_USER_ID));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, true);
+#else
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(INVALID_USER_ID));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, true);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_002 end";
+}
+
+/**
  * @tc.name: SoftbusPermissionCheckTest_SetAccessInfoToSocket_001
  * @tc.desc: Verify the SetAccessInfoToSocket function.
  * @tc.type: FUNC

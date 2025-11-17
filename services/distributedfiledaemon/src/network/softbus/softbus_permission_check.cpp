@@ -36,11 +36,11 @@ constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 #endif
 using namespace DistributedHardware;
-bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
+bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId)
 {
     LOGI("Begin");
     AccountInfo localAccountInfo;
-    if (!GetLocalAccountInfo(localAccountInfo)) {
+    if (!GetLocalAccountInfo(localAccountInfo, userId)) {
         LOGE("Get os account data failed");
         return false;
     }
@@ -70,12 +70,14 @@ bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccoun
     return true;
 }
 
-bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
+bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId)
 {
-    int32_t userId = GetCurrentUserId();
     if (userId == INVALID_USER_ID) {
-        LOGE("Get current userid failed");
-        return false;
+        userId = GetCurrentUserId();
+        if (userId == INVALID_USER_ID) {
+            LOGE("Get current userid failed");
+            return false;
+        }
     }
     localAccountInfo.userId_ = userId;
 #ifdef SUPPORT_SAME_ACCOUNT
@@ -206,11 +208,11 @@ bool SoftBusPermissionCheck::GetLocalNetworkId(std::string &networkId)
     return true;
 }
 
-bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId)
+bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId, int32_t userId)
 {
 #ifdef SUPPORT_SAME_ACCOUNT
     AccountInfo accountInfo;
-    if (!GetLocalAccountInfo(accountInfo)) {
+    if (!GetLocalAccountInfo(accountInfo, userId)) {
         LOGE("GetOsAccountData failed.");
         return false;
     }

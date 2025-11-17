@@ -27,7 +27,7 @@ public:
     ISoftBusHandlerAssetMock() = default;
     virtual ~ISoftBusHandlerAssetMock() = default;
 
-    virtual int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId) = 0;
+    virtual int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId) = 0;
     virtual int32_t AssetSendFile(int32_t socketId, const std::string &sendFile, bool isSingleFile) = 0;
     virtual std::string GetClientInfo(int32_t socketId) = 0;
     virtual sptr<AssetObj> GetAssetObj(int32_t socketId) = 0;
@@ -50,7 +50,7 @@ public:
 
 class SoftBusHandlerAssetMock : public ISoftBusHandlerAssetMock {
 public:
-    MOCK_METHOD2(AssetBind, int32_t(const std::string &dstNetworkId, int32_t &socketId));
+    MOCK_METHOD3(AssetBind, int32_t(const std::string &dstNetworkId, int32_t &socketId, int32_t userId));
     MOCK_METHOD3(AssetSendFile, int32_t(int32_t socketId, const std::string& sendFile, bool isSingleFile));
     MOCK_METHOD1(GetClientInfo, std::string(int32_t socketId));
     MOCK_METHOD1(GetAssetObj, sptr<AssetObj>(int32_t socketId));
