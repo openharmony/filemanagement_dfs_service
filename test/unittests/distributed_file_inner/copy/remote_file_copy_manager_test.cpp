@@ -276,4 +276,69 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_IsMediaUri_0001, TestS
     EXPECT_EQ(ret, false);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_IsMediaUri_0001 End";
 }
+
+/**
+ * @tc.name: RemoteFileCopyManager_CheckSrcPathIsInvalid_0001
+ * @tc.desc: The execution of the CheckSrcPathIsInvalid succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CheckSrcPathIsInvalid_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0001 Start";
+    string srcpath = "/mnt/hmdfs/100/account/device_view/files/Docs/Documents/test.txt";
+    string srcUri = "file://docs/storage/Users/currentUser/Documents/test.txt";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0001 End";
+}
+
+/**
+ * @tc.name: RemoteFileCopyManager_CheckSrcPathIsInvalid_0002
+ * @tc.desc: The execution of the CheckSrcPathIsInvalid succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CheckSrcPathIsInvalid_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0002 Start";
+    string srcpath = "/mnt/hmdfs/100/account/device_view/files/Docs/Documents/test.txt";
+    string srcUri = "file://docs/storage/Users/currentUser/Documents/test.txt?networkid=123456";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0002 End";
+}
+
+/**
+ * @tc.name: RemoteFileCopyManager_CheckSrcPathIsInvalid_0003
+ * @tc.desc: The execution of the CheckSrcPathIsInvalid succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CheckSrcPathIsInvalid_0003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0003 Start";
+    string srcpath = "/mnt/hmdfs/100/account/device_view/123456/Docs/Documents/test.txt";
+    string srcUri = "file://docs/storage/Users/currentUser/Documents/test.txt?networkid=123456";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    srcpath = "/mnt/hmdfs/100/account/device_view/123456/files/Docs/Documents/test.txt";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0003 End";
+}
+
+/**
+ * @tc.name: RemoteFileCopyManager_CheckSrcPathIsInvalid_0004
+ * @tc.desc: The execution of the CheckSrcPathIsInvalid succeed.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CheckSrcPathIsInvalid_0004, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0004 Start";
+    string srcpath = "/mnt/hmdfs/100/account/device_view/123456/Docs/Documents/test.txt";
+    string srcUri = "file://com.medialibrary.medialibrarydata/data/storage/el2/distributedfiles/.remote_share/123/"
+                    "Photo/6/1.jpg?networkid=123456";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    srcpath = "/mnt/hmdfs/100/account/device_view/123456/data/com.medialibrary.medialibrarydata/test.txt";
+    RemoteFileCopyManager::GetInstance().CheckSrcPathIsInvalid(srcpath, srcUri);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CheckSrcPathIsInvalid_0004 End";
+}
 } // namespace OHOS::Test

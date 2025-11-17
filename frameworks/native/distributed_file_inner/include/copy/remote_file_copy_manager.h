@@ -36,7 +36,8 @@ private:
         const int32_t userId, const std::string &copyPath);
     bool IsMediaUri(const std::string &uriPath);
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
-    bool IsFile(const std::string &path);
+    bool IsFile(const std::string &path, const std::string &srcUri);
+    void CheckSrcPathIsInvalid(const std::string &path, const std::string &srcUri);
 private:
     std::mutex FileInfosVecMutex_;
     std::vector<std::shared_ptr<FileInfos>> FileInfosVec_;
