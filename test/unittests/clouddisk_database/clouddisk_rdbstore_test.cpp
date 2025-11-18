@@ -14,17 +14,13 @@
 */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 
-#include "cloud_file_utils.h"
-#include "cloud_status.h"
 #include "clouddisk_notify_utils_mock.h"
-#include "clouddisk_rdb_utils.h"
 #include "clouddisk_rdbstore.h"
 #include "dfs_error.h"
 #include "rdb_assistant.h"
 #include "result_set_mock.h"
-#include "transaction_mock.cpp"
+#include "transaction_mock.h"
 
 #define stat(path, buf) OHOS::FileManagement::CloudDisk::Assistant::ins->MockStat(path, buf)
 #include "clouddisk_rdbstore.cpp"
@@ -378,7 +374,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetAttrTest4, TestSize.Level1)
     const unsigned long long size = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    
+
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
@@ -759,6 +755,8 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest3, TestSize.Level1)
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 0;
     EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(-1));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_PATH);
 }

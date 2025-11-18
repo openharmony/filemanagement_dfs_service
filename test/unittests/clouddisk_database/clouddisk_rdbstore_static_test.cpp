@@ -14,17 +14,8 @@
 */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 
-#include "cloud_file_utils.h"
-#include "cloud_status.h"
-#include "clouddisk_notify_utils_mock.h"
-#include "clouddisk_rdb_utils.h"
 #include "clouddisk_rdbstore.cpp"
-#include "dfs_error.h"
-#include "rdb_assistant.h"
-#include "result_set_mock.h"
-#include "transaction_mock.cpp"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -33,31 +24,21 @@ using namespace std;
 using namespace NativeRdb;
 using namespace OHOS::FileManagement::CloudDisk;
 
-static const string BUNDLE_NAME = "com.ohos.photos";
-static const int32_t USER_ID = 100;
 class CloudDiskRdbStoreStaticTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<CloudDiskRdbStore> clouddiskrdbStore_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void CloudDiskRdbStoreStaticTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
-    clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
 }
 
 void CloudDiskRdbStoreStaticTest::TearDownTestCase(void)
 {
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-    clouddiskrdbStore_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -850,5 +831,4 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFileTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CreateFileTest001 end";
 }
-
 } // namespace OHOS::FileManagement::CloudDisk::Test

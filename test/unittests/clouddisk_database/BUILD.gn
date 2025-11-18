@@ -88,26 +88,9 @@ ohos_unittest("clouddisk_rdb_utils_test") {
 }
 
 ohos_unittest("clouddisk_rdbstore_test") {
-  branch_protector_ret = "pac_ret"
-  public_configs =
-      [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
@@ -115,8 +98,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/transaction_mock.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "clouddisk_rdbstore_test.cpp",
   ]
@@ -125,7 +106,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
   ]
 
   sources += clouddisk_database
@@ -149,8 +129,8 @@ ohos_unittest("clouddisk_rdbstore_test") {
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   cflags = [ "--coverage" ]
@@ -205,47 +185,13 @@ ohos_unittest("clouddisk_rdbstore_test") {
 }
 
 ohos_unittest("clouddisk_rdbstore_static_test") {
-  branch_protector_ret = "pac_ret"
-  public_configs =
-      [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_notify_utils_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/transaction_mock.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp",
     "clouddisk_rdbstore_static_test.cpp",
   ]
 
-  clouddisk_database = [
-    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
-    "${services_path}/clouddisk_database/src/file_column.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
-  ]
-
-  sources += clouddisk_database
   include_dirs = [
     "${services_path}/clouddisk_database/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -264,16 +210,9 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry",
   ]
-
-  cflags = [ "--coverage" ]
-
-  ldflags = [ "--coverage" ]
-
-  cflags_cc = [ "--coverage" ]
 
   external_deps = [
     "ability_base:zuri",

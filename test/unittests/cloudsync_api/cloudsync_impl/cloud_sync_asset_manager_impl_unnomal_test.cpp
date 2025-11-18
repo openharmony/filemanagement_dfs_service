@@ -17,9 +17,7 @@
 #include <gmock/gmock.h>
 
 #include "cloud_sync_asset_manager_impl.h"
-#include "service_proxy.h"
 #include "dfs_error.h"
-#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -38,22 +36,22 @@ public:
 
 void CloudSyncAssetManagerImplTest::SetUpTestCase(void)
 {
-    std::cout << "SetUpTestCase" << std::endl;
+    GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void CloudSyncAssetManagerImplTest::TearDownTestCase(void)
 {
-    std::cout << "TearDownTestCase" << std::endl;
+    GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void CloudSyncAssetManagerImplTest::SetUp(void)
 {
-    std::cout << "SetUp" << std::endl;
+    GTEST_LOG_(INFO) << "SetUp";
 }
 
 void CloudSyncAssetManagerImplTest::TearDown(void)
 {
-    std::cout << "TearDown" << std::endl;
+    GTEST_LOG_(INFO) << "TearDown";
 }
 
 /**
@@ -64,11 +62,11 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
  */
 HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
 {
-    CloudSyncAssetManagerImpl assetManager;
+    GTEST_LOG_(INFO) << "UploadAssetTest Start";
     int32_t userId = 100;
     std::string request = "sample_request";
     std::string result;
-    int32_t ret = assetManager.UploadAsset(userId, request, result);
+    int32_t ret = CloudSyncAssetManagerImpl::GetInstance().UploadAsset(userId, request, result);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 }
 
@@ -80,11 +78,11 @@ HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
  */
 HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest, TestSize.Level1)
 {
-    CloudSyncAssetManagerImpl assetManager;
+    GTEST_LOG_(INFO) << "DownloadFileTest Start";
     int32_t userId = 100;
     std::string request = "sample_request";
     AssetInfo assetInfo;
-    int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
+    int32_t ret = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(userId, request, assetInfo);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 }
 

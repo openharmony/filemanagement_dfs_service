@@ -15,10 +15,10 @@
 
 #include <gtest/gtest.h>
 
-#include "cloud_sync_common.h"
-#include "dfs_error.h"
+#include "cloud_file_kit_mock.cpp"
 #include "cycle_task.h"
 #include "cycle_task_runner.h"
+#include "dfs_error.h"
 #include "system_load.h"
 #include "tasks/database_backup_task.h"
 #include "tasks/optimize_cache_task.h"
@@ -27,7 +27,6 @@
 #include "tasks/save_subscription_task.h"
 #include "tasks/report_statistics_task.h"
 #include "utils_log.h"
-#include "cloud_file_kit_mock.cpp"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -36,7 +35,7 @@ using namespace testing::ext;
 using namespace std;
 using namespace testing;
 
-std::shared_ptr<CloudFile::DataSyncManager> g_dataSyncManagerPtr_;
+static std::shared_ptr<CloudFile::DataSyncManager> g_dataSyncManagerPtr_;
 
 class SubCycleTask : public CycleTask {
 public:
@@ -72,6 +71,7 @@ void CloudSyncServiceCycleTaskTest::SetUpTestCase(void)
 void CloudSyncServiceCycleTaskTest::TearDownTestCase(void)
 {
     ability = nullptr;
+    g_dataSyncManagerPtr_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -286,7 +286,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest006, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest006 end";
 }
-  
+
  /*
   * @tc.name: CleanCacheTest
   * @tc.desc: Verify the CleanCache function.
@@ -312,7 +312,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest007, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest007 end";
 }
-  
+
  /*
   * @tc.name: CleanCacheTest
   * @tc.desc: Verify the CleanCache function.
@@ -337,7 +337,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest008, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "RunTaskForBundleTest008 end";
 }
-  
+
  /*
   * @tc.name: CleanCacheTest
   * @tc.desc: Verify the CleanCache function.
