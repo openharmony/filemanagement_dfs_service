@@ -118,6 +118,7 @@ void FuseOperations::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup)
 void FuseOperations::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets)
 {
     if (count == 0 || forgets[0].ino == FUSE_ROOT_ID) {
+        fuse_reply_err(req, EINVAL);
         return;
     }
     auto inoPtr = GetCloudDiskInode(req, forgets[0].ino);
