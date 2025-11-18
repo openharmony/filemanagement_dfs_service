@@ -199,6 +199,41 @@ ohos_unittest("async_work_test") {
   use_exceptions = true
 }
 
+ohos_unittest("account_utils_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "./system/account_utils_test.cpp",
+    "${distributedfile_path}/test/mock/account_sa/src/os_account_manager_mock.cpp",
+    "${utils_path}/system/src/account_utils.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/test/mock/account_sa/include",
+    "${utils_path}/system/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
@@ -208,5 +243,6 @@ group("utils_test") {
     ":cloud_pref_impl_test",
     ":plugin_loader_test",
     ":utils_directory_test",
+    ":account_utils_test",
   ]
 }

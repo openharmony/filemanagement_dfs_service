@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "account_utils.h"
 #include "battery_status.h"
 #include "cloud_file_kit.h"
 #include "cloud_status.h"
@@ -708,6 +709,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     LOGI("ChangeAppSwitch, bundleName: %{private}s, status: %{public}d, callerUserId: %{public}d", bundleName.c_str(),
          status, callerUserId);
 
+    if (!AccountUtils::IsAccountAvailableByUser(callerUserId)) {
+        return E_INVAL_ARG;
+    }
     /* update app switch status */
     int32_t ret = CloudStatus::ChangeAppSwitch(bundleName, callerUserId, status);
     if (ret != E_OK) {
