@@ -188,6 +188,7 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
     "clouddisk_rdbstore_static_test.cpp",
   ]

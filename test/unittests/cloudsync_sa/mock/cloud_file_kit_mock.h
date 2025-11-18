@@ -25,38 +25,11 @@
 
 namespace OHOS::FileManagement::CloudFile {
 
-class ICloudFileKit {
+class CloudFilekitImplMock : public CloudFileKit {
 public:
-    virtual CloudFileKit *GetInstance() = 0;
-    virtual int32_t GetAppConfigParams(const int32_t userId,
-        const std::string &bundleName, std::map<std::string, std::string> &param) = 0;
-    virtual ~ICloudFileKit() = default;
-    static inline std::shared_ptr<ICloudFileKit> proxy_{nullptr};
-};
-
-class MockCloudFileKit : public ICloudFileKit {
-public:
-    MOCK_METHOD0(GetInstance, CloudFileKit *());
     MOCK_METHOD3(GetAppConfigParams, int32_t(const int32_t userId,
         const std::string &bundleName, std::map<std::string, std::string> &param));
 };
 
-CloudFileKit *CloudFileKit::GetInstance()
-{
-    if (ICloudFileKit::proxy_ != nullptr) {
-        return ICloudFileKit::proxy_->GetInstance();
-    }
-    return nullptr;
-}
-
-int32_t CloudFileKit::GetAppConfigParams(const int32_t userId,
-                                         const std::string &bundleName,
-                                         std::map<std::string, std::string> &param)
-{
-    if (ICloudFileKit::proxy_ != nullptr) {
-        return ICloudFileKit::proxy_->GetAppConfigParams(userId, bundleName, param);
-    }
-    return E_OK;
-}
 } // OHOS::FileManagement::CloudFile
 #endif // MOCK_CLOUD_FILE_KIT_H
