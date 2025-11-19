@@ -2019,7 +2019,7 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
 }
 
 void HandleTruncateError(shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskRdbStore> rdbStore,
-    shared_ptr<CloudDiskInode> parentInode, fuse_req_t req, int valid)
+    shared_ptr<CloudDiskInode> parentInode, fuse_req_t req)
 {
     CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
         CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::FILE, errno, "truncate failed, err: " +
@@ -2089,7 +2089,7 @@ void HandleSize(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
     }
 
     if (ret.value() == -1) {
-        HandleTruncateError(inoPtr, rdbStore, parentInode, req, valid);
+        HandleTruncateError(inoPtr, rdbStore, parentInode, req);
         return;
     }
     UpdateCloudDiskInode(rdbStore, inoPtr);
