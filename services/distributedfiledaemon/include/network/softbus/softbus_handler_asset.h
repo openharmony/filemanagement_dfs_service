@@ -46,7 +46,7 @@ public:
     void CreateAssetLocalSessionServer();
     void DeleteAssetLocalSessionServer();
 
-    int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId);
+    int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId);
     int32_t AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile);
     void CloseAssetBind(int32_t socketId);
     void OnAssetRecvBind(int32_t socketId, const std::string &srcNetWorkId);

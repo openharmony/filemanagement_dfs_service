@@ -37,6 +37,7 @@ using namespace OHOS::Storage;
 constexpr int32_t INDEX1 = 1;
 constexpr int32_t INDEX2 = 2;
 constexpr int32_t STEP = 3;
+constexpr int32_t MAX_CONNECTED_SIZE = 1024;
 
 static int32_t ReadUriInfoFromResult(const std::vector<std::string> &result,
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
@@ -875,8 +876,8 @@ int32_t DistributedFileDaemonProxy::GetConnectedDeviceList(std::vector<DfsDevice
         return ret;
     }
     int32_t len = 0;
-    if (!reply.ReadInt32(len)) {
-        LOGE("Read devicelist length failed");
+    if (!reply.ReadInt32(len) || len < 0 || len > MAX_CONNECTED_SIZE) {
+        LOGE("Read devicelist length failed, len: %{public}d", len);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     deviceList.clear();

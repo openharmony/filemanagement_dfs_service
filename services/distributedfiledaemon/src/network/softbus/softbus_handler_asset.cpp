@@ -142,9 +142,9 @@ void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(ASSET_LOCAL_SESSION_NAME);
 }
 
-int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId)
+int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId)
 {
-    if (!SoftBusPermissionCheck::CheckSrcPermission(dstNetworkId)) {
+    if (!SoftBusPermissionCheck::CheckSrcPermission(dstNetworkId, userId)) {
         LOGI("Check src permission failed");
         return E_PERMISSION_DENIED;
     }
@@ -175,7 +175,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         LOGE("Create OpenSoftbusChannel Socket error");
         return E_OPEN_SESSION;
     }
-    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
+    if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId, userId)) {
         LOGE("Set access info faiLed");
         Shutdown(socketId);
         return E_OPEN_SESSION;

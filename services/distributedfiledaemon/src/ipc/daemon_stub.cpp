@@ -512,8 +512,8 @@ int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
         return E_PERMISSION_DENIED;
     }
     int32_t userId;
-    if (!data.ReadInt32(userId)) {
-        LOGE("read userId failed");
+    if (!data.ReadInt32(userId) || userId < 0) {
+        LOGE("read userId failed, userId: %{public}d", userId);
         return E_INVAL_ARG;
     }
 

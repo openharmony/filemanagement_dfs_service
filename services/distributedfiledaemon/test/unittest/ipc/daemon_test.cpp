@@ -133,12 +133,12 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(const std::string &r
     return g_isRemoteDfsVersionLowerThanGiven;
 }
 
-bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
+bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId)
 {
     return g_checkSrcPermission;
 }
 
-bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
+bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo,  int32_t userId)
 {
     return g_getLocalAccountInfo;
 }
@@ -1490,7 +1490,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
     g_isFolder = false;
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
 

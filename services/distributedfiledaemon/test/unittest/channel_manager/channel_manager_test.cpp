@@ -79,13 +79,13 @@ public:
         ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock = softBusPermissionCheckMock_;
 
         // 设置默认的 Mock 行为
-        EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_, _)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_, _)).WillRepeatedly(Return(true));
         EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillRepeatedly(Return(true));
         EXPECT_CALL(*softBusPermissionCheckMock_, FillLocalInfo(_)).WillRepeatedly(Return(true));
         EXPECT_CALL(*softBusPermissionCheckMock_, CheckSinkPermission(_)).WillRepeatedly(Return(true));
         EXPECT_CALL(*softBusPermissionCheckMock_, IsSameAccount(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*softBusPermissionCheckMock_, GetLocalAccountInfo(_))
+        EXPECT_CALL(*softBusPermissionCheckMock_, GetLocalAccountInfo(_, _))
             .WillRepeatedly(DoAll(SetArgReferee<0>(AccountInfo{}), Return(true)));
         EXPECT_CALL(*softBusPermissionCheckMock_, GetCurrentUserId()).WillRepeatedly(Return(DEFAULT_USER_ID));
 
@@ -235,7 +235,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_CreateClientChannel_001, TestSiz
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_001 start";
 
     // Test permission check failure path
-    EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_)).WillOnce(Return(false));
+    EXPECT_CALL(*softBusPermissionCheckMock_, CheckSrcPermission(_, _)).WillOnce(Return(false));
     EXPECT_EQ(ChannelManager::GetInstance().CreateClientChannel(defaultNetworkId), ERR_CHECK_PERMISSION_FAILED);
 
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_001 end";
@@ -270,7 +270,7 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_CreateClientChannel_003, TestSiz
     GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_003 start";
 
     // Test access info setting failure path
-    EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_)).WillOnce(Return(false));
+    EXPECT_CALL(*softBusPermissionCheckMock_, SetAccessInfoToSocket(_, _)).WillOnce(Return(false));
     int32_t expectedSocketId = 1;
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(expectedSocketId));
     EXPECT_EQ(ChannelManager::GetInstance().CreateClientChannel(defaultNetworkId), ERR_BAD_VALUE);
