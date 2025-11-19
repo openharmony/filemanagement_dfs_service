@@ -23,9 +23,9 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudFileCacheAni final {
 public:
     static void CloudFileCacheConstructor(ani_env *env, ani_object object);
-    static void CloudFileCacheOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt);
+    static void CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun);
+    static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun);
+    static void CloudFileCacheOff1(ani_env *env, ani_object object);
     static void CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri);
     static ani_long CloudFileCacheStartBatch(ani_env *env, ani_object object,
         ani_array_ref uriList, ani_enum_item fileType);
@@ -33,6 +33,8 @@ public:
     static void CloudFileCacheStopBatch(ani_env *env, ani_object object, ani_long taskId, ani_boolean needClean);
     static void CloudFileCacheCleanCache(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
+    static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
+    static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_ANI_H

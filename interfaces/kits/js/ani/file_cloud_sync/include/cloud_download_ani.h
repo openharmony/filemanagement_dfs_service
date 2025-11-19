@@ -22,9 +22,9 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadAni final {
 public:
     static void DownloadConstructor(ani_env *env, ani_object object);
-    static void DownloadOn(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void DownloadOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun);
-    static void DownloadOff1(ani_env *env, ani_object object, ani_string evt);
+    static void DownloadOn(ani_env *env, ani_object object, ani_object fun);
+    static void DownloadOff0(ani_env *env, ani_object object, ani_object fun);
+    static void DownloadOff1(ani_env *env, ani_object object);
     static void DownloadStart(ani_env *env, ani_object object, ani_string uri);
     static void DownloadStop(ani_env *env, ani_object object, ani_string uri);
 };

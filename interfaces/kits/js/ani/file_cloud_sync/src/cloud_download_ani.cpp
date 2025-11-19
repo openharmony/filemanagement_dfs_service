@@ -87,20 +87,8 @@ void CloudDownloadAni::DownloadConstructor(ani_env *env, ani_object object)
     }
 }
 
-void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-    if (event != "progress") {
-        LOGE("Invalid argument for event type.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
     int32_t res = CheckPermissions(PERM_CLOUD_SYNC, true);
     if (res != E_OK) {
         LOGE("On get progress failed!");
@@ -125,20 +113,8 @@ void CloudDownloadAni::DownloadOn(ani_env *env, ani_object object, ani_string ev
     }
 }
 
-void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-    if (event != "progress") {
-        LOGE("Invalid argument for event type.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
     int32_t res = CheckPermissions(PERM_CLOUD_SYNC, true);
     if (res != E_OK) {
         LOGE("On get progress failed!");
@@ -162,9 +138,9 @@ void CloudDownloadAni::DownloadOff0(ani_env *env, ani_object object, ani_string 
     callbackImpl->TryCleanCallback();
 }
 
-void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudDownloadAni::DownloadOff1(ani_env *env, ani_object object)
 {
-    DownloadOff0(env, object, evt, nullptr);
+    DownloadOff0(env, object, nullptr);
 }
 
 void CloudDownloadAni::DownloadStart(ani_env *env, ani_object object, ani_string uri)

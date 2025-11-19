@@ -136,7 +136,7 @@ void CloudSyncManagerAni::EnableCloud(ani_env *env, ani_class clazz, ani_string 
     }
 
     ani_class recordCls;
-    Type clsName = Builder::BuildClass("escompat.Record");
+    Type clsName = Builder::BuildClass("std.core.Record");
     ret = env->FindClass(clsName.Descriptor().c_str(), &recordCls);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, E_PERMISSION);
@@ -236,7 +236,7 @@ void CloudSyncManagerAni::Clean(ani_env *env, ani_class clazz, ani_string accout
     }
 
     ani_class recordCls;
-    Type clsName = Builder::BuildClass("escompat.Record");
+    Type clsName = Builder::BuildClass("std.core.Record");
     ret = env->FindClass(clsName.Descriptor().c_str(), &recordCls);
     if (ret != ANI_OK) {
         ErrorHandler::Throw(env, E_PERMISSION);
