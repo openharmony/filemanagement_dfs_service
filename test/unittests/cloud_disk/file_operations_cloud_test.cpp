@@ -3025,6 +3025,34 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest014, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetAttrTest015
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest015 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 8;
+        struct stat attr;
+        attr.mtime = 1;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest015 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest015 End";
+}
+
+/**
  * @tc.name: LseekTest001
  * @tc.desc: Verify the Lseek function
  * @tc.type: FUNC
