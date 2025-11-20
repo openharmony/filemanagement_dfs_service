@@ -2057,9 +2057,9 @@ std::optional<int32_t> FuseFileTruncate(struct fuse_file_info* fi, struct CloudD
 }
 
 int32_t HandleSize(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuseData* data,
-    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr, int valid)
+    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr)
 {
-    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, valid);
+    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, FUSE_SET_ATTR_SIZE);
     if (res != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
             CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
@@ -2069,9 +2069,9 @@ int32_t HandleSize(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuseD
 }
 
 int32_t HandleMtime(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuseData* data,
-    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr, int valid)
+    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr)
 {
-    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, valid);
+    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, FUSE_SET_ATTR_MTIME);
     if (res != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
             CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
