@@ -411,6 +411,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
     try {
         string bundleName = "";
         MockService service;
+        int32_t userId = 100;
         EXPECT_CALL(service, StartSyncInner(_, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;

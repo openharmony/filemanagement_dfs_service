@@ -29,6 +29,7 @@
 #include "service_proxy.h"
 #include "service_proxy_mock.h"
 #include "system_ability_manager_client_mock.h"
+#include "os_account_manager_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -47,6 +48,7 @@ public:
     static inline sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
     static inline std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_{nullptr};
     static inline sptr<ISystemAbilityManagerMock> saMgr_{nullptr};
+    static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -81,6 +83,8 @@ void CloudSyncManagerImplTest::SetUpTestCase(void)
     serviceProxy_ = sptr(new CloudSyncServiceMock());
     saMgr_ = sptr(new ISystemAbilityManagerMock());
     ISystemAbilityManagerClient::smc = saMgrClient_;
+    OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
+    OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -92,6 +96,8 @@ void CloudSyncManagerImplTest::TearDownTestCase(void)
     proxy_ = nullptr;
     serviceProxy_ = nullptr;
     saMgr_ = nullptr;
+    OsAccountMethodMock_ = nullptr;
+    OsAccountManagerMethod::osMethod_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -270,6 +276,97 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: StartSyncTest006
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::MAINTENANCE), Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest007
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(false, callback);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartFileSyncTest001
+ * @tc.desc: Verify the StartFileSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(E_OK)));
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, StartFileSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartFileSyncTest002
+ * @tc.desc: Verify the StartFileSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFileSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartFileSyncTest End";
+}
+
+/**
  * @tc.name: GetSyncTimeTest001
  * @tc.desc: Verify the GetSyncTime function.
  * @tc.type: FUNC
@@ -304,6 +401,8 @@ HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
     try {
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, TriggerSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);

@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
+#include "account_utils.h"
 #include "cloud_download_callback_client.h"
-#include "cloud_sync_manager_impl.h"
 #include "cloud_sync_callback_client.h"
+#include "cloud_sync_manager_impl.h"
 #include "downgrade_download_callback_client.h"
-#include "service_proxy.h"
 #include "dfs_error.h"
-#include "system_ability_definition.h"
 #include "iservice_registry.h"
+#include "service_proxy.h"
+#include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -127,6 +128,9 @@ int32_t CloudSyncManagerImpl::UnRegisterFileSyncCallback(const std::string &bund
 
 int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
 {
+    if (!AccountUtils::IsAccountAvailable()) {
+        return E_INVAL_ARG;
+    }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
@@ -138,6 +142,9 @@ int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
 
 int32_t CloudSyncManagerImpl::StartFileSync(const std::string &bundleName)
 {
+    if (!AccountUtils::IsAccountAvailable()) {
+        return E_INVAL_ARG;
+    }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
@@ -203,6 +210,11 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
         LOGE("callback is null");
         return E_INVAL_ARG;
     }
+
+    if (!AccountUtils::IsAccountAvailable()) {
+        return E_INVAL_ARG;
+    }
+    
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
@@ -230,6 +242,10 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
 
 int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const int32_t &userId)
 {
+    if (!AccountUtils::IsAccountAvailable()) {
+        return E_INVAL_ARG;
+    }
+
     if (bundleName.empty() || userId < MIN_USER_ID) {
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
