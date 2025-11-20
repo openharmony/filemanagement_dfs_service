@@ -72,9 +72,12 @@ int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::strin
     const std::string &cloudId, const struct stat *attr, const int valid)
 {
     const unsigned long long size = attr->st_size;
+    const unsigned long long mtime = attr->st_mtime;
     if (cloudId == "") {
         return 1;
     } else if (size == 1) {
+        return 1;
+    } else if (mtime == 1) {
         return 1;
     }
     return E_OK;
