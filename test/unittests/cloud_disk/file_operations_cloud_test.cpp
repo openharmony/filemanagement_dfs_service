@@ -3038,7 +3038,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest015, TestSize.Level1)
         fuse_req_t req = nullptr;
         fuse_ino_t ino = 8;
         struct stat attr;
-        attr.mtime = 1;
+        attr.st_mtime = 1;
         int valid = 32;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
