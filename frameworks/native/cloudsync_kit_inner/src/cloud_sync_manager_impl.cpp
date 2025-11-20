@@ -846,7 +846,7 @@ template <typename RemoveFn>
 void LogAndDelete(const std::string& path, RemoveFn fn, const std::string& message)
 {
     int ret = fn(path.c_str());
-    if (ret != 0) {
+    if (ret != 0 && errno != ENOENT) {
         LOGE("%{public}s, errno %{public}d", message.c_str(), errno);
     }
 }
