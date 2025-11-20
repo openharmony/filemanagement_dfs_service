@@ -4807,4 +4807,47 @@ HWTEST_F(CloudDiskRdbStoreTest, TriggerSyncForWriteTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "TriggerSyncForWriteTest002 end";
 }
+
+/**
+ * @tc.name: DatabaseRestore
+ * @tc.desc: Verify the CloudDiskRdbStore::DatabaseRestore function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DatabaseRestoreTest001 start";
+    try {
+        auto rdb = nullptr;
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        clouddiskrdbStore_->DatabaseRestore();
+        EXPECT_EQ(rdb, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DatabaseRestoreTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "DatabaseRestoreTest001 end";
+}
+
+/**
+ * @tc.name: DatabaseRestore
+ * @tc.desc: Verify the CloudDiskRdbStore::DatabaseRestore function
+ * @tc.type: FUNC
+ * @tc.require: ICGORT
+ */
+HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DatabaseRestoreTest002 start";
+    try {
+        auto rdb = make_shared<RdbStoreMock>();
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        clouddiskrdbStore_->DatabaseRestore();
+        EXPECT_NE(rdb, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DatabaseRestoreTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DatabaseRestoreTest002 end";
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test

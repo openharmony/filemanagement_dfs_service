@@ -42,14 +42,11 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<NetworkSetManager> networkSetManager_ = nullptr;
-    static inline shared_ptr<MockCloudFileKit> proxy_ = nullptr;
 };
 
 void NetworkSetManagerTest::SetUpTestCase(void)
 {
     networkSetManager_ = make_shared<NetworkSetManager>();
-    proxy_ = make_shared<MockCloudFileKit>();
-    ICloudFileKit::proxy_ = proxy_;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
@@ -57,8 +54,6 @@ void NetworkSetManagerTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
     networkSetManager_.reset();
-    ICloudFileKit::proxy_ = nullptr;
-    proxy_ = nullptr;
 }
 
 void NetworkSetManagerTest::SetUp(void)
@@ -277,54 +272,336 @@ HWTEST_F(NetworkSetManagerTest, OnChangeTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetConfigParams000
- * @tc.desc: Verify the GetConfigParams function when driveKit is null.
- * @tc.type: FUNC
- * @tc.require: ICEGLJ
- */
-HWTEST_F(NetworkSetManagerTest, GetConfigParams000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetConfigParams Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
-        EXPECT_EQ(ret, false);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetConfigParams FAILED";
-    }
-    GTEST_LOG_(INFO) << "GetConfigParams End";
-}
-
-/**
  * @tc.name: GetConfigParams001
- * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.desc: Verify the GetConfigParams function
  * @tc.type: FUNC
  * @tc.require: ICEGLJ
  */
 HWTEST_F(NetworkSetManagerTest, GetConfigParams001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetConfigParams Start";
+    GTEST_LOG_(INFO) << "GetConfigParams001 Start";
     try {
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
-        CloudFileKit *driveKit = new CloudFileKit();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(driveKit));
-        EXPECT_CALL(*proxy_, GetAppConfigParams(_, _, _)).WillOnce(Return(E_OK));
+        CloudFile::CloudFileKit::instance_ = nullptr;
         bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetConfigParams FAILED";
+        GTEST_LOG_(INFO) << "GetConfigParams001 FAILED";
     }
-    GTEST_LOG_(INFO) << "GetConfigParams End";
+    GTEST_LOG_(INFO) << "GetConfigParams001 End";
+}
+
+/**
+ * @tc.name: GetConfigParams002
+ * @tc.desc: Verify the GetConfigParams function
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams002 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(Return(E_RDB));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams002 End";
+}
+
+/**
+ * @tc.name: GetConfigParams003
+ * @tc.desc: Verify the GetConfigParams function
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams003 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        std::map<std::string, std::string> param;
+        param.insert({"test", "test"});
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams003 End";
+}
+
+/**
+ * @tc.name: GetConfigParams004
+ * @tc.desc: Verify the GetConfigParams function
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams004 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        std::map<std::string, std::string> param;
+        param.insert({"useMobileNetworkData", "0"});
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams004 End";
+}
+
+/**
+ * @tc.name: GetConfigParams005
+ * @tc.desc: Verify the GetConfigParams function
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams005 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        std::map<std::string, std::string> param;
+        param.insert({"useMobileNetworkData", "1"});
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams005 End";
+}
+
+/**
+ * @tc.name: IsAllowNetConnect001
+ * @tc.desc: Verify the IsAllowNetConnect func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, IsAllowNetConnect001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowNetConnect001 Start";
+    try {
+        std::string bundleName = "test";
+        int32_t userId = 100;
+        networkSetManager_->netMap_.Clear();
+        networkSetManager_->netMap_.EnsureInsert(std::to_string(userId) + "/" + bundleName, false);
+        bool ret = networkSetManager_->IsAllowNetConnect(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsAllowNetConnect001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsAllowNetConnect001 End";
+}
+
+/**
+ * @tc.name: IsAllowNetConnect002
+ * @tc.desc: Verify the IsAllowNetConnect func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, IsAllowNetConnect002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowNetConnect002 Start";
+    try {
+        std::string bundleName = "test";
+        int32_t userId = 100;
+        networkSetManager_->netMap_.Clear();
+        networkSetManager_->netMap_.EnsureInsert(std::to_string(userId) + "/" + bundleName, true);
+        bool ret = networkSetManager_->IsAllowNetConnect(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsAllowNetConnect002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsAllowNetConnect002 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask001
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask001 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("", false);
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask001 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask002
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask002 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("bundle_test", false);
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask002 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask003
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask003 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("com.ohos.photos", true);
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask003 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask004
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask004 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("com.ohos.photos", false);
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask004 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask005
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask005 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("test/com.ohos.photos", false);
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask005 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask006
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask006 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("100/com.ohos.photos", false);
+        networkSetManager_->dataSyncManager_ = nullptr;
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask006 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask007
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask007 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->cellularNetMap_.EnsureInsert("100/com.ohos.photos", false);
+        networkSetManager_->dataSyncManager_ = std::make_shared<CloudFile::DataSyncManager>();
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask007 End";
+}
+
+/**
+ * @tc.name: NetWorkChangeStopUploadTask008
+ * @tc.desc: Verify the NetWorkChangeStopUploadTask func
+ * @tc.type: FUNC
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, NetWorkChangeStopUploadTask008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask008 Start";
+    try {
+        networkSetManager_->cellularNetMap_.Clear();
+        networkSetManager_->NetWorkChangeStopUploadTask();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "NetWorkChangeStopUploadTask008 End";
 }
 
 /**
  * @tc.name: InitNetworkSetManagerTest001
- * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.desc: Verify the InitNetworkSetManager function when driveKit is not null.
  * @tc.type: FUNC
  * @tc.require: ICEGLJ
  */
@@ -332,9 +609,11 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager001 Start";
     try {
-        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillRepeatedly(Return(E_OK));
         networkSetManager_->InitNetworkSetManager(bundleName, userId);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -346,7 +625,7 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager001, TestSize.Level1)
 
 /**
  * @tc.name: InitNetworkSetManagerTest002
- * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.desc: Verify the InitNetworkSetManager function when driveKit is not null.
  * @tc.type: FUNC
  * @tc.require: ICEGLJ
  */
@@ -354,7 +633,6 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager002 Start";
     try {
-        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "com.ohos.ailife";
         networkSetManager_->InitNetworkSetManager(bundleName, userId);
@@ -368,7 +646,7 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager002, TestSize.Level1)
 
 /**
  * @tc.name: InitNetworkSetManagerTest003
- * @tc.desc: Verify the GetConfigParams function when driveKit is not null.
+ * @tc.desc: Verify the InitNetworkSetManager function when driveKit is not null.
  * @tc.type: FUNC
  * @tc.require: ICEGLJ
  */
@@ -376,7 +654,6 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkSetManager003 Start";
     try {
-        ICloudFileKit::proxy_ = nullptr;
         int32_t userId = 100;
         string bundleName = "xxxxxxx";
         networkSetManager_->InitNetworkSetManager(bundleName, userId);
