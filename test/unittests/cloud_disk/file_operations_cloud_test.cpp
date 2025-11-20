@@ -2989,7 +2989,6 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest013, TestSize.Level1)
         int valid = 32;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -3016,7 +3015,6 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest014, TestSize.Level1)
         int valid = 32;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
         EXPECT_TRUE(true);
     } catch (...) {
