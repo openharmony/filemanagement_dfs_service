@@ -2105,7 +2105,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
-        int32_t res = HandleSize(rdbStore, data, inoPtr, parentInode, attr, valid);
+        int32_t res = HandleSize(rdbStore, data, inoPtr, parentInode, attr);
         if (res != 0) {
             return (void) fuse_reply_err(req, EINVAL);
         }
@@ -2119,7 +2119,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         }
     }
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_MTIME) {
-        int32_t res = HandleMtime(rdbStore, data, inoPtr, parentInode, attr, valid);
+        int32_t res = HandleMtime(rdbStore, data, inoPtr, parentInode, attr);
         if (res != 0) {
             return (void) fuse_reply_err(req, EINVAL);
         }
