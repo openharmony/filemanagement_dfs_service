@@ -17,6 +17,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ffrt_inner.h"
 #include "screen_status.h"
 #include "utils_log.h"
 
@@ -37,7 +38,9 @@ void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eve
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF) {
         LOGI("Screen Off!");
         ScreenStatus::SetScreenState(ScreenStatus::ScreenState::SCREEN_OFF);
-        listener_->ScreenOff();
+        ffrt::submit([this]() {
+            listener_->ScreenOff();
+        });
     }
 }
 

@@ -19,6 +19,7 @@
 #include "account_status_listener.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ffrt_inner.h"
 #include "session_manager.h"
 #include "user_status_listener.h"
 #include "utils_log.h"
@@ -163,6 +164,7 @@ HWTEST_F(UserStatusListenerTest, OnReceiveEventTest001, TestSize.Level1)
         auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             userStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -189,6 +191,7 @@ HWTEST_F(UserStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
         auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             userStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -215,6 +218,7 @@ HWTEST_F(UserStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
         auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             userStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -241,11 +245,89 @@ HWTEST_F(UserStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             userStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_NE(subscriber->listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnReceiveEventTest004 failed";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 end";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest005
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, OnReceiveEventTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            userStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_NE(subscriber->listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 end";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest006
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            userStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_NE(subscriber->listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 end";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest007
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, OnReceiveEventTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<UserStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(), nullptr);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_EQ(subscriber->listener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 end";
 }
 }

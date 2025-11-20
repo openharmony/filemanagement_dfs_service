@@ -16,6 +16,7 @@
 
 #include "battery_status.h"
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "parameters.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
@@ -55,7 +56,14 @@ void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
     SystemLoadStatus::Setload(level);
     if (level >= PowerMgr::ThermalLevel::HOT) {
         LOGI("thermal over warm");
-    } else if (dataSyncManager_) {
+        return;
+    }
+    ffrt::submit([level, this]() {
+        if (dataSyncManager_ == nullptr) {
+            LOGE("dataSyncManager_ is nullptr");
+            return;
+        }
+
         std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         LOGI("thermal under warm, level:%{public}d", level);
@@ -76,7 +84,7 @@ void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
             TaskStateManager::GetInstance().StartTask();
             dataSyncManager_->TriggerDownloadThumb();
         }
-    }
+    });
 }
 
 void SystemLoadStatus::GetSystemloadLevel()
