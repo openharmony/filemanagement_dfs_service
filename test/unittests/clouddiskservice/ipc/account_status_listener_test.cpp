@@ -184,7 +184,7 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnloadSaTest001 start";
     try {
-        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
         subscriber_->UnloadSa();
         EXPECT_TRUE(true);
     } catch (...) {
@@ -205,7 +205,7 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnloadSaTest002 start";
     try {
         auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
-        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
         int32_t saId = 5207;
         EXPECT_CALL(*sysAbilityManager, UnloadSystemAbility(saId)).WillOnce(Return(ERR_OK));
         subscriber_->UnloadSa();
@@ -228,7 +228,7 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnloadSaTest003 start";
     try {
         auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
-        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
         int32_t saId = 5207;
         EXPECT_CALL(*sysAbilityManager, UnloadSystemAbility(saId)).WillOnce(Return(-1));
         subscriber_->UnloadSa();
