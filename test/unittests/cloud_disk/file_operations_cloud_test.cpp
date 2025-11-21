@@ -2919,6 +2919,140 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest010, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetAttrTest011
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest011 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = -1;
+        struct stat attr;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest011 End";
+}
+
+/**
+ * @tc.name: SetAttrTest012
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest012 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        struct stat attr;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest012 End";
+}
+
+/**
+ * @tc.name: SetAttrTest013
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest013 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        struct stat attr;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest013 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest013 End";
+}
+
+/**
+ * @tc.name: SetAttrTest014
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest014 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 8;
+        struct stat attr;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest014 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest014 End";
+}
+
+/**
+ * @tc.name: SetAttrTest015
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest015 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 8;
+        struct stat attr;
+        attr.st_mtime = 1;
+        int valid = 32;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest015 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest015 End";
+}
+
+/**
  * @tc.name: LseekTest001
  * @tc.desc: Verify the Lseek function
  * @tc.type: FUNC
