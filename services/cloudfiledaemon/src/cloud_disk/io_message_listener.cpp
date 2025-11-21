@@ -15,6 +15,11 @@
 #include "io_message_listener.h"
 
 #include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+#include <unordered_set>
+#include "datetime_ex.h"
 #include "hisysevent.h"
 #include "utils_log.h"
 
@@ -25,7 +30,6 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 
-const string DESK_BUNDLE_NAME = "com.ohos.sceneboard";
 const int32_t GET_FREQUENCY = 5;
 const int32_t READ_THRESHOLD = 1000;
 const int32_t OPEN_THRESHOLD = 1000;
@@ -39,10 +43,39 @@ const int32_t MAX_IO_FILE_SIZE = 16 * 1024;
 const size_t MAX_RECORD_IN_FILE = 10000;
 const size_t MAX_IO_REPORT_NUMBER = 100;
 
+const std::unordered_set<std::string> BUNDLE_NAME_CHECKLIST = {
+    "com.ohos.sceneboard",
+    "inputmethod",
+};
+
 IoMessageManager &IoMessageManager::GetInstance()
 {
     static IoMessageManager instance;
     return instance;
+}
+
+bool IoMessageManager::CheckBundleName(const std::string &appBundleName)
+{
+    for (const auto& pattern : BUNDLE_NAME_CHECKLIST) {
+        if (appBundleName.find(pattern) != std::string::npos) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+string IoMessageManager::GetIoDatetime()
+{
+    uint64_t currentTime = GetSecondsSince1970ToNow();
+
+    time_t time_t_seconds = static_cast<time_t>(currentTime);
+    std::tm* localTime = std::localtime(&time_t_seconds);
+
+    std::ostringstream oss;
+    oss << std::put_time(localTime, "%Y-%m-%d %H:%M:%S");
+
+    return oss.str();
 }
 
 bool IoMessageManager::ReadIoDataFromFile(const std::string &path)
@@ -98,7 +131,8 @@ void IoMessageManager::RecordDataToFile(const string &path)
             << dataToWrite.readBytesDiff << ","
             << dataToWrite.syscopenDiff << ","
             << dataToWrite.syscstatDiff << ","
-            << dataToWrite.result << "\n";
+            << dataToWrite.result << ","
+            << dataToWrite.datetime << "\n";
     LOGD("Write io data success");
 }
 
@@ -203,6 +237,7 @@ void IoMessageManager::Report()
         std::visit(sizeVector, variant);
     }
     auto charIoBundleName = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_BUNDLE_NAME>(targetVectors));
+    auto charIoDatetime = ConvertToCStringArray(GetVector<StringVector, VectorIndex::IO_DATETIME>(targetVectors));
     HiSysEventParam params[] = {
         CreateParam("TIME", HISYSEVENT_INT32_ARRAY, GetVector<Int32Vector, VectorIndex::IO_TIMES>(targetVectors)),
         CreateParam("BUNDLENAME", HISYSEVENT_STRING_ARRAY, charIoBundleName),
@@ -218,6 +253,7 @@ void IoMessageManager::Report()
             GetVector<Int64Vector, VectorIndex::IO_SYSC_STAT_DIFF>(targetVectors)),
         CreateParam("RESULT", HISYSEVENT_DOUBLE_ARRAY,
             GetVector<DoubleVector, VectorIndex::IO_RESULT>(targetVectors)),
+        CreateParam("DATETIME", HISYSEVENT_STRING_ARRAY, charIoDatetime)
     };
 
     auto ret = OH_HiSysEvent_Write(
@@ -343,6 +379,7 @@ void IoMessageManager::ProcessIoData(const string &path)
     }
 
     currentBundleName = lastestAppStateData.bundleName;
+    dataToWrite.datetime = GetIoDatetime();
     dataToWrite.bundleName = lastestAppStateData.bundleName;
     dataToWrite.rcharDiff = currentData.rchar - preData.rchar;
     dataToWrite.syscrDiff = currentData.syscr - preData.syscr;
@@ -382,19 +419,26 @@ void IoMessageManager::RecordIoData()
 
 void IoMessageManager::OnReceiveEvent(const AppExecFwk::AppStateData &appStateData)
 {
-    if (appStateData.bundleName == DESK_BUNDLE_NAME) {
+    lock_guard<ffrt::mutex> lock(sleepMutex);
+    if (!CheckBundleName(appStateData.bundleName)) {
         return;
     }
+
     if (appStateData.state == TYPE_FRONT) {
         lastestAppStateData = appStateData;
+        if (currentBundleName != lastestAppStateData.bundleName) {
+            bundleTimeMap[lastestAppStateData.bundleName] = 0;
+            currentBundleName = lastestAppStateData.bundleName;
+            preData = {};
+            sleepCv.notify_all();
+        }
         if (!isThreadRunning.load()) {
             isThreadRunning.store(true);
             ffrt::submit([this] {RecordIoData();}, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
         }
         return;
     }
-    if (appStateData.state == TYPE_BACKGROUND) {
-        lock_guard<ffrt::mutex> lock(sleepMutex);
+    if (appStateData.bundleName == currentBundleName && appStateData.state == TYPE_BACKGROUND) {
         isThreadRunning.store(false);
         sleepCv.notify_all();
         currentData = {};

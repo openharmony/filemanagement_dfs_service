@@ -1255,6 +1255,28 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnReceiveEventTest003
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, OnReceiveEventTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 Start";
+    try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "test1";
+        appStateData.state = BACKGROUND_EVENT;
+        ioMessageManager_->currentBundleName = "test1";
+        ioMessageManager_->OnReceiveEvent(appStateData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 End";
+}
+
+/**
  * @tc.name: OnReceiveEventTest004
  * @tc.desc: Read IO data
  * @tc.type: FUNC
@@ -1263,10 +1285,11 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest002, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, OnReceiveEventTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 Start";
-    AppExecFwk::AppStateData appStateData;
-    appStateData.bundleName = "";
-    appStateData.state = BACKGROUND_EVENT;
     try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "test1";
+        appStateData.state = BACKGROUND_EVENT;
+        ioMessageManager_->currentBundleName = "test2";
         ioMessageManager_->OnReceiveEvent(appStateData);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1286,8 +1309,9 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnReceiveEventTest005 Start";
     AppExecFwk::AppStateData appStateData;
-    appStateData.bundleName = "";
+    appStateData.bundleName = "test1";
     appStateData.state = UNKNOWN_EVENT;
+    ioMessageManager_->currentBundleName = "test1";
     try {
         ioMessageManager_->OnReceiveEvent(appStateData);
         EXPECT_TRUE(true);
@@ -1296,6 +1320,92 @@ HWTEST_F(IoMessageListenerTest, OnReceiveEventTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnReceiveEventTest005 ERROR";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest005 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest006
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, OnReceiveEventTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 Start";
+    try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "test1";
+        appStateData.state = UNKNOWN_EVENT;
+        ioMessageManager_->currentBundleName = "test2";
+        ioMessageManager_->OnReceiveEvent(appStateData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest007
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, OnReceiveEventTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 Start";
+    try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "com.example.hmos.inputmethod";
+        ioMessageManager_->OnReceiveEvent(appStateData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest008
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, OnReceiveEventTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest008 Start";
+    try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "test1";
+        appStateData.state = FRONT_EVENT;
+        ioMessageManager_->currentBundleName = "test1";
+        ioMessageManager_->OnReceiveEvent(appStateData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest008 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest009
+ * @tc.desc: Read IO data
+ * @tc.type: FUNC
+ */
+HWTEST_F(IoMessageListenerTest, OnReceiveEventTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest009 Start";
+    try {
+        AppExecFwk::AppStateData appStateData;
+        appStateData.bundleName = "test1";
+        appStateData.state = FRONT_EVENT;
+        ioMessageManager_->currentBundleName = "test2";
+        ioMessageManager_->OnReceiveEvent(appStateData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest009 End";
 }
 
 /**

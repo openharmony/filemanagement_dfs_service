@@ -46,6 +46,7 @@ struct IoDataToWrite {
     int64_t syscopenDiff = 0;
     int64_t syscstatDiff = 0;
     double result = 0;
+    std::string datetime;
 };
 
 using Int32Vector = std::vector<int32_t>;
@@ -63,7 +64,8 @@ enum class VectorIndex {
     IO_READ_BYTES_DIFF,
     IO_SYSC_OPEN_DIFF,
     IO_SYSC_STAT_DIFF,
-    IO_RESULT
+    IO_RESULT,
+    IO_DATETIME
 };
 using VectorVariant = std::variant<
     Int32Vector,
@@ -92,6 +94,7 @@ private:
     Int64Vector ioSyscOpenDiff;
     Int64Vector ioSyscStatDiff;
     DoubleVector ioResult;
+    StringVector ioDatetime;
 
     std::vector<VectorVariant> targetVectors = {
         VectorVariant(std::in_place_type<Int32Vector>, std::move(ioTimes)),
@@ -101,7 +104,8 @@ private:
         VectorVariant(std::in_place_type<Int64Vector>, std::move(ioReadBytesDiff)),
         VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscOpenDiff)),
         VectorVariant(std::in_place_type<Int64Vector>, std::move(ioSyscStatDiff)),
-        VectorVariant(std::in_place_type<DoubleVector>, std::move(ioResult))
+        VectorVariant(std::in_place_type<DoubleVector>, std::move(ioResult)),
+        VectorVariant(std::in_place_type<StringVector>, std::move(ioDatetime))
     };
 
     template <typename T, VectorIndex Index>
@@ -109,6 +113,8 @@ private:
     {
         return std::get<T>(targetVectors[static_cast<size_t>(Index)]);
     }
+    std::string GetIoDatetime();
+    bool CheckBundleName(const std::string &appBundleName);
     bool ReadIoDataFromFile(const std::string &path);
     void RecordDataToFile(const std::string &path);
     void RecordIoData();
