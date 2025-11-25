@@ -77,6 +77,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_cache_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_storage_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_clean_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/report_statistics_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/save_subscription_task.cpp",
     "${services_path}/cloudsyncservice/src/ipc/account_status_listener.cpp",

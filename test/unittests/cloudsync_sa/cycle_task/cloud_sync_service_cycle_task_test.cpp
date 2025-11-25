@@ -214,7 +214,9 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, InitTasksTest001, TestSize.Level1)
     try {
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(g_dataSyncManagerPtr_);
+        taskRunner->cycleTasks_.clear();
         taskRunner->InitTasks();
+        EXPECT_EQ(taskRunner->cycleTasks_.size(), 7);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitTasksTest001 FAILED";
