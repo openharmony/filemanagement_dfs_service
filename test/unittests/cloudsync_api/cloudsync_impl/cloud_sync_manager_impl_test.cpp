@@ -25,11 +25,12 @@
 #include "icloud_sync_service.h"
 #include "iservice_registry.h"
 #include "meta_file.h"
+#include "os_account_manager_mock.h"
 #include "service_callback_mock.h"
 #include "service_proxy.h"
 #include "service_proxy_mock.h"
 #include "system_ability_manager_client_mock.h"
-#include "os_account_manager_mock.h"
+
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -167,6 +168,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
@@ -191,8 +195,12 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
         bool forceFlag = true;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -238,6 +246,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest004, TestSize.Level1)
         bool forceFlag = true;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
@@ -262,6 +273,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
@@ -286,8 +300,11 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest006, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
-            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::MAINTENANCE), Return(E_OK)));
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -308,6 +325,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest007, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
             .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
@@ -331,8 +351,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
-            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(E_OK)));
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartFileSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
@@ -355,6 +376,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartFileSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
             .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
@@ -401,8 +425,8 @@ HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
     try {
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
-        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
-            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(E_OK)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, TriggerSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
@@ -1217,8 +1241,10 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SubscribeListenerTest1 Start";
     try {
-        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
         EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1239,9 +1265,10 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener002, TestSize.Level1)
     try {
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
-        EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
         CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        EXPECT_CALL(*saMgr_, SubscribeSystemAbility(_, _)).WillOnce(Return(0));
         CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+        EXPECT_NE(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SubscribeListener002 FAILED";
@@ -1259,11 +1286,13 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SubscribeListener003 Start";
     try {
-        CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        string bundleName = "test";
+        CloudSyncManagerImpl::GetInstance().listener_ = new CloudSyncManagerImpl::SystemAbilityStatusChange(bundleName);
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
         EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
         CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
         CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+        EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SubscribeListener003 FAILED";
@@ -1655,7 +1684,7 @@ HWTEST_F(CloudSyncManagerImplTest, ReplaceFileWithHistoryVersionTest001, TestSiz
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         oriUri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ReplaceFileWithHistoryVersion(_, _)).WillOnce(Return(E_OK));
@@ -1687,7 +1716,7 @@ HWTEST_F(CloudSyncManagerImplTest, IsFileConflictTest001, TestSize.Level1)
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         uri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, IsFileConflict(_, _)).WillOnce(Return(E_OK));
@@ -1718,7 +1747,7 @@ HWTEST_F(CloudSyncManagerImplTest, ClearFileConflictTest001, TestSize.Level1)
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         uri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ClearFileConflict(_)).WillOnce(Return(E_OK));

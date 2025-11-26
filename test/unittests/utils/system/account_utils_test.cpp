@@ -68,8 +68,7 @@ HWTEST_F(AccountUtilsTest, IsAccountAvailable001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsAccountAvailable001 Start";
     try {
-        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
-            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(0)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess).WillOnce(Return(1));
         bool result = AccountUtils::IsAccountAvailable();
         EXPECT_TRUE(result);
     } catch (...) {
@@ -88,10 +87,11 @@ HWTEST_F(AccountUtilsTest, IsAccountAvailable002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsAccountAvailable002 Start";
     try {
-        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
-            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(0)));
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(0)));
         bool result = AccountUtils::IsAccountAvailable();
-        EXPECT_FALSE(result);
+        EXPECT_TRUE(result);
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " IsAccountAvailable002 ERROR";
@@ -108,6 +108,9 @@ HWTEST_F(AccountUtilsTest, IsAccountAvailable003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsAccountAvailable003 Start";
     try {
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(0)));
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
             .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(0)));
         bool result = AccountUtils::IsAccountAvailable();
@@ -128,6 +131,9 @@ HWTEST_F(AccountUtilsTest, IsAccountAvailable004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsAccountAvailable004 Start";
     try {
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(0)));
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
             .WillOnce(Return(-1));
         bool result = AccountUtils::IsAccountAvailable();
@@ -135,6 +141,52 @@ HWTEST_F(AccountUtilsTest, IsAccountAvailable004, TestSize.Level1)
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << " IsAccountAvailable004 ERROR";
+    }
+}
+
+/**
+ * @tc.name: IsAccountAvailable005
+ * @tc.desc: Verify the IsAccountAvailable function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(AccountUtilsTest, IsAccountAvailable005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAccountAvailable005 Start";
+    try {
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(0)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::MAINTENANCE), Return(0)));
+        bool result = AccountUtils::IsAccountAvailable();
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " IsAccountAvailable005 ERROR";
+    }
+}
+
+/**
+ * @tc.name: IsAccountAvailable006
+ * @tc.desc: Verify the IsAccountAvailable function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(AccountUtilsTest, IsAccountAvailable006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAccountAvailable006 Start";
+    try {
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(0)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::NORMAL), Return(0)));
+        bool result = AccountUtils::IsAccountAvailable();
+        EXPECT_TRUE(result);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " IsAccountAvailable006 ERROR";
     }
 }
 } // namespace FileManagement

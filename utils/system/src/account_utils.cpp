@@ -53,7 +53,7 @@ bool AccountUtils::IsAccountAvailable()
     }
 
     AccountSA::OsAccountType accountType;
-    auto ret = AccountSA::OsAccountManager::GetOsAccountType(userId, accountType);
+    auto ret = AccountSA::OsAccountManager::GetOsAccountTypeFromProcess(accountType);
     if (ret != 0) {
         LOGE("get accountType failed, ret: %{public}d, userId: %{public}d", ret, userId);
         return true;
