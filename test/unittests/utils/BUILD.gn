@@ -234,6 +234,36 @@ ohos_unittest("account_utils_test") {
   use_exceptions = true
 }
 
+ohos_unittest("ffrt_timer_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "./ffrt/ffrt_timer_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/inner_api",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
@@ -241,6 +271,7 @@ group("utils_test") {
     ":async_work_test",
     ":cloud_file_utils_test",
     ":cloud_pref_impl_test",
+    ":ffrt_timer_test",
     ":plugin_loader_test",
     ":utils_directory_test",
     ":account_utils_test",
