@@ -23,7 +23,9 @@
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
 #include "dfs_device_info.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "dm_device_info.h"
+#endif
 #include "hmdfs_info.h"
 #include "i_file_dfs_listener.h"
 #include "i_file_trans_listener.h"
@@ -37,8 +39,8 @@ public:
 public:
     static DistributedFileDaemonManager &GetInstance();
 
-    virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
-    virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t ConnectDfs(const std::string &networkId) = 0;
+    virtual int32_t DisconnectDfs(const std::string &networkId) = 0;
     virtual int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) = 0;
     virtual int32_t CloseP2PConnectionEx(const std::string &networkId) = 0;
     virtual int32_t PrepareSession(const std::string &srcUri,

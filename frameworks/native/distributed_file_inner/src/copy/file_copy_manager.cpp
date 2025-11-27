@@ -34,7 +34,9 @@
 #include "copy/file_size_utils.h"
 #include "datashare_helper.h"
 #include "dfs_error.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
+#endif
 #include "file_uri.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
@@ -62,7 +64,9 @@ static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 static const int OPEN_TRUC_VERSION = 20;
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 const uint32_t API_VERSION_MOD = 1000;
+#endif
 #endif
 uint32_t g_apiCompatibleVersion = 0;
 
@@ -132,6 +136,7 @@ bool IsSystemApp()
 
 uint32_t GetApiCompatibleVersion()
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     uint32_t apiCompatibleVersion = 0;
     OHOS::sptr<OHOS::ISystemAbilityManager> systemAbilityManager =
         OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -161,6 +166,9 @@ uint32_t GetApiCompatibleVersion()
         LOGE("Call for GetApiCompatibleVersion failed, err:%{public}d", res);
     }
     return apiCompatibleVersion;
+#else
+    return EINVAL;
+#endif
 }
 #endif
 
@@ -188,11 +196,13 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
     auto infos = std::make_shared<FileInfos>();
     CreateFileInfos(srcUri, destUri, infos);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     if (IsRemoteUri(infos->srcUri)) {
         auto ret = ExecRemote(infos, processCallback);
         RemoveFileInfos(infos);
         return ret;
     }
+#endif
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
     if (infos->srcPath.rfind(MTP_PATH_PREFIX, 0) != std::string::npos) {
@@ -211,6 +221,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 
 int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCallback &processCallback)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     LOGI("ExecRemote Copy start ");
     sptr<TransListener> transListener (new (std::nothrow) TransListener(infos->destUri, processCallback));
     if (transListener == nullptr) {
@@ -237,6 +248,9 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
         return transListener->GetErrCode();
     }
     return transListener->CopyToSandBox(infos->srcUri);
+#else
+    return EINVAL;
+#endif
 }
 
 int32_t FileCopyManager::Cancel(const bool isKeepFiles)
@@ -245,10 +259,12 @@ int32_t FileCopyManager::Cancel(const bool isKeepFiles)
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     for (auto &item : FileInfosVec_) {
         item->needCancel.store(true);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
         if (item->transListener != nullptr) {
             LOGE("Cancel.");
             item->transListener->Cancel(item->srcUri, item->destUri);
         }
+#endif
         if (!isKeepFiles) {
             DeleteResFile(item);
         }
@@ -273,10 +289,12 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
             continue;
         }
         (*item)->needCancel.store(true);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
         if ((*item)->transListener != nullptr) {
             LOGE("Cancel");
             ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
+#endif
         if (!isKeepFiles) {
             DeleteResFile(*item);
         }

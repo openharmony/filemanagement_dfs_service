@@ -51,8 +51,6 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -63,6 +61,14 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -101,8 +107,6 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -114,6 +118,14 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -147,7 +159,6 @@ ohos_unittest("file_trans_listener_stub_test") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -158,6 +169,11 @@ ohos_unittest("file_trans_listener_stub_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -194,8 +210,6 @@ ohos_unittest("asset_recv_callback_stub_test") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -206,6 +220,14 @@ ohos_unittest("asset_recv_callback_stub_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -244,7 +266,6 @@ ohos_unittest("asset_adapter_sa_client_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -256,6 +277,12 @@ ohos_unittest("asset_adapter_sa_client_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -293,8 +320,6 @@ ohos_unittest("asset_send_callback_stub_test") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -305,6 +330,14 @@ ohos_unittest("asset_send_callback_stub_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -352,8 +385,6 @@ ohos_unittest("file_copy_manager_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -366,6 +397,14 @@ ohos_unittest("file_copy_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -417,8 +456,6 @@ ohos_unittest("remote_file_copy_manager_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -431,6 +468,14 @@ ohos_unittest("remote_file_copy_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -483,8 +528,6 @@ ohos_unittest("trans_listener_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -497,6 +540,14 @@ ohos_unittest("trans_listener_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -548,8 +599,6 @@ ohos_unittest("file_size_utils_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -562,6 +611,14 @@ ohos_unittest("file_size_utils_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -601,7 +658,6 @@ ohos_unittest("file_copy_listener_test") {
   external_deps = [
     "ability_base:zuri",
     "app_file_service:fileuri_native",
-    "dsoftbus:softbus_client",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -612,6 +668,11 @@ ohos_unittest("file_copy_listener_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -654,8 +715,6 @@ ohos_unittest("file_mount_manager_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -666,6 +725,14 @@ ohos_unittest("file_mount_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -754,8 +821,6 @@ ohos_unittest("ipc_wrapper_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -768,6 +833,14 @@ ohos_unittest("ipc_wrapper_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"

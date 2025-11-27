@@ -64,9 +64,6 @@ ohos_unittest("all_connect_manager_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -78,6 +75,15 @@ ohos_unittest("all_connect_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 group("unittest") {

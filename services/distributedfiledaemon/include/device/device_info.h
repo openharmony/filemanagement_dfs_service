@@ -18,8 +18,10 @@
 #include <atomic>
 #include <string>
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "device_manager.h"
 #include "dm_device_info.h"
+#endif
 #include "ipc/i_daemon.h"
 
 namespace OHOS {

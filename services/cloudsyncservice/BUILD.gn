@@ -178,7 +178,6 @@ ohos_shared_library("cloudsync_sa") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dsoftbus:softbus_client",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -204,6 +203,11 @@ ohos_shared_library("cloudsync_sa") {
     external_deps += [ "thermal_manager:thermalmgr_listener" ]
     external_deps += [ "thermal_manager:thermalsrv_client" ]
     defines += [ "support_thermal_manager" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   use_exceptions = true
@@ -291,7 +295,6 @@ ohos_static_library("cloudsync_sa_static") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dsoftbus:softbus_client",
     "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
@@ -333,6 +336,11 @@ ohos_static_library("cloudsync_sa_static") {
 
   if (is_emulator) {
     defines += [ "EMULATOR" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   use_exceptions = true

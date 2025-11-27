@@ -17,7 +17,9 @@
 #define OHOS_FILEMGMT_I_SOFTBUS_LISTENER_H
 
 #include <string>
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "socket.h"
+#endif
 
 namespace OHOS::FileManagement::CloudSync {
 class ISoftbusListener {

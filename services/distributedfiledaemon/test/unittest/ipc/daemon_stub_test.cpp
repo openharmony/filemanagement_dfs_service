@@ -219,35 +219,35 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level0)
 }
 
 /**
- * @tc.name: DaemonStubHandleOpenP2PConnectionTest001
- * @tc.desc: Verify the HandleOpenP2PConnection function
+ * @tc.name: DaemonStubHandleConnectDfsTest001
+ * @tc.desc: Verify the HandleConnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubHandleOpenP2PConnectionTest001, TestSize.Level0)
+HWTEST_F(DaemonStubTest, DaemonStubHandleConnectDfsTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "DaemonStubHandleOpenP2PConnectionTest001 Start";
+    GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 Start";
     MessageParcel data;
     MessageParcel reply;
 
     g_checkCallerPermissionTrue = false;
-    auto ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    auto ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
     EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString())
         .WillOnce(Return("testDeviceId"))
         .WillOnce(Return("testDeviceName"))
         .WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString())
@@ -257,43 +257,43 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleOpenP2PConnectionTest001, TestSize.Leve
     EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
     EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-    EXPECT_CALL(*daemonStub_, OpenP2PConnection(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*daemonStub_, ConnectDfs(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DaemonStubHandleOpenP2PConnectionTest001 End";
+    GTEST_LOG_(INFO) << "HandleConnectDfs End";
 }
 
 /**
- * @tc.name: DaemonStubHandleCloseP2PConnectionTest001
- * @tc.desc: Verify the HandleCloseP2PConnection function
+ * @tc.name: DaemonStubHandleDisconnectDfsTest001
+ * @tc.desc: Verify the HandleDisconnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubHandleCloseP2PConnectionTest001, TestSize.Level0)
+HWTEST_F(DaemonStubTest, DaemonStubHandleDisconnectDfsTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "DaemonStubHandleCloseP2PConnectionTest001 Start";
+    GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 Start";
     MessageParcel data;
     MessageParcel reply;
 
     g_checkCallerPermissionTrue = false;
-    auto ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    auto ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
     EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString())
         .WillOnce(Return("testDeviceId"))
         .WillOnce(Return("testDeviceName"))
         .WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, -1);
 
     EXPECT_CALL(*messageParcelMock_, ReadCString())
@@ -303,11 +303,11 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleCloseP2PConnectionTest001, TestSize.Lev
     EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
     EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-    EXPECT_CALL(*daemonStub_, CloseP2PConnection(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*daemonStub_, DisconnectDfs(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DaemonStubHandleCloseP2PConnectionTest001 End";
+    GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 End";
 }
 
 /**

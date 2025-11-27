@@ -16,7 +16,9 @@
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include <distributed_file_daemon_proxy.h>
+#endif
 #include <file_mount_manager.h>
 
 #undef LOG_DOMAIN
@@ -39,12 +41,16 @@ int32_t FileMountManager::GetDfsUrisDirFromLocal(
     const int32_t userId,
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+#else
+    return OHOS::FileManagement::E_OK;
+#endif
 }
 
 } // namespace DistributedFile

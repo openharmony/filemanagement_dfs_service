@@ -40,12 +40,12 @@ public:
         return FileManagement::E_OK;
     }
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+    int32_t ConnectDfs(const std::string &networkId)
     {
         return FileManagement::E_OK;
     }
 
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+    int32_t DisconnectDfs(const std::string &networkId)
     {
         return FileManagement::E_OK;
     }

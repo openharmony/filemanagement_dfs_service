@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
+#endif
 
 #include <sstream>
 
@@ -118,9 +120,9 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
     return daemonProxy_;
 }
 
-int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 {
-    LOGI("Open p2p connection");
+    LOGI("Dfs connection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -128,28 +130,8 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware:
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(deviceInfo.deviceId)) {
-        LOGE("Failed to send device id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.deviceName)) {
-        LOGE("Failed to send device name");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.networkId)) {
-        LOGE("Failed to send network id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint16(deviceInfo.deviceTypeId)) {
-        LOGE("Failed to send deviceTypeId");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint32(deviceInfo.range)) {
-        LOGE("Failed to send range");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteInt32(deviceInfo.authForm)) {
-        LOGE("Failed to send user id");
+    if (!data.WriteCString(networkId)) {
+        LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();
@@ -169,9 +151,9 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware:
     return reply.ReadInt32();
 }
 
-int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
 {
-    LOGI("Close p2p connection");
+    LOGI("Dfs disconnection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -179,28 +161,8 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(deviceInfo.deviceId)) {
-        LOGE("Failed to send device id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.deviceName)) {
-        LOGE("Failed to send device name");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.networkId)) {
-        LOGE("Failed to send network id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint16(deviceInfo.deviceTypeId)) {
-        LOGE("Failed to send deviceTypeId");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint32(deviceInfo.range)) {
-        LOGE("Failed to send range");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteInt32(deviceInfo.authForm)) {
-        LOGE("Failed to send user id");
+    if (!data.WriteCString(networkId)) {
+        LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();

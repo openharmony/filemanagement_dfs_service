@@ -18,7 +18,9 @@
 
 #include <string>
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "dm_device_info.h"
+#endif
 #include "i_file_dfs_listener.h"
 #include "iremote_proxy.h"
 

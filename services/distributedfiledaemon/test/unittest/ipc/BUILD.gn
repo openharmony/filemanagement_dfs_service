@@ -55,7 +55,6 @@ ohos_unittest("asset_callback_manager_test") {
 
   external_deps = [
     "c_utils:utils",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -67,6 +66,11 @@ ohos_unittest("asset_callback_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
 }
@@ -184,7 +188,6 @@ ohos_unittest("daemon_stub_test") {
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -204,6 +207,11 @@ ohos_unittest("daemon_stub_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
 }
@@ -265,7 +273,6 @@ ohos_unittest("daemon_test") {
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
     "distributed_notification_service:ans_innerkits",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -286,6 +293,11 @@ ohos_unittest("daemon_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -339,7 +351,6 @@ ohos_unittest("daemon_execute_test") {
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -357,6 +368,11 @@ ohos_unittest("daemon_execute_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 group("unittest") {

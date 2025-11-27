@@ -46,8 +46,6 @@ ohos_fuzztest("HandleInnerCancelCopyTaskFuzzTest") {
     "app_file_service:remote_file_share_native",
     "cJSON:cjson_static",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_single",
@@ -55,6 +53,13 @@ ohos_fuzztest("HandleInnerCancelCopyTaskFuzzTest") {
     "selinux_adapter:librestorecon",
     "samgr:samgr_proxy",
   ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 group("fuzztest") {

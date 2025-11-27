@@ -26,7 +26,9 @@
 #include "daemon_execute.h"
 #include "daemon_stub.h"
 #include "device/device_profile_adapter.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "dm_device_info.h"
+#endif
 #include "file_trans_listener_proxy.h"
 #include "hmdfs_info.h"
 #include "ipc/i_daemon.h"
@@ -60,8 +62,8 @@ public:
         return state_;
     }
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t ConnectDfs(const std::string &networkId) override;
+    int32_t DisconnectDfs(const std::string &networkId) override;
     int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);

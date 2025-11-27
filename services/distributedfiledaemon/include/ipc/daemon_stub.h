@@ -37,8 +37,8 @@ private:
     using DaemonInterface = int32_t (DaemonStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, DaemonInterface> opToInterfaceMap_;
 
-    int32_t HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleConnectDfs(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleDisconnectDfs(MessageParcel &data, MessageParcel &reply);
     int32_t HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
     int32_t HandlePrepareSession(MessageParcel &data, MessageParcel &reply);
