@@ -51,6 +51,7 @@ protected:
     std::set<std::string> bundleNames_;
     int32_t intervalTime_;
     std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
+    bool runTaskForSwitchOff_ = false;
 
 private:
     void GetLastRunTime(std::time_t &time);
