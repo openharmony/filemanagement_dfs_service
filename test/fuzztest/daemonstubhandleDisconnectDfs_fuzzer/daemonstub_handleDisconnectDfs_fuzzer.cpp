@@ -175,8 +175,8 @@ public:
 };
 
 void HandleDisconnectDfsFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                      const uint8_t *data,
-                                      size_t size)
+                                    const uint8_t *data,
+                                    size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
     MessageParcel datas;
