@@ -222,6 +222,7 @@ ohos_unittest("daemon_test") {
 
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include/device",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
@@ -239,7 +240,9 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
+    "${services_path}/distributedfiledaemon/test/unittest/dfx/radar_report_test.cpp",
     "daemon_test.cpp",
+    "dfx/radar_report_test.cpp",
   ]
 
   configs = [

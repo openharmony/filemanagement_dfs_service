@@ -68,7 +68,7 @@ void SoftBusHandlerAssetTest::CheckSrcSameAccountPass()
     osAccountInfo.uid_ = "test";
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
@@ -90,7 +90,7 @@ void SoftBusHandlerAssetTest::CheckSrcBothSamePass()
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
         .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
@@ -278,7 +278,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0200, TestSi
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
     int32_t socketId = 0;
 
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("", socketId, INVALID_USER_ID), E_PERMISSION_DENIED);
 
     CheckSrcSameAccountPass();

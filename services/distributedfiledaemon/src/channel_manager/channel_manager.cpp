@@ -14,6 +14,7 @@
  */
 
 #include "channel_manager.h"
+#include "dfs_radar.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "securec.h"
 #include "softbus_error_code.h"
@@ -108,6 +109,9 @@ int32_t ChannelManager::Init()
 
     int32_t socketServerId = CreateServerSocket();
     if (socketServerId <= 0) {
+        RadarParaInfo info = {"Init", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", "", socketServerId, "Socket fail"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         LOGE("create socket failed, ret: %{public}d", socketServerId);
         return ERR_CREATE_SOCKET_FAILED;
     }
@@ -115,6 +119,9 @@ int32_t ChannelManager::Init()
     int32_t ret = Listen(socketServerId, g_low_qosInfo, g_lowQosTvParamIndex, &channelManagerListener);
     if (ret != ERR_OK) {
         LOGE("service listen failed, ret: %{public}d", ret);
+        RadarParaInfo info = {"Init", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", "", ret, "service listen fail"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         Shutdown(socketServerId);
         return ERR_LISTEN_SOCKET_FAILED;
     }
@@ -260,6 +267,9 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
     int32_t socketId = CreateClientSocket(networkId);
     if (socketId <= 0) {
         LOGE("create client socket failed");
+        RadarParaInfo info = {"CreateClientChannel", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", networkId, socketId, "client socket fail"};
+        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
         return ERR_BAD_VALUE;
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
@@ -273,6 +283,9 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
     if (ret != ERR_OK) {
         LOGE("client bind failed, ret: %{public}d", ret);
         Shutdown(socketId);
+        RadarParaInfo info = {"CreateClientChannel", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", networkId, ret, "client socket fail"};
+        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
         return ERR_BIND_SOCKET_FAILED;
     }
 
@@ -491,6 +504,9 @@ void ChannelManager::DoSendBytesAsync(const ControlCmd &request, const std::stri
     std::string data;
     if (!ControlCmdParser::SerializeToJson(request, data)) {
         LOGE("SerializeToJson failed, requestId is %{public}d", request.msgId);
+        RadarParaInfo info = {"DoSendBytesAsync", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, DEFAULT_ERR, "SerializeToJson fail"};
+        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
         return;
     }
     SendBytes(networkId, data);

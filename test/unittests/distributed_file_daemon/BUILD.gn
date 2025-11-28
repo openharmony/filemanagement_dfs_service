@@ -355,6 +355,42 @@ ohos_unittest("trans_mananger_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("dfs_radar_test") {
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+ 
+  sources = [
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/mock_other_method.cpp",
+    "dfs_radar_test.cpp",
+  ]
+ 
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
+    "${utils_path}/dfx/include",
+    "${utils_path}/log/include",
+  ]
+ 
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+ 
+  external_deps = [
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "os_account:os_account_innerkits",
+  ]
+ 
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+  ]
+  use_exceptions = true
+}
+
 group("distributed_daemon_test") {
   testonly = true
 
@@ -363,6 +399,7 @@ group("distributed_daemon_test") {
     ":daemon_manager_impl_test",
     ":daemon_manager_test",
     ":daemon_service_proxy_test",
+    ":dfs_radar_test",
     ":file_dfs_listener_proxy_test",
     ":file_trans_listener_proxy_test",
     ":trans_mananger_test",

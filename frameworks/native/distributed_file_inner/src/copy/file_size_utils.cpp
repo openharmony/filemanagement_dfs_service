@@ -19,6 +19,7 @@
 #include <filesystem>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "file_uri.h"
 #include "utils_log.h"
 
@@ -33,6 +34,7 @@ namespace DistributedFile {
 using namespace AppFileService;
 using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
+using namespace std;
 static constexpr int DISMATCH = 0;
 static constexpr int MATCH = 1;
 static constexpr char PATH_INVALID_FLAG1[] = "../";

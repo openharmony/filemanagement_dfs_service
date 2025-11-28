@@ -45,6 +45,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "dfx/include",
     "inner_api",
     "ioctl/include",
     "load/include",
@@ -79,6 +80,7 @@ ohos_shared_library("libdistributedfileutils") {
   }
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "dfx/src/dfs_radar.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
     "load/src/plugin_loader.cpp",
@@ -121,6 +123,7 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
@@ -130,6 +133,7 @@ ohos_shared_library("libdistributedfileutils") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "napi:ace_napi",
+    "os_account:libaccountkits",
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
   ]

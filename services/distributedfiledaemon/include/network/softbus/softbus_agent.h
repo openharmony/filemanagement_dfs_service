@@ -42,6 +42,7 @@ protected:
     void QuitDomain() override;
     void StopTopHalf() override;
     void StopBottomHalf() override;
+    int32_t OpenSessionInner(const DeviceInfo &info);
     int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
     void HandleAfterOpenSession(const int32_t socketId, const std::string &networkId);

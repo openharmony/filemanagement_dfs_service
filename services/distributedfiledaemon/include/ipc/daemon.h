@@ -149,6 +149,7 @@ private:
     void RemoveDfsDelayTask(const std::string &networkId);
     void DisconnectDevice(const std::string networkId);
     bool IsCallingDeviceTrusted();
+    int32_t JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -169,6 +170,7 @@ private:
     int32_t CheckRemoteAllowConnect(const std::string &networkId);
     int32_t NotifyRemotePublishNotification(const std::string &networkId);
     int32_t NotifyRemoteCancelNotification(const std::string &networkId);
+    int32_t CheckPermission(const std::string &networkId);
 private:
     std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;
