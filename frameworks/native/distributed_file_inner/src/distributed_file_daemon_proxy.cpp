@@ -128,7 +128,7 @@ int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(networkId)) {
+    if (!data.WriteString(networkId)) {
         LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
@@ -159,7 +159,7 @@ int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(networkId)) {
+    if (!data.WriteString(networkId)) {
         LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
