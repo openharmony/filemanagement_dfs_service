@@ -23,6 +23,7 @@
 #include "ipc_skeleton.h"
 #include "securec.h"
 #include "utils_log.h"
+#include <unordered_set>
 
 namespace OHOS {
 namespace Storage {
