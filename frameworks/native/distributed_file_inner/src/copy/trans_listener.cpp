@@ -20,9 +20,7 @@
 #include <random>
 
 #include "dfs_error.h"
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
-#endif
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"
 #include "uri.h"

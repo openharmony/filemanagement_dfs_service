@@ -26,9 +26,7 @@
 #include "daemon_execute.h"
 #include "daemon_stub.h"
 #include "device/device_profile_adapter.h"
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "dm_device_info.h"
-#endif
 #include "file_trans_listener_proxy.h"
 #include "hmdfs_info.h"
 #include "ipc/i_daemon.h"
