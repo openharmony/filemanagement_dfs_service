@@ -24,9 +24,6 @@
 #include "securec.h"
 #include "utils_log.h"
 
-#include <string>
-#include <unordered_set>
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {

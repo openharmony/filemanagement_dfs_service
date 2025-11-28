@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
-#endif
 
 #include <sstream>
 
@@ -122,7 +120,7 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 
 int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 {
-    LOGI("Dfs connection");
+    LOGI("Open p2p connection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -153,7 +151,7 @@ int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 
 int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
 {
-    LOGI("Dfs disconnection");
+    LOGI("Close p2p disconnection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

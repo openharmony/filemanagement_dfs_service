@@ -59,7 +59,7 @@ public:
         return 0;
     }
 
-    int32_t ConnectDfsEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override
     {
         return 0;
     }

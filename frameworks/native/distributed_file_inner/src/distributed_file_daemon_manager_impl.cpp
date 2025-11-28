@@ -19,7 +19,6 @@
 #include "copy/file_copy_manager.h"
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
-#include "../../../../test/mock/cloudsyncservice/transport/softbus_adapter_mock.h"
 #ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
 #endif

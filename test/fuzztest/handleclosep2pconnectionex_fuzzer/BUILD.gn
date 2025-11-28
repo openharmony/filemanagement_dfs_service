@@ -47,6 +47,7 @@ ohos_fuzztest("HandleCloseP2PConnectionExFuzzTest") {
     "cJSON:cjson_static",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_single",
@@ -54,10 +55,6 @@ ohos_fuzztest("HandleCloseP2PConnectionExFuzzTest") {
     "selinux_adapter:librestorecon",
     "samgr:samgr_proxy",
   ]
-  if (dfs_service_feature_enable_distributed_ability) {
-    external_deps += [ "dsoftbus:softbus_client" ]
-    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
-  }
 }
 
 group("fuzztest") {

@@ -261,7 +261,7 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleConnectDfsTest001, TestSize.Level0)
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "HandleConnectDfs End";
+    GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 End";
 }
 
 /**

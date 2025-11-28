@@ -213,6 +213,7 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
 
     if (res != 0) {
         LOGI("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
+        return E_INVAL_ARG_NAPI;
     }
 
     LOGI("ConnectDfs networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),

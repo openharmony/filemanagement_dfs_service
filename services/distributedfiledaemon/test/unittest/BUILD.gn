@@ -1052,6 +1052,7 @@ ohos_unittest("softbus_session_pool_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
+  defines = []
   if (dfs_service_feature_enable_distributed_ability) {
     external_deps += [ "dsoftbus:softbus_client" ]
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
