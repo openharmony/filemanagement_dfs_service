@@ -209,7 +209,7 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
     std::lock_guard<std::mutex> lock(connectMutex_);
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
     DistributedHardware::DmDeviceInfo deviceInfo;
-    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_LEN, networkId.c_str());
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
         LOGI("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return E_INVAL_ARG_NAPI;
@@ -238,7 +238,6 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
 int32_t Daemon::DisconnectDfs(const std::string &networkId)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    string networkId = string(deviceInfo.networkId);
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
     LOGI("DisconnectDfs networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
          Utils::GetAnonyNumber(callingTokenId).c_str());
