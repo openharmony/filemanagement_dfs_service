@@ -49,7 +49,7 @@ int32_t FileMountManager::GetDfsUrisDirFromLocal(
     }
     return distributedFileDaemonProxy->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 

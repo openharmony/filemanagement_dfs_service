@@ -53,7 +53,7 @@ int32_t DistributedFileDaemonManagerImpl::ConnectDfs(const std::string &networkI
     openP2PConnectionSem_.release();
     return res;
 #else
-    return OHOS::FileManagement::OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -68,7 +68,7 @@ int32_t DistributedFileDaemonManagerImpl::DisconnectDfs(const std::string &netwo
     }
     return distributedFileDaemonProxy->DisconnectDfs(networkId);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -86,7 +86,7 @@ int32_t DistributedFileDaemonManagerImpl::OpenP2PConnectionEx(const std::string 
     openP2PConnectionExSem_.release();
     return res;
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -100,7 +100,7 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string
     }
     return distributedFileDaemonProxy->CloseP2PConnectionEx(networkId);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -118,7 +118,7 @@ int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcU
     }
     return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId, listener, info);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -135,7 +135,7 @@ int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &src
     }
     return distributedFileDaemonProxy->RequestSendFile(srcUri, dstPath, remoteDeviceId, sessionName);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -149,7 +149,7 @@ int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &s
     }
     return distributedFileDaemonProxy->GetRemoteCopyInfo(srcUri, isFile, isDir);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -163,7 +163,7 @@ int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &sess
     }
     return distributedFileDaemonProxy->CancelCopyTask(sessionName);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -177,7 +177,7 @@ int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &srcU
     }
     return distributedFileDaemonProxy->CancelCopyTask(srcUri, dstUri);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -194,7 +194,7 @@ int32_t DistributedFileDaemonManagerImpl::PushAsset(int32_t userId,
     }
     return distributedFileDaemonProxy->PushAsset(userId, assetObj, sendCallback);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -208,7 +208,7 @@ int32_t DistributedFileDaemonManagerImpl::GetDfsSwitchStatus(const std::string &
     }
     return distributedFileDaemonProxy->GetDfsSwitchStatus(networkId, switchStatus);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -222,7 +222,7 @@ int32_t DistributedFileDaemonManagerImpl::UpdateDfsSwitchStatus(int32_t switchSt
     }
     return distributedFileDaemonProxy->UpdateDfsSwitchStatus(switchStatus);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -236,7 +236,7 @@ int32_t DistributedFileDaemonManagerImpl::GetConnectedDeviceList(std::vector<Dfs
     }
     return distributedFileDaemonProxy->GetConnectedDeviceList(deviceList);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -251,7 +251,7 @@ int32_t DistributedFileDaemonManagerImpl::RegisterFileDfsListener(const std::str
     }
     return distributedFileDaemonProxy->RegisterFileDfsListener(instanceId, listener);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -265,7 +265,7 @@ int32_t DistributedFileDaemonManagerImpl::UnregisterFileDfsListener(const std::s
     }
     return distributedFileDaemonProxy->UnregisterFileDfsListener(instanceId);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -279,7 +279,7 @@ int32_t DistributedFileDaemonManagerImpl::IsSameAccountDevice(const std::string 
     }
     return distributedFileDaemonProxy->IsSameAccountDevice(networkId, isSameAccount);
 #else
-    return OHOS::FileManagement::E_OK;
+    return ERR_NOT_SUPPORT;
 #endif
 }
 
@@ -297,8 +297,10 @@ int32_t DistributedFileDaemonManagerImpl::RegisterAssetCallback(const sptr<IAsse
         LOGE("AssetAdapterSaClient addListener fail.");
         return ret;
     }
-#endif
     return OHOS::FileManagement::E_OK;
+#else
+    return ERR_NOT_SUPPORT;
+#endif
 }
 
 int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
@@ -314,8 +316,10 @@ int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAs
         LOGE("AssetAdapterSaClient removeListener fail.");
         return ret;
     }
-#endif
     return OHOS::FileManagement::E_OK;
+#else
+    return ERR_NOT_SUPPORT;
+#endif
 }
 
 int32_t DistributedFileDaemonManagerImpl::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)

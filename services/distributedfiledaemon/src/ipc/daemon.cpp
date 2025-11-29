@@ -208,6 +208,10 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
+    if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::ConnectDfs networkId length is invalid.");
+        return E_INVAL_ARG_NAPI;
+    }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
