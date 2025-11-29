@@ -152,7 +152,7 @@ enum DFSErrCode {
     ERR_NULLPTR,
     ERR_ACL_FAILED,
 
-    ERR_NOT_SUPPORT = 1000,
+    ERR_NOT_SUPPORT = 801,
 
     /* dfs version */
     ERR_DFS_VERSION_BASE = 1000,
