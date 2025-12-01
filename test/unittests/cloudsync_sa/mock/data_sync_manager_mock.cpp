@@ -74,15 +74,16 @@ int32_t DataSyncManager::ResetCursor(const std::string &bundleName, const int32_
 }
 
 void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName,
-                                                const std::string &callerBundleName,
-                                                const int32_t userId,
+                                                const BundleNameUserInfo &bundleNameUserInfo,
+                                                const std::string &callbackAddr,
                                                 const sptr<CloudSync::ICloudSyncCallback> &callback)
 {
     return;
 }
 
 void DataSyncManager::UnRegisterCloudSyncCallback(const std::string &bundleName,
-                                                  const std::string &callerBundleName)
+                                                  const BundleNameUserInfo &bundleNameUserInfo,
+                                                  const std::string &callbackAddr)
 {
     return;
 }

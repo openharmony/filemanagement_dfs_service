@@ -45,10 +45,12 @@ public:
     virtual int32_t StopUploadTask(const std::string &bundleName, const int32_t userId);
     virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId, bool flag = false);
     virtual void RegisterCloudSyncCallback(const std::string &bundleName,
-                                           const std::string &callerBundleName,
-                                           const int32_t userId,
+                                           const BundleNameUserInfo &bundleNameUserInfo,
+                                           const std::string &callbackAddr,
                                            const sptr<CloudSync::ICloudSyncCallback> &callback);
-    virtual void UnRegisterCloudSyncCallback(const std::string &bundleName, const std::string &callerBundleName);
+    virtual void UnRegisterCloudSyncCallback(const std::string &bundleName,
+                                             const BundleNameUserInfo &bundleNameUserInfo,
+                                             const std::string &callbackAddr);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
     virtual int32_t StartFileCache(const BundleNameUserInfo &bundleNameUserInfo,
                                    const std::vector<std::string> &uriVec,

@@ -28,190 +28,93 @@
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncServiceMock : public IRemoteStub<ICloudSyncService> {
 public:
-    int code_;
-    CloudSyncServiceMock() : code_(0) {}
-    virtual ~CloudSyncServiceMock() {}
-
+    MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
+    MOCK_METHOD2(UnRegisterCallbackInner, int32_t(const std::string &callbackAddr, const std::string &bundleName));
+    MOCK_METHOD2(UnRegisterFileSyncCallbackInner, int32_t(const std::string &callbackAddr,
+        const std::string &bundleName));
+    MOCK_METHOD3(RegisterCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject,
+        const std::string &callbackAddr, const std::string &bundleName));
+    MOCK_METHOD3(RegisterFileSyncCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject,
+        const std::string &callbackAddr, const std::string &bundleName));
+    MOCK_METHOD2(StartSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
+    MOCK_METHOD2(StartFileSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
+    MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, int32_t userId));
+    MOCK_METHOD2(StopSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
+    MOCK_METHOD2(StopFileSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
+    MOCK_METHOD2(ResetCursor, int32_t(bool flag, const std::string &bundleName));
+    MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
+    MOCK_METHOD3(OptimizeStorage,
+                 int32_t(const OptimizeSpaceOptions &optimizeOptions,
+                         bool isCallbackValid,
+                         const sptr<IRemoteObject> &optimizeCallback));
+    MOCK_METHOD0(StopOptimizeStorage, int32_t());
+    MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
+    MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
+    MOCK_METHOD3(NotifyEventChange, int32_t(int32_t userId, const std::string &eventId, const std::string &extraData));
+    MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
+    MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
+    MOCK_METHOD3(StartDownloadFile,
+                 int32_t(const std::string &uri,
+                         const sptr<IRemoteObject> &downloadCallback,
+                         int64_t &downloadId));
+    MOCK_METHOD5(StartFileCache,
+                 int32_t(const std::vector<std::string> &uriVec,
+                         int64_t &downloadId,
+                         int32_t fieldkey,
+                         const sptr<IRemoteObject> &downloadCallback,
+                         int32_t timeout));
+    MOCK_METHOD2(StopDownloadFile, int32_t(int64_t downloadId, bool needClean));
+    MOCK_METHOD3(StopFileCache, int32_t(int64_t downloadId, bool needClean, int32_t timeout));
+    MOCK_METHOD0(DownloadThumb, int32_t());
+    MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
+    MOCK_METHOD3(DownloadFile,
+                 int32_t(const int32_t userId, const std::string &bundleName, const AssetInfoObj &assetInfoObj));
+    MOCK_METHOD5(DownloadFiles,
+                 int32_t(const int32_t userId,
+                         const std::string &bundleName,
+                         const std::vector<AssetInfoObj> &assetInfoObj,
+                         std::vector<bool> &assetResultMap,
+                         int32_t connectTime));
+    MOCK_METHOD5(DownloadAsset,
+                 int32_t(const uint64_t taskId,
+                         const int32_t userId,
+                         const std::string &bundleName,
+                         const std::string &networkId,
+                         const AssetInfoObj &assetInfoObj));
+    MOCK_METHOD1(RegisterDownloadAssetCallback, int32_t(const sptr<IRemoteObject> &remoteObject));
+    MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
+    MOCK_METHOD2(GetSyncTimeInner, int32_t(int64_t &syncTime, const std::string &bundleName));
+    MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));
+    MOCK_METHOD1(CleanFileCacheInner, int32_t(const std::string &uri));
+    MOCK_METHOD2(BatchCleanFile,
+                 int32_t(const std::vector<CleanFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId));
+    MOCK_METHOD2(BatchDentryFileInsert,
+                 int32_t(const std::vector<DentryFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId));
+    MOCK_METHOD2(StartDowngrade, int32_t(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback));
+    MOCK_METHOD1(StopDowngrade, int32_t(const std::string &bundleName));
+    MOCK_METHOD2(GetCloudFileInfo, int32_t(const std::string &bundleName, CloudFileInfo &cloudFileInfo));
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
-
-    int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+    MOCK_METHOD3(GetHistoryVersionList, int32_t(const std::string &uri, const int32_t versionNumLimit,
+        std::vector<HistoryVersion> &historyVersionList));
+    MOCK_METHOD5(DownloadHistoryVersion, int32_t(const std::string &uri, int64_t &downloadId, const uint64_t versionId,
+                 const sptr<IRemoteObject> &downloadCallback, std::string &versionUri));
+    MOCK_METHOD2(ReplaceFileWithHistoryVersion, int32_t(const std::string &uri, const std::string &versionUri));
+    MOCK_METHOD2(IsFileConflict, int32_t(const std::string &uri, bool &isConflict));
+    MOCK_METHOD1(ClearFileConflict, int32_t(const std::string &uri));
+    MOCK_METHOD2(HandleRemovedClean, int32_t(const std::string &bundleName, int32_t userId));
+    MOCK_METHOD2(RemovedClean, int32_t(const std::string &bundleName, int32_t userId));
+    MOCK_METHOD2(GetBundlesLocalFilePresentStatus,
+                 int32_t(const std::vector<std::string> &bundleNames,
+                 std::vector<LocalFilePresentStatus> &localFilePresentStatusList));
+private:
+    int32_t StartFileCacheWriteParcel(MessageParcel &data,
+                                      const std::vector<std::string> &uriVec,
+                                      std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
+                                      bool isCallbackValid,
+                                      const sptr<IRemoteObject> &downloadCallback,
+                                      int32_t timeout)
     {
-        code_ = code;
-        reply.WriteInt32(E_OK);
-        return E_OK;
-    }
-
-    int32_t UnRegisterCallbackInner(const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
-        const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t TriggerSyncInner(const std::string &bundleName, int32_t userId) override
-    {
-        return E_OK;
-    }
-
-    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
-    {
-        return E_OK;
-    }
-
-    int32_t StopFileSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
-    {
-        return E_OK;
-    }
-
-    int32_t ResetCursor(bool flag = false, const std::string &bundleName = "") override
-    {
-        return E_OK;
-    }
-
-    int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override
-    {
-        return E_OK;
-    }
-
-    int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override
-    {
-        return E_OK;
-    }
-
-    int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override
-    {
-        return E_OK;
-    }
-    int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override
-    {
-        return E_OK;
-    }
-    int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override
-    {
-        return E_OK;
-    }
-    int32_t DisableCloud(const std::string &accoutId) override
-    {
-        return E_OK;
-    }
-    int32_t StartDownloadFile(const std::string &uri,
-                              const sptr<IRemoteObject> &downloadCallback,
-                              int64_t &downloadId)
-    {
-        return E_OK;
-    }
-    int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
-                           int32_t fieldkey,
-                           const sptr<IRemoteObject> &downloadCallback,
-                           int32_t timeout = -1)
-    {
-        return E_OK;
-    }
-    int32_t StopDownloadFile(int64_t downloadId, bool needClean = false)
-    {
-        return E_OK;
-    }
-    int32_t StopFileCache(int64_t downloadId,  bool needClean = false, int32_t timeout = -1)
-    {
-        return E_OK;
-    }
-    int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result)
-    {
-        return E_OK;
-    }
-    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, const AssetInfoObj &assetInfoObj)
-    {
-        return E_OK;
-    }
-    int32_t DownloadFiles(const int32_t userId,
-                          const std::string &bundleName,
-                          const std::vector<AssetInfoObj> &assetInfoObj,
-                          std::vector<bool> &assetResultMap,
-                          int32_t connectTime)
-    {
-        return E_OK;
-    }
-    int32_t DeleteAsset(const int32_t userId, const std::string &uri)
-    {
-        return E_OK;
-    }
-    int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "")
-    {
-        return E_OK;
-    }
-
-    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
-        std::vector<std::string> &failCloudId)
-    {
-        return E_OK;
-    }
-
-    int32_t CleanCacheInner(const std::string &uri)
-    {
-        return E_OK;
-    }
-
-    int32_t OptimizeStorage(const OptimizeSpaceOptions &optimizeOptions, bool isCallbackValid,
-        const sptr<IRemoteObject> &optimizeCallback)
-    {
-        return E_OK;
-    }
-
-    int32_t StopOptimizeStorage()
-    {
-        return E_OK;
-    }
-
-    int32_t DownloadAsset(const uint64_t taskId,
-                          const int32_t userId,
-                          const std::string &bundleName,
-                          const std::string &networkId,
-                          const AssetInfoObj &assetInfoObj)
-    {
-        return E_OK;
-    }
-    int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
-    {
-        return E_OK;
-    }
-
-    int32_t DownloadThumb()
-    {
-        return E_OK;
-    }
-    int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId)
-    {
-        return E_OK;
-    }
-    
-    int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
-        std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
-    {
-        return E_OK;
+        return 0;
     }
 };
 

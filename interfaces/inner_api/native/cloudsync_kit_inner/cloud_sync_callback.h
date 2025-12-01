@@ -67,6 +67,11 @@ public:
      *
      */
     virtual void OnDeathRecipient() {};
+    /**
+     * @brief 退出清理信息逻辑
+     *
+     */
+    virtual void DeleteReference() {};
 };
 } // namespace OHOS::FileManagement::CloudSync
 

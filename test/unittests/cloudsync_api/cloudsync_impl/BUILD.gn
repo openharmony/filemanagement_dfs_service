@@ -39,6 +39,33 @@ ohos_unittest("cloud_sync_callback_client_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_sync_callback_client_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "cloud_sync_callback_client_manager_test.cpp" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  deps = [ 
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_callback_stub_test") {
   module_out_path = "dfs_service/dfs_service"
 

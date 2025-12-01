@@ -21,6 +21,7 @@
 #include "cloud_download_callback.h"
 #include "cloud_optimize_callback.h"
 #include "cloud_sync_callback.h"
+#include "cloud_sync_callback_info.h"
 #include "cloud_sync_common.h"
 #include "downgrade_dl_callback.h"
 
@@ -34,18 +35,16 @@ public:
      * @param callback 注册同步回调
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
-                                     const std::string &bundleName = "") = 0;
-    virtual int32_t RegisterFileSyncCallback(const std::shared_ptr<CloudSyncCallback> callback,
-                                     const std::string &bundleName = "") = 0;
+    virtual int32_t RegisterCallback(const CallbackInfo &callbackInfo) = 0;
+    virtual int32_t RegisterFileSyncCallback(const CallbackInfo &callbackInfo) = 0;
     /**
      * @brief 注册
      *
      * @param callback 卸载同步回调
      * @return int32_t 返回执行结果
      */
-    virtual int32_t UnRegisterCallback(const std::string &bundleName = "") = 0;
-    virtual int32_t UnRegisterFileSyncCallback(const std::string &bundleName = "") = 0;
+    virtual int32_t UnRegisterCallback(const CallbackInfo &callbackInfo) = 0;
+    virtual int32_t UnRegisterFileSyncCallback(const CallbackInfo &callbackInfo) = 0;
     /**
      * @brief 启动同步
      *

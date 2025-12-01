@@ -32,8 +32,7 @@ const string FILE_SCHEME = "file";
 
 const string &CloudSyncCore::GetBundleName() const
 {
-    static const string emptyString = "";
-    return (bundleEntity) ? bundleEntity->bundleName_ : emptyString;
+    return bundleEntity->callbackInfo.bundleName;
 }
 
 FsResult<CloudSyncCore *> CloudSyncCore::Constructor()
@@ -51,7 +50,7 @@ FsResult<CloudSyncCore *> CloudSyncCore::Constructor()
 CloudSyncCore::CloudSyncCore()
 {
     LOGI("init without bundle name");
-    bundleEntity = nullptr;
+    bundleEntity = make_unique<BundleEntity>();
 }
 
 FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSyncCallbackMiddle> callback)
@@ -61,14 +60,14 @@ FsResult<void> CloudSyncCore::DoOn(const string &event, const shared_ptr<CloudSy
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         LOGI("callback already exist");
         return FsResult<void>::Success();
     }
 
-    string bundleName = GetBundleName();
-    callback_ = callback;
-    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_, bundleName);
+    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity.get());
+    bundleEntity->callbackInfo.callback = callback;
+    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("DoOn Register error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -84,17 +83,16 @@ FsResult<void> CloudSyncCore::DoOff(const string &event, const optional<shared_p
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("DoOff UnRegister error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         /* delete callback */
-        callback_->DeleteReference();
-        callback_ = nullptr;
+        bundleEntity->callbackInfo.callback->DeleteReference();
+        bundleEntity->callbackInfo.callback = nullptr;
     }
 
     return FsResult<void>::Success();
@@ -226,7 +224,7 @@ FsResult<int32_t> CloudSyncCore::DoGetCoreFileSyncState(string path)
     }
     int32_t fileStatus = atoi(xattrValue.get());
     int32_t val;
-    if (fileStatus >= 0 && fileStatus < publicStatusMap.size()) {
+    if (fileStatus >= 0 && (size_t)fileStatus < publicStatusMap.size()) {
         val = publicStatusMap[fileStatus];
     } else {
         LOGE("invalid value");
