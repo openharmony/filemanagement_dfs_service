@@ -218,6 +218,10 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
         wLock.lock();
         data->inodeCache.erase(key);
         wLock.unlock();
+    } else if (inoPtr->refCount < 0) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::FORGET, CloudFile::FaultType::WARNING, EINVAL,
+            std::to_string(key) + " refCount < 0 :" + std::to_string(inoPtr->refCount)});
     }
 }
 
@@ -234,6 +238,10 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
         wLock.lock();
         data->fileCache.erase(key);
         wLock.unlock();
+    } else if (filePtr->refCount < 0) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
+            CloudFile::FaultOperation::OPEN, CloudFile::FaultType::WARNING, EINVAL, 
+            std::to_string(key) + " refCount < 0 :" + std::to_string(filePtr->refCount)});
     }
 }
 
@@ -252,6 +260,10 @@ void FileOperationsHelper::PutLocalId(struct CloudDiskFuseData *data,
         wLock.lock();
         data->localIdCache.erase(key);
         wLock.unlock();
+    } else if (inoPtr->refCount < 0) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::FORGET, CloudFile::FaultType::WARNING, EINVAL,
+            key + " refCount < 0 :" + std::to_string(inoPtr->refCount)});
     }
 }
 } // namespace CloudDisk

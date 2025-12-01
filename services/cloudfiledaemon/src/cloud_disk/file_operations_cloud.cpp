@@ -191,6 +191,7 @@ static void LookUpRecycleBin(struct CloudDiskFuseData *data, fuse_ino_t parent,
         data->inodeCache[RECYCLE_LOCAL_ID] = child;
         cacheWLock.unlock();
     }
+    child->refCount++;
     e->ino = static_cast<fuse_ino_t>(RECYCLE_LOCAL_ID);
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
 }
@@ -229,15 +230,13 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
     }
     int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
-    if (inoPtr == nullptr) {
-        string nameStr = name;
-        size_t lastSlash = nameStr.find_last_of("_");
-        metaBase.name = nameStr.substr(0, lastSlash);
-        inoPtr = UpdateChildCache(data, inodeId, inoPtr);
-        inoPtr->refCount++;
-        InitInodeAttr(data, RECYCLE_LOCAL_ID, inoPtr.get(), metaBase, inodeId);
-        inoPtr->parent = UNKNOWN_INODE_ID;
-    }
+    string nameStr = name;
+    size_t lastSlash = nameStr.find_last_of("_");
+    metaBase.name = nameStr.substr(0, lastSlash);
+    inoPtr = UpdateChildCache(data, inodeId, inoPtr);
+    inoPtr->refCount++;
+    InitInodeAttr(data, RECYCLE_LOCAL_ID, inoPtr.get(), metaBase, inodeId);
+    inoPtr->parent = UNKNOWN_INODE_ID;
     e->ino = static_cast<fuse_ino_t>(inodeId);
     FileOperationsHelper::GetInodeAttr(inoPtr, &e->attr);
     return 0;
