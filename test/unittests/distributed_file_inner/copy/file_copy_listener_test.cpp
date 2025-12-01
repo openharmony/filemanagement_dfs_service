@@ -363,6 +363,55 @@ HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_GetNotifyEvent4Mtp_000
     GTEST_LOG_(INFO) << "FileCopyLocalListener_GetNotifyEvent4Mtp_0002 End";
 }
 
+/**
+ * @tc.name: FileCopyLocalListener_SubDirAddListener_0001
+ * @tc.desc: Verify SubDirAddListener behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_SubDirAddListener_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_SubDirAddListener_0001 Start";
+    std::string srcPath = "/data/test.txt";
+    std::string testPath = "/data/test_file_listener.txt";
+    std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
+        GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
+    };
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, false, callback);
+    ASSERT_NE(listener, nullptr);
+    listener->SubDirAddListener(srcPath, testPath, IN_MODIFY | IN_CLOSE_WRITE);
+    remove(testPath.c_str());
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_SubDirAddListener_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyLocalListener_SubDirAddListener_0002
+ * @tc.desc: Verify SubDirAddListener behavior
+ * @tc.type: FUNC
+ * @tc.require: AR000H0E5H
+ */
+HWTEST_F(FileCopyLocalListenerTest, FileCopyLocalListener_SubDirAddListener_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_SubDirAddListener_0002 Start";
+    std::string srcPath = "/data/test.txt";
+    std::string testPath = "/data/test_file_listener.txt";
+    std::function<void(uint64_t, uint64_t)> callback = [](uint64_t current, uint64_t total) {
+        GTEST_LOG_(INFO) << "Progress: " << current << "/" << total;
+    };
+
+    std::ofstream out(testPath);
+    out << "init";
+    out.close();
+    std::ofstream out1(srcPath);
+    out1 << "test";
+    out1.close();
+
+    auto listener = FileCopyLocalListener::GetLocalListener(testPath, false, callback);
+    ASSERT_NE(listener, nullptr);
+    listener->SubDirAddListener(srcPath, testPath, IN_MODIFY | IN_CLOSE_WRITE);
+    remove(testPath.c_str());
+    GTEST_LOG_(INFO) << "FileCopyLocalListener_SubDirAddListener_0002 End";
+}
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage

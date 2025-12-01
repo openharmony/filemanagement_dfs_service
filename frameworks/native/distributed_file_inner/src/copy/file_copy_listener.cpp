@@ -138,6 +138,20 @@ void FileCopyLocalListener::AddFile(const std::string &fileName)
     filePaths_.insert(fileName);
 }
 
+void FileCopyLocalListener::SubDirAddListener(const std::string &srcPath, const std::string &destPath, uint32_t mode)
+{
+    LOGI("SubDir add listener");
+    std::lock_guard<std::mutex> lock(wdsMutex_);
+    int newWd = inotify_add_watch(notifyFd_, destPath.c_str(), mode);
+    if (newWd < 0) {
+        LOGE("newWd is invalid, newWd = %{public}d, errno = %{public}d", newWd, errno);
+        return;
+    }
+    std::shared_ptr<ReceiveInfo> receiveInfo = std::make_shared<ReceiveInfo>();
+    receiveInfo->path = destPath;
+    wds_.insert(std::make_pair(newWd, receiveInfo));
+}
+
 int32_t FileCopyLocalListener::AddListenerFile(const std::string &srcPath, const std::string &destPath, uint32_t mode)
 {
     LOGI("AddListenerFile start");
