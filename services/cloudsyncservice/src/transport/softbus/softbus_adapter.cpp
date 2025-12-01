@@ -120,9 +120,7 @@ void SoftbusAdapter::OnBind(int socket, PeerSocketInfo info)
     listener->OnSessionOpened(socket, 0);
     SoftbusAdapter::GetInstance().AcceptSesion(socket, sessionName, networkId);
 }
-#endif
 
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 void SoftbusAdapter::OnShutdown(int32_t socket, ShutdownReason reason)
 {
     LOGD("Session OnShutdown, sessionId:%{public}d, reason:%{public}d", socket, reason);
@@ -141,7 +139,6 @@ void SoftbusAdapter::OnShutdown(int32_t socket, ShutdownReason reason)
     listener->OnSessionClosed(socket);
     SoftbusAdapter::GetInstance().RemoveSesion(socket);
 }
-#endif
 
 void SoftbusAdapter::OnBytes(int socket, const void *data, unsigned int dataLen)
 {
@@ -166,6 +163,7 @@ void SoftbusAdapter::OnBytes(int socket, const void *data, unsigned int dataLen)
 
     listener->OnDataReceived(peerDeviceId, socket, data, dataLen);
 }
+#endif
 
 int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
                                          const char *firstFile,
