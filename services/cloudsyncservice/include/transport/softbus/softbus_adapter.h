@@ -23,8 +23,10 @@
 #include <vector>
 
 #include "nocopyable.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "session.h"
 #include "socket.h"
+#endif
 
 #include "i_softbus_listener.h"
 
@@ -36,17 +38,21 @@ public:
     int32_t CreateSessionServer(const char *packageName, const char *sessionName);
     int32_t RemoveSessionServer(const char *packageName, const char *sessionName);
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     int OpenSession(char *sessionName,
                     char *peerDeviceId,
                     char *groupId,
                     TransDataType dataType);
+#endif
 
     int OpenSessionByP2P(char *sessionName, char *peerDeviceId, char *groupId, bool isFileType);
     void CloseSession(int sessionId);
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     static void OnBind(int socket, PeerSocketInfo info);
     static void OnShutdown(int32_t socket, ShutdownReason reason);
     static void OnFile(int32_t socket, FileEvent *event);
+#endif
     static void OnBytes(int sessionId, const void *data, unsigned int dataLen);
     static int OnReceiveFileProcess(int sessionId, const char *firstFile, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnReceiveFileFinished(int sessionId, const char *files, int fileCnt);

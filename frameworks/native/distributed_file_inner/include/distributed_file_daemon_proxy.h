@@ -21,7 +21,9 @@
 #include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "dm_device_info.h"
+#endif
 #include "ipc/i_daemon.h"
 #include "iremote_proxy.h"
 #include "remote_file_share.h"
@@ -37,8 +39,8 @@ public:
     static sptr<IDaemon> GetInstance();
     static void InvaildInstance();
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t ConnectDfs(const std::string &networkId) override;
+    int32_t DisconnectDfs(const std::string &networkId) override;
     int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t PrepareSession(const std::string &srcUri,

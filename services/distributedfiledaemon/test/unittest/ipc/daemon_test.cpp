@@ -740,24 +740,24 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: DaemonTest_OpenP2PConnection_001
- * @tc.desc: verify OpenP2PConnection.
+ * @tc.name: DaemonTest_ConnectDfs_001
+ * @tc.desc: verify ConnectDfs.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
+    GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 begin";
     ASSERT_NE(daemon_, nullptr);
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    std::string networkId;
     ConnectCount::GetInstance().RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), E_OK);
-    GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 end";
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_OK);
+    GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 end";
 }
 
 /**

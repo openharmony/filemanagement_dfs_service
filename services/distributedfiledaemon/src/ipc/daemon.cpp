@@ -204,12 +204,22 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
     }
 }
 
-int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t Daemon::ConnectDfs(const std::string &networkId)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
-    string networkId = string(deviceInfo.networkId);
-    LOGI("OpenP2PConnection networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
+    if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::ConnectDfs networkId length is invalid.");
+        return E_INVAL_ARG_NAPI;
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
+    if (res != 0) {
+        LOGI("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
+        return E_INVAL_ARG_NAPI;
+    }
+
+    LOGI("ConnectDfs networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
          Utils::GetAnonyNumber(callingTokenId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
@@ -217,28 +227,27 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     sptr<IFileDfsListener> listener = nullptr;
     int32_t ret = ConnectionCount(deviceInfo);
     if (ret == E_OK) {
-        LOGI("OpenP2PConnection Success %{public}s", Utils::GetAnonyString(networkId).c_str());
+        LOGI("ConnectDfs Success %{public}s", Utils::GetAnonyString(networkId).c_str());
         ConnectCount::GetInstance().AddConnect(callingTokenId, networkId, listener);
     } else {
         if (ret == ERR_CHECKOUT_COUNT) {
             ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
         }
-        LOGE("OpenP2PConnection failed %{public}s", Utils::GetAnonyString(networkId).c_str());
+        LOGE("ConnectDfs failed %{public}s", Utils::GetAnonyString(networkId).c_str());
         CleanUp(networkId);
     }
     return ret;
 }
 
-int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t Daemon::DisconnectDfs(const std::string &networkId)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    string networkId = string(deviceInfo.networkId);
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
-    LOGI("CloseP2PConnection networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
+    LOGI("DisconnectDfs networkId %{public}.6s, callingTokenId %{public}s", networkId.c_str(),
          Utils::GetAnonyNumber(callingTokenId).c_str());
     ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
     CleanUp(networkId);
-    LOGI("Close P2P Connection Success networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
+    LOGI("DisconnectDfs Success networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
     return 0;
 }
 
@@ -272,7 +281,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     } else {
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
                      RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
-        LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
+        LOGE("ConnectDfs failed, ret = %{public}d", ret);
     }
     return ret;
 }

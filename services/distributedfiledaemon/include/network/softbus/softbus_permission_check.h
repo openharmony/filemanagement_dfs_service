@@ -18,7 +18,9 @@
 
 #include <string>
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "transport/trans_type.h"
+#endif
 
 namespace OHOS {
 namespace Storage {
@@ -37,9 +39,11 @@ public:
     static bool CheckSinkPermission(const AccountInfo &callerAccountInfo);
     static bool GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId = INVALID_USER_ID);
     static int32_t GetCurrentUserId();
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     static bool TransCallerInfo(SocketAccessInfo *callerInfo,
         AccountInfo &callerAccountInfo, const std::string &networkId);
     static bool FillLocalInfo(SocketAccessInfo *localInfo);
+#endif
     static bool SetAccessInfoToSocket(const int32_t sessionId, int32_t userId = INVALID_USER_ID);
     static bool IsSameAccount(const std::string &networkId);
 private:
