@@ -48,7 +48,7 @@ private:
     RadarStatisticInfo opStatistics_;
     std::thread callRadarStatisticReportThread_;
     std::mutex onRadarReportLock_;
-
+    std::mutex onStatisticsLock_;
     RadarReportAdapter() = default;
     ~RadarReportAdapter() = default;
 };

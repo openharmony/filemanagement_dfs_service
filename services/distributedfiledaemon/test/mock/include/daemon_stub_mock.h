@@ -23,8 +23,8 @@ namespace Storage {
 namespace DistributedFile {
 class MockDaemonStub : public DaemonStub {
 public:
-    MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
-    MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD1(ConnectDfs, int32_t(const std::string &networkId));
+    MOCK_METHOD1(DisconnectDfs, int32_t(const std::string &networkId));
     MOCK_METHOD2(OpenP2PConnectionEx, int32_t(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj));
     MOCK_METHOD1(CloseP2PConnectionEx, int32_t(const std::string &networkId));
     MOCK_METHOD4(RequestSendFile,
@@ -70,4 +70,4 @@ public:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // FILEMANAGEMENT_DFS_SERVICE_DAEMON_STUB_MOCK_H
+#endif // FILEMANAGEMENT_DFS_SERVICE_DAEMON_STUB_MOCK_H

@@ -39,6 +39,7 @@ SoftbusAdapter &SoftbusAdapter::GetInstance()
 
 int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char *sessionName)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     SocketInfo info = {
         .name = const_cast<char*>(sessionName),
         .pkgName = const_cast<char*>(packageName),
@@ -78,6 +79,9 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
     }
     LOGD("Succeed to CreateSessionServer, sessionName:%{public}s", sessionName);
     return E_OK;
+#else
+    return 0;
+#endif
 }
 
 int32_t SoftbusAdapter::RemoveSessionServer(const char *packageName, const char *sessionName)
@@ -90,11 +94,14 @@ int32_t SoftbusAdapter::RemoveSessionServer(const char *packageName, const char 
         return ERR_BAD_VALUE;
     }
     SoftbusAdapter::GetInstance().RemoveSesion(socket);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     ::Shutdown(socket);
+#endif
     LOGD("Succeed to RemoveSessionServer, sessionName:%{public}s", sessionName);
     return E_OK;
 }
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 void SoftbusAdapter::OnBind(int socket, PeerSocketInfo info)
 {
     string sessionName = info.name;
@@ -156,6 +163,7 @@ void SoftbusAdapter::OnBytes(int socket, const void *data, unsigned int dataLen)
 
     listener->OnDataReceived(peerDeviceId, socket, data, dataLen);
 }
+#endif
 
 int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
                                          const char *firstFile,
@@ -199,13 +207,16 @@ const char* SoftbusAdapter::GetRecvPath()
     return path;
 }
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 void SoftbusAdapter::OnFile(int32_t socket, FileEvent *event)
 {
     if (event->type == FILE_EVENT_RECV_UPDATE_PATH) {
         event->UpdateRecvPath = GetRecvPath;
     }
 }
+#endif
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 int SoftbusAdapter::OpenSession(char *sessionName,
                                 char *peerDeviceId,
                                 char *groupId,
@@ -249,12 +260,14 @@ int SoftbusAdapter::OpenSession(char *sessionName,
     }
     return socket;
 }
+#endif
 
 int SoftbusAdapter::OpenSessionByP2P(char *sessionName,
                                      char *peerDeviceId,
                                      char *groupId,
                                      bool isFileType)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     TransDataType dataType;
     if (isFileType) {
         dataType = DATA_TYPE_FILE;
@@ -262,16 +275,25 @@ int SoftbusAdapter::OpenSessionByP2P(char *sessionName,
         dataType = DATA_TYPE_BYTES;
     }
     return OpenSession(sessionName, peerDeviceId, groupId, dataType);
+#else
+    return 0;
+#endif
 }
 
 void SoftbusAdapter::CloseSession(int sessionId)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     ::CloseSession(sessionId);
+#endif
 }
 
 int SoftbusAdapter::SendBytes(int sessionId, const void *data, unsigned int dataLen)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     return ::SendBytes(sessionId, data, dataLen);
+#else
+    return 0;
+#endif
 }
 
 int SoftbusAdapter::SendFile(int sessionId,
@@ -289,7 +311,11 @@ int SoftbusAdapter::SendFile(int sessionId,
         destFileList.push_back(file.data());
     }
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     return ::SendFile(sessionId, sourceFileList.data(), destFileList.data(), sourceFileList.size());
+#else
+    return 0;
+#endif
 }
 
 /* should use this interface when session closed */

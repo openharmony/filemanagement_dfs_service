@@ -134,7 +134,6 @@ ohos_unittest("cloud_sync_service_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
-    "dsoftbus:softbus_client",
     "e2fsprogs:libext2_blkid",
     "e2fsprogs:libext2_uuid",
     "eventhandler:libeventhandler",
@@ -176,6 +175,10 @@ ohos_unittest("cloud_sync_service_test") {
   if (cloudsync_service_power) {
     external_deps += [ "battery_manager:batterysrv_client" ]
     defines += [ "SUPPORT_POWER" ]
+  }
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
   use_exceptions = true
 }

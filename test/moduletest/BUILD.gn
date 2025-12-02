@@ -54,10 +54,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -72,4 +69,12 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "storage_service:storage_manager_sa_proxy",
     "zlib:shared_libz",
   ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "dataclassification:data_transit_mgr",
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }

@@ -34,10 +34,10 @@ const int32_t DATA_UID = 3012;
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
-        &DaemonStub::HandleOpenP2PConnection;
+        &DaemonStub::HandleConnectDfs;
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION)] =
-        &DaemonStub::HandleCloseP2PConnection;
+        &DaemonStub::HandleDisconnectDfs;
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX)] =
         &DaemonStub::HandleOpenP2PConnectionEx;
@@ -121,69 +121,41 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     return (this->*memberFunc)(data, reply);
 }
 
-int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
+int32_t DaemonStub::HandleConnectDfs(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin OpenP2PConnection");
+    LOGI("Begin ConnectDfs");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source device id failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
     }
-    ret = strcpy_s(deviceInfo.deviceName, DM_MAX_DEVICE_NAME_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source device name failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
-    }
-    ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
-    }
-    deviceInfo.deviceTypeId = data.ReadUint16();
-    deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
-    deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
 
-    int32_t res = OpenP2PConnection(deviceInfo);
+    int32_t res = ConnectDfs(networkId);
     reply.WriteInt32(res);
-    LOGI("End OpenP2PConnection, res = %{public}d", res);
+    LOGI("End ConnectDfs, res = %{public}d", res);
     return res;
 }
 
-int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply)
+int32_t DaemonStub::HandleDisconnectDfs(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin CloseP2PConnection");
+    LOGI("Begin DisconnectDfs");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("DATASYNC permission denied");
         return E_PERMISSION_DENIED;
     }
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source device id failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
     }
-    ret = strcpy_s(deviceInfo.deviceName, DM_MAX_DEVICE_NAME_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source device name failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
-    }
-    ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
-    if (ret != 0) {
-        LOGE("strcpy for source network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
-        return -1;
-    }
-    deviceInfo.deviceTypeId = data.ReadUint16();
-    deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
-    deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
 
-    int32_t res = CloseP2PConnection(deviceInfo);
+    int32_t res = DisconnectDfs(networkId);
     reply.WriteInt32(res);
-    LOGI("End CloseP2PConnection");
+    LOGI("End DisconnectDfs");
     return res;
 }
 

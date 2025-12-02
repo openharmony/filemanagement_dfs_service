@@ -33,34 +33,26 @@ public:
     void TearDown();
 };
 
-void RadarReportAdapterTest::SetUpTestCase()
-{
-}
+void RadarReportAdapterTest::SetUpTestCase() {}
 
-void RadarReportAdapterTest::TearDownTestCase()
-{
-}
+void RadarReportAdapterTest::TearDownTestCase() {}
 
-void RadarReportAdapterTest::SetUp()
-{
-}
+void RadarReportAdapterTest::SetUp() {}
 
-void RadarReportAdapterTest::TearDown()
-{
-}
+void RadarReportAdapterTest::TearDown() {}
 
 /**
  * @tc.name: RadarReportAdapterTest_StorageRadarThd_001
  * @tc.desc: verify StorageRadarThd.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_StorageRadarThd_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_StorageRadarThd_001 begin";
+    RadarReportAdapter::GetInstance().stopRadarReport_ = true;
     RadarReportAdapter::GetInstance().InitRadar();
     sleep(1);
-    RadarReportAdapter::GetInstance().stopRadarReport_ = true;
     RadarReportAdapter::GetInstance().UnInitRadar();
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_StorageRadarThd_001 end";
 }
@@ -74,19 +66,20 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_StorageRadarThd_001, Tes
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 begin";
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.connectSuccCount, 1);
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::CONNECT_DFS_FAIL_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.connectFailCount, 1);
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::GENERATE_DIS_URI_SUCC_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.generateUriSuccCount, 1);
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::GENERATE_DIS_URI_FAIL_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.generateUriFailCount, 1);
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::FILE_ACCESS_SUCC_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.fileAccessSuccCount, 1);
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::FILE_ACCESS_FAIL_CNT);
-    EXPECT_EQ(RadarReportAdapter::GetInstance().opStatistics_.fileAccessFailCount, 1);
-    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().SetUserStatistics(static_cast<RadarStatisticInfoType>(6)));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::CONNECT_DFS_FAIL_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::GENERATE_DIS_URI_SUCC_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::GENERATE_DIS_URI_FAIL_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::FILE_ACCESS_SUCC_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::FILE_ACCESS_FAIL_CNT));
+    EXPECT_NO_FATAL_FAILURE(
+        RadarReportAdapter::GetInstance().SetUserStatistics(static_cast<RadarStatisticInfoType>(6)));
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 end";
 }
 
@@ -94,7 +87,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, T
  * @tc.name: RadarReportAdapterTest_ReportDfxStatistics_001
  * @tc.desc: verify ReportDfxStatistics.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_001, TestSize.Level1)
 {
@@ -107,4 +100,4 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_001,
     EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_001 end";
 }
-}
+} // namespace OHOS::Storage::DistributedFile

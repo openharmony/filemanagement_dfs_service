@@ -42,9 +42,9 @@ ohos_shared_library("libdistributedfiledaemon") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/remote_file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "src/all_connect/all_connect_manager.cpp",
     "src/channel_manager/channel_manager.cpp",
@@ -105,10 +105,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "hilog:libhilog",
@@ -133,6 +130,16 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "dataclassification:data_transit_mgr",
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   if (support_device_profile) {
@@ -182,19 +189,12 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
   }
 
   sources = [
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_adapter_sa_client.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_dfs_listener_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_mount_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
@@ -205,11 +205,7 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "LOG_DOMAIN=0xD004315",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
-  configs = [ ":private_config" ]
-
-  public_configs = [ ":public_config" ]
-
-  cflags = [ "-D_FORTIFY_SOURCE=2" ]
+  public_external_deps = []
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
@@ -220,15 +216,33 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
     "data_share:datashare_consumer",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "ipc:ipc_single",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
-  public_external_deps = [ "device_manager:devicemanagersdk" ]
 
+  if (dfs_service_feature_enable_distributed_ability) {
+    sources += [
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_adapter_sa_client.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
+      "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    ]
+    external_deps += [
+      "safwk:system_ability_fwk",
+      "storage_service:storage_manager_sa_proxy",
+      "samgr:samgr_proxy",
+      "dsoftbus:softbus_client",
+    ]
+    public_external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
+  configs = [ ":private_config" ]
+  public_configs = [ ":public_config" ]
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

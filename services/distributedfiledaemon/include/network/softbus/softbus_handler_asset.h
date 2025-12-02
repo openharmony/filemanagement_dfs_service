@@ -82,6 +82,7 @@ private:
     int32_t MkDir(const std::string &path, mode_t mode);
     void ExtractFileInner(unzFile unZipFile, const std::string &filenameWithPath);
     int32_t CompressFileInner(const std::string &rootFile, zipFile outputFile);
+    int32_t AssetBindCheck(const std::string &dstNetworkId, int32_t userId);
 
     bool IsDir(const std::string &path);
     std::string ExtractFile(unzFile unZipFile, const std::string &dir);

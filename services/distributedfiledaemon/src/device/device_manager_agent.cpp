@@ -440,7 +440,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
 
 int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
 {
-    LOGI("UMountDfsDocs start in OpenP2PConnection, networkId: %{public}s, deviceId: %{public}s",
+    LOGI("UMountDfsDocs start in ConnectDfs, networkId: %{public}s, deviceId: %{public}s",
         Utils::GetAnonyString(networkId).c_str(), Utils::GetAnonyString(deviceId).c_str());
     if (networkId.empty() || deviceId.empty()) {
         LOGE("NetworkId or DeviceId is empty");

@@ -757,6 +757,22 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_ExtractFile_0200, Test
     }
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_ExtractFile_0200 end";
 }
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_CompressFileInner_0100
+ * @tc.desc: Verify the CompressFileInner function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_CompressFileInner_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_CompressFileInner_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    zipFile outputFile = nullptr;
+    auto ret = softBusHandlerAsset.CompressFileInner("", outputFile);
+    EXPECT_EQ(ret, E_ZIP);
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_CompressFileInner_0100 end";
+}
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage

@@ -149,7 +149,7 @@ void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(ASSET_LOCAL_SESSION_NAME);
 }
 
-int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId)
+int32_t SoftBusHandlerAsset::AssetBindCheck(const std::string &dstNetworkId, int32_t userId)
 {
     if (!SoftBusPermissionCheck::CheckSrcPermission(dstNetworkId, userId)) {
         LOGI("Check src permission failed");
@@ -158,6 +158,15 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     if (dstNetworkId.empty()) {
         LOGI("The parameter is empty");
         return E_OPEN_SESSION;
+    }
+    return E_OK;
+}
+
+int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId)
+{
+    int32_t res = AssetBindCheck(dstNetworkId, userId);
+    if (res != E_OK) {
+        return res;
     }
     LOGI("AssetBind Enter.");
     if (!SoftBusPermissionCheck::IsSameAccount(dstNetworkId)) {

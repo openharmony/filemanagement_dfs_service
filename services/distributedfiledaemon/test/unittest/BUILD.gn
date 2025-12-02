@@ -54,8 +54,6 @@ ohos_unittest("device_info_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -63,6 +61,14 @@ ohos_unittest("device_info_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("device_manager_agent_sup_test") {
@@ -110,10 +116,7 @@ ohos_unittest("device_manager_agent_sup_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -133,6 +136,15 @@ ohos_unittest("device_manager_agent_sup_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -174,10 +186,7 @@ ohos_unittest("device_manager_agent_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -197,6 +206,15 @@ ohos_unittest("device_manager_agent_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -237,10 +255,7 @@ ohos_unittest("os_account_observer_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -259,6 +274,15 @@ ohos_unittest("os_account_observer_test") {
   defines = [ "private=public" ]
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -293,10 +317,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -316,6 +337,15 @@ ohos_unittest("devsl_dispatcher_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -357,10 +387,7 @@ ohos_unittest("kernel_talker_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -380,6 +407,15 @@ ohos_unittest("kernel_talker_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -414,10 +450,7 @@ ohos_unittest("session_pool_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -437,6 +470,15 @@ ohos_unittest("session_pool_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -481,10 +523,7 @@ ohos_unittest("softbus_agent_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -508,6 +547,15 @@ ohos_unittest("softbus_agent_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -550,10 +598,7 @@ ohos_unittest("softbus_agent_sup_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -577,6 +622,15 @@ ohos_unittest("softbus_agent_sup_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -615,9 +669,6 @@ ohos_unittest("softbus_file_receive_listener_test") {
   external_deps = [
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -629,6 +680,15 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -667,9 +727,6 @@ ohos_unittest("softbus_file_send_listener_test") {
   external_deps = [
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -681,6 +738,15 @@ ohos_unittest("softbus_file_send_listener_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -723,10 +789,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -746,6 +809,16 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -780,10 +853,7 @@ ohos_unittest("softbus_session_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "googletest:gmock_main",
@@ -803,6 +873,15 @@ ohos_unittest("softbus_session_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -848,9 +927,6 @@ ohos_unittest("softbus_handler_asset_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -866,6 +942,15 @@ ohos_unittest("softbus_handler_asset_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -911,9 +996,6 @@ ohos_unittest("softbus_handler_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -926,6 +1008,15 @@ ohos_unittest("softbus_handler_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -957,11 +1048,15 @@ ohos_unittest("softbus_session_pool_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
+  defines = []
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("softbus_session_listener_test") {
@@ -1003,9 +1098,6 @@ ohos_unittest("softbus_session_listener_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1015,6 +1107,15 @@ ohos_unittest("softbus_session_listener_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("softbus_asset_recv_listener_test") {
@@ -1054,8 +1155,6 @@ ohos_unittest("softbus_asset_recv_listener_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1064,6 +1163,14 @@ ohos_unittest("softbus_asset_recv_listener_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("softbus_asset_send_listener_test") {
@@ -1103,8 +1210,6 @@ ohos_unittest("softbus_asset_send_listener_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1113,6 +1218,14 @@ ohos_unittest("softbus_asset_send_listener_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("softbus_permission_check_test") {
@@ -1155,9 +1268,6 @@ ohos_unittest("softbus_permission_check_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1172,6 +1282,15 @@ ohos_unittest("softbus_permission_check_test") {
 
   if (support_same_account) {
     defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 }
 
@@ -1220,10 +1339,7 @@ ohos_unittest("system_notifier_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "cJSON:cjson_static",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
     "distributed_notification_service:ans_innerkits",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1236,6 +1352,15 @@ ohos_unittest("system_notifier_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("control_cmd_parser_test") {
@@ -1280,10 +1405,7 @@ ohos_unittest("control_cmd_parser_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "cJSON:cjson_static",
-    "dataclassification:data_transit_mgr",
-    "device_manager:devicemanagersdk",
     "distributed_notification_service:ans_innerkits",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1296,6 +1418,15 @@ ohos_unittest("control_cmd_parser_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 ohos_unittest("channel_manager_test") {
@@ -1349,9 +1480,7 @@ ohos_unittest("channel_manager_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
-    "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
-    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "file_api:securitylabel",
     "hilog:libhilog",
@@ -1370,33 +1499,42 @@ ohos_unittest("channel_manager_test") {
   ]
 
   defines = [ "private=public" ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "dataclassification:data_transit_mgr",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 }
 
 group("unittest") {
-  testonly = true
-  deps = [
-    ":device_info_test",
-    ":device_manager_agent_sup_test",
-    ":device_manager_agent_test",
-    ":devsl_dispatcher_test",
-    ":kernel_talker_test",
-    ":os_account_observer_test",
-    ":softbus_agent_sup_test",
-    ":session_pool_test",
-    ":softbus_agent_test",
-    ":softbus_asset_recv_listener_test",
-    ":softbus_asset_send_listener_test",
-    ":softbus_file_receive_listener_test",
-    ":softbus_file_send_listener_test",
-    ":softbus_handler_asset_test",
-    ":softbus_handler_test",
-    ":softbus_permission_check_test",
-    ":softbus_session_dispatcher_test",
-    ":softbus_session_listener_test",
-    ":softbus_session_pool_test",
-    ":softbus_session_test",
-    ":system_notifier_test",
-    ":control_cmd_parser_test",
-    ":channel_manager_test",
-  ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    testonly = true
+    deps = [
+      ":device_info_test",
+      ":device_manager_agent_sup_test",
+      ":device_manager_agent_test",
+      ":devsl_dispatcher_test",
+      ":kernel_talker_test",
+      ":os_account_observer_test",
+      ":softbus_agent_sup_test",
+      ":session_pool_test",
+      ":softbus_agent_test",
+      ":softbus_asset_recv_listener_test",
+      ":softbus_asset_send_listener_test",
+      ":softbus_file_receive_listener_test",
+      ":softbus_file_send_listener_test",
+      ":softbus_handler_asset_test",
+      ":softbus_handler_test",
+      ":softbus_permission_check_test",
+      ":softbus_session_dispatcher_test",
+      ":softbus_session_listener_test",
+      ":softbus_session_pool_test",
+      ":softbus_session_test",
+      ":system_notifier_test",
+      ":control_cmd_parser_test",
+      ":channel_manager_test",
+    ]
+  }
 }

@@ -185,6 +185,7 @@ int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
         DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return FileManagement::E_CONTEXT;
     }
+    HandleAfterOpenSession(socketId, info.GetCid());
     return E_OK;
 }
 
@@ -198,7 +199,6 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     if (res != E_OK) {
         return res;
     }
-    HandleAfterOpenSession(socketId, info.GetCid());
     return FileManagement::E_OK;
 }
 

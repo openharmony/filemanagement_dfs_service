@@ -28,6 +28,7 @@ constexpr unsigned int UPDATE_RADAR_STATISTIC_INTERVAL_SECONDS = 300;
 
 void RadarReportAdapter::InitRadar()
 {
+    std::unique_lock<std::mutex> lock(onStatisticsLock_);
     opStatistics_ = {0, 0, 0, 0, 0, 0};
     callRadarStatisticReportThread_ = std::thread([this]() { StorageRadarThd(); });
     if (!callRadarStatisticReportThread_.joinable()) {
@@ -48,19 +49,22 @@ void RadarReportAdapter::UnInitRadar()
 void RadarReportAdapter::StorageRadarThd()
 {
     while (!stopRadarReport_.load()) {
-        std::unique_lock<std::mutex> lock(onRadarReportLock_);
-        sleep(UPDATE_RADAR_STATISTIC_INTERVAL_SECONDS);
-        std::chrono::time_point<std::chrono::system_clock> nowTime = std::chrono::system_clock::now();
-        int64_t intervalMinutes =
-            std::chrono::duration_cast<std::chrono::minutes>(nowTime - lastRadarReportTime_).count();
-        if (intervalMinutes > RADAR_REPORT_STATISTIC_INTERVAL_MINUTES) {
-            ReportDfxStatistics();
+        {
+            std::unique_lock<std::mutex> lock(onRadarReportLock_);
+            std::chrono::time_point<std::chrono::system_clock> nowTime = std::chrono::system_clock::now();
+            int64_t intervalMinutes =
+                std::chrono::duration_cast<std::chrono::minutes>(nowTime - lastRadarReportTime_).count();
+            if (intervalMinutes > RADAR_REPORT_STATISTIC_INTERVAL_MINUTES) {
+                ReportDfxStatistics();
+            }
         }
+        sleep(UPDATE_RADAR_STATISTIC_INTERVAL_SECONDS);
     }
 }
 
 void RadarReportAdapter::SetUserStatistics(const RadarStatisticInfoType type)
 {
+    std::unique_lock<std::mutex> lock(onStatisticsLock_);
     switch (type) {
         case RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT:
             opStatistics_.connectSuccCount++;

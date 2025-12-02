@@ -83,7 +83,7 @@ struct RadarParameter {
     int32_t userId = DEFAULT_VAL;
     std::string funcName;
     enum ReportLevel faultLevel = ReportLevel::DEFAULT;
-    enum BizScene bizScene = BizScene::DEFAULT; 
+    enum BizScene bizScene = BizScene::DEFAULT;
     enum DfxBizStage bizStage = DfxBizStage::DEFAULT;
     std::string toCallPkg;
     enum LinkStatus linkStatus = LinkStatus::DISCONNECTED;
@@ -116,15 +116,13 @@ struct RadarStatisticInfo {
     uint32_t generateUriFailCount;
     uint32_t fileAccessSuccCount;
     uint32_t fileAccessFailCount;
-    bool empty() const {
-        return connectSuccCount == 0 &&
-               connectFailCount == 0 &&
-               generateUriSuccCount == 0 &&
-               generateUriFailCount == 0 &&
-               fileAccessSuccCount == 0 &&
-               fileAccessFailCount == 0;
+    bool empty() const
+    {
+        return connectSuccCount == 0 && connectFailCount == 0 && generateUriSuccCount == 0 &&
+               generateUriFailCount == 0 && fileAccessSuccCount == 0 && fileAccessFailCount == 0;
     }
-    void clear() {
+    void clear()
+    {
         connectSuccCount = 0;
         connectFailCount = 0;
         generateUriSuccCount = 0;

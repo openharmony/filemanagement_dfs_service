@@ -36,8 +36,8 @@ public:
 };
 
 namespace OHOS::Storage::DistributedFile {
-int32_t
-    GetNodeKeyInfo(const char *pkgName, const char *networkId, NodeDeviceInfoKey key, uint8_t *info, int32_t infoLen)
+int32_t GetNodeKeyInfo(const char *pkgName, const char *networkId, NodeDeviceInfoKey key,
+                       uint8_t *info, int32_t infoLen)
 {
     GTEST_LOG_(INFO) << "GetNodeKeyInfo start";
     return ISoftBusServer::dfsSoftBusServer->GetNodeKeyInfo(pkgName, networkId, key, info, infoLen);
@@ -79,6 +79,10 @@ void DfsRadarTest::SetUpTestCase()
 
 void DfsRadarTest::TearDownTestCase()
 {
+    Storage::DistributedFile::DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    ISoftBusServer::dfsSoftBusServer = nullptr;
+    softBusServerMock_ = nullptr;
     DfsDeviceOtherMethodMock::otherMethod = nullptr;
     otherMethodMock_ = nullptr;
 }
@@ -129,7 +133,7 @@ HWTEST_F(DfsRadarTest, DfsRadarTest_RecordFunctionResult_001, TestSize.Level1)
         .errorInfo = "errorInfo"
     };
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(Return(INVALID_USER_ID));
+        .WillRepeatedly(Return(INVALID_USER_ID));
     bool res = DfsRadar::GetInstance().RecordFunctionResult(param);
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "DfsRadarTest_RecordFunctionResult_001 End";
@@ -216,17 +220,17 @@ HWTEST_F(DfsRadarTest, DfsRadarTest_GetLocalNetIdAndUdid_001, TestSize.Level1)
         .resultCode = 0,
         .errorInfo = "errorInfo"
     };
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(Return(-1));
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
 
     EXPECT_CALL(*deviceManagerImplMock_,
-                GetLocalDeviceNetWorkId(_, _)).WillOnce(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillOnce(Return(0));
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
 
     EXPECT_CALL(*deviceManagerImplMock_,
-                GetLocalDeviceNetWorkId(_, _)).WillOnce(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillOnce(Return(0));
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
     GTEST_LOG_(INFO) << "DfsRadarTest_GetLocalNetIdAndUdid_001 End";
 }
@@ -257,10 +261,10 @@ HWTEST_F(DfsRadarTest, DfsRadarTest_GetPeerUdid_001, TestSize.Level1)
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, ""));
 
     std::string networkId = "networkId";
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, networkId));
 
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(-1));
     EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, networkId));
     GTEST_LOG_(INFO) << "DfsRadarTest_GetPeerUdid_001 End";
 }

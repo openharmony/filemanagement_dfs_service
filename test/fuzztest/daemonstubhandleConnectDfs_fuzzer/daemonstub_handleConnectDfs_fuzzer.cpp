@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "daemonstub_handleopenP2Pconnection_fuzzer.h"
+#include "daemonstub_handleConnectDfs_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -49,12 +49,12 @@ class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
     ~DaemonStubImpl() override {}
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t ConnectDfs(const std::string &networkId) override
     {
         return 0;
     }
 
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t DisconnectDfs(const std::string &networkId) override
     {
         return 0;
     }
@@ -174,9 +174,7 @@ public:
     }
 };
 
-void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                     const uint8_t *data,
-                                     size_t size)
+void HandleConnectDfsFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
     MessageParcel datas;
@@ -229,6 +227,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleConnectDfsFuzzTest(daemonStubPtr, data, size);
     return 0;
 }

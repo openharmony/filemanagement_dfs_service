@@ -109,7 +109,7 @@ bool RemoteFileCopyManager::IsFile(const std::string &path)
     struct stat buf {};
     int ret = stat(path.c_str(), &buf);
     if (ret == -1) {
-        LOGE("stat failed, errno is %{public}d, ", errno);
+        LOGE("stat failed, errno is %{public}d", errno);
         RadarParaInfo info = {"IsFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", "", ret, "Stat failed, errno=" + to_string(errno)};
         DfsRadar::GetInstance().ReportFileAccess(info);

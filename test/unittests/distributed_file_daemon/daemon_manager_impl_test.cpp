@@ -109,45 +109,47 @@ HWTEST_F(DistributedDaemonManagerImplTest, GetInstanceTest, TestSize.Level0)
 }
 
 /**
- * @tc.name: OpenP2PConnectionTest
- * @tc.desc: Verify the OpenP2PConnection function
+ * @tc.name: ConnectDfsTest
+ * @tc.desc: Verify the ConnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionTest, TestSize.Level0)
+HWTEST_F(DistributedDaemonManagerImplTest, ConnectDfsTest, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
+    std::string networkId = "ConnectDfsTest";
+    GTEST_LOG_(INFO) << "ConnectDfsTest Start";
     try {
         auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
-        auto res = distributedDaemonManagerImpl_->OpenP2PConnection(deviceInfo);
+        auto res = distributedDaemonManagerImpl_->ConnectDfs(networkId);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OpenP2PConnectionTest  ERROR";
+        GTEST_LOG_(INFO) << "ConnectDfsTest  ERROR";
     }
-    GTEST_LOG_(INFO) << "OpenP2PConnectionTest End";
+    GTEST_LOG_(INFO) << "ConnectDfsTest End";
 }
 
 /**
- * @tc.name: CloseP2PConnectionTest
- * @tc.desc: Verify the CloseP2PConnection function
+ * @tc.name: DisconnectDfsTest
+ * @tc.desc: Verify the DisconnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Level0)
+HWTEST_F(DistributedDaemonManagerImplTest, DisconnectDfsTest, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
+    std::string networkId = "DisconnectDfsTest";
+    GTEST_LOG_(INFO) << "DisconnectDfsTest Start";
     try {
         auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
-        auto res = distributedDaemonManagerImpl_->CloseP2PConnection(deviceInfo);
+        auto res = distributedDaemonManagerImpl_->DisconnectDfs(networkId);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "CloseP2PConnectionTest  ERROR";
+        GTEST_LOG_(INFO) << "DisconnectDfsTest  ERROR";
     }
-    GTEST_LOG_(INFO) << "CloseP2PConnectionTest End";
+    GTEST_LOG_(INFO) << "DisconnectDfsTest End";
 }
 
 /**
