@@ -754,7 +754,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
     EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI))
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_INVAL_ARG_NAPI));
     EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
 
