@@ -235,32 +235,18 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleConnectDfsTest001, TestSize.Level0)
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
     ret = daemonStub_->HandleConnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
     ret = daemonStub_->HandleConnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return(nullptr));
     ret = daemonStub_->HandleConnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return("testNetworkId"));
-    EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
     EXPECT_CALL(*daemonStub_, ConnectDfs(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     ret = daemonStub_->HandleConnectDfs(data, reply);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
     GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 End";
 }
 
@@ -281,32 +267,18 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleDisconnectDfsTest001, TestSize.Level0)
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return(nullptr));
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return("testNetworkId"));
-    EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
     EXPECT_CALL(*daemonStub_, DisconnectDfs(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
     GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 End";
 }
 

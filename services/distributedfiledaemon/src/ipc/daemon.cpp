@@ -215,7 +215,7 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
-        LOGI("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
+        LOGE("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         return E_INVAL_ARG_NAPI;
     }
 
