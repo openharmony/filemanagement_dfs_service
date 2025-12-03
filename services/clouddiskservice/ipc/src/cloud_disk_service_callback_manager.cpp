@@ -47,19 +47,23 @@ void CloudDiskServiceCallbackManager::AddCallback(const std::string &bundleName,
     auto remoteObject = callback->AsObject();
     auto deathCb = [this, bundleName](const wptr<IRemoteObject> &obj) {
         LOGE("client died");
-        unique_lock<mutex> lock(callbackMutex_);
+        unique_lock<mutex> lock(callbackMutex_, defer_lock);
         std::vector<uint32_t> syncFolderIndex;
+        lock.lock();
         auto it = callbackAppMap_.find(bundleName);
         if (it != callbackAppMap_.end()) {
             syncFolderIndex = it->second.syncFolderIndexs;
             callbackAppMap_.erase(it);
         }
+        lock.unlock();
         int32_t userId = CloudDiskServiceAccessToken::GetUserId();
         if (userId == 0) {
             CloudDiskServiceAccessToken::GetAccountId(userId);
         }
         for (auto item : syncFolderIndex) {
+            lock.lock();
             callbackIndexMap_.erase(item);
+            lock.unlock();
             CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(userId, item);
         }
     };
