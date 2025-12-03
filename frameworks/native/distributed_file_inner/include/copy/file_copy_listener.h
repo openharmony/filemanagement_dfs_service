@@ -56,6 +56,7 @@ public:
     void StopListener();
     void AddFile(const std::string &fileName);
     int32_t AddListenerFile(const std::string &srcPath, const std::string &destPath, uint32_t mode);
+    void SubDirAddListener(const std::string &srcPath, const std::string &destPath, uint32_t mode);
     std::set<std::string> GetFilePath()
     {
         std::lock_guard<std::mutex> lock(filePathsMutex_);
