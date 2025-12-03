@@ -125,26 +125,18 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_ConnectDfs_0100, 
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(false));
     ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
     ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(false));
     ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteUint16(_)).WillOnce(Return(false));
     ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0100 End";
@@ -165,26 +157,18 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_DisconnectDfs_010
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(false));
     ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
     ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(false));
     ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteUint16(_)).WillOnce(Return(false));
     ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0100 End";

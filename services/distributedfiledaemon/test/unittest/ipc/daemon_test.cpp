@@ -751,12 +751,23 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     std::string networkId;
     ConnectCount::GetInstance().RemoveAllConnect();
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->ConnectDfs(networkId), ERR_BAD_VALUE);
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_OK);
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
+
+    EXPECT_EQ(daemon_->ConnectDfs(""), E_INVAL_ARG_NAPI);
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(longNetworkId), E_INVAL_ARG_NAPI);
+
+    std::string invalidNetworkId(15, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(invalidNetworkId), E_INVAL_ARG_NAPI);
+
+    std::string validNetworkId(32, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(validNetworkId), E_INVAL_ARG_NAPI);
+
     GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 end";
 }
 
