@@ -67,7 +67,7 @@ bool IoMessageManager::CheckBundleName(const std::string &appBundleName)
 
 string IoMessageManager::GetIoDatetime()
 {
-    uint64_t currentTime = GetSecondsSince1970ToNow();
+    int64_t currentTime = GetSecondsSince1970ToNow();
 
     time_t time_t_seconds = static_cast<time_t>(currentTime);
     std::tm* localTime = std::localtime(&time_t_seconds);
