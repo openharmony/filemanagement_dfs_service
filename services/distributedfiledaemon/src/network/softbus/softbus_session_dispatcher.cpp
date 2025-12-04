@@ -17,6 +17,7 @@
 
 #include <sstream>
 
+#include "dfs_radar.h"
 #include "dm_device_info.h"
 #include "network/softbus/softbus_agent.h"
 #include "utils_log.h"
@@ -76,6 +77,9 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
         return agent->second;
     }
     LOGE("Get Session Agent fail, not exist! sessionId:%{public}d", sessionId);
+    RadarParaInfo info = {"GetAgent", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+        DEFAULT_PKGNAME, "", sessionId, "Get Session Agent fail"};
+    DfsRadar::GetInstance().ReportLinkConnection(info);
     return {};
 }
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
@@ -84,6 +88,9 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     if (!SoftBusPermissionCheck::IsSameAccount(info.networkId)) {
         LOGI("The source and sink device is not same account, not support.");
         Shutdown(sessionId);
+        RadarParaInfo radarInfo = {"OnSessionOpened", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, info.networkId, DEFAULT_ERR, "not same account"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return;
     }
     std::string peerSessionName(info.name);
@@ -97,6 +104,9 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
         spt->OnSessionOpened(sessionId, info);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
+        RadarParaInfo radarInfo = {"OnSessionOpened", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, peerDevId, sessionId, "session not exist"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return;
     }
 }

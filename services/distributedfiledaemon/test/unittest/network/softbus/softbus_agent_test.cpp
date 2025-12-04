@@ -20,6 +20,7 @@
 
 #include "device_manager_agent_mock.h"
 #include "device_manager_impl_mock.h"
+#include "dfs_error.h"
 #include "dm_constants.h"
 #include "softbus_error_code.h"
 
@@ -497,6 +498,27 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0100, TestSize.Level
     auto ret = agent->IsContinueRetry(cid);
     EXPECT_EQ(ret, true);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_OpenSession_0100
+ * @tc.desc: Verify the OpenSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenSession_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    DeviceInfo info;
+    info.SetCid("test");
+    uint8_t linkType = 0;
+    int32_t ret = agent->OpenSession(info, linkType);
+    EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenSession_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

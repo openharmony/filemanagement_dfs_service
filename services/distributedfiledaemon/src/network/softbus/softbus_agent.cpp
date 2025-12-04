@@ -20,6 +20,7 @@
 #include "device_manager.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "dfsu_exception.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
@@ -85,6 +86,9 @@ void SoftbusAgent::JoinDomain()
     int32_t socketId = Socket(serverInfo);
     if (socketId < 0) {
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
+        RadarParaInfo info = {"JoinDomain", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", "", socketId, "Create Socket fail"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return;
     }
     QosTV qos[] = {
@@ -99,6 +103,9 @@ void SoftbusAgent::JoinDomain()
         stringstream ss;
         ss << "Failed to CreateSessionServer, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
+        RadarParaInfo info = {"JoinDomain", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", "", ret, "Failed to CreateSessionServer"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         throw runtime_error(ss.str());
     }
     {
@@ -131,12 +138,8 @@ void SoftbusAgent::StopTopHalf()
 
 void SoftbusAgent::StopBottomHalf() {}
 
-int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
+int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
 {
-    LOGI("Start to OpenSession, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    if (!SoftBusPermissionCheck::CheckSrcPermission(info.GetCid())) {
-        return FileManagement::E_PERMISSION_DENIED;
-    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -159,6 +162,9 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     int32_t socketId = Socket(clientInfo);
     if (socketId < FileManagement::E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
+        RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", info.GetCid(), socketId, "Create Socket error"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     if (FindSocketId(socketId)) {
@@ -173,13 +179,26 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
-        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
-            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-            RadarReporter::BIND_SOCKET_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::dSoftBus + to_string(ret));
         Shutdown(socketId);
+        RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", info.GetCid(), ret, "Bind SocketClient error"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     HandleAfterOpenSession(socketId, info.GetCid());
+    return E_OK;
+}
+
+int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
+{
+    LOGI("Start to OpenSession, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+    if (!SoftBusPermissionCheck::CheckSrcPermission(info.GetCid())) {
+        return FileManagement::E_PERMISSION_DENIED;
+    }
+    auto res = OpenSessionInner(info);
+    if (res != E_OK) {
+        return res;
+    }
     return FileManagement::E_OK;
 }
 

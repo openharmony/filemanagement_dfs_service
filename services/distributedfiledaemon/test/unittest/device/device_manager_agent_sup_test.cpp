@@ -164,7 +164,7 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
 HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_GetCurrentUserId_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetCurrentUserId_0100 start";
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     auto testPtr = DeviceManagerAgent::GetInstance();
     auto userId = testPtr->GetCurrentUserId();
     EXPECT_EQ(userId, INVALID_USER_ID);

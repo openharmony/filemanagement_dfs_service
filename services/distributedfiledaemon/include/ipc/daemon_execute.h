@@ -49,6 +49,7 @@ private:
                                 const sptr<IDaemon> &daemon,
                                 HmdfsInfo &info,
                                 const std::string &srcNetworkId);
+    int32_t HandleAssetBind(int32_t userId, const sptr<AssetObj> &assetObj, int32_t &socketId);
 private:
     std::string GetZipName(const std::string &relativePath);
     std::vector<std::string> GetFileList(const std::vector<std::string> &uris,

@@ -20,6 +20,7 @@
 
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "sandbox_helper.h"
@@ -86,6 +87,9 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
             RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
             RadarReporter::CREAT_VALID_PATH_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::appFileService);
         path_ = "";
+        RadarParaInfo info = {"SetRecvPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+            "AFS", "", DEFAULT_ERR, "invalid path fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return;
     }
     path_ = physicalPath;
@@ -148,6 +152,9 @@ void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t err
         RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
         RadarReporter::FILE_TRANS_ERROR, RadarReporter::PACKAGE_NAME,
         RadarReporter::dSoftBus + std::to_string(errorCode));
+    RadarParaInfo info = {"OnFileTransError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+        DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnFileTransError fail"};
+    DfsRadar::GetInstance().ReportFileAccess(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
@@ -172,6 +179,9 @@ void SoftBusFileReceiveListener::OnReceiveFileReport(int32_t sessionId, FileStat
 void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, ShutdownReason reason)
 {
     LOGI("OnReceiveFileShutdown, sessionId is %{public}d", sessionId);
+    RadarParaInfo info = {"OnReceiveFileShutdown", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+        DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnReceiveFileShutdown fail"};
+    DfsRadar::GetInstance().ReportFileAccess(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

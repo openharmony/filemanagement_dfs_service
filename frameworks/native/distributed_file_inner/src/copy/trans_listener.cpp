@@ -20,6 +20,7 @@
 #include <random>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "distributed_file_daemon_proxy.h"
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"
@@ -128,6 +129,9 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
             std::filesystem::copy_options::recursive | std::filesystem::copy_options::update_existing, errCode);
         if (errCode.value() != 0) {
             LOGE("Copy dir failed: errCode: %{public}d", errCode.value());
+            RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                "filesystem", "", errCode.value(), "Copy dir failed"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return EIO;
         }
     } else {
@@ -136,12 +140,18 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
         auto fileName = GetFileName(uri.GetPath());
         if (fileName.empty()) {
             LOGE("Get filename failed");
+            RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", EIO, "Get filename failed"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return EIO;
         }
         std::filesystem::copy(disSandboxPath_ + fileName, hmdfsInfo_.sandboxPath,
                               std::filesystem::copy_options::update_existing, errCode);
         if (errCode.value() != 0) {
             LOGE("Copy file failed: errCode: %{public}d", errCode.value());
+            RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                "filesystem", "", errCode.value(), "Copy file failed"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return EIO;
         }
     }

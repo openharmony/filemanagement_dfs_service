@@ -18,6 +18,7 @@
 #include <cinttypes>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "trans_mananger.h"
@@ -26,6 +27,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
+
 void SoftBusFileSendListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -78,6 +81,9 @@ void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
 void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
 {
     LOGE("OnFileTransError");
+    RadarParaInfo info = {"OnFileTransError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+        DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnFileTransError fail"};
+    DfsRadar::GetInstance().ReportFileAccess(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

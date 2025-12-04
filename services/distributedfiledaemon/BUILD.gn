@@ -27,15 +27,25 @@ ohos_shared_library("libdistributedfiledaemon") {
     "include",
     "include/network/softbus",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/utils/dfx/include",
   ]
 
   cflags = [ "-D_FORTIFY_SOURCE=2" ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/remote_file_copy_manager.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "src/all_connect/all_connect_manager.cpp",
     "src/channel_manager/channel_manager.cpp",
     "src/channel_manager/control_cmd_parser.cpp",
@@ -44,6 +54,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
     "src/device/device_profile_adapter.cpp",
+    "src/dfx/radar_report.cpp",
     "src/ipc/asset_callback_manager.cpp",
     "src/ipc/asset_recv_callback_proxy.cpp",
     "src/ipc/asset_send_callback_proxy.cpp",
@@ -77,11 +88,11 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
 
   deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = [
+    "app_file_service:fileuri_native",
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:abilitykit_native",
@@ -160,6 +171,7 @@ config("public_config") {
 config("private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/utils/dfx/include",
     "${distributedfile_path}/utils/log/include",
     "${services_path}/distributedfiledaemon/include",
   ]
@@ -194,6 +206,8 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
   public_external_deps = []
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",

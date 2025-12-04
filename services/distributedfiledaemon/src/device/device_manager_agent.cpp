@@ -24,6 +24,7 @@
 #include "device_auth.h"
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
 #include "ipc_skeleton.h"
@@ -54,6 +55,7 @@ constexpr const char *MOUNT_PATH = "/storage/hmdfs/";
 constexpr int32_t VALID_MOUNT_PATH_LEN = 16;
 } // namespace
 using namespace std;
+using namespace OHOS::FileManagement;
 MountCountInfo::MountCountInfo(std::string networkId, uint32_t callingTokenId)
 {
     networkId_ = networkId;
@@ -291,11 +293,17 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
+        RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "network is null"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return P2P_FAILED;
     }
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
         LOGE("cid %{public}s network type is null!",  Utils::GetAnonyString(info.cid_).c_str());
+        RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "network type is null"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return P2P_FAILED;
     }
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const std::string>>(
@@ -304,6 +312,9 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         it->second->Recv(move(cmd));
     } else {
         LOGE("OnDeviceP2POffline it->second is nullptr");
+        RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "OnDeviceP2POffline is null"};
+        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
         return P2P_FAILED;
     }
     cidNetTypeRecord_.erase(info.cid_);
@@ -360,7 +371,9 @@ int32_t DeviceManagerAgent::GetCurrentUserId()
     std::vector<int32_t> userIds{};
     auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
     if (ret != NO_ERROR || userIds.empty()) {
-        LOGE("query active os account id failed, ret = %{public}d", ret);
+        RadarParaInfo info = {"GetCurrentUserId", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "account", "", ret, "query active os account id fail"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return INVALID_USER_ID;
     }
     LOGI("DeviceManagerAgent::GetCurrentUserId end.");
@@ -413,6 +426,9 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
     ret = storageMgrProxy->MountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("MountDfsDocs fail, ret = %{public}d", ret);
+        RadarParaInfo info = {"MountDfsDocs", ReportLevel::INNER, DfxBizStage::MOUNT_DOCS,
+            "storage", networkId, ret, "MountDfsDocs fail"};
+        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
     } else {
         LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
              Utils::GetAnonyString(deviceId).c_str());
@@ -428,6 +444,9 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         Utils::GetAnonyString(networkId).c_str(), Utils::GetAnonyString(deviceId).c_str());
     if (networkId.empty() || deviceId.empty()) {
         LOGE("NetworkId or DeviceId is empty");
+        RadarParaInfo info = {"UMountDfsDocs", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, ERR_BAD_VALUE, "NetworkId or DeviceId is empty"};
+        DfsRadar::GetInstance().ReportGenerateDisUri(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = NO_ERROR;
@@ -438,16 +457,25 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     int32_t userId = currentUserId_;
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
+        RadarParaInfo info = {"UMountDfsDocs", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, ERR_BAD_VALUE, "GetCurrentUserId Fail"};
+        DfsRadar::GetInstance().ReportGenerateDisUri(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     auto storageMgrProxy = GetStorageManager();
     if (storageMgrProxy == nullptr) {
         LOGE("storageMgrProxy is null");
+        RadarParaInfo info = {"UMountDfsDocs", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, ERR_BAD_VALUE, "storageMgrProxy is null"};
+        DfsRadar::GetInstance().ReportGenerateDisUri(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     ret = storageMgrProxy->UMountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
+        RadarParaInfo info = {"UMountDfsDocs", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "storage", networkId, ret, "UMountDfsDocs fail"};
+        DfsRadar::GetInstance().ReportGenerateDisUri(info);
     } else {
         LOGI("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
@@ -617,6 +645,9 @@ int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDevic
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
+        RadarParaInfo info = {"IsSupportedDevice", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "devicemanager", deviceInfo.networkId, ERR_BAD_VALUE, "list size is invalid"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     DistributedHardware::DmDeviceInfo infoTemp;
@@ -637,16 +668,25 @@ int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDevic
     nlohmann::json entraDataJson = nlohmann::json::parse(infoTemp.extraData, nullptr, false);
     if (entraDataJson.is_discarded()) {
         LOGE("entraDataJson parse failed.");
+        RadarParaInfo info = {"IsSupportedDevice", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, ERR_BAD_VALUE, "entraDataJson parse failed."};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
         LOGE("error json int32_t param.");
+        RadarParaInfo info = {"IsSupportedDevice", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, ERR_BAD_VALUE, "error json int32_t param"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
     if (osType != DEVICE_OS_TYPE_OH) {
         LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
             Utils::GetAnonyString(infoTemp.deviceId).c_str(), osType);
+        RadarParaInfo info = {"IsSupportedDevice", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, deviceInfo.networkId, ERR_BAD_VALUE, "type is not openharmony"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
