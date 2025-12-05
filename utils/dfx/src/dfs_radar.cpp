@@ -14,14 +14,17 @@
  */
 #include "dfs_radar.h"
 
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "device_manager.h"
+#include "softbus_bus_center.h"
+#endif
+
 #include "dfsu_access_token_helper.h"
 #include "dfs_error.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
-#include "softbus_bus_center.h"
 
 #include <iomanip>
 
@@ -36,6 +39,7 @@ const int32_t DEFAULT_SIZE = -1;
 
 void DfsRadar::ReportLinkConnection(const RadarParaInfo &info)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -54,10 +58,12 @@ void DfsRadar::ReportLinkConnection(const RadarParaInfo &info)
     GetLocalNetIdAndUdid(param);
     GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
+#endif
 }
 
 void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     string bundleName;
     DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     RadarParameter param = {
@@ -77,10 +83,12 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info)
     GetLocalNetIdAndUdid(param);
     GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
+#endif
 }
 
 void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -99,10 +107,12 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info)
     GetLocalNetIdAndUdid(param);
     GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
+#endif
 }
 
 void DfsRadar::ReportFileAccess(const RadarParaInfo &info)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -121,6 +131,7 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info)
     GetLocalNetIdAndUdid(param);
     GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
+#endif
 }
 
 bool DfsRadar::RecordFunctionResult(const RadarParameter &parRes)
@@ -162,6 +173,7 @@ bool DfsRadar::RecordFunctionResult(const RadarParameter &parRes)
 
 void DfsRadar::ReportStatistics(const RadarStatisticInfo radarInfo)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     int32_t res = HiSysEventWrite(
         DFS_SERVICE_DOMAIN,
         DFS_SERVICE_STATISTIC,
@@ -180,6 +192,7 @@ void DfsRadar::ReportStatistics(const RadarStatisticInfo radarInfo)
     if (res != E_OK) {
         LOGE("DfsRadar Error, res :%{public}d", res);
     }
+#endif
 }
 
 int32_t DfsRadar::GetCurrentUserId()
@@ -195,6 +208,7 @@ int32_t DfsRadar::GetCurrentUserId()
 
 void DfsRadar::GetLocalNetIdAndUdid(RadarParameter &parameterRes)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     std::string localNetworkId = "";
     std::string localUdid = "";
     if (DistributedHardware::DeviceManager::GetInstance()
@@ -212,10 +226,12 @@ void DfsRadar::GetLocalNetIdAndUdid(RadarParameter &parameterRes)
     localUdid = reinterpret_cast<char *>(udid);
     parameterRes.localNetId = GetAnonymStr(localNetworkId);
     parameterRes.localUdid = GetAnonymStr(localUdid);
+#endif
 }
 
 void DfsRadar::GetPeerUdid(RadarParameter &parameterRes, const std::string &networkId)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     if (networkId.empty()) {
         parameterRes.peerUdid = "";
         parameterRes.peerNetId = "";
@@ -231,6 +247,7 @@ void DfsRadar::GetPeerUdid(RadarParameter &parameterRes, const std::string &netw
     std::string peerUdid = reinterpret_cast<char *>(udid);
     parameterRes.peerNetId = GetAnonymStr(networkId);
     parameterRes.peerUdid = GetAnonymStr(peerUdid);
+#endif
 }
 
 std::string DfsRadar::GetAnonymStr(const std::string &value)

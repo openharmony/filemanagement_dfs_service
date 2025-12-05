@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
+using namespace OHOS::FileManagement;
 FileMountManager &FileMountManager::GetInstance()
 {
     static FileMountManager instance;
