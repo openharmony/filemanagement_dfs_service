@@ -406,8 +406,6 @@ ohos_unittest("dfs_radar_test") {
  
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -419,6 +417,13 @@ ohos_unittest("dfs_radar_test") {
   defines += [
     "LOG_DOMAIN=0xD004307",
   ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
   use_exceptions = true
 }
 

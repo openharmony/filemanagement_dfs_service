@@ -33,6 +33,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::Storage;
+using namespace OHOS::FileManagement;
 DistributedFileDaemonManagerImpl &DistributedFileDaemonManagerImpl::GetInstance()
 {
     static DistributedFileDaemonManagerImpl instance;
