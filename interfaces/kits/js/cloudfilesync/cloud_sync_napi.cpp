@@ -1167,6 +1167,7 @@ napi_value CloudSyncNapi::GetCoreFileSyncState(napi_env env, napi_callback_info 
     Uri fileUri(string(uri.get()));
     string scheme = fileUri.GetScheme();
     if (scheme != FILE_SCHEME) {
+        NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
 
