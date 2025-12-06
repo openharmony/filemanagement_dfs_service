@@ -16,11 +16,22 @@
 #ifndef SYSTEM_PARAMETERS_H
 #define SYSTEM_PARAMETERS_H
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <limits>
 #include <string>
 
 namespace OHOS {
 namespace system {
+class ParameterMock {
+public:
+    MOCK_METHOD2(GetBoolParameter, bool(const std::string &, bool));
+    MOCK_METHOD2(GetParameter, std::string(const std::string &, const std::string &));
+    MOCK_METHOD2(SetParameter, bool(const std::string &, const std::string &));
+
+    static inline std::shared_ptr<ParameterMock> proxy_ = nullptr;
+};
+
 /*
  * Returns true if the system parameter `key` has the value "1", "y", "yes", "on", or "true",
  * false for "0", "n", "no", "off", or "false", or `def` otherwise.

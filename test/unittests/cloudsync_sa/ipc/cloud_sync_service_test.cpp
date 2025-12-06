@@ -118,7 +118,7 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest001, TestSize.Level1)
         std::string bundleName = "";
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
 
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
         EXPECT_EQ(ret, E_OK);
@@ -183,6 +183,33 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 failed";
     }
     GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 end";
+}
+
+/**
+ * @tc.name: ChangeAppSwitchTest004
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string accountId = "";
+        bool status = true;
+        std::string bundleName = "";
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 end";
 }
 
 /**
@@ -884,7 +911,7 @@ HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest007, TestSize.Level1)
     GTEST_LOG_(INFO) << "LoadRemoteSATest007 start";
     try {
         std::string deviceId = "abcdefg1234567";
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_)).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
         servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
         EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))

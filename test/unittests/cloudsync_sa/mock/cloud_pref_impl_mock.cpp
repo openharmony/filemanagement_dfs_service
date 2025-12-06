@@ -14,8 +14,11 @@
  */
 
 #include "cloud_pref_impl.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "cloud_pref_impl_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -33,6 +36,9 @@ void CloudPrefImpl::SetString(const std::string& key, const std::string& value)
 
 void CloudPrefImpl::GetString(const std::string& key, std::string &value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->GetString(key, value);
+    }
 }
 
 void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
@@ -41,6 +47,9 @@ void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
 
 void CloudPrefImpl::GetLong(const std::string& key, int64_t &value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->GetLong(key, value);
+    }
 }
 
 void CloudPrefImpl::SetInt(const std::string& key, const int value)
@@ -49,6 +58,9 @@ void CloudPrefImpl::SetInt(const std::string& key, const int value)
 
 void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->GetInt(key, value);
+    }
 }
 
 void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
@@ -57,6 +69,9 @@ void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
 
 void CloudPrefImpl::GetBool(const std::string& key, bool& value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->GetBool(key, value);
+    }
 }
 
 void CloudPrefImpl::Clear()

@@ -29,16 +29,25 @@ namespace system {
  */
 bool GetBoolParameter(const std::string &key, bool def)
 {
+    if (ParameterMock::proxy_ != nullptr) {
+        return ParameterMock::proxy_->GetBoolParameter(key, def);
+    }
     return true;
 }
 
 std::string GetParameter(const std::string &key, const std::string &def)
 {
+    if (ParameterMock::proxy_ != nullptr) {
+        return ParameterMock::proxy_->GetParameter(key, def);
+    }
     return "";
 }
 
 bool SetParameter(const std::string& key, const std::string& value)
 {
+    if (ParameterMock::proxy_ != nullptr) {
+        return ParameterMock::proxy_->SetParameter(key, value);
+    }
     return true;
 }
 } // namespace system

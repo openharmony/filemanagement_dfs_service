@@ -17,6 +17,7 @@
 
 #include <bitset>
 #include <memory>
+#include <mutex>
 
 #include "data_sync_const.h"
 #include "i_cloud_download_callback.h"
@@ -105,6 +106,13 @@ public:
     virtual int32_t ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
     virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames, const int32_t &userId,
                                             std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList);
+
+    // periodic clean task
+    void PeriodicCleanLock();
+    void PeriodicCleanUnlock();
+
+private:
+    std::mutex periodicCleanMutex_;
 };
 } // namespace OHOS::FileManagement::CloudFile
 
