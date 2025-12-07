@@ -193,6 +193,11 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(SyncType type, SyncPromptState
     return;
 }
 
+CloudSyncCallbackAniImpl::~CloudSyncCallbackAniImpl()
+{
+    DeleteReference();
+}
+
 ani_status ChangeListenerAni::SetValueArray(ani_env *env, const std::list<Uri> listValue, ani_object &uris)
 {
     ani_class arrayCls = nullptr;

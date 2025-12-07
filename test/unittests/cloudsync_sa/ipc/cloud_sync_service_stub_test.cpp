@@ -337,9 +337,10 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnRegisterCallbackInnerTest, TestSize.L
 {
     GTEST_LOG_(INFO) << "HandleUnRegisterCallbackInner Start";
     try {
+        string callbackAddr = "";
         string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, UnRegisterCallbackInner(bundleName)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, UnRegisterCallbackInner(callbackAddr, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -373,9 +374,10 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
 {
     GTEST_LOG_(INFO) << "HandleRegisterCallbackInner Start";
     try {
+        string callbackAddr = "";
         string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, RegisterCallbackInner(_, bundleName)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, RegisterCallbackInner(_, callbackAddr, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

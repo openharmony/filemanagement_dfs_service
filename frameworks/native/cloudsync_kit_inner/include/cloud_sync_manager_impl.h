@@ -21,23 +21,23 @@
 #include "nocopyable.h"
 
 #include "cloud_optimize_callback_client.h"
+#include "cloud_sync_callback_info.h"
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
 #include "svc_death_recipient.h"
 #include "system_ability_status_change_stub.h"
+#include "cloud_sync_callback_client_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManagerImpl final : public CloudSyncManager, public NoCopyable {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
-    int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
-                             const std::string &bundleName = "") override;
-    int32_t RegisterFileSyncCallback(const std::shared_ptr<CloudSyncCallback> callback,
-                             const std::string &bundleName = "") override;
-    int32_t UnRegisterCallback(const std::string &bundleName = "") override;
-    int32_t UnRegisterFileSyncCallback(const std::string &bundleName = "") override;
+    int32_t RegisterCallback(const CallbackInfo &callbackInfo) override;
+    int32_t RegisterFileSyncCallback(const CallbackInfo &callbackInfo) override;
+    int32_t UnRegisterCallback(const CallbackInfo &callbackInfo) override;
+    int32_t UnRegisterFileSyncCallback(const CallbackInfo &callbackInfo) override;
     int32_t StartSync(const std::string &bundleName = "") override;
     int32_t StartFileSync(const std::string &bundleName = "") override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
@@ -93,24 +93,19 @@ public:
                                            
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
-        SystemAbilityStatusChange(const std::string &bundleName) : bundleName_(bundleName) {};
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
         void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
-    private:
-        std::string bundleName_ = "";
     };
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
-    bool ResetProxyCallback(uint32_t retryCount, const std::string &bundleName);
+    bool ResetProxyCallback(uint32_t retryCount);
 
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
-    std::shared_ptr<CloudSyncCallback> callback_;
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
-    std::mutex callbackMutex_;
-    void SubscribeListener(std::string bundleName = "");
+    void SubscribeListener(void);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

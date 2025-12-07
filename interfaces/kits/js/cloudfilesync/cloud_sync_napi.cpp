@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <set>
 #include <sys/types.h>
 #include <sys/xattr.h>
@@ -124,6 +125,11 @@ CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env
     if (fun != nullptr) {
         napi_create_reference(env_, fun, 1, &cbOnRef_);
     }
+}
+
+CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
+{
+    DeleteReference();
 }
 
 void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
@@ -260,7 +266,7 @@ string CloudSyncNapi::GetBundleName(const napi_env &env, const NFuncArg &funcArg
     string bundleName;
     auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
     if (bundleEntity) {
-        bundleName = bundleEntity->bundleName_;
+        bundleName = bundleEntity->callbackInfo.bundleName;
     }
     return bundleName;
 }
@@ -269,13 +275,12 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        LOGE("Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
-        LOGD("init without bundleName");
-        return funcArg.GetThisVar();
-    }
+    auto bundleEntity = make_unique<BundleEntity>();
+
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
         auto [succ, bundleName, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
         if (!succ || bundleName.get() == string("")) {
@@ -283,40 +288,37 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        auto bundleEntity = make_unique<BundleEntity>(bundleName.get());
-        if (!NClass::SetEntityFor<BundleEntity>(env, funcArg.GetThisVar(), move(bundleEntity))) {
-            LOGE("Failed to set file entity");
-            NError(EIO).ThrowErr(env);
-            return nullptr;
-        }
+        bundleEntity->callbackInfo.bundleName = string(bundleName.get());
         LOGI("init with bundleName");
-        return funcArg.GetThisVar();
     }
-    return nullptr;
+
+    LOGD("Constructor addr:%{private}s, bundleName:%{public}s.",
+        bundleEntity->callbackInfo.addr.c_str(), bundleEntity->callbackInfo.bundleName.c_str());
+
+    if (!NClass::SetEntityFor<BundleEntity>(env, funcArg.GetThisVar(), move(bundleEntity))) {
+        LOGE("Failed to set file entity");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    return funcArg.GetThisVar();
 }
 
 bool CloudSyncNapi::InitArgsOnCallback(const napi_env &env, NFuncArg &funcArg)
 {
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
         return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(E_PARAMS).ThrowErr(env);
+        LOGE("Invalid event type for register");
         return false;
     }
 
     if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
-        NError(E_PARAMS).ThrowErr(env);
-        return false;
-    }
-
-    if (callback_ != nullptr) {
-        LOGI("callback already exist");
         return false;
     }
     return true;
@@ -326,15 +328,31 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!InitArgsOnCallback(env, funcArg)) {
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    string bundleName = GetBundleName(env, funcArg);
-    callback_ = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_, bundleName);
+    auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
+    if (bundleEntity == nullptr) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (bundleEntity->callbackInfo.callback != nullptr) {
+        LOGI("callback already exist");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity);
+    bundleEntity->callbackInfo.callback =
+        make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OnCallback Register error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        bundleEntity->callbackInfo.callback = nullptr;
         return nullptr;
     }
 
@@ -344,20 +362,18 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 bool CloudSyncNapi::InitArgsOffCallback(const napi_env &env, NFuncArg &funcArg)
 {
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
         return false;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(E_PARAMS).ThrowErr(env);
+        LOGE("Invalid event type for unregister");
         return false;
     }
 
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
-        NError(E_PARAMS).ThrowErr(env);
         return false;
     }
     return true;
@@ -367,20 +383,27 @@ napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!InitArgsOffCallback(env, funcArg)) {
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    string bundleName = GetBundleName(env, funcArg);
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleName);
+    auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
+    if (bundleEntity == nullptr) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OffCallback UnRegister error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         /* napi delete reference */
-        callback_->DeleteReference();
-        callback_ = nullptr;
+        bundleEntity->callbackInfo.callback->DeleteReference();
+        bundleEntity->callbackInfo.callback = nullptr;
     }
     return NVal::CreateUndefined(env).val_;
 }
@@ -1134,7 +1157,7 @@ static tuple<int32_t, int32_t> DoGetCoreFileSyncState(const char *resolvedPath)
 
     int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
-    if (fileStatus >= 0 && fileStatus < publicStatusMap.size()) {
+    if (fileStatus >= 0 && (size_t)fileStatus < publicStatusMap.size()) {
         val = publicStatusMap[fileStatus];
     } else {
         LOGE("invalid value");

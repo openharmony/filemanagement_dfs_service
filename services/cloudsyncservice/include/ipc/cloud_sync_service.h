@@ -43,10 +43,14 @@ public:
     int32_t CallbackExit(uint32_t code, int32_t result) override;
     int32_t HandleRemovedClean(const std::string &bundleName, int32_t userId);
     ErrCode RemovedClean(const std::string &bundleName, int32_t userId) override;
-    ErrCode UnRegisterCallbackInner(const std::string &bundleName = "") override;
-    ErrCode UnRegisterFileSyncCallbackInner(const std::string &bundleName = "") override;
-    ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
+    ErrCode UnRegisterCallbackInner(const std::string &callbackAddr = "", const std::string &bundleName = "") override;
+    ErrCode UnRegisterFileSyncCallbackInner(const std::string &callbackAddr = "",
+                                            const std::string &bundleName = "") override;
+    ErrCode RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                  const std::string &callbackAddr = "",
+                                  const std::string &bundleName = "") override;
     ErrCode RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                          const std::string &callbackAddr = "",
                                           const std::string &bundleName = "") override;
     ErrCode StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
     ErrCode StartFileSyncInner(bool forceFlag, const std::string &bundleName = "") override;

@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H
 
 #include "cloud_sync_callback.h"
+#include "cloud_sync_callback_info.h"
 #include "cloud_optimize_callback.h"
 #include "cloud_sync_common.h"
 #include "data_ability_observer_interface.h"
@@ -29,8 +30,7 @@ namespace OHOS::FileManagement::CloudSync {
 const int32_t ARGS_ONE = 1;
 
 struct BundleEntity {
-    std::string bundleName_;
-    explicit BundleEntity(const std::string bundleName): bundleName_(bundleName){};
+    CallbackInfo callbackInfo;
 };
 
 struct CloudChangeListener {
@@ -82,9 +82,6 @@ public:
     CloudSyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
     ~CloudSyncNapi() = default;
 
-protected:
-    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_{nullptr};
-
 private:
     static bool CheckRef(napi_env env, napi_ref ref, ChangeListenerNapi &listObj, const std::string &uri);
     static int32_t RegisterToObs(napi_env env, const RegisterParams &registerParams);
@@ -98,11 +95,11 @@ private:
 class CloudSyncCallbackImpl : public CloudSyncCallback, public std::enable_shared_from_this<CloudSyncCallbackImpl> {
 public:
     CloudSyncCallbackImpl(napi_env env, napi_value fun);
-    ~CloudSyncCallbackImpl() = default;
+    ~CloudSyncCallbackImpl();
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
     void OnDeathRecipient() override;
-    void DeleteReference();
+    void DeleteReference() override;
 
     class UvChangeMsg {
     public:

@@ -28,12 +28,10 @@ public:
         static CloudSyncManagerImplMock instance;
         return instance;
     }
-    MOCK_METHOD2(RegisterCallback, int32_t(const std::shared_ptr<CloudSyncCallback> callback,
-                             const std::string &bundleName));
-    MOCK_METHOD2(RegisterFileSyncCallback, int32_t(const std::shared_ptr<CloudSyncCallback> callback,
-                             const std::string &bundleName));
-    MOCK_METHOD1(UnRegisterCallback, int32_t(const std::string &bundleName));
-    MOCK_METHOD1(UnRegisterFileSyncCallback, int32_t(const std::string &bundleName));
+    MOCK_METHOD1(RegisterCallback, int32_t(const CallbackInfo &callbackInfo));
+    MOCK_METHOD1(RegisterFileSyncCallback, int32_t(const CallbackInfo &callbackInfo));
+    MOCK_METHOD1(UnRegisterCallback, int32_t(const CallbackInfo &callbackInfo));
+    MOCK_METHOD1(UnRegisterFileSyncCallback, int32_t(const CallbackInfo &callbackInfo));
     MOCK_METHOD1(StartSync, int32_t(const std::string &bundleName));
     MOCK_METHOD1(StartFileSync, int32_t(const std::string &bundleName));
     MOCK_METHOD2(StartSync, int32_t(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback));

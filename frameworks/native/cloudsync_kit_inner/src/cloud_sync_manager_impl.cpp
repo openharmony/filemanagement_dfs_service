@@ -30,17 +30,17 @@ using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
+#define CLOUDSYNC_MEDIA_CALLBACK_ADDR "mediaCloudSyncCallbackAddr"
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
     return instance;
 }
 
-int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
-                                               const std::string &bundleName)
+int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
 {
-    if (!callback) {
-        LOGE("callback is null");
+    if ((callbackInfo.addr.empty()) || (callbackInfo.callback == nullptr)) {
+        LOGE("addr or callback is null");
         return E_INVAL_ARG;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
@@ -48,23 +48,23 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    auto ret = CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)),
-                                                            bundleName);
-    {
-        unique_lock<mutex> lock(callbackMutex_);
-        callback_ = callback;
+    auto ret = CloudSyncServiceProxy->RegisterCallbackInner(
+        sptr(new (std::nothrow) CloudSyncCallbackClient(callbackInfo.callback)),
+        callbackInfo.addr, callbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
+        SubscribeListener();
     }
-    SubscribeListener(bundleName);
+
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterCallback ret %{public}d", ret);
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const std::shared_ptr<CloudSyncCallback> callback,
-    const std::string &bundleName)
+int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const CallbackInfo &callbackInfo)
 {
-    if (!callback) {
-        LOGE("callback is null");
+    if ((callbackInfo.addr.empty()) || (callbackInfo.callback == nullptr)) {
+        LOGE("addr or callback is null");
         return E_INVAL_ARG;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
@@ -73,31 +73,34 @@ int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const std::shared_ptr<Clo
         return E_SA_LOAD_FAILED;
     }
     auto ret = CloudSyncServiceProxy->RegisterFileSyncCallbackInner(
-        sptr(new (std::nothrow) CloudSyncCallbackClient(callback)), bundleName);
-    {
-        unique_lock<mutex> lock(callbackMutex_);
-        callback_ = callback;
+        sptr(new (std::nothrow) CloudSyncCallbackClient(callbackInfo.callback)),
+        callbackInfo.addr, callbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
+        SubscribeListener();
     }
-    SubscribeListener(bundleName);
+
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterFileSyncCallback ret %{public}d", ret);
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::UnRegisterCallback(const std::string &bundleName)
+int32_t CloudSyncManagerImpl::UnRegisterCallback(const CallbackInfo &callbackInfo)
 {
+    if (callbackInfo.addr.empty()) {
+        LOGE("addr is null");
+        return E_INVAL_ARG;
+    }
+
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
 
-    auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner(bundleName);
-    if (!ret) {
-        {
-            unique_lock<mutex> lock(callbackMutex_);
-            callback_ = nullptr;
-        }
+    auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner(callbackInfo.addr, callbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
         SubscribeListener();
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
@@ -105,20 +108,22 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback(const std::string &bundleName)
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::UnRegisterFileSyncCallback(const std::string &bundleName)
+int32_t CloudSyncManagerImpl::UnRegisterFileSyncCallback(const CallbackInfo &callbackInfo)
 {
+    if (callbackInfo.addr.empty()) {
+        LOGE("addr is null");
+        return E_INVAL_ARG;
+    }
+
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
 
-    auto ret = CloudSyncServiceProxy->UnRegisterFileSyncCallbackInner(bundleName);
-    if (!ret) {
-        {
-            unique_lock<mutex> lock(callbackMutex_);
-            callback_ = nullptr;
-        }
+    auto ret = CloudSyncServiceProxy->UnRegisterFileSyncCallbackInner(callbackInfo.addr, callbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
         SubscribeListener();
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
@@ -224,16 +229,14 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
     if (!isFirstCall_.test()) {
         LOGI("Register callback");
         auto ret = CloudSyncServiceProxy->RegisterCallbackInner(
-            sptr(new (std::nothrow) CloudSyncCallbackClient(callback)), "");
+            sptr(new (std::nothrow) CloudSyncCallbackClient(callback)), CLOUDSYNC_MEDIA_CALLBACK_ADDR, "");
         if (ret) {
             LOGE("Register callback failed");
             isFirstCall_.clear();
             return ret;
         }
-        {
-            unique_lock<mutex> lock(callbackMutex_);
-            callback_ = callback;
-        }
+        CallbackInfo callbackInfo = {CLOUDSYNC_MEDIA_CALLBACK_ADDR, callback, ""};
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 
@@ -645,14 +648,11 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
     }
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
-            LOGE("service died.");
-            std::shared_ptr<CloudSyncCallback> callbackTemp;
-            {
-                unique_lock<mutex> lock(callbackMutex_);
-                callbackTemp = callback_;
-            }
-            if (callbackTemp) {
-                callbackTemp->OnDeathRecipient();
+            std::vector<CallbackInfo> callbackInfos;
+            CloudSyncCallbackClientManager::GetInstance().GetAllCallback(callbackInfos);
+            LOGE("service died, callback num:%{public}zu.", callbackInfos.size());
+            for (auto &callbackInfo : callbackInfos) {
+                callbackInfo.callback->OnDeathRecipient();
             }
             isFirstCall_.clear();
         };
@@ -752,7 +752,7 @@ int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFile
     return CloudSyncServiceProxy->BatchDentryFileInsert(fileInfoObj, failCloudId);
 }
 
-void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
+void CloudSyncManagerImpl::SubscribeListener(void)
 {
     unique_lock<mutex> lock(subscribeMutex_);
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -764,13 +764,8 @@ void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
         auto ret = samgr->UnSubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("unsubscribed to systemAbility ret %{public}d", ret);
     }
-    bool hasCallback = false;
-    {
-        unique_lock<mutex> callbackLock(callbackMutex_);
-        hasCallback = (callback_ != nullptr);
-    }
-    if (hasCallback) {
-        listener_ = new SystemAbilityStatusChange(bundleName);
+    if (!CloudSyncCallbackClientManager::GetInstance().IsEmpty()) {
+        listener_ = new SystemAbilityStatusChange();
         auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("subscribed to systemAbility ret %{public}d", ret);
     } else {
@@ -778,23 +773,20 @@ void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
     }
 }
 
-bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string &bundleName)
+bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount)
 {
     auto cloudSyncServiceProxy = ServiceProxy::GetInstance();
     if (cloudSyncServiceProxy == nullptr) {
         LOGE("proxy is null");
         return false;
     }
+    std::vector<CallbackInfo> callbackInfos;
+    CloudSyncCallbackClientManager::GetInstance().GetAllCallback(callbackInfos);
     bool hasCallback = false;
-    std::shared_ptr<CloudSyncCallback> callbackTemp;
-    {
-        unique_lock<mutex> lock(callbackMutex_);
-        callbackTemp = callback_;
-    }
-    if (callbackTemp != nullptr) {
-        auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callbackTemp));
-        if (callback == nullptr ||
-            cloudSyncServiceProxy->RegisterCallbackInner(callback, bundleName) != E_OK) {
+    for (auto &callbackInfo : callbackInfos) {
+        auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callbackInfo.callback));
+        if ((callback == nullptr) || (cloudSyncServiceProxy->RegisterFileSyncCallbackInner(
+            callback, callbackInfo.addr, callbackInfo.bundleName) != E_OK)) {
             LOGW("register callback failed, try time is %{public}d", retryCount);
         } else {
             hasCallback = true;
@@ -803,6 +795,8 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string 
     if (hasCallback) {
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(cloudSyncServiceProxy->AsObject());
     }
+    LOGD("Reset proxy, callback num:%{public}zu.", callbackInfos.size());
+
     return true;
 }
 
@@ -815,7 +809,7 @@ void CloudSyncManagerImpl::SystemAbilityStatusChange::OnAddSystemAbility(int32_t
     LOGI("saId %{public}d loaded", systemAbilityId);
     do {
         usleep(SLEEP_TIME);
-        if (!CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName_)) {
+        if (!CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount)) {
             continue;
         }
         return;

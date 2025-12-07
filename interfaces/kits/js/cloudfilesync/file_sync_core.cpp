@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/xattr.h>
 
+#include "cloud_file_utils.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "uri.h"
@@ -29,8 +30,7 @@ const int32_t E_PARAMS = 401;
 
 const string &FileSyncCore::GetBundleName() const
 {
-    static const string emptyString = "";
-    return (bundleEntity) ? bundleEntity->bundleName_ : emptyString;
+    return bundleEntity->callbackInfo.bundleName;
 }
 
 FsResult<FileSyncCore *> FileSyncCore::Constructor(const optional<string> &bundleName)
@@ -58,13 +58,14 @@ FsResult<FileSyncCore *> FileSyncCore::Constructor(const optional<string> &bundl
 FileSyncCore::FileSyncCore(const string &bundleName)
 {
     LOGI("init with bundle name");
-    bundleEntity = make_unique<BundleEntity>(bundleName);
+    bundleEntity = make_unique<BundleEntity>();
+    bundleEntity->callbackInfo.bundleName = bundleName;
 }
 
 FileSyncCore::FileSyncCore()
 {
     LOGI("init without bundle name");
-    bundleEntity = nullptr;
+    bundleEntity = make_unique<BundleEntity>();
 }
 
 FsResult<void> FileSyncCore::DoOn(const string &event, const shared_ptr<CloudSyncCallbackMiddle> callback)
@@ -74,14 +75,14 @@ FsResult<void> FileSyncCore::DoOn(const string &event, const shared_ptr<CloudSyn
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         LOGI("callback already exist");
         return FsResult<void>::Success();
     }
 
-    string bundleName = GetBundleName();
-    callback_ = callback;
-    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(callback_, bundleName);
+    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity.get());
+    bundleEntity->callbackInfo.callback = callback;
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("DoOn Register error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
@@ -97,17 +98,16 @@ FsResult<void> FileSyncCore::DoOff(const string &event, const optional<shared_pt
         return FsResult<void>::Error(E_PARAMS);
     }
 
-    string bundleName = GetBundleName();
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleName);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("DoOff UnRegister error, result: %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         /* delete callback */
-        callback_->DeleteReference();
-        callback_ = nullptr;
+        bundleEntity->callbackInfo.callback->DeleteReference();
+        bundleEntity->callbackInfo.callback = nullptr;
     }
 
     return FsResult<void>::Success();
