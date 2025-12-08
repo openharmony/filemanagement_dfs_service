@@ -200,7 +200,7 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, SyncCurrentPageTest001, TestSize.Lev
     GTEST_LOG_(INFO) << "SyncCurrentPageTest001 start";
     try {
         LogGroup logGroup;
-        int fd = 1; 
+        int fd = 1;
         uint32_t line = 1;
         auto res = SyncCurrentPage(logGroup, fd, line);
         EXPECT_EQ(res, EINVAL);
