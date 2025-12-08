@@ -742,7 +742,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
+        dataSyncManager_->PeriodicCleanLock();
         ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        dataSyncManager_->PeriodicCleanUnlock();
         if (ret != E_OK) {
             LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
             return ret;

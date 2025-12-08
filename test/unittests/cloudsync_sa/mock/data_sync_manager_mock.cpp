@@ -265,4 +265,11 @@ int32_t DataSyncManager::ClearFileConflict(const BundleNameUserInfo &bundleNameU
     return E_OK;
 }
 
+void DataSyncManager::PeriodicCleanLock()
+{
+}
+
+void DataSyncManager::PeriodicCleanUnlock()
+{
+}
 } // namespace OHOS::FileManagement::CloudFile

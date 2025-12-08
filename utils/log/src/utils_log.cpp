@@ -48,6 +48,23 @@ std::string GetAnonyString(const std::string &value)
     return res;
 }
 
+std::string GetAnonyStringStrictly(const std::string &input)
+{
+    constexpr size_t INT32_PLAINTEXT_LENGTH = 8;
+    constexpr size_t INT32_MIN_ID_LENGTH = 17;
+    std::string anoyStr("********");
+
+    size_t length = input.length();
+    if (length < INT32_MIN_ID_LENGTH) {
+        return anoyStr;
+    } else {
+        std::string result = input.substr(0, INT32_PLAINTEXT_LENGTH);
+        result += anoyStr;
+        result += input.substr(length - INT32_PLAINTEXT_LENGTH, INT32_PLAINTEXT_LENGTH);
+        return result;
+    }
+}
+
 std::string GetAnonyInt32(const int32_t value)
 {
     std::string tmpStr = std::to_string(value);
