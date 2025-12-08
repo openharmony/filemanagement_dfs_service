@@ -303,6 +303,7 @@ int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 
 std::shared_ptr<ServiceCollaborationManager_ResourceRequestInfoSets> AllConnectManager::BuildResourceRequest()
 {
+    std::lock_guard<std::mutex> lock(communicationRequestMutex_);
     auto resourceRequest = std::make_shared<ServiceCollaborationManager_ResourceRequestInfoSets>();
 
     if (remoteHardwareList_ == nullptr) {
