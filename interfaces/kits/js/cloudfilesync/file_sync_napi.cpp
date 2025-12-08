@@ -102,7 +102,7 @@ napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity);
+    bundleEntity->callbackInfo.callbackId = CloudDisk::CloudFileUtils::GenerateUuid();
     bundleEntity->callbackInfo.callback =
         make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
     int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(bundleEntity->callbackInfo);

@@ -124,6 +124,7 @@ ohos_shared_library("libdistributedfileutils") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "e2fsprogs:libext2_uuid",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
@@ -268,6 +269,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   external_deps = [
     "c_utils:utils",
+    "e2fsprogs:libext2_uuid",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

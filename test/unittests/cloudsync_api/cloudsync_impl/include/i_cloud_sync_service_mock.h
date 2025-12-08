@@ -29,13 +29,13 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudSyncServiceMock : public IRemoteStub<ICloudSyncService> {
 public:
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
-    MOCK_METHOD2(UnRegisterCallbackInner, int32_t(const std::string &callbackAddr, const std::string &bundleName));
-    MOCK_METHOD2(UnRegisterFileSyncCallbackInner, int32_t(const std::string &callbackAddr,
+    MOCK_METHOD2(UnRegisterCallbackInner, int32_t(const std::string &callbackId, const std::string &bundleName));
+    MOCK_METHOD2(UnRegisterFileSyncCallbackInner, int32_t(const std::string &callbackId,
         const std::string &bundleName));
     MOCK_METHOD3(RegisterCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject,
-        const std::string &callbackAddr, const std::string &bundleName));
+        const std::string &callbackId, const std::string &bundleName));
     MOCK_METHOD3(RegisterFileSyncCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject,
-        const std::string &callbackAddr, const std::string &bundleName));
+        const std::string &callbackId, const std::string &bundleName));
     MOCK_METHOD2(StartSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
     MOCK_METHOD2(StartFileSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
     MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, int32_t userId));
