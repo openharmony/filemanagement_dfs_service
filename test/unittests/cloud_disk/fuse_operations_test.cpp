@@ -40,33 +40,33 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<FuseOperations> fuseoperations_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<FuseOperations> fuseoperations_ = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FuseOperationsTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    fuseoperations_ = make_shared<FuseOperations>();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
 }
 
 void FuseOperationsTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    fuseoperations_ = nullptr;
-    Assistant::ins = nullptr;
-    insMock = nullptr;
 }
 
 void FuseOperationsTest::SetUp(void)
 {
+    fuseoperations_ = make_shared<FuseOperations>();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FuseOperationsTest::TearDown(void)
 {
+    fuseoperations_ = nullptr;
+    Assistant::ins = nullptr;
+    insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -129,8 +129,7 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         fuse_req_t req = nullptr;
         const char *name = RECYCLE_NAME.c_str();
         fuse_ino_t parent = FUSE_ROOT_TWO;
@@ -1256,8 +1255,7 @@ HWTEST_F(FuseOperationsTest, RenameTest, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
         fuse_req_t req = nullptr;
         fuse_ino_t parent = 0;
         const char *name = "";
@@ -1742,8 +1740,7 @@ HWTEST_F(FuseOperationsTest, IoctlTest003, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
 
         fuseoperations_->Ioctl(req, ino, cmd, nullptr, nullptr, flags, nullptr, 0, 0);
         EXPECT_NE(ino, FUSE_ROOT_ID);

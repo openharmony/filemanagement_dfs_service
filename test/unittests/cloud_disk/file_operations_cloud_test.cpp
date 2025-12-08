@@ -53,35 +53,35 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<FileOperationsCloud> fileOperationsCloud_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<FileOperationsCloud> fileOperationsCloud_ = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FileOperationsCloudTest::SetUpTestCase(void)
 {
-    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
-    AssistantMock::EnableMock();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void FileOperationsCloudTest::TearDownTestCase(void)
 {
-    AssistantMock::DisableMock();
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void FileOperationsCloudTest::SetUp(void)
 {
+    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    AssistantMock::EnableMock();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FileOperationsCloudTest::TearDown(void)
 {
+    AssistantMock::DisableMock();
+    Assistant::ins = nullptr;
+    insMock = nullptr;
+    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -1400,7 +1400,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest007, TestSize.Level1)
         string name = IS_FILE_STATUS_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
