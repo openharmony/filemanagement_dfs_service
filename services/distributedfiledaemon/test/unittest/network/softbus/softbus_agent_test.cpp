@@ -18,23 +18,19 @@
 #include <memory>
 #include <unistd.h>
 
+#include "connect_count/connect_count.h"
 #include "device_manager_agent_mock.h"
 #include "device_manager_impl_mock.h"
 #include "dfs_error.h"
 #include "dm_constants.h"
 #include "softbus_error_code.h"
 
-#include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session.h"
-#include "utils_log.h"
+#include "network/softbus/softbus_session_dispatcher.h"
 #include "socket_mock.h"
+#include "utils_log.h"
 
 using namespace std;
-namespace {
-const string NETWORKID_ONE = "45656596896323231";
-const string NETWORKID_TWO = "45656596896323232";
-const string NETWORKID_THREE = "45656596896323233";
-}
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -45,13 +41,15 @@ constexpr int USER_ID = 100;
 constexpr int MAX_RETRY_COUNT = 7;
 static const string SAME_ACCOUNT = "account";
 const string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
+const std::string NETWORKID_ONE = "45656596896323231";
+const std::string NETWORKID_TWO = "45656596896323232";
 
 class SoftbusAgentTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp() {};
-    void TearDown() {};
+    static void SetUpTestCase(void){};
+    static void TearDownTestCase(void){};
+    void SetUp();
+    void TearDown();
     void CreateDeviceList(std::vector<DmDeviceInfo> &deviceList);
 
     static inline shared_ptr<SocketMock> socketMock_ = nullptr;
@@ -59,25 +57,22 @@ public:
     static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
 };
 
-
 void SoftbusAgentTest::CreateDeviceList(std::vector<DmDeviceInfo> &deviceList)
 {
     DmDeviceInfo testInfo;
-    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
-                   NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
+    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1, NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
     testInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
     deviceList.push_back(testInfo);
 
     DmDeviceInfo testInfo1;
-    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_ID_LEN - 1,
-                   NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_ID_LEN - 1, NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
     testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
     deviceList.push_back(testInfo1);
 }
 
-void SoftbusAgentTest::SetUpTestCase(void)
+void SoftbusAgentTest::SetUp(void)
 {
-    GTEST_LOG_(INFO) << "SetUpTestCase";
+    GTEST_LOG_(INFO) << "SetUp";
     socketMock_ = make_shared<SocketMock>();
     SocketMock::dfsSocket = socketMock_;
     deviceManagerAgentMock_ = std::make_shared<DeviceManagerAgentMock>();
@@ -86,9 +81,9 @@ void SoftbusAgentTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
-void SoftbusAgentTest::TearDownTestCase(void)
+void SoftbusAgentTest::TearDown(void)
 {
-    GTEST_LOG_(INFO) << "TearDownTestCase";
+    GTEST_LOG_(INFO) << "TearDown";
     SocketMock::dfsSocket = nullptr;
     socketMock_ = nullptr;
     IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = nullptr;
@@ -249,16 +244,14 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_JoinDomain_0100, TestSize.Level1)
         EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
         agent->JoinDomain();
         EXPECT_NE(SoftbusSessionDispatcher::busNameToAgent_.find(agent->sessionName_),
-            SoftbusSessionDispatcher::busNameToAgent_.end());
-        EXPECT_EQ(agent->serverIdMap_.find(agent->sessionName_),
-            agent->serverIdMap_.end());
+                  SoftbusSessionDispatcher::busNameToAgent_.end());
+        EXPECT_EQ(agent->serverIdMap_.find(agent->sessionName_), agent->serverIdMap_.end());
         SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
 
         EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
         EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
         agent->JoinDomain();
-        EXPECT_NE(agent->serverIdMap_.find(agent->sessionName_),
-            agent->serverIdMap_.end());
+        EXPECT_NE(agent->serverIdMap_.find(agent->sessionName_), agent->serverIdMap_.end());
         agent->serverIdMap_.erase(agent->sessionName_);
         SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
         GTEST_LOG_(INFO) << "3";
@@ -291,7 +284,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_JoinDomain_0200, TestSize.Level1)
     } catch (...) {
         res = false;
         EXPECT_NE(SoftbusSessionDispatcher::busNameToAgent_.find(agent->sessionName_),
-            SoftbusSessionDispatcher::busNameToAgent_.end());
+                  SoftbusSessionDispatcher::busNameToAgent_.end());
         SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
     }
     EXPECT_FALSE(res);
@@ -491,8 +484,8 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0100, TestSize.Level
     int32_t socketId = 1;
     string cid = "notExitCid";
     PeerSocketInfo info1 = {
-        .name = const_cast<char*>(sessionName.c_str()),
-        .networkId = const_cast<char*>(NETWORKID_ONE.c_str()),
+        .name = const_cast<char *>(sessionName.c_str()),
+        .networkId = const_cast<char *>(NETWORKID_ONE.c_str()),
     };
     agent->OnSessionOpened(socketId, info1);
     auto ret = agent->IsContinueRetry(cid);
@@ -519,6 +512,42 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenSession_0100, TestSize.Level1)
     int32_t ret = agent->OpenSession(info, linkType);
     EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenSession_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_GetSessionProcessInner_0100
+ * @tc.desc: Verify the GetSessionProcessInner function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_GetSessionProcessInner_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_GetSessionProcessInner_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+
+    NotifyParam param{.fd = 1, .remoteCid = "testNetworkId"};
+    agent->sessionPool_.ReleaseAllSession();
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    param.fd = -1;
+    auto session = make_shared<SoftbusSession>(1, "testNetworkId");
+    session->SetFromServer(false);
+    agent->sessionPool_.AddSessionToPool(session);
+    ConnectCount::GetInstance().RemoveAllConnect();
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    sptr<IFileDfsListener> listener = nullptr;
+    agent->sessionPool_.AddSessionToPool(session);
+    ConnectCount::GetInstance().AddConnect(1, "testNetworkId", listener);
+    agent->GetSessionProcessInner(param);
+    EXPECT_FALSE(agent->sessionPool_.FindCid("testNetworkId"));
+
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_GetSessionProcessInner_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

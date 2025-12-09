@@ -227,7 +227,6 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
          Utils::GetAnonyNumber(callingTokenId).c_str());
     RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
                  RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
-    RemoveDfsDelayTask(networkId);
     sptr<IFileDfsListener> listener = nullptr;
     int32_t ret = ConnectionCount(deviceInfo);
     if (ret == E_OK) {
@@ -301,8 +300,10 @@ int32_t Daemon::CleanUp(const std::string &networkId)
 {
     LOGI("CleanUp start, networkId is %{public}.6s", networkId.c_str());
     if (!ConnectCount::GetInstance().CheckCount(networkId)) {
-        auto ret = SendDfsDelayTask(networkId);
-        LOGI("Close P2P Connection");
+        LOGI("Close P2P Connection immediately");
+        DisconnectDevice(networkId);
+        auto ret = CancelControlLink(networkId);
+        LOGI("cancel control link ret is %{public}d", ret);
         RadarParaInfo info = {"CleanUp", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, ret, "Close P2P Connection"};
         DfsRadar::GetInstance().ReportLinkConnection(info);
@@ -413,7 +414,6 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         }
         remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
     }
-    RemoveDfsDelayTask(networkId);
 
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
@@ -578,12 +578,8 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         DfsRadar::GetInstance().ReportFileAccess(radarInfo);
         return ERR_BAD_VALUE;
     }
-    RemoveDfsDelayTask(networkId);
-    ConnectCount::GetInstance().AddConnect(IPCSkeleton::GetCallingTokenID(), networkId, nullptr);
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
         listener, QueryActiveUserId(), info.copyPath);
-    ConnectCount::GetInstance().DecreaseConnectCount(IPCSkeleton::GetCallingTokenID(), networkId);
-    CleanUp(networkId);
     LOGI("InnerCopy end, ret = %{public}d", ret);
     return ret;
 }
@@ -1151,50 +1147,6 @@ void Daemon::StartEventHandler()
     std::lock_guard<std::mutex> lock(eventHandlerMutex_);
     auto runer = AppExecFwk::EventRunner::Create(IDaemon::SERVICE_NAME.c_str());
     eventHandler_ = std::make_shared<DaemonEventHandler>(runer, daemonExecute_);
-}
-
-int32_t Daemon::SendDfsDelayTask(const std::string &networkId)
-{
-    LOGI("Daemon::SendDfsDelayTask enter.");
-    constexpr int32_t DEFAULT_DELAY_INTERVAL = 1 * 1000;
-    if (networkId.empty()) {
-        LOGE("networkId is empty.");
-        return E_NULLPTR;
-    }
-    LOGI("SendDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
-    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
-    if (eventHandler_ == nullptr) {
-        LOGE("eventHandler has not find.");
-        return E_EVENT_HANDLER;
-    }
-
-    auto executeFunc = [this, networkId] {
-        DisconnectDevice(networkId);
-        auto res = CancelControlLink(networkId);
-        LOGI("cancel control link ret is %{public}d", res);
-    };
-    bool isSucc = eventHandler_->PostTask(executeFunc, networkId, DEFAULT_DELAY_INTERVAL,
-        AppExecFwk::EventHandler::Priority::IMMEDIATE);
-    if (!isSucc) {
-        LOGE("Daemon event handler post delay disconnect device event fail.");
-        RadarParaInfo radarInfo = {"SendDfsDelayTask", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
-            "softbus", networkId, E_EVENT_HANDLER, "event fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
-        return E_EVENT_HANDLER;
-    }
-    return E_OK;
-}
-
-void Daemon::RemoveDfsDelayTask(const std::string &networkId)
-{
-    LOGI("Daemon::RemoveDfsDelayTask enter.");
-    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
-    if (eventHandler_ == nullptr) {
-        LOGE("eventHandler has not find.");
-        return;
-    }
-    LOGI("RemoveDfsDelayTask NetworkId:%{public}.5s", networkId.c_str());
-    eventHandler_->RemoveTask(networkId);
 }
 
 void Daemon::DisconnectDevice(const std::string networkId)

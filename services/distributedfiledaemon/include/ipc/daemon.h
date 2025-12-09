@@ -145,8 +145,6 @@ private:
                                                 bool isSrcFile,
                                                 HmdfsInfo &info,
                                                 std::string &physicalPath);
-    int32_t SendDfsDelayTask(const std::string &networkId);
-    void RemoveDfsDelayTask(const std::string &networkId);
     void DisconnectDevice(const std::string networkId);
     bool IsCallingDeviceTrusted();
     int32_t JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
