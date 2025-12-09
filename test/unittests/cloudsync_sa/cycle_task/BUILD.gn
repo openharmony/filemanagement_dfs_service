@@ -71,6 +71,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   ]
 
   defines = [
+    "access=mockAccess",
     "private=public",
     "protected=public",
     "LOG_DOMAIN=0xD004307",

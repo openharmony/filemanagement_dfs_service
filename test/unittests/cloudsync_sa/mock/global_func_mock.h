@@ -19,22 +19,18 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 namespace OHOS::FileManagement::CloudSync::Test {
 class GlobalFuncMock {
 public:
     MOCK_METHOD2(rename, int32_t(const char *, const char *));
     MOCK_METHOD2(mkdir, int32_t(const char *, uint32_t));
+    MOCK_METHOD2(access, int32_t(const char *, int32_t));
     static inline std::shared_ptr<GlobalFuncMock> proxy_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
 
 int32_t mockRename(const char* s1, const char* s2)
 {
-    std::cout << "mock_rename " << s1 << " -> " << s2 << std::endl;
-    std::string cmd = std::string("rename ") + s1 + " " + s2;
-    std::system(cmd.c_str());
     if (OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_ != nullptr) {
         return OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_->rename(s1, s2);
     }
@@ -43,11 +39,16 @@ int32_t mockRename(const char* s1, const char* s2)
 
 int32_t mockMkdir(const char* s, uint32_t mode)
 {
-    std::cout << "mock_mkdir: " << s << std::endl;
-    std::string cmd = std::string("mkdir -p -m ") + std::to_string(mode) + " " + s;
-    std::system(cmd.c_str());
     if (OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_ != nullptr) {
         return OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_->mkdir(s, mode);
+    }
+    return 0;
+}
+
+int32_t mockAccess(const char* s, int32_t mode)
+{
+    if (OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_ != nullptr) {
+        return OHOS::FileManagement::CloudSync::Test::GlobalFuncMock::proxy_->access(s, mode);
     }
     return 0;
 }
