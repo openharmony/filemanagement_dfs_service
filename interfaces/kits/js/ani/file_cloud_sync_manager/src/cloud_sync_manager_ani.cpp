@@ -383,7 +383,7 @@ static ani_status CreateLocalFilePresentStatusArray(ani_env *env,
     return GetAniArrayObject(env, localFilePresentStatusList, obj, cls, ctor);
 }
 
-ani_ref CloudSyncManagerAni::GetBundlesLocalFilePresentStatus(ani_env *env, ani_class clazz, ani_array_ref bundleNames)
+ani_ref CloudSyncManagerAni::GetBundlesLocalFilePresentStatus(ani_env *env, ani_class clazz, ani_array bundleNames)
 {
     auto [ret, bundleNameInputArray] = ANIUtils::AniToStringArray(env, bundleNames);
     if (!ret) {
