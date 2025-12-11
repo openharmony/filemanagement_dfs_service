@@ -196,7 +196,7 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(SyncType type, SyncPromptState
 ani_status ChangeListenerAni::SetValueArray(ani_env *env, const std::list<Uri> listValue, ani_object &uris)
 {
     ani_class arrayCls = nullptr;
-    Type arrSign = Builder::BuildClass("escompat.Array");
+    Type arrSign = Builder::BuildClass("std.core.Array");
     ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
     if (ret != ANI_OK) {
         LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
@@ -254,7 +254,7 @@ ani_status ChangeListenerAni::SetIsDir(ani_env *env, const shared_ptr<MessagePar
         return ANI_INVALID_ARGS;
     }
     ani_class arrayCls = nullptr;
-    Type arrSign = Builder::BuildClass("escompat.Array");
+    Type arrSign = Builder::BuildClass("std.core.Array");
     ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
     if (ret != ANI_OK) {
         LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
@@ -320,7 +320,7 @@ ani_status ChangeListenerAni::GetChangeDataObject(
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
     std::string ctSign = Builder::BuildSignatureDescriptor({notifyTypeSign,
-        Builder::BuildClass("escompat.Array"), Builder::BuildClass("escompat.Array")});
+        Builder::BuildClass("std.core.Array"), Builder::BuildClass("std.core.Array")});
     ret = env->Class_FindMethod(cls, ct.c_str(), ctSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);

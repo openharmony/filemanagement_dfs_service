@@ -320,7 +320,7 @@ static ani_status GetAniArrayObject(ani_env *env, const std::vector<LocalFilePre
     ani_object &obj, ani_class &cls, ani_method &ctor)
 {
     ani_class arrayCls = nullptr;
-    Type arrSign = Builder::BuildClass("escompat.Array");
+    Type arrSign = Builder::BuildClass("std.core.Array");
     ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
     if (ret != ANI_OK) {
         LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
