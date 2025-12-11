@@ -80,6 +80,7 @@ enum class FaultType {
     FILE = 10000000,
     DENTRY_FILE = 10000001,
     INODE_FILE = 10000002,
+    CACHE_CLEAR = 10000003,
 
     /* driverkit fault type */
     DRIVERKIT = 20000000,
@@ -149,6 +150,7 @@ struct CloudCacheFaultInfo {
 };
 
 const std::vector<FaultType> PERIODIC_REPORT_FAULT_TYPE = { FaultType::WARNING,
+                                                            FaultType::CACHE_CLEAR,
                                                             FaultType::TIMEOUT,
                                                             FaultType::OPEN_CLOUD_FILE_TIMEOUT,
                                                             FaultType::CLOUD_READ_FILE_TIMEOUT,

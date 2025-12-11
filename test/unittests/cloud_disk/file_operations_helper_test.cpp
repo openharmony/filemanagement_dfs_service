@@ -728,7 +728,6 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest003, TestSize.Level1)
  * @tc.name: PutCloudDiskInodeTest004
  * @tc.desc: Verify the PutCloudDiskInode function
  * @tc.type: FUNC
- * @tc.require: issuesI92WQP
  */
 HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest004, TestSize.Level1)
 {
@@ -828,7 +827,6 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest003, TestSize.Level1)
  * @tc.name: PutCloudDiskFileTest004
  * @tc.desc: Verify the PutCloudDiskFile function
  * @tc.type: FUNC
- * @tc.require: issuesI92WQP
  */
 HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest004, TestSize.Level1)
 {
@@ -930,7 +928,6 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest003, TestSize.Level1)
  * @tc.name: PutLocalIdTest004
  * @tc.desc: Verify the PutLocalId function
  * @tc.type: FUNC
- * @tc.require: issuesI92WQP
  */
 HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest004, TestSize.Level1)
 {
