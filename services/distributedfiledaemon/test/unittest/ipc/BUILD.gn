@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -26,6 +26,8 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include/ipc",
     "${services_path}/distributedfiledaemon/test/mock/include",
   ]
+
+  defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
 ohos_unittest("asset_callback_manager_test") {
@@ -250,7 +252,7 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
-    "${services_path}/distributedfiledaemon/test/unittest/dfx/radar_report_test.cpp",
+    "${utils_path}/dfx/src/dfs_radar.cpp",
     "daemon_test.cpp",
   ]
 
