@@ -83,6 +83,11 @@ enum Notify {
     NOTIFY_CNT,
 };
 
+KernelTalker::~KernelTalker()
+{
+    WaitForPollThreadExited();
+}
+
 uint8_t KernelTalker::GetSecurityMode()
 {
     int32_t userId = SoftBusPermissionCheck::GetCurrentUserId();
@@ -172,6 +177,7 @@ void KernelTalker::SinkOfflineCmdToKernel(string cid)
 void KernelTalker::CreatePollThread()
 {
     isRunning_ = true;
+    std::lock_guard lock(pollThreadMutex_);
     if (pollThread_ != nullptr) {
         LOGE("pollTread is not null");
         return;
@@ -183,6 +189,7 @@ void KernelTalker::CreatePollThread()
 void KernelTalker::WaitForPollThreadExited()
 {
     isRunning_ = false;
+    std::lock_guard lock(pollThreadMutex_);
     if (pollThread_ == nullptr) {
         LOGE("pollTread is null");
         return;

@@ -52,7 +52,7 @@ public:
     {
     }
     KernelTalker() = default;
-    ~KernelTalker() = default;
+    ~KernelTalker();
 
     void SinkSessionTokernel(std::shared_ptr<BaseSession> session, const std::string backStage);
     void SinkDevslTokernel(const std::string &cid, uint32_t devsl);
@@ -108,6 +108,7 @@ private:
     std::weak_ptr<MountPoint> mountPoint_;
     std::mutex cmdMutex_;
     std::atomic<bool> isRunning_ {true};
+    std::mutex pollThreadMutex_;
     std::unique_ptr<std::thread> pollThread_ {nullptr};
     std::function<void(NotifyParam &)> GetSessionCallback_ {nullptr};
     std::function<void(const std::string &cid)> CloseSessionCallback_ {nullptr};
