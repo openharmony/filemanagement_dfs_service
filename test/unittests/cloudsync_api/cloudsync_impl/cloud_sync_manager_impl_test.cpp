@@ -25,10 +25,12 @@
 #include "icloud_sync_service.h"
 #include "iservice_registry.h"
 #include "meta_file.h"
+#include "os_account_manager_mock.h"
 #include "service_callback_mock.h"
 #include "service_proxy.h"
 #include "service_proxy_mock.h"
 #include "system_ability_manager_client_mock.h"
+
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -47,6 +49,7 @@ public:
     static inline sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
     static inline std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_{nullptr};
     static inline sptr<ISystemAbilityManagerMock> saMgr_{nullptr};
+    static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -81,6 +84,8 @@ void CloudSyncManagerImplTest::SetUpTestCase(void)
     serviceProxy_ = sptr(new CloudSyncServiceMock());
     saMgr_ = sptr(new ISystemAbilityManagerMock());
     ISystemAbilityManagerClient::smc = saMgrClient_;
+    OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
+    OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -92,6 +97,8 @@ void CloudSyncManagerImplTest::TearDownTestCase(void)
     proxy_ = nullptr;
     serviceProxy_ = nullptr;
     saMgr_ = nullptr;
+    OsAccountMethodMock_ = nullptr;
+    OsAccountManagerMethod::osMethod_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -116,10 +123,13 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
-        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b670";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
-        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -138,16 +148,90 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
     try {
-        string bundleName = "com.ohos.photos";
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b660";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
-        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(bundleName);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnRegisterCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest End";
+}
+
+/*
+ * @tc.name: UnRegisterCallbackTest002
+ * @tc.desc: Verify the UnRegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest002 Start";
+    try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest002 End";
+}
+
+/*
+ * @tc.name: UnRegisterFileSyncCallbackTest001
+ * @tc.desc: Verify the UnRegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterFileSyncCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest001 Start";
+    try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, UnRegisterFileSyncCallbackInner(_, _)).WillOnce(Return(E_OK));
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterFileSyncCallback(callbackInfo);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest001 End";
+}
+
+/*
+ * @tc.name: UnRegisterFileSyncCallbackTest002
+ * @tc.desc: Verify the UnRegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterFileSyncCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest002 Start";
+    try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterFileSyncCallback(callbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest002 End";
 }
 
 /**
@@ -161,6 +245,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
@@ -185,8 +272,12 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
         bool forceFlag = true;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -232,6 +323,9 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest004, TestSize.Level1)
         bool forceFlag = true;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
@@ -256,8 +350,11 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
@@ -267,6 +364,107 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "StartSyncTest005 FAILED";
     }
     GTEST_LOG_(INFO) << "StartSyncTest005 End";
+}
+
+/**
+ * @tc.name: StartSyncTest006
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest007
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(false, callback);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartFileSyncTest001
+ * @tc.desc: Verify the StartFileSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, StartFileSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartFileSyncTest002
+ * @tc.desc: Verify the StartFileSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 101;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountTypeFromProcess(_))
+            .WillOnce(DoAll(SetArgReferee<0>(AccountSA::OsAccountType::PRIVATE), Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFileSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartFileSyncTest End";
 }
 
 /**
@@ -304,6 +502,8 @@ HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
     try {
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, TriggerSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
@@ -745,14 +945,40 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
-        auto callback = nullptr;
-        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "RegisterCallbackTest End";
+}
+
+/**
+ * @tc.name: RegisterFileSyncCallbackTest001
+ * @tc.desc: Verify the invalid input parameters of the RegisterFileSyncCallback function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest001 Start";
+    try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterFileSyncCallback(callbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest001 End";
 }
 
 /*
@@ -807,10 +1033,14 @@ HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetDeathRecipientTest002 Start";
     try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = nullptr;
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
-        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
-
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest002 FAILED";
@@ -828,9 +1058,14 @@ HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetDeathRecipientTest003 Start";
     try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
-        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(serviceProxy_->AsObject());
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest003 FAILED";
@@ -885,9 +1120,8 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest001 Start";
     try {
         uint32_t retryCount = 3;
-        string bundleName = "testBundle";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
-        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, false);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -898,7 +1132,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest001, TestSize.Level1)
 
 /*
  * @tc.name: ResetProxyCallbackTest002
- * @tc.desc: proxy 不为空，但callback_为空
+ * @tc.desc: proxy 不为空，但callback为空
  * @tc.type: FUNC
  * @tc.require: 2544
  */
@@ -907,10 +1141,8 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest002 Start";
     try {
         uint32_t retryCount = 3;
-        string bundleName = "testBundle";
-        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -921,7 +1153,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest002, TestSize.Level1)
 
 /*
  * @tc.name: ResetProxyCallbackTest002
- * @tc.desc: proxy 不为空，但callback_ 不为空, RegisterCallbackInner返回异常
+ * @tc.desc: proxy 不为空，但callback 不为空, RegisterCallbackInner返回异常
  * @tc.type: FUNC
  * @tc.require: 2544
  */
@@ -930,12 +1162,16 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest003 Start";
     try {
         uint32_t retryCount = 3;
-        string bundleName = "testBundle";
-        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
-        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ResetProxyCallbackTest003 FAILED";
@@ -945,7 +1181,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
 
 /*
  * @tc.name: ResetProxyCallbackTest004
- * @tc.desc: proxy 不为空，但callback_ 不为空，RegisterCallbackInner 返回正常
+ * @tc.desc: proxy 不为空，但callback 不为空，RegisterCallbackInner 返回正常
  * @tc.type: FUNC
  * @tc.require: 2544
  */
@@ -954,12 +1190,16 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest004 Start";
     try {
         uint32_t retryCount = 3;
-        string bundleName = "testBundle";
-        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
-        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ResetProxyCallbackTest004 FAILED";
@@ -999,8 +1239,7 @@ HWTEST_F(CloudSyncManagerImplTest, OnAddSystemAbilityTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnAddSystemAbilityTest001 Start";
     try {
-        string bundleName = "testbundleName";
-        CloudSyncManagerImpl::SystemAbilityStatusChange statusChange(bundleName);
+        CloudSyncManagerImpl::SystemAbilityStatusChange statusChange;
         int32_t systemAbilityId = 1;
         std::string deviceId = "testDeviceId";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr))
@@ -1118,8 +1357,10 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListenerTest1, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SubscribeListenerTest1 Start";
     try {
-        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+        CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
+        CloudSyncManagerImpl::GetInstance().SubscribeListener();
         EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1138,11 +1379,17 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SubscribeListener002 Start";
     try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
-        EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
-        CloudSyncManagerImpl::GetInstance().callback_ = make_shared<CloudSyncCallback>();
-        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+        EXPECT_CALL(*saMgr_, SubscribeSystemAbility(_, _)).WillOnce(Return(0));
+        CloudSyncManagerImpl::GetInstance().SubscribeListener();
+        EXPECT_NE(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SubscribeListener002 FAILED";
@@ -1160,11 +1407,11 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SubscribeListener003 Start";
     try {
-        CloudSyncManagerImpl::GetInstance().listener_ = nullptr;
+        CloudSyncManagerImpl::GetInstance().listener_ = new CloudSyncManagerImpl::SystemAbilityStatusChange();
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
         EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
-        CloudSyncManagerImpl::GetInstance().callback_ = nullptr;
-        CloudSyncManagerImpl::GetInstance().SubscribeListener("testBundleName");
+        CloudSyncManagerImpl::GetInstance().SubscribeListener();
+        EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SubscribeListener003 FAILED";
@@ -1556,7 +1803,7 @@ HWTEST_F(CloudSyncManagerImplTest, ReplaceFileWithHistoryVersionTest001, TestSiz
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         oriUri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ReplaceFileWithHistoryVersion(_, _)).WillOnce(Return(E_OK));
@@ -1588,7 +1835,7 @@ HWTEST_F(CloudSyncManagerImplTest, IsFileConflictTest001, TestSize.Level1)
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         uri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, IsFileConflict(_, _)).WillOnce(Return(E_OK));
@@ -1619,7 +1866,7 @@ HWTEST_F(CloudSyncManagerImplTest, ClearFileConflictTest001, TestSize.Level1)
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
-        
+
         uri = "path/file/1.txt";
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ClearFileConflict(_)).WillOnce(Return(E_OK));
@@ -1737,6 +1984,33 @@ HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest003, Test
         GTEST_LOG_(INFO) << " GetBundlesLocalFilePresentStatusTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "GetBundlesLocalFilePresentStatusTest003 End";
+}
+
+/**
+ * @tc.name: RegisterFileSyncCallbackTest002
+ * @tc.desc: Verify the RegisterFileSyncCallback function.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest002 Start";
+    try {
+        CallbackInfo callbackInfo;
+        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.bundleName = "com.ohos.photos";
+        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).Times(2).WillOnce(Return(E_OK));
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterFileSyncCallback(callbackInfo);
+        CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest002 End";
 }
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

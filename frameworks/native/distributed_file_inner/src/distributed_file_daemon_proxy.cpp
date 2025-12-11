@@ -26,7 +26,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -37,6 +37,7 @@ using namespace OHOS::Storage;
 constexpr int32_t INDEX1 = 1;
 constexpr int32_t INDEX2 = 2;
 constexpr int32_t STEP = 3;
+constexpr int32_t MAX_CONNECTED_SIZE = 1024;
 
 static int32_t ReadUriInfoFromResult(const std::vector<std::string> &result,
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
@@ -117,7 +118,7 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
     return daemonProxy_;
 }
 
-int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 {
     LOGI("Open p2p connection");
     MessageParcel data;
@@ -127,28 +128,8 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware:
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(deviceInfo.deviceId)) {
-        LOGE("Failed to send device id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.deviceName)) {
-        LOGE("Failed to send device name");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.networkId)) {
-        LOGE("Failed to send network id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint16(deviceInfo.deviceTypeId)) {
-        LOGE("Failed to send deviceTypeId");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint32(deviceInfo.range)) {
-        LOGE("Failed to send range");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteInt32(deviceInfo.authForm)) {
-        LOGE("Failed to send user id");
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();
@@ -168,9 +149,9 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnection(const DistributedHardware:
     return reply.ReadInt32();
 }
 
-int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
 {
-    LOGI("Close p2p connection");
+    LOGI("Close p2p disconnection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -178,28 +159,8 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    if (!data.WriteCString(deviceInfo.deviceId)) {
-        LOGE("Failed to send device id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.deviceName)) {
-        LOGE("Failed to send device name");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteCString(deviceInfo.networkId)) {
-        LOGE("Failed to send network id");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint16(deviceInfo.deviceTypeId)) {
-        LOGE("Failed to send deviceTypeId");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteUint32(deviceInfo.range)) {
-        LOGE("Failed to send range");
-        return OHOS::FileManagement::E_INVAL_ARG;
-    }
-    if (!data.WriteInt32(deviceInfo.authForm)) {
-        LOGE("Failed to send user id");
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();
@@ -875,8 +836,8 @@ int32_t DistributedFileDaemonProxy::GetConnectedDeviceList(std::vector<DfsDevice
         return ret;
     }
     int32_t len = 0;
-    if (!reply.ReadInt32(len)) {
-        LOGE("Read devicelist length failed");
+    if (!reply.ReadInt32(len) || len < 0 || len > MAX_CONNECTED_SIZE) {
+        LOGE("Read devicelist length failed, len: %{public}d", len);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     deviceList.clear();

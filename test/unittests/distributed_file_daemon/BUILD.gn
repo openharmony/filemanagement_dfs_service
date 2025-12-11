@@ -47,8 +47,6 @@ ohos_unittest("daemon_manager_impl_test") {
   external_deps = [
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -60,6 +58,14 @@ ohos_unittest("daemon_manager_impl_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -95,7 +101,6 @@ ohos_unittest("daemon_manager_test") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -106,6 +111,11 @@ ohos_unittest("daemon_manager_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -144,8 +154,6 @@ ohos_unittest("daemon_service_proxy_test") {
     "ability_base:zuri",
     "app_file_service:remote_file_share_native",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -156,6 +164,14 @@ ohos_unittest("daemon_service_proxy_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -189,7 +205,6 @@ ohos_unittest("connection_detector_test") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -201,6 +216,11 @@ ohos_unittest("connection_detector_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -239,7 +259,6 @@ ohos_unittest("file_dfs_listener_proxy_test") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -252,6 +271,11 @@ ohos_unittest("file_dfs_listener_proxy_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -290,7 +314,6 @@ ohos_unittest("file_trans_listener_proxy_test") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -303,6 +326,11 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -337,7 +365,6 @@ ohos_unittest("trans_mananger_test") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -350,9 +377,54 @@ ohos_unittest("trans_mananger_test") {
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
 
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
+}
+
+ohos_unittest("dfs_radar_test") {
+  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
+ 
+  sources = [
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/mock_other_method.cpp",
+    "dfs_radar_test.cpp",
+  ]
+ 
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
+    "${utils_path}/dfx/include",
+    "${utils_path}/log/include",
+  ]
+ 
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+ 
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "os_account:os_account_innerkits",
+  ]
+ 
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+  ]
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+  use_exceptions = true
 }
 
 group("distributed_daemon_test") {
@@ -363,6 +435,7 @@ group("distributed_daemon_test") {
     ":daemon_manager_impl_test",
     ":daemon_manager_test",
     ":daemon_service_proxy_test",
+    ":dfs_radar_test",
     ":file_dfs_listener_proxy_test",
     ":file_trans_listener_proxy_test",
     ":trans_mananger_test",

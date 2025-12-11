@@ -38,7 +38,7 @@ constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
 static pid_t UID = DAEMON_UID;
 bool g_writeBatchUrisTrue = true;
-int32_t g_readBatchUris = true;
+int32_t g_readBatchUris = OHOS::FileManagement::E_OK;
 } // namespace
 
 namespace OHOS {
@@ -219,95 +219,67 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level0)
 }
 
 /**
- * @tc.name: DaemonStubHandleOpenP2PConnectionTest001
- * @tc.desc: Verify the HandleOpenP2PConnection function
+ * @tc.name: DaemonStubHandleConnectDfsTest001
+ * @tc.desc: Verify the HandleConnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubHandleOpenP2PConnectionTest001, TestSize.Level0)
+HWTEST_F(DaemonStubTest, DaemonStubHandleConnectDfsTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "DaemonStubHandleOpenP2PConnectionTest001 Start";
+    GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 Start";
     MessageParcel data;
     MessageParcel reply;
 
     g_checkCallerPermissionTrue = false;
-    auto ret = daemonStub_->HandleOpenP2PConnection(data, reply);
+    auto ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleConnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return("testNetworkId"));
-    EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-    EXPECT_CALL(*daemonStub_, OpenP2PConnection(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    ret = daemonStub_->HandleOpenP2PConnection(data, reply);
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DaemonStubHandleOpenP2PConnectionTest001 End";
+    EXPECT_CALL(*daemonStub_, ConnectDfs(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleConnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+    GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 End";
 }
 
 /**
- * @tc.name: DaemonStubHandleCloseP2PConnectionTest001
- * @tc.desc: Verify the HandleCloseP2PConnection function
+ * @tc.name: DaemonStubHandleDisconnectDfsTest001
+ * @tc.desc: Verify the HandleDisconnectDfs function
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DaemonStubTest, DaemonStubHandleCloseP2PConnectionTest001, TestSize.Level0)
+HWTEST_F(DaemonStubTest, DaemonStubHandleDisconnectDfsTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "DaemonStubHandleCloseP2PConnectionTest001 Start";
+    GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 Start";
     MessageParcel data;
     MessageParcel reply;
 
     g_checkCallerPermissionTrue = false;
-    auto ret = daemonStub_->HandleCloseP2PConnection(data, reply);
+    auto ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
 
     g_checkCallerPermissionTrue = true;
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString()).WillOnce(Return("testDeviceId")).WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return(nullptr));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
-    EXPECT_EQ(ret, -1);
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*messageParcelMock_, ReadCString())
-        .WillOnce(Return("testDeviceId"))
-        .WillOnce(Return("testDeviceName"))
-        .WillOnce(Return("testNetworkId"));
-    EXPECT_CALL(*messageParcelMock_, ReadUint16()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadUint32()).WillOnce(Return(1));
-    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-    EXPECT_CALL(*daemonStub_, CloseP2PConnection(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
-    ret = daemonStub_->HandleCloseP2PConnection(data, reply);
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DaemonStubHandleCloseP2PConnectionTest001 End";
+    EXPECT_CALL(*daemonStub_, DisconnectDfs(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleDisconnectDfs(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+    GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 End";
 }
 
 /**
@@ -927,9 +899,18 @@ HWTEST_F(DaemonStubTest, DaemonStubHandlePushAssetTest003, TestSize.Level0)
     g_checkCallerPermissionTrue = true;
 
     // Test case: ReadParcelable returns nullptr (AssetObj read failure)
-    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    ASSERT_NE(messageParcelMock_, nullptr) << "DaemonStubHandlePushAssetTest003 messageParcelMock_ is nullptr";
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(-1), Return(true))); // -1: Invalid userId
 
     auto ret = daemonStub_->HandlePushAsset(data, reply);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    // Test case: ReadParcelable returns nullptr (AssetObj read failure)
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(100), Return(true))); // 100: Valid userId
+
+    ret = daemonStub_->HandlePushAsset(data, reply);
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DaemonStubHandlePushAssetTest003 End";
 }

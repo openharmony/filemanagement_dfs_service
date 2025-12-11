@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_session.h"
 
+#include "dfs_radar.h"
 #include "dfs_session.h"
 #include "fcntl.h"
 #include "utils_log.h"
@@ -22,6 +23,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
 using namespace std;
 
 constexpr int32_t SOFTBUS_OK = 0;
@@ -33,6 +35,9 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
     if (ret != SOFTBUS_OK || socketFd < 0) {
         LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         socketFd_ = INVALID_SOCKET_FD;
+        RadarParaInfo info = {"SoftbusSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", peerDeviceId, ret, "get session socket fd failed"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return;
     }
     int32_t flags = fcntl(socketFd, F_GETFL, 0);
@@ -51,6 +56,9 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
     array<char, KEY_SIZE_MAX> key;
     ret = ::GetSessionKey(sessionId_, key.data(), key.size());
     if (ret != SOFTBUS_OK) {
+        RadarParaInfo info = {"SoftbusSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "softbus", peerDeviceId, ret, "get session key failed"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         LOGE("get session key failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         key_ = {};
     } else {
@@ -99,6 +107,9 @@ void SoftbusSession::DisableSessionListener() const
     LOGI("DisableSessionListener Enter.");
     int32_t ret = ::DisableSessionListener(sessionId_);
     if (ret != SOFTBUS_OK) {
+        RadarParaInfo info = {"DisableSessionListener", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
+            "softbus", "", ret, "disableSessionlistener failed"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         LOGE("disableSessionlistener failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         return;
     }

@@ -14,7 +14,9 @@
 */
 
 #include "net_conn_callback_observer.h"
+
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "network_status.h"
 #include "utils_log.h"
 
@@ -42,18 +44,26 @@ int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandl
         LOGI("net status is not change, status is %{public}d", static_cast<int32_t>(newStatus));
         return E_OK;
     }
-    if (newStatus == NetworkStatus::WIFI_CONNECT) {
-        LOGI("NetCapabilitiesChanged wifi connected");
-        dataSyncManager_->TriggerRecoverySync(triggerType_);
-        dataSyncManager_->DownloadThumb();
-        dataSyncManager_->CacheVideo();
-    } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
-        LOGI("NetCapabilitiesChanged cellular connected");
-        dataSyncManager_->TriggerRecoverySync(triggerType_);
-        NetworkStatus::NetWorkChangeStopUploadTask();
-    } else {
-        LOGI("NetCapabilitiesChanged newStatus:%{public}d", newStatus);
-    }
+
+    ffrt::submit([newStatus, this]() {
+        if (dataSyncManager_ == nullptr) {
+            LOGE("dataSyncManager_ is nullptr");
+            return;
+        }
+        if (newStatus == NetworkStatus::WIFI_CONNECT) {
+            LOGI("NetCapabilitiesChanged wifi connected");
+            dataSyncManager_->TriggerRecoverySync(triggerType_);
+            dataSyncManager_->DownloadThumb();
+            dataSyncManager_->CacheVideo();
+        } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
+            LOGI("NetCapabilitiesChanged cellular connected");
+            dataSyncManager_->TriggerRecoverySync(triggerType_);
+            NetworkStatus::NetWorkChangeStopUploadTask();
+        } else {
+            LOGI("NetCapabilitiesChanged newStatus:%{public}d", newStatus);
+        }
+    });
+
     return E_OK;
 }
 

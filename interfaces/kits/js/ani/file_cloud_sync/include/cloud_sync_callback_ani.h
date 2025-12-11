@@ -19,6 +19,7 @@
 #include <ani.h>
 #include <ani_signature_builder.h>
 
+#include "cloud_sync_callback_info.h"
 #include "cloud_sync_callback_middle.h"
 #include "cloud_optimize_callback_middle.h"
 #include "data_ability_observer_interface.h"
@@ -32,8 +33,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudNotifyObserver;
 
 struct BundleEntity {
-    std::string bundleName_;
-    explicit BundleEntity(const std::string bundleName) : bundleName_(bundleName) {};
+    CallbackInfo callbackInfo;
 };
 
 struct CloudChangeListener {
@@ -71,7 +71,7 @@ class CloudSyncCallbackAniImpl : public CloudSyncCallbackMiddle,
                                  public std::enable_shared_from_this<CloudSyncCallbackAniImpl> {
 public:
     CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun);
-    ~CloudSyncCallbackAniImpl() override = default;
+    ~CloudSyncCallbackAniImpl();
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
     void DeleteReference() override;

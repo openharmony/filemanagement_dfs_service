@@ -19,6 +19,7 @@
 #include <sys/types.h>
 
 #include "async_work.h"
+#include "cloud_file_utils.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
@@ -83,16 +84,32 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!FileSyncNapi::InitArgsOnCallback(env, funcArg)) {
+    if (!InitArgsOnCallback(env, funcArg)) {
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    string bundleName = GetBundleName(env, funcArg);
-    callback_ = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(callback_, bundleName);
+    auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
+    if (bundleEntity == nullptr) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (bundleEntity->callbackInfo.callback != nullptr) {
+        LOGI("callback already exist");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity);
+    bundleEntity->callbackInfo.callback =
+        make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OnCallback Register error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        bundleEntity->callbackInfo.callback = nullptr;
         return nullptr;
     }
 
@@ -102,21 +119,28 @@ napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!FileSyncNapi::InitArgsOffCallback(env, funcArg)) {
+    if (!InitArgsOffCallback(env, funcArg)) {
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    string bundleName = GetBundleName(env, funcArg);
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleName);
+    auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
+    if (bundleEntity == nullptr) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OffCallback UnRegister error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
-    if (callback_ != nullptr) {
+    if (bundleEntity->callbackInfo.callback != nullptr) {
         /* napi delete reference */
-        callback_->DeleteReference();
-        callback_ = nullptr;
+        bundleEntity->callbackInfo.callback->DeleteReference();
+        bundleEntity->callbackInfo.callback = nullptr;
     }
     return NVal::CreateUndefined(env).val_;
 }

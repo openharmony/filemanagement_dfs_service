@@ -21,6 +21,7 @@
 #include "battersrvclient_mock.h"
 #include "battery_status.h"
 #include "battery_status_listener.h"
+#include "ffrt_inner.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
@@ -116,7 +117,7 @@ HWTEST_F(BatteryStatusListenerTest, OnStatusAbnormalTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnReceiveEventTest
+ * @tc.name: OnReceiveEventTest001
  * @tc.desc: Verify the OnReceiveEvent function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
@@ -133,6 +134,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest001, TestSize.Level1)
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -142,7 +144,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnReceiveEventTest
+ * @tc.name: OnReceiveEventTest002
  * @tc.desc: Verify the OnReceiveEvent function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
@@ -159,6 +161,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -168,7 +171,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnReceiveEventTest
+ * @tc.name: OnReceiveEventTest003
  * @tc.desc: Verify the OnReceiveEvent function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
@@ -185,6 +188,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_FALSE(batteryStatus_->IsCharging());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -194,7 +198,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnReceiveEventTest
+ * @tc.name: OnReceiveEventTest004
  * @tc.desc: Verify the OnReceiveEvent function
  * @tc.type: FUNC
  */
@@ -210,6 +214,7 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
             batteryStatusListener);
         subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
         EXPECT_TRUE(batteryStatus_->IsCharging());
     } catch (...) {
         EXPECT_TRUE(false);

@@ -45,6 +45,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "dfx/include",
     "inner_api",
     "ioctl/include",
     "load/include",
@@ -79,6 +80,7 @@ ohos_shared_library("libdistributedfileutils") {
   }
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "dfx/src/dfs_radar.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
     "load/src/plugin_loader.cpp",
@@ -121,6 +123,7 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
@@ -130,6 +133,7 @@ ohos_shared_library("libdistributedfileutils") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "napi:ace_napi",
+    "os_account:libaccountkits",
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
   ]
@@ -137,6 +141,11 @@ ohos_shared_library("libdistributedfileutils") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   part_name = "dfs_service"
@@ -181,7 +190,6 @@ ohos_shared_library("libdistributedfiledentry") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "json:nlohmann_json_static",
@@ -195,6 +203,11 @@ ohos_shared_library("libdistributedfiledentry") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   part_name = "dfs_service"
@@ -255,7 +268,6 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -272,6 +284,11 @@ ohos_shared_library("libdistributedfileutils_lite") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
   part_name = "dfs_service"

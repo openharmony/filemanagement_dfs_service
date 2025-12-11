@@ -2033,7 +2033,8 @@ void HandleTruncateError(shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDisk
     CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
         CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::FILE, errno, "truncate failed, err: " +
         std::to_string(errno)});
-    int res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, inoPtr->stat.st_size);
+    struct stat *statPtr = &inoPtr->stat;
+    int res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, statPtr, FUSE_SET_ATTR_SIZE);
     if (res != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
             CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
@@ -2064,6 +2065,30 @@ std::optional<int32_t> FuseFileTruncate(struct fuse_file_info* fi, struct CloudD
     return res;
 }
 
+int32_t HandleSize(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuseData* data,
+    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr)
+{
+    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, FUSE_SET_ATTR_SIZE);
+    if (res != 0) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
+            "update rdb size failed, res: " + std::to_string(res)});
+    }
+    return res;
+}
+
+int32_t HandleMtime(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuseData* data,
+    shared_ptr<CloudDiskInode> inoPtr, shared_ptr<CloudDiskInode> parentInode, struct stat *attr)
+{
+    int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr, FUSE_SET_ATTR_MTIME);
+    if (res != 0) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
+            "update rdb mtime failed, res: " + std::to_string(res)});
+    }
+    return res;
+}
+
 void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                                   int valid, struct fuse_file_info *fi)
 {
@@ -2072,6 +2097,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         return (void) fuse_reply_err(req, EBUSY);
     }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    LOGD("SetAttr begin valid:%{public}d", valid);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
@@ -2079,35 +2105,35 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
             CloudFile::FaultType::INODE_FILE, EINVAL, "get an invalid inode!"});
         return (void) fuse_reply_err(req, EINVAL);
     }
-    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
-        static_cast<int64_t>(inoPtr->parent));
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
     if (parentInode == nullptr) {
         LOGE("parent inode not found");
         fuse_reply_err(req, EINVAL);
         return;
     }
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
-        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-        int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr->st_size);
+        int32_t res = HandleSize(rdbStore, data, inoPtr, parentInode, attr);
         if (res != 0) {
-            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
-                CloudFile::FaultOperation::SETATTR, CloudFile::FaultType::DATABASE, res,
-                "update rdb size failed, res: " + std::to_string(res)});
             return (void) fuse_reply_err(req, EINVAL);
         }
-
         auto ret = FuseFileTruncate(fi, data, inoPtr, req, attr);
         if (!ret.has_value()) {
             return;
         }
-
         if (ret.value() == -1) {
             HandleTruncateError(inoPtr, rdbStore, parentInode, req);
             return;
         }
-        UpdateCloudDiskInode(rdbStore, inoPtr);
     }
+    if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_MTIME) {
+        int32_t res = HandleMtime(rdbStore, data, inoPtr, parentInode, attr);
+        if (res != 0) {
+            return (void) fuse_reply_err(req, EINVAL);
+        }
+    }
+    UpdateCloudDiskInode(rdbStore, inoPtr);
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_SETATTR, inoPtr});
     fuse_reply_attr(req, &inoPtr->stat, 0);

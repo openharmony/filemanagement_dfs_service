@@ -71,33 +71,35 @@ void DistributedDaemonProxyTest::TearDown(void)
 }
 
 /**
- * @tc.name: OpenP2PConnectionTest
- * @tc.desc: Verify the OpenP2PConnection function.
+ * @tc.name: ConnectDfsTest
+ * @tc.desc: Verify the ConnectDfs function.
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonProxyTest, OpenP2PConnectionTest, TestSize.Level0)
+HWTEST_F(DistributedDaemonProxyTest, ConnectDfsTest, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "OpenP2PConnectionTest Start";
+    std::string networkId = "ConnectDfsTest";
+    GTEST_LOG_(INFO) << "ConnectDfsTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-    int ret = proxy_->OpenP2PConnection(deviceInfo);
+    int ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "OpenP2PConnectionTest End";
+    GTEST_LOG_(INFO) << "ConnectDfsTest End";
 }
 
 /**
- * @tc.name: CloseP2PConnectionTest
- * @tc.desc: Verify the CloseP2PConnection function.
+ * @tc.name: DisconnectDfsTest
+ * @tc.desc: Verify the DisconnectDfs function.
  * @tc.type: FUNC
  * @tc.require: I7M6L1
  */
-HWTEST_F(DistributedDaemonProxyTest, CloseP2PConnectionTest, TestSize.Level0)
+HWTEST_F(DistributedDaemonProxyTest, DisconnectDfsTest, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "CloseP2PConnectionTest Start";
+    std::string networkId = "DisconnectDfsTest";
+    GTEST_LOG_(INFO) << "DisconnectDfsTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-    int ret = proxy_->OpenP2PConnection(deviceInfo);
+    int ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "CloseP2PConnectionTest End";
+    GTEST_LOG_(INFO) << "DisconnectDfsTest End";
 }
 
 /**

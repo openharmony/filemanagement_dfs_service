@@ -16,18 +16,20 @@
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include <distributed_file_daemon_proxy.h>
+#endif
 #include <file_mount_manager.h>
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
+using namespace OHOS::FileManagement;
 FileMountManager &FileMountManager::GetInstance()
 {
     static FileMountManager instance;
@@ -39,12 +41,16 @@ int32_t FileMountManager::GetDfsUrisDirFromLocal(
     const int32_t userId,
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
+#else
+    return ERR_NOT_SUPPORT;
+#endif
 }
 
 } // namespace DistributedFile

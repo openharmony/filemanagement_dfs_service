@@ -26,14 +26,14 @@ public:
     ISoftBusPermissionCheckMock() = default;
     virtual ~ISoftBusPermissionCheckMock() = default;
 
-    virtual bool CheckSrcPermission(const std::string &sinkNetworkId) = 0;
+    virtual bool CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId = INVALID_USER_ID) = 0;
     virtual bool CheckSinkPermission(const AccountInfo &callerAccountInfo) = 0;
-    virtual bool GetLocalAccountInfo(AccountInfo &localAccountInfo) = 0;
+    virtual bool GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId = INVALID_USER_ID) = 0;
     virtual int32_t GetCurrentUserId() = 0;
     virtual bool
         TransCallerInfo(SocketAccessInfo *callerInfo, AccountInfo &callerAccountInfo, const std::string &networkId) = 0;
     virtual bool FillLocalInfo(SocketAccessInfo *localInfo) = 0;
-    virtual bool SetAccessInfoToSocket(const int32_t sessionId) = 0;
+    virtual bool SetAccessInfoToSocket(const int32_t sessionId, int32_t userId = INVALID_USER_ID) = 0;
     virtual bool IsSameAccount(const std::string &networkId) = 0;
 
 public:
@@ -42,14 +42,14 @@ public:
 
 class SoftBusPermissionCheckMock : public ISoftBusPermissionCheckMock {
 public:
-    MOCK_METHOD1(CheckSrcPermission, bool(const std::string &sinkNetworkId));
+    MOCK_METHOD2(CheckSrcPermission, bool(const std::string &sinkNetworkId, int32_t userId));
     MOCK_METHOD1(CheckSinkPermission, bool(const AccountInfo &callerAccountInfo));
-    MOCK_METHOD1(GetLocalAccountInfo, bool(AccountInfo &localAccountInfo));
+    MOCK_METHOD2(GetLocalAccountInfo, bool(AccountInfo &localAccountInfo, int32_t userId));
     MOCK_METHOD0(GetCurrentUserId, int32_t());
     MOCK_METHOD3(TransCallerInfo,
                  bool(SocketAccessInfo *callerInfo, AccountInfo &callerAccountInfo, const std::string &networkId));
     MOCK_METHOD1(FillLocalInfo, bool(SocketAccessInfo *localInfo));
-    MOCK_METHOD1(SetAccessInfoToSocket, bool(const int32_t sessionId));
+    MOCK_METHOD2(SetAccessInfoToSocket, bool(const int32_t sessionId, int32_t userId));
     MOCK_METHOD1(IsSameAccount, bool(const std::string &networkId));
 };
 } // namespace DistributedFile

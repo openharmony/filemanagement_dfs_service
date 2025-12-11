@@ -60,8 +60,8 @@ public:
         return state_;
     }
 
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t ConnectDfs(const std::string &networkId) override;
+    int32_t DisconnectDfs(const std::string &networkId) override;
     int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
@@ -149,6 +149,7 @@ private:
     void RemoveDfsDelayTask(const std::string &networkId);
     void DisconnectDevice(const std::string networkId);
     bool IsCallingDeviceTrusted();
+    int32_t JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -169,6 +170,7 @@ private:
     int32_t CheckRemoteAllowConnect(const std::string &networkId);
     int32_t NotifyRemotePublishNotification(const std::string &networkId);
     int32_t NotifyRemoteCancelNotification(const std::string &networkId);
+    int32_t CheckPermission(const std::string &networkId);
 private:
     std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;

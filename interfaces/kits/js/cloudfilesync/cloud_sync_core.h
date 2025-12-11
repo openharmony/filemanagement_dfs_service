@@ -46,7 +46,6 @@ public:
     ~CloudSyncCore() = default;
 
 private:
-    std::shared_ptr<CloudSyncCallbackMiddle> callback_;
     std::unique_ptr<BundleEntity> bundleEntity;
 };
 } // namespace OHOS::FileManagement::CloudSync

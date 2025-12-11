@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
 #include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler.h"
@@ -30,6 +31,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
+
 #ifdef __LP64__
 constexpr const char *ALL_CONNECT_SO_PATH = "/system/lib64/";
 #else
@@ -107,6 +110,9 @@ int32_t AllConnectManager::PublishServiceState(DfsConnectCode code, const std::s
                                                                               "", state);
     if (ret != FileManagement::ERR_OK) {
         LOGE("PublishServiceState %{public}d fail, ret %{public}d", state, ret);
+        RadarParaInfo info = {"PublishServiceState", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
+            DEFAULT_PKGNAME, peerNetworkId, ret, "PublishServiceState failed"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_PUBLISH_STATE;
     }
     return FileManagement::ERR_OK;
@@ -173,6 +179,9 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
                                                                                 &allConnectCallback_);
     if (ret != FileManagement::ERR_OK) {
         LOGE("ApplyAdvancedResource fail, ret %{public}d", ret);
+        RadarParaInfo info = {"ApplyAdvancedResource", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+            "collaboration", peerNetworkId, ret, "ApplyAdvancedResource fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_APPLY_RESULT;
     }
     auto success = applyResultBlock_->GetValue();

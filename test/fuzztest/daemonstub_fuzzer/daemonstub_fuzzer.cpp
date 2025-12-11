@@ -57,12 +57,12 @@ class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
     ~DaemonStubImpl() override {}
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t ConnectDfs(const std::string &networkId) override
     {
         return 0;
     }
 
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override
+    int32_t DisconnectDfs(const std::string &networkId) override
     {
         return 0;
     }

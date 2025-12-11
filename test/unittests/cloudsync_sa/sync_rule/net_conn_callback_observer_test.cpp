@@ -17,7 +17,9 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "net_conn_callback_observer.h"
+#include "network_status.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -74,19 +76,113 @@ HWTEST_F(NetConnCallbackObserverTest, NetAvailable, TestSize.Level1)
 }
 
 /**
- * @tc.name: NetCapabilitiesChangeTest
+ * @tc.name: NetCapabilitiesChangeTest001
  * @tc.desc: Verify the NetCapabilitiesChange function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
  */
-HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChange, TestSize.Level1)
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "NetCapabilitiesChange Start";
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest001 Start";
     sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
     sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
-    int res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
+    int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
     EXPECT_EQ(res, E_OK);
-    GTEST_LOG_(INFO) << "NetCapabilitiesChange End";
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest001 End";
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest002
+ * @tc.desc: Verify the NetCapabilitiesChange function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest002 Start";
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
+    sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
+    sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
+    netAllCap->netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+    netAllCap->bearerTypes_.insert(NetManagerStandard::BEARER_ETHERNET);
+    int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
+    EXPECT_EQ(res, E_OK);
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest002 End";
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest003
+ * @tc.desc: Verify the NetCapabilitiesChange function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest003 Start";
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
+    sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
+    sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
+    netAllCap->netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+    netAllCap->bearerTypes_.insert(NetManagerStandard::BEARER_WIFI);
+    int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
+    EXPECT_EQ(res, E_OK);
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest003 End";
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest004
+ * @tc.desc: Verify the NetCapabilitiesChange function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest004 Start";
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
+    sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
+    sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
+    netAllCap->netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+    netAllCap->bearerTypes_.insert(NetManagerStandard::BEARER_CELLULAR);
+    int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
+    EXPECT_EQ(res, E_OK);
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest004 End";
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest005
+ * @tc.desc: Verify the NetCapabilitiesChange function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest005 Start";
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
+    sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
+    sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
+    netAllCap->bearerTypes_.insert(NetManagerStandard::BEARER_CELLULAR);
+    int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
+    EXPECT_EQ(res, E_OK);
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest005 End";
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest006
+ * @tc.desc: Verify the NetCapabilitiesChange function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest006 Start";
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
+    sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
+    sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
+    netAllCap->bearerTypes_.insert(NetManagerStandard::BEARER_CELLULAR);
+    std::shared_ptr<NetConnCallbackObserver> tmpOberverPtr = make_shared<NetConnCallbackObserver>(nullptr);
+    int32_t res = tmpOberverPtr->NetCapabilitiesChange(netHandle, netAllCap);
+    EXPECT_EQ(res, E_OK);
+    ffrt::wait();
+    GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest006 End";
 }
 
 /**

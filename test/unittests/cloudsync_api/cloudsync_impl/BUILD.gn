@@ -39,6 +39,33 @@ ohos_unittest("cloud_sync_callback_client_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_sync_callback_client_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "cloud_sync_callback_client_manager_test.cpp" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  deps = [ 
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_callback_stub_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -80,6 +107,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
 
   sources = [
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
+    "${distributedfile_path}/test/mock/account_sa/src/os_account_manager_mock.cpp",
     "cloud_sync_manager_impl_test.cpp",
   ]
 
@@ -91,13 +119,14 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${distributedfile_path}/test/mock/account_sa/include",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/system/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${utils_path}/dentry/include/",
   ]
 
-  deps = [ 
+  deps = [
   "${utils_path}:libdistributedfileutils",
   "${utils_path}:libdistributedfiledentry",
   ]
@@ -111,6 +140,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "ipc:ipc_single",
     "json:nlohmann_json_static",
     "samgr:samgr_proxy",
+    "os_account:os_account_innerkits",
   ]
 
   defines = [
@@ -385,9 +415,6 @@ ohos_unittest("cloud_sync_asset_manager_impl_unnomal_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
     "cloud_sync_asset_manager_impl_unnomal_test.cpp",
   ]
 

@@ -14,17 +14,9 @@
 */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 
-#include "cloud_file_utils.h"
-#include "cloud_status.h"
-#include "clouddisk_notify_utils_mock.h"
-#include "clouddisk_rdb_utils.h"
 #include "clouddisk_rdbstore.cpp"
-#include "dfs_error.h"
 #include "rdb_assistant.h"
-#include "result_set_mock.h"
-#include "transaction_mock.cpp"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -33,15 +25,12 @@ using namespace std;
 using namespace NativeRdb;
 using namespace OHOS::FileManagement::CloudDisk;
 
-static const string BUNDLE_NAME = "com.ohos.photos";
-static const int32_t USER_ID = 100;
 class CloudDiskRdbStoreStaticTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<CloudDiskRdbStore> clouddiskrdbStore_ = nullptr;
     static inline shared_ptr<AssistantMock> insMock = nullptr;
 };
 
@@ -50,14 +39,11 @@ void CloudDiskRdbStoreStaticTest::SetUpTestCase(void)
     GTEST_LOG_(INFO) << "SetUpTestCase";
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
-    clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
 }
 
 void CloudDiskRdbStoreStaticTest::TearDownTestCase(void)
 {
-    Assistant::ins = nullptr;
     insMock = nullptr;
-    clouddiskrdbStore_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -296,6 +282,19 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest3, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest4, TestSize.Level1)
 {
     string uri = "file:///data/storage/el2/cloud/a";
+    string expectResult = "/";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
+
+/**
+ * @tc.name: ConvertUriToSrcPathTest005
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest005, TestSize.Level1)
+{
+    string uri = "/data/storage/el2/cloud/a";
     string expectResult = "/";
     string filePath = ConvertUriToSrcPath(uri);
     EXPECT_EQ(filePath, expectResult);
@@ -849,6 +848,475 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFileTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "CreateFileTest001 failed";
     }
     GTEST_LOG_(INFO) << "CreateFileTest001 end";
+}
+
+/**
+ * @tc.name: CreateFileTest002
+ * @tc.desc: Verify the CloudSyncTriggerFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateFileTest002 start";
+    try {
+        std::string fileName = "test.txt";
+        std::string filePath = "/data/service/el2/100/hmdfs/cloud/";
+        ValuesBucket fileInfo;
+        struct stat statInfo{};
+        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(0));
+        int32_t result = CreateFile(fileName, filePath, fileInfo, &statInfo);
+
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateFileTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "CreateFileTest002 end";
+}
+
+/**
+ * @tc.name: FillFileTypeTest001
+ * @tc.desc: Verify the FillFileType
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, FillFileTypeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FillFileTypeTest001 start";
+    try {
+        std::string fileName = "test.txt";
+        ValuesBucket fileInfo;
+        FillFileType(fileName, fileInfo);
+
+        std::string extension;
+        int32_t result = GetFileExtension(fileName, extension);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FillFileTypeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "FillFileTypeTest001 end";
+}
+
+/**
+ * @tc.name: CreateDentryTest001
+ * @tc.desc: Verify the CreateDentry
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CreateDentryTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDentryTest001 start";
+    try {
+        std::string fileName = "mock";
+        std::string cloudId;
+        uint32_t userId = 1;
+        std::string bundleName;
+        std::string parentCloudId;
+        MetaBase metaBase(fileName, cloudId);
+
+        int32_t result = CreateDentry(metaBase, userId, bundleName, fileName, parentCloudId);
+        EXPECT_EQ(result, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDentryTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CreateDentryTest001 end";
+}
+
+/**
+ * @tc.name: CreateDentryTest002
+ * @tc.desc: Verify the CreateDentry
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CreateDentryTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDentryTest002 start";
+    try {
+        std::string fileName = "filename";
+        std::string cloudId;
+        uint32_t userId = 1;
+        std::string bundleName;
+        std::string parentCloudId;
+        MetaBase metaBase(fileName, cloudId);
+
+        int32_t result = CreateDentry(metaBase, userId, bundleName, fileName, parentCloudId);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDentryTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "CreateDentryTest002 end";
+}
+
+/**
+ * @tc.name: HandleWriteValueTest001
+ * @tc.desc: Verify the HandleWriteValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleWriteValueTest001 start";
+    try {
+        ValuesBucket write;
+        int32_t position = LOCAL;
+        struct stat statInfo;
+
+        HandleWriteValue(write, position, statInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleWriteValueTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleWriteValueTest001 end";
+}
+
+/**
+ * @tc.name: HandleWriteValueTest002
+ * @tc.desc: Verify the HandleWriteValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleWriteValueTest002 start";
+    try {
+        ValuesBucket write;
+        int32_t position = 1;
+        struct stat statInfo;
+
+        HandleWriteValue(write, position, statInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleWriteValueTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleWriteValueTest002 end";
+}
+
+/**
+ * @tc.name: WriteUpdateDentryTest001
+ * @tc.desc: Verify the WriteUpdateDentry
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, WriteUpdateDentryTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "WriteUpdateDentryTest001 start";
+    try {
+        std::string fileName = "mock";
+        std::string cloudId;
+        uint32_t userId = 1;
+        std::string bundleName;
+        std::string parentCloudId;
+        MetaBase metaBase(fileName, cloudId);
+
+        int32_t result = WriteUpdateDentry(metaBase, userId, bundleName, fileName, parentCloudId);
+        EXPECT_EQ(result, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "WriteUpdateDentryTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "WriteUpdateDentryTest001 end";
+}
+
+/**
+ * @tc.name: WriteUpdateDentryTest002
+ * @tc.desc: Verify the WriteUpdateDentry
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, WriteUpdateDentryTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "WriteUpdateDentryTest002 start";
+    try {
+        std::string fileName = "filename";
+        std::string cloudId;
+        uint32_t userId = 1;
+        std::string bundleName;
+        std::string parentCloudId;
+        MetaBase metaBase(fileName, cloudId);
+
+        int32_t result = WriteUpdateDentry(metaBase, userId, bundleName, fileName, parentCloudId);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "WriteUpdateDentryTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "WriteUpdateDentryTest002 end";
+}
+
+/**
+ * @tc.name: UpdateValueBucketsTest001
+ * @tc.desc: Verify the UpdateValueBuckets
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateValueBucketsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateValueBucketsTest001 start";
+    try {
+        MetaBase metaBase;
+        std::string filePath = "";
+        int32_t status = 1;
+        ValuesBucket fileInfo;
+        int64_t fileSize = 0;
+        struct stat statInfo{};
+        int32_t result = UpdateValueBuckets(metaBase, filePath, status, fileInfo, fileSize);
+        EXPECT_NE(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateValueBucketsTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateValueBucketsTest001 end";
+}
+
+/**
+ * @tc.name: UpdateValueBucketsTest002
+ * @tc.desc: Verify the UpdateValueBuckets
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateValueBucketsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateValueBucketsTest002 start";
+    try {
+        MetaBase metaBase;
+        std::string filePath = "/data/service/el2/100/hmdfs/cloud/";
+        int32_t status = 1;
+        ValuesBucket fileInfo;
+        int64_t fileSize = 0;
+        struct stat statInfo{};
+        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(0));
+        int32_t result = UpdateValueBuckets(metaBase, filePath, status, fileInfo, fileSize);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateValueBucketsTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateValueBucketsTest002 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest001
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest001 start";
+    try {
+        TrashOptType val = TrashOptType::RESTORE;
+        ValuesBucket setXAttr;
+        int32_t position = -1;
+        int32_t dirtyType = -1;
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest001 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest002
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest002 start";
+    try {
+        TrashOptType val = TrashOptType::RESTORE;
+        ValuesBucket setXAttr;
+        int32_t position = -1;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_FDIRTY);
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest002 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest003
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest003 start";
+    try {
+        TrashOptType val = TrashOptType::RESTORE;
+        ValuesBucket setXAttr;
+        int32_t position = LOCAL;
+        int32_t dirtyType = -1;
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest003 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest004
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest004 start";
+    try {
+        TrashOptType val = TrashOptType::RECYCLE;
+        ValuesBucket setXAttr;
+        int32_t position = LOCAL;
+        int32_t dirtyType = -1;
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest004 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest005
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest005 start";
+    try {
+        int intValue = -1;
+        TrashOptType val = static_cast<TrashOptType>(intValue);
+        ValuesBucket setXAttr;
+        int32_t position = LOCAL;
+        int32_t dirtyType = -1;
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest005 end";
+}
+
+/**
+ * @tc.name: UpdateParentTest001
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateParentTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateParentTest001 start";
+    try {
+        int32_t userId = 100;
+        string bundleName;
+        string srcPath = "";
+        string parentCloudId;
+
+        int32_t result = UpdateParent(userId, bundleName, srcPath, parentCloudId);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateParentTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateParentTest001 end";
+}
+
+/**
+ * @tc.name: UpdateParentTest002
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateParentTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateParentTest002 start";
+    try {
+        int32_t userId = 100;
+        string bundleName;
+        string srcPath = "/";
+        string parentCloudId;
+
+        int32_t result = UpdateParent(userId, bundleName, srcPath, parentCloudId);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateParentTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateParentTest002 end";
+}
+
+/**
+ * @tc.name: ExtAttrJsonValueTest001
+ * @tc.desc: Verify the ExtAttrJsonValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttrJsonValueTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest001 start";
+    try {
+        std::string jsonValue;
+        ValuesBucket setXAttr;
+        int32_t pos = 0;
+        int32_t dirtyType = 0;
+
+        int32_t result = ExtAttrJsonValue(jsonValue, setXAttr, pos, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtAttrJsonValueTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest001 end";
+}
+
+/**
+ * @tc.name: ExtAttrJsonValueTest002
+ * @tc.desc: Verify the ExtAttrJsonValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttrJsonValueTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest002 start";
+    try {
+        std::string jsonValue;
+        ValuesBucket setXAttr;
+        int32_t pos = 0;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_FDIRTY);
+
+        int32_t result = ExtAttrJsonValue(jsonValue, setXAttr, pos, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtAttrJsonValueTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest002 end";
+}
+
+/**
+ * @tc.name: ExtAttrJsonValueTest003
+ * @tc.desc: Verify the ExtAttrJsonValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttrJsonValueTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest003 start";
+    try {
+        std::string jsonValue;
+        ValuesBucket setXAttr;
+        int32_t pos = 1;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_FDIRTY);
+
+        int32_t result = ExtAttrJsonValue(jsonValue, setXAttr, pos, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtAttrJsonValueTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "ExtAttrJsonValueTest003 end";
 }
 
 } // namespace OHOS::FileManagement::CloudDisk::Test

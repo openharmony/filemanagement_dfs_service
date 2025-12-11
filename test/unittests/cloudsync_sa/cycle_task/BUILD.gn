@@ -18,8 +18,8 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
-    "${distributedfile_path}/test/mock/cloud_file_kit_mock.cpp",
+    "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/clouddisk_rdbstore_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
@@ -27,6 +27,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_cache_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_storage_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_clean_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/report_statistics_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/save_subscription_task.cpp",
     "cloud_sync_service_cycle_task_test.cpp",
@@ -43,7 +44,6 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   ]
 
   deps = [
-    "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -55,7 +55,6 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",
     "googletest:gmock",
     "googletest:gtest",
@@ -72,6 +71,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   ]
 
   defines = [
+    "access=mockAccess",
     "private=public",
     "protected=public",
     "LOG_DOMAIN=0xD004307",
@@ -91,7 +91,82 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   use_exceptions = true
 }
 
+ohos_unittest("periodic_clean_task_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_ability_observer_stub.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_result_set.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_pref_impl_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/database_backup_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_cache_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_storage_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_clean_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/report_statistics_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/save_subscription_task.cpp",
+    "periodic_clean_task_test.cpp",
+  ]
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "os_account:os_account_innerkits",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "rename=mockRename",
+    "mkdir=mockMkdir",
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_cycle_task_test") {
   testonly = true
-  deps = [ ":cloud_sync_service_cycle_task_test" ]
+  deps = [
+    ":cloud_sync_service_cycle_task_test",
+    ":periodic_clean_task_test",
+  ]
 }

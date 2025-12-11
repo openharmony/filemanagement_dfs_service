@@ -100,11 +100,11 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalNetworkI
 HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetCurrentUserId_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetCurrentUserId_001 start";
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     auto userId = SoftBusPermissionCheck::GetCurrentUserId();
     EXPECT_EQ(userId, INVALID_USER_ID);
 
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(FileManagement::E_OK));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(FileManagement::E_OK));
     userId = SoftBusPermissionCheck::GetCurrentUserId();
     EXPECT_EQ(userId, INVALID_USER_ID);
 
@@ -130,13 +130,13 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_FillLocalInfo_00
     EXPECT_TRUE(res == false);
 
     SocketAccessInfo localInfo;
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     res = SoftBusPermissionCheck::FillLocalInfo(&localInfo);
     EXPECT_TRUE(res == false);
 
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     res = SoftBusPermissionCheck::FillLocalInfo(&localInfo);
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_FillLocalInfo_001 end";
@@ -186,14 +186,14 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
 {
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_001 start";
     AccountInfo localAccountInfo;
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     bool res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo);
     EXPECT_TRUE(res == false);
 
     std::vector<int32_t> userIds{100, 101};
 #ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     AccountSA::OhosAccountInfo osAccountInfo;
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(INVALID_USER_ID)));
@@ -202,7 +202,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
 
     osAccountInfo.uid_ = ""; // accountinfo uid = ""
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
     res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo);
@@ -210,7 +210,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
 #endif
 
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))// GetLocalDeviceInfo = false
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
 #ifdef SUPPORT_SAME_ACCOUNT
     osAccountInfo.uid_ = "test";
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
@@ -221,7 +221,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
     EXPECT_EQ(res, false);
 
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
 #ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
@@ -230,6 +230,55 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountI
     res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo);
     EXPECT_EQ(res, true);
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_001 end";
+}
+
+/**
+ * @tc.name: SoftbusPermissionCheckTest_GetLocalAccountInfo_002
+ * @tc.desc: Verify the GetLocalAccountInfo function.
+ * @tc.type: FUNC
+ * @tc.require: IC987N
+ */
+HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountInfo_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_002 start";
+    AccountInfo localAccountInfo;
+    int32_t testUserId = 100; // 100: test userId
+    bool res = false;
+#ifdef SUPPORT_SAME_ACCOUNT
+    AccountSA::OhosAccountInfo osAccountInfo;
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(INVALID_USER_ID)));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    osAccountInfo.uid_ = ""; // accountinfo uid = ""
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    osAccountInfo.uid_ = "test";
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(INVALID_USER_ID));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
+        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, true);
+#else
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(INVALID_USER_ID));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, false);
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
+    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
+    EXPECT_EQ(res, true);
+#endif
+    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_002 end";
 }
 
 /**
@@ -244,13 +293,13 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_SetAccessInfoToS
     int32_t socketId = 0;
     bool res = false;
 #ifdef SUPPORT_SAME_ACCOUNT
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     SoftBusPermissionCheck::SetAccessInfoToSocket(socketId);
     EXPECT_TRUE(res == false);
 
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
 
     AccountSA::OhosAccountInfo osAccountInfo;
     osAccountInfo.uid_ = "test";
@@ -262,7 +311,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_SetAccessInfoToS
     EXPECT_TRUE(res == false);
 
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
@@ -384,7 +433,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_CheckSrcPermissi
 {
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_CheckSrcPermission_001 start";
     std::string networkId; // GetLocalAccount failed
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     bool res = SoftBusPermissionCheck::CheckSrcPermission(networkId);
     EXPECT_TRUE(res == false);
 
@@ -402,7 +451,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_CheckSrcPermissi
     EXPECT_TRUE(res == true);
 
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
@@ -429,7 +478,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_CheckSinkPermiss
 {
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_CheckSinkPermission_001 start";
     AccountInfo callerAccountInfo;
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     bool res = SoftBusPermissionCheck::CheckSinkPermission(callerAccountInfo);
     EXPECT_TRUE(res == false);
 
@@ -447,7 +496,7 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_CheckSinkPermiss
     EXPECT_TRUE(res == true);
 
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));

@@ -26,7 +26,7 @@ group("services_target") {
     "${services_path}/cloudsyncservice:cloudsync_sa",
   ]
 
-  if (dfs_service_feature_enable_dist_file_daemon) {
+  if (dfs_service_feature_enable_dist_file_daemon && dfs_service_feature_enable_distributed_ability) {
     deps +=
         [ "${services_path}/distributedfiledaemon:libdistributedfiledaemon" ]
   }

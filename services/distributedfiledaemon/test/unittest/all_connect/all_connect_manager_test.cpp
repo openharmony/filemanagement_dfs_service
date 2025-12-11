@@ -145,9 +145,9 @@ HWTEST_F(AllConnectManagerTest, InitAllConnectManager_003, TestSize.Level1)
         auto &allConnectManager = AllConnectManager::GetInstance();
 
         EXPECT_CALL(*libraryFuncMock_, realpath(_, _)).WillOnce(Return(soPath));
-        EXPECT_CALL(*libraryFuncMock_, dlopen(_, _)).WillOnce(Return(reinterpret_cast<void *>(0x1)));
+        EXPECT_CALL(*libraryFuncMock_, dlopen(_, _)).WillRepeatedly(Return(reinterpret_cast<void *>(0x1)));
         EXPECT_CALL(*libraryFuncMock_, dlsym(_, _))
-            .WillOnce(Return(reinterpret_cast<void *>(&CollaborationMockSuccess)));
+            .WillRepeatedly(Return(reinterpret_cast<void *>(&CollaborationMockSuccess)));
         allConnectManager.allConnect_.ServiceCollaborationManager_RegisterLifecycleCallback = [](
             const char *serviceName,
             ServiceCollaborationManager_Callback *callback) -> int32_t {

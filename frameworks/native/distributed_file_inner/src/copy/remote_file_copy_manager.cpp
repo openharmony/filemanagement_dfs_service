@@ -16,10 +16,12 @@
 #include "copy/remote_file_copy_manager.h"
 
 #include <mutex>
+#include <string>
 #include <sys/stat.h>
 
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "datashare_helper.h"
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"
@@ -27,7 +29,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -35,6 +37,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace AppFileService;
 using namespace FileManagement;
+using namespace std;
 static const std::string MEDIA_AUTHORITY = "media";
 static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string FILE_SCHEMA = "file://";
@@ -183,11 +186,17 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
     std::string srcPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(userId), srcPhysicalPath)) {
         LOGE("Get src path failed, invalid uri");
+        RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "AFS", "", EINVAL, "Get src path fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return EINVAL;
     }
     std::string dstPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(destUri, std::to_string(userId), dstPhysicalPath)) {
         LOGE("Get dst path failed, invalid uri");
+        RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "AFS", "", EINVAL, "Get dst path fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return EINVAL;
     }
     Uri uri(destUri);
@@ -227,6 +236,9 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
+        RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -238,6 +250,9 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
         if (callingUid != (*item)->callingUid) {
             LOGE("RemoteCancel failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.",
             callingUid, (*item)->callingUid);
+            RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", EPERM, "RemoteCancel failed"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return EPERM;
         }
         LOGI("RemoteCancel success");
@@ -259,6 +274,9 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
+        RadarParaInfo info = {"RemoteCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();

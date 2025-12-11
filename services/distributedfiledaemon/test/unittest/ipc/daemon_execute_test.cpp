@@ -168,14 +168,14 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     DevslDispatcher::devslMap_.insert(make_pair("test", static_cast<int32_t>(SecurityLabel::S4)));
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(-1));
     daemonExecute_->ExecutePushAsset(event);
 
     assetObj->uris_.push_back("test");
     assetObj->srcBundleName_ = "srcBundleName_";
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
     daemonExecute_->ExecutePushAsset(event);
 
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_001 end";
@@ -205,18 +205,18 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_002, TestSize.Level1)
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     std::shared_ptr<PushAssetData> pushData = std::make_shared<PushAssetData>(userId, assetObj);
     auto event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(-1));
     daemonExecute_->ExecutePushAsset(event);
 
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
     daemonExecute_->ExecutePushAsset(event);
 
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/2.txt");
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerAssetMock_, CompressFile(_, _, _)).WillOnce(Return(-1));
     daemonExecute_->ExecutePushAsset(event);
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_002 end";

@@ -64,98 +64,98 @@ void DistributedFileDaemonProxyTest::TearDown(void)
 }
 
 /**
- * @tc.name: DistributedFileDaemon_OpenP2PConnection_0100
- * @tc.desc: The execution of the OpenP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_ConnectDfs_0100
+ * @tc.desc: The execution of the ConnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection_0100, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_ConnectDfs_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0100 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0100 Start";
+    std::string networkId;
     auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
-    auto ret = testProxy->OpenP2PConnection(deviceInfo);
+    auto ret = testProxy->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0100 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0100 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_OpenP2PConnection_0200
- * @tc.desc: The execution of the OpenP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_ConnectDfs_0200
+ * @tc.desc: The execution of the ConnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection_0200, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_ConnectDfs_0200, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0200 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0200 Start";
+    std::string networkId;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
-    auto ret = proxy_->OpenP2PConnection(deviceInfo);
+    auto ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0200 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0200 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_OpenP2PConnection_0300
- * @tc.desc: The execution of the OpenP2PConnection success.
+ * @tc.name: DistributedFileDaemon_ConnectDfs_0300
+ * @tc.desc: The execution of the ConnectDfs success.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection_0300, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_ConnectDfs_0300, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0300 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0300 Start";
+    std::string networkId;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
-    auto ret = proxy_->OpenP2PConnection(deviceInfo);
+    auto ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0300 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0300 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_CloseP2PConnection_0100
- * @tc.desc: The execution of the CloseP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_DisconnectDfs_0100
+ * @tc.desc: The execution of the DisconnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_CloseP2PConnection_0100, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_DisconnectDfs_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0100 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0100 Start";
+    std::string networkId;
     auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
-    auto ret = testProxy->CloseP2PConnection(deviceInfo);
+    auto ret = testProxy->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0100 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0100 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_CloseP2PConnection_0200
- * @tc.desc: The execution of the CloseP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_DisconnectDfs_0200
+ * @tc.desc: The execution of the DisconnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_CloseP2PConnection_0200, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_DisconnectDfs_0200, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0200 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0200 Start";
+    std::string networkId;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
-    auto ret = proxy_->CloseP2PConnection(deviceInfo);
+    auto ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0200 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0200 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_CloseP2PConnection_0300
- * @tc.desc: The execution of the CloseP2PConnection success.
+ * @tc.name: DistributedFileDaemon_DisconnectDfs_0300
+ * @tc.desc: The execution of the DisconnectDfs success.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_CloseP2PConnection_0300, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_DisconnectDfs_0300, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0300 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0300 Start";
+    std::string networkId;
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
-    auto ret = proxy_->CloseP2PConnection(deviceInfo);
+    auto ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0300 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0300 End";
 }
 }

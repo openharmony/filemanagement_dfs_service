@@ -25,6 +25,7 @@
 #include "tasks/optimize_cache_task.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
+#include "tasks/periodic_clean_task.h"
 #include "tasks/report_statistics_task.h"
 #include "tasks/save_subscription_task.h"
 #include "utils_log.h"
@@ -72,15 +73,16 @@ void CycleTaskRunner::StartTask()
 
 void CycleTaskRunner::InitTasks()
 {
-    //push tasks here
-    cycleTasks_.push_back(std::make_shared<OptimizeCacheTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<DatabaseBackupTask>(dataSyncManager_));
+    // push tasks here
+    cycleTasks_.emplace_back(std::make_shared<PeriodicCleanTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<OptimizeCacheTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<DatabaseBackupTask>(dataSyncManager_));
 
-    //do periodic check task last
-    cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
+    // do periodic check task last
+    cycleTasks_.emplace_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
 }
 
 static int32_t GetString(const string &key, string &val, NativeRdb::ResultSet &resultSet)

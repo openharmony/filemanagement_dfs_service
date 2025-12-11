@@ -41,6 +41,10 @@ void FfrtTimer::Start(const TimerCallback &callback, uint32_t interval, uint32_t
         LOGD("task entering loop");
         uint32_t times = repatTimes;
         while (times > 0) {
+            if (callback == nullptr) {
+                LOGE("task callback is nullptr, don't need to call");
+                break;
+            }
             callback();
             times--;
             unique_lock<ffrt::mutex> lock(sleepMutex_);

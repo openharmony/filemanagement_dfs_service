@@ -83,6 +83,7 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     }
     auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     if (object != nullptr) {
+        unique_lock<mutex> proxyLock(proxyMutex_);
         LOGI("SA check successfully");
         serviceProxy_ = iface_cast<ICloudSyncService>(object);
         return serviceProxy_;
@@ -131,17 +132,19 @@ void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(
     proxyConVar_.notify_one();
 }
 
-int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &callbackAddr, const std::string &bundleName)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::UnRegisterFileSyncCallbackInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::UnRegisterFileSyncCallbackInner(const std::string &callbackAddr,
+                                                               const std::string &bundleName)
 {
     return E_OK;
 }
 
 int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                                     const std::string &callbackAddr,
                                                      const std::string &bundleName)
 {
     return E_OK;

@@ -22,6 +22,7 @@
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,7 +35,10 @@
 #include "copy/file_size_utils.h"
 #include "datashare_helper.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
+#endif
 #include "file_uri.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
@@ -46,7 +50,7 @@
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -54,6 +58,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace AppFileService;
 using namespace FileManagement;
+using namespace std;
 static const std::string FILE_PREFIX_NAME = "file://";
 static const std::string NETWORK_PARA = "?networkid=";
 static const std::string MEDIALIBRARY_DATA_URI = "datashare:///media";
@@ -62,7 +67,9 @@ static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 static const int OPEN_TRUC_VERSION = 20;
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 const uint32_t API_VERSION_MOD = 1000;
+#endif
 #endif
 uint32_t g_apiCompatibleVersion = 0;
 
@@ -132,6 +139,7 @@ bool IsSystemApp()
 
 uint32_t GetApiCompatibleVersion()
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     uint32_t apiCompatibleVersion = 0;
     OHOS::sptr<OHOS::ISystemAbilityManager> systemAbilityManager =
         OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -161,6 +169,9 @@ uint32_t GetApiCompatibleVersion()
         LOGE("Call for GetApiCompatibleVersion failed, err:%{public}d", res);
     }
     return apiCompatibleVersion;
+#else
+    return EINVAL;
+#endif
 }
 #endif
 
@@ -168,6 +179,15 @@ FileCopyManager &FileCopyManager::GetInstance()
 {
     static FileCopyManager instance;
     return instance;
+}
+
+static void ReportRemoteCopy(const std::string &srcUri, const RadarParaInfo &info)
+{
+    if (srcUri.find(NETWORK_PARA) == srcUri.npos) {
+        LOGI("is local copy, no need report");
+        return;
+    }
+    DfsRadar::GetInstance().ReportFileAccess(info);
 }
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
@@ -178,21 +198,29 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
     if (srcUri == destUri) {
         LOGE("The srcUri and destUri is same");
+        RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "srcUri and destUri is same"};
+        ReportRemoteCopy(srcUri, info);
         return EINVAL;
     }
 
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
+        RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
+        ReportRemoteCopy(srcUri, info);
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();
     CreateFileInfos(srcUri, destUri, infos);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     if (IsRemoteUri(infos->srcUri)) {
         auto ret = ExecRemote(infos, processCallback);
         RemoveFileInfos(infos);
         return ret;
     }
+#endif
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
         infos->srcUriIsFile, processCallback);
     if (infos->srcPath.rfind(MTP_PATH_PREFIX, 0) != std::string::npos) {
@@ -211,6 +239,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 
 int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCallback &processCallback)
 {
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
     LOGI("ExecRemote Copy start ");
     sptr<TransListener> transListener (new (std::nothrow) TransListener(infos->destUri, processCallback));
     if (transListener == nullptr) {
@@ -234,9 +263,15 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
 
     auto copyResult = transListener->WaitForCopyResult();
     if (copyResult == DFS_FAILED) {
+        RadarParaInfo info = {"ExecRemote", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", copyResult, "CopyResult is fail"};
+        ReportRemoteCopy(infos->srcUri, info);
         return transListener->GetErrCode();
     }
     return transListener->CopyToSandBox(infos->srcUri);
+#else
+    return EINVAL;
+#endif
 }
 
 int32_t FileCopyManager::Cancel(const bool isKeepFiles)
@@ -245,10 +280,12 @@ int32_t FileCopyManager::Cancel(const bool isKeepFiles)
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     for (auto &item : FileInfosVec_) {
         item->needCancel.store(true);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
         if (item->transListener != nullptr) {
             LOGE("Cancel.");
             item->transListener->Cancel(item->srcUri, item->destUri);
         }
+#endif
         if (!isKeepFiles) {
             DeleteResFile(item);
         }
@@ -265,6 +302,9 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
+        RadarParaInfo info = {"Cancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
+        ReportRemoteCopy(srcUri, info);
         return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -273,10 +313,12 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
             continue;
         }
         (*item)->needCancel.store(true);
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
         if ((*item)->transListener != nullptr) {
             LOGE("Cancel");
             ret = (*item)->transListener->Cancel(srcUri, destUri);
         }
+#endif
         if (!isKeepFiles) {
             DeleteResFile(*item);
         }
@@ -355,12 +397,6 @@ int32_t FileCopyManager::ExecCopy(std::shared_ptr<FileInfos> infos)
         return CopyFile(infos->srcPath, infos->destPath, infos);
     }
     if (!infos->srcUriIsFile && IsDirectory(infos->destPath)) {
-        if (infos->srcPath.back() != '/') {
-            infos->srcPath += '/';
-        }
-        if (infos->destPath.back() != '/') {
-            infos->destPath += '/';
-        }
         // copyDir
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
@@ -373,11 +409,17 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     LOGI("start ExecLocal");
     if (infos == nullptr || infos->localListener == nullptr) {
         LOGE("infos or localListener is nullptr");
+        RadarParaInfo info = {"ExecLocal", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "infos or localListener is nullptr"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return EINVAL;
     }
     if (infos->srcUriIsFile) {
         if (infos->srcPath == infos->destPath) {
             LOGE("The src and dest is same");
+            RadarParaInfo info = {"ExecLocal", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", EINVAL, "The src and dest is same"};
+            ReportRemoteCopy(infos->srcUri, info);
             return EINVAL;
         }
         int32_t ret = CheckOrCreatePath(infos->destPath);
@@ -418,6 +460,9 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     }
     if (destFd < 0) {
         LOGE("Error opening dest file descriptor. errno = %{public}d", errno);
+        RadarParaInfo info = {"CopyFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", errno, "open dest file fail errno=" + to_string(errno)};
+        ReportRemoteCopy(infos->srcUri, info);
         close(srcFd);
         return errno;
     }
@@ -454,6 +499,9 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
     struct stat srcStat{};
     if (fstat(srcFdg->GetFD(), &srcStat) < 0) {
         LOGE("Failed to get stat of file by fd: %{public}d ,errno = %{public}d", srcFdg->GetFD(), errno);
+        RadarParaInfo info = {"SendFileCore", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "kernel", "", srcFdg->GetFD(), "fstat fail, errno=" + to_string(errno)};
+        ReportRemoteCopy(infos->srcUri, info);
         return errno;
     }
     int32_t ret = 0;
@@ -464,6 +512,9 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
             offset, MAX_SIZE, nullptr);
         if (ret < 0) {
             LOGE("Failed to sendfile by errno : %{public}d", errno);
+            RadarParaInfo info = {"SendFileCore", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                "kernel", "", ret, "uv_fs_sendfile fail, errno=" + to_string(errno)};
+            ReportRemoteCopy(infos->srcUri, info);
             return errno;
         }
 
@@ -481,6 +532,9 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
 
     if (size != 0) {
         LOGE("The execution of the sendfile task was terminated, remaining file size %{public}" PRIu64, size);
+        RadarParaInfo info = {"SendFileCore", ReportLevel::INNER, DfxBizStage::HMDFS_COPY, "kernel", "",
+            EIO, "totalsize=" + to_string(srcStat.st_size) + ", remaining file size=" + to_string(size)};
+        ReportRemoteCopy(infos->srcUri, info);
         return EIO;
     }
     return E_OK;
@@ -492,19 +546,12 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
     size_t found = dest.find(src);
     if (found != std::string::npos && found == 0) {
         LOGE("not support copy src to dest");
+        RadarParaInfo info = {"CopyDirFunc", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "not support copy src to dest"};
+        ReportRemoteCopy(infos->srcUri, info);
         return EINVAL;
     }
-
-    // 获取src目录的目录名称
-    std::filesystem::path srcPath = std::filesystem::u8path(src);
-    std::string dirName;
-    if (srcPath.has_parent_path()) {
-        dirName = srcPath.parent_path().filename();
-    }
-
-    // 构造要拷贝到的路径
-    std::string destStr = dest + "/" + dirName;
-    return CopySubDir(src, destStr, infos);
+    return CopySubDir(src, dest, infos);
 }
 
 int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
@@ -514,17 +561,24 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
         int res = MakeDir(destPath);
         if (res != E_OK) {
+            RadarParaInfo info = {"CopySubDir", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", res, "MakeDir fail"};
+            ReportRemoteCopy(infos->srcUri, info);
             LOGE("Failed to mkdir");
             return res;
         }
     } else if (errCode.value() != E_OK) {
         LOGE("fs exists fail, errcode is %{public}d", errCode.value());
+        RadarParaInfo info = {"CopySubDir", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", errCode.value(), "fs exists fail"};
+        ReportRemoteCopy(infos->srcUri, info);
         return errCode.value();
     }
     {
         std::lock_guard<std::mutex> lock(infos->subDirsMutex);
         infos->subDirs.insert(destPath);
     }
+    infos->localListener->SubDirAddListener(srcPath, destPath, IN_MODIFY);
     return RecurCopyDir(srcPath, destPath, infos);
 }
 
@@ -629,12 +683,18 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
         srcFd = dataShareHelper->OpenFile(uri, GetModeFromFlags(O_RDONLY));
         if (srcFd < 0) {
             LOGE("Open media uri by data share fail. ret = %{public}d", srcFd);
+            RadarParaInfo info = {"OpenSrcFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", srcFd, "Open media fail"};
+            ReportRemoteCopy(infos->srcUri, info);
             return EPERM;
         }
     } else {
         srcFd = open(srcPth.c_str(), O_RDONLY);
         if (srcFd < 0) {
             LOGE("Error opening src file descriptor. errno = %{public}d", errno);
+            RadarParaInfo info = {"OpenSrcFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                DEFAULT_PKGNAME, "", srcFd, "opening src file fail" + to_string(errno)};
+            ReportRemoteCopy(infos->srcUri, info);
             return errno;
         }
         if ((infos->needCancel.load()) && (srcPth.rfind(MTP_PATH_PREFIX, 0) != std::string::npos)) {
@@ -679,10 +739,16 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
         auto file = open(destPath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (file < 0) {
             LOGE("Error opening file descriptor. errno = %{public}d", errno);
+            RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                "libc++", "", file, "Error opening file descriptor. errno=" + to_string(errno)};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return errno;
         }
         close(file);
     } else if (errCode.value() != 0) {
+        RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "libc++", "", errCode.value(), "errCode fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return errCode.value();
     }
     return E_OK;

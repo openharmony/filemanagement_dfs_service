@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_CLOUDDISK_DATABASE_TRANSACTION_MOCK_H
+#define OHOS_CLOUDDISK_DATABASE_TRANSACTION_MOCK_H
 
 #include <gmock/gmock.h>
 #include "transaction.h"
@@ -40,5 +42,7 @@ public:
     MOCK_METHOD3(QueryByStep, std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates, const Fields &columns,
                  bool preCount));
     MOCK_METHOD2(Execute, std::pair<int32_t, ValueObject>(const std::string &sql, const Values &args));
+    ~TransactionMock() {}
 };
 }
+#endif  // OHOS_CLOUDDISK_DATABASE_TRANSACTION_MOCK_H

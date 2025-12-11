@@ -23,11 +23,14 @@
 #include <vector>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
+
 constexpr int32_t INVALID_USER_ID = -1;
 std::string ConnectionDetector::GetCellByIndex(const std::string &str, int targetIndex)
 {
@@ -139,6 +142,9 @@ bool ConnectionDetector::CheckValidDir(const std::string &path)
     auto ret = stat(path.c_str(), &buf);
     if (ret == -1) {
         LOGE("stat failed, errno = %{public}d", errno);
+        RadarParaInfo info = {"CheckValidDir", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "kernel", "", ret, "stat failed,errno = " + to_string(errno)};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return false;
     }
     if ((buf.st_mode & S_IFMT) != S_IFDIR) {
@@ -161,6 +167,9 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
     int num = scandir(SYS_HMDFS_PATH.c_str(), &(pNameList->namelist), FilterFunc, alphasort);
     if (num < 0) {
         LOGE("Failed to scandir, errno = %{public}d", errno);
+        RadarParaInfo info = {"GetConnectionStatus", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, num, "Failed to scandir"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return false;
     }
     pNameList->direntNum = num;
@@ -187,6 +196,9 @@ uint64_t ConnectionDetector::MocklispHash(const string &str)
     auto err = stat(str.c_str(), &statBuf);
     if (err != 0) {
         LOGE("stat failed %{public}s error, err: %{public}d", GetAnonyString(str).c_str(), err);
+        RadarParaInfo info = {"MocklispHash", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
+            "Kernel", "", err, "stat failed"};
+        DfsRadar::GetInstance().ReportLinkConnection(info);
         return static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE);
     }
     LOGI("statBuf dev id: %{public}lu", static_cast<unsigned long>(statBuf.st_dev));

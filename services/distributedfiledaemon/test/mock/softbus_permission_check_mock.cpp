@@ -19,23 +19,35 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
+bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId)
 {
-    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->CheckSrcPermission(sinkNetworkId);
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
+    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->CheckSrcPermission(sinkNetworkId, userId);
 }
 
 bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccountInfo)
 {
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
     return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->CheckSinkPermission(callerAccountInfo);
 }
 
-bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
+bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId)
 {
-    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->GetLocalAccountInfo(localAccountInfo);
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
+    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->GetLocalAccountInfo(localAccountInfo, userId);
 }
 
 int32_t SoftBusPermissionCheck::GetCurrentUserId()
 {
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return -1; // -1: default userId
+    }
     return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->GetCurrentUserId();
 }
 
@@ -43,25 +55,37 @@ bool SoftBusPermissionCheck::TransCallerInfo(SocketAccessInfo *callerInfo,
                                              AccountInfo &callerAccountInfo,
                                              const std::string &networkId)
 {
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
     return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->TransCallerInfo(callerInfo, callerAccountInfo,
                                                                                      networkId);
 }
 
 bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
 {
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
     return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->FillLocalInfo(localInfo);
 }
 
-bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId)
+bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId, int32_t userId)
 {
-    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->SetAccessInfoToSocket(sessionId);
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
+    return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->SetAccessInfoToSocket(sessionId, userId);
 }
 
 bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
 {
+    if (ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock == nullptr) {
+        return false;
+    }
     return ISoftBusPermissionCheckMock::iSoftBusPermissionCheckMock->IsSameAccount(networkId);
 }
 
 } // namespace DistributedFile
 } // namespace Storage
-} // namespace OHOS
+} // namespace OHOS

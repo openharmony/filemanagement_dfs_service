@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <unordered_set>
 
+#include "dfs_radar.h"
 #include "mountpoint/mount_point.h"
 #include "network/base_session.h"
 #include "utils_log.h"
@@ -32,6 +33,9 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace std;
+using namespace FileManagement;
+
 constexpr int CID_MAX_LEN = 64;
 struct NotifyParam {
     int32_t notify;
@@ -72,17 +76,26 @@ private:
         char resolvedPath[PATH_MAX] = {'\0'};
         char *realPath = realpath(ctrlPath.c_str(), resolvedPath);
         if (realPath == nullptr) {
+            RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
+                "kernel", "", DEFAULT_ERR, "realpath faile"};
+            DfsRadar::GetInstance().ReportLinkConnection(info);
             return;
         }
 
         int file = open(realPath, O_RDWR);
         if (file < 0) {
             LOGE("Open node file error. %{public}d", errno);
+            RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
+                "kernel", "", file, "Open node file err, error=" + to_string(errno)};
+            DfsRadar::GetInstance().ReportLinkConnection(info);
             return;
         }
         int err = write(file, &cmd, sizeof(T));
         if (err < 0) {
             LOGE("write return err. %{public}d", errno);
+            RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
+                "kernel", "", err, "write return err, errno=" + to_string(errno)};
+            DfsRadar::GetInstance().ReportLinkConnection(info);
         }
         close(file);
     }

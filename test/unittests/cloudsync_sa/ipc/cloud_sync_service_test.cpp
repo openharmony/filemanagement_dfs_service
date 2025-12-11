@@ -21,6 +21,7 @@
 #include "cloud_sync_service.h"
 #include "dfsu_access_token_helper_mock.h"
 #include "i_cloud_download_callback_mock.h"
+#include "os_account_manager_mock.h"
 #include "service_callback_mock.h"
 #include "system_ability_manager_client_mock.h"
 
@@ -57,6 +58,7 @@ public:
     static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
     static inline sptr<CloudSyncService> servicePtr_ = nullptr;
     static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
+    static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -71,6 +73,8 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     CloudDiskServiceAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     dfsBatterySrvClient_ = make_shared<BatterySrvClientMock>();
     BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
+    OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
+    OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
@@ -83,6 +87,8 @@ void CloudSyncServiceTest::TearDownTestCase(void)
     saMgr_ = nullptr;
     BatterySrvClientMock::dfsBatterySrvClient = nullptr;
     dfsBatterySrvClient_ = nullptr;
+    OsAccountMethodMock_ = nullptr;
+    OsAccountManagerMethod::osMethod_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -112,7 +118,7 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest001, TestSize.Level1)
         std::string bundleName = "";
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
 
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
         EXPECT_EQ(ret, E_OK);
@@ -140,9 +146,10 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest002, TestSize.Level1)
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
-
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountType(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(AccountSA::OsAccountType::PRIVATE), Return(0)));
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ChangeAppSwitchTest002 failed";
@@ -167,14 +174,42 @@ HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest003, TestSize.Level1)
 
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
-
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountType(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(AccountSA::OsAccountType::MAINTENANCE), Return(0)));
         int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 failed";
     }
     GTEST_LOG_(INFO) << "ChangeAppSwitchTest003 end";
+}
+
+/**
+ * @tc.name: ChangeAppSwitchTest004
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string accountId = "";
+        bool status = true;
+        std::string bundleName = "";
+
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        int32_t ret = servicePtr_->ChangeAppSwitch(accountId, bundleName, status);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest004 end";
 }
 
 /**
@@ -187,15 +222,114 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
     try {
+        std::string callbackAddr = "";
         std::string bundleName = "";
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->UnRegisterCallbackInner(bundleName);
+        int ret = servicePtr_->UnRegisterCallbackInner(callbackAddr, bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnRegisterCallbackInner FAILED";
     }
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
+}
+
+/**
+ * @tc.name:UnRegisterCallbackInnerTest2
+ * @tc.desc:Verify the UnRegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest2 Start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b680";
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).Times(2).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        int ret = servicePtr_->UnRegisterCallbackInner(callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest2 End";
+}
+
+/**
+ * @tc.name:UnRegisterCallbackInnerTest3
+ * @tc.desc:Verify the UnRegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest3, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest3 Start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b780";
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).Times(2).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .Times(2).WillOnce(Return(E_OK)).WillOnce(Return(E_INVAL_ARG));
+        int ret = servicePtr_->UnRegisterCallbackInner(callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest3 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInnerTest3 End";
+}
+
+/**
+ * @tc.name:UnRegisterFileSyncCallbackInnerTest1
+ * @tc.desc:Verify the UnRegisterFileSyncCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, UnRegisterFileSyncCallbackInnerTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest1 Start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b681";
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        int ret = servicePtr_->UnRegisterFileSyncCallbackInner(callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest1 End";
+}
+
+/**
+ * @tc.name:UnRegisterFileSyncCallbackInnerTest2
+ * @tc.desc:Verify the UnRegisterFileSyncCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, UnRegisterFileSyncCallbackInnerTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest2 Start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b681";
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .Times(2).WillOnce(Return(E_OK)).WillOnce(Return(E_INVAL_ARG));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        int ret = servicePtr_->UnRegisterFileSyncCallbackInner(callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackInnerTest2 End";
 }
 
 /**
@@ -208,10 +342,11 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner start";
     try {
+        std::string callbackAddr = "";
         std::string bundleName = "";
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->RegisterCallbackInner(callback, bundleName);
+        int ret = servicePtr_->RegisterCallbackInner(callback, callbackAddr, bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -230,16 +365,119 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner error branch start";
     try {
+        std::string callbackAddr = "0x0000005a40d3b680";
         std::string bundleName = "com.ohos.photos";
         sptr<CloudSyncCallbackMock> callback = nullptr;
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        int ret = servicePtr_->RegisterCallbackInner(callback, bundleName);
+        int ret = servicePtr_->RegisterCallbackInner(callback, callbackAddr, bundleName);
         EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterCallbackInner error branch FAILED";
     }
     GTEST_LOG_(INFO) << "RegisterCallbackInner error branch end";
+}
+
+/**
+ * @tc.name:RegisterCallbackInnerTest003
+ * @tc.desc:Verify the RegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackInner branch start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b680";
+        std::string bundleName = "com.ohos.photos";
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).Times(2).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        int ret = servicePtr_->RegisterCallbackInner(callback, callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterCallbackInner branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackInner branch end";
+}
+
+/**
+ * @tc.name:RegisterCallbackInnerTest004
+ * @tc.desc:Verify the RegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackInnerTest004 branch start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b680";
+        std::string bundleName = "com.ohos.photos";
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).Times(2).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .Times(2).WillOnce(Return(E_OK)).WillOnce(Return(E_INVAL_ARG));
+        int ret = servicePtr_->RegisterCallbackInner(callback, callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterCallbackInnerTest004 branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackInnerTest004 branch end";
+}
+
+/**
+ * @tc.name:RegisterFileSyncCallbackInnerTest001
+ * @tc.desc:Verify the RegisterFileSyncCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterFileSyncCallbackInnerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest001 branch start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b680";
+        std::string bundleName = "com.ohos.photos";
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        int ret = servicePtr_->RegisterFileSyncCallbackInner(callback, callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest001 branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest001 branch end";
+}
+
+/**
+ * @tc.name:RegisterFileSyncCallbackInnerTest002
+ * @tc.desc:Verify the RegisterFileSyncCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterFileSyncCallbackInnerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest002 branch start";
+    try {
+        std::string callbackAddr = "0x0000005a40d3b680";
+        std::string bundleName = "com.ohos.photos";
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .Times(2).WillOnce(Return(E_OK)).WillOnce(Return(E_INVAL_ARG));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        int ret = servicePtr_->RegisterFileSyncCallbackInner(callback, callbackAddr, bundleName);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest002 branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterFileSyncCallbackInnerTest002 branch end";
 }
 
 /**
@@ -876,7 +1114,7 @@ HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest007, TestSize.Level1)
     GTEST_LOG_(INFO) << "LoadRemoteSATest007 start";
     try {
         std::string deviceId = "abcdefg1234567";
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_)).WillOnce(Return(saMgr_));
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
         servicePtr_->remoteObjectMap_.insert(std::make_pair(deviceId, nullptr));
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
         EXPECT_CALL(*saMgr_, CheckSystemAbility(An<int32_t>(), An<const string &>()))

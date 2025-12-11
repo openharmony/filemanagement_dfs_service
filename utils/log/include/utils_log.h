@@ -23,7 +23,7 @@
 
 namespace OHOS {
 #ifndef LOG_DOMAIN
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #endif
 
 #ifndef LOG_TAG
@@ -38,6 +38,7 @@ std::string GetFileNameFromFullPath(const char *str);
 #define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "%{public}s:" fmt, __FUNCTION__,  ##__VA_ARGS__)
 #define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "%{public}s:" fmt, __FUNCTION__,  ##__VA_ARGS__)
 
+std::string GetAnonyStringStrictly(const std::string &input);
 std::string GetAnonyString(const std::string &value);
 std::string GetAnonyInt32(const int32_t value);
 } // namespace OHOS

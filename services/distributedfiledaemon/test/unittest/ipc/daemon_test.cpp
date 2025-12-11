@@ -133,12 +133,12 @@ bool DeviceProfileAdapter::IsRemoteDfsVersionLowerThanGiven(const std::string &r
     return g_isRemoteDfsVersionLowerThanGiven;
 }
 
-bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId)
+bool SoftBusPermissionCheck::CheckSrcPermission(const std::string &sinkNetworkId, int32_t userId)
 {
     return g_checkSrcPermission;
 }
 
-bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo)
+bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo,  int32_t userId)
 {
     return g_getLocalAccountInfo;
 }
@@ -468,6 +468,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 start";
 
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
     const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
     const std::string srcDeviceId = "testSrcDeviceId";
@@ -632,6 +633,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnStart_001, TestSize.Level1)
     daemon_->state_ = ServiceRunningState::STATE_NOT_START;
     try {
         daemon_->OnStart();
+        daemon_->OnStop();
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -740,24 +742,35 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: DaemonTest_OpenP2PConnection_001
- * @tc.desc: verify OpenP2PConnection.
+ * @tc.name: DaemonTest_ConnectDfs_001
+ * @tc.desc: verify ConnectDfs.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
+HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
+    GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 begin";
     ASSERT_NE(daemon_, nullptr);
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    std::string networkId;
     ConnectCount::GetInstance().RemoveAllConnect();
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), E_OK);
-    GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 end";
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_INVAL_ARG_NAPI));
+    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
+
+    EXPECT_EQ(daemon_->ConnectDfs(""), E_INVAL_ARG_NAPI);
+    std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(longNetworkId), E_INVAL_ARG_NAPI);
+
+    std::string invalidNetworkId(15, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(invalidNetworkId), E_INVAL_ARG_NAPI);
+
+    std::string validNetworkId(32, 'a');
+    EXPECT_EQ(daemon_->ConnectDfs(validNetworkId), E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 end";
 }
 
 /**
@@ -794,11 +807,11 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
     string networkId = "testNetworkId";
 
     ConnectCount::GetInstance().RemoveAllConnect();
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return((E_OK)));
     EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
     sleep(1);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((ERR_BAD_VALUE)));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return((ERR_BAD_VALUE)));
     EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
     sleep(1);
 
@@ -840,14 +853,14 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
 
     g_checkCallerPermission = true;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
+    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
+    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 end";
@@ -1343,17 +1356,17 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteSA_001 begin";
     ASSERT_NE(daemon_, nullptr);
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
     auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
+    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillRepeatedly(Return(nullptr));
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_FALSE(daemon_->GetRemoteSA("") == nullptr);
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteSA_001 end";
@@ -1368,6 +1381,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 begin";
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
 
     EXPECT_EQ(daemon_->Copy("", "", nullptr, "", "networkId"), E_INVAL_ARG_NAPI);
 
@@ -1490,8 +1504,8 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
     g_isFolder = false;
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillRepeatedly(Return(E_OK));
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
 
     assetObj->uris_.push_back("../srcUri");
@@ -1628,7 +1642,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     // Test normal case with mock
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(NO_ERROR));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(NO_ERROR));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(NO_ERROR));
     EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
 
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 end";
@@ -1708,7 +1722,8 @@ HWTEST_F(DaemonTest, DaemonTest_CheckRemoteAllowConnect_001, TestSize.Level1)
 
     // Test getLocalNetworkId failed
     g_isRemoteDfsVersionLowerThanGiven = false;
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _))
+        .WillRepeatedly(Return(FileManagement::ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->CheckRemoteAllowConnect("networkId"), FileManagement::ERR_BAD_VALUE);
 
     // Test SendRequest failed
@@ -2190,7 +2205,7 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_003, TestSize.Level1)
     // Test status 0 with cleanup
     g_putDeviceStatus = E_OK;
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(E_OK));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
     EXPECT_NE(result, E_OK);
@@ -2217,7 +2232,7 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_004, TestSize.Level1)
     // Test status 0 with cleanup failure
     g_putDeviceStatus = E_OK;
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(ERR_BAD_VALUE));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
     EXPECT_EQ(result, E_CONNECTION_FAILED);
@@ -2288,7 +2303,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
     EXPECT_EQ(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     g_checkSinkPermission = true;
-    EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillOnce(Return("test"));
+    EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillRepeatedly(Return("test"));
     EXPECT_NE(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";

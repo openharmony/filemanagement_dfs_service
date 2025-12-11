@@ -102,7 +102,7 @@ static uint64_t PathHash(const std::string &path, bool caseSense)
     return res;
 }
 
-static std::string GetDentryfileName(const std::string &path, bool caseSense)
+std::string MetaFile::GetDentryfileName(const std::string &path, bool caseSense)
 {
     // path should be like "/", "/dir/", "/dir/dir/" ...
     constexpr uint32_t fileNameLen = 32;
@@ -115,7 +115,7 @@ static std::string GetDentryfileName(const std::string &path, bool caseSense)
     return buf;
 }
 
-static std::string GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense = false)
+std::string MetaFile::GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense)
 {
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";

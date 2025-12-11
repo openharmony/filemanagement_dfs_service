@@ -85,13 +85,21 @@ bool CycleTask::IsEligibleToRun(std::time_t currentTime, std::string bundleName)
 
 void CycleTask::RunTask(int32_t userId)
 {
-    if (runnableBundleNames_ == nullptr) {
-        LOGE("runnableBundleNames_ is nullptr");
-        return;
+    std::set<std::string> bundleNames;
+
+    if (runTaskForSwitchOff_) {
+        bundleNames = bundleNames_;
+    } else {
+        if (runnableBundleNames_ == nullptr) {
+            LOGE("runnableBundleNames_ is nullptr");
+            return;
+        }
+        bundleNames = *runnableBundleNames_;
     }
+
     userId_ = userId;
     std::time_t currentTime = std::time(nullptr);
-    for (const auto &bundleName : *runnableBundleNames_) {
+    for (const auto &bundleName : bundleNames) {
         cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(userId_, bundleName, FILE_PATH);
         if (IsEligibleToRun(currentTime, bundleName)) {
             LOGI("begin task, task name is %{public}s, bundle name is %{public}s",

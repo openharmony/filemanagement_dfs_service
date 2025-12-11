@@ -95,6 +95,7 @@ static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
 static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
+static const unsigned int MIN_LOG_SIZE = 4 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 6;
 static const unsigned int MAX_APPID_LEN = 256;
@@ -254,6 +255,12 @@ struct FuseData {
     struct fuse_session *se;
     string photoBundleName{""};
     string activeBundle{PHOTOS_BUNDLE_NAME};
+};
+
+struct FFRTParamData {
+    string cachePath{""};
+    string activeBundle{PHOTOS_BUNDLE_NAME};
+    FFRTParamData(string cachePath, string activeBundle) : cachePath(cachePath), activeBundle(activeBundle) {}
 };
 
 static shared_ptr<struct CloudFdInfo> FindKeyInCloudFdCache(struct FuseData *data, uint64_t key)
@@ -1118,7 +1125,6 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             string cachePath = VideoCachePath(cInode->path, data);
             if (cachePath == "") {
                 LOGE("cloud release cache path failed");
-                return;
             }
             if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
                          sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
@@ -1345,10 +1351,9 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
 static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
                             shared_ptr<CloudInode> cInode,
                             int64_t cacheIndex,
-                            struct FuseData *data)
+                            shared_ptr<FFRTParamData> data)
 {
-    string cachePath = VideoCachePath(cInode->path, data);
-    char *realPaths = realpath(cachePath.c_str(), nullptr);
+    char *realPaths = realpath(data->cachePath.c_str(), nullptr);
     if (realPaths == nullptr) {
         LOGE("realpath failed");
         return;
@@ -1395,13 +1400,13 @@ static void UpdateReadStatInfo(size_t size,
 }
 
 static void CloudReadOnCloudFile(pid_t pid,
-                                 struct FuseData *data,
+                                 shared_ptr<FFRTParamData> data,
                                  shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudInode> cInode,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
+    LOGD("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
 
     uint64_t startTime = UTCTimeMilliSeconds();
@@ -1451,7 +1456,7 @@ static void CloudReadOnCloudFile(pid_t pid,
 static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudInode> cInode,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession,
-                                 struct FuseData *data)
+                                 shared_ptr<FFRTParamData> data)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (static_cast<uint64_t>(readArgs->offset) >= cInode->mBase->size) {
@@ -1684,8 +1689,10 @@ static bool DoReadSlice(fuse_req_t req,
         fuse_reply_err(req, ENETUNREACH);
         return false;
     }
-    ffrt::submit([pid, readArgs, cInode, readSession, data] {
-        CloudReadOnCloudFile(pid, data, readArgs, cInode, readSession);
+    string cachePath = VideoCachePath(cInode->path, data);
+    auto ffrtData = make_shared<FFRTParamData>(cachePath, data->activeBundle);
+    ffrt::submit([pid, readArgs, cInode, readSession, ffrtData] {
+        CloudReadOnCloudFile(pid, ffrtData, readArgs, cInode, readSession);
     });
     return true;
 }
@@ -1723,8 +1730,10 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
             LOGE("Init readArgsCache failed");
             break;
         }
-        ffrt::submit([readArgsCache, params, data] {
-            CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data);
+        string cachePath = VideoCachePath(params.cInode->path, data);
+        auto ffrtData = make_shared<FFRTParamData>(cachePath, data->activeBundle);
+        ffrt::submit([readArgsCache, params, ffrtData] {
+            CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, ffrtData);
         });
     }
     return true;
@@ -1761,8 +1770,11 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid, req->ctx.pid,
-         req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+
+    if (size > MIN_LOG_SIZE) {
+        LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid,
+            req->ctx.pid, req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+    }
 
     if (!CloudReadHelper(req, size, cInode)) {
         return;

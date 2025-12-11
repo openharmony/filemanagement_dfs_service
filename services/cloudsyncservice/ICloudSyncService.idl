@@ -27,10 +27,10 @@ option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
 {
-    void UnRegisterCallbackInner([in] String bundleName);
-    void UnRegisterFileSyncCallbackInner([in] String bundleName);
-    void RegisterCallbackInner([in] IRemoteObject remoteObject, [in] String bundleName);
-    void RegisterFileSyncCallbackInner([in] IRemoteObject remoteObject, [in] String bundleName);
+    void UnRegisterCallbackInner([in] String callbackAddr, [in] String bundleName);
+    void UnRegisterFileSyncCallbackInner([in] String callbackAddr, [in] String bundleName);
+    void RegisterCallbackInner([in] IRemoteObject remoteObject, [in] String callbackAddr, [in] String bundleName);
+    void RegisterFileSyncCallbackInner([in] IRemoteObject remoteObject, [in] String callbackAddr, [in] String bundleName);
     void StartSyncInner([in] boolean forceFlag, [in] String bundleName);
     void StartFileSyncInner([in] boolean forceFlag, [in] String bundleName);
     void TriggerSyncInner([in] String bundleName, [in] int userId);

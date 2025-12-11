@@ -15,11 +15,14 @@
 #ifndef CLOUD_FILE_DAEMON_CLOUD_FILE_UTILS_H
 #define CLOUD_FILE_DAEMON_CLOUD_FILE_UTILS_H
 
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <sys/stat.h>
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+#define CLOUD_FILE_UTILS_NUM_TO_STR 2
 struct CloudDiskFileInfo {
     std::string name;
     std::string cloudId;
@@ -88,6 +91,21 @@ public:
 private:
     static bool EndsWith(const std::string &fullString, const std::string &ending);
 };
+
+template<typename T>
+std::string AddressToString(T *ptr, bool prefix = true)
+{
+    std::stringstream ss;
+
+    if (prefix) {
+        ss << "0x";
+    }
+
+    // format, nd add zeros on the left if there are not enough.
+    ss << std::hex << std::setw(sizeof(void *) * CLOUD_FILE_UTILS_NUM_TO_STR) << std::setfill('0')
+        << reinterpret_cast<uintptr_t>(ptr);
+    return ss.str();
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

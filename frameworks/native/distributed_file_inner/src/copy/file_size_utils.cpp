@@ -19,12 +19,13 @@
 #include <filesystem>
 
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "file_uri.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
-#define LOG_DOMAIN 0xD004315
+#define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
@@ -33,6 +34,7 @@ namespace DistributedFile {
 using namespace AppFileService;
 using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
+using namespace std;
 static constexpr int DISMATCH = 0;
 static constexpr int MATCH = 1;
 static constexpr char PATH_INVALID_FLAG1[] = "../";

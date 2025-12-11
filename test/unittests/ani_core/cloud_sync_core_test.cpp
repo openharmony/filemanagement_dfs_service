@@ -104,7 +104,7 @@ HWTEST_F(CloudSyncCoreTest, DoOnTest1, TestSize.Level1)
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
-    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    EXPECT_CALL(cloudMock, RegisterCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoOn(event, callback);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -123,7 +123,7 @@ HWTEST_F(CloudSyncCoreTest, DoOffTest3, TestSize.Level1)
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
-    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    EXPECT_CALL(cloudMock, RegisterCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
     auto ret = cloudSync->DoOn(event, callback);
     EXPECT_FALSE(ret.IsSuccess());
     EXPECT_CALL(cloudMock, UnRegisterCallback(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
@@ -162,7 +162,7 @@ HWTEST_F(CloudSyncCoreTest, DoOnTest3, TestSize.Level1)
     auto callback = std::make_shared<CloudSyncCallbackAniImpl>(nullptr, nullptr);
     std::string event = "progress";
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
-    EXPECT_CALL(cloudMock, RegisterCallback(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(cloudMock, RegisterCallback(_)).WillOnce(Return(E_OK));
     auto ret = cloudSync->DoOn(event, callback);
     ret = cloudSync->DoOn(event, callback);
     EXPECT_TRUE(ret.IsSuccess());

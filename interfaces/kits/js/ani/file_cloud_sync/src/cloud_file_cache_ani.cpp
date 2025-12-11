@@ -74,24 +74,8 @@ void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object objec
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
-    if (event == "multiProgress") {
-        event = MULTI_PROGRESS;
-    }
-    if (event != PROGRESS && event != MULTI_PROGRESS) {
-        LOGE("Invalid argument for event type.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
@@ -99,7 +83,7 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
         return;
     }
 
-    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(event, true);
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(EVENT_TYPE, true);
     callbackImpl->InitVm(env);
     auto status = callbackImpl->RegisterCallback(env, fun);
     if (status != ANI_OK) {
@@ -109,24 +93,8 @@ void CloudFileCacheAni::CloudFileCacheOn(ani_env *env, ani_object object, ani_st
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_string evt, ani_object fun)
+void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun)
 {
-    std::string event;
-    ani_status ret = ANIUtils::AniString2String(env, evt, event);
-    if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
-    if (event == "multiProgress") {
-        event = MULTI_PROGRESS;
-    }
-    if (event != PROGRESS && event != MULTI_PROGRESS) {
-        LOGE("Invalid argument for event type.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return;
-    }
-
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
@@ -134,7 +102,7 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
         return;
     }
 
-    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(event, false);
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl = cloudFileCache->GetCallbackImpl(EVENT_TYPE, false);
     if (callbackImpl == nullptr || callbackImpl->UnregisterCallback(env, fun) != ANI_OK) {
         LOGE("Failed to unregister callback.");
         ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
@@ -143,9 +111,9 @@ void CloudFileCacheAni::CloudFileCacheOff0(ani_env *env, ani_object object, ani_
     callbackImpl->TryCleanCallback();
 }
 
-void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object, ani_string evt)
+void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object)
 {
-    CloudFileCacheOff0(env, object, evt, nullptr);
+    CloudFileCacheOff0(env, object, nullptr);
 }
 
 void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri)
@@ -232,10 +200,7 @@ void CloudFileCacheAni::CloudFileCacheStop(ani_env *env, ani_object object, ani_
     }
 }
 
-void CloudFileCacheAni::CloudFileCacheStopBatch(ani_env *env,
-                                                ani_object object,
-                                                ani_long taskId,
-                                                ani_boolean needClean)
+void CloudFileCacheAni::CloudFileCacheStopBatch(ani_env *env, ani_object object, ani_long taskId, ani_boolean needClean)
 {
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
@@ -298,5 +263,44 @@ void CloudFileCacheAni::CloudFileCacheCleanFileCache(ani_env *env, ani_object ob
         LOGE("cloudFileCache do cleanFileCache failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
+}
+
+void CloudFileCacheAni::CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun)
+{
+    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
+    if (cloudFileCache == nullptr) {
+        LOGE("Cannot wrap cloudFileCache.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl =
+        cloudFileCache->GetCallbackImpl(MULT_EVENT_TYPE, true);
+    callbackImpl->InitVm(env);
+    auto status = callbackImpl->RegisterCallback(env, fun);
+    if (status != ANI_OK) {
+        LOGE("Failed to register callback, status: %{public}d.", status);
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+}
+
+void CloudFileCacheAni::CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun)
+{
+    auto cloudFileCache = CloudFileCacheUnwrap(env, object);
+    if (cloudFileCache == nullptr) {
+        LOGE("Cannot wrap cloudFileCache.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+
+    std::shared_ptr<CloudFileCacheCallbackImplAni> callbackImpl =
+        cloudFileCache->GetCallbackImpl(MULT_EVENT_TYPE, false);
+    if (callbackImpl == nullptr || callbackImpl->UnregisterCallback(env, fun) != ANI_OK) {
+        LOGE("Failed to unregister callback.");
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return;
+    }
+    callbackImpl->TryCleanCallback();
 }
 } // namespace OHOS::FileManagement::CloudSync

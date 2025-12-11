@@ -24,6 +24,7 @@
 #include "asset_callback_manager.h"
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
+#include "dfs_radar.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"
@@ -33,6 +34,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
+using namespace std;
 
 std::mutex SoftbusAssetRecvListener::mtx_;
 const std::string HMDFS_PATH = "/mnt/hmdfs/{userId}/account/device_view/local/data/";
@@ -174,9 +177,11 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
         std::string filePath(path_ + fileList[i]);
         if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
             LOGE("path is forbidden");
-            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
-                FileManagement::ERR_BAD_VALUE);
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, ERR_BAD_VALUE);
             SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+            RadarParaInfo info = {"OnRecvAssetFinished", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
+                DEFAULT_PKGNAME, "", E_INVAL_ARG, "path is forbidden"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
             return;
         }
         if (JudgeSingleFile(filePath)) {
@@ -187,8 +192,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
 
         if (ret != FileManagement::ERR_OK) {
             LOGE("MoveAsset fail, socket %{public}d", socketId);
-            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
-                                                                        FileManagement::ERR_BAD_VALUE);
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, ERR_BAD_VALUE);
             SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
             return;
         }
@@ -202,6 +206,9 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
                                                 const char **fileList, int32_t fileCnt)
 {
     std::lock_guard<std::mutex> lock(mtx_);
+    RadarParaInfo info = {"OnRecvAssetError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+        DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnRecvAssetError fail"};
+    DfsRadar::GetInstance().ReportFileAccess(info);
     LOGE("OnRecvAssetError, sessionId = %{public}d, errorCode = %{public}d", socketId, errorCode);
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
     if (srcNetworkId.empty()) {
@@ -311,6 +318,9 @@ int32_t SoftbusAssetRecvListener::HandleSingleFile(int32_t socketId,
     auto uris = SoftBusHandlerAsset::GetInstance().GenerateUris(fileList, assetObj->dstBundleName_, true);
     if (uris.size() == 0) {
         LOGE("Generate uris fail");
+        RadarParaInfo info = {"HandleSingleFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
+            DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "Generate uris fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->uris_.emplace_back(uris[0]);
@@ -318,6 +328,9 @@ int32_t SoftbusAssetRecvListener::HandleSingleFile(int32_t socketId,
     bool moveRet = MoveAsset(fileList, true);
     if (!moveRet) {
         LOGE("MoveAsset fail, socket %{public}d", socketId);
+        RadarParaInfo info = {"HandleSingleFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
+            DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "MoveAsset fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("HandleOneFile end.");
@@ -356,6 +369,9 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     auto uris = SoftBusHandlerAsset::GetInstance().GenerateUris(fileList, assetObj->dstBundleName_, false);
     if (uris.size() == 0) {
         LOGE("Generate uris fail");
+        RadarParaInfo info = {"HandleZipFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
+            DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "Generate uris fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->uris_.insert(assetObj->uris_.end(), uris.begin(), uris.end());
@@ -363,6 +379,9 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     bool moveRet = MoveAsset(fileList, false);
     if (!moveRet) {
         LOGE("MoveAsset fail, socket %{public}d", socketId);
+        RadarParaInfo info = {"HandleZipFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
+            DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "MoveAsset fail"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("HandleMoreFile end.");

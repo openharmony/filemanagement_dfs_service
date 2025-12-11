@@ -25,6 +25,8 @@
 #include "i_daemon_mock.h"
 #include "copy/ipc_wrapper.h"
 
+constexpr int32_t MAX_CONNECTED_SIZE = 1024;
+
 namespace {
     bool g_writeBatchUrisTrue = true;
     int32_t g_readBatchUris = OHOS::FileManagement::E_OK;
@@ -109,83 +111,67 @@ void DistributedFileDaemonProxyTest::TearDown(void)
 }
 
 /**
- * @tc.name: DistributedFileDaemon_OpenP2PConnection_0100
- * @tc.desc: The execution of the OpenP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_ConnectDfs_0100
+ * @tc.desc: The execution of the ConnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection_0100, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_ConnectDfs_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0100 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0100 Start";
+    std::string networkId;
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
-    auto ret = proxy_->OpenP2PConnection(deviceInfo);
+    auto ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(false));
-    ret = proxy_->OpenP2PConnection(deviceInfo);
+    ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
-    ret = proxy_->OpenP2PConnection(deviceInfo);
+    ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(false));
-    ret = proxy_->OpenP2PConnection(deviceInfo);
+    ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteUint16(_)).WillOnce(Return(false));
-    ret = proxy_->OpenP2PConnection(deviceInfo);
+    ret = proxy_->ConnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnection_0100 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_ConnectDfs_0100 End";
 }
 
 /**
- * @tc.name: DistributedFileDaemon_CloseP2PConnection_0100
- * @tc.desc: The execution of the CloseP2PConnection failed.
+ * @tc.name: DistributedFileDaemon_DisconnectDfs_0100
+ * @tc.desc: The execution of the DisconnectDfs failed.
  * @tc.type: FUNC
  * @tc.require: I7TDJK
  */
-HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_CloseP2PConnection_0100, TestSize.Level1)
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_DisconnectDfs_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0100 Start";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0100 Start";
+    std::string networkId;
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
-    auto ret = proxy_->OpenP2PConnection(deviceInfo);
+    auto ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_BROKEN_IPC);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(false));
-    ret = proxy_->CloseP2PConnection(deviceInfo);
+    ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(false));
-    ret = proxy_->CloseP2PConnection(deviceInfo);
+    ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(false));
-    ret = proxy_->CloseP2PConnection(deviceInfo);
+    ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteCString(_)).WillOnce(Return(true))
-        .WillOnce(Return(true)).WillOnce(Return(true));
-    EXPECT_CALL(*messageParcelMock_, WriteUint16(_)).WillOnce(Return(false));
-    ret = proxy_->CloseP2PConnection(deviceInfo);
+    ret = proxy_->DisconnectDfs(networkId);
     EXPECT_EQ(ret, E_INVAL_ARG);
-    GTEST_LOG_(INFO) << "DistributedFileDaemon_CloseP2PConnection_0100 End";
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_DisconnectDfs_0100 End";
 }
 
 /**
@@ -1118,6 +1104,32 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetConnectedDevic
     ret = proxy_->GetConnectedDeviceList(deviceList);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_GetConnectedDeviceList
+ * @tc.desc: Verify GetConnectedDeviceList function
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetConnectedDeviceList_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList_0100 Start";
+    std::vector<DfsDeviceInfo> deviceList;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(-1), Return(true))); // -1: error length
+    auto ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(MAX_CONNECTED_SIZE + 1), Return(true))); // 1: nax size + 1
+    ret = proxy_->GetConnectedDeviceList(deviceList);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_GetConnectedDeviceList_0100 End";
 }
 
 /**

@@ -37,12 +37,12 @@ void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
     return;
 }
 
-int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId)
+int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t &socketId, int32_t userId)
 {
     if (ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ == nullptr) {
         return -1;
     }
-    return ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_->AssetBind(dstNetworkId, socketId);
+    return ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_->AssetBind(dstNetworkId, socketId, userId);
 }
 
 int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string &sendFile, bool isSingleFile)
