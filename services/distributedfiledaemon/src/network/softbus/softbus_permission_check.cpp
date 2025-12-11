@@ -246,7 +246,7 @@ bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId, int3
     accessInfo.userId = accountInfo.userId_;
     std::string jsonStr = jsonObj.dump();
     size_t len = jsonStr.size();
-    std::shared_ptr<char> charArr(new char[len + 1], [](char *p) {delete[] p;});
+    auto charArr = std::make_unique<char[]>(len + 1);
     if (strcpy_s(charArr.get(), len + 1, jsonStr.c_str()) != 0) {
         LOGE("strcpy_s failed, errno = %{public}d", errno);
         return false;
