@@ -254,7 +254,6 @@ int32_t Daemon::DisconnectDfs(const std::string &networkId)
          Utils::GetAnonyNumber(callingTokenId).c_str());
     ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
     CleanUp(networkId);
-    LOGI("DisconnectDfs Success networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
     return 0;
 }
 
@@ -300,7 +299,6 @@ int32_t Daemon::CleanUp(const std::string &networkId)
 {
     LOGI("CleanUp start, networkId is %{public}.6s", networkId.c_str());
     if (!ConnectCount::GetInstance().CheckCount(networkId)) {
-        LOGI("Close P2P Connection immediately");
         DisconnectDevice(networkId);
         auto ret = CancelControlLink(networkId);
         LOGI("cancel control link ret is %{public}d", ret);
@@ -1151,14 +1149,12 @@ void Daemon::StartEventHandler()
 
 void Daemon::DisconnectDevice(const std::string networkId)
 {
-    LOGI("Daemon::DisconnectDevice enter.");
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (ret != 0) {
         LOGE("strcpy for network id failed, ret is %{public}d, errno = %{public}d", ret, errno);
         return;
     }
-    LOGI("DisconnectDevice NetworkId:%{public}.5s", networkId.c_str());
     ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
     LOGI("Daemon::DisconnectDevice result %{public}d", ret);
 }
