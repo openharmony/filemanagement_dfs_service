@@ -243,7 +243,7 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
         wLock.unlock();
     } else {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::OPEN, CloudFile::FaultType::CACHE_CLEAR, EINVAL, 
+            CloudFile::FaultOperation::OPEN, CloudFile::FaultType::CACHE_CLEAR, EINVAL,
             std::to_string(key) + " refCount != 0 : " + std::to_string(filePtr->refCount)});
     }
 }
