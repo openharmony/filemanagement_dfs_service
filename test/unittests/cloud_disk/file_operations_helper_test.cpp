@@ -733,14 +733,14 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutCloudDiskInodeTest004 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
         inoPtr->refCount.store(1);
         uint64_t num = 2;
         int64_t key = 0;
 
-        fuseoperationshelper_->PutCloudDiskInode(data, inoPtr, num, key);
-        delete data;
+        fuseoperationshelper_->PutCloudDiskInode(data.get(), inoPtr, num, key);
+        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -832,13 +832,13 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutCloudDiskFileTest004 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskFile> file = make_shared<CloudDiskFile>();
         file->refCount.store(-1);
         int64_t key = 0;
 
-        fuseoperationshelper_->PutCloudDiskFile(data, file, key);
-        delete data;
+        fuseoperationshelper_->PutCloudDiskFile(data.get(), file, key);
+        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -933,14 +933,14 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutLocalIdTest004 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
         inoPtr->refCount.store(1);
         uint64_t num = 2;
         string key = "";
 
-        fuseoperationshelper_->PutLocalId(data, inoPtr, num, key);
-        delete data;
+        fuseoperationshelper_->PutLocalId(data.get(), inoPtr, num, key);
+        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
