@@ -21,6 +21,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
     "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/clouddisk_rdbstore_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/system_func_mock.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/database_backup_task.cpp",
@@ -101,7 +102,8 @@ ohos_unittest("periodic_clean_task_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_result_set.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_pref_impl_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
-
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/screen_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/system_func_mock.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/database_backup_task.cpp",
@@ -152,6 +154,8 @@ ohos_unittest("periodic_clean_task_test") {
   ]
 
   defines = [
+    "remove=mockRemove",
+    "access=mockAccess",
     "rename=mockRename",
     "mkdir=mockMkdir",
     "private=public",

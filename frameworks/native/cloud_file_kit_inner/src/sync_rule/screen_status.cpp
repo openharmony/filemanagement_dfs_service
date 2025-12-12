@@ -26,18 +26,19 @@ namespace FileManagement {
 namespace CloudSync {
 bool ScreenStatus::IsScreenOn()
 {
-    return screenState_ == ScreenState::SCREEN_ON;
+    return screenState_.load() == ScreenState::SCREEN_ON;
 }
 
 void ScreenStatus::InitScreenStatus()
 {
     bool isScreenOn = PowerMgr::PowerMgrClient::GetInstance().IsScreenOn();
-    screenState_ =  isScreenOn? ScreenState::SCREEN_ON : ScreenState::SCREEN_OFF;
+    ScreenState screenState = isScreenOn ? ScreenState::SCREEN_ON : ScreenState::SCREEN_OFF;
+    screenState_.store(screenState);
 }
 
 void ScreenStatus::SetScreenState(ScreenState screenState)
 {
-    screenState_ = screenState;
+    screenState_.store(screenState);
 }
 
 bool ScreenStatus::IsForceSleep()
