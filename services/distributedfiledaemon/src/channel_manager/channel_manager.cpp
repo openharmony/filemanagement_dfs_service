@@ -221,6 +221,7 @@ int32_t ChannelManager::PostTask(const AppExecFwk::InnerEvent::Callback &callbac
         LOGE("event handler empty");
         return ERR_NULL_EVENT_HANDLER;
     }
+    std::lock_guard<std::mutex> lock(eventMutex_);
     if (eventHandler_->PostTask(callback, priority)) {
         return ERR_OK;
     }
@@ -235,6 +236,7 @@ int32_t ChannelManager::PostCallbackTask(const AppExecFwk::InnerEvent::Callback 
         LOGE("callback event handler empty");
         return ERR_NULL_EVENT_HANDLER;
     }
+    std::lock_guard<std::mutex> lock(callbackEventMutex_);
     if (callbackEventHandler_->PostTask(callback, priority)) {
         return ERR_OK;
     }

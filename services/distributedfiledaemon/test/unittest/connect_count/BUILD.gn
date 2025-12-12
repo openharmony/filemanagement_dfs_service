@@ -25,6 +25,8 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
+
+  defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
 ohos_unittest("connect_count_test") {
