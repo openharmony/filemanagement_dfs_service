@@ -740,7 +740,6 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest004, TestSize.Level1)
         int64_t key = 0;
 
         fuseoperationshelper_->PutCloudDiskInode(data.get(), inoPtr, num, key);
-        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -838,7 +837,6 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest004, TestSize.Level1)
         int64_t key = 0;
 
         fuseoperationshelper_->PutCloudDiskFile(data.get(), file, key);
-        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -940,7 +938,6 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest004, TestSize.Level1)
         string key = "";
 
         fuseoperationshelper_->PutLocalId(data.get(), inoPtr, num, key);
-        // delete data;
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
