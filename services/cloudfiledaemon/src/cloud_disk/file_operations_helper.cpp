@@ -248,16 +248,17 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
     }
 }
 
+/* Currently, the following function is always used after PutCloudDiskInode(). 
+   If used independently, note the increment or decrement of refCount. */
 void FileOperationsHelper::PutLocalId(struct CloudDiskFuseData *data,
                                       std::shared_ptr<CloudDiskInode> inoPtr,
-                                      uint64_t num, const std::string &key)
+                                      const std::string &key)
 {
     std::unique_lock<std::shared_mutex> wLock(data->localIdLock, std::defer_lock);
     if (inoPtr == nullptr) {
         LOGD("Get an invalid inode!");
         return;
     }
-    inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
         LOGD("node released: %{public}s", key.c_str());
         wLock.lock();
