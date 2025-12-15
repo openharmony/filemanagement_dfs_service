@@ -95,6 +95,7 @@ static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
 static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
+static const unsigned int MIN_LOG_SIZE = 4 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 6;
 static const unsigned int MAX_APPID_LEN = 256;
@@ -1375,7 +1376,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
+    LOGD("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
 
     uint64_t startTime = UTCTimeMilliSeconds();
@@ -1732,8 +1733,11 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid, req->ctx.pid,
-         req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+
+    if (size > MIN_LOG_SIZE) {
+        LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid,
+            req->ctx.pid, req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+    }
 
     if (!CloudReadHelper(req, size, cInode)) {
         return;
