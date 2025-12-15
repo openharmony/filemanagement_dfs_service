@@ -248,7 +248,7 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
     }
 }
 
-/* Currently, the following function is always used after PutCloudDiskInode(). 
+/* Currently, the following function is always used after PutCloudDiskInode().
    If used independently, note the increment or decrement of refCount. */
 void FileOperationsHelper::PutLocalId(struct CloudDiskFuseData *data,
                                       std::shared_ptr<CloudDiskInode> inoPtr,
