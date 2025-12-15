@@ -42,6 +42,8 @@ static const std::string MEDIA_AUTHORITY = "media";
 static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string FILE_SCHEMA = "file://";
 static const std::string FILE_SEPARATOR = "/";
+static const std::string NETWORKID_SIGN = "?networkid=";
+static const std::string COMMON_PATH_PREFIX = "/mnt/hmdfs/100/account/device_view/";
 
 static std::string GetBundleName(const std::string &uri)
 {
@@ -104,15 +106,57 @@ bool RemoteFileCopyManager::IsMediaUri(const std::string &uriPath)
     return bundleName == MEDIA_AUTHORITY;
 }
 
-bool RemoteFileCopyManager::IsFile(const std::string &path)
+void RemoteFileCopyManager::CheckSrcPathIsInvalid(const std::string &path, const std::string &srcUri)
+{
+    auto pos = srcUri.find(NETWORKID_SIGN);
+    if (pos == srcUri.npos) {
+        LOGE("srcUri is local uri, not include networkId");
+        return;
+    }
+    std::string networkId = srcUri.substr(pos + NETWORKID_SIGN.size());
+    std::string commonPrefix = COMMON_PATH_PREFIX + networkId;
+    if (path.find(commonPrefix) == path.npos) {
+        LOGE("srcPath is not a distributed path, not begin with /mnt/hmdfs/100/account/device_view/");
+        RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "kernel", networkId, DEFAULT_ERR, "deviceview cid not found"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
+        return;
+    }
+    Uri uri(srcUri);
+    auto authority = uri.GetAuthority();
+    if (authority == FILE_MANAGER_AUTHORITY) {
+        std::string fileManagerPath = commonPrefix + "/file/Docs";
+        if (path.find(fileManagerPath) == path.npos) {
+            LOGE("deviceview fileManager bundle path not found");
+            RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+                "kernel", networkId, DEFAULT_ERR, "deviceview fileManager bundle path not found"};
+            DfsRadar::GetInstance().ReportFileAccess(info);
+        }
+        return;
+    }
+    std::string AppPath = commonPrefix + "/data/" + authority;
+    if (path.find(AppPath) == path.npos) {
+        LOGE("deviceview App bundle path not found");
+        RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            "kernel", networkId, DEFAULT_ERR, "deviceview App bundle path not found"};
+        DfsRadar::GetInstance().ReportFileAccess(info);
+        return;
+    }
+    LOGI("Judge common path prefix success");
+}
+
+bool RemoteFileCopyManager::IsFile(const std::string &path, const std::string &srcUri)
 {
     struct stat buf {};
     int ret = stat(path.c_str(), &buf);
-    if (ret == -1) {
+    if (ret != E_OK) {
         LOGE("stat failed, errno is %{public}d", errno);
         RadarParaInfo info = {"IsFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", "", ret, "Stat failed, errno=" + to_string(errno)};
         DfsRadar::GetInstance().ReportFileAccess(info);
+        if (errno == ENOENT) {
+            CheckSrcPathIsInvalid(path, srcUri);
+        }
         return false;
     }
     return (buf.st_mode & S_IFMT) == S_IFREG;
@@ -166,7 +210,7 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
     }
     infos->srcPath = srcPhysicalPath;
     infos->destPath = dstPhysicalPath;
-    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || IsFile(infos->srcPath);
+    infos->srcUriIsFile = IsFile(infos->srcPath, srcUri);
     infos->callingUid = IPCSkeleton::GetCallingUid();
     AddFileInfos(infos);
     return E_OK;
