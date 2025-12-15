@@ -144,20 +144,18 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline std::shared_ptr<MockDaemonStub> daemonStub_;
-    static inline shared_ptr<MessageParcelMock> messageParcelMock_ = nullptr;
+    std::shared_ptr<MockDaemonStub> daemonStub_;
+    shared_ptr<MessageParcelMock> messageParcelMock_ = nullptr;
 };
 
 void DaemonStubTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    daemonStub_ = std::make_shared<MockDaemonStub>();
 }
 
 void DaemonStubTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    daemonStub_ = nullptr;
 }
 
 void DaemonStubTest::SetUp(void)
@@ -165,6 +163,7 @@ void DaemonStubTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     g_checkUriPermissionTrue = true;
     UID = DATA_UID;
+    daemonStub_ = std::make_shared<MockDaemonStub>();
     messageParcelMock_ = make_shared<MessageParcelMock>();
     MessageParcelMock::messageParcel = messageParcelMock_;
 }
@@ -172,6 +171,7 @@ void DaemonStubTest::SetUp(void)
 void DaemonStubTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    daemonStub_ = nullptr;
     messageParcelMock_ = nullptr;
     MessageParcelMock::messageParcel = nullptr;
 }
@@ -244,7 +244,6 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleConnectDfsTest001, TestSize.Level0)
     ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*daemonStub_, ConnectDfs(_)).WillOnce(Return(E_OK));
     ret = daemonStub_->HandleConnectDfs(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
     GTEST_LOG_(INFO) << "DaemonStubHandleConnectDfsTest001 End";
@@ -276,7 +275,6 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleDisconnectDfsTest001, TestSize.Level0)
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
 
-    EXPECT_CALL(*daemonStub_, DisconnectDfs(_)).WillOnce(Return(E_OK));
     ret = daemonStub_->HandleDisconnectDfs(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
     GTEST_LOG_(INFO) << "DaemonStubHandleDisconnectDfsTest001 End";

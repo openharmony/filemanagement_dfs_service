@@ -48,6 +48,7 @@ ohos_unittest("all_connect_manager_test") {
 
   sources = [
     "${services_path}/distributedfiledaemon/test/mock/library_func_mock.cpp",
+    "${utils_path}/dfx/src/dfs_radar.cpp",
     "all_connect_manager_test.cpp",
   ]
 
