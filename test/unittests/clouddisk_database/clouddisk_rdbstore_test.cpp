@@ -1325,6 +1325,28 @@ HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest7, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HasTHMSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::HasTHMSetXattr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, HasTHMSetXattrTest8, TestSize.Level1)
+{
+    const std::string name = "test";
+    const std::string key = CLOUD_HAS_THM;
+    const std::string cloudId = "100";
+    const std::string value = "1";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_RDB, nullptr)));
+
+    int32_t ret = clouddiskrdbStore_->HasTHMSetXattr(name, key, cloudId, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
  * @tc.name: GetRowId
  * @tc.desc: Verify the CloudDiskRdbStore::GetRowId function
  * @tc.type: FUNC
