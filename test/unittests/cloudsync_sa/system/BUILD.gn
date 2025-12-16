@@ -99,11 +99,12 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${utils_path}/system/src/dfsu_mount_argument_descriptors.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfsu_mount_argument_descriptors.cpp",
     "dfsu_mount_argument_descriptors_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/dfs_utils/include",
     "${utils_path}/system/include",
     "${utils_path}/log/include",
   ]

@@ -50,7 +50,7 @@ ohos_unittest("mount_manager_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -83,7 +83,7 @@ ohos_unittest("mount_point_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",

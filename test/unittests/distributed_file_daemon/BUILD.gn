@@ -41,7 +41,7 @@ ohos_unittest("daemon_manager_impl_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -96,7 +96,7 @@ ohos_unittest("daemon_manager_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -147,7 +147,7 @@ ohos_unittest("daemon_service_proxy_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -200,7 +200,7 @@ ohos_unittest("connection_detector_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -254,7 +254,7 @@ ohos_unittest("file_dfs_listener_proxy_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -309,7 +309,7 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -360,7 +360,7 @@ ohos_unittest("trans_mananger_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -402,7 +402,7 @@ ohos_unittest("dfs_radar_test") {
     "${utils_path}/log/include",
   ]
  
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
  
   external_deps = [
     "c_utils:utils",
