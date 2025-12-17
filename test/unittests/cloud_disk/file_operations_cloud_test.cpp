@@ -2145,7 +2145,7 @@ HWTEST_F(FileOperationsCloudTest, ReadTest001, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
         CloudDiskInode ino;
-        size_t size = 5 * 1024 *1024;
+        size_t size = 5 * 1024 * 1024;
         off_t off = 0;
         struct fuse_file_info fi;
 
