@@ -36,6 +36,9 @@
 #include "datashare_helper.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#ifdef DFS_ENABLE_RADAR
+#include "radar_report.h"
+#endif
 #ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 #include "distributed_file_daemon_proxy.h"
 #endif
@@ -187,7 +190,9 @@ static void ReportRemoteCopy(const std::string &srcUri, const RadarParaInfo &inf
         LOGI("is local copy, no need report");
         return;
     }
-    DfsRadar::GetInstance().ReportFileAccess(info);
+#ifdef DFS_ENABLE_RADAR
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
 }
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
@@ -409,9 +414,11 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     LOGI("start ExecLocal");
     if (infos == nullptr || infos->localListener == nullptr) {
         LOGE("infos or localListener is nullptr");
+#ifdef DFS_ENABLE_RADAR
         RadarParaInfo info = {"ExecLocal", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "infos or localListener is nullptr"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
         return EINVAL;
     }
     if (infos->srcUriIsFile) {
@@ -739,16 +746,20 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
         auto file = open(destPath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (file < 0) {
             LOGE("Error opening file descriptor. errno = %{public}d", errno);
+#ifdef DFS_ENABLE_RADAR
             RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 "libc++", "", file, "Error opening file descriptor. errno=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
             return errno;
         }
         close(file);
     } else if (errCode.value() != 0) {
+#ifdef DFS_ENABLE_RADAR
         RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "libc++", "", errCode.value(), "errCode fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
         return errCode.value();
     }
     return E_OK;

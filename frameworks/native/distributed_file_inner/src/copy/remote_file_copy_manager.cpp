@@ -22,6 +22,7 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "datashare_helper.h"
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"
@@ -119,7 +120,7 @@ void RemoteFileCopyManager::CheckSrcPathIsInvalid(const std::string &path, const
         LOGE("srcPath is not a distributed path, not begin with /mnt/hmdfs/100/account/device_view/");
         RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", networkId, DEFAULT_ERR, "deviceview cid not found"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     Uri uri(srcUri);
@@ -130,7 +131,7 @@ void RemoteFileCopyManager::CheckSrcPathIsInvalid(const std::string &path, const
             LOGE("deviceview fileManager bundle path not found");
             RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 "kernel", networkId, DEFAULT_ERR, "deviceview fileManager bundle path not found"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         }
         return;
     }
@@ -139,7 +140,7 @@ void RemoteFileCopyManager::CheckSrcPathIsInvalid(const std::string &path, const
         LOGE("deviceview App bundle path not found");
         RadarParaInfo info = {"CheckSrcPathIsInvalid", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", networkId, DEFAULT_ERR, "deviceview App bundle path not found"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     LOGI("Judge common path prefix success");
@@ -153,7 +154,7 @@ bool RemoteFileCopyManager::IsFile(const std::string &path, const std::string &s
         LOGE("stat failed, errno is %{public}d", errno);
         RadarParaInfo info = {"IsFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", "", ret, "Stat failed, errno=" + to_string(errno)};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         if (errno == ENOENT) {
             CheckSrcPathIsInvalid(path, srcUri);
         }
@@ -188,7 +189,7 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
         LOGE("Get src path failed, invalid uri");
         RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "AFS", "", EINVAL, "Get src path fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return EINVAL;
     }
     std::string dstPhysicalPath;
@@ -196,7 +197,7 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
         LOGE("Get dst path failed, invalid uri");
         RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "AFS", "", EINVAL, "Get dst path fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return EINVAL;
     }
     Uri uri(destUri);
@@ -238,7 +239,7 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
         LOGE("path is forbidden");
         RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return EINVAL;
     }
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -252,7 +253,7 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
             callingUid, (*item)->callingUid);
             RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 DEFAULT_PKGNAME, "", EPERM, "RemoteCancel failed"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return EPERM;
         }
         LOGI("RemoteCancel success");
@@ -276,7 +277,7 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
         LOGE("path is forbidden");
         RadarParaInfo info = {"RemoteCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return EINVAL;
     }
     auto infos = std::make_shared<FileInfos>();

@@ -1,0 +1,72 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+config("utils_public_config") {
+  include_dirs = [
+    "include",
+    "${utils_path}/log/include",
+    "${utils_path}/system/include",
+  ]
+}
+
+ohos_shared_library("libdfsutils") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  public_configs = [ ":utils_public_config" ]
+
+  sources = [
+    "./src/dfs_radar.cpp",
+    "${utils_path}/log/src/dfs_error.cpp",
+    "${utils_path}/log/src/utils_log.cpp",
+    "${utils_path}/system/src/dfsu_access_token_helper.cpp",
+    "${utils_path}/system/src/dfsu_mount_argument_descriptors.cpp",
+    "${utils_path}/system/src/utils_directory.cpp",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD00430B",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:uri_permission_mgr",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_core",
+    "os_account:libaccountkits",
+    "os_account:os_account_innerkits",
+  ]
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
+  cflags = [ "-D_FORTIFY_SOURCE=2" ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}

@@ -21,29 +21,6 @@
 #include "device_manager_impl_mock.h"
 #include "mock_other_method.h"
 
-const std::string NETWORKID_ONE = "testNetWork1";
-class ISoftBusServer {
-public:
-    virtual int32_t GetNodeKeyInfo(const char *pkgName, const  char *networkId,
-    NodeDeviceInfoKey key, uint8_t *info, int32_t infoLen) = 0;
-    static inline std::shared_ptr<ISoftBusServer> dfsSoftBusServer = nullptr;
-    virtual ~ISoftBusServer() = default;
-};
-
-class SoftBusServerMock : public ISoftBusServer {
-public:
-    MOCK_METHOD(int32_t, GetNodeKeyInfo, (const char *, const char *, NodeDeviceInfoKey, uint8_t *, int32_t));
-};
-
-namespace OHOS::Storage::DistributedFile {
-int32_t GetNodeKeyInfo(const char *pkgName, const char *networkId, NodeDeviceInfoKey key,
-                       uint8_t *info, int32_t infoLen)
-{
-    GTEST_LOG_(INFO) << "GetNodeKeyInfo start";
-    return ISoftBusServer::dfsSoftBusServer->GetNodeKeyInfo(pkgName, networkId, key, info, infoLen);
-}
-} // namespace OHOS::Storage::DistributedFile
-
 namespace OHOS::FileManagement::Test {
 using namespace std;
 using namespace OHOS;
@@ -62,27 +39,17 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    static inline std::shared_ptr<Storage::DistributedFile::DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
-    static inline std::shared_ptr<SoftBusServerMock> softBusServerMock_ = nullptr;
     static inline std::shared_ptr<DfsDeviceOtherMethodMock> otherMethodMock_ = nullptr;
 };
 
 void DfsRadarTest::SetUpTestCase()
 {
-    deviceManagerImplMock_ = std::make_shared<Storage::DistributedFile::DeviceManagerImplMock>();
-    Storage::DistributedFile::DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
-    softBusServerMock_ = std::make_shared<SoftBusServerMock>();
-    ISoftBusServer::dfsSoftBusServer = softBusServerMock_;
     otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
     DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
 }
 
 void DfsRadarTest::TearDownTestCase()
 {
-    Storage::DistributedFile::DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    ISoftBusServer::dfsSoftBusServer = nullptr;
-    softBusServerMock_ = nullptr;
     DfsDeviceOtherMethodMock::otherMethod = nullptr;
     otherMethodMock_ = nullptr;
 }
@@ -193,102 +160,5 @@ HWTEST_F(DfsRadarTest, DfsRadarTest_GetCurrentUserId_001, TestSize.Level1)
     res = DfsRadar::GetInstance().GetCurrentUserId();
     EXPECT_EQ(res, userIds[0]);
     GTEST_LOG_(INFO) << "DfsRadarTest_GetCurrentUserId_001 End";
-}
-
-/**
- * @tc.name: DfsRadarTest_GetLocalNetIdAndUdid_001
- * @tc.desc: verify GetLocalNetIdAndUdid.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(DfsRadarTest, DfsRadarTest_GetLocalNetIdAndUdid_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetLocalNetIdAndUdid_001 Start";
-    RadarParameter param = {
-        .orgPkg = DEFAULT_PKGNAME,
-        .hostPkg = "hostPkg",
-        .funcName = "test",
-        .faultLevel = ReportLevel::DEFAULT,
-        .bizScene = BizScene::GENERATE_DIS_URI,
-        .bizStage = DfxBizStage::DEFAULT,
-        .toCallPkg = "toCallPkg",
-        .fileSize = DEFAULT_SIZE,
-        .fileCount = DEFAULT_SIZE,
-        .operateTime = DEFAULT_SIZE,
-        .peerUdid = "peerUdid",
-        .peerNetId = "peerNetId",
-        .resultCode = 0,
-        .errorInfo = "errorInfo"
-    };
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(Return(-1));
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
-
-    EXPECT_CALL(*deviceManagerImplMock_,
-                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
-
-    EXPECT_CALL(*deviceManagerImplMock_,
-                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetLocalNetIdAndUdid(param));
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetLocalNetIdAndUdid_001 End";
-}
-
-/**
- * @tc.name: DfsRadarTest_GetPeerUdid_001
- * @tc.desc: verify GetPeerUdid.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(DfsRadarTest, DfsRadarTest_GetPeerUdid_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetPeerUdid_001 Start";
-    RadarParameter param = {
-        .orgPkg = DEFAULT_PKGNAME,
-        .hostPkg = "hostPkg",
-        .funcName = "test",
-        .faultLevel = ReportLevel::DEFAULT,
-        .bizScene = BizScene::GENERATE_DIS_URI,
-        .bizStage = DfxBizStage::DEFAULT,
-        .toCallPkg = "toCallPkg",
-        .fileSize = DEFAULT_SIZE,
-        .fileCount = DEFAULT_SIZE,
-        .operateTime = DEFAULT_SIZE,
-        .resultCode = 0,
-        .errorInfo = "errorInfo"
-    };
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, ""));
-
-    std::string networkId = "networkId";
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, networkId));
-
-    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(-1));
-    EXPECT_NO_FATAL_FAILURE(DfsRadar::GetInstance().GetPeerUdid(param, networkId));
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetPeerUdid_001 End";
-}
-
-/**
- * @tc.name: DfsRadarTest_GetAnonymStr_001
- * @tc.desc: verify GetAnonymStr.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(DfsRadarTest, DfsRadarTest_GetAnonymStr_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetAnonymStr_001 Start";
-    string value = "";
-    string res = DfsRadar::GetInstance().GetAnonymStr(value);
-    EXPECT_EQ(res, "");
-
-    value = "123";
-    res = DfsRadar::GetInstance().GetAnonymStr(value);
-    EXPECT_EQ(res, "");
-
-    value = "12345678901";
-    res = DfsRadar::GetInstance().GetAnonymStr(value);
-    EXPECT_EQ(res, "12345**78901");
-    GTEST_LOG_(INFO) << "DfsRadarTest_GetAnonymStr_001 End";
 }
 }

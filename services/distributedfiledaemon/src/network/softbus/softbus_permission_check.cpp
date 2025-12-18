@@ -18,6 +18,7 @@
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
 #include "ohos_account_kits.h"
@@ -89,7 +90,7 @@ bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, 
         LOGE("Get accountId from Ohos account info failed, ret: %{public}d.", ret);
         RadarParaInfo info = {"GetLocalAccountInfo", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "account", "", ret, "from Ohos account info failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     localAccountInfo.accountId_ = osAccountInfo.uid_;
@@ -120,7 +121,7 @@ bool SoftBusPermissionCheck::CheckSrcIsSameAccount(const std::string &sinkNetwor
         LOGE("Check src same account failed");
         RadarParaInfo info = {"CheckSrcIsSameAccount", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", sinkNetworkId, DEFAULT_ERR, "Check src same account fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
 #endif
@@ -145,7 +146,7 @@ bool SoftBusPermissionCheck::CheckSinkIsSameAccount(const AccountInfo &callerAcc
         LOGE("Check sink same account failed");
         RadarParaInfo info = {"CheckSinkIsSameAccount", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", calleeAccountInfo.networkId_, DEFAULT_ERR, "Check sink same account fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
 #endif
@@ -169,7 +170,7 @@ bool SoftBusPermissionCheck::CheckSrcAccessControl(const std::string &sinkNetwor
         LOGE("Check src acl failed");
         RadarParaInfo info = {"CheckSrcAccessControl", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", sinkNetworkId, DEFAULT_ERR, "Check src acl failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     return true;
@@ -196,7 +197,7 @@ bool SoftBusPermissionCheck::CheckSinkAccessControl(const AccountInfo &callerAcc
         LOGE("Check sink acl failed");
         RadarParaInfo info = {"CheckSinkAccessControl", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", calleeAccountInfo.networkId_, DEFAULT_ERR, "Check sink acl failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     return true;
@@ -210,7 +211,7 @@ int32_t SoftBusPermissionCheck::GetCurrentUserId()
         LOGE("Query active os account id failed, ret = %{public}d", ret);
         RadarParaInfo info = {"GetCurrentUserId", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "account", "", ret, "GetCurrentUserId failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return INVALID_USER_ID;
     }
     return userIds[0];
@@ -224,7 +225,7 @@ bool SoftBusPermissionCheck::GetLocalNetworkId(std::string &networkId)
         LOGE("Get localdeviceInfo failed, ret = %{public}d", errCode);
         RadarParaInfo info = {"GetLocalNetworkId", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", "", errCode, "Get localdeviceInfo failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     networkId = localDeviceInfo.networkId;
@@ -257,7 +258,7 @@ bool SoftBusPermissionCheck::SetAccessInfoToSocket(const int32_t sessionId, int3
         LOGE("set access info failed");
         RadarParaInfo info = {"SetAccessInfoToSocket", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "softbus", "", DEFAULT_ERR, "set info fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
 #endif
@@ -276,14 +277,14 @@ bool SoftBusPermissionCheck::TransCallerInfo(SocketAccessInfo *callerInfo,
         LOGE("jsonObj parse failed.");
         RadarParaInfo info = {"TransCallerInfo", ReportLevel::INNER, DfxBizStage::DEFAULT,
             DEFAULT_PKGNAME, networkId, DEFAULT_ERR, "get ext jsonObj parse failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     if (!jsonObj.contains(ACCOUNT_ID) || !jsonObj[ACCOUNT_ID].is_string()) {
         LOGE("get ext jsonObj parse failed.");
         RadarParaInfo info = {"TransCallerInfo", ReportLevel::INNER, DfxBizStage::DEFAULT,
             DEFAULT_PKGNAME, networkId, DEFAULT_ERR, "get ext jsonObj parse failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     callerAccountInfo.accountId_ = jsonObj[ACCOUNT_ID].get<std::string>();
@@ -319,7 +320,7 @@ bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
         LOGE("Trust device list size is invalid, size=%zu", deviceList.size());
         RadarParaInfo info = {"IsSameAccount", ReportLevel::INNER, DfxBizStage::DEFAULT,
             "DM", networkId, DEFAULT_ERR, "list size err"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     DistributedHardware::DmDeviceInfo deviceInfoTemp;
@@ -342,7 +343,7 @@ bool SoftBusPermissionCheck::IsSameAccount(const std::string &networkId)
         LOGE("Device entraDataJson parse failed.");
         RadarParaInfo info = {"IsSameAccount", ReportLevel::INNER, DfxBizStage::DEFAULT,
             DEFAULT_PKGNAME, networkId, DEFAULT_ERR, "entraDataJson parse failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {

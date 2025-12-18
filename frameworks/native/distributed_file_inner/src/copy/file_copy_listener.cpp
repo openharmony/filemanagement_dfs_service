@@ -21,6 +21,9 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#ifdef DFS_ENABLE_RADAR
+#include "radar_report.h"
+#endif
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -165,9 +168,11 @@ int32_t FileCopyLocalListener::AddListenerFile(const std::string &srcPath, const
     int newWd = inotify_add_watch(notifyFd_, destPath.c_str(), mode);
     if (newWd < 0) {
         LOGE("inotify_add_watch, newWd is unvaild, newWd = %{public}d, errno = %{public}d", newWd, errno);
+#ifdef DFS_ENABLE_RADAR
         RadarParaInfo info = {"AddListenerFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", "", newWd, "newWd is invaild, errno=" + to_string(errno)};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
         return errno;
     }
     std::shared_ptr<ReceiveInfo> receiveInfo = std::make_shared<ReceiveInfo>();
@@ -186,9 +191,11 @@ int32_t FileCopyLocalListener::AddListenerFile(const std::string &srcPath, const
     }
     if (err != E_OK) {
         LOGE("Failed to get src size, isFile=%{public}d, err=%{public}d", isFile_, err);
+#ifdef DFS_ENABLE_RADAR
         RadarParaInfo info = {"AddListenerFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "kernel", "", err, "Failed to get src size"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+#endif
         return err;
     }
     totalSize_ = fileSize;

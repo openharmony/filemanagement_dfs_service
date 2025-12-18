@@ -30,7 +30,6 @@ ohos_shared_library("libdistributedfiledaemon") {
     "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
-    "${distributedfile_path}/utils/dfx/include",
   ]
 
   cflags = [ "-D_FORTIFY_SOURCE=2" ]
@@ -87,9 +86,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/softbus/softbus_session_pool.cpp",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "app_file_service:fileuri_native",
@@ -126,6 +123,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   defines = [
     "LOG_DOMAIN=0xD00430B",
     "LOG_TAG=\"distributedfile_daemon\"",
+    "DFS_ENABLE_RADAR",
   ]
 
   if (support_same_account) {
@@ -171,7 +169,6 @@ config("public_config") {
 config("private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
-    "${distributedfile_path}/utils/dfx/include",
     "${distributedfile_path}/utils/log/include",
     "${services_path}/distributedfiledaemon/include",
   ]
@@ -207,7 +204,7 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
   ]
   public_external_deps = []
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",

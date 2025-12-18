@@ -19,7 +19,9 @@ config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "${distributedfile_path}/dfs_utils/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
@@ -41,9 +43,9 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   ]
 
   deps = [
+    "${distributedfile_path}/dfs_utils:libdfsutils",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = [

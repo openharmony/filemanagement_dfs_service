@@ -21,6 +21,7 @@ config("module_private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
@@ -53,7 +54,7 @@ ohos_unittest("asset_callback_manager_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -101,7 +102,7 @@ ohos_unittest("asset_recv_callback_proxy_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -138,7 +139,7 @@ ohos_unittest("asset_send_callback_proxy_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -176,7 +177,7 @@ ohos_unittest("daemon_stub_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -252,7 +253,8 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
-    "${utils_path}/dfx/src/dfs_radar.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "daemon_test.cpp",
   ]
 
@@ -264,7 +266,7 @@ ohos_unittest("daemon_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -345,7 +347,7 @@ ohos_unittest("daemon_execute_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [

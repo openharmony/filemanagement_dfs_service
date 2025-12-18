@@ -18,6 +18,7 @@
 #include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "utils_log.h"
@@ -78,7 +79,7 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     RadarParaInfo info = {"OnSendAssetError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnSendAssetError fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d", socketId, errorCode);
     if (fileCnt == 0) {
         LOGE("fileList has no file");
@@ -124,7 +125,7 @@ void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason 
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     RadarParaInfo info = {"OnSendShutdown", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnSendShutdown fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     LOGE("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(sessionId);
     if (assetObj == nullptr) {

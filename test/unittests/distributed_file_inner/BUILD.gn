@@ -102,7 +102,7 @@ ohos_unittest("distributed_file_daemon_proxy_sup_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "app_file_service:remote_file_share_native",
@@ -155,7 +155,7 @@ ohos_unittest("file_trans_listener_stub_test") {
     "${distributedfile_path}/test/mock",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -206,7 +206,7 @@ ohos_unittest("asset_recv_callback_stub_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -259,7 +259,7 @@ ohos_unittest("asset_adapter_sa_client_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
   ]
 
@@ -316,7 +316,7 @@ ohos_unittest("asset_send_callback_stub_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -372,7 +372,7 @@ ohos_unittest("file_copy_manager_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
   ]
 
@@ -442,7 +442,7 @@ ohos_unittest("remote_file_copy_manager_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon"
   ]
@@ -517,7 +517,7 @@ ohos_unittest("trans_listener_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
@@ -588,7 +588,7 @@ ohos_unittest("file_size_utils_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
@@ -653,7 +653,7 @@ ohos_unittest("file_copy_listener_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -709,7 +709,7 @@ ohos_unittest("file_mount_manager_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -765,7 +765,7 @@ ohos_unittest("distributed_file_fd_guard_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",
@@ -810,7 +810,7 @@ ohos_unittest("ipc_wrapper_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
@@ -875,7 +875,7 @@ ohos_unittest("file_dfs_listener_stub_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",
