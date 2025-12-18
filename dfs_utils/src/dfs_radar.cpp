@@ -87,7 +87,7 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
         .localUdid = localDeviceUdid,
         .localNetId = localDeviceNetId,
         .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,        
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
@@ -117,7 +117,7 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
         .localUdid = localDeviceUdid,
         .localNetId = localDeviceNetId,
         .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,        
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
@@ -147,7 +147,7 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info,
         .localUdid = localDeviceUdid,
         .localNetId = localDeviceNetId,
         .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,        
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
