@@ -37,10 +37,10 @@ ohos_shared_library("libdfsutils") {
 
   sources = [
     "./src/dfs_radar.cpp",
-    "./src/dfsu_mount_argument_descriptors.cpp",
     "${utils_path}/log/src/dfs_error.cpp",
     "${utils_path}/log/src/utils_log.cpp",
     "${utils_path}/system/src/dfsu_access_token_helper.cpp",
+    "${utils_path}/system/src/dfsu_mount_argument_descriptors.cpp",
     "${utils_path}/system/src/utils_directory.cpp",
   ]
 
