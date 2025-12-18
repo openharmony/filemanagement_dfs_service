@@ -38,7 +38,7 @@ void DfsRadar::ReportLinkConnection(const RadarParaInfo &info,
                                     const std::string &localDeviceNetId,
                                     const std::string &localDeviceUdid,
                                     const std::string &peerDeviceNetId,
-                                    const std::string &peerDeviceUdid);
+                                    const std::string &peerDeviceUdid)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
@@ -68,7 +68,7 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
                                       const std::string &localDeviceNetId,
                                       const std::string &localDeviceUdid,
                                       const std::string &peerDeviceNetId,
-                                      const std::string &peerDeviceUdid);
+                                      const std::string &peerDeviceUdid)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     string bundleName;
@@ -99,7 +99,7 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
                                     const std::string &localDeviceNetId,
                                     const std::string &localDeviceUdid,
                                     const std::string &peerDeviceNetId,
-                                    const std::string &peerDeviceUdid);
+                                    const std::string &peerDeviceUdid)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
@@ -129,7 +129,7 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info,
                                 const std::string &localDeviceNetId,
                                 const std::string &localDeviceUdid,
                                 const std::string &peerDeviceNetId,
-                                const std::string &peerDeviceUdid);
+                                const std::string &peerDeviceUdid)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
