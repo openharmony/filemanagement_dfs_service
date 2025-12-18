@@ -25,6 +25,7 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"

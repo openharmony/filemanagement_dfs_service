@@ -21,6 +21,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dfsu_exception.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
@@ -164,7 +165,7 @@ int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
         LOGE("Create OpenSoftbusChannel Socket error");
         RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", info.GetCid(), socketId, "Create Socket error"};
-        DfsRadar::GetInstance().ReportLinkConnectionAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     if (FindSocketId(socketId)) {
@@ -182,7 +183,7 @@ int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
         Shutdown(socketId);
         RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", info.GetCid(), ret, "Bind SocketClient error"};
-        DfsRadar::GetInstance().ReportLinkConnectionAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     HandleAfterOpenSession(socketId, info.GetCid());

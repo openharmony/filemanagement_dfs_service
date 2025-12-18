@@ -26,6 +26,7 @@
 #include <unordered_set>
 
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "mountpoint/mount_point.h"
 #include "network/base_session.h"
 #include "utils_log.h"

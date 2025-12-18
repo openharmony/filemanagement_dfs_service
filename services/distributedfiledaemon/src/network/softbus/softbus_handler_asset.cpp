@@ -28,6 +28,7 @@
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_asset_recv_listener.h"

@@ -16,6 +16,7 @@
 #include "network/softbus/softbus_session.h"
 
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dfs_session.h"
 #include "fcntl.h"
 #include "utils_log.h"

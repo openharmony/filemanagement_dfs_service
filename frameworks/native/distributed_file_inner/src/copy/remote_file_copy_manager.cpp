@@ -22,6 +22,7 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "datashare_helper.h"
 #include "ipc_skeleton.h"
 #include "sandbox_helper.h"

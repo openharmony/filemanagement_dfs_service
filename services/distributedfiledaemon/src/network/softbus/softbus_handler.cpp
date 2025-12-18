@@ -22,6 +22,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"

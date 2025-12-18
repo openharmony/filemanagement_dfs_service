@@ -24,6 +24,7 @@
 
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "utils_log.h"
 
 namespace OHOS {

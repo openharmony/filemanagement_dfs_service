@@ -19,6 +19,7 @@
 
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "trans_mananger.h"

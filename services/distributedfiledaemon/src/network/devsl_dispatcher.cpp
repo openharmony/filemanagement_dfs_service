@@ -18,6 +18,7 @@
 #include "device_manager.h"
 #include "device/device_manager_agent.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "ipc/i_daemon.h"
 #include "securec.h"
 #include "security_label.h"

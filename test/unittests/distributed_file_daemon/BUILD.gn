@@ -190,12 +190,14 @@ ohos_unittest("connection_detector_test") {
   module_out_path = "dfs_service/dfs_service_daemon"
 
   sources = [
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "connection_detector_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${services_path}/distributedfiledaemon/include/ipc",
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
@@ -218,7 +220,10 @@ ohos_unittest("connection_detector_test") {
   ]
 
   if (dfs_service_feature_enable_distributed_ability) {
-    external_deps += [ "device_manager:devicemanagersdk" ]
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 

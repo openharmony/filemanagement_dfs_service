@@ -15,6 +15,8 @@
 
 #include <gmock/gmock.h>
 
+#include "device_manager_impl_mock.h"
+#include "mock_other_method.h"
 #include "radar_report.h"
 
 const std::string NETWORKID_ONE = "testNetWork1";
@@ -48,8 +50,6 @@ using namespace OHOS::Storage::DistributedFile;
 using namespace testing::ext;
 using namespace testing;
 
-constexpr const char *DEFAULT_PKGNAME = "dfsService";
-const int32_t DEFAULT_SIZE = -1;
 class RadarReportAdapterTest : public testing::Test {
 public:
     static void SetUpTestCase();

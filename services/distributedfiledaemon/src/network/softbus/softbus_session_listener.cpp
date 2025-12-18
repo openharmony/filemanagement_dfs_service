@@ -18,6 +18,7 @@
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "os_account_manager.h"

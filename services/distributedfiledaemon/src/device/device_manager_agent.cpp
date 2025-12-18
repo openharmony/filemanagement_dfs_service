@@ -25,6 +25,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
 #include "ipc_skeleton.h"
@@ -295,7 +296,7 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
         RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "network is null"};
-        DfsRadar::GetInstance().ReportLinkConnectionAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return P2P_FAILED;
     }
     auto type_ = cidNetworkType_.find(info.cid_);
@@ -303,7 +304,7 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network type is null!",  Utils::GetAnonyString(info.cid_).c_str());
         RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "network type is null"};
-        DfsRadar::GetInstance().ReportLinkConnectionAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return P2P_FAILED;
     }
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const std::string>>(
@@ -314,7 +315,7 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("OnDeviceP2POffline it->second is nullptr");
         RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "OnDeviceP2POffline is null"};
-        DfsRadar::GetInstance().ReportLinkConnectionAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return P2P_FAILED;
     }
     cidNetTypeRecord_.erase(info.cid_);

@@ -15,6 +15,7 @@
 
 #include "channel_manager.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "securec.h"
 #include "softbus_error_code.h"

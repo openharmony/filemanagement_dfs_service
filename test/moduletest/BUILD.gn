@@ -21,6 +21,7 @@ config("module_private_config") {
   include_dirs = [
     "${distributedfile_path}/dfs_utils/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]

@@ -18,6 +18,7 @@
 #include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "utils_log.h"

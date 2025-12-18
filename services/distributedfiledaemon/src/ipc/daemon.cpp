@@ -575,7 +575,7 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         LOGE("Path is forbidden");
         RadarParaInfo radarInfo = {"InnerCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return ERR_BAD_VALUE;
     }
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
@@ -598,7 +598,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, E_NULLPTR, "Get src path failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_NULLPTR;
     }
 
@@ -607,7 +607,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, EINVAL, "Get src path failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         LOGE("Get src path failed, invalid uri");
         return EINVAL;
     }
@@ -633,7 +633,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     if (result != E_OK) {
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, result, "copy failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
     }
     return result;
 }
@@ -660,7 +660,7 @@ int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         RadarParaInfo radarInfo = {"CopyBaseOnRPC", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_SOFTBUS_SESSION_FAILED, "SessionServer exce max"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_SOFTBUS_SESSION_FAILED;
     }
 
@@ -721,7 +721,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("Path is forbidden");
         RadarParaInfo radarInfo = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     int32_t ret = E_OK;
@@ -767,7 +767,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
                      RadarReporter::accessTokenKit + to_string(result));
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "access", "", result, "GetHapTokenInfo failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_USER_ID;
     }
 
@@ -776,7 +776,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         LOGE("invalid uri, ret = %{public}d", ret);
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "AFS", "", ret, "invalid uri failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
@@ -787,7 +787,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         LOGE("CheckCopyRule failed, ret = %{public}d", ret);
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", ret, "CheckCopyRule failed"};
-        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
     return E_OK;

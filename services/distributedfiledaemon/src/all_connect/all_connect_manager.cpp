@@ -22,6 +22,7 @@
 
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
 #include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler.h"

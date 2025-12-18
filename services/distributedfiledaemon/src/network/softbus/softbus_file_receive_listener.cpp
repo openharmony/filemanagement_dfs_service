@@ -21,6 +21,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_permission_check.h"
 #include "sandbox_helper.h"
