@@ -112,7 +112,7 @@ int32_t AllConnectManager::PublishServiceState(DfsConnectCode code, const std::s
         LOGE("PublishServiceState %{public}d fail, ret %{public}d", state, ret);
         RadarParaInfo info = {"PublishServiceState", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, peerNetworkId, ret, "PublishServiceState failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return FileManagement::ERR_PUBLISH_STATE;
     }
     return FileManagement::ERR_OK;
@@ -181,7 +181,7 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
         LOGE("ApplyAdvancedResource fail, ret %{public}d", ret);
         RadarParaInfo info = {"ApplyAdvancedResource", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "collaboration", peerNetworkId, ret, "ApplyAdvancedResource fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return FileManagement::ERR_APPLY_RESULT;
     }
     auto success = applyResultBlock_->GetValue();

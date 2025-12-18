@@ -83,7 +83,7 @@ void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorC
     LOGE("OnFileTransError");
     RadarParaInfo info = {"OnFileTransError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnFileTransError fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

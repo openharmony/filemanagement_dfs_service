@@ -78,7 +78,7 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     RadarParaInfo info = {"OnSendAssetError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnSendAssetError fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d", socketId, errorCode);
     if (fileCnt == 0) {
         LOGE("fileList has no file");
@@ -124,7 +124,7 @@ void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason 
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     RadarParaInfo info = {"OnSendShutdown", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnSendShutdown fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     LOGE("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(sessionId);
     if (assetObj == nullptr) {

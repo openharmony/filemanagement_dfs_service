@@ -131,7 +131,7 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
             LOGE("Copy dir failed: errCode: %{public}d", errCode.value());
             RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 "filesystem", "", errCode.value(), "Copy dir failed"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return EIO;
         }
     } else {
@@ -142,7 +142,7 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
             LOGE("Get filename failed");
             RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 DEFAULT_PKGNAME, "", EIO, "Get filename failed"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return EIO;
         }
         std::filesystem::copy(disSandboxPath_ + fileName, hmdfsInfo_.sandboxPath,
@@ -151,7 +151,7 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
             LOGE("Copy file failed: errCode: %{public}d", errCode.value());
             RadarParaInfo info = {"CopyToSandBox", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 "filesystem", "", errCode.value(), "Copy file failed"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return EIO;
         }
     }

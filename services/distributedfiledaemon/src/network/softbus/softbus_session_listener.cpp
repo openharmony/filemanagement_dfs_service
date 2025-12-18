@@ -49,7 +49,7 @@ int32_t SoftBusSessionListener::QueryActiveUserId()
         LOGE("Query active userid failed, errCode: %{public}d, ", errCode);
         RadarParaInfo info = {"QueryActiveUserId", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "account", "", errCode, "Query userid failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return DEFAULT_USER_ID;
     }
     return ids[0];
@@ -115,7 +115,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("GetPhysicalPath failed, invalid uri");
         RadarParaInfo info = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "AFS", "", DEFAULT_ERR, "GetPhysicalPath failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return "";
     }
     if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {
@@ -126,7 +126,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("Check physicalPath err, physicalPath is forbidden");
         RadarParaInfo info = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return "";
     }
     char realPath[PATH_MAX] = { 0x00 };
@@ -134,7 +134,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("realpath failed, error: %{public}d", errno);
         RadarParaInfo info = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "kernel", "", DEFAULT_ERR, "realpath failed errno=" + to_string(errno)};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return "";
     }
     return physicalPath;

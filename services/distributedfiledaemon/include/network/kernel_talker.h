@@ -78,7 +78,7 @@ private:
         if (realPath == nullptr) {
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", DEFAULT_ERR, "realpath faile"};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
 
@@ -87,7 +87,7 @@ private:
             LOGE("Open node file error. %{public}d", errno);
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", file, "Open node file err, error=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
         int err = write(file, &cmd, sizeof(T));
@@ -95,7 +95,7 @@ private:
             LOGE("write return err. %{public}d", errno);
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", err, "write return err, errno=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         }
         close(file);
     }

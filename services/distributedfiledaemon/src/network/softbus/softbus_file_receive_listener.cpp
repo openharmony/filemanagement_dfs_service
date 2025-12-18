@@ -89,7 +89,7 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
         path_ = "";
         RadarParaInfo info = {"SetRecvPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "AFS", "", DEFAULT_ERR, "invalid path fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     path_ = physicalPath;
@@ -154,7 +154,7 @@ void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t err
         RadarReporter::dSoftBus + std::to_string(errorCode));
     RadarParaInfo info = {"OnFileTransError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnFileTransError fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
@@ -181,7 +181,7 @@ void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, Shutdo
     LOGI("OnReceiveFileShutdown, sessionId is %{public}d", sessionId);
     RadarParaInfo info = {"OnReceiveFileShutdown", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnReceiveFileShutdown fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

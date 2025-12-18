@@ -40,9 +40,17 @@ public:
     void SetUserStatistics(const RadarStatisticInfoType type);
     void ReportDfxStatistics();
 
+    void ReportLinkConnectionAdapter(const RadarParaInfo &info);
+    void ReportLinkConnectionExAdapter(const RadarParaInfo &info);
+    void ReportGenerateDisUriAdapter(const RadarParaInfo &info);
+    void ReportFileAccessAdapter(const RadarParaInfo &info);
+
 private:
     void StorageRadarThd();
- 
+    void GetLocalNetIdAndUdid(std::string &localDeviceNetId, std::string &localDeviceUdid);
+    void GetPeerUdid(const std::string &networkId, std::string &peerDeviceNetId, std::string &peerDeviceUdid);
+    std::string GetAnonymStr(const std::string &value);
+
     std::atomic<bool> stopRadarReport_{false};
     std::chrono::time_point<std::chrono::system_clock> lastRadarReportTime_;
     RadarStatisticInfo opStatistics_;

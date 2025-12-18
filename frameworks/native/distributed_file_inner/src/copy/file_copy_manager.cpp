@@ -187,7 +187,7 @@ static void ReportRemoteCopy(const std::string &srcUri, const RadarParaInfo &inf
         LOGI("is local copy, no need report");
         return;
     }
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
 }
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
@@ -411,7 +411,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         LOGE("infos or localListener is nullptr");
         RadarParaInfo info = {"ExecLocal", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "infos or localListener is nullptr"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return EINVAL;
     }
     if (infos->srcUriIsFile) {
@@ -741,14 +741,14 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
             LOGE("Error opening file descriptor. errno = %{public}d", errno);
             RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 "libc++", "", file, "Error opening file descriptor. errno=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return errno;
         }
         close(file);
     } else if (errCode.value() != 0) {
         RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "libc++", "", errCode.value(), "errCode fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return errCode.value();
     }
     return E_OK;

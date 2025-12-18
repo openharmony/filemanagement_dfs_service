@@ -253,6 +253,7 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "daemon_test.cpp",
   ]
 

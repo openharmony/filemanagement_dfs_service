@@ -165,6 +165,7 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "device/device_manager_agent_test.cpp",
   ]
 
@@ -434,6 +435,7 @@ ohos_unittest("session_pool_test") {
   sources = [
     "network/session_pool_test.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
   ]
 
   configs = [
@@ -506,6 +508,7 @@ ohos_unittest("softbus_agent_test") {
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_agent_test.cpp",
   ]
 
@@ -698,6 +701,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
   sources = [
     "network/softbus/softbus_session_dispatcher_test.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
   ]
 
@@ -910,6 +914,7 @@ ohos_unittest("softbus_handler_test") {
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_handler_test.cpp",
   ]
 
@@ -1182,6 +1187,7 @@ ohos_unittest("softbus_permission_check_test") {
     "${distributedfile_path}/services/distributedfiledaemon/src/network/softbus/softbus_permission_check.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/mock_other_method.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_permission_check_test.cpp",
   ]
 
@@ -1387,6 +1393,7 @@ ohos_unittest("channel_manager_test") {
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/softbus_permission_check_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "channel_manager/channel_manager_test.cpp",
   ]
 

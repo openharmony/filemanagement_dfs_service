@@ -239,7 +239,7 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
         LOGE("ConnectDfs failed %{public}s", Utils::GetAnonyString(networkId).c_str());
         RadarParaInfo info = {"ConnectDfs", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "OpenP2PConnection failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         CleanUp(networkId);
     }
     RadarReportAdapter::GetInstance().SetUserStatistics(ret == E_OK ? CONNECT_DFS_SUCC_CNT : CONNECT_DFS_FAIL_CNT);
@@ -291,7 +291,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
         LOGE("ConnectDfs failed, ret = %{public}d", ret);
         RadarParaInfo info = {"ConnectionCount", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, deviceInfo.networkId, ret, "ConnectDfs failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     }
     return ret;
 }
@@ -306,7 +306,7 @@ int32_t Daemon::CleanUp(const std::string &networkId)
         LOGI("cancel control link ret is %{public}d", ret);
         RadarParaInfo info = {"CleanUp", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, ret, "Close P2P Connection"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     return E_OK;
@@ -322,7 +322,7 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
         LOGE("CheckRemoteAllowConnect failed for %{public}.6s", networkId.c_str());
         RadarParaInfo info = {"ConnectionAndMount", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return E_PERMISSION;
     }
 
@@ -364,7 +364,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_PERMISSION;
     }
@@ -373,7 +373,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("[CheckPermission] DATASYNC permission denied");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_PERMISSION;
     }
@@ -382,7 +382,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("Daemon::OpenP2PConnectionEx networkId length is invalid.");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId length is invalid"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_INVAL_ARG_NAPI;
     }
@@ -408,7 +408,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
             LOGE("Daemon::OpenP2PConnectionEx failed to allocate memory for dfsListenerDeathRecipient_");
             RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
                 DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "OpenP2PConnectionEx failed"};
-            DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
             return E_INVAL_ARG_NAPI;
         }
@@ -421,7 +421,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, res, "strcpy_s failed"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_INVAL_ARG_NAPI;
     }
@@ -432,7 +432,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("ConnectionAndMount ret is %{public}d", ret);
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "ConnectionAndMount failed"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         CleanUp(networkId);
         return E_CONNECTION_FAILED;
     }
@@ -448,7 +448,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGW("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return E_PERMISSION;
     }
 
@@ -456,7 +456,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return E_PERMISSION;
     }
 
@@ -464,7 +464,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu", networkId.length());
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId invalid"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return E_INVAL_ARG_NAPI;
     }
     std::lock_guard<std::mutex> lock(connectMutex_);
@@ -497,7 +497,7 @@ bool Daemon::IsCallingDeviceTrusted()
         LOGE("Get callingNetworkId failed");
         RadarParaInfo info = {"IsCallingDeviceTrusted", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "softbus", "", DEFAULT_ERR, "ipc call failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return false;
     }
     if (!SoftBusPermissionCheck::IsSameAccount(callingNetworkId)) {
@@ -525,7 +525,7 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
         LOGE("Path is forbidden");
         RadarParaInfo info = {"RequestSendFile", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
@@ -543,7 +543,7 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
             LOGE("Daemon event handler post push asset event fail.");
             RadarParaInfo info = {"RequestSendFile", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
                 "AppExecFwk", "", E_EVENT_HANDLER, "handler fail"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return E_EVENT_HANDLER;
         }
     }
@@ -575,7 +575,7 @@ int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
         LOGE("Path is forbidden");
         RadarParaInfo radarInfo = {"InnerCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return ERR_BAD_VALUE;
     }
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
@@ -598,7 +598,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, E_NULLPTR, "Get src path failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_NULLPTR;
     }
 
@@ -607,7 +607,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, EINVAL, "Get src path failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         LOGE("Get src path failed, invalid uri");
         return EINVAL;
     }
@@ -633,7 +633,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     if (result != E_OK) {
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, result, "copy failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
     }
     return result;
 }
@@ -660,7 +660,7 @@ int32_t Daemon::CopyBaseOnRPC(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         RadarParaInfo radarInfo = {"CopyBaseOnRPC", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_SOFTBUS_SESSION_FAILED, "SessionServer exce max"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_SOFTBUS_SESSION_FAILED;
     }
 
@@ -721,7 +721,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("Path is forbidden");
         RadarParaInfo radarInfo = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     int32_t ret = E_OK;
@@ -767,7 +767,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
                      RadarReporter::accessTokenKit + to_string(result));
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "access", "", result, "GetHapTokenInfo failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_USER_ID;
     }
 
@@ -776,7 +776,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         LOGE("invalid uri, ret = %{public}d", ret);
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "AFS", "", ret, "invalid uri failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
@@ -787,7 +787,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         LOGE("CheckCopyRule failed, ret = %{public}d", ret);
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", ret, "CheckCopyRule failed"};
-        DfsRadar::GetInstance().ReportFileAccess(radarInfo);
+        DfsRadar::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
     return E_OK;
@@ -889,7 +889,7 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
         LOGE("Sam is nullptr");
         RadarParaInfo info = {"GetRemoteSA", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "samanager", "", DEFAULT_ERR, "Sam is nullptr"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return nullptr;
     }
 
@@ -901,7 +901,7 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
             RadarReporter::GET_SYSTEM_ABILITY_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::saMgr);
         RadarParaInfo info = {"GetRemoteSA", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "samanager", "", DEFAULT_ERR, "GetSystemAbility failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return nullptr;
     }
     auto daemon = iface_cast<IDaemon>(object);
@@ -909,7 +909,7 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
         LOGE("Connect service nullptr");
         RadarParaInfo info = {"GetRemoteSA", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "IPC", "", DEFAULT_ERR, "Connect service nullptr"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return nullptr;
     }
     LOGI("GetRemoteSA success, DeviceId: %{public}s", Utils::GetAnonyString(remoteDeviceId).c_str());
@@ -931,7 +931,7 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("Path is forbidden");
         RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_INVAL_ARG, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_INVAL_ARG;
     }
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -980,7 +980,7 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
         LOGE("CancelCopyTask failed, cannot get session info for input session name=%{public}s.", sessionName.c_str());
         RadarParaInfo info = {"CancelCopyTask", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", E_INVAL_ARG, "CancelCopyTask failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_INVAL_ARG;
     }
     auto callingUid = IPCSkeleton::GetCallingUid();
@@ -989,7 +989,7 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
              callingUid, sessionInfo.uid);
         RadarParaInfo info = {"CancelCopyTask", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "softbus", "", E_PERMISSION_DENIED, "ipc call failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_PERMISSION_DENIED;
     }
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
@@ -1053,7 +1053,7 @@ int32_t Daemon::JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSend
         LOGE("param is nullptr.");
         RadarParaInfo info = {"JudgeEmpty", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", E_NULLPTR, "param is nullptr"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_NULLPTR;
     }
@@ -1074,7 +1074,7 @@ int32_t Daemon::PushAsset(int32_t userId,
             LOGE("Path is forbidden");
             RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
                 DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
@@ -1084,7 +1084,7 @@ int32_t Daemon::PushAsset(int32_t userId,
         LOGE("assetObj info is null.");
         RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_NULLPTR, "assetObj info is null."};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_NULLPTR;
     }
@@ -1098,7 +1098,7 @@ int32_t Daemon::PushAsset(int32_t userId,
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_EVENT_HANDLER, "eventHandler has not find"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_EVENT_HANDLER;
     }
@@ -1108,7 +1108,7 @@ int32_t Daemon::PushAsset(int32_t userId,
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             "AppExecFwk", assetObj->dstNetworkId_, E_EVENT_HANDLER, "event Handler fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_EVENT_HANDLER;
     }
@@ -1174,7 +1174,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         LOGE("Permission denied, caller is not pasterboard or udmf");
         RadarParaInfo info = {"GetDfsUrisDirFromLocal", ReportLevel::INTERFACE, DfxBizStage::GENERATE_DIS_URI,
             DEFAULT_PKGNAME, "", E_PERMISSION_DENIED, "Permission Denied"};
-        DfsRadar::GetInstance().ReportGenerateDisUri(info);
+        RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(GENERATE_DIS_URI_FAIL_CNT);
         return E_PERMISSION_DENIED;
     }
@@ -1183,7 +1183,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
             LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
             RadarParaInfo info = {"GetDfsUrisDirFromLocal", ReportLevel::INTERFACE, DfxBizStage::GENERATE_DIS_URI,
                 DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidde"};
-            DfsRadar::GetInstance().ReportGenerateDisUri(info);
+            RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(GENERATE_DIS_URI_FAIL_CNT);
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
@@ -1196,7 +1196,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         LOGE("GetDfsUrisDirFromLocal Failed, ret = %{public}d", ret);
         RadarParaInfo info = {"GetDfsUrisDirFromLocal", ReportLevel::INTERFACE, DfxBizStage::GENERATE_DIS_URI,
             "AFS", "", ret, "GetDfsUrisDirFromLocal Failed"};
-        DfsRadar::GetInstance().ReportGenerateDisUri(info);
+        RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
         return ret;
     }
     return FileManagement::E_OK;
@@ -1368,7 +1368,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGW("remote verison < 6.0.1, not support!");
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DP", networkId, ERR_VERSION_NOT_SUPPORT, "verison not support"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
@@ -1377,7 +1377,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "CreatControlLink fail"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return ret;
     }
     ControlCmd request;
@@ -1390,7 +1390,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DM", networkId, ret, "GetLocalDeviceNetWorkId fail"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return ret;
     }
     request.networkId = srcNetId;
@@ -1400,7 +1400,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return ret;
     }
 
@@ -1414,7 +1414,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
         LOGW("remote verison < 6.0.1, not support!");
         RadarParaInfo info = {"NotifyRemotePublishNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DP", networkId, ERR_VERSION_NOT_SUPPORT, "verison not support"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
@@ -1440,7 +1440,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"NotifyRemotePublishNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
-        DfsRadar::GetInstance().ReportLinkConnectionEx(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
         return ret;
     }
     return ret;
@@ -1468,7 +1468,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         RadarParaInfo info = {"NotifyRemoteCancelNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DM", networkId, ret, "GetLocalDeviceNetWorkId failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     request.networkId = srcNetId;
@@ -1479,7 +1479,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"NotifyRemoteCancelNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     return ret;

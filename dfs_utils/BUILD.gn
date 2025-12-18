@@ -63,10 +63,6 @@ ohos_shared_library("libdfsutils") {
   ]
 
   if (dfs_service_feature_enable_distributed_ability) {
-    external_deps += [
-      "device_manager:devicemanagersdk",
-      "dsoftbus:softbus_client",
-    ]
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
