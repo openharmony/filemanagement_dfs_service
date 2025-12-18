@@ -300,7 +300,7 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t &userId, FailedList &failed,
+static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed,
     const string &syncFolder)
 {
     std::string setXattrPath;

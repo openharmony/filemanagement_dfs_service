@@ -135,11 +135,10 @@ void CloudDiskServiceCallbackImpl::OnChangeData(const std::string &syncFolder,
     callback_(syncFolderPath, changeDatas, length);
 }
 
-CloudDisk_ErrorCode
-    OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
-                                           void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                            const CloudDisk_ChangeData changeDatas[],
-                                                            size_t bufferLength))
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
+    void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
+                     const CloudDisk_ChangeData changeDatas[],
+                     size_t bufferLength))
 {
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
