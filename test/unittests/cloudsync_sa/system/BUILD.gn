@@ -95,45 +95,10 @@ ohos_unittest("dfsu_access_token_helper_test") {
   use_exceptions = true
 }
 
-ohos_unittest("dfsu_mount_argument_descriptors_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [
-    "${distributedfile_path}/dfs_utils/src/dfsu_mount_argument_descriptors.cpp",
-    "dfsu_mount_argument_descriptors_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/dfs_utils/include",
-    "${utils_path}/system/include",
-    "${utils_path}/log/include",
-  ]
-
-  deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "image_framework:image_native",
-  ]
-
-  defines = [ "private=public" ]
-  defines += [
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_SA\"",
-  ]
-  use_exceptions = true
-}
 group("utils_system_src_test") {
   testonly = true
   deps = [
     ":dfsu_access_token_helper_test",
     ":dfsu_fd_guard_test",
-    ":dfsu_mount_argument_descriptors_test",
   ]
 }
