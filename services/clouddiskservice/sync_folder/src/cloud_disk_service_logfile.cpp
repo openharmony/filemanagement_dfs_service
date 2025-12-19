@@ -108,6 +108,11 @@ static uint64_t GetCurrentLine(int fd)
             LOGE("load page failed");
             return 0;
         }
+        if (i == 0) {
+            startLine = logGroup->nsl[0].line;
+            offset = logGroup->logBlockCnt;
+            continue;
+        }
         if (logGroup->nsl[0].timestamp == 0) {
             break;
         } else if (logGroup->nsl[0].line != startLine + offset) {
