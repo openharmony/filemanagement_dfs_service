@@ -972,6 +972,200 @@ HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest002, TestSize.Level1)
     CloudDiskNotify.NotifyChangeOuter();
     GTEST_LOG_(INFO) << "NotifyChangeOuter End";
 }
+
+/**
+ * @tc.name: GetInstanceTest001
+ * @tc.desc: Verify the GetInstance function returns same instance
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, GetInstanceTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstance Start";
+    CloudDiskNotify &instance1 = CloudDiskNotify::GetInstance();
+    CloudDiskNotify &instance2 = CloudDiskNotify::GetInstance();
+    EXPECT_EQ(&instance1, &instance2);
+    GTEST_LOG_(INFO) << "GetInstance End";
+}
+
+/**
+ * @tc.name: GetInstanceTest002
+ * @tc.desc: Verify the GetInstance function returns valid instance
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, GetInstanceTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstance Start";
+    CloudDiskNotify &instance = CloudDiskNotify::GetInstance();
+    EXPECT_NE(&instance, nullptr);
+    GTEST_LOG_(INFO) << "GetInstance End";
+}
+
+/**
+ * @tc.name: AddNotifyTest003
+ * @tc.desc: Verify the AddNotify function with NOTIFY_MODIFIED type
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, AddNotifyTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyData notifyData;
+    notifyData.type = NotifyType::NOTIFY_MODIFIED;
+    notifyData.uri = "test://uri";
+    notifyData.isDir = false;
+    notifyData.isLocalOperation = true;
+    CloudDiskNotify.AddNotify(notifyData);
+    GTEST_LOG_(INFO) << "AddNotify End";
+}
+
+/**
+ * @tc.name: AddNotifyTest004
+ * @tc.desc: Verify the AddNotify function with NOTIFY_DELETED type
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, AddNotifyTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyData notifyData;
+    notifyData.type = NotifyType::NOTIFY_DELETED;
+    notifyData.uri = "test://uri";
+    notifyData.isDir = true;
+    notifyData.isLocalOperation = false;
+    CloudDiskNotify.AddNotify(notifyData);
+    GTEST_LOG_(INFO) << "AddNotify End";
+}
+
+/**
+ * @tc.name: AddNotifyTest005
+ * @tc.desc: Verify the AddNotify function with NOTIFY_RENAMED type
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, AddNotifyTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyData notifyData;
+    notifyData.type = NotifyType::NOTIFY_RENAMED;
+    notifyData.uri = "test://newUri";
+    notifyData.extraUri = "test://oldUri";
+    notifyData.isDir = false;
+    notifyData.isLocalOperation = true;
+    CloudDiskNotify.AddNotify(notifyData);
+    GTEST_LOG_(INFO) << "AddNotify End";
+}
+
+/**
+ * @tc.name: AddNotifyTest006
+ * @tc.desc: Verify the AddNotify function with NOTIFY_FILE_CHANGED type
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, AddNotifyTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyData notifyData;
+    notifyData.type = NotifyType::NOTIFY_FILE_CHANGED;
+    notifyData.uri = "test://uri";
+    notifyData.isDir = false;
+    notifyData.isLocalOperation = true;
+    CloudDiskNotify.AddNotify(notifyData);
+    GTEST_LOG_(INFO) << "AddNotify End";
+}
+
+/**
+ * @tc.name: GetDeleteNotifyDataTest002
+ * @tc.desc: Verify the GetDeleteNotifyData function with empty deleteIds
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, GetDeleteNotifyDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDeleteNotifyData Start";
+    CloudDiskNotify CloudDiskNotify;
+    vector<NativeRdb::ValueObject> deleteIds;
+    vector<NotifyData> notifyDataList;
+    ParamServiceOther paramOthers;
+    paramOthers.bundleName = "com.ohos.photos";
+    paramOthers.userId = 100;
+    int32_t ret = CloudDiskNotify.GetDeleteNotifyData(deleteIds, notifyDataList, paramOthers);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(notifyDataList.empty());
+    GTEST_LOG_(INFO) << "GetDeleteNotifyData End";
+}
+
+/**
+ * @tc.name: GetDeleteNotifyDataTest003
+ * @tc.desc: Verify the GetDeleteNotifyData function with multiple deleteIds
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, GetDeleteNotifyDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDeleteNotifyData Start";
+    CloudDiskNotify CloudDiskNotify;
+    vector<NativeRdb::ValueObject> deleteIds;
+    deleteIds.emplace_back(std::string("cloudId1"));
+    deleteIds.emplace_back(std::string("cloudId2"));
+    deleteIds.emplace_back(std::string("cloudId3"));
+    vector<NotifyData> notifyDataList;
+    ParamServiceOther paramOthers;
+    paramOthers.bundleName = "com.ohos.photos";
+    paramOthers.userId = 100;
+    int32_t ret = CloudDiskNotify.GetDeleteNotifyData(deleteIds, notifyDataList, paramOthers);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "GetDeleteNotifyData End";
+}
+
+/**
+ * @tc.name: NotifyChangeOuterTest003
+ * @tc.desc: Verify the NotifyChangeOuter function with multiple CacheNotifyInfo
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyChangeOuter Start";
+    CacheNotifyInfo nf1;
+    nf1.notifyType = NotifyType::NOTIFY_ADDED;
+    nf1.isDirList.push_back(true);
+    nf1.uriList.push_back(Uri("test://uri1"));
+    
+    CacheNotifyInfo nf2;
+    nf2.notifyType = NotifyType::NOTIFY_DELETED;
+    nf2.isDirList.push_back(false);
+    nf2.uriList.push_back(Uri("test://uri2"));
+    
+    CloudDiskNotify CloudDiskNotify;
+    CloudDiskNotify.nfList_.push_back(nf1);
+    CloudDiskNotify.nfList_.push_back(nf2);
+    CloudDiskNotify.NotifyChangeOuter();
+    GTEST_LOG_(INFO) << "NotifyChangeOuter End";
+}
+
+/**
+ * @tc.name: NotifyChangeOuterTest004
+ * @tc.desc: Verify the NotifyChangeOuter function with empty isDirList
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyChangeOuter Start";
+    CacheNotifyInfo nf;
+    nf.notifyType = NotifyType::NOTIFY_MODIFIED;
+    nf.uriList.push_back(Uri("test://uri"));
+    CloudDiskNotify CloudDiskNotify;
+    CloudDiskNotify.nfList_.push_back(nf);
+    CloudDiskNotify.NotifyChangeOuter();
+    GTEST_LOG_(INFO) << "NotifyChangeOuter End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
