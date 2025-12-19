@@ -47,11 +47,11 @@ public:
     virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId, bool flag = false);
     virtual void RegisterCloudSyncCallback(const std::string &bundleName,
                                            const BundleNameUserInfo &bundleNameUserInfo,
-                                           const std::string &callbackAddr,
+                                           const std::string &callbackId,
                                            const sptr<CloudSync::ICloudSyncCallback> &callback);
     virtual void UnRegisterCloudSyncCallback(const std::string &bundleName,
                                              const BundleNameUserInfo &bundleNameUserInfo,
-                                             const std::string &callbackAddr);
+                                             const std::string &callbackId);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
     virtual int32_t StartFileCache(const BundleNameUserInfo &bundleNameUserInfo,
                                    const std::vector<std::string> &uriVec,

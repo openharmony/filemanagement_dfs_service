@@ -292,8 +292,8 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
         LOGI("init with bundleName");
     }
 
-    LOGD("Constructor addr:%{private}s, bundleName:%{public}s.",
-        bundleEntity->callbackInfo.addr.c_str(), bundleEntity->callbackInfo.bundleName.c_str());
+    LOGD("Constructor callbackId:%{private}s, bundleName:%{public}s.",
+        bundleEntity->callbackInfo.callbackId.c_str(), bundleEntity->callbackInfo.bundleName.c_str());
 
     if (!NClass::SetEntityFor<BundleEntity>(env, funcArg.GetThisVar(), move(bundleEntity))) {
         LOGE("Failed to set file entity");
@@ -345,7 +345,7 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity);
+    bundleEntity->callbackInfo.callbackId = CloudDisk::CloudFileUtils::GenerateUuid();
     bundleEntity->callbackInfo.callback =
         make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
     int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(bundleEntity->callbackInfo);

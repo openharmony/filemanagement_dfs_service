@@ -80,7 +80,7 @@ FsResult<void> FileSyncCore::DoOn(const string &event, const shared_ptr<CloudSyn
         return FsResult<void>::Success();
     }
 
-    bundleEntity->callbackInfo.addr = CloudDisk::AddressToString(bundleEntity.get());
+    bundleEntity->callbackInfo.callbackId = CloudDisk::CloudFileUtils::GenerateUuid();
     bundleEntity->callbackInfo.callback = callback;
     int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {

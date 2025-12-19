@@ -27,49 +27,50 @@ CloudSyncCallbackClientManager &CloudSyncCallbackClientManager::GetInstance()
 
 int32_t CloudSyncCallbackClientManager::AddCallback(const CallbackInfo &callbackInfo)
 {
-    if ((callbackInfo.addr.empty()) || (callbackInfo.callback == nullptr)) {
-        LOGE("Addr or callback empty, addr:%{private}s, bundleName:%{public}s.",
-            callbackInfo.addr.c_str(), callbackInfo.bundleName.c_str());
+    if ((callbackInfo.callbackId.empty()) || (callbackInfo.callback == nullptr)) {
+        LOGE("Id or callback empty, callbackId:%{private}s, bundleName:%{public}s.",
+            callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
 
     std::lock_guard<std::mutex> lock(callbackListMutex_);
     auto it = std::find_if(callbackList_.begin(), callbackList_.end(),
         [&callbackInfo](const CallbackInfo &info) {
-            return info.addr == callbackInfo.addr;
+            return info.callbackId == callbackInfo.callbackId;
         });
     if (it != callbackList_.end()) {
-        LOGD("Addr same, addr:%{private}s, bundleName:%{public}s.",
-            callbackInfo.addr.c_str(), callbackInfo.bundleName.c_str());
+        LOGE("Id same, callbackId:%{private}s, bundleName:%{public}s.",
+            callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
 
-    LOGD("Add callback, addr:%{private}s, bundleName:%{public}s.",
-        callbackInfo.addr.c_str(), callbackInfo.bundleName.c_str());
+    LOGD("Add callback, callbackId:%{private}s, bundleName:%{public}s.",
+        callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
     callbackList_.push_back(callbackInfo);
     return E_OK;
 }
 
 int32_t CloudSyncCallbackClientManager::RemoveCallback(const CallbackInfo &callbackInfo)
 {
-    if (callbackInfo.addr.empty()) {
-        LOGE("Addr empty, addr:%{private}s, bundleName:%{public}s.",
-            callbackInfo.addr.c_str(), callbackInfo.bundleName.c_str());
+    if (callbackInfo.callbackId.empty()) {
+        LOGE("Id empty, callbackId:%{private}s, bundleName:%{public}s.",
+            callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
 
     std::lock_guard<std::mutex> lock(callbackListMutex_);
     auto it = std::find_if(callbackList_.begin(), callbackList_.end(),
         [&callbackInfo](const CallbackInfo &info) {
-            return info.addr == callbackInfo.addr;
+            return info.callbackId == callbackInfo.callbackId;
         });
     if (it == callbackList_.end()) {
-        LOGD("Not find addr:%{private}s, bundleName:%{public}s.",
-            callbackInfo.addr.c_str(), callbackInfo.bundleName.c_str());
-        return E_CONTEXT;
+        LOGD("Not find callbackId:%{private}s, bundleName:%{public}s.",
+            callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
+        return E_INVAL_ARG;
     }
 
-    LOGD("Remove callback, addr:%{private}s, bundleName:%{public}s.", it->addr.c_str(), it->bundleName.c_str());
+    LOGD("Remove callback, callbackId:%{private}s, bundleName:%{public}s.",
+        it->callbackId.c_str(), it->bundleName.c_str());
     callbackList_.erase(it);
     return E_OK;
 }

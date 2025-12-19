@@ -26,7 +26,7 @@ namespace OHOS::FileManagement::CloudSync {
  * Synchronization Process: Client Callback Information
  */
 struct CallbackInfo {
-    std::string addr;
+    std::string callbackId;
     std::shared_ptr<CloudSyncCallback> callback{nullptr};
     std::string bundleName;
 };
