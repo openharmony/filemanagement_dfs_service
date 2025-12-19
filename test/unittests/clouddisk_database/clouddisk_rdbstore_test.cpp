@@ -6002,4 +6002,63 @@ HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "DatabaseRestoreTest004 end";
 }
 
+/**
+ * @tc.name: InsertCopyData_BeginTransactionFail
+ * @tc.desc: InsertCopyData
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, InsertCopyData_BeginTransactionFail, TestSize.Level1)
+{
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    auto resultSet = make_shared<NiceMock<ResultSetMock>>();
+    ON_CALL(*resultSet, GetColumnIndex(_, _)).WillByDefault(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    ON_CALL(*resultSet, GetString(_, _)).WillByDefault(DoAll(SetArgReferee<1>(std::string("fileName")), Return(E_OK)));
+    ON_CALL(*resultSet, GetInt(_, _)).WillByDefault(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    ON_CALL(*resultSet, GetLong(_, _)).WillByDefault(DoAll(SetArgReferee<1>(1), Return(E_OK)));
+
+    EXPECT_CALL(*rdb, CreateTransaction(_))
+        .WillOnce(Return(std::make_pair(E_RDB, std::shared_ptr<Transaction>(nullptr))));
+
+    int32_t ret = clouddiskrdbStore_->InsertCopyData("srcId", "dstId", "parentId", resultSet);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: InsertCopyData_CreateDentryFileNameMock
+ * @tc.desc: metaBase.name is "mock"
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, InsertCopyData_CreateDentryFileNameMock, TestSize.Level1)
+{
+    std::string srcCloudId = "srcId";
+    std::string destCloudId = "dstId";
+    std::string destParentCloudId = "parentId";
+
+    auto rdb = make_shared<RdbStoreMock>();
+    auto transaction = make_shared<TransactionMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+
+    auto rset = std::make_shared<ResultSetMock>();
+
+    EXPECT_CALL(*rdb, CreateTransaction(_))
+        .WillOnce(Return(std::make_pair(E_OK, transaction)));
+
+    EXPECT_CALL(*rset, GetColumnIndex(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*rset, GetString(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(std::string("mock_0")), Return(E_OK)));
+    EXPECT_CALL(*rset, GetInt(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*rset, GetLong(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+
+    EXPECT_CALL(*transaction, Insert(_, _, _))
+        .WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->InsertCopyData(
+        srcCloudId, destCloudId, destParentCloudId, rset);
+    EXPECT_EQ(ret, E_RDB);
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

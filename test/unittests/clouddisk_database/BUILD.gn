@@ -189,6 +189,7 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
 
   sources = [
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
     "clouddisk_rdbstore_static_test.cpp",
   ]
@@ -331,6 +332,7 @@ ohos_unittest("clouddisk_notify_test") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "hisysevent:libhisysevent",
   ]
 
   defines = [
@@ -379,6 +381,7 @@ ohos_unittest("clouddisk_notify_static_test") {
     "${services_path}/clouddisk_database/src",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/test/unittests/cloud_disk/mock",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
   ]
 
   deps = [
@@ -420,6 +423,7 @@ ohos_unittest("clouddisk_notify_static_test") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "hisysevent:libhisysevent",
   ]
 
   defines = [
