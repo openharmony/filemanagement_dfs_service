@@ -142,6 +142,13 @@ struct RadarParaInfo {
     std::string errorInfo;
 };
 
+struct RadarIDInfo {
+    std::string localDeviceNetId;
+    std::string localDeviceUdid;
+    std::string peerDeviceNetId;
+    std::string peerDeviceUdid;
+};
+
 class DfsRadar {
 public:
     static DfsRadar &GetInstance()
@@ -151,26 +158,9 @@ public:
     }
 
 public:
-    void ReportLinkConnection(const RadarParaInfo &info,
-                              const std::string &localDeviceNetId,
-                              const std::string &localDeviceUdid,
-                              const std::string &peerDeviceNetId,
-                              const std::string &peerDeviceUdid);
-    void ReportLinkConnectionEx(const RadarParaInfo &info,
-                                const std::string &localDeviceNetId,
-                                const std::string &localDeviceUdid,
-                                const std::string &peerDeviceNetId,
-                                const std::string &peerDeviceUdid);
-    void ReportGenerateDisUri(const RadarParaInfo &info,
-                              const std::string &localDeviceNetId,
-                              const std::string &localDeviceUdid,
-                              const std::string &peerDeviceNetId,
-                              const std::string &peerDeviceUdid);
-    void ReportFileAccess(const RadarParaInfo &info,
-                          const std::string &localDeviceNetId,
-                          const std::string &localDeviceUdid,
-                          const std::string &peerDeviceNetId,
-                          const std::string &peerDeviceUdid);
+    void ReportLinkConnection(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo);
+    void ReportGenerateDisUri(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo);
+    void ReportFileAccess(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo);
     void ReportStatistics(const RadarStatisticInfo radarInfo);
 
 private:

@@ -294,9 +294,6 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
-        RadarParaInfo radarInfo = {"OnDeviceP2POffline", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
-            DEFAULT_PKGNAME, deviceInfo.networkId, P2P_FAILED, "network is null"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return P2P_FAILED;
     }
     auto type_ = cidNetworkType_.find(info.cid_);
@@ -429,7 +426,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId,
         LOGE("MountDfsDocs fail, ret = %{public}d", ret);
         RadarParaInfo info = {"MountDfsDocs", ReportLevel::INNER, DfxBizStage::MOUNT_DOCS,
             "storage", networkId, ret, "MountDfsDocs fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     } else {
         LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
              Utils::GetAnonyString(deviceId).c_str());

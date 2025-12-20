@@ -320,7 +320,7 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
         LOGE("CheckRemoteAllowConnect failed for %{public}.6s", networkId.c_str());
         RadarParaInfo info = {"ConnectionAndMount", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_PERMISSION;
     }
 
@@ -362,7 +362,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_PERMISSION;
     }
@@ -371,7 +371,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("[CheckPermission] DATASYNC permission denied");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_PERMISSION;
     }
@@ -380,7 +380,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
         LOGE("Daemon::OpenP2PConnectionEx networkId length is invalid.");
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId length is invalid"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_INVAL_ARG_NAPI;
     }
@@ -406,7 +406,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
             LOGE("Daemon::OpenP2PConnectionEx failed to allocate memory for dfsListenerDeathRecipient_");
             RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
                 DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "OpenP2PConnectionEx failed"};
-            RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
             return E_INVAL_ARG_NAPI;
         }
@@ -419,7 +419,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, res, "strcpy_s failed"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
         return E_INVAL_ARG_NAPI;
     }
@@ -430,7 +430,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("ConnectionAndMount ret is %{public}d", ret);
         RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "ConnectionAndMount failed"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         CleanUp(networkId);
         return E_CONNECTION_FAILED;
     }
@@ -446,7 +446,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGW("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_PERMISSION;
     }
 
@@ -454,7 +454,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_PERMISSION;
     }
 
@@ -462,7 +462,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu", networkId.length());
         RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId invalid"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_INVAL_ARG_NAPI;
     }
     std::lock_guard<std::mutex> lock(connectMutex_);
@@ -1364,7 +1364,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGW("remote verison < 6.0.1, not support!");
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DP", networkId, ERR_VERSION_NOT_SUPPORT, "verison not support"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return FileManagement::ERR_VERSION_NOT_SUPPORT;
     }
 
@@ -1373,7 +1373,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "CreatControlLink fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     ControlCmd request;
@@ -1386,7 +1386,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DM", networkId, ret, "GetLocalDeviceNetWorkId fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     request.networkId = srcNetId;
@@ -1396,7 +1396,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
 
@@ -1436,7 +1436,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"NotifyRemotePublishNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ret;
     }
     return ret;

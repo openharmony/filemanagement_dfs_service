@@ -272,7 +272,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
         LOGE("create client socket failed");
         RadarParaInfo info = {"CreateClientChannel", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", networkId, socketId, "client socket fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ERR_BAD_VALUE;
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId)) {
@@ -288,7 +288,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
         Shutdown(socketId);
         RadarParaInfo info = {"CreateClientChannel", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", networkId, ret, "client socket fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return ERR_BIND_SOCKET_FAILED;
     }
 
@@ -509,7 +509,7 @@ void ChannelManager::DoSendBytesAsync(const ControlCmd &request, const std::stri
         LOGE("SerializeToJson failed, requestId is %{public}d", request.msgId);
         RadarParaInfo info = {"DoSendBytesAsync", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, DEFAULT_ERR, "SerializeToJson fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionExAdapter(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return;
     }
     SendBytes(networkId, data);

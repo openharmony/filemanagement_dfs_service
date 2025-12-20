@@ -34,41 +34,7 @@ constexpr const char *DFS_SERVICE_STATISTIC = "DFS_SERVICE_STATISTIC";
 const int32_t DEFAULT_SIZE = -1;
 #endif
 
-void DfsRadar::ReportLinkConnection(const RadarParaInfo &info,
-                                    const std::string &localDeviceNetId,
-                                    const std::string &localDeviceUdid,
-                                    const std::string &peerDeviceNetId,
-                                    const std::string &peerDeviceUdid)
-{
-#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
-    auto callingUid = IPCSkeleton::GetCallingUid();
-    RadarParameter param = {
-        .orgPkg = DEFAULT_PKGNAME,
-        .hostPkg = to_string(callingUid),
-        .funcName = info.funcName,
-        .faultLevel = info.faultLevel,
-        .bizScene = BizScene::LINK_CONNECTION,
-        .bizStage = info.bizStage,
-        .toCallPkg = info.toCallPkg,
-        .fileSize = DEFAULT_SIZE,
-        .fileCount = DEFAULT_SIZE,
-        .operateTime = DEFAULT_SIZE,
-        .localUdid = localDeviceUdid,
-        .localNetId = localDeviceNetId,
-        .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,
-        .resultCode = info.resultCode,
-        .errorInfo = info.errorInfo
-    };
-    RecordFunctionResult(param);
-#endif
-}
-
-void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
-                                      const std::string &localDeviceNetId,
-                                      const std::string &localDeviceUdid,
-                                      const std::string &peerDeviceNetId,
-                                      const std::string &peerDeviceUdid)
+void DfsRadar::ReportLinkConnection(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     string bundleName;
@@ -84,10 +50,10 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
-        .localUdid = localDeviceUdid,
-        .localNetId = localDeviceNetId,
-        .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,
+        .localUdid = radarIdInfo.localDeviceUdid,
+        .localNetId = radarIdInfo.localDeviceNetId,
+        .peerUdid = radarIdInfo.peerDeviceUdid,
+        .peerNetId = radarIdInfo.peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
@@ -95,17 +61,14 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
 #endif
 }
 
-void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
-                                    const std::string &localDeviceNetId,
-                                    const std::string &localDeviceUdid,
-                                    const std::string &peerDeviceNetId,
-                                    const std::string &peerDeviceUdid)
+void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
-    auto callingUid = IPCSkeleton::GetCallingUid();
+    string bundleName;
+    DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
-        .hostPkg = to_string(callingUid),
+        .hostPkg = bundleName,
         .funcName = info.funcName,
         .faultLevel = info.faultLevel,
         .bizScene = BizScene::GENERATE_DIS_URI,
@@ -114,10 +77,10 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
-        .localUdid = localDeviceUdid,
-        .localNetId = localDeviceNetId,
-        .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,
+        .localUdid = radarIdInfo.localDeviceUdid,
+        .localNetId = radarIdInfo.localDeviceNetId,
+        .peerUdid = radarIdInfo.peerDeviceUdid,
+        .peerNetId = radarIdInfo.peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
@@ -125,17 +88,14 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
 #endif
 }
 
-void DfsRadar::ReportFileAccess(const RadarParaInfo &info,
-                                const std::string &localDeviceNetId,
-                                const std::string &localDeviceUdid,
-                                const std::string &peerDeviceNetId,
-                                const std::string &peerDeviceUdid)
+void DfsRadar::ReportFileAccess(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
 {
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
-    auto callingUid = IPCSkeleton::GetCallingUid();
+    string bundleName;
+    DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
-        .hostPkg = to_string(callingUid),
+        .hostPkg = bundleName,
         .funcName = info.funcName,
         .faultLevel = info.faultLevel,
         .bizScene = BizScene::FILE_ACCESS,
@@ -144,10 +104,10 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info,
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
-        .localUdid = localDeviceUdid,
-        .localNetId = localDeviceNetId,
-        .peerUdid = peerDeviceUdid,
-        .peerNetId = peerDeviceNetId,
+        .localUdid = radarIdInfo.localDeviceUdid,
+        .localNetId = radarIdInfo.localDeviceNetId,
+        .peerUdid = radarIdInfo.peerDeviceUdid,
+        .peerNetId = radarIdInfo.peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };

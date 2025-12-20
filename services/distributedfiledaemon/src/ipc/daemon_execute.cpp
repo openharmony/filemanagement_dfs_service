@@ -114,7 +114,7 @@ int32_t DaemonExecute::HandleAssetBind(int32_t userId, const sptr<AssetObj> &ass
         AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         RadarParaInfo info = {"HandleAssetBind", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", ret, "AssetBind failed"};
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, ret, "AssetBind failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return ERR_BIND_SOCKET_FAILED;
@@ -135,7 +135,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         LOGE("get fileList is empty.");
         HandlePushAssetFail(socketId, assetObj);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", DEFAULT_ERR, "fileList is empty"};
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, DEFAULT_ERR, "fileList is empty"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;
@@ -145,7 +145,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         LOGE("remote device cannot read this files");
         HandlePushAssetFail(socketId, assetObj);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", DEFAULT_ERR, "device cannot read this files"};
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, DEFAULT_ERR, "device cannot read this files"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return ;
@@ -159,7 +159,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         HandlePushAssetFail(socketId, assetObj);
         SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", ret, "zip files fail"};
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, ret, "zip files fail"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;
@@ -171,7 +171,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         HandlePushAssetFail(socketId, assetObj);
         SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", ret, "send file fail"};
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, ret, "send file fail"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;

@@ -30,6 +30,7 @@ namespace DistributedFile {
 namespace {
 constexpr unsigned int RADAR_REPORT_STATISTIC_INTERVAL_MINUTES = 360;
 constexpr unsigned int UPDATE_RADAR_STATISTIC_INTERVAL_SECONDS = 300;
+const int PREFIX_LEN = 5;
 } // namespace
 
 #if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
@@ -108,6 +109,7 @@ void RadarReportAdapter::ReportDfxStatistics()
     lastRadarReportTime_ = std::chrono::system_clock::now();
     opStatistics_.clear();
 }
+
 void RadarReportAdapter::ReportLinkConnectionAdapter(const RadarParaInfo &info)
 {
     std::string localDeviceNetId;
@@ -116,20 +118,13 @@ void RadarReportAdapter::ReportLinkConnectionAdapter(const RadarParaInfo &info)
     std::string peerDeviceUdid;
     GetLocalNetIdAndUdid(localDeviceNetId, localDeviceUdid);
     GetPeerUdid(info.peerNetId, peerDeviceNetId, peerDeviceUdid);
-    DfsRadar::GetInstance().ReportLinkConnection(info, localDeviceNetId, localDeviceUdid, peerDeviceNetId,
-                                                 peerDeviceUdid);
-}
-
-void RadarReportAdapter::ReportLinkConnectionExAdapter(const RadarParaInfo &info)
-{
-    std::string localDeviceNetId;
-    std::string localDeviceUdid;
-    std::string peerDeviceNetId;
-    std::string peerDeviceUdid;
-    GetLocalNetIdAndUdid(localDeviceNetId, localDeviceUdid);
-    GetPeerUdid(info.peerNetId, peerDeviceNetId, peerDeviceUdid);
-    DfsRadar::GetInstance().ReportLinkConnectionEx(info, localDeviceNetId, localDeviceUdid, peerDeviceNetId,
-                                                   peerDeviceUdid);
+    RadarIDInfo radarIdInfo = {
+        .localDeviceNetId = localDeviceNetId,
+        .localDeviceUdid = localDeviceUdid,
+        .peerDeviceNetId = peerDeviceNetId,
+        .peerDeviceUdid = peerDeviceUdid
+    };
+    DfsRadar::GetInstance().ReportLinkConnection(info, radarIdInfo);
 }
 
 void RadarReportAdapter::ReportGenerateDisUriAdapter(const RadarParaInfo &info)
@@ -140,8 +135,13 @@ void RadarReportAdapter::ReportGenerateDisUriAdapter(const RadarParaInfo &info)
     std::string peerDeviceUdid;
     GetLocalNetIdAndUdid(localDeviceNetId, localDeviceUdid);
     GetPeerUdid(info.peerNetId, peerDeviceNetId, peerDeviceUdid);
-    DfsRadar::GetInstance().ReportGenerateDisUri(info, localDeviceNetId, localDeviceUdid, peerDeviceNetId,
-                                                 peerDeviceUdid);
+    RadarIDInfo radarIdInfo = {
+        .localDeviceNetId = localDeviceNetId,
+        .localDeviceUdid = localDeviceUdid,
+        .peerDeviceNetId = peerDeviceNetId,
+        .peerDeviceUdid = peerDeviceUdid
+    };
+    DfsRadar::GetInstance().ReportGenerateDisUri(info, radarIdInfo);
 }
 
 void RadarReportAdapter::ReportFileAccessAdapter(const RadarParaInfo &info)
@@ -152,7 +152,13 @@ void RadarReportAdapter::ReportFileAccessAdapter(const RadarParaInfo &info)
     std::string peerDeviceUdid;
     GetLocalNetIdAndUdid(localDeviceNetId, localDeviceUdid);
     GetPeerUdid(info.peerNetId, peerDeviceNetId, peerDeviceUdid);
-    DfsRadar::GetInstance().ReportFileAccess(info, localDeviceNetId, localDeviceUdid, peerDeviceNetId, peerDeviceUdid);
+    RadarIDInfo radarIdInfo = {
+        .localDeviceNetId = localDeviceNetId,
+        .localDeviceUdid = localDeviceUdid,
+        .peerDeviceNetId = peerDeviceNetId,
+        .peerDeviceUdid = peerDeviceUdid
+    };
+    DfsRadar::GetInstance().ReportFileAccess(info, radarIdInfo);
 }
 
 void RadarReportAdapter::GetLocalNetIdAndUdid(std::string &localDeviceNetId, std::string &localDeviceUdid)
@@ -166,7 +172,7 @@ void RadarReportAdapter::GetLocalNetIdAndUdid(std::string &localDeviceNetId, std
         return;
     }
 
-    uint8_t udid[65] = { 0 };
+    uint8_t udid[UDID_BUF_LEN] = { 0 };
     int32_t ret = GetNodeKeyInfo(DFS_SERVICE_NAME, localNetworkId.c_str(),
         NodeDeviceInfoKey::NODE_KEY_UDID, udid, sizeof(udid));
     if (ret != E_OK) {
@@ -188,7 +194,7 @@ void RadarReportAdapter::GetPeerUdid(const std::string &networkId,
         peerDeviceNetId = "";
         return;
     }
-    uint8_t udid[65] = { 0 };
+    uint8_t udid[UDID_BUF_LEN] = { 0 };
     int32_t ret = GetNodeKeyInfo(DFS_SERVICE_NAME, networkId.c_str(),
         NodeDeviceInfoKey::NODE_KEY_UDID, udid, sizeof(udid));
     if (ret != E_OK) {
@@ -207,9 +213,7 @@ std::string RadarReportAdapter::GetAnonymStr(const std::string &value)
     if (value.empty() || value.length() < minLength) {
         return "";
     }
-    const size_t prefixLength = 5;
-    const size_t suffixLength = 5;
-    return value.substr(0, prefixLength) + "**" + value.substr(value.length() - suffixLength);
+    return value.substr(0, PREFIX_LEN) + "**" + value.substr(value.length() - PREFIX_LEN);
 }
 } // namespace DistributedFile
 }

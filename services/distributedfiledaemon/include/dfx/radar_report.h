@@ -41,7 +41,6 @@ public:
     void ReportDfxStatistics();
 
     void ReportLinkConnectionAdapter(const RadarParaInfo &info);
-    void ReportLinkConnectionExAdapter(const RadarParaInfo &info);
     void ReportGenerateDisUriAdapter(const RadarParaInfo &info);
     void ReportFileAccessAdapter(const RadarParaInfo &info);
 
