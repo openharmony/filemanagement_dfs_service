@@ -71,12 +71,16 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId,
     const sptr<IRemoteObject> &remoteObject)
 {
-    LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{private}s", systemAbilityId,
-         (remoteObject == nullptr ? "false" : "true"));
     unique_lock<mutex> lock(proxyMutex_);
-    serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+    if (remoteObject == nullptr) {
+        LOGI("Load CloudSync SA success,systemAbilityId:%{public}d", systemAbilityId);
+        serviceProxy_ = nullptr;
+        isLoadSuccess_.store(false);
+    } else {
+        serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+        isLoadSuccess_.store(true);
+    }
 
-    isLoadSuccess_.store(true);
     proxyConVar_.notify_one();
 }
 
