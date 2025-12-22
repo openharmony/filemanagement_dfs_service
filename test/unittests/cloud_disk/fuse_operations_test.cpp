@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 
 #include "fuse_operations.h"
 #include "cloud_disk_inode.h"
@@ -33,6 +35,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 static const string RECYCLE_NAME = ".trash";
+const int SLEEP_TIME = 500;
 
 class FuseOperationsTest : public testing::Test {
 public:
@@ -334,6 +337,7 @@ HWTEST_F(FuseOperationsTest, OpenTest002, TestSize.Level1)
 
         fuseoperations_->Open(req, 0, fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest002  ERROR";
@@ -363,6 +367,7 @@ HWTEST_F(FuseOperationsTest, OpenTest, TestSize.Level1)
         fuseoperations_->Open(req, ino, &fi);
         EXPECT_NE(ino, FUSE_ROOT_ID);
         EXPECT_NE((data.inodeCache)[0], nullptr);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest ERROR";
