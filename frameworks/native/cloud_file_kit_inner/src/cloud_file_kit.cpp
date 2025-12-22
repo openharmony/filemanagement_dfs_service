@@ -105,4 +105,9 @@ std::string CloudFileKit::GetPrepareTraceId(const int32_t userId, const std::str
 }
 
 void CloudFileKit::Release(int32_t userId) {}
+
+int32_t CloudFileKit::GenerateLocalIds(const string &bundleName, int count, std::vector<std::string> &ids)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudFile

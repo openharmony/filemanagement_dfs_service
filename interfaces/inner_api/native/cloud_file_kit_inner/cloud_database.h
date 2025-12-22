@@ -33,6 +33,7 @@ public:
                                                                        std::string assetPath);
     virtual int32_t Init();
     virtual int32_t GenerateIds(int count, std::vector<std::string> &ids);
+    virtual int32_t Convert2CloudId(const std::string &localId, std::string &cloudId);
 
 protected:
     int32_t userId_;

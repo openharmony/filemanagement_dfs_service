@@ -553,8 +553,12 @@ static void HandleNewSession(struct CloudDiskFuseData *data, const struct Sessio
         return;
     }
     rwLock.unlock();
-    filePtr->readSession = database->NewAssetReadSession(data->userId, "file",
-        sessionParam.cloudId, sessionParam.assets, path);
+    string cloudId;
+    if (database->Convert2CloudId(sessionParam.cloudId, cloudId) != 0) {
+        LOGE("Failed to get cloudId");
+        return;
+    }
+    filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, sessionParam.assets, path);
     rwLock.lock();
     if (filePtr->readSession) {
         data->readSessionCache[path] = filePtr->readSession;
@@ -771,14 +775,28 @@ void RemoveLocalFile(const string &path)
 int32_t GenerateCloudId(int32_t userId, string &cloudId, const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto dkDatabasePtr = GetDatabase(userId, bundleName);
-    if (dkDatabasePtr == nullptr) {
-        LOGE("Failed to get database");
+    vector<std::string> ids;
+    int32_t ret = 0;
+    if (bundleName == system::GetParameter(FILEMANAGER_KEY, "")) {
+        auto dkDatabasePtr = GetDatabase(userId, bundleName);
+        if (dkDatabasePtr == nullptr) {
+            LOGE("Failed to get database");
+            return ENOSYS;
+        }
+        ret = dkDatabasePtr->GenerateIds(1, ids);
+        if (ret != 0 || ids.size() == 0) {
+            return ENOSYS;
+        }
+        cloudId = ids[0];
+        return 0;
+    }
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
+            CloudFile::FaultType::DRIVERKIT, EINVAL, "get cloud file helper instance failed"});
         return ENOSYS;
     }
-
-    vector<std::string> ids;
-    auto ret = dkDatabasePtr->GenerateIds(1, ids);
+    ret = instance->GenerateLocalIds(bundleName, 1, ids);
     if (ret != 0 || ids.size() == 0) {
         return ENOSYS;
     }
