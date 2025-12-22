@@ -140,7 +140,7 @@ void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani
 }
 
 ani_long CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env, ani_object object,
-    ani_array_ref uriList, ani_enum_item fileType)
+    ani_array uriList, ani_enum_item fileType)
 {
     ani_long errResult = 0;
     auto [ret, urisInput] = ANIUtils::AniToStringArray(env, uriList);
