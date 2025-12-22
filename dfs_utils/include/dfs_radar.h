@@ -56,8 +56,8 @@ enum class DfxBizStage : int32_t {
 };
 
 enum class LinkStatus : int32_t {
-    CONNECTED = 0,
-    DISCONNECTED = 1,
+    DISCONNECTED = 0,
+    CONNECTED = 1,
 };
 
 enum class BizState : int32_t {
@@ -166,6 +166,7 @@ public:
 private:
     bool RecordFunctionResult(const RadarParameter &parameterRes);
     int32_t GetCurrentUserId();
+    int32_t RecordBehavior(const RadarParameter &parRes);
 
 private:
     DfsRadar() = default;

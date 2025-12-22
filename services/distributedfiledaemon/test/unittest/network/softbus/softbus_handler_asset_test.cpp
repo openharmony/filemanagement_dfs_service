@@ -111,6 +111,16 @@ void SoftBusHandlerAssetTest::CheckSrcBothDiffPass()
 void SoftBusHandlerAssetTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+}
+
+void SoftBusHandlerAssetTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+}
+
+void SoftBusHandlerAssetTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
     otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
     DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     socketMock_ = make_shared<SocketMock>();
@@ -119,25 +129,15 @@ void SoftBusHandlerAssetTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
-void SoftBusHandlerAssetTest::TearDownTestCase(void)
-{
-    GTEST_LOG_(INFO) << "TearDownTestCase";
-    SocketMock::dfsSocket = nullptr;
-    socketMock_ = nullptr;
-    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceOtherMethodMock::otherMethod = nullptr;
-    otherMethodMock_ = nullptr;
-}
-
-void SoftBusHandlerAssetTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
-}
-
 void SoftBusHandlerAssetTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    socketMock_ = nullptr;
+    SocketMock::dfsSocket = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    otherMethodMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
 }
 
 /**

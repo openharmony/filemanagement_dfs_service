@@ -141,6 +141,16 @@ void SoftbusHandlerTest::CheckSrcBothDiffPass()
 void SoftbusHandlerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+}
+
+void SoftbusHandlerTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+}
+
+void SoftbusHandlerTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
     otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
     DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     socketMock_ = make_shared<SocketMock>();
@@ -149,27 +159,17 @@ void SoftbusHandlerTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
-void SoftbusHandlerTest::TearDownTestCase(void)
-{
-    GTEST_LOG_(INFO) << "TearDownTestCase";
-    SocketMock::dfsSocket = nullptr;
-    socketMock_ = nullptr;
-    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceOtherMethodMock::otherMethod = nullptr;
-    otherMethodMock_ = nullptr;
-}
-
-void SoftbusHandlerTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
-}
-
 void SoftbusHandlerTest::TearDown(void)
 {
+    GTEST_LOG_(INFO) << "TearDown";
     SoftBusHandler::GetInstance().clientSessNameMap_.clear();
     SoftBusHandler::GetInstance().serverIdMap_.clear();
-    GTEST_LOG_(INFO) << "TearDown";
+    socketMock_ = nullptr;
+    SocketMock::dfsSocket = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    otherMethodMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
 }
 
 /**

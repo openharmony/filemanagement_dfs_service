@@ -115,6 +115,35 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info, const RadarIDInfo &ra
 #endif
 }
 
+int32_t DfsRadar::RecordBehavior(const RadarParameter &parRes)
+{
+    return HiSysEventWrite(
+        DFS_SERVICE_DOMAIN,
+        DFS_SERVICE_BEHAVIOR,
+        HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        "ORG_PKG", parRes.orgPkg,
+        "HOST_PKG", parRes.hostPkg,
+        "USER_ID", GetCurrentUserId(),
+        "FUNC", parRes.funcName,
+        "FAULT_LEVEL", static_cast<int32_t>(parRes.faultLevel),
+        "BIZ_SCENE", static_cast<int32_t>(parRes.bizScene),
+        "BIZ_STAGE", static_cast<int32_t>(parRes.bizStage),
+        "TO_CALL_PKG", parRes.toCallPkg,
+        "LINK_STATUS", static_cast<int32_t>(LinkStatus::CONNECTED),
+        "FILE_SIZE", parRes.fileSize,
+        "FILE_COUNT", parRes.fileCount,
+        "OPERATE_TIME", parRes.operateTime,
+        "LOCAL_UDID", parRes.localUdid,
+        "LOCAL_NET_ID", parRes.localNetId,
+        "PEER_UDID", parRes.peerUdid,
+        "PEER_NET_ID", parRes.peerNetId,
+        "IS_TRUST", static_cast<int32_t>(TrustType::SAME_TRUST),
+        "STAGE_RES", static_cast<int32_t>(StageRes::SUCC),
+        "ERROR_CODE", parRes.resultCode,
+        "ERROR_INFO", parRes.errorInfo,
+        "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_START));
+}
+
 bool DfsRadar::RecordFunctionResult(const RadarParameter &parRes)
 {
     int32_t res = E_OK;
@@ -144,6 +173,8 @@ bool DfsRadar::RecordFunctionResult(const RadarParameter &parRes)
             "ERROR_CODE", parRes.resultCode,
             "ERROR_INFO", parRes.errorInfo,
             "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_END));
+    } else {
+        res = RecordBehavior(parRes);
     }
     if (res != E_OK) {
         LOGE("DfsRadar Error, res :%{public}d", res);

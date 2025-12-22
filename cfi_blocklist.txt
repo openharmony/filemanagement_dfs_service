@@ -36,5 +36,6 @@ src:*cloud_sync_callback_stub.cpp
 src:*cloud_daemon_stub.cpp
 src:*daemon_stub.cpp
 src:*dfsu_access_token_helper.cpp
+src:*radar_report.cpp
 src:*third_party/googletest/googlemock/include/gmock/*
 src:*third_party/googletest/googletest/include/gtest/*
