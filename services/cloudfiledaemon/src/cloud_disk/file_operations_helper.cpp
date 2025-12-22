@@ -218,6 +218,13 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
         wLock.lock();
         data->inodeCache.erase(key);
         wLock.unlock();
+    } else {
+        /* Once the design is optimized, it may be possible to allow refCount > 0.
+           Then, the exception branch will only be entered when refCount < 0.
+           This applies equally to both PutCloudDiskFile() and PutLocalId(). */
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::FORGET, CloudFile::FaultType::CACHE_CLEAR, EINVAL,
+            std::to_string(key) + " refCount != 0 : " + std::to_string(inoPtr->refCount)});
     }
 }
 
@@ -234,24 +241,33 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
         wLock.lock();
         data->fileCache.erase(key);
         wLock.unlock();
+    } else {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
+            CloudFile::FaultOperation::OPEN, CloudFile::FaultType::CACHE_CLEAR, EINVAL,
+            std::to_string(key) + " refCount != 0 : " + std::to_string(filePtr->refCount)});
     }
 }
 
+/* Currently, the following function is always used after PutCloudDiskInode().
+   If used independently, note the increment or decrement of refCount. */
 void FileOperationsHelper::PutLocalId(struct CloudDiskFuseData *data,
                                       std::shared_ptr<CloudDiskInode> inoPtr,
-                                      uint64_t num, const std::string &key)
+                                      const std::string &key)
 {
     std::unique_lock<std::shared_mutex> wLock(data->localIdLock, std::defer_lock);
     if (inoPtr == nullptr) {
         LOGD("Get an invalid inode!");
         return;
     }
-    inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
         LOGD("node released: %{public}s", key.c_str());
         wLock.lock();
         data->localIdCache.erase(key);
         wLock.unlock();
+    } else {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{inoPtr->bundleName,
+            CloudFile::FaultOperation::FORGET, CloudFile::FaultType::CACHE_CLEAR, EINVAL,
+            key + " refCount != 0 : " + std::to_string(inoPtr->refCount)});
     }
 }
 } // namespace CloudDisk

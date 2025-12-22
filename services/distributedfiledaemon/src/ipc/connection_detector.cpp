@@ -24,6 +24,7 @@
 
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -144,7 +145,7 @@ bool ConnectionDetector::CheckValidDir(const std::string &path)
         LOGE("stat failed, errno = %{public}d", errno);
         RadarParaInfo info = {"CheckValidDir", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "kernel", "", ret, "stat failed,errno = " + to_string(errno)};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     if ((buf.st_mode & S_IFMT) != S_IFDIR) {
@@ -169,7 +170,7 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
         LOGE("Failed to scandir, errno = %{public}d", errno);
         RadarParaInfo info = {"GetConnectionStatus", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, num, "Failed to scandir"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     pNameList->direntNum = num;
@@ -198,7 +199,7 @@ uint64_t ConnectionDetector::MocklispHash(const string &str)
         LOGE("stat failed %{public}s error, err: %{public}d", GetAnonyString(str).c_str(), err);
         RadarParaInfo info = {"MocklispHash", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "Kernel", "", err, "stat failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE);
     }
     LOGI("statBuf dev id: %{public}lu", static_cast<unsigned long>(statBuf.st_dev));

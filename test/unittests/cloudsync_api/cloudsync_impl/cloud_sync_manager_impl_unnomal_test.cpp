@@ -79,7 +79,7 @@ HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));

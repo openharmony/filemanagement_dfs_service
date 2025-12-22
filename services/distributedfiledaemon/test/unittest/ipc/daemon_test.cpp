@@ -269,14 +269,14 @@ public:
     sptr<Daemon> daemon_;
 
 public:
-    static inline std::shared_ptr<ConnectionDetectorMock> connectionDetectorMock_ = nullptr;
-    static inline std::shared_ptr<DeviceManagerAgentMock> deviceManagerAgentMock_ = nullptr;
-    static inline std::shared_ptr<DfsSystemAbilityManagerClientMock> smc_ = nullptr;
-    static inline std::shared_ptr<SoftBusSessionListenerMock> softBusSessionListenerMock_ = nullptr;
-    static inline std::shared_ptr<SoftBusHandlerAssetMock> softBusHandlerAssetMock_ = nullptr;
-    static inline std::shared_ptr<SoftBusHandlerMock> softBusHandlerMock_ = nullptr;
-    static inline std::shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
-    static inline std::shared_ptr<ChannelManagerMock> channelManagerMock_ = nullptr;
+    std::shared_ptr<ConnectionDetectorMock> connectionDetectorMock_ = nullptr;
+    std::shared_ptr<DeviceManagerAgentMock> deviceManagerAgentMock_ = nullptr;
+    std::shared_ptr<DfsSystemAbilityManagerClientMock> smc_ = nullptr;
+    std::shared_ptr<SoftBusSessionListenerMock> softBusSessionListenerMock_ = nullptr;
+    std::shared_ptr<SoftBusHandlerAssetMock> softBusHandlerAssetMock_ = nullptr;
+    std::shared_ptr<SoftBusHandlerMock> softBusHandlerMock_ = nullptr;
+    std::shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
+    std::shared_ptr<ChannelManagerMock> channelManagerMock_ = nullptr;
 };
 
 class FileTransListenerMock : public IRemoteStub<IFileTransListener> {
@@ -294,19 +294,6 @@ public:
 void DaemonTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    connectionDetectorMock_ = std::make_shared<ConnectionDetectorMock>();
-    IConnectionDetectorMock::iConnectionDetectorMock_ = connectionDetectorMock_;
-    deviceManagerAgentMock_ = std::make_shared<DeviceManagerAgentMock>();
-    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = deviceManagerAgentMock_;
-    smc_ = std::make_shared<DfsSystemAbilityManagerClientMock>();
-    DfsSystemAbilityManagerClient::smc = smc_;
-    softBusSessionListenerMock_ = std::make_shared<SoftBusSessionListenerMock>();
-    ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ = softBusSessionListenerMock_;
-    softBusHandlerAssetMock_ = std::make_shared<SoftBusHandlerAssetMock>();
-    ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = softBusHandlerAssetMock_;
-    softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
-    ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
-
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directory(path);
@@ -323,19 +310,6 @@ void DaemonTest::SetUpTestCase(void)
 void DaemonTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    IConnectionDetectorMock::iConnectionDetectorMock_ = nullptr;
-    connectionDetectorMock_ = nullptr;
-    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = nullptr;
-    deviceManagerAgentMock_ = nullptr;
-    DfsSystemAbilityManagerClient::smc = nullptr;
-    smc_ = nullptr;
-    ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ = nullptr;
-    softBusSessionListenerMock_ = nullptr;
-    ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = nullptr;
-    softBusHandlerAssetMock_ = nullptr;
-    ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
-    softBusHandlerMock_ = nullptr;
-
     std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
@@ -365,6 +339,18 @@ void DaemonTest::SetUp(void)
     IChannelManagerMock::iChannelManagerMock = channelManagerMock_;
     deviceManagerImplMock_ = std::make_shared<DeviceManagerImplMock>();
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = deviceManagerImplMock_;
+    smc_ = std::make_shared<DfsSystemAbilityManagerClientMock>();
+    DfsSystemAbilityManagerClient::smc = smc_;
+    softBusSessionListenerMock_ = std::make_shared<SoftBusSessionListenerMock>();
+    ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ = softBusSessionListenerMock_;
+    softBusHandlerAssetMock_ = std::make_shared<SoftBusHandlerAssetMock>();
+    ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = softBusHandlerAssetMock_;
+    softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
+    ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
+    connectionDetectorMock_ = std::make_shared<ConnectionDetectorMock>();
+    IConnectionDetectorMock::iConnectionDetectorMock_ = connectionDetectorMock_;
+    deviceManagerAgentMock_ = std::make_shared<DeviceManagerAgentMock>();
+    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = deviceManagerAgentMock_;
 
     g_getDfsVersionFromNetworkId = 0;
     g_dfsVersion = {0, 0, 0};
@@ -382,6 +368,18 @@ void DaemonTest::TearDown(void)
     IChannelManagerMock::iChannelManagerMock = nullptr;
     deviceManagerImplMock_ = nullptr;
     DfsDeviceManagerImpl::dfsDeviceManagerImpl = nullptr;
+    smc_ = nullptr;
+    DfsSystemAbilityManagerClient::smc = nullptr;
+    softBusSessionListenerMock_ = nullptr;
+    ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ = nullptr;
+    softBusHandlerAssetMock_ = nullptr;
+    ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = nullptr;
+    softBusHandlerMock_ = nullptr;
+    ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
+    deviceManagerAgentMock_ = nullptr;
+    IDeviceManagerAgentMock::iDeviceManagerAgentMock_ = nullptr;
+    connectionDetectorMock_ = nullptr;
+    IConnectionDetectorMock::iConnectionDetectorMock_ = nullptr;
 }
 
 /**
@@ -753,14 +751,8 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     std::string networkId;
     ConnectCount::GetInstance().RemoveAllConnect();
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
     EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_INVAL_ARG_NAPI));
-    EXPECT_EQ(daemon_->ConnectDfs(networkId), E_INVAL_ARG_NAPI);
-
-    EXPECT_EQ(daemon_->ConnectDfs(""), E_INVAL_ARG_NAPI);
     std::string longNetworkId(DM_MAX_DEVICE_ID_LEN, 'a');
     EXPECT_EQ(daemon_->ConnectDfs(longNetworkId), E_INVAL_ARG_NAPI);
 
@@ -768,6 +760,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectDfs_001, TestSize.Level1)
     EXPECT_EQ(daemon_->ConnectDfs(invalidNetworkId), E_INVAL_ARG_NAPI);
 
     std::string validNetworkId(32, 'a');
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_INVAL_ARG_NAPI));
     EXPECT_EQ(daemon_->ConnectDfs(validNetworkId), E_INVAL_ARG_NAPI);
 
     GTEST_LOG_(INFO) << "DaemonTest_ConnectDfs_001 end";
@@ -807,18 +800,20 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
     string networkId = "testNetworkId";
 
     ConnectCount::GetInstance().RemoveAllConnect();
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
-    sleep(1);
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(E_OK));
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return((ERR_BAD_VALUE)));
-    EXPECT_EQ(daemon_->CleanUp(networkId), E_EVENT_HANDLER);
-    sleep(1);
+    // 场景一：没有控制通道，CancelControlLink 返回 OK，CleanUp 返回 E_OK
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
+    EXPECT_EQ(daemon_->CleanUp(networkId), E_OK);
+
+    // 场景二：存在控制通道且 DestroyClientChannel 失败，CleanUp 返回错误码
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, DestroyClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->CleanUp(networkId), FileManagement::ERR_BAD_VALUE);
 
     sptr<IFileDfsListener> nullListener = nullptr;
     ConnectCount::GetInstance().AddConnect(333, networkId, nullListener);
     EXPECT_EQ(daemon_->CleanUp(networkId), E_OK);
-    sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }
 
@@ -934,11 +929,11 @@ HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
     // networkId is valid but without file access permissions
     std::string validNetworkId(64, 'a');
     g_checkCallerPermission = false;
-    EXPECT_NE(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
 
     // networkId is valid with file access permissions
     g_checkCallerPermission = true;
-    EXPECT_NE(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
+    EXPECT_EQ(daemon_->CloseP2PConnectionEx(validNetworkId), NO_ERROR);
 
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 end";
 }
@@ -1356,7 +1351,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteSA_001 begin";
     ASSERT_NE(daemon_, nullptr);
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
     auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
@@ -2206,9 +2201,10 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_003, TestSize.Level1)
     g_putDeviceStatus = E_OK;
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
-    EXPECT_NE(result, E_OK);
+    EXPECT_EQ(result, E_OK);
 
     GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_003 end";
 }
@@ -2233,6 +2229,8 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_004, TestSize.Level1)
     g_putDeviceStatus = E_OK;
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(ERR_BAD_VALUE));
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(true));
+    EXPECT_CALL(*channelManagerMock_, DestroyClientChannel(_)).WillOnce(Return(FileManagement::ERR_BAD_VALUE));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
     EXPECT_EQ(result, E_CONNECTION_FAILED);
@@ -2258,9 +2256,10 @@ HWTEST_F(DaemonTest, DaemonTest_UpdateDfsSwitchStatus_005, TestSize.Level1)
     // Test status 0 with strcpy failure
     g_putDeviceStatus = E_OK;
     EXPECT_CALL(*deviceManagerAgentMock_, GetAllMountInfo()).WillOnce(Return(allMountInfo));
+    EXPECT_CALL(*channelManagerMock_, HasExistChannel(_)).WillOnce(Return(false));
 
     int32_t result = daemon_->UpdateDfsSwitchStatus(0);
-    EXPECT_EQ(result, E_CONNECTION_FAILED);
+    EXPECT_EQ(result, E_OK);
 
     GTEST_LOG_(INFO) << "DaemonTest_UpdateDfsSwitchStatus_005 end";
 }

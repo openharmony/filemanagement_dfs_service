@@ -434,4 +434,24 @@ HWTEST_F(CloudFileUtilsTest, GetPathFromUri005, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetPathFromUri005 ERROR.";
     }
 }
+
+/**
+ * @tc.name: GenerateUuidTest001
+ * @tc.desc: Verify the GenerateUuid function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudFileUtilsTest, GenerateUuidTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateUuidTest001 start";
+    try {
+        string uuid = CloudFileUtils::GenerateUuid();
+        EXPECT_EQ(uuid.length(), 36);
+        EXPECT_TRUE(uuid.find('-') != string::npos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateUuidTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateUuidTest001 end";
+}
 } // OHOS

@@ -126,6 +126,7 @@ void SystemNotifier::ClearAllConnect()
 
 int32_t SystemNotifier::GetNotificationMapSize()
 {
+    std::shared_lock<std::shared_mutex> readLock(mutex);
     LOGI("GetNotificationMapSize size is %{public}zu", notificationMap_.size());
     return notificationMap_.size();
 }

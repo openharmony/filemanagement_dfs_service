@@ -52,7 +52,7 @@ const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_TRY_AGAIN, CLOUD_DISK_TRY_AGAIN},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_ALLOWED, CLOUD_DISK_NOT_ALLOWED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_SUPPORTED, CLOUD_DISK_NOT_SUPPORTED},
-    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED, 
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED,
         CLOUD_DISK_PERMISSION_DENIED},
 };
 

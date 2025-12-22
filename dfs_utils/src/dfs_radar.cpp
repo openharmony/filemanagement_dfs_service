@@ -14,17 +14,12 @@
  */
 #include "dfs_radar.h"
 
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
-#include "device_manager.h"
-#include "softbus_bus_center.h"
-#endif
-
-#include "dfsu_access_token_helper.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
-#include "utils_log.h"
 #include "os_account_manager.h"
+#include "utils_log.h"
 
 #include <iomanip>
 
@@ -32,14 +27,20 @@ namespace OHOS {
 namespace FileManagement {
 using namespace std;
 constexpr char DFS_SERVICE_DOMAIN[] = "FILEMANAGEMENT";
-constexpr const char *DFS_SERVICE_BEHAVIOR  = "DFS_SERVICE_BEHAVIOR";
-constexpr const char *DFS_SERVICE_STATISTIC = "DFS_SERVICE_STATISTIC";
-constexpr const char *DFS_SERVICE_NAME = "ohos.storage.distributedfile.daemon";
-const int32_t DEFAULT_SIZE = -1;
+constexpr const char *DFS_SERVICE_BEHAVIOR = "DFS_SERVICE_BEHAVIOR";
 
-void DfsRadar::ReportLinkConnection(const RadarParaInfo &info)
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
+constexpr const char *DFS_SERVICE_STATISTIC = "DFS_SERVICE_STATISTIC";
+const int32_t DEFAULT_SIZE = -1;
+#endif
+
+void DfsRadar::ReportLinkConnection(const RadarParaInfo &info,
+                                    const std::string &localDeviceNetId,
+                                    const std::string &localDeviceUdid,
+                                    const std::string &peerDeviceNetId,
+                                    const std::string &peerDeviceUdid)
 {
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -52,18 +53,24 @@ void DfsRadar::ReportLinkConnection(const RadarParaInfo &info)
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
+        .localUdid = localDeviceUdid,
+        .localNetId = localDeviceNetId,
+        .peerUdid = peerDeviceUdid,
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
-    GetLocalNetIdAndUdid(param);
-    GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
 #endif
 }
 
-void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info)
+void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info,
+                                      const std::string &localDeviceNetId,
+                                      const std::string &localDeviceUdid,
+                                      const std::string &peerDeviceNetId,
+                                      const std::string &peerDeviceUdid)
 {
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     string bundleName;
     DfsuAccessTokenHelper::GetCallerBundleName(bundleName);
     RadarParameter param = {
@@ -77,18 +84,24 @@ void DfsRadar::ReportLinkConnectionEx(const RadarParaInfo &info)
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
+        .localUdid = localDeviceUdid,
+        .localNetId = localDeviceNetId,
+        .peerUdid = peerDeviceUdid,
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
-    GetLocalNetIdAndUdid(param);
-    GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
 #endif
 }
 
-void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info)
+void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info,
+                                    const std::string &localDeviceNetId,
+                                    const std::string &localDeviceUdid,
+                                    const std::string &peerDeviceNetId,
+                                    const std::string &peerDeviceUdid)
 {
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -101,18 +114,24 @@ void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info)
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
+        .localUdid = localDeviceUdid,
+        .localNetId = localDeviceNetId,
+        .peerUdid = peerDeviceUdid,
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
-    GetLocalNetIdAndUdid(param);
-    GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
 #endif
 }
 
-void DfsRadar::ReportFileAccess(const RadarParaInfo &info)
+void DfsRadar::ReportFileAccess(const RadarParaInfo &info,
+                                const std::string &localDeviceNetId,
+                                const std::string &localDeviceUdid,
+                                const std::string &peerDeviceNetId,
+                                const std::string &peerDeviceUdid)
 {
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     auto callingUid = IPCSkeleton::GetCallingUid();
     RadarParameter param = {
         .orgPkg = DEFAULT_PKGNAME,
@@ -125,11 +144,13 @@ void DfsRadar::ReportFileAccess(const RadarParaInfo &info)
         .fileSize = DEFAULT_SIZE,
         .fileCount = DEFAULT_SIZE,
         .operateTime = DEFAULT_SIZE,
+        .localUdid = localDeviceUdid,
+        .localNetId = localDeviceNetId,
+        .peerUdid = peerDeviceUdid,
+        .peerNetId = peerDeviceNetId,
         .resultCode = info.resultCode,
         .errorInfo = info.errorInfo
     };
-    GetLocalNetIdAndUdid(param);
-    GetPeerUdid(param, info.peerNetId);
     RecordFunctionResult(param);
 #endif
 }
@@ -173,7 +194,7 @@ bool DfsRadar::RecordFunctionResult(const RadarParameter &parRes)
 
 void DfsRadar::ReportStatistics(const RadarStatisticInfo radarInfo)
 {
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+#if defined(DFS_ENABLE_DISTRIBUTED_ABILITY) && !defined(DFS_DISABLE_RADAR_ABILITY)
     int32_t res = HiSysEventWrite(
         DFS_SERVICE_DOMAIN,
         DFS_SERVICE_STATISTIC,
@@ -204,61 +225,6 @@ int32_t DfsRadar::GetCurrentUserId()
         return DEFAULT_ERR;
     }
     return userIds[0];
-}
-
-void DfsRadar::GetLocalNetIdAndUdid(RadarParameter &parameterRes)
-{
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
-    std::string localNetworkId = "";
-    std::string localUdid = "";
-    if (DistributedHardware::DeviceManager::GetInstance()
-        .GetLocalDeviceNetWorkId(DFS_SERVICE_NAME, localNetworkId) != 0) {
-        LOGE("GetLocalDeviceNetWorkId failed");
-        return;
-    }
-
-    uint8_t udid[65] = { 0 };
-    int32_t ret = GetNodeKeyInfo(DFS_SERVICE_NAME, localNetworkId.c_str(),
-        NodeDeviceInfoKey::NODE_KEY_UDID, udid, sizeof(udid));
-    if (ret != E_OK) {
-        LOGE("GetNodeKeyInfo failed");
-    }
-    localUdid = reinterpret_cast<char *>(udid);
-    parameterRes.localNetId = GetAnonymStr(localNetworkId);
-    parameterRes.localUdid = GetAnonymStr(localUdid);
-#endif
-}
-
-void DfsRadar::GetPeerUdid(RadarParameter &parameterRes, const std::string &networkId)
-{
-#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
-    if (networkId.empty()) {
-        parameterRes.peerUdid = "";
-        parameterRes.peerNetId = "";
-        return;
-    }
-    uint8_t udid[65] = { 0 };
-    int32_t ret = GetNodeKeyInfo(DFS_SERVICE_NAME, networkId.c_str(),
-        NodeDeviceInfoKey::NODE_KEY_UDID, udid, sizeof(udid));
-    if (ret != E_OK) {
-        LOGE("GetNodeKeyInfo failed");
-        return;
-    }
-    std::string peerUdid = reinterpret_cast<char *>(udid);
-    parameterRes.peerNetId = GetAnonymStr(networkId);
-    parameterRes.peerUdid = GetAnonymStr(peerUdid);
-#endif
-}
-
-std::string DfsRadar::GetAnonymStr(const std::string &value)
-{
-    const size_t minLength = 10;
-    if (value.empty() || value.length() < minLength) {
-        return "";
-    }
-    const size_t prefixLength = 5;
-    const size_t suffixLength = 5;
-    return value.substr(0, prefixLength) + "**" + value.substr(value.length() - suffixLength);
 }
 } // namespace FileManagement
 } // namespace OHOS

@@ -80,7 +80,6 @@ ohos_shared_library("libdistributedfileutils") {
   }
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
-    "dfx/src/dfs_radar.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
     "load/src/plugin_loader.cpp",
@@ -90,7 +89,6 @@ ohos_shared_library("libdistributedfileutils") {
     "system/src/dfsu_access_token_helper.cpp",
     "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_memory_guard.cpp",
-    "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/dfsu_timer.cpp",
     "system/src/sys_utils.cpp",
     "system/src/utils_directory.cpp",
@@ -124,6 +122,7 @@ ohos_shared_library("libdistributedfileutils") {
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "e2fsprogs:libext2_uuid",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
@@ -268,6 +267,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   external_deps = [
     "c_utils:utils",
+    "e2fsprogs:libext2_uuid",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

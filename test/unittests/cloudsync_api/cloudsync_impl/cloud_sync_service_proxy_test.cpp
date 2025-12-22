@@ -77,10 +77,10 @@ void CloudSyncServiceProxyTest::TearDown(void)
 HWTEST_F(CloudSyncServiceProxyTest, UnRegisterCallbackInner001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
-    string callbackAddr = "0x0000005a40d3b680";
+    string callbackId = "0x0000005a40d3b680";
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
-    int result = proxy_->UnRegisterCallbackInner(callbackAddr, bundleName);
+    int result = proxy_->UnRegisterCallbackInner(callbackId, bundleName);
     EXPECT_EQ(result, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
 }
@@ -94,10 +94,10 @@ HWTEST_F(CloudSyncServiceProxyTest, UnRegisterCallbackInner001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, UnRegisterCallbackInner002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
-    string callbackAddr = "0x0000005a40d3b680";
+    string callbackId = "0x0000005a40d3b680";
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-    int result = proxy_->UnRegisterCallbackInner(callbackAddr, bundleName);
+    int result = proxy_->UnRegisterCallbackInner(callbackId, bundleName);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
 }
@@ -112,10 +112,10 @@ HWTEST_F(CloudSyncServiceProxyTest, UnRegisterCallbackInner002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, RegisterCallbackInner001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner Start";
-    string callbackAddr = "0x0000005a40d3b680";
+    string callbackId = "0x0000005a40d3b680";
     string bundleName = "com.ohos.photos";
 
-    int result = proxy_->RegisterCallbackInner(nullptr, callbackAddr, bundleName);
+    int result = proxy_->RegisterCallbackInner(nullptr, callbackId, bundleName);
     EXPECT_EQ(result, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "RegisterCallbackInner End";
 }
@@ -129,11 +129,11 @@ HWTEST_F(CloudSyncServiceProxyTest, RegisterCallbackInner001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, RegisterCallbackInner002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner Start";
-    string callbackAddr = "0x0000005a40d3b680";
+    string callbackId = "0x0000005a40d3b680";
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
 
-    int result = proxy_->RegisterCallbackInner(remote_, callbackAddr, bundleName);
+    int result = proxy_->RegisterCallbackInner(remote_, callbackId, bundleName);
     EXPECT_EQ(result, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "RegisterCallbackInner End";
 }
@@ -147,11 +147,11 @@ HWTEST_F(CloudSyncServiceProxyTest, RegisterCallbackInner002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceProxyTest, RegisterCallbackInner003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner Start";
-    string callbackAddr = "0x0000005a40d3b680";
+    string callbackId = "0x0000005a40d3b680";
     string bundleName = "com.ohos.photos";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
 
-    int result = proxy_->RegisterCallbackInner(remote_, callbackAddr, bundleName);
+    int result = proxy_->RegisterCallbackInner(remote_, callbackId, bundleName);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "RegisterCallbackInner End";
 }

@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_SCREEN_STATUS_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_SCREEN_STATUS_H
 
+#include <atomic>
 #include "common_event_subscriber.h"
 
 namespace OHOS {
@@ -33,7 +34,7 @@ public:
     static bool IsForceSleep();
 
 private:
-    static inline ScreenState screenState_{ScreenState::SCREEN_ON};
+    static inline std::atomic<ScreenState> screenState_{ScreenState::SCREEN_ON};
 };
 } // namespace CloudSync
 } // namespace FileManagement

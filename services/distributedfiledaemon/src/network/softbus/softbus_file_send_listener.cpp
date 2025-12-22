@@ -19,6 +19,7 @@
 
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "trans_mananger.h"
@@ -83,7 +84,7 @@ void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorC
     LOGE("OnFileTransError");
     RadarParaInfo info = {"OnFileTransError", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
         DEFAULT_PKGNAME, "", DEFAULT_ERR, "OnFileTransError fail"};
-    DfsRadar::GetInstance().ReportFileAccess(info);
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

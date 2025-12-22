@@ -179,7 +179,7 @@ void AccountStatusSubscriber::RemovedClean(const EventFwk::CommonEventData &even
     std::string localIdKey = std::to_string(node->parent) + node->fileName;
     int64_t key = static_cast<int64_t>(childSt.st_ino);
     FileOperationsHelper::PutCloudDiskInode(data, node, node->refCount, key);
-    FileOperationsHelper::PutLocalId(data, node, node->refCount, localIdKey);
+    FileOperationsHelper::PutLocalId(data, node, localIdKey);
     if (fuse_lowlevel_notify_inval_entry(se, parentSt.st_ino, bundleName.c_str(), bundleName.size())) {
         fuse_lowlevel_notify_inval_inode(se, childSt.st_ino, 0, 0);
     }

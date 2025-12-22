@@ -80,7 +80,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo info = {"ExecutePushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", E_EVENT_HANDLER, "eventHandler fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     auto pushData = event->GetSharedObject<PushAssetData>();
@@ -89,7 +89,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo info = {"ExecutePushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "pushData is nullptr."};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     int32_t userId = pushData->userId_;
@@ -99,7 +99,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         RadarParaInfo info = {"ExecutePushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "assetObj is nullptr."};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return;
     }
     PushAssetInner(userId, assetObj);
@@ -115,7 +115,7 @@ int32_t DaemonExecute::HandleAssetBind(int32_t userId, const sptr<AssetObj> &ass
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         RadarParaInfo info = {"HandleAssetBind", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", ret, "AssetBind failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return ERR_BIND_SOCKET_FAILED;
     }
@@ -136,7 +136,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         HandlePushAssetFail(socketId, assetObj);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "fileList is empty"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;
     }
@@ -146,7 +146,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         HandlePushAssetFail(socketId, assetObj);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "device cannot read this files"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return ;
     }
@@ -160,7 +160,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", ret, "zip files fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;
     }
@@ -172,7 +172,7 @@ void DaemonExecute::PushAssetInner(int32_t userId, const sptr<AssetObj> &assetOb
         SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         RadarParaInfo info = {"PushAssetInner", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", ret, "send file fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return;
     }
@@ -251,7 +251,7 @@ void DaemonExecute::ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer 
     if (prepareSessionData == nullptr) {
         RadarParaInfo info = {"ExecutePrepareSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "session is null"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         LOGE("prepareSessionData is nullptr.");
         return;
     }
@@ -332,14 +332,14 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             LOGE("invalid uri, ret = %{public}d", ret);
             RadarParaInfo info = {"GetFileList", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
                 "AFS", "", DEFAULT_ERR, "uri err"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return {};
         }
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
             LOGE("invalid path");
             RadarParaInfo info = {"GetFileList", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
                 "AFS", "", DEFAULT_ERR, "path err"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return {};
         }
         if (OHOS::Storage::DistributedFile::Utils::IsFolder(physicalPath)) {

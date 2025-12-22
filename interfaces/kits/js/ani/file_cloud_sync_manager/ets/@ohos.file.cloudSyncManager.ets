@@ -132,7 +132,7 @@ export default namespace cloudSyncManager  {
             return new Promise<CloudFileInfo>((resolve: (result: CloudFileInfo) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): CloudFileInfo => this.getCloudFileInfoInner());
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as CloudFileInfo);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -149,7 +149,7 @@ export default namespace cloudSyncManager  {
                     this.startDownloadInner(callbackIn);
                     return 0;
                 }, callback);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(undefined);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -161,7 +161,7 @@ export default namespace cloudSyncManager  {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): int => this.stopDownloadInner());
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(undefined);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -430,7 +430,7 @@ export default namespace cloudSyncManager  {
             ): Array<LocalFilePresentStatus> => {
                 return StaticFunction.getBundlesLocalFilePresentStatusInner(bundleNames);
             }, bundleNames);
-            promise.then<void, void>((ret: NullishType): void => {
+            promise.then<void, void>((ret: Any): void => {
                 resolve(ret as Array<LocalFilePresentStatus>);
             }, (e: Error): void => {
                 reject(e as BusinessError<void>);

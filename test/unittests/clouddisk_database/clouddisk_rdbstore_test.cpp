@@ -316,11 +316,18 @@ HWTEST_F(CloudDiskRdbStoreTest, MtimeSetAttrTest1, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const unsigned long long mtime = 20250101000000;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
     int32_t ret = clouddiskrdbStore_->MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
     EXPECT_EQ(ret, E_OK);
 }
@@ -336,11 +343,18 @@ HWTEST_F(CloudDiskRdbStoreTest, MtimeSetAttrTest2, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const unsigned long long mtime = 20250101000000;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
+
     int32_t ret = clouddiskrdbStore_->MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -356,11 +370,18 @@ HWTEST_F(CloudDiskRdbStoreTest, MtimeSetAttrTest3, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const unsigned long long mtime = 20250101000000;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
     int32_t ret = clouddiskrdbStore_->MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -376,12 +397,49 @@ HWTEST_F(CloudDiskRdbStoreTest, MtimeSetAttrTest4, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const unsigned long long mtime = 20250101000000;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_RDB, transaction)));
+
     int32_t ret = clouddiskrdbStore_->MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
     EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: MtimeSetAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::MtimeSetAttr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, MtimeSetAttrTest5, TestSize.Level1)
+{
+    const std::string fileName = "Test";
+    const std::string parentCloudId = "100";
+    const std::string cloudId = "100";
+    const unsigned long long mtime = 20250101000000;
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(DoAll(
+        SetArgReferee<1>(1),
+        Return(E_OK)
+    ));
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
+
+    int32_t ret = clouddiskrdbStore_->MtimeSetAttr(fileName, parentCloudId, cloudId, mtime);
+    EXPECT_EQ(ret, E_OK);
 }
 
 /**
@@ -561,10 +619,16 @@ HWTEST_F(CloudDiskRdbStoreTest, SetAttrTest6, TestSize.Level1)
     const std::string cloudId = "100";
     struct stat attr;
     const int valid = 32;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
     auto transaction = make_shared<TransactionMock>();
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 

@@ -25,6 +25,8 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
+
+  defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
 ohos_unittest("connect_count_test") {
@@ -54,7 +56,7 @@ ohos_unittest("connect_count_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "c_utils:utils",

@@ -151,18 +151,31 @@ public:
     }
 
 public:
-    void ReportLinkConnection(const RadarParaInfo &info);
-    void ReportLinkConnectionEx(const RadarParaInfo &info);
-    void ReportGenerateDisUri(const RadarParaInfo &info);
-    void ReportFileAccess(const RadarParaInfo &info);
+    void ReportLinkConnection(const RadarParaInfo &info,
+                              const std::string &localDeviceNetId,
+                              const std::string &localDeviceUdid,
+                              const std::string &peerDeviceNetId,
+                              const std::string &peerDeviceUdid);
+    void ReportLinkConnectionEx(const RadarParaInfo &info,
+                                const std::string &localDeviceNetId,
+                                const std::string &localDeviceUdid,
+                                const std::string &peerDeviceNetId,
+                                const std::string &peerDeviceUdid);
+    void ReportGenerateDisUri(const RadarParaInfo &info,
+                              const std::string &localDeviceNetId,
+                              const std::string &localDeviceUdid,
+                              const std::string &peerDeviceNetId,
+                              const std::string &peerDeviceUdid);
+    void ReportFileAccess(const RadarParaInfo &info,
+                          const std::string &localDeviceNetId,
+                          const std::string &localDeviceUdid,
+                          const std::string &peerDeviceNetId,
+                          const std::string &peerDeviceUdid);
     void ReportStatistics(const RadarStatisticInfo radarInfo);
 
 private:
     bool RecordFunctionResult(const RadarParameter &parameterRes);
     int32_t GetCurrentUserId();
-    void GetLocalNetIdAndUdid(RadarParameter &parameterRes);
-    void GetPeerUdid(RadarParameter &parameterRes, const std::string &netId);
-    std::string GetAnonymStr(const std::string &value);
 
 private:
     DfsRadar() = default;

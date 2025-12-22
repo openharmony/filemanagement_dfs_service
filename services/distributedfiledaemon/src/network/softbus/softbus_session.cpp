@@ -16,6 +16,7 @@
 #include "network/softbus/softbus_session.h"
 
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dfs_session.h"
 #include "fcntl.h"
 #include "utils_log.h"
@@ -37,7 +38,7 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
         socketFd_ = INVALID_SOCKET_FD;
         RadarParaInfo info = {"SoftbusSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", peerDeviceId, ret, "get session socket fd failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return;
     }
     int32_t flags = fcntl(socketFd, F_GETFL, 0);
@@ -58,7 +59,7 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
     if (ret != SOFTBUS_OK) {
         RadarParaInfo info = {"SoftbusSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", peerDeviceId, ret, "get session key failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         LOGE("get session key failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         key_ = {};
     } else {
@@ -109,7 +110,7 @@ void SoftbusSession::DisableSessionListener() const
     if (ret != SOFTBUS_OK) {
         RadarParaInfo info = {"DisableSessionListener", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             "softbus", "", ret, "disableSessionlistener failed"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         LOGE("disableSessionlistener failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         return;
     }

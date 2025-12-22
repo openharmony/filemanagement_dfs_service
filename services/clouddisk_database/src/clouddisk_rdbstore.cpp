@@ -285,7 +285,11 @@ int32_t CloudDiskRdbStore::MtimeSetAttr(const std::string &fileName, const std::
     ValuesBucket setAttr;
     setAttr.PutLong(FileColumn::FILE_TIME_EDITED, static_cast<int64_t>(mtime));
     setAttr.PutLong(FileColumn::META_TIME_EDITED, static_cast<int64_t>(mtime));
-    setAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    int32_t dirtyType;
+    RETURN_ON_ERR(GetDirtyType(cloudId, dirtyType));
+    if (dirtyType == static_cast<int32_t>(DirtyType::TYPE_SYNCED)) {
+        setAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    }
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {

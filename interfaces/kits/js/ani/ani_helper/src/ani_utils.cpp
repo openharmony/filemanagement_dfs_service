@@ -56,7 +56,7 @@ std::tuple<bool, int32_t> ANIUtils::EnumToInt32(ani_env *env, ani_enum_item enum
     return {succ, result};
 }
 
-std::tuple<bool, std::vector<std::string>> ANIUtils::AniToStringArray(ani_env *env, ani_array_ref strArray)
+std::tuple<bool, std::vector<std::string>> ANIUtils::AniToStringArray(ani_env *env, ani_array strArray)
 {
     ani_size arraySize;
     ani_status ret;
@@ -67,7 +67,7 @@ std::tuple<bool, std::vector<std::string>> ANIUtils::AniToStringArray(ani_env *e
     std::vector<std::string> res;
     for (ani_size i = 0; i < arraySize; ++i) {
         ani_ref strRef;
-        if ((ret = env->Array_Get_Ref(strArray, i, &strRef)) != ANI_OK) {
+        if ((ret = env->Array_Get(strArray, i, &strRef)) != ANI_OK) {
             LOGE("Failed to get string item, %{public}d", ret);
             return {false, {}};
         }
@@ -81,7 +81,7 @@ std::tuple<bool, std::vector<std::string>> ANIUtils::AniToStringArray(ani_env *e
     return {true, res};
 }
 
-std::tuple<bool, ani_array_ref> ANIUtils::ToAniStringArray(ani_env *env, const std::vector<std::string> &strList)
+std::tuple<bool, ani_array> ANIUtils::ToAniStringArray(ani_env *env, const std::vector<std::string> &strList)
 {
     size_t length = strList.size();
     const std::string *strArray = strList.data();
@@ -90,8 +90,8 @@ std::tuple<bool, ani_array_ref> ANIUtils::ToAniStringArray(ani_env *env, const s
     if (env->FindClass(classDesc.c_str(), &cls) != ANI_OK) {
         return {false, nullptr};
     }
-    ani_array_ref result = nullptr;
-    if (env->Array_New_Ref(cls, length, nullptr, &result) != ANI_OK) {
+    ani_array result = nullptr;
+    if (env->Array_New(length, nullptr, &result) != ANI_OK) {
         return {false, nullptr};
     }
     for (size_t i = 0; i < length; ++i) {
@@ -100,7 +100,7 @@ std::tuple<bool, ani_array_ref> ANIUtils::ToAniStringArray(ani_env *env, const s
             LOGE("Failed to conver to ani string");
             return {false, nullptr};
         }
-        if (env->Array_Set_Ref(result, i, item) != ANI_OK) {
+        if (env->Array_Set(result, i, item) != ANI_OK) {
             LOGE("Failed to set element for array");
             return {false, nullptr};
         }
