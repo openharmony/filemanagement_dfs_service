@@ -15,6 +15,7 @@
 
 #include "data_sync_manager.h"
 #include "dfs_error.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudFile {
 using namespace std;
@@ -66,7 +67,7 @@ int32_t DataSyncManager::ResetCursor(const std::string &bundleName, const int32_
 
 void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName,
                                                 const BundleNameUserInfo &bundleNameUserInfo,
-                                                const std::string &callbackAddr,
+                                                const std::string &callbackId,
                                                 const sptr<CloudSync::ICloudSyncCallback> &callback)
 {
     return;
@@ -74,7 +75,7 @@ void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName,
 
 void DataSyncManager::UnRegisterCloudSyncCallback(const std::string &bundleName,
                                                   const BundleNameUserInfo &bundleNameUserInfo,
-                                                  const std::string &callbackAddr)
+                                                  const std::string &callbackId)
 {
     return;
 }
@@ -250,5 +251,17 @@ int32_t DataSyncManager::GetBundlesLocalFilePresentStatus(const std::vector<std:
     const int32_t &userId, std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList)
 {
     return E_OK;
+}
+
+void DataSyncManager::PeriodicCleanLock()
+{
+    LOGI("PeriodicClean lock");
+    periodicCleanMutex_.lock();
+}
+
+void DataSyncManager::PeriodicCleanUnlock()
+{
+    LOGI("PeriodicClean unlock");
+    periodicCleanMutex_.unlock();
 }
 } // namespace OHOS::FileManagement::CloudFile

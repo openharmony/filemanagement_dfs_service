@@ -32,10 +32,10 @@ class ANIUtils {
 public:
     static ani_status AniString2String(ani_env *env, ani_string str, std::string &res);
     static std::tuple<bool, int32_t> EnumToInt32(ani_env *env, ani_enum_item enumItem);
-    static std::tuple<bool, std::vector<std::string>> AniToStringArray(ani_env *env, ani_array_ref strArray);
+    static std::tuple<bool, std::vector<std::string>> AniToStringArray(ani_env *env, ani_array strArray);
 
     static std::tuple<bool, ani_string> ToAniString(ani_env *env, const std::string &str);
-    static std::tuple<bool, ani_array_ref> ToAniStringArray(ani_env *env, const std::vector<std::string> &strList);
+    static std::tuple<bool, ani_array> ToAniStringArray(ani_env *env, const std::vector<std::string> &strList);
     static bool SendEventToMainThread(const std::function<void()> func);
 
 private:

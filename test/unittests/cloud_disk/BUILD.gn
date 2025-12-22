@@ -594,7 +594,9 @@ ohos_unittest("meta_file_clouddisk_test") {
     "meta_file_clouddisk_test.cpp",
   ]
 
-  deps = []
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "c_utils:utils",

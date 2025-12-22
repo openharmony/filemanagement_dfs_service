@@ -34,6 +34,8 @@ enum class TaskType : uint64_t {
     DISABLE_CLOUD_TASK = 1 << 7,
     CACHE_VIDEO_TASK = 1 << 8,
     DOWNGRADE_DOWNLOAD_TASK = 1 << 9,
+    CLEAN_DENTRY_FILE_TASK = 1 << 10,
+    CLEAN_CLOUD_CACHE_TASK = 1 << 11,
 };
 class TaskStateManager : public NoCopyable {
 public:

@@ -18,6 +18,7 @@
 #include "device_manager.h"
 #include "device/device_manager_agent.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "ipc/i_daemon.h"
 #include "securec.h"
 #include "security_label.h"
@@ -76,7 +77,7 @@ int32_t DevslDispatcher::GetSecurityLabel(const std::string &path)
         LOGE("GetSecurityLabel cannot find label= %{public}s", current.c_str());
         RadarParaInfo info = {"GetSecurityLabel", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "securitylevel", "", DEFAULT_ERR, "cannot find"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return -1;
     }
     return static_cast<int32_t>(iter->second);
@@ -93,7 +94,7 @@ bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, co
         LOGE("remoteDevsl < 0");
         RadarParaInfo info = {"CompareDevslWithLocal", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", remoteDevsl, "remoteDevsl < 0"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return false;
     }
 
@@ -103,7 +104,7 @@ bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, co
             LOGE("localDevsl < 0");
             RadarParaInfo info = {"CompareDevslWithLocal", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
                 DEFAULT_PKGNAME, "", securityLabel, "localDevsl < 0"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return false;
         }
         if (remoteDevsl < securityLabel) {
@@ -111,7 +112,7 @@ bool DevslDispatcher::CompareDevslWithLocal(const std::string &peerNetworkId, co
                  remoteDevsl, securityLabel);
             RadarParaInfo info = {"CompareDevslWithLocal", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
                 DEFAULT_PKGNAME, "", remoteDevsl, "remote < security"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return false;
         }
     }
@@ -142,7 +143,7 @@ int32_t DevslDispatcher::GetDeviceDevsl(const std::string &networkId)
         LOGE("devsl dispatcher register callback error %{public}d", ret);
         RadarParaInfo info = {"GetDeviceDevsl", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "securitylevel", "", ret, "dispatcher register error"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return -1;
     }
     devslMap_[networkId] = static_cast<int32_t>(levelInfo);

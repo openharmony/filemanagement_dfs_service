@@ -26,6 +26,7 @@
 #include <unordered_set>
 
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "mountpoint/mount_point.h"
 #include "network/base_session.h"
 #include "utils_log.h"
@@ -52,7 +53,7 @@ public:
     {
     }
     KernelTalker() = default;
-    ~KernelTalker() = default;
+    ~KernelTalker();
 
     void SinkSessionTokernel(std::shared_ptr<BaseSession> session, const std::string backStage);
     void SinkDevslTokernel(const std::string &cid, uint32_t devsl);
@@ -78,7 +79,7 @@ private:
         if (realPath == nullptr) {
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", DEFAULT_ERR, "realpath faile"};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
 
@@ -87,7 +88,7 @@ private:
             LOGE("Open node file error. %{public}d", errno);
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", file, "Open node file err, error=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
         int err = write(file, &cmd, sizeof(T));
@@ -95,7 +96,7 @@ private:
             LOGE("write return err. %{public}d", errno);
             RadarParaInfo info = {"SetCmd", ReportLevel::INNER, DfxBizStage::KERNEL_NEG,
                 "kernel", "", err, "write return err, errno=" + to_string(errno)};
-            DfsRadar::GetInstance().ReportLinkConnection(info);
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         }
         close(file);
     }
@@ -108,6 +109,7 @@ private:
     std::weak_ptr<MountPoint> mountPoint_;
     std::mutex cmdMutex_;
     std::atomic<bool> isRunning_ {true};
+    std::mutex pollThreadMutex_;
     std::unique_ptr<std::thread> pollThread_ {nullptr};
     std::function<void(NotifyParam &)> GetSessionCallback_ {nullptr};
     std::function<void(const std::string &cid)> CloseSessionCallback_ {nullptr};

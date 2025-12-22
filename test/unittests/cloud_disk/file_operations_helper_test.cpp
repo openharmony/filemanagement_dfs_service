@@ -725,6 +725,30 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PutCloudDiskInodeTest004
+ * @tc.desc: Verify the PutCloudDiskInode function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseOperationsHelperTest, PutCloudDiskInodeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PutCloudDiskInodeTest004 Start";
+    try {
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->refCount.store(1);
+        uint64_t num = 2;
+        int64_t key = 0;
+
+        fuseoperationshelper_->PutCloudDiskInode(data.get(), inoPtr, num, key);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PutCloudDiskInodeTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PutCloudDiskInodeTest004 End";
+}
+
+/**
  * @tc.name: PutCloudDiskFileTest001
  * @tc.desc: Verify the PutCloudDiskFile function
  * @tc.type: FUNC
@@ -799,6 +823,29 @@ HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PutCloudDiskFileTest004
+ * @tc.desc: Verify the PutCloudDiskFile function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseOperationsHelperTest, PutCloudDiskFileTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PutCloudDiskFileTest004 Start";
+    try {
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        std::shared_ptr<CloudDiskFile> file = make_shared<CloudDiskFile>();
+        file->refCount.store(-1);
+        int64_t key = 0;
+
+        fuseoperationshelper_->PutCloudDiskFile(data.get(), file, key);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PutCloudDiskFileTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PutCloudDiskFileTest004 End";
+}
+
+/**
  * @tc.name: PutLocalIdTest001
  * @tc.desc: Verify the PutLocalId function
  * @tc.type: FUNC
@@ -808,13 +855,11 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutLocalIdTest001 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskInode> inoPtr = nullptr;
-        uint64_t num = 1;
         string key = "";
 
-        fuseoperationshelper_->PutLocalId(data, inoPtr, num, key);
-        delete data;
+        fuseoperationshelper_->PutLocalId(data.get(), inoPtr, key);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -833,14 +878,12 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutLocalIdTest002 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
-        inoPtr->refCount.store(1);
-        uint64_t num = 1;
+        inoPtr->refCount.store(0);
         string key = "";
 
-        fuseoperationshelper_->PutLocalId(data, inoPtr, num, key);
-        delete data;
+        fuseoperationshelper_->PutLocalId(data.get(), inoPtr, key);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -859,19 +902,40 @@ HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PutLocalIdTest003 Start";
     try {
-        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
-        inoPtr->refCount.store(2);
-        uint64_t num = 1;
+        inoPtr->refCount.store(1);
         string key = "";
 
-        fuseoperationshelper_->PutLocalId(data, inoPtr, num, key);
-        delete data;
+        fuseoperationshelper_->PutLocalId(data.get(), inoPtr, key);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PutLocalIdTest003 ERROR";
     }
     GTEST_LOG_(INFO) << "PutLocalIdTest003 End";
+}
+
+/**
+ * @tc.name: PutLocalIdTest004
+ * @tc.desc: Verify the PutLocalId function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseOperationsHelperTest, PutLocalIdTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PutLocalIdTest004 Start";
+    try {
+        std::shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->refCount.store(-1);
+        string key = "";
+
+        fuseoperationshelper_->PutLocalId(data.get(), inoPtr, key);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PutLocalIdTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PutLocalIdTest004 End";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

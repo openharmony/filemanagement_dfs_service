@@ -504,7 +504,7 @@ export default namespace cloudSync {
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((uris: Array<string>, fieldKey: DownloadFileType): long =>
                     this.CloudFileCacheStartBatch(uris, fieldKey), uris, fieldKey);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as long);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -812,7 +812,7 @@ export default namespace cloudSync {
                 ): Array<HistoryVersion> => {
                     return this.getHistoryVersionListInner(uriIn, versionNumLimitIn);
                 }, uri, versionNumLimit);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as Array<HistoryVersion>);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -830,7 +830,7 @@ export default namespace cloudSync {
                 ): string => {
                     return this.downloadHistoryVersionInner(uriIn, versionIdIn, callbackIn);
                 }, uri, versionId, callback);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as string);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -847,7 +847,7 @@ export default namespace cloudSync {
                     this.replaceFileWithHistoryVersionInner(originalUriIn, versionUriIn);
                     return 0;
                 }, originalUri, versionUri);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(undefined);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -863,7 +863,7 @@ export default namespace cloudSync {
                 ): boolean => {
                     return this.isFileConflictInner(uriIn);
                 }, uri);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(ret as boolean);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);
@@ -880,7 +880,7 @@ export default namespace cloudSync {
                     this.clearFileConflictInner(uriIn);
                     return 0;
                 }, uri);
-                promise.then<void, void>((ret: NullishType): void => {
+                promise.then<void, void>((ret: Any): void => {
                     resolve(undefined);
                 }, (e: Error): void => {
                     reject(e as BusinessError<void>);

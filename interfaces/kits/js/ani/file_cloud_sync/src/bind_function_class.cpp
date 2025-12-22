@@ -69,8 +69,8 @@ static ani_status BindContextOnMultiDlProgress(ani_env *env)
         return ret;
     }
     std::string ct = Builder::BuildConstructorName();
-    std::string succSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("escompat.Array"));
-    std::string failSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("escompat.Array"));
+    std::string succSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("std.core.Array"));
+    std::string failSign = Builder::BuildSignatureDescriptor({}, Builder::BuildClass("std.core.Array"));
     std::array methods = {
         ani_native_function{"getFailedFiles", succSign.c_str(),
                             reinterpret_cast<void *>(MultiDlProgressAni::GetFailedFileList)},
@@ -102,7 +102,7 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string sbSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
-    std::string startBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("escompat.Array"),
+    std::string startBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.Array"),
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
     std::string stopBatchSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildLong(), Builder::BuildBoolean()});
@@ -263,7 +263,7 @@ static ani_status BindContextOnFileVersion(ani_env *env)
     std::string ct = Builder::BuildConstructorName();
     std::string vSign = Builder::BuildSignatureDescriptor({});
     std::string getHisListSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String"),
-        Builder::BuildInt()}, Builder::BuildClass("escompat.Array"));
+        Builder::BuildInt()}, Builder::BuildClass("std.core.Array"));
     std::string downloadHisVerSign = Builder::BuildSignatureDescriptor({
         Builder::BuildClass("std.core.String"), Builder::BuildClass("std.core.String"),
         Builder::BuildFunctionalObject(1, false)}, Builder::BuildClass("std.core.String"));

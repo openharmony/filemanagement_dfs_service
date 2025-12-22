@@ -22,9 +22,12 @@ config("module_private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
+
+  defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
 ohos_unittest("all_connect_manager_test") {
@@ -46,6 +49,8 @@ ohos_unittest("all_connect_manager_test") {
 
   sources = [
     "${services_path}/distributedfiledaemon/test/mock/library_func_mock.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "all_connect_manager_test.cpp",
   ]
 
@@ -56,7 +61,7 @@ ohos_unittest("all_connect_manager_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [

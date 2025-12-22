@@ -26,6 +26,7 @@
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
 #include "tasks/report_statistics_task.h"
+#include "system_func_mock.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -95,12 +96,18 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest001, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "RunTaskForBundleTest001 start";
     try {
+        SystemFuncMock::proxy_ = std::make_shared<SystemFuncMock>();
+        EXPECT_CALL(*SystemFuncMock::proxy_, access(_, _)).WillOnce(Return(-1));
+        errno = 123456;
+
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
         shared_ptr<DatabaseBackupTask> task = make_shared<DatabaseBackupTask>(g_dataSyncManagerPtr_);
         int32_t ret = task->RunTaskForBundle(userId, bundleName);
         EXPECT_NE(ret, 0);
+
+        SystemFuncMock::proxy_ = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RunTaskForBundleTest001 FAILED";
@@ -302,6 +309,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskForBundleTest007, TestSize.Level1
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
         CloudFile::CloudFileKit::instance_ = ability.get();
+        EXPECT_CALL(*ability, GetAppConfigParams(_, _, _)).WillOnce(Return(E_OK));
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::NORMAL);
         shared_ptr<OptimizeStorageTask> task = make_shared<OptimizeStorageTask>(g_dataSyncManagerPtr_);

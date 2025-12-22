@@ -22,8 +22,8 @@ namespace OHOS::FileManagement::CloudSync {
 class MultiDlProgressAni final {
 public:
     static void Constructor(ani_env *env, ani_object object);
-    static ani_array_ref GetFailedFileList(ani_env *env, ani_object object);
-    static ani_array_ref GetDownloadedFileList(ani_env *env, ani_object object);
+    static ani_array GetFailedFileList(ani_env *env, ani_object object);
+    static ani_array GetDownloadedFileList(ani_env *env, ani_object object);
 };
 
 class MultiDlProgressWrapper final {

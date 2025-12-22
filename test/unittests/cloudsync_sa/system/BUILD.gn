@@ -104,11 +104,13 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/dfs_utils/include",
     "${utils_path}/system/include",
     "${utils_path}/log/include",
   ]
 
   deps = [
+    "${distributedfile_path}/dfs_utils:libdfsutils",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -128,6 +130,7 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
   ]
   use_exceptions = true
 }
+
 group("utils_system_src_test") {
   testonly = true
   deps = [

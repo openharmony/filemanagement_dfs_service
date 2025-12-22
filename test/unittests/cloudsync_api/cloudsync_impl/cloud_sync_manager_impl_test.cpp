@@ -124,7 +124,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b670";
+        callbackInfo.callbackId = "0x0000005a40d3b670";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
@@ -149,7 +149,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b660";
+        callbackInfo.callbackId = "0x0000005a40d3b660";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
@@ -174,7 +174,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest002 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "";
+        callbackInfo.callbackId = "";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = nullptr;
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
@@ -197,7 +197,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterFileSyncCallbackTest001, TestSize.L
     GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest001 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
@@ -222,7 +222,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterFileSyncCallbackTest002, TestSize.L
     GTEST_LOG_(INFO) << "UnRegisterFileSyncCallbackTest002 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "";
+        callbackInfo.callbackId = "";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = nullptr;
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterFileSyncCallback(callbackInfo);
@@ -946,7 +946,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = nullptr;
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callbackInfo);
@@ -969,7 +969,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest001, TestSize.Lev
     GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest001 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = nullptr;
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterFileSyncCallback(callbackInfo);
@@ -1034,7 +1034,7 @@ HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetDeathRecipientTest002 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = nullptr;
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
@@ -1059,7 +1059,7 @@ HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetDeathRecipientTest003 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
@@ -1163,7 +1163,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
     try {
         uint32_t retryCount = 3;
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
@@ -1190,7 +1190,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
     try {
         uint32_t retryCount = 3;
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
@@ -1378,7 +1378,7 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener002, TestSize.Level1)
     GTEST_LOG_(INFO) << "SubscribeListener002 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
@@ -1995,7 +1995,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Lev
     GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest002 Start";
     try {
         CallbackInfo callbackInfo;
-        callbackInfo.addr = "0x0000005a40d3b680";
+        callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));

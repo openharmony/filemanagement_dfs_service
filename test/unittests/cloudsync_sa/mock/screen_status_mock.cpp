@@ -15,17 +15,16 @@
 
 #include "screen_status.h"
 
-#include "common_event_manager.h"
-#include "common_event_support.h"
-#include "dfs_error.h"
-#include "power_mgr_client.h"
-#include "utils_log.h"
+#include "screen_status_mock.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 bool ScreenStatus::IsScreenOn()
 {
+    if (Test::ScreenStatusMock::proxy_ != nullptr) {
+        return Test::ScreenStatusMock::proxy_->IsScreenOn();
+    }
     return screenState_ == ScreenState::SCREEN_ON;
 }
 

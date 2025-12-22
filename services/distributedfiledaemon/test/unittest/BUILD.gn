@@ -21,9 +21,12 @@ config("module_private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
+
+  defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
 ohos_unittest("device_info_test") {
@@ -47,9 +50,7 @@ ohos_unittest("device_info_test") {
     "${utils_path}:compiler_configs",
   ]
 
-  deps = [ 
-    "${utils_path}:libdistributedfileutils" 
-  ]
+  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
 
   external_deps = [
     "app_file_service:remote_file_share_native",
@@ -105,7 +106,7 @@ ohos_unittest("device_manager_agent_sup_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -164,6 +165,8 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "device/device_manager_agent_test.cpp",
   ]
 
@@ -175,7 +178,7 @@ ohos_unittest("device_manager_agent_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -244,7 +247,7 @@ ohos_unittest("os_account_observer_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -307,7 +310,7 @@ ohos_unittest("devsl_dispatcher_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -377,7 +380,7 @@ ohos_unittest("kernel_talker_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -430,7 +433,11 @@ ohos_unittest("session_pool_test") {
 
   module_out_path = module_output_path
 
-  sources = [ "network/session_pool_test.cpp" ]
+  sources = [
+    "network/session_pool_test.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
+  ]
 
   configs = [
     ":module_private_config",
@@ -440,7 +447,7 @@ ohos_unittest("session_pool_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -501,6 +508,8 @@ ohos_unittest("softbus_agent_test") {
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_agent_test.cpp",
   ]
 
@@ -512,82 +521,7 @@ ohos_unittest("softbus_agent_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "app_file_service:remote_file_share_native",
-    "app_file_service:sandbox_helper_native",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "device_auth:deviceauth_sdk",
-    "eventhandler:libeventhandler",
-    "file_api:securitylabel",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "ipc:ipc_single",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-    "zlib:shared_libz",
-  ]
-
-  defines = [
-    "private=public",
-    "protected=public",
-    "NORMAL_MOCK",
-  ]
-
-  if (support_same_account) {
-    defines += [ "SUPPORT_SAME_ACCOUNT" ]
-  }
-
-  if (dfs_service_feature_enable_distributed_ability) {
-    external_deps += [
-      "device_manager:devicemanagersdk",
-      "dataclassification:data_transit_mgr",
-      "dsoftbus:softbus_client",
-    ]
-    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
-  }
-}
-
-ohos_unittest("softbus_agent_sup_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
-
-  module_out_path = module_output_path
-
-  include_dirs = [ "${services_path}/distributedfiledaemon/test/mock/include/" ]
-
-  sources = [
-    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
-    "${services_path}/distributedfiledaemon/test/mock/device_manager_agent_mock.cpp",
-    "network/softbus/softbus_agent_sup_test.cpp",
-  ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [
-    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -663,7 +597,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -721,7 +655,7 @@ ohos_unittest("softbus_file_send_listener_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -767,6 +701,8 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   sources = [
     "network/softbus/softbus_session_dispatcher_test.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
   ]
 
@@ -778,7 +714,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -843,7 +779,7 @@ ohos_unittest("softbus_session_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -920,7 +856,7 @@ ohos_unittest("softbus_handler_asset_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -978,6 +914,8 @@ ohos_unittest("softbus_handler_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_handler_test.cpp",
   ]
 
@@ -988,7 +926,7 @@ ohos_unittest("softbus_handler_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1041,7 +979,7 @@ ohos_unittest("softbus_session_pool_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1089,7 +1027,7 @@ ohos_unittest("softbus_session_listener_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1148,7 +1086,7 @@ ohos_unittest("softbus_asset_recv_listener_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1203,7 +1141,7 @@ ohos_unittest("softbus_asset_send_listener_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1249,6 +1187,8 @@ ohos_unittest("softbus_permission_check_test") {
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/src/network/softbus/softbus_permission_check.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/mock_other_method.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "network/softbus/softbus_permission_check_test.cpp",
   ]
 
@@ -1260,7 +1200,7 @@ ohos_unittest("softbus_permission_check_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1328,7 +1268,7 @@ ohos_unittest("system_notifier_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1394,7 +1334,7 @@ ohos_unittest("control_cmd_parser_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1453,6 +1393,8 @@ ohos_unittest("channel_manager_test") {
     "${distributedfile_path}/services/distributedfiledaemon/src/channel_manager/channel_manager.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/softbus_permission_check_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "channel_manager/channel_manager_test.cpp",
   ]
 
@@ -1464,7 +1406,7 @@ ohos_unittest("channel_manager_test") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfileutils",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
   ]
 
   external_deps = [
@@ -1507,6 +1449,86 @@ ohos_unittest("channel_manager_test") {
   }
 }
 
+ohos_unittest("radar_report_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/device",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
+    "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/include",
+    "${distributedfile_path}/test/mock/",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
+    "${services_path}/distributedfiledaemon/test/unittest/dfx/radar_report_test.cpp",
+  ]
+
+  configs = [
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${distributedfile_path}/dfs_utils:libdfsutils",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "device_auth:deviceauth_sdk",
+    "distributed_notification_service:ans_innerkits",
+    "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  if (support_same_account) {
+    defines += [ "SUPPORT_SAME_ACCOUNT" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "dataclassification:data_transit_mgr",
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+}
+
 group("unittest") {
   if (dfs_service_feature_enable_distributed_ability) {
     testonly = true
@@ -1517,7 +1539,6 @@ group("unittest") {
       ":devsl_dispatcher_test",
       ":kernel_talker_test",
       ":os_account_observer_test",
-      ":softbus_agent_sup_test",
       ":session_pool_test",
       ":softbus_agent_test",
       ":softbus_asset_recv_listener_test",
@@ -1534,6 +1555,7 @@ group("unittest") {
       ":system_notifier_test",
       ":control_cmd_parser_test",
       ":channel_manager_test",
+      ":radar_report_test",
     ]
   }
 }

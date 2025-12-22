@@ -41,7 +41,7 @@ public:
     static void PutCloudDiskFile(struct CloudDiskFuseData *data,
                                  std::shared_ptr<CloudDiskFile> filePtr, int64_t key);
     static void PutLocalId(struct CloudDiskFuseData *data,
-                           std::shared_ptr<CloudDiskInode> inoPtr, uint64_t num, const std::string &key);
+                           std::shared_ptr<CloudDiskInode> inoPtr, const std::string &key);
     static std::shared_ptr<CloudDiskInode> GenerateCloudDiskInode(struct CloudDiskFuseData *data,
                                                                   fuse_ino_t parent,
                                                                   const std::string &fileName,

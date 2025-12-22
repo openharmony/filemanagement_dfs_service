@@ -79,7 +79,6 @@ void DistributedFileDaemonProxy::DaemonDeathRecipient::OnRemoteDied(const wptr<I
 
 sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 {
-    LOGI("getinstance");
     unique_lock<mutex> lock(proxyMutex_);
     if (daemonProxy_ != nullptr) {
         return daemonProxy_;
@@ -120,7 +119,6 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 
 int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 {
-    LOGI("Open p2p connection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -151,7 +149,6 @@ int32_t DistributedFileDaemonProxy::ConnectDfs(const std::string &networkId)
 
 int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
 {
-    LOGI("Close p2p disconnection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -183,7 +180,6 @@ int32_t DistributedFileDaemonProxy::DisconnectDfs(const std::string &networkId)
 int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &networkId,
                                                         sptr<IFileDfsListener> remoteReverseObj)
 {
-    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx start.");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -218,13 +214,11 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &netwo
         LOGE("DistributedFileDaemonProxy::OpenP2PConnectionEx failed ret = %{public}d", ret);
         return ret;
     }
-    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx Success.");
     return ret;
 }
 
 int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &networkId)
 {
-    LOGI("Close p2p connection");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -253,7 +247,6 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &netw
         LOGE("DistributedFileDaemonProxy::CloseP2PConnectionEx failed ret = %{public}d", ret);
         return ret;
     }
-    LOGI("DistributedFileDaemonProxy::CloseP2PConnectionEx Success.");
     return ret;
 }
 

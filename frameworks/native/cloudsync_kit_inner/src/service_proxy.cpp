@@ -38,6 +38,7 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
     }
     auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
     if (object != nullptr) {
+        unique_lock<mutex> proxyLock(proxyMutex_);
         LOGI("SA check successfully");
         serviceProxy_ = iface_cast<ICloudSyncService>(object);
         return serviceProxy_;

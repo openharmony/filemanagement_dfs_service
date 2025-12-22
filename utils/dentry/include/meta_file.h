@@ -61,6 +61,8 @@ public:
 
     static std::string GetParentDir(const std::string &path);
     static std::string GetFileName(const std::string &path);
+    static std::string GetDentryfileName(const std::string &path, bool caseSense);
+    static std::string GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense = false);
 
 private:
     std::mutex mtx_{};

@@ -68,6 +68,7 @@ private:
     ServiceCollaborationManager_Callback allConnectCallback_;
     std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> remoteHardwareList_;
     std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> localHardwareList_;
+    std::mutex communicationRequestMutex_;
     std::shared_ptr<ServiceCollaborationManager_CommunicationRequestInfo> communicationRequest_;
 
     std::mutex connectStatesMutex_;

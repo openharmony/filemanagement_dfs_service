@@ -28,6 +28,7 @@
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
@@ -105,7 +106,7 @@ void SoftBusHandlerAsset::CreateAssetLocalSessionServer()
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
         RadarParaInfo info = {"CreateAssetLocalSessionServer", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", socketId, "Create Socket fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return;
     }
     QosTV qos[] = {
@@ -118,7 +119,7 @@ void SoftBusHandlerAsset::CreateAssetLocalSessionServer()
         LOGE("Listen SocketClient error");
         RadarParaInfo info = {"CreateAssetLocalSessionServer", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", ret, "Listen fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         Shutdown(socketId);
         return;
     }
@@ -191,7 +192,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         LOGE("Create OpenSoftbusChannel Socket error");
         RadarParaInfo info = {"AssetBind", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             "softbus", dstNetworkId, socketId, "Create OpenSoftbusChannel Socket error"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_OPEN_SESSION;
     }
     if (!SoftBusPermissionCheck::SetAccessInfoToSocket(socketId, userId)) {
@@ -205,7 +206,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         LOGE("Bind SocketClient error");
         RadarParaInfo info = {"AssetBind", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             "softbus", dstNetworkId, ret, "Bind SocketClient error"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         Shutdown(socketId);
         return ret;
     }
@@ -245,7 +246,7 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
         LOGE("SendFile failed, sessionId = %{public}d", socketId);
         RadarParaInfo info = {"AssetSendFile", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             "softbus", assetObj->dstNetworkId_, ret, "SendFile fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return ret;
     }
     return E_OK;
@@ -285,7 +286,7 @@ std::string SoftBusHandlerAsset::GetClientInfo(int32_t socketId)
         LOGE("ClientInfo not registered");
         RadarParaInfo info = {"GetClientInfo", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "ClientInfo not registered"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return "";
     }
     return iter->second;
@@ -403,7 +404,7 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
         LOGE("Generate srcBundleName fail");
         RadarParaInfo info = {"GenerateAssetObjInfo", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "Generate srcBundleName fai"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->srcBundleName_ = match[1].str();
@@ -484,7 +485,7 @@ int32_t SoftBusHandlerAsset::CompressFileInner(const std::string &rootFile, zipF
         LOGE("open file fail");
         RadarParaInfo info = {"CompressFile", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", E_ZIP, "open file fail"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_ZIP;
     }
     const size_t pageSize { getpagesize() };
@@ -512,7 +513,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
         LOGE("Minizip failed to zipOpen");
         RadarParaInfo info = {"CompressFile", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
             "zip", "", E_ZIP, "Minizip failed to zipOpen"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return E_ZIP;
     }
 
@@ -531,7 +532,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
             zipClose(outputFile, NULL);
             RadarParaInfo info = {"CompressFile", ReportLevel::INNER, DfxBizStage::PUSH_ASSERT,
                 "zip", "", E_ZIP, "Minizip failed to zipOpenNewFileInZip"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return E_ZIP;
         }
         
@@ -558,7 +559,7 @@ std::vector<std::string> SoftBusHandlerAsset::DecompressFile(const std::string &
         LOGE("Minizip failed to unzOpen");
         RadarParaInfo info = {"DecompressFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             "zip", "", DEFAULT_ERR, "Minizip failed to unzOpen"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return {};
     }
 
@@ -568,7 +569,7 @@ std::vector<std::string> SoftBusHandlerAsset::DecompressFile(const std::string &
         LOGE("Minizip failed to unzGetGlobalInfo");
         RadarParaInfo info = {"DecompressFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             "zip", "", DEFAULT_ERR, "Minizip failed to unzGetGlobalInfo"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return {};
     }
 
@@ -657,7 +658,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     if (unzGetCurrentFileInfo64(unZipFile, &fileInfo, filename.get(), BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
         RadarParaInfo info = {"ExtractFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             "zip", "", DEFAULT_ERR, "Minizip failed to unzGetCurrentFileInfo64"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         LOGE("Minizip failed to unzGetCurrentFileInfo64");
         return "";
     }
@@ -671,7 +672,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     if (!FileSizeUtils::IsFilePathValid(filenameWithPath)) {
         RadarParaInfo info = {"ExtractFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "path is forbidden"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         LOGE("path is forbidden");
         return "";
     }
@@ -694,7 +695,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
             file.close();
             RadarParaInfo info = {"ExtractFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
                 "zip", "", bytesRead, "Minizip failed to unzReadCurrentFile"};
-            DfsRadar::GetInstance().ReportFileAccess(info);
+            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return "";
         }
         file.write(fileData.get(), bytesRead);

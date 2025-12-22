@@ -22,6 +22,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
@@ -139,7 +140,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
             RadarReporter::dSoftBus + std::to_string(socketId));
         RadarParaInfo info = {"CreateSessionServer", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", socketId, "Create Socket fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     QosTV qos[] = {
@@ -153,7 +154,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
         LOGE("Listen socket error for sessionName:%{public}s", sessionName.c_str());
         RadarParaInfo info = {"CreateSessionServer", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", ret, "Listen fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         Shutdown(socketId);
         return FileManagement::ERR_BAD_VALUE;
     }
@@ -200,7 +201,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         LOGE("Bind SocketClient error");
         RadarParaInfo info = {"OpenSession", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", peerDevId, ret, "Bind SocketClient fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         Shutdown(socketId);
         return ret;
     }
@@ -234,7 +235,7 @@ bool SoftBusHandler::CreatSocketId(const std::string &mySessionName, const std::
         LOGE("Create OpenSoftbusChannel Socket error");
         RadarParaInfo info = {"CreatSocketId", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", peerDevId, socketId, "Create Socket fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
     return true;
@@ -261,7 +262,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
         LOGE("remote device cannot read this files");
         RadarParaInfo info = {"CopySendFile", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, peerNetworkId, ERR_BAD_VALUE, "remote device cannot err"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     if (fileList.size() > MAX_SIZE) {
@@ -289,7 +290,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
         LOGE("SendFile failed, sessionId = %{public}d", socketId);
         RadarParaInfo info = {"CopySendFile", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             "softbus", peerNetworkId, ret, "SendFile failed"};
-        DfsRadar::GetInstance().ReportFileAccess(info);
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return ret;
     }
     return E_OK;

@@ -20,7 +20,6 @@
 
 #include "cloud_pref_impl.h"
 #include "cycle_task.h"
-#include "utils_directory.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -33,8 +32,15 @@ public:
     int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
 
 private:
-    void PeriodicCleanTempDir(int32_t userId);
-    void CleanTempDir(const std::string &dir, const std::string &prefix);
+    int32_t PeriodicCleanTempDir(int32_t userId);
+    int32_t CleanTempDir(const std::string &dir, const std::string &prefix);
+    int32_t RemoveDirectoryByScreenOff(const std::string& path);
+
+    int32_t RenameCacheDir(int32_t userId);
+    int32_t RenameTempDir(const std::string &dir, const std::string &tempSuffix);
+
+private:
+    std::unique_ptr<CloudPrefImpl> periodicCleanConfig_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

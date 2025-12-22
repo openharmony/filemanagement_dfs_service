@@ -23,6 +23,7 @@
 #include "fuse_ioctl.h"
 #include "parameters.h"
 #include "utils_log.h"
+#include "uuid.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -38,6 +39,7 @@ namespace {
     static const uint32_t CLOUD_ID_MIN_SIZE = 3;
     static const uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
     static const uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
+    static const uint32_t CLOUD_FILE_UUID_MAX_LEN = 50;
     static const int64_t SECOND_TO_MILLISECOND = 1e3;
     static const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
     static const uint64_t DELTA_DISK = 0x9E3779B9;
@@ -465,6 +467,17 @@ string CloudFileUtils::GetPathFromUri(const std::string &uriString)
     }
  
     return path.substr(pathStart);
+}
+
+string CloudFileUtils::GenerateUuid()
+{
+    string guid("");
+    uuid_t uuid;
+    uuid_generate(uuid);
+    char str[CLOUD_FILE_UUID_MAX_LEN] = {};
+    uuid_unparse(uuid, str);
+    guid.assign(str);
+    return guid;
 }
 
 } // namespace CloudDisk

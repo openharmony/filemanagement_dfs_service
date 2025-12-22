@@ -240,7 +240,7 @@ static tuple<bool, ani_object> ToFailedFileInfo(ani_env *env, ani_class cls, ani
     return {true, obj};
 }
 
-static std::tuple<bool, ani_array_ref> ToAniObjectArray(ani_env *env, const std::vector<FailedFileInfo> &objList)
+static std::tuple<bool, ani_array> ToAniObjectArray(ani_env *env, const std::vector<FailedFileInfo> &objList)
 {
     ani_status ret;
     ani_class cls;
@@ -262,8 +262,8 @@ static std::tuple<bool, ani_array_ref> ToAniObjectArray(ani_env *env, const std:
 
     size_t length = objList.size();
     const FailedFileInfo *objArray = objList.data();
-    ani_array_ref result = nullptr;
-    if (env->Array_New_Ref(cls, length, nullptr, &result) != ANI_OK) {
+    ani_array result = nullptr;
+    if (env->Array_New(length, nullptr, &result) != ANI_OK) {
         LOGE("Failed to new array");
         return {false, nullptr};
     }
@@ -273,7 +273,7 @@ static std::tuple<bool, ani_array_ref> ToAniObjectArray(ani_env *env, const std:
             LOGE("Failed to get element for array");
             return {false, nullptr};
         }
-        if (env->Array_Set_Ref(result, i, item) != ANI_OK) {
+        if (env->Array_Set(result, i, item) != ANI_OK) {
             LOGE("Failed to set element for array");
             return {false, nullptr};
         }
@@ -281,7 +281,7 @@ static std::tuple<bool, ani_array_ref> ToAniObjectArray(ani_env *env, const std:
     return {true, result};
 }
 
-ani_array_ref MultiDlProgressAni::GetFailedFileList(ani_env *env, ani_object object)
+ani_array MultiDlProgressAni::GetFailedFileList(ani_env *env, ani_object object)
 {
     auto multiDlProgress = MultiDlProgressWrapper::Unwrap(env, object);
     if (multiDlProgress == nullptr) {
@@ -305,7 +305,7 @@ ani_array_ref MultiDlProgressAni::GetFailedFileList(ani_env *env, ani_object obj
     return res;
 }
 
-ani_array_ref MultiDlProgressAni::GetDownloadedFileList(ani_env *env, ani_object object)
+ani_array MultiDlProgressAni::GetDownloadedFileList(ani_env *env, ani_object object)
 {
     auto multiDlProgress = MultiDlProgressWrapper::Unwrap(env, object);
     if (multiDlProgress == nullptr) {

@@ -62,7 +62,7 @@ void FileOperationsBase::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup
     string localIdKey = std::to_string(node->parent) + node->fileName;
     int64_t key = static_cast<int64_t>(ino);
     FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, key);
-    FileOperationsHelper::PutLocalId(data, node, nLookup, localIdKey);
+    FileOperationsHelper::PutLocalId(data, node, localIdKey);
     fuse_reply_none(req);
 }
 
@@ -78,7 +78,7 @@ void FileOperationsBase::ForgetMulti(fuse_req_t req, size_t count, struct fuse_f
         }
         string localIdKey = std::to_string(inoPtr->parent) + inoPtr->fileName;
         FileOperationsHelper::PutCloudDiskInode(data, inoPtr, forgets[i].nlookup, forgets[i].ino);
-        FileOperationsHelper::PutLocalId(data, inoPtr, forgets[i].nlookup, localIdKey);
+        FileOperationsHelper::PutLocalId(data, inoPtr, localIdKey);
     }
     fuse_reply_none(req);
 }

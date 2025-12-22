@@ -21,6 +21,7 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
+#include "radar_report.h"
 #include "dfsu_exception.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
@@ -88,7 +89,7 @@ void SoftbusAgent::JoinDomain()
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
         RadarParaInfo info = {"JoinDomain", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", socketId, "Create Socket fail"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return;
     }
     QosTV qos[] = {
@@ -105,7 +106,7 @@ void SoftbusAgent::JoinDomain()
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
         RadarParaInfo info = {"JoinDomain", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", "", ret, "Failed to CreateSessionServer"};
-        DfsRadar::GetInstance().ReportLinkConnection(info);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         throw runtime_error(ss.str());
     }
     {
@@ -164,7 +165,7 @@ int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
         LOGE("Create OpenSoftbusChannel Socket error");
         RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", info.GetCid(), socketId, "Create Socket error"};
-        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     if (FindSocketId(socketId)) {
@@ -182,7 +183,7 @@ int32_t SoftbusAgent::OpenSessionInner(const DeviceInfo &info)
         Shutdown(socketId);
         RadarParaInfo radarInfo = {"OpenSessionInner", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "softbus", info.GetCid(), ret, "Bind SocketClient error"};
-        DfsRadar::GetInstance().ReportLinkConnection(radarInfo);
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
         return FileManagement::E_CONTEXT;
     }
     HandleAfterOpenSession(socketId, info.GetCid());

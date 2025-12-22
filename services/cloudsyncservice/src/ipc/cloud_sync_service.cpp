@@ -406,7 +406,7 @@ int32_t CloudSyncService::RemovedClean(const string &bundleName, int32_t userId)
     return E_OK;
 }
 
-int32_t CloudSyncService::UnRegisterCallbackInner(const string &callbackAddr, const string &bundleName)
+int32_t CloudSyncService::UnRegisterCallbackInner(const string &callbackId, const string &bundleName)
 {
     LOGI("Begin UnRegisterCallbackInner");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
@@ -424,12 +424,12 @@ int32_t CloudSyncService::UnRegisterCallbackInner(const string &callbackAddr, co
     if (ret != E_OK) {
         return ret;
     }
-    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackAddr);
+    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackId);
     LOGI("End UnRegisterCallbackInner");
     return E_OK;
 }
 
-int32_t CloudSyncService::UnRegisterFileSyncCallbackInner(const string &callbackAddr, const string &bundleName)
+int32_t CloudSyncService::UnRegisterFileSyncCallbackInner(const string &callbackId, const string &bundleName)
 {
     LOGI("Begin UnRegisterFileSyncCallbackInner");
     string targetBundleName = bundleName;
@@ -445,13 +445,13 @@ int32_t CloudSyncService::UnRegisterFileSyncCallbackInner(const string &callback
     if (ret != E_OK) {
         return ret;
     }
-    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackAddr);
+    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackId);
     LOGI("End UnRegisterFileSyncCallbackInner");
     return E_OK;
 }
 
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
-                                                const string &callbackAddr,
+                                                const string &callbackId,
                                                 const string &bundleName)
 {
     LOGI("Begin RegisterCallbackInner");
@@ -476,13 +476,13 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
         return ret;
     }
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
-    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackAddr, callback);
+    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackId, callback);
     LOGI("End RegisterCallbackInner");
     return E_OK;
 }
 
 int32_t CloudSyncService::RegisterFileSyncCallbackInner(const sptr<IRemoteObject> &remoteObject,
-                                                        const string &callbackAddr,
+                                                        const string &callbackId,
                                                         const string &bundleName)
 {
     LOGI("Begin RegisterFileSyncCallbackInner");
@@ -505,7 +505,7 @@ int32_t CloudSyncService::RegisterFileSyncCallbackInner(const sptr<IRemoteObject
         return ret;
     }
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
-    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackAddr, callback);
+    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackId, callback);
     LOGI("End RegisterFileSyncCallbackInner");
     return E_OK;
 }
@@ -742,7 +742,9 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
+        dataSyncManager_->PeriodicCleanLock();
         ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        dataSyncManager_->PeriodicCleanUnlock();
         if (ret != E_OK) {
             LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
             return ret;
