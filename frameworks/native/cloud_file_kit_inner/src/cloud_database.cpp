@@ -43,4 +43,9 @@ int32_t CloudDatabase::GenerateIds(int count, std::vector<std::string> &ids)
 {
     return E_OK;
 }
+
+int32_t CloudDatabase::Convert2CloudId(const std::string &localId, std::string &cloudId)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudFile
