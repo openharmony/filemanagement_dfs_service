@@ -308,11 +308,6 @@ int32_t Daemon::CleanUp(const std::string &networkId)
         DisconnectDevice(networkId);
         auto ret = CancelControlLink(networkId);
         LOGI("cancel control link ret is %{public}d", ret);
-        if (ret != E_OK) {
-            RadarParaInfo info = {"CleanUp", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
-                DEFAULT_PKGNAME, networkId, ret, "CancelControlLink failed"};
-            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
-        }
         return ret;
     }
     return E_OK;
@@ -1371,6 +1366,9 @@ int32_t Daemon::CancelControlLink(const std::string &networkId)
     }
     if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
+        RadarParaInfo info = {"CancelControlLink", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
+            DEFAULT_PKGNAME, networkId, ERR_BAD_VALUE, "CancelControlLink failed"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return FileManagement::ERR_BAD_VALUE;
     }
     return ERR_OK;
