@@ -198,8 +198,12 @@ int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("OnDeviceOffline  begin networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
-    DeviceInfo info(deviceInfo);
+    RadarParaInfo radarInfo = {"OnDeviceOffline", ReportLevel::DEFAULT, DfxBizStage::DEFAULT, DEFAULT_PKGNAME,
+        deviceInfo.networkId, FileManagement::ERR_OK,
+        "Device Offline, networkid:" + Utils::GetAnonyString(deviceInfo.networkId)};
+    RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(radarInfo);
 
+    DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
@@ -626,6 +630,8 @@ void DeviceManagerAgent::InitDeviceInfos()
         ThrowException(errCode, "Failed to get info of remote devices");
     }
 
+    int num = 0;
+    string reportInfo = "";
     for (const auto &deviceInfo : deviceInfoList) {
         int32_t ret = IsSupportedDevice(deviceInfo);
         if (ret != FileManagement::ERR_OK) {
@@ -634,7 +640,12 @@ void DeviceManagerAgent::InitDeviceInfos()
         }
         DeviceInfo info(deviceInfo);
         QueryRelatedGroups(info.udid_, info.cid_);
+        num++;
+        reportInfo += "device " + to_string(num) + " networkid:" + Utils::GetAnonyString(deviceInfo.networkId) + ", ";
     }
+    RadarParaInfo info = {"InitDeviceInfos", ReportLevel::DEFAULT, DfxBizStage::DEFAULT,
+        DEFAULT_PKGNAME, "", FileManagement::ERR_OK, to_string(num) + " Devices Online, " + reportInfo};
+    RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
 }
 
 int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)

@@ -603,14 +603,11 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                HmdfsInfo &info)
 {
     LOGI("PrepareSession networkId: %{public}.6s", networkId.c_str());
-    RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::DEFAULT, DfxBizStage::HMDFS_COPY,
-        DEFAULT_PKGNAME, networkId, E_OK, "PrepareSession Begin"};
-    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
+        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, E_NULLPTR, "Get src path failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_NULLPTR;
@@ -619,7 +616,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     std::string srcPhysicalPath;
     if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(QueryActiveUserId()), srcPhysicalPath) != E_OK) {
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
+        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, EINVAL, "Get src path failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         LOGE("Get src path failed, invalid uri");
@@ -645,7 +642,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
     RadarReportAdapter::GetInstance().SetUserStatistics(result == E_OK ? FILE_ACCESS_SUCC_CNT : FILE_ACCESS_FAIL_CNT);
     if (result != E_OK) {
-        radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
+        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, result, "copy failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
     }
@@ -1063,9 +1060,12 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
 
 int32_t Daemon::JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
 {
+    RadarParaInfo info = {"PushAsset", ReportLevel::DEFAULT, DfxBizStage::PUSH_ASSERT,
+        DEFAULT_PKGNAME, "", E_OK, "PushAsset Begin"};
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     if (assetObj == nullptr || sendCallback == nullptr) {
         LOGE("param is nullptr.");
-        RadarParaInfo info = {"JudgeEmpty", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+        info = {"JudgeEmpty", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, "", E_NULLPTR, "param is nullptr"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
@@ -1079,9 +1079,6 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    RadarParaInfo info = {"PushAsset", ReportLevel::DEFAULT, DfxBizStage::PUSH_ASSERT,
-        DEFAULT_PKGNAME, "", E_OK, "PushAsset Begin"};
-    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
     if (JudgeEmpty(assetObj, sendCallback) != E_OK) {
         return E_NULLPTR;
     }
@@ -1089,7 +1086,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     for (const auto &uri : uriVec) {
         if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
             LOGE("Path is forbidden");
-            info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+            RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
                 DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
             RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
@@ -1099,7 +1096,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     if (taskId.empty()) {
         LOGE("assetObj info is null.");
-        info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_NULLPTR, "assetObj info is null."};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
@@ -1113,7 +1110,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_EVENT_HANDLER, "eventHandler has not find"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
@@ -1123,7 +1120,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     if (!isSucc) {
         LOGE("Daemon event handler post push asset event fail.");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
             "AppExecFwk", assetObj->dstNetworkId_, E_EVENT_HANDLER, "event Handler fail"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
