@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 
 #include "file_operations_cloud.h"
 
@@ -46,6 +48,7 @@ const struct stat mockStat = {.st_dev = 0x00012345,
                               .st_ctime = 1623456789,
                               .st_blksize = 4096,
                               .st_blocks = 2};
+const int SLEEP_TIME = 500;
 
 class FileOperationsCloudTest : public testing::Test {
 public:
@@ -53,35 +56,35 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<FileOperationsCloud> fileOperationsCloud_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<FileOperationsCloud> fileOperationsCloud_ = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FileOperationsCloudTest::SetUpTestCase(void)
 {
-    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
-    AssistantMock::EnableMock();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void FileOperationsCloudTest::TearDownTestCase(void)
 {
-    AssistantMock::DisableMock();
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void FileOperationsCloudTest::SetUp(void)
 {
+    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    AssistantMock::EnableMock();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FileOperationsCloudTest::TearDown(void)
 {
+    AssistantMock::DisableMock();
+    Assistant::ins = nullptr;
+    insMock = nullptr;
+    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -381,6 +384,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest002, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest002  ERROR";
@@ -410,6 +414,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest003, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest003  ERROR";
@@ -439,6 +444,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest004, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest004  ERROR";
@@ -467,6 +473,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest005, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest005  ERROR";
@@ -497,6 +504,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest006, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest006 ERROR";
@@ -526,6 +534,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest007, TestSize.Level1)
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest007 ERROR";
@@ -553,6 +562,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest008, TestSize.Level1)
 
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest008 ERROR";
@@ -580,6 +590,7 @@ HWTEST_F(FileOperationsCloudTest, OpenTest009, TestSize.Level1)
 
         fileOperationsCloud_->Open(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest009 ERROR";
@@ -1400,7 +1411,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest007, TestSize.Level1)
         string name = IS_FILE_STATUS_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2134,7 +2145,7 @@ HWTEST_F(FileOperationsCloudTest, ReadTest001, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
         CloudDiskInode ino;
-        size_t size = 5 * 1024 *1024;
+        size_t size = 5 * 1024 * 1024;
         off_t off = 0;
         struct fuse_file_info fi;
 
@@ -2401,6 +2412,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest002, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->Release(req, ino, &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest002 ERROR";
@@ -2458,6 +2470,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest004, TestSize.Level1)
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest004 ERROR";
@@ -2485,6 +2498,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest005, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest005 ERROR";
@@ -2515,6 +2529,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest006, TestSize.Level1)
         EXPECT_CALL(*insMock, fstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(mockStat), Return(0)));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest006 ERROR";
@@ -2542,6 +2557,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest007, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest007 ERROR";
@@ -2572,6 +2588,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest008, TestSize.Level1)
 
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest008 ERROR";
@@ -2603,6 +2620,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest009, TestSize.Level1)
 
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest009 ERROR";
@@ -2634,6 +2652,7 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest010, TestSize.Level1)
 
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest010 ERROR";

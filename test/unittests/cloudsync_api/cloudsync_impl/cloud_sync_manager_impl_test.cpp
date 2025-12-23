@@ -45,11 +45,11 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline std::shared_ptr<MockServiceProxy> proxy_ = nullptr;
-    static inline sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
-    static inline std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_{nullptr};
-    static inline sptr<ISystemAbilityManagerMock> saMgr_{nullptr};
-    static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
+    std::shared_ptr<MockServiceProxy> proxy_ = nullptr;
+    sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
+    std::shared_ptr<SystemAbilityManagerClientMock> saMgrClient_{nullptr};
+    sptr<ISystemAbilityManagerMock> saMgr_{nullptr};
+    std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -78,6 +78,16 @@ public:
 
 void CloudSyncManagerImplTest::SetUpTestCase(void)
 {
+    std::cout << "SetUpTestCase" << std::endl;
+}
+
+void CloudSyncManagerImplTest::TearDownTestCase(void)
+{
+    std::cout << "TearDownTestCase" << std::endl;
+}
+
+void CloudSyncManagerImplTest::SetUp(void)
+{
     saMgrClient_ = make_shared<SystemAbilityManagerClientMock>();
     proxy_ = std::make_shared<MockServiceProxy>();
     IserviceProxy::proxy_ = proxy_;
@@ -86,10 +96,11 @@ void CloudSyncManagerImplTest::SetUpTestCase(void)
     ISystemAbilityManagerClient::smc = saMgrClient_;
     OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
     OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
-    std::cout << "SetUpTestCase" << std::endl;
+    CloudSyncManagerImpl::GetInstance().isFirstCall_.test_and_set();
+    std::cout << "SetUp" << std::endl;
 }
 
-void CloudSyncManagerImplTest::TearDownTestCase(void)
+void CloudSyncManagerImplTest::TearDown(void)
 {
     ISystemAbilityManagerClient::smc = nullptr;
     IserviceProxy::proxy_ = nullptr;
@@ -99,17 +110,6 @@ void CloudSyncManagerImplTest::TearDownTestCase(void)
     saMgr_ = nullptr;
     OsAccountMethodMock_ = nullptr;
     OsAccountManagerMethod::osMethod_ = nullptr;
-    std::cout << "TearDownTestCase" << std::endl;
-}
-
-void CloudSyncManagerImplTest::SetUp(void)
-{
-    CloudSyncManagerImpl::GetInstance().isFirstCall_.test_and_set();
-    std::cout << "SetUp" << std::endl;
-}
-
-void CloudSyncManagerImplTest::TearDown(void)
-{
     std::cout << "TearDown" << std::endl;
 }
 
@@ -1168,7 +1168,6 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
@@ -1196,7 +1195,6 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
@@ -2001,7 +1999,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Lev
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).Times(2).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterFileSyncCallback(callbackInfo);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);

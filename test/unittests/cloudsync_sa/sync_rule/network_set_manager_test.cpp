@@ -41,28 +41,28 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<NetworkSetManager> networkSetManager_ = nullptr;
+    shared_ptr<NetworkSetManager> networkSetManager_ = nullptr;
 };
 
 void NetworkSetManagerTest::SetUpTestCase(void)
 {
-    networkSetManager_ = make_shared<NetworkSetManager>();
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void NetworkSetManagerTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    networkSetManager_.reset();
 }
 
 void NetworkSetManagerTest::SetUp(void)
 {
+    networkSetManager_ = make_shared<NetworkSetManager>();
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void NetworkSetManagerTest::TearDown(void)
 {
+    networkSetManager_.reset();
     GTEST_LOG_(INFO) << "TearDown";
 }
 

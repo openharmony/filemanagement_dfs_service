@@ -32,29 +32,29 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<AssistantMock> insMock_;
+    shared_ptr<AssistantMock> insMock_;
 };
 
 void CloudDiskServiceLogFileStaticTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    insMock_ = make_shared<AssistantMock>();
-    Assistant::ins = insMock_;
 }
 
 void CloudDiskServiceLogFileStaticTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    insMock_ = nullptr;
-    Assistant::ins = nullptr;
 }
 
 void CloudDiskServiceLogFileStaticTest::SetUp()
 {
+    insMock_ = make_shared<AssistantMock>();
+    Assistant::ins = insMock_;
 }
 
 void CloudDiskServiceLogFileStaticTest::TearDown()
 {
+    insMock_ = nullptr;
+    Assistant::ins = nullptr;
 }
 
 /**
@@ -202,7 +202,6 @@ HWTEST_F(CloudDiskServiceLogFileStaticTest, SyncCurrentPageTest001, TestSize.Lev
         LogGroup logGroup;
         int fd = 1;
         uint32_t line = 1;
-        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Return(1));
         auto res = SyncCurrentPage(logGroup, fd, line);
         EXPECT_EQ(res, EINVAL);
     } catch (...) {

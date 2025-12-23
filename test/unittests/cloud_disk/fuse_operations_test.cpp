@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 
 #include "fuse_operations.h"
 #include "cloud_disk_inode.h"
@@ -33,6 +35,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 static const string RECYCLE_NAME = ".trash";
+const int SLEEP_TIME = 500;
 
 class FuseOperationsTest : public testing::Test {
 public:
@@ -40,33 +43,33 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<FuseOperations> fuseoperations_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<FuseOperations> fuseoperations_ = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FuseOperationsTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    fuseoperations_ = make_shared<FuseOperations>();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
 }
 
 void FuseOperationsTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    fuseoperations_ = nullptr;
-    Assistant::ins = nullptr;
-    insMock = nullptr;
 }
 
 void FuseOperationsTest::SetUp(void)
 {
+    fuseoperations_ = make_shared<FuseOperations>();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FuseOperationsTest::TearDown(void)
 {
+    fuseoperations_ = nullptr;
+    Assistant::ins = nullptr;
+    insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -129,8 +132,7 @@ HWTEST_F(FuseOperationsTest, LookupTest, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         fuse_req_t req = nullptr;
         const char *name = RECYCLE_NAME.c_str();
         fuse_ino_t parent = FUSE_ROOT_TWO;
@@ -335,6 +337,7 @@ HWTEST_F(FuseOperationsTest, OpenTest002, TestSize.Level1)
 
         fuseoperations_->Open(req, 0, fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest002  ERROR";
@@ -364,6 +367,7 @@ HWTEST_F(FuseOperationsTest, OpenTest, TestSize.Level1)
         fuseoperations_->Open(req, ino, &fi);
         EXPECT_NE(ino, FUSE_ROOT_ID);
         EXPECT_NE((data.inodeCache)[0], nullptr);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OpenTest ERROR";
@@ -1256,8 +1260,7 @@ HWTEST_F(FuseOperationsTest, RenameTest, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
         fuse_req_t req = nullptr;
         fuse_ino_t parent = 0;
         const char *name = "";
@@ -1742,8 +1745,7 @@ HWTEST_F(FuseOperationsTest, IoctlTest003, TestSize.Level1)
         CloudDiskFuseData data;
         (data.inodeCache)[0] = make_shared<CloudDiskInode>();
         (data.inodeCache)[0]->ops = make_shared<FileOperationsCloud>();
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
 
         fuseoperations_->Ioctl(req, ino, cmd, nullptr, nullptr, flags, nullptr, 0, 0);
         EXPECT_NE(ino, FUSE_ROOT_ID);
