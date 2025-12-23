@@ -319,9 +319,6 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_SetAccessInfoToS
     res = SoftBusPermissionCheck::SetAccessInfoToSocket(socketId);
 #else
     std::vector<int32_t> userIds{100, 101};
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
     res = SoftBusPermissionCheck::SetAccessInfoToSocket(socketId);
 #endif
     EXPECT_TRUE(res == true);

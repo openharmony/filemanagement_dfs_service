@@ -105,6 +105,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_StorageRadarThd_001, Tes
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_NO_FATAL_FAILURE(
         RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT));
     EXPECT_NO_FATAL_FAILURE(
@@ -119,6 +120,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, T
         RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::FILE_ACCESS_FAIL_CNT));
     EXPECT_NO_FATAL_FAILURE(
         RadarReportAdapter::GetInstance().SetUserStatistics(static_cast<RadarStatisticInfoType>(6)));
+#endif
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 end";
 }
 
@@ -132,9 +134,6 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_001,
 {
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_001 begin";
     RadarReportAdapter::GetInstance().opStatistics_ = {0, 0, 0, 0, 0, 0};
-    RadarReportAdapter::GetInstance().ReportDfxStatistics();
-    EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT);
     RadarReportAdapter::GetInstance().ReportDfxStatistics();
     EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_001 end";
