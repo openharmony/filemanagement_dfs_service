@@ -64,6 +64,7 @@ void BatchProgressNapi::Update(const DownloadProgressObj &progress)
     totalSize_ = progress.batchTotalSize;
     totalNum_ = progress.batchTotalNum;
     errorType_ = static_cast<int32_t>(progress.downloadErrorType);
+    uri_ = progress.path;
     if (progress.state == DownloadProgressObj::COMPLETED) {
         downloadedFiles_.insert(progress.path);
     } else if (progress.state != DownloadProgressObj::RUNNING) {
