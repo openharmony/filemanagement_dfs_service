@@ -859,6 +859,10 @@ int32_t CloudDiskRdbStore::HasTHMSetXattr(const std::string &name, const std::st
     int32_t dirtyType;
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
     RETURN_ON_ERR(GetDirtyType(cloudId, dirtyType));
     if (dirtyType == static_cast<int32_t>(DirtyType::TYPE_SYNCED)) {
         setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
