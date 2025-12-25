@@ -119,9 +119,6 @@ bool SoftBusPermissionCheck::CheckSrcIsSameAccount(const std::string &sinkNetwor
     };
     if (!DeviceManager::GetInstance().CheckSrcIsSameAccount(caller, callee)) {
         LOGE("Check src same account failed");
-        RadarParaInfo info = {"CheckSrcIsSameAccount", ReportLevel::INNER, DfxBizStage::DEFAULT,
-            "DM", sinkNetworkId, DEFAULT_ERR, "Check src same account fail"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return false;
     }
 #endif

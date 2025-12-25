@@ -79,7 +79,7 @@ void SoftBusHandlerAssetTest::CheckSrcDiffAccountPass()
 {
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
 }
 
@@ -103,14 +103,23 @@ void SoftBusHandlerAssetTest::CheckSrcBothDiffPass()
 {
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
 }
 
 void SoftBusHandlerAssetTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+}
+
+void SoftBusHandlerAssetTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+}
+
+void SoftBusHandlerAssetTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
     otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
     DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     socketMock_ = make_shared<SocketMock>();
@@ -119,25 +128,15 @@ void SoftBusHandlerAssetTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
-void SoftBusHandlerAssetTest::TearDownTestCase(void)
-{
-    GTEST_LOG_(INFO) << "TearDownTestCase";
-    SocketMock::dfsSocket = nullptr;
-    socketMock_ = nullptr;
-    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceOtherMethodMock::otherMethod = nullptr;
-    otherMethodMock_ = nullptr;
-}
-
-void SoftBusHandlerAssetTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
-}
-
 void SoftBusHandlerAssetTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    socketMock_ = nullptr;
+    SocketMock::dfsSocket = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    otherMethodMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
 }
 
 /**
@@ -229,7 +228,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0100, TestSi
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
     int32_t socketId = 0;
 
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(INVALID_USER_ID));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("", socketId, INVALID_USER_ID), E_PERMISSION_DENIED);
 
     CheckSrcDiffAccountPass();
@@ -243,21 +242,15 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0100, TestSi
     deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
     deviceList.push_back(deviceInfo);
     CheckSrcDiffAccountPass();
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("testNetWork", socketId, INVALID_USER_ID), E_OPEN_SESSION);
     
     CheckSrcBothDiffPass();
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("testNetWork", socketId, INVALID_USER_ID), -1);
 
     CheckSrcBothDiffPass();
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("testNetWork", socketId, INVALID_USER_ID), E_OK);

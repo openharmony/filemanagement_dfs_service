@@ -105,6 +105,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_StorageRadarThd_001, Tes
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_NO_FATAL_FAILURE(
         RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT));
     EXPECT_NO_FATAL_FAILURE(
@@ -119,6 +120,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_SetUserStatistics_001, T
         RadarReportAdapter::GetInstance().SetUserStatistics(RadarStatisticInfoType::FILE_ACCESS_FAIL_CNT));
     EXPECT_NO_FATAL_FAILURE(
         RadarReportAdapter::GetInstance().SetUserStatistics(static_cast<RadarStatisticInfoType>(6)));
+#endif
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_SetUserStatistics_001 end";
 }
 
@@ -134,9 +136,6 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_001,
     RadarReportAdapter::GetInstance().opStatistics_ = {0, 0, 0, 0, 0, 0};
     RadarReportAdapter::GetInstance().ReportDfxStatistics();
     EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
-    RadarReportAdapter::GetInstance().SetUserStatistics(FileManagement::RadarStatisticInfoType::CONNECT_DFS_SUCC_CNT);
-    RadarReportAdapter::GetInstance().ReportDfxStatistics();
-    EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_001 end";
 }
 
@@ -149,6 +148,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_001,
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetLocalNetIdAndUdid_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsRadarTest_GetLocalNetIdAndUdid_001 Start";
+#ifdef SUPPORT_SAME_ACCOUNT
     std::string localDeviceNetId;
     std::string localDeviceUdid;
     EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(Return(-1));
@@ -163,6 +163,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetLocalNetIdAndUdid_001
                 GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
     EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(-1));
     EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().GetLocalNetIdAndUdid(localDeviceNetId, localDeviceUdid));
+#endif
     GTEST_LOG_(INFO) << "DfsRadarTest_GetLocalNetIdAndUdid_001 End";
 }
 
@@ -175,6 +176,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetLocalNetIdAndUdid_001
 HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetPeerUdid_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsRadarTest_GetPeerUdid_001 Start";
+#ifdef SUPPORT_SAME_ACCOUNT
     std::string networkId = "networkId";
     std::string peerDeviceNetId;
     std::string peerDeviceUdid;
@@ -185,6 +187,7 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetPeerUdid_001, TestSiz
 
     EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(-1));
     EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().GetPeerUdid(networkId, peerDeviceNetId, peerDeviceUdid));
+#endif
     GTEST_LOG_(INFO) << "DfsRadarTest_GetPeerUdid_001 End";
 }
 

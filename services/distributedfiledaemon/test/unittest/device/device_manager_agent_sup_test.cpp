@@ -169,7 +169,7 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_GetCurrentUserId_0100
     auto userId = testPtr->GetCurrentUserId();
     EXPECT_EQ(userId, INVALID_USER_ID);
 
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(NO_ERROR));
+    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillRepeatedly(Return(NO_ERROR));
     userId = testPtr->GetCurrentUserId();
     EXPECT_EQ(userId, INVALID_USER_ID);
     

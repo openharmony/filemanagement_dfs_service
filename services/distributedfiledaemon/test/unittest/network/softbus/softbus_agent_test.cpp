@@ -510,7 +510,11 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenSession_0100, TestSize.Level1)
     info.SetCid("test");
     uint8_t linkType = 0;
     int32_t ret = agent->OpenSession(info, linkType);
+#ifdef SUPPORT_SAME_ACCOUNT
     EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
+#else
+    EXPECT_EQ(ret, FileManagement::E_OK);
+#endif
     GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenSession_0100 end";
 }
 

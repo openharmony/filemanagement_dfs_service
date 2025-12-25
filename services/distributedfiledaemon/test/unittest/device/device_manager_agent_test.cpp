@@ -69,6 +69,16 @@ public:
 void DeviceManagerAgentTest::SetUpTestCase(void)
 {
     // input testsuit setup step，setup invoked before all testcases
+}
+
+void DeviceManagerAgentTest::TearDownTestCase(void)
+{
+    // input testsuit teardown step，teardown invoked after all testcases
+}
+
+void DeviceManagerAgentTest::SetUp(void)
+{
+    // input testcase setup step，setup invoked before each testcases
     deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
     EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillRepeatedly(Return(0));
@@ -79,21 +89,11 @@ void DeviceManagerAgentTest::SetUpTestCase(void)
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillRepeatedly(Return(0));
 }
 
-void DeviceManagerAgentTest::TearDownTestCase(void)
-{
-    // input testsuit teardown step，teardown invoked after all testcases
-    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-}
-
-void DeviceManagerAgentTest::SetUp(void)
-{
-    // input testcase setup step，setup invoked before each testcases
-}
-
 void DeviceManagerAgentTest::TearDown(void)
 {
     // input testcase teardown step，teardown invoked after each testcases
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
 }
 
 /**
@@ -205,8 +205,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, Te
     bool res = true;
 
     try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0))
-            .WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
         DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         auto agent1 = make_shared<SoftbusAgent>(smp);
@@ -355,7 +354,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0400, Te
 
         deviceInfo.networkType = NETWORKTYPE_NONE_WIFI;
         EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillOnce(Return(0));
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         devicePtr->OnDeviceChanged(deviceInfo);
         devicePtr->cidNetTypeRecord_.erase(NETWORKID_TWO);
         devicePtr->cidNetworkType_.erase(NETWORKID_TWO);

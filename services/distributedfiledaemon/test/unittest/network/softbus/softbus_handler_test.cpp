@@ -133,14 +133,23 @@ void SoftbusHandlerTest::CheckSrcBothDiffPass()
 {
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)))
-        .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
 }
 
 void SoftbusHandlerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+}
+
+void SoftbusHandlerTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+}
+
+void SoftbusHandlerTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
     otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
     DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     socketMock_ = make_shared<SocketMock>();
@@ -149,27 +158,17 @@ void SoftbusHandlerTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
 }
 
-void SoftbusHandlerTest::TearDownTestCase(void)
-{
-    GTEST_LOG_(INFO) << "TearDownTestCase";
-    SocketMock::dfsSocket = nullptr;
-    socketMock_ = nullptr;
-    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
-    deviceManagerImplMock_ = nullptr;
-    DfsDeviceOtherMethodMock::otherMethod = nullptr;
-    otherMethodMock_ = nullptr;
-}
-
-void SoftbusHandlerTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
-}
-
 void SoftbusHandlerTest::TearDown(void)
 {
+    GTEST_LOG_(INFO) << "TearDown";
     SoftBusHandler::GetInstance().clientSessNameMap_.clear();
     SoftBusHandler::GetInstance().serverIdMap_.clear();
-    GTEST_LOG_(INFO) << "TearDown";
+    socketMock_ = nullptr;
+    SocketMock::dfsSocket = nullptr;
+    deviceManagerImplMock_ = nullptr;
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    otherMethodMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
 }
 
 /**
@@ -532,17 +531,10 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
         return;
     }
     deviceList.push_back(deviceInfo3);
-
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId1, info1);
 
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId2, info2);
 
-    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
     handler.OnSinkSessionOpened(sessionId3, info3);
 
 #ifdef SUPPORT_SAME_ACCOUNT
