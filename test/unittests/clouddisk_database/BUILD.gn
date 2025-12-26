@@ -250,13 +250,6 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (support_thermal_manager) {
-    external_deps += [ "bundle_framework:appexecfwk_base" ]
-    external_deps += [ "thermal_manager:thermalmgr_listener" ]
-    external_deps += [ "thermal_manager:thermalsrv_client" ]
-    defines += [ "support_thermal_manager" ]
-  }
-
   use_exceptions = true
 }
 

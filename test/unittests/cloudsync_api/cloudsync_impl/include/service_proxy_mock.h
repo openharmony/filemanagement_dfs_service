@@ -29,7 +29,7 @@ namespace OHOS {
 namespace FileManagement::CloudSync {
 using namespace std;
 
-class CloudSyncServiceMock : public ICloudSyncService {
+class CloudSyncServiceMock : public IRemoteStub<ICloudSyncService> {
 public:
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
     MOCK_METHOD2(UnRegisterCallbackInner, int32_t(const string &callbackId, const string &bundleName));
