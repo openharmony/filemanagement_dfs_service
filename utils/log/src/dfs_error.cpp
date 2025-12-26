@@ -25,6 +25,15 @@ int32_t Convert2JsErrNum(int32_t errNum)
     }
 }
 
+std::string Convert2JsErrMsg(int32_t errNum)
+{
+    if (errMessageTable_.find(errNum) != errMessageTable_.end()) {
+        return errMessageTable_.at(errNum);
+    } else {
+        return "System inner error, unable to process.";
+    }
+}
+
 int32_t Convert2ErrNum(int32_t errNum)
 {
     if (errCodeTable.find(errNum) != errCodeTable.end()) {

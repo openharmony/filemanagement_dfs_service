@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_DFS_ERROR_H
 #define OHOS_FILEMGMT_DFS_ERROR_H
 
+#include <string>
 #include <string_view>
 #include <sys/types.h>
 #include <unordered_map>
@@ -112,6 +113,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_RETRY,
 
     E_AGAIN,
+
+    E_UNKNOWN_FAULT,
 
     E_SOURCE_BASIC = 10000,
 
@@ -225,10 +228,16 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
     { E_SERVICE_INNER_ERROR, E_INNER_FAILED },
     { E_VERSION_FILE_NOT_EXIST, E_VERSION_FILE_NO_EXIST },
     { E_INNER_RDB, E_INNER_FAILED },
-    { E_AGAIN, E_TRY_AGAIN }
+    { E_AGAIN, E_TRY_AGAIN },
+    { E_UNKNOWN_FAULT, E_UNKNOWN_ERR }
+};
+
+const std::unordered_map<int32_t, std::string> errMessageTable_ {
+    { E_UNKNOWN_FAULT, "Unknown error. The possible causes is getxattr failed." }
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);
+std::string Convert2JsErrMsg(int32_t errNum);
 int32_t Convert2ErrNum(int32_t errNum);
 } // namespace OHOS::FileManagement
 

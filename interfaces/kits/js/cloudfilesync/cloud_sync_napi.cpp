@@ -789,7 +789,7 @@ napi_value CloudSyncNapi::StartOptimizeStorage(napi_env env, napi_callback_info 
     LOGI("StartOptimizeStorage enter");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         LOGE("Number of arguments unmatched");
         return nullptr;
     }
@@ -889,7 +889,7 @@ static tuple<int32_t, int32_t> GetxattrErr()
     if (errForSingleFileSync.find(errno) != errForSingleFileSync.end()) {
         return { errno, -1 };
     }
-    return { E_UNKNOWN_ERR, -1 };
+    return { E_UNKNOWN_FAULT, -1 };
 }
 
 tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
@@ -921,7 +921,7 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize + 1);
     if (xattrValue == nullptr) {
         LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
-        return { E_UNKNOWN_ERR, -1 };
+        return { E_UNKNOWN_FAULT, -1 };
     }
     xattrValueSize = getxattr(sandBoxPath.c_str(), xattrKey.c_str(), xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
@@ -1111,7 +1111,7 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
         }
         tie(result, fileStatus) = GetSingleFileSyncState(string(uri.get()));
         if (result != E_OK) {
-            NError(Convert2JsErrNum(result)).ThrowErr(env);
+            NError(Convert2JsErrNum(result)).ThrowErrWithMsg(env, Convert2JsErrMsg(result));
             return nullptr;
         }
         return NVal::CreateInt32(env, fileStatus).val_;

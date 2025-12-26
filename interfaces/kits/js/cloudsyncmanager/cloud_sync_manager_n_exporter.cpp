@@ -33,7 +33,7 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::THREE), static_cast<size_t>(NARG_CNT::FOUR))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         return nullptr;
     }
     bool succ = false;
@@ -186,7 +186,7 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     LOGI("NotifyDataChange entrance");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -201,7 +201,7 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
     LOGI("DisableCloud");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::ONE), static_cast<size_t>(NARG_CNT::TWO))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -279,7 +279,7 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
     LOGI("EnableCloud");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -360,7 +360,7 @@ napi_value Clean(napi_env env, napi_callback_info info)
     LOGI("Clean");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErrWithMsg(env, "Number of arguments unmatched");
         return nullptr;
     }
     std::unique_ptr<char []> accoutId = nullptr;
