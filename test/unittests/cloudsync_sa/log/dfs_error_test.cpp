@@ -71,4 +71,42 @@ HWTEST_F(DfsErrorTest, Convert2JsErrNumTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "Convert2JsErrNumTest End";
 }
+
+/**
+ * @tc.name: Convert2JsErrMsgTest001
+ * @tc.desc: convert errcode to errmsg.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsErrorTest, Convert2JsErrMsgTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Convert2JsErrMsgTest001 Start";
+    try {
+        std::string errMsg = Convert2JsErrMsg(E_UNKNOWN_FAULT);
+        EXPECT_STREQ(errMsg.c_str(), errMessageTable_.at(E_UNKNOWN_FAULT).c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "Convert2JsErrMsgTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Convert2JsErrMsgTest001 End";
+}
+
+/**
+ * @tc.name: Convert2JsErrMsgTest002
+ * @tc.desc: convert errcode to errmsg.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsErrorTest, Convert2JsErrMsgTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Convert2JsErrMsgTest002 Start";
+    try {
+        std::string errMsg = Convert2JsErrMsg(0xFFFFFFFF);
+        EXPECT_STREQ(errMsg.c_str(), "System inner error, unable to process.");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "Convert2JsErrMsgTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Convert2JsErrMsgTest002 End";
+}
 } // namespace OHOS::FileManagement::Test
