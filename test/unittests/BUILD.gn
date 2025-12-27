@@ -25,6 +25,7 @@ group("cloudsyncunittests") {
       "clouddiskservice:clouddisk_service_test",
       "cloudsync_api:cloudsync_api_test",
       "cloudsync_sa:cloudsync_sa_test",
+      "ndk:ndk_test",
       "services_daemon:services_daemon_test",
       "utils:utils_test",
     ]
