@@ -446,7 +446,6 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest001, TestSize.Level1)
         for (const auto &item : syncFolder.GetSyncFolderMap()) {
             syncFolder.DeleteSyncFolder(item.first);
         }
-        EXPECT_CALL(*insMock, opendir(_)).WillOnce(Return(static_cast<DIR*>(nullptr)));
         string path = "/valid/path";
         string attrName = "user.test_attr";
         syncFolder.RemoveXattr(path, attrName);
@@ -456,6 +455,114 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "RemoveXattrTest001 failed";
     }
     GTEST_LOG_(INFO) << "RemoveXattrTest001 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest002
+ * @tc.desc: Verify the RemoveXattr function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest002 start";
+    try {
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test.txt");
+        EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(-1));
+        Assistant::mockErrno = 1000;
+
+        string path = "/data/test_tdd";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+        EXPECT_EQ(errno, 1000);
+        std::system("rm -rf /data/test_tdd");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest002 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest003
+ * @tc.desc: Verify the RemoveXattr function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest003 start";
+    try {
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test.txt");
+        EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(-1));
+        Assistant::mockErrno = ENODATA;
+
+        string path = "/data/test_tdd";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+        EXPECT_EQ(errno, ENODATA);
+        std::system("rm -rf /data/test_tdd");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest003 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest004
+ * @tc.desc: Verify the RemoveXattr function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest004 start";
+    try {
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test.txt");
+        EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(0));
+        Assistant::mockErrno = 1000;
+
+        string path = "/data/test_tdd";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+        EXPECT_EQ(errno, 1000);
+        std::system("rm -rf /data/test_tdd");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest004 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest005
+ * @tc.desc: Verify the RemoveXattr function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest005 start";
+    try {
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test.txt");
+        EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(0));
+        Assistant::mockErrno = ENODATA;
+
+        string path = "/data/test_tdd";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+        EXPECT_EQ(errno, ENODATA);
+        std::system("rm -rf /data/test_tdd");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest005 end";
 }
 
 /**

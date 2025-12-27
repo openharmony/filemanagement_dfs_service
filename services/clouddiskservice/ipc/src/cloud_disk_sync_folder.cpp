@@ -131,11 +131,12 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
             LOGE("lstat failed");
             continue;
         }
+        if (removexattr(realPath, attrName.c_str()) == -1 && errno != ENODATA) {
+            LOGE("removexattr failed for path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(realPath).c_str(), errno);
+        }
         if (S_ISDIR(st.st_mode)) {
             RemoveXattr(pathToRemove, attrName);
-        }
-        if (S_ISREG(st.st_mode)) {
-            removexattr(realPath, attrName.c_str());
         }
     }
     closedir(dir);
