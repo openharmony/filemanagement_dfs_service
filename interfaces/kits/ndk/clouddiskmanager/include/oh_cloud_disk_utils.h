@@ -22,6 +22,8 @@
 #include "cloud_disk_error_code.h"
 
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
+char *AllocField(const char *value, size_t length);
+bool IsValidPathInfo(const char *path, size_t length);
 
 const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_OK},

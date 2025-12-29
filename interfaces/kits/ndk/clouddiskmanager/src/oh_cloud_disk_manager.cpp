@@ -36,41 +36,6 @@ using namespace OHOS;
 using namespace OHOS::FileManagement;
 using namespace OHOS::FileManagement::CloudDiskService;
 
-static char *AllocField(const char *value, size_t length)
-{
-    char *field = new(std::nothrow) char[length + 1];
-    if (field == nullptr) {
-        LOGE("new failed");
-        return nullptr;
-    }
-
-    if (strncpy_s(field, length + 1, value, length) != 0) {
-        LOGE("strncpy_s failed");
-        delete[] field;
-        return nullptr;
-    }
-    field[length] = '\0';
-    return field;
-}
-
-static bool IsValidPathInfo(const char *path, size_t length)
-{
-    if (path == nullptr) {
-        LOGE("path is nullptr");
-        return false;
-    }
-    if (length == 0) {
-        LOGE("length is invalid: %{public}zu", length);
-        return false;
-    }
-    size_t actualLen = strnlen(path, length + 1);
-    if (actualLen != length) {
-        LOGE("length not equal to actual string length: %{public}zu", actualLen);
-        return false;
-    }
-    return true;
-}
-
 class CloudDiskServiceCallbackImpl : public CloudDiskServiceCallback {
 public:
     using OnChangeDataCallback =
