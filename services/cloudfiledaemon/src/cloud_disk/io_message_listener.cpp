@@ -406,11 +406,11 @@ void IoMessageManager::ProcessIoData(const string &path)
 void IoMessageManager::RecordIoData()
 {
     while (isThreadRunning.load()) {
+        unique_lock<ffrt::mutex> lock(sleepMutex);
         if (!lastestAppStateData.bundleName.empty()) {
             string path = "/proc/" + to_string(lastestAppStateData.pid) + "/sys_count";
             ProcessIoData(path);
         }
-        unique_lock<ffrt::mutex> lock(sleepMutex);
         sleepCv.wait_for(lock, chrono::seconds(GET_FREQUENCY), [&] {
             return !isThreadRunning.load();
         });
