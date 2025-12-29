@@ -242,7 +242,7 @@ ohos_unittest("cloud_disk_sync_folder_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock_ext.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
