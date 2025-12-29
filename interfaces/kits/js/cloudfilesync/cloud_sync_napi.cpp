@@ -341,7 +341,6 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 
     if (bundleEntity->callbackInfo.callback != nullptr) {
         LOGI("callback already exist");
-        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
