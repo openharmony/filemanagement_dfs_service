@@ -18,7 +18,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
-#include <sys/xattr.h>
 
 #include "cloud_sync_manager_mock.h"
 #include "system_mock.h"
@@ -267,6 +266,7 @@ HWTEST_F(CloudSyncCoreTest, DoStopTest1, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest1, TestSize.Level1)
 {
     string filePath = "file://com.ohos.camera/test/test.txt";
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
     auto ret = CloudSyncCore::DoGetFileSyncState(filePath);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -297,7 +297,7 @@ HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest2, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
 {
     string filePath = "file://com.ohos.camera/test/test.txt";
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
     auto ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
 #if CLOUD_ADAPTER_ENABLED
     EXPECT_TRUE(ret.IsSuccess());

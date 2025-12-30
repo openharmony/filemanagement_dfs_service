@@ -70,6 +70,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoChangeAppCloudSwitchTest1, TestSize.Level1)
     std::string accoutId = "100";
     std::string bundleName = "com.example.test";
     bool status = true;
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, ChangeAppSwitch).WillOnce(Return(E_OK));
     auto data = CloudSyncManagerCore::DoChangeAppCloudSwitch(accoutId, bundleName, status);
     EXPECT_TRUE(data.IsSuccess());
 }
@@ -84,6 +86,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoChangeAppCloudSwitchTest2, TestSize.Level1)
     std::string accoutId = "100";
     std::string bundleName = "com.example.test";
     bool status = false;
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, ChangeAppSwitch).WillOnce(Return(E_OK));
     auto data = CloudSyncManagerCore::DoChangeAppCloudSwitch(accoutId, bundleName, status);
     EXPECT_TRUE(data.IsSuccess());
 }
@@ -113,6 +117,8 @@ HWTEST_F(CloudSyncManagerCoreTest, DoNotifyDataChangeTest1, TestSize.Level1)
 {
     std::string accoutId = "100";
     std::string bundleName = "com.example.test";
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, NotifyDataChange).WillOnce(Return(E_OK));
     auto data = CloudSyncManagerCore::DoNotifyDataChange(accoutId, bundleName);
     EXPECT_TRUE(data.IsSuccess());
 }
