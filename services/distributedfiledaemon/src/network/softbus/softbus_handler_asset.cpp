@@ -178,6 +178,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = DFS_QOS_TYPE_MIN_LATENCY},
+        {.qos = QOS_TYPE_TRANS_RATE_PREFERENCE, .value = 1}
     };
     SocketInfo clientInfo = {
         .name = const_cast<char*>((ASSET_LOCAL_SESSION_NAME.c_str())),
