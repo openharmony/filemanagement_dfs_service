@@ -309,6 +309,7 @@ ani_int CloudSyncAni::GetCoreFileSyncState(ani_env *env, ani_class clazz, ani_st
     if (!CheckIsValidUri(fileUri)) {
         LOGE("uri illegally crossess, uri is %{public}s", GetAnonyString(filePath).c_str());
         ErrorHandler::Throw(env, JsErrCode::E_INVALID_URI);
+        return E_INVALID_URI;
     }
     auto data = CloudSyncCore::DoGetCoreFileSyncState(filePath);
     if (!data.IsSuccess()) {
