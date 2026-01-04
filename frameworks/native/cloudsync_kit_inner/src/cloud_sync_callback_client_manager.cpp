@@ -28,7 +28,7 @@ CloudSyncCallbackClientManager &CloudSyncCallbackClientManager::GetInstance()
 int32_t CloudSyncCallbackClientManager::AddCallback(const CallbackInfo &callbackInfo)
 {
     if ((callbackInfo.callbackId.empty()) || (callbackInfo.callback == nullptr)) {
-        LOGE("Id or callback empty, callbackId:%{private}s, bundleName:%{public}s.",
+        LOGE("Id or callback empty, callbackId:%{public}s, bundleName:%{public}s.",
             callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
@@ -39,12 +39,12 @@ int32_t CloudSyncCallbackClientManager::AddCallback(const CallbackInfo &callback
             return info.callbackId == callbackInfo.callbackId;
         });
     if (it != callbackList_.end()) {
-        LOGE("Id same, callbackId:%{private}s, bundleName:%{public}s.",
+        LOGE("Id same, callbackId:%{public}s, bundleName:%{public}s.",
             callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
 
-    LOGD("Add callback, callbackId:%{private}s, bundleName:%{public}s.",
+    LOGI("Add callback, callbackId:%{public}s, bundleName:%{public}s.",
         callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
     callbackList_.push_back(callbackInfo);
     return E_OK;
@@ -53,7 +53,7 @@ int32_t CloudSyncCallbackClientManager::AddCallback(const CallbackInfo &callback
 int32_t CloudSyncCallbackClientManager::RemoveCallback(const CallbackInfo &callbackInfo)
 {
     if (callbackInfo.callbackId.empty()) {
-        LOGE("Id empty, callbackId:%{private}s, bundleName:%{public}s.",
+        LOGE("Id empty, callbackId:%{public}s, bundleName:%{public}s.",
             callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
@@ -64,12 +64,12 @@ int32_t CloudSyncCallbackClientManager::RemoveCallback(const CallbackInfo &callb
             return info.callbackId == callbackInfo.callbackId;
         });
     if (it == callbackList_.end()) {
-        LOGD("Not find callbackId:%{private}s, bundleName:%{public}s.",
+        LOGE("Not find callbackId:%{public}s, bundleName:%{public}s.",
             callbackInfo.callbackId.c_str(), callbackInfo.bundleName.c_str());
         return E_INVAL_ARG;
     }
 
-    LOGD("Remove callback, callbackId:%{private}s, bundleName:%{public}s.",
+    LOGI("Remove callback, callbackId:%{public}s, bundleName:%{public}s.",
         it->callbackId.c_str(), it->bundleName.c_str());
     callbackList_.erase(it);
     return E_OK;

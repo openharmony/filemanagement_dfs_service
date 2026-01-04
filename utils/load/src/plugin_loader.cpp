@@ -15,6 +15,7 @@
 
 #include "plugin_loader.h"
 
+#include <chrono>
 #include <dlfcn.h>
 #include <unistd.h>
 #include <vector>
@@ -67,11 +68,17 @@ void PluginLoader::LoadCloudKitPlugin(bool isSupportCloudSync)
                 LOGE("realpath failed in line path: %s", pluginFilePath.c_str());
                 return;
             }
+            auto dlopenStartTime = std::chrono::high_resolution_clock::now();
             cloudKitPulginHandle_ = dlopen(pluginFilePath.c_str(), RTLD_LAZY);
+            auto dlopenFinishTime = std::chrono::high_resolution_clock::now();
+            auto dlopenDurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(dlopenFinishTime - dlopenStartTime).count();
             if (cloudKitPulginHandle_ == nullptr) {
-                LOGE("dlopen failed, path:%{public}s", pluginFilePath.c_str());
+                LOGE("dlopen failed, path:%{public}s, cost:%{public}lld",
+                    pluginFilePath.c_str(), dlopenDurationTime);
             } else {
-                LOGI("succ to load plugin, path:%{public}s", pluginFilePath.c_str());
+                LOGI("succ to load plugin, path:%{public}s, cost:%{public}lld",
+                    pluginFilePath.c_str(), dlopenDurationTime);
             }
             return;
         }
