@@ -87,11 +87,14 @@ FsResult<void> CloudFileCacheCore::DoStop(const string &uri, bool needClean)
     auto callbackImpl = GetCallbackImpl(PROGRESS, false);
     if (callbackImpl == nullptr) {
         LOGE("Failed to stop download, callback is null!");
-        return FsResult<void>::Error(E_INVAL_ARG);
+        return FsResult<void>::Error(Convert2ErrNum(E_BROKEN_IPC));
     }
     int32_t ret = callbackImpl->StopDownloadInner(uri, needClean);
     if (ret != E_OK) {
         LOGE("Stop Download failed! ret = %{public}d", ret);
+        if (ret != E_INVAL_ARG) {
+            ret = E_BROKEN_IPC;
+        }
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 
