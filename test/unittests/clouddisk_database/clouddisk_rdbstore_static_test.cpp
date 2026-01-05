@@ -17,6 +17,7 @@
 
 #include "clouddisk_rdbstore.cpp"
 #include "rdb_assistant.h"
+#include "result_set_mock.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -1545,4 +1546,940 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFolderTriggerSyncTest001, TestSize.L
     GTEST_LOG_(INFO) << "CreateFolderTriggerSyncTest001 end";
 }
 
+/**
+ * @tc.name: VersionFixFileTriggerTest002
+ * @tc.desc: Verify the VersionFixFileTrigger with drop trigger failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixFileTriggerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+
+        VersionFixFileTrigger(rdbStoreMock);
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixFileTriggerTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest002 end";
+}
+
+/**
+ * @tc.name: VersionFixFileTriggerTest003
+ * @tc.desc: Verify the VersionFixFileTrigger with add update trigger failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixFileTriggerTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+
+        VersionFixFileTrigger(rdbStoreMock);
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixFileTriggerTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest003 end";
+}
+
+/**
+ * @tc.name: VersionFixFileTriggerTest004
+ * @tc.desc: Verify the VersionFixFileTrigger with add delete trigger failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixFileTriggerTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest004 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+
+        VersionFixFileTrigger(rdbStoreMock);
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixFileTriggerTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest004 end";
+}
+
+/**
+ * @tc.name: VersionFixFileTriggerTest005
+ * @tc.desc: Verify the VersionFixFileTrigger with add local trigger failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixFileTriggerTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest005 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR));
+
+        VersionFixFileTrigger(rdbStoreMock);
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixFileTriggerTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixFileTriggerTest005 end";
+}
+
+/**
+ * @tc.name: VersionFixCreateAndLocalTriggerTest001
+ * @tc.desc: Trigger drop files_new_cloud_sync_trigger failure in VersionFixCreateAndLocalTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixCreateAndLocalTriggerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixCreateAndLocalTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest001 end";
+}
+
+/**
+ * @tc.name: VersionFixCreateAndLocalTriggerTest002
+ * @tc.desc: Trigger drop files_local_cloud_sync_trigger failure in VersionFixCreateAndLocalTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixCreateAndLocalTriggerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixCreateAndLocalTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest002 end";
+}
+
+/**
+ * @tc.name: VersionFixCreateAndLocalTriggerTest003
+ * @tc.desc: Trigger add local file trigger failure in VersionFixCreateAndLocalTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixCreateAndLocalTriggerTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixCreateAndLocalTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest003 end";
+}
+
+/**
+ * @tc.name: VersionFixCreateAndLocalTriggerTest004
+ * @tc.desc: Trigger add create folder trigger failure in VersionFixCreateAndLocalTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixCreateAndLocalTriggerTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest004 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixCreateAndLocalTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixCreateAndLocalTriggerTest004 end";
+}
+
+/**
+ * @tc.name: VersionAddFileStatusAndErrorCodeTest001
+ * @tc.desc: Trigger add is_favorite failure in VersionAddFileStatusAndErrorCode
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddFileStatusAndErrorCodeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddFileStatusAndErrorCodeTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddFileStatusAndErrorCode(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddFileStatusAndErrorCodeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddFileStatusAndErrorCodeTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddFileStatusTest001
+ * @tc.desc: Trigger add file_status failure in VersionAddFileStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddFileStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddFileStatusTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddFileStatus(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddFileStatusTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddFileStatusTest001 end";
+}
+
+/**
+ * @tc.name: VersionSetFileStatusDefaultTest001
+ * @tc.desc: Trigger set file_status failure in VersionSetFileStatusDefault
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionSetFileStatusDefaultTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionSetFileStatusDefaultTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionSetFileStatusDefault(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionSetFileStatusDefaultTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionSetFileStatusDefaultTest001 end";
+}
+
+/**
+ * @tc.name: VersionFixSyncMetatimeTriggerTest001
+ * @tc.desc: Trigger drop files_update_cloud_sync_trigger failure in VersionFixSyncMetatimeTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixSyncMetatimeTriggerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixSyncMetatimeTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest001 end";
+}
+
+/**
+ * @tc.name: VersionFixSyncMetatimeTriggerTest002
+ * @tc.desc: Trigger add update file trigger failure in VersionFixSyncMetatimeTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixSyncMetatimeTriggerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixSyncMetatimeTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixSyncMetatimeTriggerTest002 end";
+}
+
+/**
+ * @tc.name: VersionFixRetryTriggerTest001
+ * @tc.desc: Trigger drop local file trigger failure in VersionFixRetryTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixRetryTriggerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixRetryTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest001 end";
+}
+
+/**
+ * @tc.name: VersionFixRetryTriggerTest002
+ * @tc.desc: Trigger add local file trigger failure in VersionFixRetryTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionFixRetryTriggerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionFixRetryTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionFixRetryTriggerTest002 end";
+}
+
+/**
+ * @tc.name: VersionRemoveCloudSyncFuncTriggerTest001
+ * @tc.desc: Trigger drop folders_new_cloud_sync_trigger failure in VersionRemoveCloudSyncFuncTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionRemoveCloudSyncFuncTriggerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionRemoveCloudSyncFuncTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest001 end";
+}
+
+/**
+ * @tc.name: VersionRemoveCloudSyncFuncTriggerTest002
+ * @tc.desc: Trigger drop files_update_cloud_sync_trigger failure in VersionRemoveCloudSyncFuncTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionRemoveCloudSyncFuncTriggerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionRemoveCloudSyncFuncTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest002 end";
+}
+
+/**
+ * @tc.name: VersionRemoveCloudSyncFuncTriggerTest003
+ * @tc.desc: Trigger drop files_delete_cloud_sync_trigger failure in VersionRemoveCloudSyncFuncTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionRemoveCloudSyncFuncTriggerTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionRemoveCloudSyncFuncTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest003 end";
+}
+
+/**
+ * @tc.name: VersionRemoveCloudSyncFuncTriggerTest004
+ * @tc.desc: Trigger drop files_local_cloud_sync_trigger failure in VersionRemoveCloudSyncFuncTrigger
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionRemoveCloudSyncFuncTriggerTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest004 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionRemoveCloudSyncFuncTrigger(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionRemoveCloudSyncFuncTriggerTest004 end";
+}
+
+/**
+ * @tc.name: VersionAddThmFlagTest001
+ * @tc.desc: Trigger add thm_flag failure in VersionAddThmFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmFlagTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmFlagTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddThmFlagTest002
+ * @tc.desc: Trigger add lcd_flag failure in VersionAddThmFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmFlagTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmFlagTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest002 end";
+}
+
+/**
+ * @tc.name: VersionAddThmFlagTest003
+ * @tc.desc: Trigger add upload_flag failure in VersionAddThmFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmFlagTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmFlagTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmFlagTest003 end";
+}
+
+/**
+ * @tc.name: VersionAddSrcCloudIdTest001
+ * @tc.desc: Trigger add src_cloud_id failure in VersionAddSrcCloudId
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddSrcCloudIdTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddSrcCloudIdTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddSrcCloudId(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddSrcCloudIdTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddSrcCloudIdTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddThmSizeTest001
+ * @tc.desc: Trigger add thm_size failure in VersionAddThmSize
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmSizeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmSize(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmSizeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddThmSizeTest002
+ * @tc.desc: Trigger add lcd_size failure in VersionAddThmSize
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmSizeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmSize(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmSizeTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest002 end";
+}
+
+/**
+ * @tc.name: VersionAddThmSizeTest003
+ * @tc.desc: Trigger add source_cloud_id failure in VersionAddThmSize
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddThmSizeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_OK))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddThmSize(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddThmSizeTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddThmSizeTest003 end";
+}
+
+/**
+ * @tc.name: VersionAddLocalFlagTest001
+ * @tc.desc: Trigger add local_flag failure in VersionAddLocalFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddLocalFlagTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddLocalFlagTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddLocalFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddLocalFlagTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddLocalFlagTest001 end";
+}
+
+/**
+ * @tc.name: GetUserIdAndBundleNameTest001
+ * @tc.desc: Trigger invalid user Id failure in GetUserIdAndBundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetUserIdAndBundleNameTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUserIdAndBundleNameTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, GetPath()).WillOnce(testing::Return("/data/cloudfile/abc123/com.example.app/rdb"));
+        uint32_t userId;
+        std::string bundleName;
+        int32_t result = GetUserIdAndBundleName(rdbStoreMock, userId, bundleName);
+        EXPECT_EQ(result, E_INVAL_ARG);
+        EXPECT_EQ(bundleName, "com.example.app");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUserIdAndBundleNameTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetUserIdAndBundleNameTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddAttributeTest001
+ * @tc.desc: Trigger add attribute failure in VersionAddAttribute
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddAttributeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddAttributeTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR))
+            .WillRepeatedly(testing::Return(NativeRdb::E_OK));
+        VersionAddAttribute(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddAttributeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddAttributeTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddCheckFlagTest001
+ * @tc.desc: ExecuteSql trigger CLOUD_FILE_FAULT_REPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddCheckFlagTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_)).WillOnce(testing::Return(NativeRdb::E_ERROR));
+        EXPECT_CALL(rdbStoreMock, GetPath())
+            .WillRepeatedly(testing::Return("/data/service/el2/100/hmdfs/cloudfile/100/com.example.app/rdb/cloud.db"));
+        EXPECT_CALL(rdbStoreMock, Query(testing::_, testing::_)).WillRepeatedly(testing::Return(nullptr));
+        VersionAddCheckFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddCheckFlagTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddCheckFlagTest002
+ * @tc.desc: GenerateDentryRecursively trigger CLOUD_FILE_FAULT_REPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddCheckFlagTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        auto resultSetMock = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+        // ExecuteSql 成功
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_)).WillOnce(testing::Return(NativeRdb::E_OK));
+        EXPECT_CALL(rdbStoreMock, GetPath())
+            .WillRepeatedly(testing::Return("/data/service/el2/100/hmdfs/cloudfile/100/com.example.app/rdb/cloud.db"));
+        EXPECT_CALL(*resultSetMock, GetRowCount(testing::_))
+            .WillOnce(testing::DoAll(testing::SetArgReferee<0>(1), testing::Return(E_OK)));
+        EXPECT_CALL(*resultSetMock, GoToNextRow()).WillOnce(testing::Return(0));
+        EXPECT_CALL(*resultSetMock, GetColumnIndex(testing::_, testing::_)).WillRepeatedly(testing::Return(E_RDB));
+        auto resultSetZero = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+        EXPECT_CALL(*resultSetZero, GetRowCount(testing::_))
+            .WillRepeatedly(testing::DoAll(testing::SetArgReferee<0>(0), testing::Return(E_OK)));
+        EXPECT_CALL(rdbStoreMock, Query(testing::_, testing::_))
+            .WillOnce(testing::Return(resultSetMock))
+            .WillOnce(testing::Return(resultSetZero));
+        VersionAddCheckFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddCheckFlagTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest002 end";
+}
+
+/**
+ * @tc.name: VersionAddCheckFlagTest003
+ * @tc.desc: GenerateRecycleDentryRecursively trigger CLOUD_FILE_FAULT_REPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddCheckFlagTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest003 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        auto resultSetMock = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+        auto resultSetZero = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+        auto recycleResultSetMock = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_)).WillOnce(testing::Return(NativeRdb::E_OK));
+        EXPECT_CALL(rdbStoreMock, GetPath())
+            .WillRepeatedly(testing::Return("/data/service/el2/100/hmdfs/cloudfile/100/com.ohos.photos/rdb/cloud.db"));
+        EXPECT_CALL(*resultSetZero, GetRowCount(testing::_))
+            .WillRepeatedly(testing::DoAll(testing::SetArgReferee<0>(0), testing::Return(E_OK)));
+        EXPECT_CALL(*recycleResultSetMock, GetRowCount(testing::_))
+            .WillOnce(testing::DoAll(testing::SetArgReferee<0>(1), testing::Return(E_OK)));
+ 	    EXPECT_CALL(*recycleResultSetMock, GoToNextRow())
+ 	        .WillOnce(testing::Return(0));
+        EXPECT_CALL(*recycleResultSetMock, GetColumnIndex(testing::_, testing::_))
+            .WillRepeatedly(testing::Return(E_RDB));
+        EXPECT_CALL(rdbStoreMock, Query(testing::_, testing::_))
+            .WillOnce(testing::Return(resultSetZero))
+            .WillOnce(testing::Return(recycleResultSetMock));
+        VersionAddCheckFlag(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddCheckFlagTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddCheckFlagTest003 end";
+}
+
+/**
+ * @tc.name: VersionAddRootDirectoryTest001
+ * @tc.desc: ExecuteSql trigger CLOUD_FILE_FAULT_REPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddRootDirectoryTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest001 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_)).WillOnce(testing::Return(NativeRdb::E_ERROR));
+        EXPECT_CALL(rdbStoreMock, Update(testing::Matcher<int &>(testing::_), testing::_, testing::_, testing::_,
+                                         testing::Matcher<const std::vector<ValueObject> &>(testing::_)))
+            .WillOnce(testing::Return(NativeRdb::E_OK));
+        VersionAddRootDirectory(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest001 end";
+}
+
+/**
+ * @tc.name: VersionAddRootDirectoryTest002
+ * @tc.desc: Update trigger CLOUD_FILE_FAULT_REPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, VersionAddRootDirectoryTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest002 start";
+    try {
+        RdbStoreMock rdbStoreMock;
+        EXPECT_CALL(rdbStoreMock, ExecuteSql(testing::_, testing::_)).WillOnce(testing::Return(NativeRdb::E_OK));
+        EXPECT_CALL(rdbStoreMock, Update(testing::Matcher<int &>(testing::_), testing::_, testing::_, testing::_,
+                                         testing::Matcher<const std::vector<ValueObject> &>(testing::_)))
+            .WillOnce(testing::Return(NativeRdb::E_ERROR));
+        VersionAddRootDirectory(rdbStoreMock);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "VersionAddRootDirectoryTest002 end";
+}
+
+/**
+ * @tc.name: GenerateDentryRecursivelyInvalidPathTest
+ * @tc.desc: Trigger userId/bundleName failure
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateDentryRecursivelyInvalidPathTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    EXPECT_CALL(store, GetPath()).Times(AtLeast(1)).WillRepeatedly(Return("cloudfile/100/invalid/rdb"));
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(nullptr));
+    auto ret = GenerateDentryRecursively(store, "parent");
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GenerateDentryRecursivelyNullResultSetTest
+ * @tc.desc: Trigger resultSet is null
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateDentryRecursivelyNullResultSetTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    ON_CALL(store, GetPath()).WillByDefault(Return("cloudfile/100/bundleName/rdb"));
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(nullptr));
+    auto ret = GenerateDentryRecursively(store, "parent");
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GenerateDentryRecursivelyNameMockTest
+ * @tc.desc: Trigger metaFile->DoLookupAndUpdate(info.name, callback)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateDentryRecursivelyNameMockTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    ON_CALL(store, GetPath()).WillByDefault(
+        Return("cloudfile/100/com.ohos.photos/rdb/cloud.db"));
+
+    auto resultSet = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(ByMove(resultSet)));
+    EXPECT_CALL(*resultSet, GetRowCount(_))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(E_OK)));
+
+    EXPECT_CALL(*resultSet, GoToNextRow())
+        .WillOnce(Return(0))
+        .WillRepeatedly(Return(E_RDB));
+
+    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetString(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(std::string("mock")), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetInt(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetLong(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+
+    int32_t ret = GenerateDentryRecursively(store, "parentCloudId");
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: GenerateRecycleDentryRecursivelyNullResultSetTest
+ * @tc.desc: Trigger resultSet is null
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateRecycleDentryRecursivelyNullResultSetTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    ON_CALL(store, GetPath()).WillByDefault(Return("cloudfile/100/bundleName/rdb"));
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(nullptr));
+    auto ret = GenerateRecycleDentryRecursively(store);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GenerateRecycleDentryRecursivelyRowCountFailTest
+ * @tc.desc: Trigger rowCount fault
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateRecycleDentryRecursivelyRowCountFailTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    ON_CALL(store, GetPath()).WillByDefault(Return("cloudfile/100/bundleName/rdb"));
+
+    auto resultSet = std::make_shared<AbsSharedResultSetMock>();
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(ByMove(resultSet)));
+    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(Return(E_RDB));
+
+    auto ret = GenerateRecycleDentryRecursively(store);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GenerateRecycleDentryRecursivelyNameMockTest
+ * @tc.desc: Trigger metaFile->DoLookupAndUpdate(uniqueName, callback)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateRecycleDentryRecursivelyNameMockTest, TestSize.Level1)
+{
+    RdbStoreMock store;
+    ON_CALL(store, GetPath()).WillByDefault(
+        Return("cloudfile/100/com.ohos.photos/rdb/cloud.db"));
+
+    auto resultSet = std::make_shared<NiceMock<AbsSharedResultSetMock>>();
+    EXPECT_CALL(store, Query(_, _)).WillOnce(Return(ByMove(resultSet)));
+    EXPECT_CALL(*resultSet, GetRowCount(_))
+        .WillOnce(DoAll(SetArgReferee<0>(1), Return(E_OK)));
+
+    EXPECT_CALL(*resultSet, GoToNextRow())
+        .WillOnce(Return(0))
+        .WillRepeatedly(Return(E_RDB));
+
+    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetString(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(std::string("mock")), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetInt(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+    EXPECT_CALL(*resultSet, GetLong(_, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(0), Return(E_OK)));
+
+    int32_t ret = GenerateRecycleDentryRecursively(store);
+    EXPECT_EQ(ret, E_RDB);
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
