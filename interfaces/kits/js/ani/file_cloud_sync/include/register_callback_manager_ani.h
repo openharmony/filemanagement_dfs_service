@@ -30,8 +30,8 @@ public:
     ani_status UnregisterCallback(ani_env *env, ani_object callback);
 
     void OnJsCallback(ani_env *env, ani_object value, uint32_t argc);
-    ani_env *GetEnv();
-    void DetachEnv();
+    ani_env *GetEnv(bool &isAttached);
+    void DetachEnv(const bool &isAttached);
     virtual ~RegisterCallbackManagerAni();
 
 protected:
