@@ -20,6 +20,7 @@
 #include "data_syncer_rdb_store.h"
 #include "os_account_manager.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "result_set.h"
 #include "tasks/database_backup_task.h"
 #include "tasks/optimize_cache_task.h"
@@ -112,7 +113,7 @@ void CycleTaskRunner::SetRunableBundleNames()
         LOGE("query data syncer fail %{public}d", ret);
         return;
     }
-    while (resultSet->GoToNextRow() == E_OK) {
+    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
         string bundleName;
         ret = GetString(BUNDLE_NAME, bundleName, *resultSet);
         if (ret != E_OK) {
@@ -139,6 +140,15 @@ void CycleTaskRunner::SetRunableBundleNames()
         }
         cloudPrefImpl->Delete("lastCheckTime");
         runnableBundleNames->insert(bundleName);
+        LOGI("runable bundleName is %{public}s", bundleName.c_str());
+    }
+
+    string startCondition = "persist.kernel.cloudsync.screen_off_enable_download";
+    if (runnableBundleNames->empty()) {
+        LOGW("no runnable bundle names");
+        system::SetParameter(startCondition, "false");
+    } else {
+        system::SetParameter(startCondition, "true");
     }
 
     for (auto task_data  : cycleTasks_) {

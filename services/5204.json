@@ -38,14 +38,9 @@
                             {
                                 "eventId": "commonevent",
                                 "name": "usual.event.POWER_CONNECTED"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "usual.event.SCREEN_OFF",
-                        "conditions": [
+                            },
                             {
-                                "eventId": "commonevent",
+                                "eventId": "param",
                                 "name": "persist.kernel.cloudsync.screen_off_enable_download",
                                 "value": "true"
                             }
@@ -62,6 +57,11 @@
                             {
                                 "eventId": "commonevent",
                                 "name": "usual.event.POWER_CONNECTED"
+                            },
+                            {
+                                "eventId": "param",
+                                "name": "persist.kernel.cloudsync.screen_off_enable_download",
+                                "value": "true"
                             }
                         ]
                     },
@@ -72,6 +72,11 @@
                                 "eventId": "commonevent",
                                 "name": "usual.event.wifi.CONN_STATE",
                                 "value": "4"
+                            },
+                            {
+                                "eventId": "param",
+                                "name": "persist.kernel.cloudsync.screen_off_enable_download",
+                                "value": "true"
                             }
                         ]
                     },
@@ -82,11 +87,13 @@
                                 "eventId": "param",
                                 "name": "persist.kernel.cloudsync.battery_level_low",
                                 "value": "true"
+                            },
+                            {
+                                "eventId": "param",
+                                "name": "persist.kernel.cloudsync.screen_off_enable_download",
+                                "value": "true"
                             }
                         ]
-                    },
-                    {
-                        "name": "usual.event.USER_UNLOCKED"
                     }
                 ]
             }

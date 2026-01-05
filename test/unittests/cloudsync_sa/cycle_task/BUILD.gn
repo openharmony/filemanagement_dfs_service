@@ -20,6 +20,8 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   sources = [
     "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/clouddisk_rdbstore_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store/data_syncer_rdb_store.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/system_func_mock.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
@@ -37,8 +39,11 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   include_dirs = [
     "${clouddisk_database_path}/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/cycle_task/tasks",
@@ -97,10 +102,10 @@ ohos_unittest("periodic_clean_task_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/settings_data_manager.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_pref_impl_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_ability_observer_stub.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_result_set.cpp",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_pref_impl_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/screen_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/system_func_mock.cpp",
@@ -121,6 +126,7 @@ ohos_unittest("periodic_clean_task_test") {
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/cycle_task/tasks",

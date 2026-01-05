@@ -477,7 +477,6 @@ HWTEST_F(SytemLoadTest, GetSystemloadLevel, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetSystemloadLevel Start";
     try {
         systemLoadStatus_->GetSystemloadLevel();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetSystemloadLevel FAILED";
@@ -535,7 +534,6 @@ HWTEST_F(SytemLoadTest, InitSystemloadTest, TestSize.Level1)
     try {
         auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
         systemLoadStatus_->InitSystemload(dataSyncManager);
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitSystemloadTest FAILED";

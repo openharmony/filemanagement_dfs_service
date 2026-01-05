@@ -742,6 +742,8 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
+        string startCondition = "persist.kernel.cloudsync.screen_off_enable_download";
+        system::SetParameter(startCondition, "true");
         dataSyncManager_->PeriodicCleanLock();
         ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
         dataSyncManager_->PeriodicCleanUnlock();
