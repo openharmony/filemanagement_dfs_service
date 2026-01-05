@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_NAPI_H
 
+#include <mutex>
+
 #include "cloud_sync_callback.h"
 #include "cloud_sync_callback_info.h"
 #include "cloud_optimize_callback.h"
@@ -48,6 +50,11 @@ struct RegisterParams {
 struct BatchContext {
     std::vector<std::string> uriList;
     std::vector<int32_t> resultList;
+};
+
+struct AutoRef {
+    napi_ref cbRef{nullptr};
+    std::mutex refMtx;
 };
 
 class CloudSyncCallbackImpl;
@@ -100,6 +107,7 @@ public:
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
     void OnDeathRecipient() override;
     void DeleteReference() override;
+    void DeleteReferenceAsync();
 
     class UvChangeMsg {
     public:
@@ -116,7 +124,7 @@ public:
 private:
     static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
-    napi_ref cbOnRef_ = nullptr;
+    std::shared_ptr<AutoRef> cbOnRef_{nullptr};
     static CloudSyncState preState_;
     static ErrorType preError_;
     static inline std::string taskName_ = "cloudSync.SyncProgress";
