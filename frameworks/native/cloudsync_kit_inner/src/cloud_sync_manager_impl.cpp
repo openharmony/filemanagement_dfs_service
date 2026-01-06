@@ -39,6 +39,7 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 
 int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
 {
+    LOGI("Start RegisterCallback");
     if ((callbackInfo.callbackId.empty()) || (callbackInfo.callback == nullptr)) {
         LOGE("callbackId or callback is null");
         return E_INVAL_ARG;
@@ -63,6 +64,7 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
 
 int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const CallbackInfo &callbackInfo)
 {
+    LOGI("Start RegisterFileSyncCallback");
     if ((callbackInfo.callbackId.empty()) || (callbackInfo.callback == nullptr)) {
         LOGE("callbackId or callback is null");
         return E_INVAL_ARG;
@@ -87,6 +89,7 @@ int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const CallbackInfo &callb
 
 int32_t CloudSyncManagerImpl::UnRegisterCallback(const CallbackInfo &callbackInfo)
 {
+    LOGI("Start UnRegisterCallback");
     if (callbackInfo.callbackId.empty()) {
         LOGE("callbackId is null");
         return E_INVAL_ARG;
@@ -110,6 +113,7 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback(const CallbackInfo &callbackInf
 
 int32_t CloudSyncManagerImpl::UnRegisterFileSyncCallback(const CallbackInfo &callbackInfo)
 {
+    LOGI("Start UnRegisterFileSyncCallback");
     if (callbackInfo.callbackId.empty()) {
         LOGE("callbackId is null");
         return E_INVAL_ARG;
