@@ -122,6 +122,7 @@ bool GetAndCheckUserId(Uri* uri, std::string &userId)
         userId = it->second;
         if (!IsNumeric(userId)) {
             LOGE("IsNumeric check fail");
+            userId.clear();
             return false;
         }
         return true;
