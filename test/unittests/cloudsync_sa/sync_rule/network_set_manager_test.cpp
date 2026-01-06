@@ -22,8 +22,8 @@
 #include "data_ability_observer_stub.h"
 #include "accesstoken_kit.h"
 #include "cloud_file_kit_mock.h"
-#include "datashare_errno.h"
-#include "datashare_result_set.h"
+#include "datashare_helper_mock.h"
+#include "datashare_result_set_mock.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
@@ -34,6 +34,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace CloudFile;
+using namespace OHOS::DataShare;
 
 class NetworkSetManagerTest : public testing::Test {
 public:
@@ -42,6 +43,8 @@ public:
     void SetUp();
     void TearDown();
     shared_ptr<NetworkSetManager> networkSetManager_ = nullptr;
+    shared_ptr<DataShareHelperMock> dataShareHelperMock_ = nullptr;
+    shared_ptr<DataShareResultSetMock> resultSetMock_ = nullptr;
 };
 
 void NetworkSetManagerTest::SetUpTestCase(void)
@@ -57,12 +60,20 @@ void NetworkSetManagerTest::TearDownTestCase(void)
 void NetworkSetManagerTest::SetUp(void)
 {
     networkSetManager_ = make_shared<NetworkSetManager>();
+    dataShareHelperMock_ = std::make_shared<DataShareHelperMock>();
+    resultSetMock_ = std::make_shared<DataShareResultSetMock>();
+    DataShareHelperMock::proxy_ = dataShareHelperMock_;
+    DataShareResultSetMock::proxy_ = resultSetMock_;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void NetworkSetManagerTest::TearDown(void)
 {
     networkSetManager_.reset();
+    dataShareHelperMock_ = nullptr;
+    DataShareHelperMock::proxy_ = nullptr;
+    resultSetMock_ = nullptr;
+    DataShareResultSetMock::proxy_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -78,6 +89,7 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
     try {
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
 
         int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
         EXPECT_EQ(ret, E_RDB);
@@ -89,6 +101,148 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: QueryCellularConnectTest002
+ * @tc.desc: Verify the QueryCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest002 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(nullptr));
+        
+        int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryCellularConnectTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest002 End";
+}
+
+/**
+ * @tc.name: QueryCellularConnectTest003
+ * @tc.desc: Verify the QueryCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest003 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryCellularConnectTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest003 End";
+}
+
+/**
+ * @tc.name: QueryCellularConnectTest004
+ * @tc.desc: Verify the QueryCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest004 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryCellularConnectTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest004 End";
+}
+
+/**
+ * @tc.name: QueryCellularConnectTest005
+ * @tc.desc: Verify the QueryCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest005 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetLong(_, _)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryCellularConnectTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest005 End";
+}
+
+/**
+ * @tc.name: QueryCellularConnectTest006
+ * @tc.desc: Verify the QueryCellularConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest006 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetLong(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryCellularConnectTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryCellularConnectTest006 End";
+}
+
+/**
  * @tc.name: QueryNetConnectTest001
  * @tc.desc: Verify the QueryNetConnect function
  * @tc.type: FUNC
@@ -96,18 +250,161 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
  */
 HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "QueryNetConnectTest Start";
+    GTEST_LOG_(INFO) << "QueryNetConnectTest001 Start";
     try {
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
         
         int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
         EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "QueryNetConnectTest FAILED";
+        GTEST_LOG_(INFO) << "QueryNetConnectTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "QueryNetConnectTest End";
+    GTEST_LOG_(INFO) << "QueryNetConnectTest001 End";
+}
+
+/**
+ * @tc.name: QueryNetConnectTest002
+ * @tc.desc: Verify the QueryNetConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryNetConnectTest002 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(nullptr));
+        
+        int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryNetConnectTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryNetConnectTest002 End";
+}
+
+/**
+ * @tc.name: QueryNetConnectTest003
+ * @tc.desc: Verify the QueryNetConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryNetConnectTest003 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryNetConnectTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryNetConnectTest003 End";
+}
+
+/**
+ * @tc.name: QueryNetConnectTest004
+ * @tc.desc: Verify the QueryNetConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryNetConnectTest004 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryNetConnectTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryNetConnectTest004 End";
+}
+
+/**
+ * @tc.name: QueryNetConnectTest005
+ * @tc.desc: Verify the QueryNetConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryNetConnectTest005 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryNetConnectTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryNetConnectTest005 End";
+}
+
+/**
+ * @tc.name: QueryNetConnectTest006
+ * @tc.desc: Verify the QueryNetConnect function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryNetConnectTest006 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSetMock_, Close()).WillOnce(Return(E_OK));
+        
+        int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryNetConnectTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "QueryNetConnectTest006 End";
 }
 
 /**
@@ -309,6 +606,8 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams002, TestSize.Level1)
         EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(Return(E_RDB));
         bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
         EXPECT_EQ(ret, false);
+        delete driveKit;
+        driveKit = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetConfigParams002 FAILED";
@@ -335,6 +634,8 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams003, TestSize.Level1)
         EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
         bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
         EXPECT_EQ(ret, false);
+        delete driveKit;
+        driveKit = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetConfigParams003 FAILED";
@@ -360,6 +661,8 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams004, TestSize.Level1)
         EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
         bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
         EXPECT_EQ(ret, false);
+        delete driveKit;
+        driveKit = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetConfigParams004 FAILED";
@@ -385,6 +688,8 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams005, TestSize.Level1)
         EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
         bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
         EXPECT_EQ(ret, true);
+        delete driveKit;
+        driveKit = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetConfigParams005 FAILED";
@@ -616,6 +921,8 @@ HWTEST_F(NetworkSetManagerTest, InitNetworkSetManager001, TestSize.Level1)
         EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillRepeatedly(Return(E_OK));
         networkSetManager_->InitNetworkSetManager(bundleName, userId);
         EXPECT_TRUE(true);
+        delete driveKit;
+        driveKit = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitNetworkSetManager001 FAILED";
