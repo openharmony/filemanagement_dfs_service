@@ -71,7 +71,8 @@ void CloudDlCallbackMiddleAni::OnDownloadProcess(const DownloadProgressObj &prog
             return;
         }
         LOGI("CloudDlCallbackMiddleAni OnDownloadProcess for JS");
-        ani_env *tmpEnv = callbackImpl->GetEnv();
+        bool isAttached = false;
+        ani_env *tmpEnv = callbackImpl->GetEnv(isAttached);
         if (tmpEnv == nullptr) {
             LOGE("Failed to get env from vm");
             return;
@@ -91,7 +92,7 @@ void CloudDlCallbackMiddleAni::OnDownloadProcess(const DownloadProgressObj &prog
         if (fileCacheInfo->IsNeedClean()) {
             callbackImpl->RemoveDownloadInfo(fileCacheInfo->GetTaskId());
         }
-        callbackImpl->DetachEnv();
+        callbackImpl->DetachEnv(isAttached);
     };
     if (!ANIUtils::SendEventToMainThread(task)) {
         LOGE("failed to send event");

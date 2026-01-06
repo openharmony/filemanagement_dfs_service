@@ -133,7 +133,7 @@ void RegisterCallbackManagerAni::OnJsCallback(ani_env *env, ani_object value, ui
     }
 }
 
-ani_env *RegisterCallbackManagerAni::GetEnv()
+ani_env *RegisterCallbackManagerAni::GetEnv(bool &isAttached)
 {
     if (vm_ == nullptr) {
         return nullptr;
@@ -148,12 +148,18 @@ ani_env *RegisterCallbackManagerAni::GetEnv()
             LOGE("vm GetEnv, err: %{private}d", ret);
             return nullptr;
         }
+    } else {
+        isAttached = true;
     }
     return env;
 }
 
-void RegisterCallbackManagerAni::DetachEnv()
+void RegisterCallbackManagerAni::DetachEnv(const bool &isAttached)
 {
+    if (!isAttached) {
+        return;
+    }
+
     if (vm_ == nullptr) {
         return;
     }
@@ -177,7 +183,8 @@ void RegisterCallbackManagerAni::CleanAllCallback(bool force)
             return;
         }
     }
-    ani_env *env = GetEnv();
+    bool isAttached = false;
+    ani_env *env = GetEnv(isAttached);
     if (env != nullptr) {
         for (auto &iter : callbackList_) {
             env->GlobalReference_Delete(iter.second);
@@ -185,9 +192,8 @@ void RegisterCallbackManagerAni::CleanAllCallback(bool force)
     } else {
         LOGE("Failed to delete reference before clean callback");
     }
-    if (callbackList_.size() != 0) {
-        DetachEnv();
-    }
+
+    DetachEnv(isAttached);
 
     callbackList_.clear();
     validRefNum_ = 0;
