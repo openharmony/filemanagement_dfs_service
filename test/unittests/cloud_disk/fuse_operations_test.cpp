@@ -1478,6 +1478,7 @@ HWTEST_F(FuseOperationsTest, ReleaseTest002, TestSize.Level1)
 
         fuseoperations_->Release(req, 0, &fi);
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest002  ERROR";
@@ -1507,6 +1508,7 @@ HWTEST_F(FuseOperationsTest, ReleaseTest, TestSize.Level1)
         fuseoperations_->Release(req, ino, &fi);
         EXPECT_NE(ino, FUSE_ROOT_ID);
         EXPECT_NE((data.inodeCache)[0], nullptr);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReleaseTest ERROR";
