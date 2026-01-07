@@ -266,6 +266,23 @@ int32_t CloudDiskRdbStore::GetNotifyData(const CacheNode &cacheNode, NotifyData 
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFile,
+    MetaBase &metaBase, int32_t status, const string &filePath)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::CopyFile(std::string srcCloudId, std::string destCloudId, std::string bundleName,
+                                    const int userId, std::string destPath)
+{
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::CheckRootIdValid()
 {
     return E_OK;
