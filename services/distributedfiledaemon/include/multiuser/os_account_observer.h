@@ -36,8 +36,8 @@ public:
 
     virtual void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
 private:
-    void RemoveMPInfo(const int id);
-    void AddMPInfo(const int id, const std::string &relativePath);
+    void RemoveMountPointInfo(const int userId);
+    void AddMountPointInfo(const int userId, const std::string &relativePath);
     int32_t GetCurrentUserId();
     void OnEventUserSwitched(int32_t userId);
     void OnEventUserUnlocked(int32_t userId);

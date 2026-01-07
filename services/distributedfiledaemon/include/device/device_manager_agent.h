@@ -76,12 +76,11 @@ public:
     void JoinGroup(std::weak_ptr<MountPoint> mp);
     void QuitGroup(std::shared_ptr<MountPoint> smp);
 
-    void InitDeviceInfos();
     int32_t IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo);
 
     void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
 
     int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
@@ -120,7 +119,6 @@ private:
 
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
-    std::unordered_map<std::string, int32_t> cidNetworkType_;
     bool MountDfsCountOnly(const std::string &deviceId);
     bool UMountDfsCountOnly(const std::string &deviceId, bool needClear);
     int32_t GetCurrentUserId();
