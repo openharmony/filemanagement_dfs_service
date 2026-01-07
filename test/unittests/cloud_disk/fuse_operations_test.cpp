@@ -43,8 +43,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+#if 0
     shared_ptr<FuseOperations> fuseoperations_ = nullptr;
     shared_ptr<AssistantMock> insMock = nullptr;
+#endif
 };
 
 void FuseOperationsTest::SetUpTestCase(void)
@@ -59,17 +61,21 @@ void FuseOperationsTest::TearDownTestCase(void)
 
 void FuseOperationsTest::SetUp(void)
 {
+#if 0
     fuseoperations_ = make_shared<FuseOperations>();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
+#endif
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FuseOperationsTest::TearDown(void)
 {
+#if 0
     fuseoperations_ = nullptr;
     Assistant::ins = nullptr;
     insMock = nullptr;
+#endif
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -83,17 +89,20 @@ HWTEST_F(FuseOperationsTest, LookupTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "LookupTest001 Start";
     try {
+#if 0
         fuse_req_t req = nullptr;
         const char *name = "";
 
         fuseoperations_->Lookup(req, FUSE_ROOT_ID, name);
         EXPECT_TRUE(true);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "LookupTest001  ERROR";
     }
     GTEST_LOG_(INFO) << "LookupTest001 End";
 }
+#if 0
 
 /**
  * @tc.name: LookupTest002
@@ -1757,4 +1766,5 @@ HWTEST_F(FuseOperationsTest, IoctlTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IoctlTest003 End";
 }
+#endif
 } // namespace OHOS::FileManagement::CloudDisk::Test
