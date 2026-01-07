@@ -329,20 +329,21 @@ ohos_unittest("fuse_operations_test") {
   module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/ioctl/include",
-    "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
-    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
-    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
-    "${services_path}/clouddisk_database/include",
-
+    "${services_path}/clouddisk_database/include/",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
   ]
 
   sources = [
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
@@ -356,6 +357,7 @@ ohos_unittest("fuse_operations_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
   ]
@@ -379,6 +381,7 @@ ohos_unittest("fuse_operations_test") {
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
+    "preferences:native_preferences",
   ]
 
   defines = [
