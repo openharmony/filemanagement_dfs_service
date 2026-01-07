@@ -1230,7 +1230,7 @@ int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switch
         switchStatus = DEFAULT_DP_CANNOTFIND_VALUE;
         return ret;
     }
-    LOGE("Get switch status failed, networkId: %{pulblic}s", Utils::GetAnonyString(networkId).c_str());
+    LOGE("Get switch status failed, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
     return ret;
 }
 
