@@ -334,6 +334,11 @@ ohos_unittest("fuse_operations_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${services_path}/clouddisk_database/include",
+
   ]
 
   sources = [
