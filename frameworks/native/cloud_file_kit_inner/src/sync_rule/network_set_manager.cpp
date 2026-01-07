@@ -283,9 +283,7 @@ void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, con
     LOGI("InitNetworkSetManager bundleName: %{public}s", bundleName.c_str());
     if (bundleName == GALLERY_BUNDLE_NAME) {
         RegisterObserver(bundleName, userId, CELLULARCONNECT);
-        RegisterObserver(bundleName, userId, NETCONNECT);
         GetCellularConnect(bundleName, userId);
-        GetNetConnect(bundleName, userId);
     } else if (bundleName == HDC_BUNDLE_NAME) {
         SettingsDataManager::GetNetworkConnectionStatus();
         SettingsDataManager::GetMobileDataStatus();

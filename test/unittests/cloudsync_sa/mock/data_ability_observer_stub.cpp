@@ -15,12 +15,12 @@
 
 #include "data_ability_observer_stub.h"
 
+#include "common_utils.h"
+#include "dataobs_mgr_changeinfo.h"
 #include "hilog_tag_wrapper.h"
 #include "hilog_wrapper.h"
 #include "ipc_skeleton.h"
-#include "common_utils.h"
 #include "string_ex.h"
-#include "dataobs_mgr_changeinfo.h"
 
 namespace OHOS {
 namespace AAFwk {

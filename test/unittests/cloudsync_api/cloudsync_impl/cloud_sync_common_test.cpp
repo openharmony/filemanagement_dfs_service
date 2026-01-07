@@ -249,7 +249,8 @@ HWTEST_F(CloudSyncCommonTest, Marshalling006, TestSize.Level1)
         EXPECT_TRUE(!res);
 
         EXPECT_CALL(*parcel_, WriteUint32(_)).WillOnce(Return(true));
-        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(false));
         res = cleanOptions.Marshalling(parcel);
         EXPECT_TRUE(!res);
     } catch (...) {
@@ -660,7 +661,9 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel003, TestSize.Level1)
         res = switchDataObj.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
 
-        EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUint32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(DoAll(SetArgReferee<0>("123"), Return(true)));
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(false), Return(true)));
         res = switchDataObj.ReadFromParcel(parcel);
         EXPECT_TRUE(res);
     } catch (...) {
@@ -768,6 +771,18 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel007, TestSize.Level1)
 
         EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
         EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
         res = downloadProgressObj.ReadFromParcel(parcel);
         EXPECT_TRUE(!res);
 
