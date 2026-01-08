@@ -330,10 +330,13 @@ ohos_unittest("fuse_operations_test") {
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
-    "${distributedfile_path}/utils/log/include",
-    "${distributedfile_path}/utils/ioctl/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/clouddisk_database/include/",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
   ]
