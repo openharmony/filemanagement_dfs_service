@@ -13,13 +13,16 @@
  * limitations under the License.
  */
 
-#include <memory>
-
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
+#include <memory>
 
+#include "assistant.h"
+#include "cloud_asset_read_session_mock.h"
 #include "dfs_error.h"
 #include "file_operations_cloud.cpp"
+#include "ffrt_inner.h"
 
 enum class GenerateType : int32_t {
     FAILED_GEN,
@@ -87,15 +90,20 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FileOperationsCloudStaticTest::SetUpTestCase(void)
 {
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void FileOperationsCloudStaticTest::TearDownTestCase(void)
 {
+    Assistant::ins = nullptr;
+    insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -521,5 +529,164 @@ HWTEST_F(FileOperationsCloudStaticTest, GenerateCloudId008, TestSize.Level1)
         GTEST_LOG_(INFO) << "GenerateCloudId008 ERROR";
     }
     GTEST_LOG_(INFO) << "GenerateCloudId008 End";
+}
+
+/**
+ * @tc.name: DoSessionInitTest001
+ * @tc.desc: Verify the DoSessionInit function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, DoSessionInitTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoSessionInitTest001 Start";
+    try {
+        MetaBase metabase;
+        shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metabase, metaFile, filePtr};
+
+        auto error = make_shared<CloudFile::CloudError>(CloudFile::CloudError::CK_NO_ERROR);
+        auto openFinish = make_shared<bool>(false);
+        auto cond = make_shared<ffrt::condition_variable>();
+        SessionInitParams sessionInitParams = {filePtr, error, openFinish};
+        string bundlePath = "";
+
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillRepeatedly(Return(0));
+        DoSessionInit(sessionInitParams, cond, cloudOpenParams, bundlePath);
+
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoSessionInitTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoSessionInitTest001 End";
+}
+
+/**
+ * @tc.name: DoSessionInitTest002
+ * @tc.desc: Verify the DoSessionInit function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, DoSessionInitTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoSessionInitTest002 Start";
+    try {
+        string path = "/data";
+        string cloudId = "100";
+        string assets = "content";
+        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        data->userId = 100;
+        shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+
+        MetaBase metabase;
+        shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        auto sessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+        filePtr->readSession = sessionMock;
+        CloudOpenParams cloudOpenParams = {metabase, metaFile, filePtr};
+
+        auto error = make_shared<CloudFile::CloudError>(CloudFile::CloudError::CK_NO_ERROR);
+        auto openFinish = make_shared<bool>(false);
+        auto cond = make_shared<ffrt::condition_variable>();
+        SessionInitParams sessionInitParams = {filePtr, error, openFinish};
+        string bundlePath = "";
+
+        EXPECT_CALL(*sessionMock, InitSession()).WillOnce(Return(CloudFile::CloudError::CK_NO_ERROR));
+        EXPECT_CALL(*sessionMock, ChownUidForSyncDisk(_, _)).WillOnce(Return(true));
+
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillRepeatedly(Return(0));
+        DoSessionInit(sessionInitParams, cond, cloudOpenParams, bundlePath);
+
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoSessionInitTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoSessionInitTest002 End";
+}
+
+/**
+ * @tc.name: DoSessionInitTest003
+ * @tc.desc: Verify the DoSessionInit function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, DoSessionInitTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoSessionInitTest003 Start";
+    try {
+        string path = "/data";
+        string cloudId = "100";
+        string assets = "content";
+        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        data->userId = 100;
+        shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+
+        MetaBase metabase;
+        metabase.fileType = FILE_TYPE_THUMBNAIL;
+        shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        auto sessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+        filePtr->readSession = sessionMock;
+        CloudOpenParams cloudOpenParams = {metabase, metaFile, filePtr};
+
+        auto error = make_shared<CloudFile::CloudError>(CloudFile::CloudError::CK_NO_ERROR);
+        auto openFinish = make_shared<bool>(false);
+        auto cond = make_shared<ffrt::condition_variable>();
+        SessionInitParams sessionInitParams = {filePtr, error, openFinish};
+        string bundlePath = "";
+
+        EXPECT_CALL(*sessionMock, InitSession()).WillOnce(Return(CloudFile::CloudError::CK_NETWORK_ERROR));
+        EXPECT_CALL(*sessionMock, ChownUidForSyncDisk(_, _)).WillOnce(Return(false));
+
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillRepeatedly(Return(0));
+        DoSessionInit(sessionInitParams, cond, cloudOpenParams, bundlePath);
+
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoSessionInitTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoSessionInitTest003 End";
+}
+
+/**
+ * @tc.name: DoCloudOpenTest001
+ * @tc.desc: Verify the DoCloudOpen function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, DoCloudOpenTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoCloudOpenTest001 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_file_info *fi = new fuse_file_info;
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+
+        MetaBase metabase;
+        shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metabase, metaFile, filePtr};
+
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillRepeatedly(Return(0));
+        DoCloudOpen(req, fi, inoPtr, data, cloudOpenParams);
+
+        ffrt::wait();
+
+        delete fi;
+        delete data;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoCloudOpenTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoCloudOpenTest001 End";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

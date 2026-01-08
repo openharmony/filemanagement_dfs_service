@@ -72,4 +72,9 @@ std::string CloudAssetReadSession::GetPrepareTraceId()
 {
     return traceId_;
 }
+
+bool CloudAssetReadSession::ChownUidForSyncDisk(bool needChown, const std::string &dirPath)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::CloudFile
