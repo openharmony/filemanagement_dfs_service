@@ -1166,8 +1166,10 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
         callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
@@ -1193,8 +1195,10 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
         callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallback>();
+        CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
         EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);

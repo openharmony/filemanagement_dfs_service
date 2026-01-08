@@ -30,8 +30,6 @@ namespace OHOS::FileManagement::CloudFile::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace system;
-constexpr int32_t USER_ID = 100;
-constexpr int32_t DEV_FD = 10;
 const string REGION_PARAMETER = "const.global.region";
 const string VERSION_TYPE_PARAMETER = "const.logsystem.versiontype";
 

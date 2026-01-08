@@ -17,8 +17,8 @@
 
 #include "cloud_file_kit.h"
 #include "dfs_error.h"
-#include "utils_log.h"
 #include "settings_data_manager.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const int32_t userId)
