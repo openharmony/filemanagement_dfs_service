@@ -279,6 +279,7 @@ ohos_unittest("cloud_daemon_test") {
     "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "${distributedfile_path}/interfaces/inner_api/native",
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
