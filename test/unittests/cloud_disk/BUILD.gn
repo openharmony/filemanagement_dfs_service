@@ -342,6 +342,8 @@ ohos_unittest("fuse_operations_test") {
   ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
