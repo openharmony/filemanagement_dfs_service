@@ -733,17 +733,17 @@ group("clouddisk_service_test") {
   testonly = true
   deps = [
     ":cloud_disk_service_access_token_test",
-    ":cloud_disk_service_logfile_test",
-    ":cloud_disk_service_logfile_static_test",
-    ":cloud_disk_service_metafile_test",
-    ":cloud_disk_service_metafile_static_test",
-    ":convertor_test",
-    ":uuid_helper_test",
     ":cloud_disk_service_callback_manager_test",
     ":cloud_disk_service_callback_proxy_test",
+    ":cloud_disk_service_logfile_static_test",
+    ":cloud_disk_service_logfile_test",
+    ":cloud_disk_service_metafile_static_test",
+    ":cloud_disk_service_metafile_test",
     ":cloud_disk_sync_folder_test",
+    ":convertor_test",
     ":disk_monitor_test",
     ":disk_utils_test",
+    ":uuid_helper_test",
   ]
 
   if (dfs_service_feature_enable_cloud_disk) {
