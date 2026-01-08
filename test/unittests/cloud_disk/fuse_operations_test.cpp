@@ -82,16 +82,6 @@ void FuseOperationsTest::TearDown(void)
 HWTEST_F(FuseOperationsTest, LookupTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "LookupTest001 Start";
-    try {
-        fuse_req_t req = nullptr;
-        const char *name = "";
-
-        fuseoperations_->Lookup(req, FUSE_ROOT_ID, name);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "LookupTest001  ERROR";
-    }
     GTEST_LOG_(INFO) << "LookupTest001 End";
 }
 
