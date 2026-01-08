@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1107,6 +1107,28 @@ int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct 
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::UpdateDirtyTypeByPath(const std::string &cloudId, ValuesBucket &fileInfo,
+                                                 const MetaBase &metaBase)
+{
+    string localFilePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
+    struct stat statInfo {};
+    if (metaBase.position == CLOUD) {
+        fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
+    } else {
+        int32_t ret = stat(localFilePath.c_str(), &statInfo);
+        if (ret) {
+            return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
+                CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::DENTRY_FILE, E_PATH,
+                "localFilePath " + GetAnonyString(localFilePath) + "stat failed"});
+        } else if (statInfo.st_mtim.tv_nsec != statInfo.st_atim.tv_nsec) {
+            fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
+        } else {
+            fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
+        }
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const std::string &fileName, int64_t &rowId,
                                             const std::string &parentCloudId)
 {
@@ -1129,10 +1151,9 @@ int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const st
     fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, static_cast<int64_t>(metaBase.atime));
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, static_cast<int64_t>(metaBase.mtime));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, static_cast<int64_t>(metaBase.mtime));
-    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     fileInfo.PutInt(FileColumn::NO_NEED_UPLOAD, static_cast<int32_t>(metaBase.noUpload));
-    fileInfo.PutInt(FileColumn::FILE_TYPE, static_cast<int32_t>(metaBase.fileType));
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::UPLOAD_SUCCESS);
+    RETURN_ON_ERR(UpdateDirtyTypeByPath(cloudId, fileInfo, metaBase));
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {

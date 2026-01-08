@@ -107,6 +107,8 @@ public:
         const std::string &filePath);
     int32_t GenerateNewRowId(const std::string &cloudId, const std::string &fileName, int64_t &rowId,
                              const std::string &parentCloudId);
+    int32_t UpdateDirtyTypeByPath(const std::string &cloudId, NativeRdb::ValuesBucket &fileInfo,
+                                  const MetaBase &metaBase);
     void DatabaseRestore();
 
     static const int32_t BATCH_LIMIT_SIZE = 500;

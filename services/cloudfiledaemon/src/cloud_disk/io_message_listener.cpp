@@ -182,7 +182,7 @@ bool CheckDouble(const std::string &value)
     if (errno != 0) {
         return false;
     }
-    return *endptr == '\0';
+    return *endptr == '\0' || *endptr == '\r';
 }
 
 struct PushBackVisitor {
