@@ -156,7 +156,7 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + E_INVAL_ARG);
+    EXPECT_EQ(errorCode, E_IPCSS);
 }
 
 /**
@@ -210,13 +210,10 @@ HWTEST_F(CloudFileCacheCoreTest, DoStopTest4, TestSize.Level1)
     std::string uri = "testuri";
     bool needClean = false;
     auto ret = cloudFileCache->DoStop(uri, needClean);
+    EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
-    if (ret.IsSuccess()) {
-        EXPECT_EQ(errorCode, 0);
-    } else {
-        EXPECT_EQ(errorCode, OHOS::FileManagement::FILEIO_SYS_CAP_TAG + E_INVAL_ARG);
-    }
+    EXPECT_EQ(errorCode, E_IPCSS);
 }
 
 /**
