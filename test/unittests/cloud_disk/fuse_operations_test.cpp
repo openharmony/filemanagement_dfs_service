@@ -69,7 +69,6 @@ void FuseOperationsTest::SetUp(void)
 void FuseOperationsTest::TearDown(void)
 {
     AssistantMock::DisableMock();
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     fuseoperations_ = nullptr;
     Assistant::ins = nullptr;
     insMock = nullptr;
