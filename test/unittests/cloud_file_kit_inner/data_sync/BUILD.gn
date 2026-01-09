@@ -174,6 +174,81 @@ ohos_unittest("task_state_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("dfs_occupy_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/dfs_occupy_manager.cpp",
+    "dfs_occupy_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "commonlibrary/c_utils/base/include/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "preferences:native_preferences",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"cloud_file_kit_inner_test\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("dfs_occupy_manager_static_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "dfs_occupy_manager_static_test.cpp",
+  ]
+
+  include_dirs = [
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "commonlibrary/c_utils/base/include/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "preferences:native_preferences",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"cloud_file_kit_inner_test\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("data_sync_test") {
   testonly = true
   deps = [
@@ -181,5 +256,7 @@ group("data_sync_test") {
     ":data_syncer_rdb_store_static_test",
     ":sync_state_manager_test",
     ":task_state_manager_test",
+    ":dfs_occupy_manager_test",
+    ":dfs_occupy_manager_static_test",
   ]
 }

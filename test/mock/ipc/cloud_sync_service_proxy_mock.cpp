@@ -73,6 +73,11 @@ int32_t CloudSyncServiceProxy::GetBundlesLocalFilePresentStatus(const std::vecto
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::GetDentryFileOccupy(int64_t &occupyNum)
+{
+    return E_OK;
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     serviceProxy_ = iface_cast<ICloudSyncService>(sptr(new CloudSyncServiceMock()));

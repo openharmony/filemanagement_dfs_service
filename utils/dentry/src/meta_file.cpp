@@ -48,6 +48,8 @@ constexpr uint32_t DIR_SIZE = 4096;
 constexpr uint32_t EVEN_NUM_FLAG = 2;
 const char HDC_ID_START = '0';
 const std::string HDC_ID_END = "ff";
+const uid_t STAT_MODE_REG = 0660;
+const uid_t MEDIA_UID = 1008;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -176,6 +178,8 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     if (ret != 0) {
         LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, GetAnonyString(cacheFile_).c_str());
     }
+
+    CloudDisk::CloudFileUtils::ChangeUidByPath(cacheFile_, STAT_MODE_REG, MEDIA_UID);
 
     /* lookup and create in parent */
     parentMetaFile_ = GetParentMetaFile(userId, path);

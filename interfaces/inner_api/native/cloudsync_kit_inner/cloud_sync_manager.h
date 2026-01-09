@@ -182,6 +182,8 @@ public:
      */
     virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
                                                    std::vector<LocalFilePresentStatus> &localFilePresentStatusList) = 0;
+    // get dentryfile occupy
+    virtual int32_t GetDentryFileOccupy(int64_t &occupyNum);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

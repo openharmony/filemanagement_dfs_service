@@ -85,6 +85,7 @@ public:
     MOCK_METHOD2(RemovedClean, int32_t(const std::string &bundleName, int32_t userId));
     MOCK_METHOD2(GetBundlesLocalFilePresentStatus, int32_t(const std::vector<std::string> &bundleNames,
             std::vector<LocalFilePresentStatus> &localFilePresentStatusList));
+    MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
 };
 }
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK
