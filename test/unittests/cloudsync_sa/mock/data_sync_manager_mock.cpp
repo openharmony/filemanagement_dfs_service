@@ -235,6 +235,11 @@ int32_t DataSyncManager::GetBundlesLocalFilePresentStatus(const std::vector<std:
     return E_OK;
 }
 
+int32_t DataSyncManager::GetDentryFileOccupy(const int32_t userId, int64_t &occupyNum)
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
     const int32_t versionNumLimit, std::vector<CloudSync::HistoryVersion> &historyVersionList)
 {

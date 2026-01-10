@@ -90,7 +90,7 @@ public:
     /* static func: detect cloud-access app local file present status */
     int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
                                              std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
-                                           
+    int32_t GetDentryFileOccupy(int64_t &occupyNum) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);

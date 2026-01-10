@@ -98,6 +98,7 @@ public:
     MOCK_METHOD2(GetBundlesLocalFilePresentStatus,
                  int32_t(const std::vector<std::string> &bundleNames,
                  std::vector<LocalFilePresentStatus> &localFilePresentStatusList));
+    MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
     MOCK_METHOD3(GetHistoryVersionList,
                  int32_t(const string &uri, const int32_t versionNumLimit, vector<HistoryVersion> &historyVersionList));

@@ -2014,5 +2014,36 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Lev
     }
     GTEST_LOG_(INFO) << "RegisterFileSyncCallbackTest002 End";
 }
+
+/**
+ * @tc.name: GetDentryFileOccupyTest001
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ * @tc.require: issues2770
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 Start";
+    try {
+        int64_t num = 1;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
+        EXPECT_EQ(res, E_OK);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

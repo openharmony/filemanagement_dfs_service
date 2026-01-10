@@ -1255,4 +1255,15 @@ int32_t CloudSyncService::GetBundlesLocalFilePresentStatus(const std::vector<std
     int32_t ret = dataSyncManager_->GetBundlesLocalFilePresentStatus(bundleNames, userId, localFilePresentStatusList);
     return ret;
 }
+
+int32_t CloudSyncService::GetDentryFileOccupy(int64_t &occupyNum)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    auto userId = DfsuAccessTokenHelper::GetUserId();
+    int32_t ret = dataSyncManager_->GetDentryFileOccupy(userId, occupyNum);
+    if (ret != E_OK) {
+        LOGE("GetDentryFileOccupy failed: %{public}d", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync
