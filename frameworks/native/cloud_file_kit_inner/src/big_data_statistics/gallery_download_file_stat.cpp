@@ -76,6 +76,9 @@ static int32_t CreateDownloadFileStatData()
         LOGE("create file downloadstatistic report fail, ret = %{public}d", errno);
         return errno;
     }
+    if (chmod(path.c_str(), FILE_MODE) != 0) {
+        LOGE("chmod file downloadstatistic report fail, ret = %{public}d", errno);
+    }
     if (fclose(file)) {
         LOGE("close file downloadstatistic report fail, ret = %{public}d", errno);
     }
