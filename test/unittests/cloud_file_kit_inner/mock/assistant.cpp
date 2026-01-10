@@ -68,7 +68,7 @@ int access(const char *name, int type)
 int chmod(const char *pathname, mode_t mode)
 {
     if (AssistantMock::IsMockable()) {
-        return Assistant::ins->access(pathname, mode);
+        return Assistant::ins->chmod(pathname, mode);
     }
 
     static int (*realChmod)() = []() {

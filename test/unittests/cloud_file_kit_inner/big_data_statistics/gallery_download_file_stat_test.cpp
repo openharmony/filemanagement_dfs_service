@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "gallery_download_file_stat.cpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "assistant.cpp"
+#include "assistant.h"
 #include "gallery_download_file_stat.h"
 
 namespace OHOS::FileManagement::CloudFile::Test {
@@ -52,7 +53,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<AssistantMock> insMock_ = nullptr;
 };
 
 void GalleryDownloadFileStatTest::SetUpTestCase(void)
@@ -69,8 +70,8 @@ void GalleryDownloadFileStatTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
     AssistantMock::EnableMock();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
+    insMock_ = make_shared<AssistantMock>();
+    Assistant::ins = insMock_;
 }
 
 void GalleryDownloadFileStatTest::TearDown(void)
@@ -78,7 +79,7 @@ void GalleryDownloadFileStatTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
     AssistantMock::DisableMock();
     Assistant::ins = nullptr;
-    insMock = nullptr;
+    insMock_ = nullptr;
 }
 
 HWTEST_F(GalleryDownloadFileStatTest, GalleryDownloadFileStatTest_001, TestSize.Level1)
@@ -487,7 +488,7 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest001, TestSiz
 {
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest001 Start";
     try {
-        EXPECT_CALL(*insMock, access(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(0));
 
         int32_t ret = CreateDownloadFileStatData();
         EXPECT_EQ(ret, E_OK);
@@ -508,8 +509,8 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest002, TestSiz
 {
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 Start";
     try {
-        EXPECT_CALL(*insMock, access(_, _)).WillOnce(Return(-1));
-        EXPECT_CALL(*insMock, chmod(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
         EXPECT_EQ(ret, E_OK);
@@ -530,8 +531,8 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest003, TestSiz
 {
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 Start";
     try {
-        EXPECT_CALL(*insMock, access(_, _)).WillOnce(Return(-1));
-        EXPECT_CALL(*insMock, chmod(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(0));
 
         int32_t ret = CreateDownloadFileStatData();
         EXPECT_EQ(ret, E_OK);
