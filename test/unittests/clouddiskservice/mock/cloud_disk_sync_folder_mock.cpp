@@ -80,6 +80,9 @@ bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
 bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,
                                                       const std::string &userId, std::string &realpath)
 {
+    if (path == "/test/mockFailed") {
+        return false;
+    }
     return true;
 }
 
