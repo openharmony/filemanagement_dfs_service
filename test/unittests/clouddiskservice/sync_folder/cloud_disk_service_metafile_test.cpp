@@ -744,7 +744,6 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest002, TestSize.Level1)
         string longName(1000, 'a');
         string recordId = longName;
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
-        EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
         EXPECT_EQ(ret, ENAMETOOLONG);
     } catch (...) {
