@@ -41,6 +41,7 @@ public:
     virtual bool Catch(CloudError &error, uint32_t catchTimeOutPara);
     void SetPrepareTraceId(std::string prepareTraceId);
     std::string GetPrepareTraceId();
+    virtual bool ChownUidForSyncDisk(bool needChown, const std::string &dirPath);
     int32_t sessionCount {0};
 private:
     std::string traceId_;

@@ -81,6 +81,12 @@ struct CloudDiskCopy {
     char destPath[MAX_SIZE];
 };
 
+struct SessionInitParams {
+    std::shared_ptr<CloudDiskFile> filePtr;
+    std::shared_ptr<CloudFile::CloudError> error;
+    std::shared_ptr<bool> openFinish;
+};
+
 struct FuseInvalData {
     fuse_session *se;
     fuse_ino_t parentIno;
@@ -470,31 +476,35 @@ static int32_t HandleCloudOpenSuccess(struct fuse_file_info *fi, struct CloudDis
     return EOK;
 }
 
-static void DoSessionInit(shared_ptr<CloudDiskFile> filePtr, shared_ptr<CloudError> error,
-    shared_ptr<bool> openFinish, shared_ptr<ffrt::condition_variable> cond, CloudOpenParams cloudOpenParams)
+static void DoSessionInit(SessionInitParams sessionInitParams, shared_ptr<ffrt::condition_variable> cond,
+    CloudOpenParams cloudOpenParams, const std::string &dirPath)
 {
-    ffrt::submit([filePtr, error, openFinish, cond, cloudOpenParams] {
+    ffrt::submit([sessionInitParams, cond, cloudOpenParams, dirPath] {
         HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-        auto session = filePtr->readSession;
+        auto session = sessionInitParams.filePtr->readSession;
         if (!session) {
             LOGE("readSession is nullptr");
             {
-                unique_lock lck(filePtr->openLock);
-                *openFinish = true;
+                unique_lock lck(sessionInitParams.filePtr->openLock);
+                *sessionInitParams.openFinish = true;
             }
             cond->notify_one();
-            *error = CloudError::CK_LOCAL_ERROR;
+            *sessionInitParams.error = CloudError::CK_LOCAL_ERROR;
             return;
         }
-        *error = session->InitSession();
-        if (*error == CloudError::CK_NO_ERROR) {
+        *sessionInitParams.error = session->InitSession();
+        if (*sessionInitParams.error == CloudError::CK_NO_ERROR) {
             if (cloudOpenParams.metaBase.fileType != FILE_TYPE_CONTENT) {
-                session->Catch(*error, CATCH_TIMEOUT_S);
+                session->Catch(*sessionInitParams.error, CATCH_TIMEOUT_S);
             }
         }
+        bool isSetUidSuccess = session->ChownUidForSyncDisk(true, dirPath);
+        if (!isSetUidSuccess) {
+            LOGE("SetUid failed: %{public}s", dirPath.c_str());
+        }
         {
-            unique_lock lck(filePtr->openLock);
-            *openFinish = true;
+            unique_lock lck(sessionInitParams.filePtr->openLock);
+            *sessionInitParams.openFinish = true;
         }
         cond->notify_one();
         LOGI("download done");
@@ -509,7 +519,9 @@ static int32_t DoCloudOpen(fuse_req_t req, struct fuse_file_info *fi,
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
     auto filePtr = cloudOpenParams.filePtr;
-    DoSessionInit(filePtr, error, openFinish, cond, cloudOpenParams);
+    SessionInitParams sessionInitParams = {filePtr, error, openFinish};
+    string bundlePath = CloudFileUtils::GetLocalBaseDir(inoPtr->bundleName, data->userId);
+    DoSessionInit(sessionInitParams, cond, cloudOpenParams, bundlePath);
     unique_lock lck(filePtr->openLock);
     auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
         return *openFinish;

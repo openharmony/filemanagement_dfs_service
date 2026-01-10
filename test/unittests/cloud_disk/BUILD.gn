@@ -163,6 +163,7 @@ ohos_unittest("file_operations_cloud_static_test") {
     "${services_path}/clouddisk_database/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
   ]
 
 sources = [
@@ -173,6 +174,7 @@ sources = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "file_operations_cloud_static_test.cpp",
+    "mock/libfuse_mock.cpp",
   ]
 
   deps = [
