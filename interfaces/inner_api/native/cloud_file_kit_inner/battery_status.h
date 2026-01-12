@@ -32,16 +32,18 @@ public:
         LEVEL_LOW,
         LEVEL_TOO_LOW,
     };
-    static bool IsAllowUpload(bool forceFlag);
+    static bool IsAllowSync(bool forceFlag);
     static bool IsBatteryCapcityOkay();
     static CapacityLevel GetCapacityLevel();
     static void GetInitChargingStatus();
     static void SetChargingStatus(bool status);
     static bool IsCharging();
     static int32_t GetCapacity();
+    static void SetCapacity(int32_t capacity);
 private:
-    static inline CapacityLevel level_{LEVEL_NORMAL};
-    static inline std::atomic_bool isCharging_{false};
+    static inline std::atomic<int32_t> capacity_{-1};
+    static inline std::atomic<CapacityLevel> level_{LEVEL_NORMAL};
+    static inline std::atomic<bool> isCharging_{false};
 };
 } // namespace OHOS::FileManagement::CloudSync
 

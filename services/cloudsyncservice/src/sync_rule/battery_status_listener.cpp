@@ -46,6 +46,18 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         ffrt::submit([this]() {
             listener_->OnPowerConnected();
         });
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
+#ifdef SUPPORT_POWER
+        std::string KEY_CAPACITY = OHOS::PowerMgr::BatteryInfo::COMMON_EVENT_KEY_CAPACITY;
+        int32_t defaultCapacity = -1;
+        auto capacity = eventData.GetWant().GetIntParam(KEY_CAPACITY, defaultCapacity);
+        if (capacity == -1) {
+            LOGW("BatteryStatusListener: capacity is default value");
+        } else {
+            BatteryStatus::SetCapacity(capacity);
+        }
+        LOGI("Battery status changed: BATTERY_STATUS_CHANGED, capacity: %{public}d", capacity);
+#endif
     } else {
         LOGI("OnReceiveEvent action is invalid");
     }
@@ -68,6 +80,7 @@ void BatteryStatusListener::Start()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<BatteryStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);

@@ -243,7 +243,7 @@ ohos_unittest("battery_status_test") {
   module_out_path = "dfs_service/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
-    "${distributedfile_path}/test/mock/battersrvclient_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_client/battery_client_mock.cpp",
     "battery_status_test.cpp",
   ]
 
@@ -255,6 +255,7 @@ ohos_unittest("battery_status_test") {
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${utils_path}/log/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_client",
   ]
 
   deps = [
