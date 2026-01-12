@@ -123,13 +123,19 @@ bool ObserverImpl::DeleteObserver(const Uri &uri, const shared_ptr<CloudNotifyOb
 CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env_(env)
 {
     if (fun != nullptr) {
-        napi_create_reference(env_, fun, 1, &cbOnRef_);
+        cbOnRef_ = make_shared<AutoRef>();
+        unique_lock<mutex> lock(cbOnRef_->refMtx);
+        auto status = napi_create_reference(env_, fun, 1, &cbOnRef_->cbRef);
+        if (status != napi_ok) {
+            cbOnRef_->cbRef = nullptr;
+            LOGE("Failed to create reference, status: %{public}d.", status);
+        }
     }
 }
 
 CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
 {
-    DeleteReference();
+    DeleteReferenceAsync();
 }
 
 void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
@@ -137,12 +143,16 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     LOGD("OnComplete state: %{public}d, error: %{public}d", static_cast<int32_t>(msg->state_),
         static_cast<int32_t>(msg->error_));
     auto cloudSyncCallback = msg->cloudSyncCallback_.lock();
-    if (cloudSyncCallback == nullptr || cloudSyncCallback->cbOnRef_ == nullptr) {
-        LOGE("cloudSyncCallback->cbOnRef_ is nullptr");
+    if (cloudSyncCallback == nullptr || cloudSyncCallback->cbOnRef_->cbRef == nullptr) {
+        LOGE("cloudSyncCallback->cbOnRef_->cbRef is nullptr");
         return;
     }
+    napi_ref ref = nullptr;
+    {
+        unique_lock<mutex> lock(cloudSyncCallback->cbOnRef_->refMtx);
+        ref = cloudSyncCallback->cbOnRef_->cbRef;
+    }
     auto env = cloudSyncCallback->env_;
-    auto ref = cloudSyncCallback->cbOnRef_;
     napi_handle_scope scope = nullptr;
     napi_status status = napi_open_handle_scope(env, &scope);
     if (status != napi_ok || scope == nullptr) {
@@ -152,7 +162,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_value jsCallback = nullptr;
     status = napi_get_reference_value(env, ref, &jsCallback);
     if (status != napi_ok) {
-        LOGE("Create reference failed, status: %{public}d", status);
+        LOGE("Get reference value failed, status: %{public}d, ref: %{public}d", status, (ref == nullptr));
         napi_close_handle_scope(env, scope);
         return;
     }
@@ -168,6 +178,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     }
     napi_close_handle_scope(env, scope);
 }
+
 void CloudSyncCallbackImpl::OnDeathRecipient()
 {
     auto isInDownOrUpload = (preState_ == CloudSyncState::UPLOADING) || (preState_ == CloudSyncState::DOWNLOADING);
@@ -206,9 +217,39 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
 
 void CloudSyncCallbackImpl::DeleteReference()
 {
-    if (cbOnRef_ != nullptr) {
-        napi_delete_reference(env_, cbOnRef_);
-        cbOnRef_ = nullptr;
+    unique_lock<mutex> lock(cbOnRef_->refMtx);
+    if (cbOnRef_->cbRef != nullptr) {
+        napi_delete_reference(env_, cbOnRef_->cbRef);
+        cbOnRef_->cbRef = nullptr;
+    }
+}
+
+void CloudSyncCallbackImpl::DeleteReferenceAsync()
+{
+    if (cbOnRef_->cbRef == nullptr) {
+        return;
+    }
+
+    auto status = napi_send_event (
+        env_,
+        [env{env_}, cbOnRef{cbOnRef_}]() mutable {
+            unique_lock<mutex> lock(cbOnRef->refMtx);
+            if ((env == nullptr) || (cbOnRef->cbRef == nullptr)) {
+                LOGE("Failed to callback, is napi_ref null: %{public}d.", (cbOnRef->cbRef == nullptr));
+                return;
+            }
+            auto status = napi_delete_reference(env, cbOnRef->cbRef);
+            if (status != napi_ok) {
+                LOGE("Delete reference failed, status: %{public}d", status);
+                return;
+            }
+            cbOnRef->cbRef = nullptr;
+        },
+        napi_event_priority::napi_eprio_immediate,
+        taskName_.c_str()
+    );
+    if (status != napi_ok) {
+        LOGE("Failed to execute libuv work queue, status: %{public}d", status);
     }
 }
 

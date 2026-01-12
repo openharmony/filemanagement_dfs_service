@@ -26,7 +26,7 @@ public:
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
 
 private:
-    std::shared_ptr<CloudSyncCallback> callback_;
+    std::shared_ptr<CloudSyncCallback> callback_{nullptr};
 };
 } // namespace OHOS::FileManagement::CloudSync
 
