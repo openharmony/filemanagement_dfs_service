@@ -156,11 +156,6 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     return;
 }
 
-void DeviceManagerAgent::InitDeviceInfos()
-{
-    return;
-}
-
 int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
