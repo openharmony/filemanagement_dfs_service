@@ -18,7 +18,11 @@
 #include "cloud_file_kit_mock.cpp"
 #include "cycle_task.h"
 #include "cycle_task_runner.h"
+#include "cloud_status_mock.h"
 #include "dfs_error.h"
+#include "data_syncer_rdb_store.h"
+#include "gmock/gmock.h"
+#include "result_set_mock.h"
 #include "system_load.h"
 #include "tasks/database_backup_task.h"
 #include "tasks/optimize_cache_task.h"
@@ -37,6 +41,9 @@ using namespace std;
 using namespace testing;
 
 static std::shared_ptr<CloudFile::DataSyncManager> g_dataSyncManagerPtr_;
+static const string START_CONDITION = "persist.kernel.cloudsync.screen_off_enable_download";
+static const string TEST_BUNDLE_NAME = "com.ohos.test";
+static const int32_t USER_ID = 100;
 
 class SubCycleTask : public CycleTask {
 public:
@@ -59,6 +66,11 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<CloudFileKitMock> ability = make_shared<CloudFileKitMock>();
+    static inline std::shared_ptr<DataSyncerRdbStoreMock> dataSyncerRdbStore_ = nullptr;
+    static inline std::shared_ptr<ResultSetMock> rset_ = nullptr;
+    static inline std::unique_ptr<CloudPrefImpl> cloudPrefImpl_ = nullptr;
+    static inline std::shared_ptr<CloudStatusMethodMock> cloudStatus_ = nullptr;
+    static inline std::shared_ptr<CycleTaskRunner> taskRunner_ = nullptr;
 };
 
 void CloudSyncServiceCycleTaskTest::SetUpTestCase(void)
@@ -67,12 +79,29 @@ void CloudSyncServiceCycleTaskTest::SetUpTestCase(void)
     if (g_dataSyncManagerPtr_ == nullptr) {
         g_dataSyncManagerPtr_ = make_shared<CloudFile::DataSyncManager>();
     }
+    rset_ = std::make_shared<ResultSetMock>();
+    cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(USER_ID, TEST_BUNDLE_NAME,  CycleTask::FILE_PATH);
+    dataSyncerRdbStore_ = make_shared<DataSyncerRdbStoreMock>();
+    DataSyncerRdbStoreMock::proxy_ = dataSyncerRdbStore_;
+    cloudStatus_ = make_shared<CloudStatusMethodMock>();
+    CloudStatusMethod::proxy_ = cloudStatus_;
+    EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+        SetArgReferee<1>(nullptr),
+        Return(E_OK)));
+    taskRunner_ = make_shared<CycleTaskRunner>(g_dataSyncManagerPtr_);
 }
 
 void CloudSyncServiceCycleTaskTest::TearDownTestCase(void)
 {
     ability = nullptr;
     g_dataSyncManagerPtr_ = nullptr;
+    rset_ = nullptr;
+    cloudPrefImpl_ = nullptr;
+    dataSyncerRdbStore_ = nullptr;
+    cloudStatus_ = nullptr;
+    taskRunner_ = nullptr;
+    CloudStatusMethodMock::proxy_ = nullptr;
+    DataSyncerRdbStoreMock::proxy_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -220,10 +249,9 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, InitTasksTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "InitTasksTest001 start";
     try {
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(g_dataSyncManagerPtr_);
-        taskRunner->cycleTasks_.clear();
-        taskRunner->InitTasks();
-        EXPECT_EQ(taskRunner->cycleTasks_.size(), 7);
+        taskRunner_->cycleTasks_.clear();
+        taskRunner_->InitTasks();
+        EXPECT_EQ(taskRunner_->cycleTasks_.size(), 7);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitTasksTest001 FAILED";
@@ -242,34 +270,13 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, StartTaskTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartTaskTest001 start";
     try {
         EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(g_dataSyncManagerPtr_);
-        GTEST_LOG_(INFO) << "StartTaskTest001 userId_:" << taskRunner->userId_;
-        taskRunner->StartTask();
+        GTEST_LOG_(INFO) << "StartTaskTest001 userId_:" << taskRunner_->userId_;
+        taskRunner_->StartTask();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartTaskTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "StartTaskTest001 end";
-}
-
-/**
- * @tc.name: SetRunableBundleNamesTest001
- * @tc.desc: Verify the SetRunableBundleNames function
- * @tc.type: FUNC
- * @tc.require: IB3SWZ
- */
-HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 start";
-    try {
-        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(g_dataSyncManagerPtr_);
-        taskRunner->SetRunableBundleNames();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 FAILED";
-    }
-    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 end";
 }
 
 /*
@@ -810,6 +817,162 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, RunTaskTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "RunTaskTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "RunTaskTest001 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest001
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(nullptr),
+            Return(E_OK)));
+        taskRunner_->SetRunableBundleNames();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest001 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest002
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest002 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(nullptr),
+            Return(E_RDB)));
+        taskRunner_->SetRunableBundleNames();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest002 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest003
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest003 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        cloudPrefImpl_->SetLong("lastCheckTime", 0);
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(rset_),
+            Return(E_OK)));
+        EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*rset_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*rset_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>(TEST_BUNDLE_NAME), Return(E_OK)));
+        EXPECT_CALL(*cloudStatus_, IsCloudStatusOkay(_, _)).WillOnce(Return(true));
+        taskRunner_->SetRunableBundleNames();
+        
+        EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "true");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest003 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest004
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest004 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(rset_),
+            Return(E_OK)));
+        EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_RDB));
+        taskRunner_->SetRunableBundleNames();
+        EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "false");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest004 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest005
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest005 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        std::time_t currentTime = std::time(nullptr);
+        cloudPrefImpl_->SetLong("lastCheckTime", currentTime);
+
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(rset_),
+            Return(E_OK)));
+        EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*rset_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*rset_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>(TEST_BUNDLE_NAME), Return(E_OK)));
+
+        taskRunner_->SetRunableBundleNames();
+        EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "false");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest005 end";
+}
+
+/**
+ * @tc.name: SetRunableBundleNamesTest006
+ * @tc.desc: Verify the SetRunableBundleNames function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest006 start";
+    try {
+        EXPECT_NE(g_dataSyncManagerPtr_, nullptr);
+        cloudPrefImpl_->SetLong("lastCheckTime", 0);
+        EXPECT_CALL(*dataSyncerRdbStore_, QueryDataSyncer(_, _)).WillOnce(DoAll(
+            SetArgReferee<1>(rset_),
+            Return(E_OK)));
+        EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*rset_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*rset_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>(TEST_BUNDLE_NAME), Return(E_OK)));
+        EXPECT_CALL(*cloudStatus_, IsCloudStatusOkay(_, _)).WillOnce(Return(false));
+
+        taskRunner_->SetRunableBundleNames();
+        EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "false");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetRunableBundleNamesTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetRunableBundleNamesTest006 end";
 }
 }
 }

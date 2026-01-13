@@ -15,6 +15,8 @@
 
 #include "parameters.h"
 #include "parameter.h"
+#include <map>
+#include <string>
 
 int WaitParameter(const char *key, const char *value, int timeout)
 {
@@ -23,6 +25,7 @@ int WaitParameter(const char *key, const char *value, int timeout)
 
 namespace OHOS {
 namespace system {
+std::map<std::string, std::string> paraMap_;
 /*
  * Returns true if the system parameter `key` has the value "1", "y", "yes", "on", or "true",
  * false for "0", "n", "no", "off", or "false", or `def` otherwise.
@@ -39,14 +42,21 @@ std::string GetParameter(const std::string &key, const std::string &def)
 {
     if (ParameterMock::proxy_ != nullptr) {
         return ParameterMock::proxy_->GetParameter(key, def);
+    } else {
+        auto it = paraMap_.find(key);
+        if (it != paraMap_.end()) {
+            return it->second;
+        }
     }
-    return "";
+    return def;
 }
 
 bool SetParameter(const std::string& key, const std::string& value)
 {
     if (ParameterMock::proxy_ != nullptr) {
         return ParameterMock::proxy_->SetParameter(key, value);
+    } else {
+        paraMap_[key] = value;
     }
     return true;
 }
