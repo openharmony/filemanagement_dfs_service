@@ -59,6 +59,7 @@ void FuseOperationsTest::TearDownTestCase(void)
 
 void FuseOperationsTest::SetUp(void)
 {
+    AssistantMock::EnableMock();
     fuseoperations_ = make_shared<FuseOperations>();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
@@ -67,6 +68,7 @@ void FuseOperationsTest::SetUp(void)
 
 void FuseOperationsTest::TearDown(void)
 {
+    AssistantMock::DisableMock();
     fuseoperations_ = nullptr;
     Assistant::ins = nullptr;
     insMock = nullptr;
