@@ -223,6 +223,7 @@ public:
     virtual int DeleteRdbStore(const std::string &) = 0;
     virtual std::string GetDefaultDatabasePath(const std::string &, const std::string &, int &) = 0;
     virtual int MockStat(const char* path, struct stat* buf) = 0;
+    virtual int MockAccess(const char* path, int mode) = 0;
 };
 
 class AssistantMock : public Assistant {
@@ -231,6 +232,7 @@ public:
     MOCK_METHOD1(DeleteRdbStore, int(const std::string &));
     MOCK_METHOD3(GetDefaultDatabasePath, std::string(const std::string &, const std::string &, int &));
     MOCK_METHOD2(MockStat, int(const char*, struct stat*));
+    MOCK_METHOD2(MockAccess, int(const char*, int));
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
 #endif
