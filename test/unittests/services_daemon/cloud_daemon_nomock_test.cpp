@@ -12,24 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "dfs_error.h"
-#include "fuse_assistant.h"
-#include "fuse_manager/fuse_manager.h"
 #include "ipc/cloud_daemon.h"
-#include "iremote_object.h"
 #include "setting_data_helper.h"
 #include "system_ability_definition.h"
 #include "system_mock.h"
-#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudFile::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace system;
+using namespace std;
 const string REGION_PARAMETER = "const.global.region";
 const string VERSION_TYPE_PARAMETER = "const.logsystem.versiontype";
 
@@ -40,7 +36,6 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<CloudDaemon> cloudDaemon_;
-    static inline shared_ptr<FuseAssistantMock> insMock_ = nullptr;
     static inline shared_ptr<SystemMock> systemMock = nullptr;
 };
 
@@ -59,8 +54,6 @@ void CloudDaemonTest::SetUp(void)
     int32_t saID = FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID;
     bool runOnCreate = true;
     cloudDaemon_ = std::make_shared<CloudDaemon>(saID, runOnCreate);
-    insMock_ = make_shared<FuseAssistantMock>();
-    FuseAssistantMock::ins = insMock_;
 
     systemMock = make_shared<SystemMock>();
     ISystem::system_ = systemMock;
@@ -69,9 +62,6 @@ void CloudDaemonTest::SetUp(void)
 
 void CloudDaemonTest::TearDown(void)
 {
-    FuseAssistantMock::ins = nullptr;
-    insMock_ = nullptr;
-
     systemMock = nullptr;
     ISystem::system_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";

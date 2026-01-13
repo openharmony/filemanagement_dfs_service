@@ -61,6 +61,7 @@ public:
 void IoMessageListenerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    system("mkdir -p /data/service/el1/public/cloudfile/rdb");
     ioMessageManager_ = make_shared<IoMessageManager>();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
