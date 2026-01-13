@@ -357,7 +357,9 @@ ohos_unittest("file_copy_manager_test") {
   module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "copy/file_copy_manager_test.cpp",
   ]
 
@@ -365,6 +367,7 @@ ohos_unittest("file_copy_manager_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
@@ -388,13 +391,16 @@ ohos_unittest("file_copy_manager_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "libuv:uv",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
 
   defines = [
     "private=public",
+    "DFS_DISABLE_RADAR_ABILITY",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
 
@@ -424,10 +430,12 @@ ohos_unittest("remote_file_copy_manager_test") {
   module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/ipc_wrapper.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "copy/remote_file_copy_manager_test.cpp",
   ]
 
@@ -435,6 +443,7 @@ ohos_unittest("remote_file_copy_manager_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
@@ -459,13 +468,16 @@ ohos_unittest("remote_file_copy_manager_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "libuv:uv",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
 
   defines = [
     "private=public",
+    "DFS_DISABLE_RADAR_ABILITY",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
 
@@ -495,6 +507,7 @@ ohos_unittest("trans_listener_test") {
   module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
@@ -504,6 +517,7 @@ ohos_unittest("trans_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "copy/trans_listener_test.cpp",
   ]
 
@@ -511,6 +525,7 @@ ohos_unittest("trans_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
@@ -531,13 +546,16 @@ ohos_unittest("trans_listener_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "libuv:uv",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
 
   defines = [
     "private=public",
+    "DFS_DISABLE_RADAR_ABILITY",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
 
@@ -638,8 +656,10 @@ ohos_unittest("file_copy_listener_test") {
   module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "copy/file_copy_listener_test.cpp",
   ]
 
@@ -647,6 +667,7 @@ ohos_unittest("file_copy_listener_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include/copy",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy",
+    "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
@@ -662,10 +683,13 @@ ohos_unittest("file_copy_listener_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "os_account:os_account_innerkits",
   ]
 
   defines = [
     "private=public",
+    "DFS_DISABLE_RADAR_ABILITY",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
 
