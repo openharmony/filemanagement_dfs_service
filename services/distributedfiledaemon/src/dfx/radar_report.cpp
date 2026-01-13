@@ -38,7 +38,7 @@ constexpr const char *DFS_SERVICE_NAME = "ohos.storage.distributedfile.daemon";
 #endif
 void RadarReportAdapter::InitRadar()
 {
-    std::unique_lock<std::mutex> lock(onStatisticsLock_);
+    std::unique_lock<std::mutex> lock(onRadarReportLock_);
     opStatistics_ = {0, 0, 0, 0, 0, 0};
     callRadarStatisticReportThread_ = std::thread([this]() { StorageRadarThd(); });
     if (!callRadarStatisticReportThread_.joinable()) {
