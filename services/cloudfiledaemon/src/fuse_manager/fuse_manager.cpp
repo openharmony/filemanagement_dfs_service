@@ -245,7 +245,7 @@ struct HmdfsSaveAppId {
 
 struct FuseData {
     int userId;
-    int64_t fileId{0};
+    uint64_t fileId{0};
     shared_ptr<CloudInode> rootNode{nullptr};
     /* store CloudInode by path */
     map<uint64_t, shared_ptr<CloudInode>> inodeCache;
@@ -688,7 +688,8 @@ static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childI
     ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt_qos_background));
 }
 
-static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode,
+    struct fuse_file_info *fi, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetCacheTmpPath(data->userId, cInode->path);
@@ -722,17 +723,13 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         return 0;
     }
     auto fdsan = new fdsan_fd(fd);
-    auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
-    if (cloudFdInfo == nullptr) {
-        LOGE("cloudFdCache is nullptr");
-        return 0;
-    }
+    std::unique_lock<std::shared_mutex> lock(data->cacheLock);
     cloudFdInfo->fdsan = reinterpret_cast<uint64_t>(fdsan);
     return 0;
 }
 
 static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data,
-    shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+    shared_ptr<CloudInode> cInode, struct fuse_file_info *fi, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
     string prepareTraceId;
     if (cInode->readSession) {
@@ -743,7 +740,7 @@ static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data
         return ret;
     }
     if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
-        ret = CloudOpenOnLocal(data, cInode, fi);
+        ret = CloudOpenOnLocal(data, cInode, fi, cloudFdInfo);
         if (ret < 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
                 FaultType::INODE_FILE, ret, "inner error"});
@@ -773,8 +770,8 @@ static void DoSessionInit(shared_ptr<CloudInode> cInode, shared_ptr<CloudError> 
             unique_lock lck(cInode->openLock);
             *openFinish = true;
         }
-        cond->notify_one();
         *err = CloudError::CK_LOCAL_ERROR;
+        cond->notify_one();
         return;
     }
     *err = session->InitSession();
@@ -893,7 +890,8 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, struct FuseData *d
     cInode->cacheFileIndex = std::move(mp);
 }
 
-static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi, struct FuseData *data)
+static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
+    struct FuseData *data, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
@@ -917,7 +915,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
         cInode->readSession->CancelSession();
         return -ENETUNREACH;
     }
-    return HandleOpenResult(*error, data, cInode, fi);
+    return HandleOpenResult(*error, data, cInode, fi, cloudFdInfo);
 }
 
 static bool IsLocalFile(struct FuseData *data, shared_ptr<CloudInode> cInode)
@@ -940,7 +938,7 @@ static bool NeedReCloudOpen(struct FuseData *data, shared_ptr<CloudInode> cInode
 }
 
 static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<CloudInode> cInode,
-    struct fuse_file_info *fi)
+    struct fuse_file_info *fi, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
     do {
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
@@ -962,7 +960,8 @@ static void HandleReopen(fuse_req_t req, struct FuseData *data, shared_ptr<Cloud
             break;
         }
         auto fdsan = new fdsan_fd(fd);
-        data->cloudFdCache[fi->fh]->fdsan = reinterpret_cast<uint64_t>(fdsan);
+        std::unique_lock<std::shared_mutex> lock(data->cacheLock);
+        cloudFdInfo->fdsan = reinterpret_cast<uint64_t>(fdsan);
     } while (0);
 
     cInode->sessionRefCount++;
@@ -1001,7 +1000,7 @@ static void EraseCloudFdCache(FuseData *data, uint64_t key)
 }
 
 static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
-    struct FuseData *data, shared_ptr<CloudInode>& cInode)
+    struct FuseData *data, shared_ptr<CloudInode>& cInode, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
     pid_t pid = GetPidFromTid(req->ctx.pid);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId, IsHdc(data));
@@ -1030,7 +1029,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
             GetAssetKey(cInode->mBase->fileType), GetAssetPath(cInode, data));
         if (cInode->readSession) {
             cInode->readSession->SetPrepareTraceId(prepareTraceId);
-            auto ret = DoCloudOpen(cInode, fi, data);
+            auto ret = DoCloudOpen(cInode, fi, data, cloudFdInfo);
             if (ret == 0) {
                 fuse_reply_open(req, fi);
             } else {
@@ -1051,7 +1050,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
             FaultType::DRIVERKIT, EPERM, "readSession is null or fix size fail"});
     } else {
-        HandleReopen(req, data, cInode, fi);
+        HandleReopen(req, data, cInode, fi, cloudFdInfo);
     }
     wSesLock.unlock();
 }
@@ -1069,12 +1068,12 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         return;
     }
     {
-        std::shared_lock<std::shared_mutex> lock(data->cacheLock);
+        std::unique_lock<std::shared_mutex> lock(data->cacheLock);
         data->fileId++;
-        fi->fh = static_cast<uint64_t>(data->fileId);
+        fi->fh = data->fileId;
         data->cloudFdCache[fi->fh] = std::make_shared<CloudFdInfo>();
     }
-    CloudOpenHelper(req, ino, fi, data, cInode);
+    CloudOpenHelper(req, ino, fi, data, cInode, data->cloudFdCache[fi->fh]);
 }
 
 static void DeleteFdsan(shared_ptr<struct CloudFdInfo> cloudFdInfo)
@@ -1795,11 +1794,13 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     }
     std::string appId = "";
     auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
-    if (cloudFdInfo->fdsan != UINT64_MAX) {
-        CloudReadOnLocalFile(req, buf, size, off, cloudFdInfo->fdsan);
-        return;
+    if (cloudFdInfo != nullptr) {
+        if (cloudFdInfo->fdsan != UINT64_MAX) {
+            CloudReadOnLocalFile(req, buf, size, off, cloudFdInfo->fdsan);
+            return;
+        }
+        appId = cloudFdInfo->appId;
     }
-    appId = cloudFdInfo->appId;
 
     ReadSlice readSlice;
     /* slice read request into 4M pages */
