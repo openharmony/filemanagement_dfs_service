@@ -15,7 +15,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#define TEST_LOCAL_PATH_MNT_HMDFS "/test/mnt/hmdfs/"
 #include "clouddisk_rdbstore.cpp"
+#undef TEST_LOCAL_PATH_MNT_HMDFS
 #include "rdb_assistant.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
@@ -43,6 +45,7 @@ void CloudDiskRdbStoreStaticTest::SetUpTestCase(void)
 
 void CloudDiskRdbStoreStaticTest::TearDownTestCase(void)
 {
+    Assistant::ins = nullptr;
     insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
@@ -301,6 +304,19 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest005, TestSize.Level
 }
 
 /**
+ * @tc.name: ConvertUriToSrcPathTest006
+ * @tc.desc: Verify the ConvertUriToSrcPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ConvertUriToSrcPathTest006, TestSize.Level1)
+{
+    string uri = "";
+    string expectResult = "/";
+    string filePath = ConvertUriToSrcPath(uri);
+    EXPECT_EQ(filePath, expectResult);
+}
+
+/**
  * @tc.name: CloudSyncTriggerFuncTest001
  * @tc.desc: Verify the CloudSyncTriggerFunc
  * @tc.type: FUNC
@@ -336,6 +352,44 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CloudSyncTriggerFuncTest002, TestSize.Leve
         GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest002 failed";
     }
     GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest002 end";
+}
+
+/**
+ * @tc.name: CloudSyncTriggerFuncTest003
+ * @tc.desc: Verify the CloudSyncTriggerFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CloudSyncTriggerFuncTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest003 start";
+    try {
+        std::vector<std::string> args = {};
+        std::string result = CloudSyncTriggerFunc(args);
+        EXPECT_EQ(result, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest003 end";
+}
+
+/**
+ * @tc.name: CloudSyncTriggerFuncTest004
+ * @tc.desc: Verify the CloudSyncTriggerFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CloudSyncTriggerFuncTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest004 start";
+    try {
+        std::vector<std::string> args = {"123", "com.example.app", "extra"};
+        std::string result = CloudSyncTriggerFunc(args);
+        EXPECT_EQ(result, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "CloudSyncTriggerFuncTest004 end";
 }
 
 /**
@@ -436,6 +490,26 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, GetFileExtensionTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetFileExtensionTest005 failed";
     }
     GTEST_LOG_(INFO) << "GetFileExtensionTest005 end";
+}
+
+/**
+ * @tc.name: GetFileExtensionTest006
+ * @tc.desc: Verify the GetFileExtension
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetFileExtensionTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtensionTest006 start";
+    try {
+        std::string fileName = ".";
+        std::string extension;
+        int32_t result = GetFileExtension(fileName, extension);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileExtensionTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtensionTest006 end";
 }
 
 /**
@@ -556,6 +630,66 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameForSpaceTest006, TestSize.Level1)
         GTEST_LOG_(INFO) << "CheckNameForSpaceTest006 failed";
     }
     GTEST_LOG_(INFO) << "CheckNameForSpaceTest006 end";
+}
+
+/**
+ * @tc.name: CheckNameForSpaceTest007
+ * @tc.desc: Verify the CheckNameForSpace
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameForSpaceTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest007 start";
+    try {
+        std::string fileName = "fileName ";
+        int32_t isDir = FILE;
+        int32_t result = CheckNameForSpace(fileName, isDir);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNameForSpaceTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest007 end";
+}
+
+/**
+ * @tc.name: CheckNameForSpaceTest008
+ * @tc.desc: Verify the CheckNameForSpace
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameForSpaceTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest008 start";
+    try {
+        std::string fileName = ".trash";
+        int32_t isDir = FILE;
+        int32_t result = CheckNameForSpace(fileName, isDir);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNameForSpaceTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest008 end";
+}
+
+/**
+ * @tc.name: CheckNameForSpaceTest009
+ * @tc.desc: Verify the CheckNameForSpace
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameForSpaceTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest009 start";
+    try {
+        std::string fileName = ".Trash";
+        int32_t isDir = DIRECTORY;
+        int32_t result = CheckNameForSpace(fileName, isDir);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNameForSpaceTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckNameForSpaceTest009 end";
 }
 
 /**
@@ -829,6 +963,25 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameTest014, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CheckNameTest015
+ * @tc.desc: Verify the CheckName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CheckNameTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNameTest015 start";
+    try {
+        std::string fileName = "file-name_test (1)";
+        int32_t result = CheckName(fileName);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNameTest015 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckNameTest015 end";
+}
+
+/**
  * @tc.name: CreateFileTest001
  * @tc.desc: Verify the CreateFile
  * @tc.type: FUNC
@@ -872,6 +1025,29 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFileTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "CreateFileTest002 failed";
     }
     GTEST_LOG_(INFO) << "CreateFileTest002 end";
+}
+
+/**
+ * @tc.name: CreateFileTest003
+ * @tc.desc: Verify the CreateFile
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, CreateFileTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateFileTest003 start";
+    try {
+        std::string fileName = "test.txt";
+        std::string filePath = "/invalid/path/";
+        ValuesBucket fileInfo;
+        struct stat statInfo{};
+        int32_t result = CreateFile(fileName, filePath, fileInfo, &statInfo);
+
+        EXPECT_EQ(result, E_PATH);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateFileTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "CreateFileTest003 end";
 }
 
 /**
@@ -988,6 +1164,40 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "HandleWriteValueTest002 end";
 }
+
+/**
+ * @tc.name: HandleWriteValueTest003
+ * @tc.desc: Verify the HandleWriteValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleWriteValueTest003 start";
+    try {
+        ValuesBucket write;
+        int32_t position = CLOUD;
+        struct stat statInfo;
+        statInfo.st_size = 100;
+
+        HandleWriteValue(write, position, statInfo);
+
+        ValueObject obj;
+        write.GetObject(FileColumn::FILE_SIZE, obj);
+        int64_t fileSize;
+        obj.GetLong(fileSize);
+        EXPECT_EQ(fileSize, 100);
+
+        write.GetObject(FileColumn::DIRTY_TYPE, obj);
+        int32_t dirtyType;
+        obj.GetInt(dirtyType);
+        EXPECT_EQ(dirtyType, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleWriteValueTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleWriteValueTest003 end";
+}
+
 
 /**
  * @tc.name: WriteUpdateDentryTest001
@@ -1205,6 +1415,75 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RecycleSetValueTest006
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest006 start";
+    try {
+        TrashOptType val = TrashOptType::RECYCLE;
+        ValuesBucket setXAttr;
+        int32_t position = CLOUD;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest006 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest007
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest007 start";
+    try {
+        TrashOptType val = TrashOptType::RESTORE;
+        ValuesBucket setXAttr;
+        int32_t position = LOCAL;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest007 end";
+}
+
+/**
+ * @tc.name: RecycleSetValueTest008
+ * @tc.desc: Verify the RecycleSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleSetValueTest008 start";
+    try {
+        TrashOptType val = TrashOptType::RECYCLE;
+        ValuesBucket setXAttr;
+        int32_t position = CLOUD;
+        int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_FDIRTY);
+
+        int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RecycleSetValueTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "RecycleSetValueTest008 end";
+}
+
+/**
  * @tc.name: UpdateParentTest001
  * @tc.desc: Verify the RecycleSetValue
  * @tc.type: FUNC
@@ -1248,6 +1527,319 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateParentTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "UpdateParentTest002 failed";
     }
     GTEST_LOG_(INFO) << "UpdateParentTest002 end";
+}
+
+/**
+ * @tc.name: UpdateParentTest003
+ * @tc.desc: Verify the UpdateParent
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateParentTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateParentTest003 start";
+    try {
+        string parentCloudId;
+        int32_t userId = 0;
+        string bundleName = "test";
+        string srcPath = "/should_fail";
+
+        int32_t ret = UpdateParent(userId, bundleName, srcPath, parentCloudId);
+
+        EXPECT_NE(ret, E_OK) << "ForceCreateDirectory should fail and return errno.";
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateParentTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateParentTest003 end";
+}
+
+/**
+ * @tc.name: UTCTimeMilliSecondsTest001
+ * @tc.desc: Verify the UTCTimeMilliSeconds
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UTCTimeMilliSecondsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest001 start";
+    try {
+        int64_t time1 = UTCTimeMilliSeconds();
+        EXPECT_GT(time1, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest001 end";
+}
+
+/**
+ * @tc.name: UTCTimeMilliSecondsTest002
+ * @tc.desc: Verify the UTCTimeMilliSeconds
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UTCTimeMilliSecondsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest002 start";
+    try {
+        int64_t time1 = UTCTimeMilliSeconds();
+        int64_t time2 = UTCTimeMilliSeconds();
+        EXPECT_GE(time2, time1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UTCTimeMilliSecondsTest002 end";
+}
+
+/**
+ * @tc.name: UpdateMetabaseTest001
+ * @tc.desc: Verify the UpdateMetabase
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateMetabaseTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateMetabaseTest001 start";
+    try {
+        MetaBase metaBase;
+        int64_t fileTimeAdded = 1234567890;
+        struct stat statInfo{};
+        statInfo.st_mtim.tv_sec = 1000;
+        statInfo.st_mtim.tv_nsec = 500000000;
+        statInfo.st_mode = 0644;
+        statInfo.st_size = 1024;
+
+        UpdateMetabase(metaBase, fileTimeAdded, &statInfo);
+
+        EXPECT_EQ(metaBase.atime, static_cast<uint64_t>(fileTimeAdded));
+        EXPECT_EQ(metaBase.mode, statInfo.st_mode);
+        EXPECT_EQ(metaBase.size, static_cast<uint64_t>(statInfo.st_size));
+        EXPECT_EQ(metaBase.position, LOCAL);
+        EXPECT_EQ(metaBase.fileType, FILE_TYPE_CONTENT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateMetabaseTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateMetabaseTest001 end";
+}
+
+/**
+ * @tc.name: UpdateMetabaseTest002
+ * @tc.desc: Verify the UpdateMetabase
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateMetabaseTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateMetabaseTest002 start";
+    try {
+        MetaBase metaBase;
+        int64_t fileTimeAdded = 0;
+        struct stat statInfo{};
+
+        UpdateMetabase(metaBase, fileTimeAdded, &statInfo);
+
+        EXPECT_EQ(metaBase.atime, 0);
+        EXPECT_EQ(metaBase.position, LOCAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateMetabaseTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateMetabaseTest002 end";
+}
+
+/**
+ * @tc.name: HandleCreateValueTest001
+ * @tc.desc: Verify the HandleCreateValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, HandleCreateValueTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCreateValueTest001 start";
+    try {
+        ValuesBucket fileInfo;
+        std::string cloudId = "testCloudId";
+        std::string parentCloudId = "testParentCloudId";
+        std::string fileName = "testFile.txt";
+        std::string bundleName = "com.example.app";
+
+        HandleCreateValue(fileInfo, cloudId, parentCloudId, fileName, bundleName);
+
+        ValueObject valueObj;
+        fileInfo.GetObject(FileColumn::CLOUD_ID, valueObj);
+        std::string resultCloudId;
+        valueObj.GetString(resultCloudId);
+        EXPECT_EQ(resultCloudId, cloudId);
+
+        fileInfo.GetObject(FileColumn::FILE_NAME, valueObj);
+        std::string resultFileName;
+        valueObj.GetString(resultFileName);
+        EXPECT_EQ(resultFileName, fileName);
+
+        fileInfo.GetObject(FileColumn::PARENT_CLOUD_ID, valueObj);
+        std::string resultParentCloudId;
+        valueObj.GetString(resultParentCloudId);
+        EXPECT_EQ(resultParentCloudId, parentCloudId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCreateValueTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleCreateValueTest001 end";
+}
+
+/**
+ * @tc.name: HandleCreateValueTest002
+ * @tc.desc: Verify the HandleCreateValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, HandleCreateValueTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCreateValueTest002 start";
+    try {
+        ValuesBucket fileInfo;
+        std::string cloudId = "";
+        std::string parentCloudId = "";
+        std::string fileName = "";
+        std::string bundleName = "";
+
+        HandleCreateValue(fileInfo, cloudId, parentCloudId, fileName, bundleName);
+
+        ValueObject valueObj;
+        fileInfo.GetObject(FileColumn::CLOUD_ID, valueObj);
+        std::string resultCloudId;
+        valueObj.GetString(resultCloudId);
+        EXPECT_EQ(resultCloudId, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCreateValueTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleCreateValueTest002 end";
+}
+
+/**
+ * @tc.name: UpdateFileTriggerSyncTest001
+ * @tc.desc: Verify the UpdateFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateFileTriggerSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest001 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return("/path/to/cloudfile/user123/app123/rdb"));
+
+        std::string result = UpdateFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+        EXPECT_NE(result.find("files_update_cloud_sync_trigger"), std::string::npos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest001 end";
+}
+
+/**
+ * @tc.name: UpdateFileTriggerSyncTest002
+ * @tc.desc: Verify the UpdateFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateFileTriggerSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest002 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return(""));
+
+        std::string result = UpdateFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateFileTriggerSyncTest002 end";
+}
+
+/**
+ * @tc.name: DeleteFileTriggerSyncTest001
+ * @tc.desc: Verify the DeleteFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, DeleteFileTriggerSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest001 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return("/path/to/cloudfile/user123/app123/rdb"));
+
+        std::string result = DeleteFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+        EXPECT_NE(result.find("files_delete_cloud_sync_trigger"), std::string::npos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest001 end";
+}
+
+/**
+ * @tc.name: DeleteFileTriggerSyncTest002
+ * @tc.desc: Verify the DeleteFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, DeleteFileTriggerSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest002 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return(""));
+
+        std::string result = DeleteFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DeleteFileTriggerSyncTest002 end";
+}
+
+/**
+ * @tc.name: LocalFileTriggerSyncTest001
+ * @tc.desc: Verify the LocalFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, LocalFileTriggerSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest001 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return("/path/to/cloudfile/user123/app123/rdb"));
+
+        std::string result = LocalFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+        EXPECT_NE(result.find("files_local_cloud_sync_trigger"), std::string::npos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest001 end";
+}
+
+/**
+ * @tc.name: LocalFileTriggerSyncTest002
+ * @tc.desc: Verify the LocalFileTriggerSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, LocalFileTriggerSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest002 start";
+    try {
+        RdbStoreMock store;
+        EXPECT_CALL(store, GetPath()).WillOnce(Return(""));
+
+        std::string result = LocalFileTriggerSync(store);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "LocalFileTriggerSyncTest002 end";
 }
 
 /**

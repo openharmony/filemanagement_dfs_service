@@ -75,7 +75,11 @@ static const string ROOT_CLOUD_ID = "rootId";
 static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 // srcPath only used in restore files
 static const string SRC_PATH_KEY = "srcPath";
+#ifndef TEST_LOCAL_PATH_MNT_HMDFS
 static const string LOCAL_PATH_MNT_HMDFS = "/mnt/hmdfs/";
+#else
+static const string LOCAL_PATH_MNT_HMDFS = TEST_LOCAL_PATH_MNT_HMDFS;
+#endif
 static const string LOCAL_PATH_CLOUD_DATA = "/cloud/data/";
 static const string FILE_SCHEME = "file";
 static const int32_t DIRECTLY_RECYCLED_COPY = 4;
