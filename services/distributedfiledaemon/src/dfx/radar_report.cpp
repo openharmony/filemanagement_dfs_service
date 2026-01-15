@@ -44,6 +44,7 @@ void RadarReportAdapter::InitRadar()
     if (!callRadarStatisticReportThread_.joinable()) {
         return;
     }
+    callRadarStatisticReportThread_.detach();
     lastRadarReportTime_ = std::chrono::system_clock::now();
 }
 
