@@ -106,6 +106,7 @@ public:
     MOCK_METHOD2(GetBundlesLocalFilePresentStatus,
                  int32_t(const std::vector<std::string> &bundleNames,
                  std::vector<LocalFilePresentStatus> &localFilePresentStatusList));
+    MOCK_METHOD1(IsFinishPull, int32_t(bool &finishPull));
     MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,

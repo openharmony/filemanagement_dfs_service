@@ -80,5 +80,6 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void ClearFileConflict([in] String uri);
     void GetBundlesLocalFilePresentStatus([in] String[] bundleNames,
                                           [out] LocalFilePresentStatus[] localFilePresentStatusList);
+    void IsFinishPull([out] boolean finishFlag);
     void GetDentryFileOccupy([out] long occupyNum);
 }

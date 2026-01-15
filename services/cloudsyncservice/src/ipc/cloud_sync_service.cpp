@@ -1258,6 +1258,22 @@ int32_t CloudSyncService::GetBundlesLocalFilePresentStatus(const std::vector<std
     return ret;
 }
 
+int32_t CloudSyncService::IsFinishPull(bool &finishFlag)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    std::string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName) != E_OK) {
+        LOGE("Can not get caller bundle name");
+        return E_INVAL_ARG;
+    }
+    if (!AccountUtils::IsAccountAvailableByUser(userId)) {
+        LOGE("User unavailable");
+        return E_INVAL_ARG;
+    }
+    return dataSyncManager_->IsFinishPull(userId, bundleName, finishFlag);
+}
+
 int32_t CloudSyncService::GetDentryFileOccupy(int64_t &occupyNum)
 {
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));

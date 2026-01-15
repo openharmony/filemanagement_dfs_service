@@ -28,6 +28,7 @@ group("cloudsyncunittests") {
       "ndk:ndk_test",
       "services_daemon:services_daemon_test",
       "utils:utils_test",
+      "data_sync_manager:data_sync_manager_test",
     ]
   }
 }

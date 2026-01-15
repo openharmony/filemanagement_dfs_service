@@ -108,6 +108,7 @@ public:
     MOCK_METHOD2(IsFileConflict, int32_t(const string &uri, bool &isConflict));
     MOCK_METHOD1(ClearFileConflict, int32_t(const string &uri));
     MOCK_METHOD2(RemovedClean, ErrCode(const std::string& bundleName, int32_t userId));
+    MOCK_METHOD1(IsFinishPull, int32_t(bool &finishPull));
 
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,

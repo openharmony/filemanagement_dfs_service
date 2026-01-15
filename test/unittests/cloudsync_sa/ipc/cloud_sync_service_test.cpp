@@ -2127,6 +2127,122 @@ HWTEST_F(CloudSyncServiceTest, HandleRemovedCleanTest005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsFinishPullTest001
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, IsFinishPullTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest001 start";
+    bool finishFlag;
+    try {
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->IsFinishPull(finishFlag);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "IsFinishPullTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest001 end";
+}
+
+/**
+ * @tc.name: IsFinishPullTest002
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, IsFinishPullTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest002 start";
+    bool finishFlag;
+    try {
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->IsFinishPull(finishFlag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "IsFinishPullTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest002 end";
+}
+
+/**
+ * @tc.name: IsFinishPullTest003
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, IsFinishPullTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest003 start";
+    bool finishFlag;
+    try {
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountType(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(AccountSA::OsAccountType::MAINTENANCE), Return(0)));
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(135));
+        auto ret = servicePtr_->IsFinishPull(finishFlag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "IsFinishPullTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest003 end";
+}
+
+/**
+ * @tc.name: IsFinishPullTest004
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, IsFinishPullTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest004 start";
+    bool finishFlag;
+    try {
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->IsFinishPull(finishFlag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "IsFinishPullTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest004 end";
+}
+
+/**
+ * @tc.name: IsFinishPullTest005
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, IsFinishPullTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest005 start";
+    bool finishFlag;
+    std::string bundleName = "";
+    try {
+        auto ret = servicePtr_->dataSyncManager_->IsFinishPull(100, bundleName, finishFlag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "IsFinishPullTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest005 end";
+}
+
+/**
  * @tc.name: GetDentryFileOccupyTest001
  * @tc.desc: Verify the GetDentryFileOccupy function.
  * @tc.type: FUNC
