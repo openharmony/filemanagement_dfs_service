@@ -44,6 +44,7 @@ void RadarReportAdapter::InitRadar()
     if (!callRadarStatisticReportThread_.joinable()) {
         return;
     }
+    callRadarStatisticReportThread_.detach();
     lastRadarReportTime_ = std::chrono::system_clock::now();
 }
 
@@ -51,9 +52,6 @@ void RadarReportAdapter::UnInitRadar()
 {
     std::unique_lock<std::mutex> lock(onRadarReportLock_);
     stopRadarReport_ = true;
-    if (callRadarStatisticReportThread_.joinable()) {
-        callRadarStatisticReportThread_.join();
-    }
 }
 
 void RadarReportAdapter::StorageRadarThd()
