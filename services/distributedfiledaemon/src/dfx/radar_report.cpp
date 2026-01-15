@@ -52,9 +52,6 @@ void RadarReportAdapter::UnInitRadar()
 {
     std::unique_lock<std::mutex> lock(onRadarReportLock_);
     stopRadarReport_ = true;
-    if (callRadarStatisticReportThread_.joinable()) {
-        callRadarStatisticReportThread_.join();
-    }
 }
 
 void RadarReportAdapter::StorageRadarThd()
