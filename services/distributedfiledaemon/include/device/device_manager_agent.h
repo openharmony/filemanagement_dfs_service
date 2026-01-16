@@ -93,6 +93,7 @@ public:
                                const uint32_t callingTokenId);
     void RemoveMountDfsCount(const std::string &mountPath);
     void GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList);
+    void UMountDisShareFile();
 
     void OfflineAllDevice();
     void OnRemoteDied() override;

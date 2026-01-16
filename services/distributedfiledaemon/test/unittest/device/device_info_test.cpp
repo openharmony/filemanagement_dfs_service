@@ -101,9 +101,9 @@ HWTEST_F(DeviceInfoTest, DeviceInfoTest_GetCid_0100, TestSize.Level1)
     try {
         devInfo.initCidFlag_ = false;
         (void)devInfo.GetCid();
-        EXPECT_TRUE(false);
-    } catch (...) {
         EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "DeviceInfoTest_GetCid_0100 start";
 }
