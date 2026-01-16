@@ -227,22 +227,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     }
 
     cidNetTypeRecord_.erase(info.cid_);
-    int32_t ret = NO_ERROR;
-    int32_t userId = GetCurrentUserId();
-    auto localNetworkId = GetLocalDeviceInfo().GetCid();
-    if (userId == INVALID_USER_ID) {
-        LOGE("DeviceManagerAgent::GetCurrentUserId Fail");
-        return;
-    }
-    auto storageMgrProxy = GetStorageManager();
-    if (storageMgrProxy == nullptr) {
-        LOGE("storageMgrProxy is null");
-        return;
-    }
-    ret = storageMgrProxy->UMountDisShareFile(userId, localNetworkId);
-    if (ret != NO_ERROR) {
-        LOGE("UMountDisShareFile failed, ret =%{public}d", ret);
-    }
     LOGI("OnDeviceOffline end");
 }
 
@@ -669,6 +653,25 @@ std::unordered_map<std::string, MountCountInfo> DeviceManagerAgent::GetAllMountI
 {
     std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     return mountDfsCount_;
+}
+
+void DeviceManagerAgent::UMountDisShareFile()
+{
+    LOGI("UMountDisShareFile begin");
+    int32_t ret = NO_ERROR;
+    int32_t userId = GetCurrentUserId();
+    auto localNetworkId = GetLocalDeviceInfo().GetCid();
+    if (userId == INVALID_USER_ID || localNetworkId.empty()) {
+        LOGE("userId or networkId is invalid");
+        return;
+    }
+    auto storageMgrProxy = GetStorageManager();
+    if (storageMgrProxy == nullptr) {
+        LOGE("storageMgrProxy is null");
+        return;
+    }
+    ret = storageMgrProxy->UMountDisShareFile(userId, localNetworkId);
+    LOGI("UMountDisShareFile end, ret = %{public}d", ret);
 }
 } // namespace DistributedFile
 } // namespace Storage

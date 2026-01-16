@@ -169,6 +169,7 @@ void Daemon::OnStop()
     subScriber_ = nullptr;
     daemonExecute_ = nullptr;
     eventHandler_ = nullptr;
+    DeviceManagerAgent::GetInstance()->UMountDisShareFile();
     SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     AllConnectManager::GetInstance().UnInitAllConnectManager();
     RadarReportAdapter::GetInstance().ReportDfxStatistics();

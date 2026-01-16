@@ -158,6 +158,9 @@ ohos_unittest("device_manager_agent_test") {
     debug = false
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/include",
+  ]
 
   module_out_path = module_output_path
 
@@ -167,6 +170,7 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/device/mock_other_method.cpp",
     "device/device_manager_agent_test.cpp",
   ]
 

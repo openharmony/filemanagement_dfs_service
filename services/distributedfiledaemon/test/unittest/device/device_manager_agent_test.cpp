@@ -24,6 +24,7 @@
 #include "device_manager_impl_mock.h"
 #include "mountpoint/mount_point.h"
 #include "network/softbus/softbus_agent.h"
+#include "mock_other_method.h"
 
 namespace OHOS {
 bool g_parameterVaule = true;
@@ -64,6 +65,7 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
+    static inline shared_ptr<DfsDeviceOtherMethodMock> otherMethodMock_ = nullptr;
 };
 
 void DeviceManagerAgentTest::SetUpTestCase(void)
@@ -79,6 +81,8 @@ void DeviceManagerAgentTest::TearDownTestCase(void)
 void DeviceManagerAgentTest::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
+    otherMethodMock_ = make_shared<DfsDeviceOtherMethodMock>();
+    DfsDeviceOtherMethodMock::otherMethod = otherMethodMock_;
     deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
     EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillRepeatedly(Return(0));
@@ -94,6 +98,8 @@ void DeviceManagerAgentTest::TearDown(void)
     // input testcase teardown step，teardown invoked after each testcases
     DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
     deviceManagerImplMock_ = nullptr;
+    DfsDeviceOtherMethodMock::otherMethod = nullptr;
+    otherMethodMock_ = nullptr;
 }
 
 /**
@@ -1001,6 +1007,106 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QueryRelatedGroups_0100,
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QueryRelatedGroups_0100 end";
 }
 
+/**
+ * @tc.name: DeviceManagerAgentTest_UMountDisShareFile_0100
+ * @tc.desc: Verify the UMountDisShareFile function with invalid userID and networkID.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UMountDisShareFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UMountDisShareFile_0200
+ * @tc.desc: Verify the UMountDisShareFile function with invalid networkID.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UMountDisShareFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0200 start";
+    bool res = true;
+
+    try {
+        std::vector<int32_t> userIds{100, 101};
+        EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+            .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(NO_ERROR)));
+
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UMountDisShareFile_0300
+ * @tc.desc: Verify the UMountDisShareFile function with invalid userID.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UMountDisShareFile_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0300 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->GetLocalDeviceInfo() = deviceInfo;
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0300 end";
+}
+
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UMountDisShareFile_0400
+ * @tc.desc: Verify the UMountDisShareFile function handles multiple calls gracefully.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UMountDisShareFile_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0400 start";
+    bool res = true;
+
+    try {
+        std::vector<int32_t> userIds{100, 101};
+        EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
+            .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(NO_ERROR)));
+
+        // Call UMountDisShareFile multiple times to ensure it handles gracefully
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+        DeviceManagerAgent::GetInstance()->UMountDisShareFile();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDisShareFile_0400 end";
+}
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
