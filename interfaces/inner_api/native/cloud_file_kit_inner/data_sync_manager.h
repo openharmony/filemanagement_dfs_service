@@ -108,6 +108,7 @@ public:
     virtual int32_t ClearFileConflict(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
     virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames, const int32_t &userId,
                                             std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList);
+    virtual int32_t IsFinishPull(const int32_t userId, const std::string &bundleName, bool &finishFlag);
     
     // get dentryfile occupy
     virtual int32_t GetDentryFileOccupy(const int32_t userId, int64_t &occupyNum);

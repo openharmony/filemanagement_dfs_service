@@ -116,6 +116,7 @@ public:
     ErrCode ClearFileConflict(const std::string &uri) override;
     ErrCode GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
                                              std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
+    ErrCode IsFinishPull(bool &finishFlag) override;
     ErrCode GetDentryFileOccupy(int64_t &occupyNum) override;
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

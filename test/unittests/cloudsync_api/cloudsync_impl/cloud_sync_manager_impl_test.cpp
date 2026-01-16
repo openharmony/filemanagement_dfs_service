@@ -2045,5 +2045,35 @@ HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 End";
 }
+
+/**
+ * @tc.name: IsFinishPullTest001
+ * @tc.desc: Verify the IsFinishPull function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, IsFinishPullTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsFinishPullTest001 Start";
+    try {
+        bool finishFlag = false;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, IsFinishPull(_)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
+        EXPECT_EQ(res, E_OK);
+
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, IsFinishPull(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsFinishPullTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsFinishPullTest001 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

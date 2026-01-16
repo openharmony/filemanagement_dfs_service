@@ -1,0 +1,87 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("data_sync_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+  public_configs =
+      [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "data_sync_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/mock/account_sa/include",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloud_sync_service_stub",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "e2fsprogs:libext2_blkid",
+    "e2fsprogs:libext2_uuid",
+    "eventhandler:libeventhandler",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "memmgr:memmgrclient",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+  use_exceptions = true
+}
