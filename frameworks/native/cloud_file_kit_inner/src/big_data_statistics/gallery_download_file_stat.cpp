@@ -154,6 +154,7 @@ void GalleryDownloadFileStat::UpdateDownloadStat(uint32_t mediaType, uint64_t si
 
 void GalleryDownloadFileStat::UpdateDownloadBundleName(const std::string &bundleName)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     stat_.bundleName = bundleName;
 }
 
