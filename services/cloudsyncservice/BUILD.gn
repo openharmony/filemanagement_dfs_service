@@ -211,6 +211,11 @@ ohos_shared_library("cloudsync_sa") {
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
+  if (cloudsync_service_power) {
+    external_deps += [ "battery_manager:batterysrv_client" ]
+    defines += [ "SUPPORT_POWER" ]
+  }
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

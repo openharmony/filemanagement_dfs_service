@@ -18,11 +18,16 @@
 namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 constexpr int32_t STOP_CAPACITY_LIMIT = 10;
-constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
+constexpr int32_t FULL_BATTERY_CAPACITY = 100;
 
 void BatteryStatus::SetChargingStatus(bool status)
 {
-    isCharging_ = status;
+    isCharging_.store(status);
+}
+
+void BatteryStatus::SetCapacity(int32_t capacity)
+{
+    capacity_.store(capacity);
 }
 
 void BatteryStatus::GetInitChargingStatus()
@@ -30,70 +35,75 @@ void BatteryStatus::GetInitChargingStatus()
 #ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
     auto pluggedType = batterySrvClient.GetPluggedType();
-    isCharging_ = pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_NONE &&
-                  pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_BUTT;
-    LOGI("pluggedType: %{public}d, isCharging: %{public}d", pluggedType, isCharging_.load());
+    isCharging_.store(pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_NONE &&
+                  pluggedType != PowerMgr::BatteryPluggedType::PLUGGED_TYPE_BUTT);
+    capacity_.store(batterySrvClient.GetCapacity());
+    LOGI("pluggedType: %{public}d, isCharging: %{public}d, capacity: %{public}d",
+        pluggedType, isCharging_.load(), capacity_.load());
 #endif
 }
 
 int32_t BatteryStatus::GetCapacity()
 {
-    int32_t capacity = DEFAULT_BATTERY_CAPCITY;
 #ifdef SUPPORT_POWER
-    auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
-    capacity = batterySrvClient.GetCapacity();
-#endif
+    auto capacity = capacity_.load();
+    if (capacity < 0) {
+        auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
+        capacity = batterySrvClient.GetCapacity();
+    }
     return capacity;
+#endif
+    return FULL_BATTERY_CAPACITY;
 }
 
-bool BatteryStatus::IsAllowUpload(bool forceFlag)
+bool BatteryStatus::IsAllowSync(bool forceFlag)
 {
-    if (isCharging_) {
+    if (isCharging_.load()) {
         return true;
     }
 
     auto capacity = GetCapacity();
     if (capacity < STOP_CAPACITY_LIMIT) {
-        LOGE("power saving, stop upload");
-        level_ = BatteryStatus::LEVEL_TOO_LOW;
+        LOGE("power saving, stop sync");
+        level_.store(BatteryStatus::LEVEL_TOO_LOW);
         return false;
     } else if (capacity < PAUSE_CAPACITY_LIMIT) {
         if (forceFlag) {
             return true;
         } else {
-            LOGE("power saving, pause upload");
-            level_ = BatteryStatus::LEVEL_LOW;
+            LOGE("power saving, pause sync");
+            level_.store(BatteryStatus::LEVEL_LOW);
             return false;
         }
     } else {
-        level_ = BatteryStatus::LEVEL_NORMAL;
+        level_.store(BatteryStatus::LEVEL_NORMAL);
         return true;
     }
 }
 
 bool BatteryStatus::IsBatteryCapcityOkay()
 {
-    if (isCharging_) {
+    if (isCharging_.load()) {
         return true;
     }
 
     auto capacity = GetCapacity();
     if (capacity < STOP_CAPACITY_LIMIT) {
         LOGE("battery capacity too low");
-        level_ = BatteryStatus::LEVEL_TOO_LOW;
+        level_.store(BatteryStatus::LEVEL_TOO_LOW);
         return false;
     }
-    level_ = BatteryStatus::LEVEL_NORMAL;
+    level_.store(BatteryStatus::LEVEL_NORMAL);
     return true;
 }
 
 BatteryStatus::CapacityLevel BatteryStatus::GetCapacityLevel()
 {
-    return level_;
+    return level_.load();
 }
 
 bool BatteryStatus::IsCharging()
 {
-    return isCharging_;
+    return isCharging_.load();
 }
 } // namespace OHOS::FileManagement::CloudSync

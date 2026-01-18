@@ -31,7 +31,7 @@ int32_t BatteryStatus::GetCapacity()
     return capacity;
 }
 
-bool BatteryStatus::IsAllowUpload(bool forceFlag)
+bool BatteryStatus::IsAllowSync(bool forceFlag)
 {
     return true;
 }

@@ -32,6 +32,9 @@ using namespace CloudFile;
 using Want = OHOS::AAFwk::Want;
 using ChargeState = PowerMgr::BatteryChargeState;
 using PluggedType = PowerMgr::BatteryPluggedType;
+constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
+constexpr int32_t STOP_CAPACITY_LIMIT = 10;
+constexpr int32_t FULL_BATTERY_CAPACITY = 100;
 
 class BatteryStatusMock final : public BatteryStatus {
 public:
@@ -221,6 +224,64 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         GTEST_LOG_(INFO) << " OnReceiveEventTest004 FAILED";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest005
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED);
+        want.SetParam(OHOS::PowerMgr::BatteryInfo::COMMON_EVENT_KEY_CAPACITY, FULL_BATTERY_CAPACITY);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        auto ret = BatteryStatus::GetCapacity();
+        ffrt::wait();
+        EXPECT_EQ(ret, FULL_BATTERY_CAPACITY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest006
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        BatteryStatus::SetCapacity(FULL_BATTERY_CAPACITY);
+        subscriber->OnReceiveEvent(eventData);
+        auto ret = BatteryStatus::GetCapacity();
+        ffrt::wait();
+        EXPECT_EQ(ret, FULL_BATTERY_CAPACITY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 End";
 }
 
 /**
