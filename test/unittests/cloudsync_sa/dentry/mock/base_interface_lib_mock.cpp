@@ -16,6 +16,14 @@
 
 namespace OHOS {
 namespace FileManagement {
+enum ErrStatus {
+    E_FAIL = -1,
+    E_SUCCESS = 0,
+    E_EINVAL = 22,
+    DENTRY_PER_GROUP = 60,
+    MAX_BUCKET_LEVEL = 63
+};
+
 string GetDentryfileByPath(uint32_t userId, const string &path, bool caseSense)
 {
     if (BaseInterfaceLib::baseInterfaceLib_ == nullptr) {
@@ -134,6 +142,15 @@ int32_t DoCreate(const MetaBase &base)
 int32_t DoLookupAndRemove(MetaBase &metaBase)
 {
     return E_SUCCESS;
+}
+
+int32_t MyOpen(const char* s, int flag, mode_t mode)
+{
+    if (BaseInterfaceLib::baseInterfaceLib_ == nullptr) {
+        return E_SUCCESS;
+    }
+
+    return BaseInterfaceLib::baseInterfaceLib_->MyOpen(s, flag, mode);
 }
 } // FileManagement
 } // OHOS

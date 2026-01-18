@@ -30,6 +30,14 @@ constexpr uint32_t TEST_USER_ID = 201;
 constexpr uint64_t TEST_ISIZE = 1024;
 #endif
 
+enum ErrStatus {
+    E_FAIL = -1,
+    E_SUCCESS = 0,
+    E_EINVAL = 22,
+    DENTRY_PER_GROUP = 60,
+    MAX_BUCKET_LEVEL = 63
+};
+
 class CloudDiskDentryMetaFileTest : public testing::Test {
 public:
     static void SetUpTestCase(void);

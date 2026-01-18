@@ -684,6 +684,12 @@ std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::s
         metaFileList_.splice(metaFileList_.begin(), metaFileList_, it->second);
         mFile = it->second->second;
     } else {
+        std::string dentryFile = MetaFile::GetDentryfileByPath(userId, path);
+        UniqueFd fd = UniqueFd{open(dentryFile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
+        if (fd.Get() < 0 && errno == EDQUOT) {
+            LOGE("create dentryfile failed, fd=%{public}d, errno :%{public}d", fd.Get(), errno);
+            return mFile;
+        }
         mFile = std::make_shared<MetaFile>(userId, path);
         while (metaFiles_.size() >= MAX_META_FILE_NUM) {
             auto deleteKey = metaFileList_.back().first;
