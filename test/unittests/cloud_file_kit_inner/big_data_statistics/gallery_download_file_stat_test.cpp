@@ -513,7 +513,7 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest002, TestSiz
         EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
-        EXPECT_EQ(ret, -1);
+        EXPECT_NE(ret, E_OK);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 ERROR";
@@ -536,7 +536,7 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest003, TestSiz
         EXPECT_CALL(*insMock_, close(_)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
-        EXPECT_EQ(ret, -1);
+        EXPECT_NE(ret, E_OK);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 ERROR";

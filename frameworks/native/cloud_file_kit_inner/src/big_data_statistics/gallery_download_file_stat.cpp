@@ -74,11 +74,11 @@ static int32_t CreateDownloadFileStatData()
     int fd = creat(path.c_str(), FILE_MODE);
     if (fd < 0) {
         LOGE("create file downloadstatistic report fail, ret = %{public}d", errno);
-        return -1;
+        return errno;
     }
     if (close(fd)) {
         LOGE("close file downloadstatistic report fail, ret = %{public}d", errno);
-        return -1;
+        return errno;
     }
     return E_OK;
 }
