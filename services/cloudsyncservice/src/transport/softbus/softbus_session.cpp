@@ -41,8 +41,8 @@ SoftbusSession::SoftbusSession(const std::string &peerDeviceId, const std::strin
 
 int32_t SoftbusSession::Start()
 {
-    std::unique_lock<mutex> lock(sessionMutex_);
     CancelReleaseSessionIfNeeded();
+    std::unique_lock<mutex> lock(sessionMutex_);
     if (sessionId_ != INVALID_SESSION_ID) {
         LOGI("session is exist, no need open again");
         return E_OK;
