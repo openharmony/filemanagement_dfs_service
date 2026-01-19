@@ -533,7 +533,7 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest003, TestSiz
     try {
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
         EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, close(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, close(_)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
         EXPECT_EQ(ret, -1);
@@ -556,7 +556,7 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest004, TestSiz
     try {
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
         EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*insMock_, close(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, close(_)).WillOnce(Return(0));
 
         int32_t ret = CreateDownloadFileStatData();
         EXPECT_EQ(ret, E_OK);
