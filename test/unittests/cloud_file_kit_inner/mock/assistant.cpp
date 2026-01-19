@@ -50,8 +50,8 @@ int access(const char *name, int type)
         return Assistant::ins->access(name, type);
     }
 
-    static int (*realAccess)() = []() {
-        auto func = (int (*)())dlsym(RTLD_NEXT, "access");
+    static int (*realAccess)(const char*, int) = []() {
+        auto func = (int (*)(const char*, int))dlsym(RTLD_NEXT, "access");
         if (!func) {
             GTEST_LOG_(ERROR) << "Failed to resolve real access: " << dlerror();
         }
@@ -71,8 +71,8 @@ int creat(const char *pathname, mode_t mode)
         return Assistant::ins->creat(pathname, mode);
     }
 
-    static int (*realCreat)() = []() {
-        auto func = (int (*)())dlsym(RTLD_NEXT, "creat");
+    static int (*realCreat)(const char*, mode_t) = []() {
+        auto func = (int (*)(const char*, mode_t))dlsym(RTLD_NEXT, "creat");
         if (!func) {
             GTEST_LOG_(ERROR) << "Failed to resolve real creat: " << dlerror();
         }
@@ -92,8 +92,8 @@ int close(int fd)
         return Assistant::ins->close(fd);
     }
 
-    static int (*realClose)() = []() {
-        auto func = (int (*)())dlsym(RTLD_NEXT, "close");
+    static int (*realClose)(int) = []() {
+        auto func = (int (*)(int))dlsym(RTLD_NEXT, "close");
         if (!func) {
             GTEST_LOG_(ERROR) << "Failed to resolve real close: " << dlerror();
         }
