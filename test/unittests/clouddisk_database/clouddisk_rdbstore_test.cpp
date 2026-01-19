@@ -40,33 +40,33 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<CloudDiskRdbStore> clouddiskrdbStore_ = nullptr;
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<CloudDiskRdbStore> clouddiskrdbStore_ = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void CloudDiskRdbStoreTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
-    clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
 }
 
 void CloudDiskRdbStoreTest::TearDownTestCase(void)
 {
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-    clouddiskrdbStore_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void CloudDiskRdbStoreTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
+    clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
 }
 
 void CloudDiskRdbStoreTest::TearDown(void)
 {
+    Assistant::ins = nullptr;
+    insMock = nullptr;
+    clouddiskrdbStore_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -1927,9 +1927,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest1, TestSize.Level1)
     const std::string fileName = "testfile";
     int64_t rowId = 0;
     const std::string parentCloudId = "1";
+    struct stat st;
+    st.st_size = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
@@ -1947,9 +1950,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest2, TestSize.Level1)
     const std::string fileName = "testfile";
     int64_t rowId = 0;
     const std::string parentCloudId = "1";
+    struct stat st;
+    st.st_size = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
@@ -1967,9 +1973,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest3, TestSize.Level1)
     const std::string fileName = "testfile";
     int64_t rowId = 0;
     const std::string parentCloudId = "1";
+    struct stat st;
+    st.st_size = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(1, transaction)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
     EXPECT_EQ(ret, E_RDB);
