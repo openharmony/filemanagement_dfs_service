@@ -510,10 +510,10 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest002, TestSiz
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 Start";
     try {
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
-        EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, -1);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 ERROR";
@@ -532,14 +532,38 @@ HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest003, TestSiz
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 Start";
     try {
         EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
-        EXPECT_CALL(*insMock_, chmod(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, close(_, _)).WillOnce(Return(-1));
 
         int32_t ret = CreateDownloadFileStatData();
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, -1);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 ERROR";
     }
     GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 End";
+}
+
+/**
+ * @tc.name: CreateDownloadFileStatDataTest004
+ * @tc.desc: Verify the CreateDownloadFileStatData function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 Start";
+    try {
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, close(_, _)).WillOnce(Return(0));
+
+        int32_t ret = CreateDownloadFileStatData();
+        EXPECT_EQ(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 End";
 }
 }

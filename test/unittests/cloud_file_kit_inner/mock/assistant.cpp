@@ -65,25 +65,46 @@ int access(const char *name, int type)
     return realAccess();
 }
 
-int chmod(const char *pathname, mode_t mode)
+int creat(const char *pathname, mode_t mode)
 {
     if (AssistantMock::IsMockable()) {
-        return Assistant::ins->chmod(pathname, mode);
+        return Assistant::ins->creat(pathname, mode);
     }
 
-    static int (*realChmod)() = []() {
-        auto func = (int (*)())dlsym(RTLD_NEXT, "chmod");
+    static int (*realCreat)() = []() {
+        auto func = (int (*)())dlsym(RTLD_NEXT, "creat");
         if (!func) {
-            GTEST_LOG_(ERROR) << "Failed to resolve real chmod: " << dlerror();
+            GTEST_LOG_(ERROR) << "Failed to resolve real creat: " << dlerror();
         }
         return func;
     }();
 
-    if (!realChmod) {
+    if (!realCreat) {
         return -1;
     }
 
-    return realChmod();
+    return realCreat();
+}
+
+int close(int fd)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->close(fd);
+    }
+
+    static int (*realClose)() = []() {
+        auto func = (int (*)())dlsym(RTLD_NEXT, "close");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real close: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realClose) {
+        return -1;
+    }
+
+    return realClose();
 }
 } // extern "C"
 #endif

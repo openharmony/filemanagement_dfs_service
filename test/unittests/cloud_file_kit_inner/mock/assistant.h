@@ -26,7 +26,8 @@ public:
 
     virtual ~Assistant() = default;
     virtual int access(const char *name, int type) = 0;
-    virtual int chmod(const char *pathname, mode_t mode) = 0;
+    virtual int creat(const char *pathname, mode_t mode) = 0;
+    virtual int close(int fd) = 0;
 
     static inline bool mockable = false;
 };
@@ -34,7 +35,8 @@ public:
 class AssistantMock : public Assistant {
 public:
     MOCK_METHOD2(access, int(const char *, int));
-    MOCK_METHOD2(chmod, int(const char *, mode_t));
+    MOCK_METHOD2(creat, int(const char *, mode_t));
+    MOCK_METHOD1(close, int(int));
 
     static void EnableMock();
     static void DisableMock();
