@@ -21,6 +21,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
+#include <filesystem>
 
 #include "assistant.h"
 #include "application_state_observer_stub.h"
@@ -46,6 +47,8 @@ const int32_t LOOP_COUNT = 20000;
 const int32_t FEWER_LOOP_COUNT = 101;
 const string IO_REPORT_FILE = "/data/service/el1/public/cloudfile/io/wait_report_io_message.csv";
 const string IO_FILE = "/data/service/el1/public/cloudfile/io/io_message.csv";
+const string IO_DIR = "/data/service/el1/public/cloudfile/io";
+const string IO_TEST_FILE = "/data/service/el1/public/cloudfile/io/1.txt";
 
 
 class IoMessageListenerTest : public testing::Test {
@@ -77,6 +80,17 @@ void IoMessageListenerTest::TearDownTestCase(void)
 void IoMessageListenerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    filesystem::path dirPath(IO_DIR);
+    if (!filesystem::exists(dirPath)) {
+        try {
+            if (!filesystem::create_directory(dirPath)) {
+                GTEST_LOG_(ERROR) << "Failed to create directory: " << IO_DIR;
+            }
+            GTEST_LOG_(INFO) << "Directory created successfully: " << IO_DIR;
+        } catch (const filesystem::filesystem_error& e) {
+            GTEST_LOG_(INFO) << "Directory creation error: " << e.what();
+        }
+    }
 }
 
 void IoMessageListenerTest::TearDown(void)
@@ -94,8 +108,7 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest001 Start";
     try {
-        string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
@@ -113,17 +126,17 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest001, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest002 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest002 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest002 End";
 }
 
@@ -136,19 +149,19 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest002, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest003 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:a\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest003 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest003 End";
 }
 
@@ -161,21 +174,21 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest003, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest004 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:a\n";
         write(fd, line1.c_str(), line1.size());
         write(fd, line2.c_str(), line2.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest004 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest004 End";
 }
 
@@ -188,9 +201,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest004, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest005 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -202,13 +215,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest005, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest005 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest005 End";
 }
 
@@ -221,9 +234,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest005, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest006, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest006 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:a\n";
@@ -231,13 +244,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest006, TestSize.Level1)
         write(fd, line2.c_str(), line2.size());
         write(fd, line3.c_str(), line3.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest006 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest006 End";
 }
 
@@ -250,9 +263,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest006, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest007 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -262,13 +275,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest007, TestSize.Level1)
         write(fd, line3.c_str(), line3.size());
         write(fd, line4.c_str(), line4.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest007 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest007 End";
 }
 
@@ -281,9 +294,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest007, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest008, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest008 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -295,13 +308,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest008, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest008 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest008 End";
 }
 
@@ -314,19 +327,19 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest008, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest009, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest009 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:99999999999999999999\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest009 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest009 End";
 }
 
@@ -339,21 +352,21 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest009, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest010, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest010 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:99999999999999999999\n";
         write(fd, line1.c_str(), line1.size());
         write(fd, line2.c_str(), line2.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest010 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest010 End";
 }
 
@@ -366,9 +379,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest010, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest011, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest011 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:99999999999999999999\n";
@@ -376,13 +389,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest011, TestSize.Level1)
         write(fd, line2.c_str(), line2.size());
         write(fd, line3.c_str(), line3.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest011 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest011 End";
 }
 
@@ -395,9 +408,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest011, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest012, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest012 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -407,13 +420,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest012, TestSize.Level1)
         write(fd, line3.c_str(), line3.size());
         write(fd, line4.c_str(), line4.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest012 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest012 End";
 }
 
@@ -426,9 +439,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest012, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest013, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest013 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -440,13 +453,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest013, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest013 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest013 End";
 }
 
@@ -459,19 +472,19 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest013, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest014, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest014 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest014 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest014 End";
 }
 
@@ -484,21 +497,21 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest014, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest015, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest015 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         write(fd, line1.c_str(), line1.size());
         write(fd, line2.c_str(), line2.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest015 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest015 End";
 }
 
@@ -511,9 +524,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest015, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest016, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest016 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -523,13 +536,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest016, TestSize.Level1)
         write(fd, line3.c_str(), line3.size());
         write(fd, line4.c_str(), line4.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest016 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest016 End";
 }
 
@@ -542,9 +555,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest016, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest017, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest017 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -552,13 +565,13 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest017, TestSize.Level1)
         write(fd, line2.c_str(), line2.size());
         write(fd, line3.c_str(), line3.size());
         close(fd);
-        bool ret = ioMessageManager_->ReadIoDataFromFile(path);
+        bool ret = ioMessageManager_->ReadIoDataFromFile(IO_TEST_FILE);
         EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ReadIoDataFromFileTest017 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ReadIoDataFromFileTest017 End";
 }
 
@@ -571,9 +584,9 @@ HWTEST_F(IoMessageListenerTest, ReadIoDataFromFileTest017, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, RecordDataToFileTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RecordDataToFileTest001 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        ioMessageManager_->RecordDataToFile(path);
+        ioMessageManager_->RecordDataToFile(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
@@ -591,19 +604,19 @@ HWTEST_F(IoMessageListenerTest, RecordDataToFileTest001, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, RecordDataToFileTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RecordDataToFileTest002 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "time\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
-        ioMessageManager_->RecordDataToFile(path);
+        ioMessageManager_->RecordDataToFile(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RecordDataToFileTest002 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "RecordDataToFileTest002 End";
 }
 
@@ -616,19 +629,19 @@ HWTEST_F(IoMessageListenerTest, RecordDataToFileTest002, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, RecordDataToFileTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RecordDataToFileTest003 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "test\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
-        ioMessageManager_->RecordDataToFile(path);
+        ioMessageManager_->RecordDataToFile(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "RecordDataToFileTest003 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "RecordDataToFileTest003 End";
 }
 
@@ -661,11 +674,11 @@ HWTEST_F(IoMessageListenerTest, RecordDataToFileTest004, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest001 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "";
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_FALSE(true);
@@ -683,11 +696,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest001, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest002 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_FALSE(true);
@@ -705,9 +718,9 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest002, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest003 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -719,13 +732,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest003, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest003 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest003 End";
 }
 
@@ -738,9 +751,9 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest003, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest004 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -752,13 +765,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest004, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ProcessIoDataTest004 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest004 End";
 }
 
@@ -771,9 +784,9 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest004, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest005 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -786,13 +799,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest005, TestSize.Level1)
         write(fd, line5.c_str(), line5.size());
         close(fd);
         ioMessageManager_->preData.rchar = ONE;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest005 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest005 End";
 }
 
@@ -805,9 +818,9 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest005, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest006, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest006 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -820,13 +833,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest006, TestSize.Level1)
         write(fd, line5.c_str(), line5.size());
         close(fd);
         ioMessageManager_->preData.rchar = ZERO;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest006 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest006 End";
 }
 
@@ -839,11 +852,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest006, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest007 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:2\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -856,13 +869,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest007, TestSize.Level1)
         write(fd, line5.c_str(), line5.size());
         close(fd);
         ioMessageManager_->preData.rchar = ONE;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest007 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest007 End";
 }
 
@@ -875,11 +888,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest007, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest008, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest008 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:0\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -892,13 +905,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest008, TestSize.Level1)
         write(fd, line5.c_str(), line5.size());
         close(fd);
         ioMessageManager_->preData.rchar = ONE;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ProcessIoDataTest008 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest008 End";
 }
 
@@ -911,11 +924,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest008, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest009, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest009 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:0\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -929,13 +942,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest009, TestSize.Level1)
         close(fd);
         ioMessageManager_->preData.rchar = ONE;
         ioMessageManager_->dataToWrite.result = ABOVE_DATA;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest009 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest009 End";
 }
 
@@ -948,11 +961,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest009, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest010, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest010 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:0\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -967,13 +980,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest010, TestSize.Level1)
         ioMessageManager_->preData.rchar = ONE;
         ioMessageManager_->dataToWrite.result = ZERO;
         ioMessageManager_->preData.syscopen = ZERO;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest010 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest010 End";
 }
 
@@ -986,11 +999,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest010, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest011, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest011 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:0\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -1006,13 +1019,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest011, TestSize.Level1)
         ioMessageManager_->dataToWrite.result = ZERO;
         ioMessageManager_->preData.syscopen = ZERO;
         ioMessageManager_->preData.syscstat = ZERO;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ProcessIoDataTest011 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest011 End";
 }
 
@@ -1025,11 +1038,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest011, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest012, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest012 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:0\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -1045,13 +1058,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest012, TestSize.Level1)
         ioMessageManager_->dataToWrite.result = ZERO;
         ioMessageManager_->preData.syscopen = ZERO;
         ioMessageManager_->preData.syscstat = ZERO;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ProcessIoDataTest012 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest012 End";
 }
 
@@ -1064,9 +1077,9 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest012, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest013, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest013 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:1\n";
         string line2 = "syscr:1\n";
         string line3 = "read_bytes:1\n";
@@ -1078,13 +1091,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest013, TestSize.Level1)
         write(fd, line4.c_str(), line4.size());
         write(fd, line5.c_str(), line5.size());
         close(fd);
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ProcessIoDataTest013 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest013 End";
 }
 
@@ -1097,11 +1110,11 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest013, TestSize.Level1)
 HWTEST_F(IoMessageListenerTest, ProcessIoDataTest014, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ProcessIoDataTest014 Start";
-    string path = "/data/service/el1/public/cloudfile/rdb/1.txt";
+    
     try {
         ioMessageManager_->currentBundleName = "";
         ioMessageManager_->lastestAppStateData.bundleName = "test";
-        int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(IO_TEST_FILE.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         string line1 = "rchar:99999999999999999999\n";
         write(fd, line1.c_str(), line1.size());
         close(fd);
@@ -1112,13 +1125,13 @@ HWTEST_F(IoMessageListenerTest, ProcessIoDataTest014, TestSize.Level1)
         ioMessageManager_->preData.syscopen = ZERO;
         ioMessageManager_->currentData.syscstat = ZERO;
         ioMessageManager_->preData.syscopen = ZERO;
-        ioMessageManager_->ProcessIoData(path);
+        ioMessageManager_->ProcessIoData(IO_TEST_FILE);
         EXPECT_FALSE(false);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "ProcessIoDataTest014 ERROR";
     }
-    unlink(path.c_str());
+    unlink(IO_TEST_FILE.c_str());
     GTEST_LOG_(INFO) << "ProcessIoDataTest014 End";
 }
 
