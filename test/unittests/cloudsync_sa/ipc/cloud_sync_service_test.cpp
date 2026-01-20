@@ -1864,7 +1864,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 
         auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
         EXPECT_EQ(ret, E_NULLPTR);
-        delete cloudFileKitMock;
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest002 failed";
@@ -1903,7 +1902,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
 
         auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
         EXPECT_EQ(ret, E_INVAL_ARG);
-        delete cloudFileKitMock;
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";

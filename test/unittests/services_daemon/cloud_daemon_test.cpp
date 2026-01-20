@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
-#include "fuse_assistant.h"
+#include "mock/fuse_assistant.h"
 #include "fuse_manager/fuse_manager.h"
 #include "ipc/cloud_daemon.h"
 #include "iremote_object.h"

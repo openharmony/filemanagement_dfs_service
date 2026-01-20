@@ -76,6 +76,20 @@ string CloudFileUtils::GetLocalFilePath(string cloudId, string bundleName, int32
     return "/data";
 }
 
+std::string CloudFileUtils::GetLocalBaseDir(std::string bundleName, int32_t userId)
+{
+    return "";
+}
+
+std::string CloudFileUtils::GetLocalDKCachePath(std::string cloudId, std::string bundleName, int32_t userId)
+{
+    return "";
+}
+
+void CloudFileUtils::ChangeUid(int32_t userId, const string &bundleName, uint32_t mode, const string &path)
+{
+}
+
 string CloudFileUtils::GetPathWithoutTmp(const string &path)
 {
     return "";
