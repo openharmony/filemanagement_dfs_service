@@ -78,7 +78,6 @@ static const string SRC_PATH_KEY = "srcPath";
 static const string LOCAL_PATH_MNT_HMDFS = "/mnt/hmdfs/";
 static const string LOCAL_PATH_CLOUD_DATA = "/cloud/data/";
 static const string FILE_SCHEME = "file";
-static const int32_t DIRECTLY_RECYCLED_COPY = 4;
 static const int32_t VERSION_COPY = 0;
 static const int32_t FLAG_NOT_EXIST = 2;
 static const int32_t FLAG_TO_BE_UPLOAD = 1;
@@ -2606,7 +2605,6 @@ static void getCopyValues(std::string srcCloudId, std::string destCloudId, std::
     fileInfo.PutLong(FileColumn::FILE_TIME_RECYCLED, fileTimeRecycled);
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, metaTimeEdited);
     fileInfo.PutLong(FileColumn::FILE_TIME_VISIT, fileTimeVisit);
-    fileInfo.PutInt(FileColumn::DIRECTLY_RECYCLED, DIRECTLY_RECYCLED_COPY);
     fileInfo.PutLong(FileColumn::VERSION, VERSION_COPY);
     fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int>(OperationType::COPY));
     fileInfo.PutInt(FileColumn::SYNC_STATUS, syncStatus);
