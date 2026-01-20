@@ -47,8 +47,8 @@ const int32_t LOOP_COUNT = 20000;
 const int32_t FEWER_LOOP_COUNT = 101;
 const string IO_REPORT_FILE = "/data/service/el1/public/cloudfile/io/wait_report_io_message.csv";
 const string IO_FILE = "/data/service/el1/public/cloudfile/io/io_message.csv";
-const string IO_DIR = "/data/service/el1/public/cloudfile/io";
-const string IO_TEST_FILE = "/data/service/el1/public/cloudfile/io/1.txt";
+const string IO_TEST_DIR = "/data/test_io";
+const string IO_TEST_FILE = "/data/test_io/1.txt";
 
 
 class IoMessageListenerTest : public testing::Test {
@@ -80,22 +80,28 @@ void IoMessageListenerTest::TearDownTestCase(void)
 void IoMessageListenerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    filesystem::path dirPath(IO_DIR);
-    if (!filesystem::exists(dirPath)) {
-        try {
-            if (!filesystem::create_directory(dirPath)) {
-                GTEST_LOG_(ERROR) << "Failed to create directory: " << IO_DIR;
-            }
-            GTEST_LOG_(INFO) << "Directory created successfully: " << IO_DIR;
-        } catch (const filesystem::filesystem_error& e) {
-            GTEST_LOG_(INFO) << "Directory creation error: " << e.what();
+    filesystem::path dirPath(IO_TEST_DIR);
+    std::error_code ec;
+    if (!filesystem::exists(dirPath, ec)) {
+        if (ec) {
+            GTEST_LOG_(ERROR) << "Check path exists failed: " << ec.message();
         }
+        if (!filesystem::create_directory(dirPath, ec)) {
+            GTEST_LOG_(ERROR) << "Failed to create directory: " << ec.message();
+        }
+        GTEST_LOG_(INFO) << "Directory created successfully: " << IO_TEST_DIR;
     }
 }
 
 void IoMessageListenerTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    filesystem::path dirPath(IO_TEST_DIR);
+    std::error_code ec;
+    if (!filesystem::remove(dirPath, ec)) {
+        GTEST_LOG_(ERROR) << "Failed to delete directory: " << ec.message();
+    }
+    GTEST_LOG_(INFO) << "Directory delete successfully: " << IO_TEST_DIR;
 }
 
 /**
