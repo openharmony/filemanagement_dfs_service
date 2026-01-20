@@ -42,12 +42,12 @@ SoftbusSession::SoftbusSession(const std::string &peerDeviceId, const std::strin
 int32_t SoftbusSession::Start()
 {
     CancelReleaseSessionIfNeeded();
+    std::unique_lock<mutex> lock(sessionMutex_);
     if (sessionId_ != INVALID_SESSION_ID) {
         LOGI("session is exist, no need open again");
         return E_OK;
     }
 
-    std::unique_lock<mutex> lock(sessionMutex_);
     if (sessionId_ == INVALID_SESSION_ID) {
         LOGI("open session with device: %{public}s", ToBeAnonymous(peerDeviceId_).c_str());
         int session = SoftbusAdapter::GetInstance().OpenSessionByP2P(
@@ -79,12 +79,22 @@ int32_t SoftbusSession::Stop()
 
 int32_t SoftbusSession::SendData(const void *data, uint32_t dataLen)
 {
-    return SoftbusAdapter::GetInstance().SendBytes(sessionId_, data, dataLen);
+    int sessionId = 0;
+    {
+        std::unique_lock<mutex> lock(sessionMutex_);
+        sessionId = sessionId_;
+    }
+    return SoftbusAdapter::GetInstance().SendBytes(sessionId, data, dataLen);
 }
 
 int32_t SoftbusSession::SendFile(const std::vector<std::string> &sFileList, const std::vector<std::string> &dFileList)
 {
-    return SoftbusAdapter::GetInstance().SendFile(sessionId_, sFileList, dFileList);
+    int sessionId = 0;
+    {
+        std::unique_lock<mutex> lock(sessionMutex_);
+        sessionId = sessionId_;
+    }
+    return SoftbusAdapter::GetInstance().SendFile(sessionId, sFileList, dFileList);
 }
 
 int32_t SoftbusSession::GetSessionId()
