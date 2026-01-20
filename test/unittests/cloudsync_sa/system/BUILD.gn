@@ -52,6 +52,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
+    "${distributedfile_path}/test/mock/account_sa/src/os_account_manager_mock.cpp",
     "${utils_path}/system/src/dfsu_access_token_helper.cpp",
     "dfsu_access_token_helper_test.cpp",
     "reimplement/accesstoken_kit.cpp",
@@ -60,6 +61,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/test/mock/account_sa/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/system/reimplement",
     "${utils_path}/system/include",
     "${utils_path}/log/include",

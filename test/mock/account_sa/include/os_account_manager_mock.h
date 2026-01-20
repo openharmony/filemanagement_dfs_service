@@ -16,8 +16,10 @@
 #define OHOS_OS_ACCOUNT_MOCK_H
 
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <vector>
 #include "os_account_manager.h"
 
 namespace OHOS {
@@ -28,6 +30,9 @@ public:
     virtual int GetOsAccountType(int32_t userId, AccountSA::OsAccountType &accountType) = 0;
     virtual int GetOsAccountTypeFromProcess(AccountSA::OsAccountType &accountType) = 0;
     virtual int GetOsAccountLocalIdFromProcess(int32_t &userId) = 0;
+    virtual int IsOsAccountVerified(const int id, bool &isVerified) = 0;
+    virtual int QueryActiveOsAccountIds(std::vector<int32_t>& ids) = 0;
+
 public:
     static inline std::shared_ptr<OsAccountManagerMethod> osMethod_ = nullptr;
 };
@@ -37,6 +42,8 @@ public:
     MOCK_METHOD2(GetOsAccountType, int(int32_t userId, AccountSA::OsAccountType &accountType));
     MOCK_METHOD1(GetOsAccountTypeFromProcess, int(AccountSA::OsAccountType &accountType));
     MOCK_METHOD1(GetOsAccountLocalIdFromProcess, int(int32_t &userId));
+    MOCK_METHOD2(IsOsAccountVerified, int(const int id, bool &isVerified));
+    MOCK_METHOD1(QueryActiveOsAccountIds, int(std::vector<int32_t>& ids));
 };
 }
 #endif
