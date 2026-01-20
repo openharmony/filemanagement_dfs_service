@@ -115,18 +115,21 @@ bool MessageHandler::UnPackData(uint8_t *data, uint32_t totalLen)
 
     leftSize -= sizeof(SessionDeviceInfo);
     if (leftSize < sizeof(UserData)) {
-        LOGE("failed to parse UserData, leftsize:%{public}d", leftSize);
+        LOGE("failed to parse UserData, leftsize:%{public}u", leftSize);
         return false;
     }
     ptr += sizeof(SessionDeviceInfo);
     UserData *userData = reinterpret_cast<UserData *>(ptr);
-    taskId_ = le64toh(userData->taskId);
-    userId_ = static_cast<int32_t>(le32toh(userData->userId));
-    auto uriLen = userData->uriLen;
-    if (uriLen > PATH_MAX) {
-        LOGE("exception uriLen:%{public}d", uriLen);
+    auto taskId = le64toh(userData->taskId);
+    auto userId = le32toh(userData->userId);
+    auto uriLen = le32toh(userData->uriLen);
+    leftSize -= sizeof(taskId) + sizeof(userId) + sizeof(uriLen);
+    if (uriLen > PATH_MAX || uriLen > leftSize) {
+        LOGE("exception uriLen:%{public}u", uriLen);
         return false;
     }
+    taskId_ = taskId;
+    userId_ = static_cast<int32_t>(userId);
     uri_ = string(userData->uri, uriLen);
     return true;
 }
