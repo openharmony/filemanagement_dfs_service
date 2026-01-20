@@ -20,6 +20,7 @@
 
 #include "assistant.h"
 #include "cloud_asset_read_session_mock.h"
+#include "cloud_file_kit_mock.h"
 #include "dfs_error.h"
 #include "file_operations_cloud.cpp"
 #include "ffrt_inner.h"
@@ -688,5 +689,415 @@ HWTEST_F(FileOperationsCloudStaticTest, DoCloudOpenTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "DoCloudOpenTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "DoCloudOpenTest001 End";
+}
+
+/**
+ * @tc.name: InitFileAttrTest001
+ * @tc.desc: Verify the InitFileAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitFileAttrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitFileAttrTest001 Start";
+    try {
+        // 预制测试数据
+        struct CloudDiskFuseData *data = new struct CloudDiskFuseData;
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        fi->fh = 100;
+
+        // 调用被测接口
+        auto ptr = InitFileAttr(data, fi);
+
+        // 验证测试结果
+        EXPECT_EQ(ptr, data->fileCache[fi->fh]);
+        delete data;
+        delete fi;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitFileAttrTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitFileAttrTest001 End";
+}
+
+/**
+ * @tc.name: InitFileAttrTest002
+ * @tc.desc: Verify the InitFileAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitFileAttrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitFileAttrTest002 Start";
+    try {
+        // 预制测试数据
+        struct CloudDiskFuseData *data = new struct CloudDiskFuseData;
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        shared_ptr<CloudDiskFile> file = make_shared<CloudDiskFile>();
+        data->fileCache.insert({100, file});
+        fi->fh = 100;
+
+        // 调用被测接口
+        auto ptr = InitFileAttr(data, fi);
+
+        // 验证测试结果
+        EXPECT_EQ(ptr, file);
+        delete data;
+        delete fi;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitFileAttrTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitFileAttrTest002 End";
+}
+
+/**
+ * @tc.name: HandleCloudErrorTest001
+ * @tc.desc: Verify the HandleCloudError function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudErrorTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest001 Start";
+    try {
+        // 预制测试数据
+        struct fuse_req *req = new struct fuse_req;
+        CloudError error = CloudError::CK_NO_ERROR;
+
+        // 调用被测接口
+        int32_t ret = HandleCloudError(req, error);
+
+        // 验证测试结果
+        EXPECT_EQ(ret, 0);
+        delete req;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudErrorTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest001 End";
+}
+
+/**
+ * @tc.name: HandleCloudErrorTest002
+ * @tc.desc: Verify the HandleCloudError function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudErrorTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest002 Start";
+    try {
+        // 预制测试数据
+        struct fuse_req *req = new struct fuse_req;
+        CloudError error = CloudError::CK_NETWORK_ERROR;
+
+        // 调用被测接口
+        int32_t ret = HandleCloudError(req, error);
+
+        // 验证测试结果
+        EXPECT_EQ(ret, ENOTCONN);
+        delete req;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudErrorTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest002 End";
+}
+
+/**
+ * @tc.name: HandleCloudErrorTest003
+ * @tc.desc: Verify the HandleCloudError function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudErrorTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest003 Start";
+    try {
+        // 预制测试数据
+        struct fuse_req *req = new struct fuse_req;
+        CloudError error = CloudError::CK_SERVER_ERROR;
+
+        // 调用被测接口
+        int32_t ret = HandleCloudError(req, error);
+
+        // 验证测试结果
+        EXPECT_EQ(ret, EIO);
+        delete req;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudErrorTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest003 End";
+}
+
+/**
+ * @tc.name: HandleCloudErrorTest004
+ * @tc.desc: Verify the HandleCloudError function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudErrorTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest004 Start";
+    try {
+        // 预制测试数据
+        struct fuse_req *req = new struct fuse_req;
+        CloudError error = CloudError::CK_LOCAL_ERROR;
+
+        // 调用被测接口
+        int32_t ret = HandleCloudError(req, error);
+
+        // 验证测试结果
+        EXPECT_EQ(ret, EINVAL);
+        delete req;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudErrorTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest004 End";
+}
+
+/**
+ * @tc.name: HandleCloudErrorTest005
+ * @tc.desc: Verify the HandleCloudError function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudErrorTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest005 Start";
+    try {
+        // 预制测试数据
+        struct fuse_req *req = new struct fuse_req;
+        CloudError error = CloudError::CK_UNKNOWN_ERROR;
+
+        // 调用被测接口
+        int32_t ret = HandleCloudError(req, error);
+
+        // 验证测试结果
+        EXPECT_EQ(ret, EIO);
+        delete req;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudErrorTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudErrorTest005 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest001
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest001 Start";
+    try {
+        // 预制测试数据
+        CloudFile::CloudFileKit::instance_ = nullptr;
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest001 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest002
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest002 Start";
+    try {
+        // 预制测试数据
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // AccountStatus::IsNeedCleanCache()返回true
+        AccountStatus::preAccountState_ = AccountStatus::ACCOUNT_LOGOUT;
+        AccountStatus::accountState_ = AccountStatus::ACCOUNT_LOGIN;
+
+        // instance->CleanCloudUserInfo执行一次返回E_RDB;
+        CloudFilekitImplMock *cloudFileKitMock = new CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+        EXPECT_CALL(*cloudFileKitMock, CleanCloudUserInfo(_, _)).WillOnce(Return(E_RDB));
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, nullptr);
+        delete cloudFileKitMock;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest002 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest003
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest003 Start";
+    try {
+        // 预制测试数据
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // AccountStatus::IsNeedCleanCache()返回true
+        AccountStatus::preAccountState_ = AccountStatus::ACCOUNT_LOGOUT;
+        AccountStatus::accountState_ = AccountStatus::ACCOUNT_LOGIN;
+
+        // instance->CleanCloudUserInfo执行一次返回E_OK;
+        CloudFilekitImplMock *cloudFileKitMock = new CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+        EXPECT_CALL(*cloudFileKitMock, CleanCloudUserInfo(_, _)).WillOnce(Return(E_OK));
+
+        // instance->GetCloudDatabase执行一次返回nullptr
+        EXPECT_CALL(*cloudFileKitMock, GetCloudDatabase(_, _)).WillOnce(Return(nullptr));
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, nullptr);
+        delete cloudFileKitMock;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest003 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest004
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest004 Start";
+    try {
+        // 预制测试数据
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // AccountStatus::IsNeedCleanCache()返回true
+        AccountStatus::preAccountState_ = AccountStatus::ACCOUNT_LOGOUT;
+        AccountStatus::accountState_ = AccountStatus::ACCOUNT_LOGIN;
+
+        // instance->CleanCloudUserInfo执行一次返回E_OK;
+        CloudFilekitImplMock *cloudFileKitMock = new CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+        EXPECT_CALL(*cloudFileKitMock, CleanCloudUserInfo(_, _)).WillOnce(Return(E_OK));
+
+        // instance->GetCloudDatabase执行一次返回database
+        auto database = make_shared<CloudDatabase>(userId, bundleName);
+        EXPECT_CALL(*cloudFileKitMock, GetCloudDatabase(_, _)).WillOnce(Return(database));
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, database);
+        delete cloudFileKitMock;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest004 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest005
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest005 Start";
+    try {
+        // 预制测试数据
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // AccountStatus::IsNeedCleanCache()返回false
+        AccountStatus::preAccountState_ = AccountStatus::ACCOUNT_LOGOUT;
+        AccountStatus::accountState_ = AccountStatus::ACCOUNT_LOGOUT;
+
+        // instance->GetCloudDatabase执行一次返回nullptr
+        CloudFilekitImplMock *cloudFileKitMock = new CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+        EXPECT_CALL(*cloudFileKitMock, GetCloudDatabase(_, _)).WillOnce(Return(nullptr));
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, nullptr);
+        delete cloudFileKitMock;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest005 End";
+}
+
+/**
+ * @tc.name: GetDatabaseTest006
+ * @tc.desc: Verify the GetDatabase function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDatabaseTest006 Start";
+    try {
+        // 预制测试数据
+        int32_t userId = 100;
+        std::string bundleName = "bundle_test";
+
+        // AccountStatus::IsNeedCleanCache()返回false
+        AccountStatus::preAccountState_ = AccountStatus::ACCOUNT_LOGOUT;
+        AccountStatus::accountState_ = AccountStatus::ACCOUNT_LOGOUT;
+
+        // instance->GetCloudDatabase执行一次返回nullptr
+        CloudFilekitImplMock *cloudFileKitMock = new CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
+        auto database = make_shared<CloudDatabase>(userId, bundleName);
+        EXPECT_CALL(*cloudFileKitMock, GetCloudDatabase(_, _)).WillOnce(Return(database));
+
+        // 调用被测接口
+        auto sptr = GetDatabase(userId, bundleName);
+
+        // 验证测试结果
+        EXPECT_EQ(sptr, database);
+        delete cloudFileKitMock;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDatabaseTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDatabaseTest006 End";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

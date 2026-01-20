@@ -158,6 +158,7 @@ ohos_unittest("file_operations_cloud_static_test") {
   include_dirs = [
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/ioctl/include",
     "${services_path}/clouddisk_database/include",
