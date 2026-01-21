@@ -67,19 +67,6 @@ void IoMessageListenerTest::SetUpTestCase(void)
     ioMessageManager_ = make_shared<IoMessageManager>();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
-}
-
-void IoMessageListenerTest::TearDownTestCase(void)
-{
-    GTEST_LOG_(INFO) << "TearDownTestCase";
-    ioMessageManager_ = nullptr;
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-}
-
-void IoMessageListenerTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
     filesystem::path dirPath(IO_TEST_DIR);
     std::error_code ec;
     if (!filesystem::exists(dirPath, ec)) {
@@ -93,15 +80,28 @@ void IoMessageListenerTest::SetUp(void)
     }
 }
 
-void IoMessageListenerTest::TearDown(void)
+void IoMessageListenerTest::TearDownTestCase(void)
 {
-    GTEST_LOG_(INFO) << "TearDown";
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+    ioMessageManager_ = nullptr;
+    Assistant::ins = nullptr;
+    insMock = nullptr;
     filesystem::path dirPath(IO_TEST_DIR);
     std::error_code ec;
     if (!filesystem::remove(dirPath, ec)) {
         GTEST_LOG_(ERROR) << "Failed to delete directory: " << ec.message();
     }
     GTEST_LOG_(INFO) << "Directory delete successfully: " << IO_TEST_DIR;
+}
+
+void IoMessageListenerTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
+}
+
+void IoMessageListenerTest::TearDown(void)
+{
+    GTEST_LOG_(INFO) << "TearDown";
 }
 
 /**
