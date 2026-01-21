@@ -121,6 +121,7 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnThermalLevelResultTest001 Start";
     try {
+        systemLoadEvent_->dataSyncManager_ = nullptr;
         systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::HOT);
         ffrt::wait();
     } catch (...) {

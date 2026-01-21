@@ -58,6 +58,24 @@ void DataSyncManagerTest::TearDown(void)
 }
 
 /**
+ * @tc.name: StopDownloadAndUploadTaskTest001
+ * @tc.desc: Verify the StopDownloadAndUploadTask function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DataSyncManagerTest, StopDownloadAndUploadTaskTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDownloadAndUploadTaskTest001 start";
+    try {
+        manager_->StopDownloadAndUploadTask();
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StopDownloadAndUploadTaskTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StopDownloadAndUploadTaskTest001 end";
+}
+
+/**
  * @tc.name: IsFinishPullTest001
  * @tc.desc: Verify the ChangeAppSwitch function.
  * @tc.type: FUNC

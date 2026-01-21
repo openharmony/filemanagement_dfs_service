@@ -44,6 +44,7 @@ public:
                                         bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     virtual int32_t StopUploadTask(const std::string &bundleName, const int32_t userId);
+    virtual void StopDownloadAndUploadTask();
     virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId, bool flag = false);
     virtual void RegisterCloudSyncCallback(const std::string &bundleName,
                                            const BundleNameUserInfo &bundleNameUserInfo,

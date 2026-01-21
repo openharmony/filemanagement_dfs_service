@@ -56,6 +56,11 @@ void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
     SystemLoadStatus::Setload(level);
     if (level >= PowerMgr::ThermalLevel::HOT) {
         LOGI("thermal over warm");
+        if (dataSyncManager_ == nullptr) {
+            LOGE("dataSyncManager_ is nullptr");
+            return;
+        }
+        dataSyncManager_->StopDownloadAndUploadTask();
         return;
     }
     ffrt::submit([level, this]() {
