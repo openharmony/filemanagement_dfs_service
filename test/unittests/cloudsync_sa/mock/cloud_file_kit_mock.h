@@ -29,6 +29,9 @@ class CloudFilekitImplMock : public CloudFileKit {
 public:
     MOCK_METHOD3(GetAppConfigParams, int32_t(const int32_t userId,
         const std::string &bundleName, std::map<std::string, std::string> &param));
+    MOCK_METHOD2(CleanCloudUserInfo, int32_t(const int32_t userId, const std::string &bundleName));
+    MOCK_METHOD2(GetCloudDatabase,
+        std::shared_ptr<CloudDatabase>(const int32_t userId, const std::string &bundleName));
 };
 
 } // OHOS::FileManagement::CloudFile
