@@ -218,8 +218,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest001 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "/a/b/c";
-        string syncFolder = "/a/b/";
+        fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/currentUser/";
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
@@ -244,8 +244,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest002 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "/a/b/c";
-        string syncFolder = "/a/d";
+        fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/otherUser";
         int32_t userId = 1;
         FailedList failed;
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
@@ -268,8 +268,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest003 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "/a/b/c";
-        string syncFolder = "/a/b";
+        fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/currentUser";
         fileSyncStates.state = static_cast<SyncState>(6);
         int32_t userId = 1;
         FailedList failed;
@@ -293,8 +293,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest004 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "/a/b/c";
-        string syncFolder = "/a/b";
+        fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/currentUser";
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
@@ -319,7 +319,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetFileSyncStatesTest005 start";
     try {
         FileSyncState fileSyncStates;
-        fileSyncStates.path = "/a/b/c";
+        fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
         string syncFolder = "";
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
@@ -335,6 +335,30 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetFileSyncStatesTest006
+ * @tc.desc: Verify the SetFileSyncStates function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetFileSyncStatesTest006 start";
+    try {
+        FileSyncState fileSyncStates;
+        fileSyncStates.path = "/test/mockFailed";
+        string syncFolder = "/test";
+        int32_t userId = 1;
+        FailedList failed;
+        auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetFileSyncStatesTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "SetFileSyncStatesTest006 end";
+}
+
+/**
  * @tc.name: GetFileSyncStateTest001
  * @tc.desc: Verify the GetFileSyncState function
  * @tc.type: FUNC
@@ -344,11 +368,11 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStateTest001 start";
     try {
-        string path = "/a/b/c";
-        string syncFolder = "/a/d/";
+        string path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/currentUser/";
         int32_t userId = 1;
         auto res = GetFileSyncState(path, userId, syncFolder);
-        EXPECT_EQ(res.error, ErrorReason::INVALID_ARGUMENT);
+        EXPECT_FALSE(res.isSuccess);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetFileSyncStateTest001 failed";
@@ -366,11 +390,12 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStateTest002 start";
     try {
-        string path = "/a/b/c";
-        string syncFolder = "/a/c";
+        string path = "/storage/Users/currentUser/testfile.txt";
+        string syncFolder = "/storage/Users/otherUser";
         int32_t userId = 1;
         auto res = GetFileSyncState(path, userId, syncFolder);
         EXPECT_EQ(res.isSuccess, false);
+        EXPECT_EQ(res.error, ErrorReason::INVALID_ARGUMENT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetFileSyncStateTest002 failed";
@@ -388,11 +413,12 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStateTest003 start";
     try {
-        string path = "/a/b/c";
+        string path = "/test/mockFailed";
         string syncFolder = "";
         int32_t userId = 1;
         auto res = GetFileSyncState(path, userId, syncFolder);
         EXPECT_EQ(res.isSuccess, false);
+        EXPECT_EQ(res.error, ErrorReason::NO_SUCH_FILE);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetFileSyncStateTest003 failed";

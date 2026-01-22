@@ -40,13 +40,15 @@ public:
     bool GetIndexBySyncFolder(uint32_t &syncFolderIndex, const std::string &path);
     void RemoveXattr(std::string &path, const std::string &attrName);
     bool PathToPhysicalPath(const std::string &path, const std::string &userId, std::string &physicalPath);
-    bool PathToMntPathBySandboxPath(const std::string &path, const std::string &userId, std::string &realpath);
-    bool PathToMntPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath);
-    bool PathToSandboxPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath);
+    bool PathToMntPathBySandboxPath(const std::string &path, const std::string &userId, std::string &realPath);
+    bool PathToMntPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realPath);
+    bool PathToSandboxPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realPath);
     std::unordered_map<uint32_t, SyncFolderValue> GetSyncFolderMap();
     void ClearMap();
 
 private:
+    bool ReplacePathPrefix(const std::string &oldPrefix, const std::string &newPrefix,
+                           const std::string &inputPath, std::string &outputPath);
     std::unordered_map<uint32_t, SyncFolderValue> syncFolderMap;
     std::mutex mutex_;
 };

@@ -67,7 +67,7 @@ bool CloudDiskSyncFolder::CheckSyncFolder(const uint32_t &syncFolderIndex)
     return true;
 }
 
-bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, std::string &path)
+bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, string &path)
 {
     unique_lock<mutex> lock(mutex_);
     auto item = syncFolderMap.find(syncFolderIndex);
@@ -89,7 +89,7 @@ bool CloudDiskSyncFolder::GetSyncFolderValueByIndex(const uint32_t syncFolderInd
     return true;
 }
 
-bool CloudDiskSyncFolder::GetIndexBySyncFolder(uint32_t &syncFolderIndex, const std::string &path)
+bool CloudDiskSyncFolder::GetIndexBySyncFolder(uint32_t &syncFolderIndex, const string &path)
 {
     unique_lock<mutex> lock(mutex_);
     for (const auto &item : syncFolderMap) {
@@ -107,7 +107,7 @@ std::unordered_map<uint32_t, SyncFolderValue> CloudDiskSyncFolder::GetSyncFolder
     return syncFolderMap;
 }
 
-void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attrName)
+void CloudDiskSyncFolder::RemoveXattr(string &path, const string &attrName)
 {
     DIR *dir = opendir(path.c_str());
     if (!dir) {
@@ -142,61 +142,80 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
     closedir(dir);
 }
 
-bool CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath)
+/* Verify the path specified by inputPath, replace its prefix oldPrefix with the new prefix newPrefix. */
+bool CloudDiskSyncFolder::ReplacePathPrefix(const string &oldPrefix, const string &newPrefix,
+                                            const string &inputPath, string &outputPath)
 {
-    std::string sandboxPath = "/storage/Users/currentUser";
-    std::string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-
-    if (path.substr(0, sandboxPath.length()) != sandboxPath) {
-        LOGE("replace path failed");
+    if ((inputPath.size() < oldPrefix.size()) || (inputPath.substr(0, oldPrefix.size()) != oldPrefix)) {
+        LOGE("Invalid path prefix: %{public}s, input: %{public}s",
+            GetAnonyStringStrictly(oldPrefix).c_str(), GetAnonyStringStrictly(inputPath).c_str());
         return false;
     }
-    realpath = replacementPath + path.substr(sandboxPath.length());
+
+    string newPath = newPrefix + inputPath.substr(oldPrefix.size());
+
+    char realPathBuffer[PATH_MAX + 1] { '\0' };
+    if (realpath(newPath.c_str(), realPathBuffer) == nullptr) {
+        LOGE("Realpath error: %{public}d, path=%{public}s", errno, GetAnonyStringStrictly(newPath).c_str());
+        return false;
+    }
+
+    string newRealPath = string(realPathBuffer);
+    if (newRealPath.substr(0, newPrefix.size()) != newPrefix) {
+        LOGE("Path traversal prefix: %{public}s, newRealPath: %{public}s",
+            GetAnonyStringStrictly(newPrefix).c_str(), GetAnonyStringStrictly(newRealPath).c_str());
+        return false;
+    }
+
+    outputPath = newRealPath;
     return true;
 }
 
-bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
-                                                     const std::string &userId,
-                                                     std::string &realpath)
+bool CloudDiskSyncFolder::PathToPhysicalPath(const string &path, const string &userId, string &realPath)
 {
-    std::string sandboxPath = "/storage/Users/currentUser";
-    std::string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
+    string sandboxPath = "/storage/Users/currentUser";
+    string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
 
-    if (path.substr(0, sandboxPath.length()) != sandboxPath) {
-        LOGE("replace path failed");
-        return false;
-    }
-    realpath = replacementPath + path.substr(sandboxPath.length());
-    return true;
+    return ReplacePathPrefix(sandboxPath, replacementPath, path, realPath);
 }
 
-bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,
-                                                      const std::string &userId,
-                                                      std::string &realpath)
+bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const string &path,
+                                                     const string &userId,
+                                                     string &realPath)
 {
-    std::string sandboxPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-    std::string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
+    string sandboxPath = "/storage/Users/currentUser";
+    string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
 
-    if (path.substr(0, sandboxPath.length()) != sandboxPath) {
-        LOGE("replace path failed");
-        return false;
-    }
-    realpath = replacementPath + path.substr(sandboxPath.length());
-    return true;
+    return ReplacePathPrefix(sandboxPath, replacementPath, path, realPath);
 }
 
-bool CloudDiskSyncFolder::PathToSandboxPathByPhysicalPath(const std::string &path,
-                                                          const std::string &userId,
-                                                          std::string &realpath)
+bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const string &path,
+                                                      const string &userId,
+                                                      string &realPath)
 {
-    std::string physicalPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-    std::string replacementPath = "/storage/Users/currentUser";
+    string physicalPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
 
     if (path.substr(0, physicalPath.length()) != physicalPath) {
         LOGE("replace path failed");
         return false;
     }
-    realpath = replacementPath + path.substr(physicalPath.length());
+    realPath = replacementPath + path.substr(physicalPath.length());
+    return true;
+}
+
+bool CloudDiskSyncFolder::PathToSandboxPathByPhysicalPath(const string &path,
+                                                          const string &userId,
+                                                          string &realPath)
+{
+    string physicalPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    string replacementPath = "/storage/Users/currentUser";
+
+    if (path.substr(0, physicalPath.length()) != physicalPath) {
+        LOGE("replace path failed");
+        return false;
+    }
+    realPath = replacementPath + path.substr(physicalPath.length());
     return true;
 }
 

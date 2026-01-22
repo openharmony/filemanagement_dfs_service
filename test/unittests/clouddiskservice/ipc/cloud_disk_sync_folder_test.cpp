@@ -19,6 +19,7 @@
 #include "cloud_disk_sync_folder.h"
 
 #include "assistant.h"
+#include "cloud_disk_sync_folder_system_mock.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -35,6 +36,7 @@ public:
     void SetUp();
     void TearDown();
     static inline shared_ptr<AssistantMock> insMock;
+    static inline shared_ptr<SyncFolderAssistantMock> syncFolderMock;
 };
 
 void CloudDiskSyncFolderTest::SetUpTestCase(void)
@@ -52,6 +54,8 @@ void CloudDiskSyncFolderTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
+    syncFolderMock = make_shared<SyncFolderAssistantMock>();
+    SyncFolderAssistant::ins = syncFolderMock;
 }
 
 void CloudDiskSyncFolderTest::TearDown(void)
@@ -59,6 +63,8 @@ void CloudDiskSyncFolderTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
     Assistant::ins = nullptr;
     insMock = nullptr;
+    SyncFolderAssistant::ins = nullptr;
+    syncFolderMock = nullptr;
 }
 
 /**
@@ -472,6 +478,13 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest002, TestSize.Level1)
         EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(-1));
         Assistant::mockErrno = 1000;
 
+        const char *realOutputPath = "/data/test_tdd/test.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+        .WillOnce(DoAll(
+            SetArrayArgument<1>(realOutputPath, realOutputPath + strlen(realOutputPath) + 1),
+            Return(const_cast<char*>(realOutputPath))
+        ));
+
         string path = "/data/test_tdd";
         string attrName = "user.test_attr";
         CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
@@ -498,6 +511,13 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest003, TestSize.Level1)
         std::system("touch /data/test_tdd/test.txt");
         EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(-1));
         Assistant::mockErrno = ENODATA;
+
+        const char *realOutputPath = "/data/test_tdd/test.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+        .WillOnce(DoAll(
+            SetArrayArgument<1>(realOutputPath, realOutputPath + strlen(realOutputPath) + 1),
+            Return(const_cast<char*>(realOutputPath))
+        ));
 
         string path = "/data/test_tdd";
         string attrName = "user.test_attr";
@@ -526,6 +546,13 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest004, TestSize.Level1)
         EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(0));
         Assistant::mockErrno = 1000;
 
+        const char *realOutputPath = "/data/test_tdd/test.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+        .WillOnce(DoAll(
+            SetArrayArgument<1>(realOutputPath, realOutputPath + strlen(realOutputPath) + 1),
+            Return(const_cast<char*>(realOutputPath))
+        ));
+
         string path = "/data/test_tdd";
         string attrName = "user.test_attr";
         CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
@@ -553,6 +580,13 @@ HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest005, TestSize.Level1)
         EXPECT_CALL(*insMock, removexattr(_, _)).WillOnce(Return(0));
         Assistant::mockErrno = ENODATA;
 
+        const char *realOutputPath = "/data/test_tdd/test.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+        .WillOnce(DoAll(
+            SetArrayArgument<1>(realOutputPath, realOutputPath + strlen(realOutputPath) + 1),
+            Return(const_cast<char*>(realOutputPath))
+        ));
+
         string path = "/data/test_tdd";
         string attrName = "user.test_attr";
         CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
@@ -579,9 +613,9 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest001, TestSize.Level1)
         string path = "/storage/Users/currentUser/testfile.txt";
         string userId = "100";
         string realpath;
+        EXPECT_CALL(*syncFolderMock, realpath(_, _)).WillOnce(Return(nullptr));
         bool ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
-        EXPECT_EQ(ret, true);
-        EXPECT_EQ(realpath, "/data/service/el2/100/hmdfs/account/files/Docs/testfile.txt");
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PathToPhysicalPathTest001 failed";
@@ -614,6 +648,36 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PathToPhysicalPathTest003
+ * @tc.desc: Verify the PathToPhysicalPath function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToPhysicalPathTest003 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        string path = "/storage/Users/currentUser/testfile.txt";
+        string userId = "100";
+        string realpath;
+        const char *resolvedPath = "/data/service/el2/100/hmdfs/account/files/Docs/testfile.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(resolvedPath, resolvedPath + strlen(resolvedPath) + 1),
+                Return(const_cast<char*>(resolvedPath))
+            ));
+        bool ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
+        EXPECT_EQ(ret, true);
+        EXPECT_EQ(realpath, resolvedPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToPhysicalPathTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToPhysicalPathTest003 end";
+}
+
+/**
  * @tc.name: PathToMntPathBySandboxPathTest001
  * @tc.desc: Verify the PathToMntPathBySandboxPath function
  * @tc.type: FUNC
@@ -627,9 +691,15 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest001, TestSize.Le
         string path = "/storage/Users/currentUser/testfile.txt";
         string userId = "100";
         string realpath;
+        const char *resolvedPath = "/mnt/hmdfs/100/account/device_view/local/files/Docs/testfile.txt";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(resolvedPath, resolvedPath + strlen(resolvedPath) + 1),
+                Return(const_cast<char*>(resolvedPath))
+            ));
         bool ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
         EXPECT_EQ(ret, true);
-        EXPECT_EQ(realpath, "/mnt/hmdfs/100/account/device_view/local/files/Docs/testfile.txt");
+        EXPECT_EQ(realpath, resolvedPath);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 failed";
@@ -659,6 +729,30 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest002, TestSize.Le
         GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 failed";
     }
     GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 end";
+}
+
+/**
+ * @tc.name: PathToMntPathBySandboxPathTest003
+ * @tc.desc: Verify the PathToMntPathBySandboxPath function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest003 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        string path = "/storage/Users/currentUser/testfile.txt";
+        string userId = "100";
+        string realpath;
+        EXPECT_CALL(*syncFolderMock, realpath(_, _)).WillOnce(Return(nullptr));
+        bool ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest003 end";
 }
 
 /**
@@ -775,6 +869,70 @@ HWTEST_F(CloudDiskSyncFolderTest, ClearMapTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "ClearMapTest001 failed";
     }
     GTEST_LOG_(INFO) << "ClearMapTest001 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest001
+ * @tc.desc: Verify the ReplacePathPrefix function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest001 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users/currentUser/a/b/file.txt";
+        const char *outputRealPath = "/data/service/el2/100/hmdfs/account/files/Docs/a/b/file.txt";
+        string outputPath = "";
+        string outputPathTrue = "/data/service/el2/100/hmdfs/account/files/Docs/a/b/file.txt";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
+                Return(const_cast<char*>(outputRealPath))
+            ));
+        bool ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, true);
+        EXPECT_EQ(outputPath, outputPathTrue);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest001 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest002
+ * @tc.desc: Verify the ReplacePathPrefix function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest002 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users/currentUser/a/../../file.txt";
+        const char *outputRealPath = "/data/service/el2/100/hmdfs/account/files/file.txt";
+        string outputPath = "";
+        string outputPathTrue = "";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
+                Return(const_cast<char*>(outputRealPath))
+            ));
+        bool ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, false);
+        EXPECT_EQ(outputPath, outputPathTrue);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest002 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
