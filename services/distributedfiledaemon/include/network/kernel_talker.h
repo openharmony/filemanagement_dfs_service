@@ -31,6 +31,10 @@
 #include "network/base_session.h"
 #include "utils_log.h"
 
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD00430B
+#define FDSAN_TAG 1
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -82,7 +86,7 @@ private:
             RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
-
+        uint64_t new_tag = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
         int file = open(realPath, O_RDWR);
         if (file < 0) {
             LOGE("Open node file error. %{public}d", errno);
@@ -91,6 +95,7 @@ private:
             RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             return;
         }
+        fdsan_exchange_owner_tag(file, 0, new_tag);
         int err = write(file, &cmd, sizeof(T));
         if (err < 0) {
             LOGE("write return err. %{public}d", errno);
@@ -98,7 +103,7 @@ private:
                 "kernel", "", err, "write return err, errno=" + to_string(errno)};
             RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         }
-        close(file);
+        fdsan_close_with_tag(file, new_tag);
     }
 
     void PollRun();
