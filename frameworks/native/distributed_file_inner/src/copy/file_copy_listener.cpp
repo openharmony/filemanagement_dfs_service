@@ -30,6 +30,7 @@
 #undef LOG_TAG
 #define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
+#define FDSAN_TAG 1
 
 namespace OHOS {
 namespace Storage {
@@ -40,6 +41,7 @@ static constexpr int BUF_SIZE = 1024;
 static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
 static constexpr int SLEEP_TIME_US = 100000;
 constexpr uint64_t DEFAULT_SPEED_SIZE = 2.8 * 1024 * 1024;
+const uint64_t NEW_TAG = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
 
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
@@ -54,11 +56,13 @@ FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
         LOGE("Failed to init inotify, errno:%{public}d", errno);
         return;
     }
+    fdsan_exchange_owner_tag(notifyFd_, 0, NEW_TAG);
     eventFd_ = eventfd(0, EFD_CLOEXEC);
     if (eventFd_ < 0) {
         LOGE("Failed to init eventFd, errno:%{public}d", errno);
         return;
     }
+    fdsan_exchange_owner_tag(eventFd_, 0, NEW_TAG);
 }
 
 FileCopyLocalListener::~FileCopyLocalListener()
@@ -346,7 +350,7 @@ void FileCopyLocalListener::CloseNotifyFd()
     readClosed_ = false;
     std::unique_lock<std::mutex> cvLock(cvLock_);
     if (eventFd_ != -1) {
-        close(eventFd_);
+        fdsan_close_with_tag(eventFd_, NEW_TAG);
         eventFd_ = -1;
     }
     if (notifyFd_ == -1) {
@@ -357,7 +361,7 @@ void FileCopyLocalListener::CloseNotifyFd()
     for (auto item : wds_) {
         inotify_rm_watch(notifyFd_, item.first);
     }
-    close(notifyFd_);
+    fdsan_close_with_tag(notifyFd_, NEW_TAG);
     notifyFd_ = -1;
     notifyCv_.notify_one();
 }

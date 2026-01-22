@@ -55,6 +55,7 @@
 #undef LOG_TAG
 #define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
+#define FDSAN_TAG 1
 
 namespace OHOS {
 namespace Storage {
@@ -744,6 +745,7 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
     std::error_code errCode;
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
         LOGI("destPath not exist");
+        uint64_t new_tag = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
         auto file = open(destPath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (file < 0) {
             LOGE("Error opening file descriptor. errno = %{public}d", errno);
@@ -754,7 +756,8 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
 #endif
             return errno;
         }
-        close(file);
+        fdsan_exchange_owner_tag(file, 0, new_tag);
+        fdsan_close_with_tag(file, new_tag);
     } else if (errCode.value() != 0) {
 #ifdef DFS_ENABLE_RADAR
         RadarParaInfo info = {"CheckOrCreatePath", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,

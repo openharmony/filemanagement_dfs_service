@@ -222,12 +222,13 @@ void KernelTalker::PollRun()
         LOGE("realpath fail");
         return;
     }
+    uint64_t new_tag = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
     cmdFd = open(realPath, O_RDWR);
     if (cmdFd < 0) {
         LOGE("Open node file error %{public}d", errno);
         return;
     }
-
+    fdsan_exchange_owner_tag(cmdFd, 0, new_tag);
     LOGI("Open node file success");
 
     while (isRunning_) {
@@ -248,7 +249,7 @@ void KernelTalker::PollRun()
                 LOGI("poll exit");
         }
     }
-    close(cmdFd);
+    fdsan_close_with_tag(cmdFd, new_tag);
     LOGI("exit");
     return;
 }
