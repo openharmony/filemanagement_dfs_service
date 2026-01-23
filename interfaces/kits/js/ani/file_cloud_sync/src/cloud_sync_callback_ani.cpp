@@ -24,6 +24,7 @@ using namespace std;
 using namespace arkts::ani_signature;
 
 constexpr int32_t ANI_SCOPE_SIZE = 16;
+static const unsigned int MAX_CHANGE_DATA_SIZE = 200 * 1024;
 static const unsigned int READ_SIZE = 1024;
 static mutex obsMutex_;
 
@@ -248,7 +249,7 @@ ani_status ChangeListenerAni::SetValueArray(ani_env *env, const std::list<Uri> l
     return ANI_OK;
 }
 
-ani_status ChangeListenerAni::SetIsDir(ani_env *env, const shared_ptr<MessageParcel> parcel, ani_object &isDirectory)
+static ani_status SetIsDir(ani_env *env, const shared_ptr<MessageParcel> parcel, ani_object &isDirectory)
 {
     uint32_t len = 0;
     if (!parcel->ReadUint32(len)) {
@@ -297,6 +298,42 @@ ani_status ChangeListenerAni::SetIsDir(ani_env *env, const shared_ptr<MessagePar
     return ANI_OK;
 }
 
+static ani_status ProcessParcelData(ani_env *env, CloudChangeListener &listener, ani_object &isDirectory)
+{
+    if (listener.changeInfo.size_ > MAX_CHANGE_DATA_SIZE || listener.changeInfo.data_ == nullptr) {
+        LOGE("change info is invalid");
+        return ANI_INVALID_ARGS;
+    }
+    uint8_t *parcelData = (uint8_t *)malloc(listener.changeInfo.size_);
+    if (parcelData == nullptr) {
+        LOGE("new parcelData failed");
+        return ANI_INVALID_ARGS;
+    }
+
+    int copyRet = memcpy_s(
+        parcelData, listener.changeInfo.size_, listener.changeInfo.data_, listener.changeInfo.size_);
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err=%d", copyRet);
+        free(parcelData);
+        return ANI_INVALID_ARGS;
+    }
+
+    shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
+    if (!parcel->ParseFrom(reinterpret_cast<uintptr_t>(parcelData), listener.changeInfo.size_)) {
+        LOGE("parcel parse failed");
+        free(parcelData);
+        return ANI_INVALID_ARGS;
+    }
+
+    ani_status ret = SetIsDir(env, parcel, isDirectory);
+    if (ret != ANI_OK) {
+        LOGE("set isDirectory failed");
+        return ret;
+    }
+
+    return ANI_OK;
+}
+
 ani_status ChangeListenerAni::GetChangeDataObject(
     ani_env *env, CloudChangeListener &listener, ani_class cls, ani_object &changeData)
 {
@@ -306,17 +343,13 @@ ani_status ChangeListenerAni::GetChangeDataObject(
         LOGE("set array uris failed. ret = %{public}d", ret);
         return ret;
     }
+
     ani_object isDirectory;
-    if (listener.changeInfo.size_ > 0) {
-        shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
-        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(listener.changeInfo.data_), listener.changeInfo.size_)) {
-            ret = SetIsDir(env, parcel, isDirectory);
-            if (ret != ANI_OK) {
-                LOGE("Set subArray named property error! field: subUris");
-                return ret;
-            }
-        }
+    ret = ProcessParcelData(env, listener, isDirectory);
+    if (ret != ANI_OK) {
+        return ret;
     }
+
     ani_enum notifyTypeEnum;
     Type notifyTypeSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.NotifyType");
     env->FindEnum(notifyTypeSign.Descriptor().c_str(), &notifyTypeEnum);
@@ -363,6 +396,10 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
         }
         ani_object changeData;
         ret = GetChangeDataObject(tmpEnv, tmpListener, cls, changeData);
+        if (ret != ANI_OK) {
+            LOGE("failed to GetChangeDataObject. ret = %{public}d", ret);
+            return;
+        }
         ani_ref ref_;
         ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbRef);
         std::vector<ani_ref> vec = { changeData };

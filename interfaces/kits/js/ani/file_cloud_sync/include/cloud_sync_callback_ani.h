@@ -110,7 +110,6 @@ public:
     void OnChange(CloudChangeListener &listener, const ani_ref cbRef);
     ani_status GetChangeDataObject(
         ani_env *env, CloudChangeListener &listener, ani_class cls, ani_object &changeData);
-    ani_status SetIsDir(ani_env *env, const std::shared_ptr<MessageParcel> parcel, ani_object &isDirectory);
     ani_status SetValueArray(ani_env *env, const std::list<Uri> listValue, ani_object &uris);
     ani_ref cbOnRef_ = nullptr;
     ani_ref cbOffRef_ = nullptr;
