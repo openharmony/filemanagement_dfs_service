@@ -23,7 +23,9 @@
 
 using namespace OHOS::FileManagement::CloudDisk;
 
+constexpr mode_t DEFAULT_MODE = 0666;
+
 int open(const char *file, int oflag)
 {
-    return Assistant::ins->open(file, oflag);
+    return Assistant::ins->MyOpen(file, oflag, DEFAULT_MODE);
 }

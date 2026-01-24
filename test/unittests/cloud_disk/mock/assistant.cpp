@@ -174,5 +174,36 @@ int ftruncate(int fd, off_t length)
 
     return realFtruncate();
 }
+
+int MyOpen(const char *file, int oflag, mode_t mode)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->MyOpen(file, oflag, mode);
+    }
+
+    return 0;
+}
+
+ssize_t MyPread(int fd, void *buf, size_t count, off_t offset)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->MyPread(fd, buf, count, offset);
+    }
+
+    static int (*realpread)() = []() {
+        auto func = (int (*)())dlsym(RTLD_NEXT, "pread");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real pread: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realpread) {
+        return -1;
+    }
+
+    return realpread();
+}
+
 } // extern "C"
 #endif
