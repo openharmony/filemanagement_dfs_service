@@ -315,6 +315,29 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttributeSetValueTest004, TestSize.Leve
 }
 
 /**
+ * @tc.name: ExtAttributeSetValueTest005
+ * @tc.desc: Verify the ExtAttributeSetValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttributeSetValueTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtAttributeSetValueTest005 start";
+    try {
+        std::string jsonValue;
+        const std::string key = "testKey";
+        std::string value = "file://com.test.hap/data/storage/el2/cloud/\xD6\xF8\xD0\xA1/text.txt";
+        std::string xattrList = "{}";
+
+        int32_t ret = ExtAttributeSetValue(jsonValue, key, value, xattrList);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtAttributeSetValueTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "ExtAttributeSetValueTest005 end";
+}
+
+/**
  * @tc.name: ConvertUriToSrcPathTest001
  * @tc.desc: Verify the ConvertUriToSrcPath
  * @tc.type: FUNC
