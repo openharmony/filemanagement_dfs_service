@@ -35,7 +35,6 @@ CloudError CloudAssetReadSession::InitSession()
 
 int64_t CloudAssetReadSession::PRead(int64_t offset,
                                      int64_t size,
-                                     char *buffer,
                                      CloudError &error,
                                      const std::string appId)
 {

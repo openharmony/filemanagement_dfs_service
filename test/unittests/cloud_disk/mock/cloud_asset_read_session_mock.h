@@ -35,8 +35,7 @@ public:
     virtual ~CloudAssetReadSessionMock() = default;
 
     MOCK_METHOD0(InitSession, CloudError());
-    MOCK_METHOD5(PRead, int64_t(int64_t offset, int64_t size, char *buffer,
-        CloudError &error, const std::string appId));
+    MOCK_METHOD4(PRead, int64_t(int64_t offset, int64_t size, CloudError &error, const std::string appId));
     MOCK_METHOD0(CancelSession, void());
     MOCK_METHOD1(Close, bool(bool needRemain));
     MOCK_METHOD1(SentPrepareTraceId, void(std::string prepareTraceId));

@@ -22,7 +22,13 @@
 #include "cloud_asset_read_session_mock.h"
 #include "cloud_file_kit_mock.h"
 #include "dfs_error.h"
+
+#define open MyOpen
+#define pread(fd, buf, size, off) MyPread(fd, buf, size, off)
 #include "file_operations_cloud.cpp"
+#define MyOpen open
+#define MyPread(fd, buf, size, off) pread(fd, buf, size, off)
+
 #include "ffrt_inner.h"
 
 enum class GenerateType : int32_t {
@@ -98,6 +104,7 @@ void FileOperationsCloudStaticTest::SetUpTestCase(void)
 {
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
+    AssistantMock::EnableMock();
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
@@ -1100,4 +1107,136 @@ HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest006, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetDatabaseTest006 End";
 }
+
+/**
+ * @tc.name: ReadFileToBufTest001
+ * @tc.desc: 读取缓存成功,读取到1024字节
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest001, TestSize.Level1) {
+    std::string path = "/path/to/file";
+    char buf[1024];
+    size_t size = 1024;
+    off_t off = 0;
+
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(1024));
+    int64_t result = ReadFileToBuf(path, buf, size, off);
+    EXPECT_EQ(result, 1024);
+}
+
+/**
+ * @tc.name: ReadFileToBufTest002
+ * @tc.desc: 读取缓存失败,读取到0字节
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest002, TestSize.Level1) {
+    std::string path = "/path/to/file";
+    char buf[1024];
+    size_t size = 1024;
+    off_t off = 0;
+
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(0));
+    int64_t result = ReadFileToBuf(path, buf, size, off);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name: ReadFileToBufTest003
+ * @tc.desc: 读取缓存成功,读取到末尾0字节
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest003, TestSize.Level1) {
+    std::string path = "/path/to/file";
+    char buf[1024];
+    size_t size = 1024;
+    off_t off = 0;
+
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(-1));
+    int64_t result = ReadFileToBuf(path, buf, size, off);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name: ReadFileToBufTest004
+ * @tc.desc: 读取缓存成功,中间有中断信号
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest004, TestSize.Level1) {
+    std::string path = "/path/to/file";
+    char buf[1024];
+    size_t size = 1024;
+    off_t off = 0;
+
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(SetErrnoAndReturn(EINTR, 1024));
+    int64_t result = ReadFileToBuf(path, buf, size, off);
+    EXPECT_EQ(result, 1024);
+}
+
+/**
+ * @tc.name: ReadFileToBufTest005
+ * @tc.desc: open文件失败,读取到0字节
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest005, TestSize.Level1) {
+    std::string path = "/path/to/file";
+    char buf[1024];
+    size_t size = 1024;
+    off_t off = 0;
+
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(-1));
+    int64_t result = ReadFileToBuf(path, buf, size, off);
+    EXPECT_EQ(result, -1);
+}
+
+/**
+ * @tc.name: HandleReadCompletionTest002
+ * @tc.desc: 读取失败，size < 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleReadCompletionTest002, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 1;
+    std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+    filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+
+    ReadCompletionParams params;
+    params.cond = std::make_shared<ffrt::condition_variable>();
+    params.readFinish = std::make_shared<bool>(false);
+    params.error = std::make_shared<CloudError>(CloudFile::CloudError::CK_NO_ERROR);
+    params.readSize = std::make_shared<int64_t>(-1);
+    params.buf = std::shared_ptr<char>(new char[128]);
+
+    EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+    HandleReadCompletion(req, filePtr, params);
+
+    EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
+}
+
+/**
+ * @tc.name: HandleReadCompletionTest003
+ * @tc.desc: 读取失败,返回错误
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleReadCompletionTest003, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 1;
+    std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+    filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+
+    ReadCompletionParams params;
+    params.cond = std::make_shared<ffrt::condition_variable>();
+    params.readFinish = std::make_shared<bool>(false);
+    params.error = std::make_shared<CloudError>(CloudFile::CloudError::CK_NETWORK_ERROR);
+    params.readSize = std::make_shared<int64_t>(0);
+    params.buf = std::shared_ptr<char>(new char[128]);;
+
+    EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+    HandleReadCompletion(req, filePtr, params);
+    EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test

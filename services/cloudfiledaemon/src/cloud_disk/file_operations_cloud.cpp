@@ -97,6 +97,21 @@ struct FuseInvalData {
         : se(seVal), parentIno(parentInoVal), childIno(childInoVal), childName(childNameVal) {}
 };
 
+struct ReadCompletionParams {
+    shared_ptr<ffrt::condition_variable> cond;
+    shared_ptr<bool> readFinish;
+    shared_ptr<CloudError> error;
+    shared_ptr<int64_t> readSize;
+    shared_ptr<char> buf;
+};
+
+struct CloudReadParams {
+    off_t offset;
+    size_t size;
+    shared_ptr<char> buf;
+    string path;
+};
+
 static void CallBack(void *data)
 {
     FuseInvalData *fuseInvalData = static_cast<FuseInvalData *>(data);
@@ -1739,15 +1754,69 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     return (void) fuse_reply_err(req, 0);
 }
 
-static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
-                        off_t offset, size_t size, shared_ptr<char> buf)
+static int64_t ReadFileToBuf(const std::string& path, char* buf, size_t size, off_t off)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOGE("open file %{public}s failed!, fd: %d", GetAnonyStringStrictly(path).c_str(), fd);
+        return -1;
+    }
+ 
+    ssize_t n;
+    size_t readLen = 0;
+    while (readLen < size) {
+        n = pread(fd, buf + readLen, size - readLen, off + readLen);
+        if (n > 0) {
+            readLen += n;
+        } else if (n == 0) {
+            break;
+        } else {
+            LOGE("pread failed, return: %{public}zd", n);
+            break;
+        }
+    }
+ 
+    close(fd);
+    int64_t result = static_cast<int64_t>(readLen);
+    return result;
+}
+
+static void HandleReadCompletion(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr, ReadCompletionParams params)
+{
+    unique_lock lck(filePtr->readLock);
+    auto waitStatus = params.cond->wait_for(lck, READ_TIMEOUT_S, [params] {
+        return *params.readFinish;
+    });
+    if (!waitStatus) {
+        LOGE("PRead timeout");
+        fuse_reply_err(req, ENETUNREACH);
+        return;
+    }
+    if (*params.readSize < 0) {
+        LOGE("read fail");
+        fuse_reply_err(req, EIO);
+        return;
+    }
+
+    auto ret = HandleCloudError(req, *params.error);
+    if (ret == 0) {
+        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
+        fuse_reply_buf(req, params.buf.get(), *params.readSize);
+    } else {
+        LOGE("read fail");
+        fuse_reply_err(req, ret);
+    }
+    return;
+}
+
+static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr, CloudReadParams params)
 {
     auto readSize = make_shared<int64_t>();
     auto error = make_shared<CloudError>();
     auto readFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
 
-    ffrt::submit([filePtr, error, readFinish, cond, offset, size, buf, readSize] {
+    ffrt::submit([filePtr, error, readFinish, cond, params, readSize] {
         HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
         auto session = filePtr->readSession;
         if (!session) {
@@ -1760,34 +1829,23 @@ static void DoCloudRead(fuse_req_t req, shared_ptr<CloudDiskFile> filePtr,
             cond->notify_one();
             return;
         }
-        *readSize = session->PRead(offset, size, buf.get(), *error);
+        *readSize = session->PRead(params.offset, params.size, *error);
         {
             unique_lock lck(filePtr->readLock);
             *readFinish = true;
+        }
+        if (*readSize == 0) {
+            *readSize = ReadFileToBuf(params.path, params.buf.get(), params.size, params.offset);
+        } else {
+            LOGE("read cloud disk file failed,read result: %{public}" PRId64 ",error: %{public}d", *readSize, *error);
         }
         cond->notify_one();
         LOGI("download done");
         return;
     });
 
-    unique_lock lck(filePtr->readLock);
-    auto waitStatus = cond->wait_for(lck, READ_TIMEOUT_S, [readFinish] {
-        return *readFinish;
-        });
-    if (!waitStatus) {
-        LOGE("PRead timeout");
-        fuse_reply_err(req, ENETUNREACH);
-        return;
-    }
-    auto ret = HandleCloudError(req, *error);
-    if (ret == 0) {
-        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
-        fuse_reply_buf(req, buf.get(), *readSize);
-    } else {
-        LOGE("read fail");
-        fuse_reply_err(req, ret);
-    }
-    return;
+    ReadCompletionParams readParams = {cond, readFinish, error, readSize, params.buf};
+    HandleReadCompletion(req, filePtr, readParams);
 }
 
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
@@ -1801,6 +1859,13 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         return;
     }
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
     if (filePtr == nullptr) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READ,
@@ -1820,7 +1885,6 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     }
 
     shared_ptr<char> buf = nullptr;
-
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;
     });
@@ -1831,7 +1895,9 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    DoCloudRead(req, filePtr, offset, size, buf);
+    string path = CloudFileUtils::GetLocalDKCachePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+    CloudReadParams readParams = {offset, size, buf, path};
+    DoCloudRead(req, filePtr, readParams);
 }
 
 static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, shared_ptr<CloudDiskInode> inoPtr)

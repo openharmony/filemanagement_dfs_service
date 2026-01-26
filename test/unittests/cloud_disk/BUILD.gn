@@ -175,6 +175,7 @@ sources = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "file_operations_cloud_static_test.cpp",
+    "mock/assistant.cpp",
     "mock/libfuse_mock.cpp",
   ]
 

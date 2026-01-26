@@ -187,7 +187,7 @@ struct CloudInode {
     std::mutex readArgsLock;
     off_t offset{0xffffffff};
     std::map<int64_t, std::shared_ptr<ReadCacheInfo>> readCacheMap;
-    /* variable readArguments for cancel*/
+    /* variable readArguments for cancel */
     std::set<shared_ptr<ReadArguments>> readArgsSet;
     /* process's read status for ioctl, true when canceled */
     std::map<pid_t, bool> readCtlMap;
@@ -999,6 +999,18 @@ static void EraseCloudFdCache(FuseData *data, uint64_t key)
     data->cloudFdCache.erase(key);
 }
 
+static shared_ptr<CloudFile::CloudAssetReadSession> CreateReadSession(shared_ptr<CloudInode>& cInode,
+    shared_ptr<CloudFile::CloudDatabase> database, const string& recordId, struct FuseData* data)
+{
+    if (IsVideoType(cInode->mBase->name)) {
+        return database->NewAssetReadSession(data->userId, "media", recordId,
+            GetAssetKey(cInode->mBase->fileType), VideoCachePath(cInode->path, data));
+    } else {
+        return database->NewAssetReadSession(data->userId, "media", recordId,
+            GetAssetKey(cInode->mBase->fileType), GetAssetPath(cInode, data));
+    }
+}
+
 static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
     struct FuseData *data, shared_ptr<CloudInode>& cInode, shared_ptr<CloudFdInfo> cloudFdInfo)
 {
@@ -1025,8 +1037,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
          */
         LOGD("recordId: %s", recordId.c_str());
         uint64_t startTime = UTCTimeMilliSeconds();
-        cInode->readSession = database->NewAssetReadSession(data->userId, "media", recordId,
-            GetAssetKey(cInode->mBase->fileType), GetAssetPath(cInode, data));
+        cInode->readSession = CreateReadSession(cInode, database, recordId, data);
         if (cInode->readSession) {
             cInode->readSession->SetPrepareTraceId(prepareTraceId);
             auto ret = DoCloudOpen(cInode, fi, data, cloudFdInfo);
@@ -1110,8 +1121,10 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     if (cInode->sessionRefCount == 0) {
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
             cInode->readSession->CancelSession();
-            if (!cInode->readSession->Close(false)) {
-                LOGE("Failed to close readSession");
+            bool needClose = IsVideoType(cInode->mBase->name);
+            bool closeResult = cInode->readSession->Close(needClose);
+            if (!closeResult) {
+                LOGE("Failed to close readSession of %s", needClose ? "video" : "picture");
             }
         }
         cInode->readSession = nullptr;
@@ -1347,43 +1360,6 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
     return !CheckReadIsCanceled(pid, cInode);
 }
 
-static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
-                            shared_ptr<CloudInode> cInode,
-                            int64_t cacheIndex,
-                            shared_ptr<FFRTParamData> data)
-{
-    char *realPaths = realpath(data->cachePath.c_str(), nullptr);
-    if (realPaths == nullptr) {
-        LOGE("realpath failed");
-        return;
-    }
-    std::FILE *file = fopen(realPaths, "r+");
-    free(realPaths);
-    if (file == nullptr) {
-        LOGE("Failed to open cache file, err: %{public}d", errno);
-        return;
-    }
-    int fd = fileno(file);
-    /*
-     * In the implementation of fopen, if the contained fd < 0, reutrn nullptr.
-     * There is no case where the fd < 0 when the pointer is non-null.
-     * This is to judge the exception where the file carrying the fd has been closed.
-     * In such cases, fclose is not needed.
-     */
-    if (fd < 0) {
-        LOGE("Failed to get fd, err: %{public}d", errno);
-        return;
-    }
-    if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
-        pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
-        LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
-        cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
-    }
-    if (fclose(file)) {
-        LOGE("Failed to close cache file, err: %{public}d", errno);
-    }
-}
-
 static void UpdateReadStatInfo(size_t size,
                                std::string name,
                                uint64_t readTime,
@@ -1398,6 +1374,48 @@ static void UpdateReadStatInfo(size_t size,
     readStat.UpdateBundleName(bundleName);
 }
 
+static int64_t ReadFileToBuf(const std::string& path, char* buf, size_t size, off_t off)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOGE("open file %{public}s failed!, fd: %d", GetAnonyStringStrictly(path).c_str(), fd);
+        return -1;
+    }
+ 
+    ssize_t n;
+    size_t readLen = 0;
+    while (readLen < size) {
+        n = pread(fd, buf + readLen, size - readLen, off + readLen);
+        if (n > 0) {
+            readLen += n;
+        } else if (n == 0) {
+            break;
+        } else {
+            LOGE("pread failed, return: %{public}zd", n);
+            break;
+        }
+    }
+ 
+    close(fd);
+    int64_t result = static_cast<int64_t>(readLen);
+    return result;
+}
+
+static void ExecuteCloudRead(shared_ptr<CloudFile::CloudAssetReadSession> readSession,
+                             shared_ptr<ReadArguments> readArgs,
+                             shared_ptr<FFRTParamData> data)
+{
+    *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, *readArgs->ckError, readArgs->appId);
+    if (*readArgs->readResult == 0) {
+        *readArgs->readResult = ReadFileToBuf(data->cachePath, readArgs->buf.get(), readArgs->size, readArgs->offset);
+    } else {
+        LOGE("read cloud file failed, read result: %{public}" PRId64 ", error: %{public}d",
+            *readArgs->readResult, *readArgs->ckError);
+    }
+ 
+    return;
+}
+
 static void CloudReadOnCloudFile(pid_t pid,
                                  shared_ptr<FFRTParamData> data,
                                  shared_ptr<ReadArguments> readArgs,
@@ -1407,7 +1425,6 @@ static void CloudReadOnCloudFile(pid_t pid,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGD("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
-
     uint64_t startTime = UTCTimeMilliSeconds();
     bool isReading = true;
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
@@ -1425,8 +1442,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         LOGD("reading and need wait");
         return;
     }
-    *readArgs->readResult =
-        readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError, readArgs->appId);
+    ExecuteCloudRead(readSession, readArgs, data);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
     UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
@@ -1444,8 +1460,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                 static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-            ffrt::submit(
-                [data, readArgs, cInode, cacheIndex] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
+            cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
         }
         wSesLock.unlock();
     }
@@ -1477,11 +1492,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.unlock();
 
     readArgs->size = MAX_READ_SIZE;
-    readArgs->buf.reset(new char[MAX_READ_SIZE], [](char *ptr) { delete[] ptr; });
     LOGI("To do preread cloudfile path: %{public}s, size: %{public}zd, offset: %{public}ld*4M",
          GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<long>(cacheIndex));
-    *readArgs->readResult =
-        readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
+    *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, *readArgs->ckError);
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
@@ -1494,8 +1507,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
         LOGI("Preread cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
             static_cast<long>(cacheIndex));
     }
-    if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
-        ffrt::submit([readArgs, cInode, cacheIndex, data] { SaveCacheToFile(readArgs, cInode, cacheIndex, data); });
+    if (IsVideoType(cInode->mBase->name) && *readArgs->readResult == 0) {
+            cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
     wSesLock.unlock();
     return;
@@ -1688,7 +1701,13 @@ static bool DoReadSlice(fuse_req_t req,
         fuse_reply_err(req, ENETUNREACH);
         return false;
     }
-    string cachePath = VideoCachePath(cInode->path, data);
+
+    std::string cachePath;
+    if (IsVideoType(cInode->mBase->name)) {
+        cachePath = VideoCachePath(cInode->path, data);
+    } else {
+        cachePath = GetAssetPath(cInode, data);
+    }
     auto ffrtData = make_shared<FFRTParamData>(cachePath, data->activeBundle);
     ffrt::submit([pid, readArgs, cInode, readSession, ffrtData] {
         CloudReadOnCloudFile(pid, ffrtData, readArgs, cInode, readSession);

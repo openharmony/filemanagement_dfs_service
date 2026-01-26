@@ -2235,7 +2235,7 @@ HWTEST_F(FileOperationsCloudTest, ReadTest004, TestSize.Level1)
         fi.fh = 1;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_buf(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->Read(req, reinterpret_cast<fuse_ino_t>(&ino), size, off, &fi);
         EXPECT_TRUE(true);
     } catch (...) {

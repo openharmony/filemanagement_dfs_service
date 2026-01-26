@@ -24,6 +24,17 @@
 #include <gmock/gmock.h>
 #include <memory>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int MyOpen(const char *file, int oflag, mode_t mode = 0660);
+ssize_t MyPread(int fd, void *buf, size_t count, off_t offset);
+
+#ifdef __cplusplus
+}
+#endif
+
 namespace OHOS::FileManagement::CloudDisk {
 class Assistant {
 public:
@@ -58,10 +69,6 @@ public:
         }
         return 1;
     }
-    static int open(const char *file, int oflag)
-    {
-        return 0;
-    }
     static int close(int fd)
     {
         return 0;
@@ -72,6 +79,8 @@ public:
     virtual int fstat(int fd, struct stat *buf) = 0;
     virtual int fcntl(int fd, int op) = 0;
     virtual int ftruncate(int fd, off_t length) = 0;
+    virtual int MyOpen(const char *file, int oflag, mode_t mode) = 0;
+    virtual ssize_t MyPread(int fd, void *buf, size_t count, off_t offset) = 0;
 
 public:
     // file_utils
@@ -109,6 +118,8 @@ public:
     MOCK_METHOD2(fstat, int(int, struct stat *));
     MOCK_METHOD2(fcntl, int(int, int));
     MOCK_METHOD2(ftruncate, int(int, off_t));
+    MOCK_METHOD3(MyOpen, int(const char *file, int oflag, mode_t mode));
+    MOCK_METHOD4(MyPread, ssize_t(int fd, void *buf, size_t count, off_t offset));
 
 public:
     // file_utils

@@ -32,7 +32,6 @@ public:
     virtual CloudError InitSession();
     virtual int64_t PRead(int64_t offset,
                           int64_t size,
-                          char *buffer,
                           CloudError &error,
                           const std::string appId = "");
     virtual void CancelSession();
