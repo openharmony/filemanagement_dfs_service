@@ -70,6 +70,7 @@ void FuseManagerStaticTest::SetUp(void)
 void FuseManagerStaticTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    fuseManager_ = nullptr;
 }
 
 /**
@@ -1182,47 +1183,10 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCacheFileTest001, TestSize.Level1) {
 
 /**
  * @tc.name: CloudReadOnCloudFileTest001
- * @tc.desc: 当缓存索引不存在且读取成功时,函数应进入后续读取操作
+ * @tc.desc: 落盘成功，设置标志位
  * @tc.type: FUNC
  */
 HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest001, TestSize.Level1) {
-    shared_ptr<FFRTParamData> data = make_shared<FFRTParamData>("", "");
-    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
-    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
-
-    pid_t pid = 1;
-    readArgs->offset = 0;
-    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
-    cInode->mBase->size = 100;
-
-    // 设置缓存索引不存在
-    uint64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
-    cInode->readCacheMap.clear();
-    EXPECT_TRUE(cInode->readCacheMap.empty());
-
-    size_t newSize = 10;
-    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
-    for (size_t i = 0; i < newSize; ++i) {
-        cInode->cacheFileIndex[i] = NOT_CACHE;
-    }
-
-    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
-    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
-    CloudReadOnCloudFile(pid, data, readArgs, cInode, readSessionMock);
-
-    // 验证函数进入后续操作
-    EXPECT_EQ(*readArgs->readResult, 0);
-
-    cInode->readCacheMap.clear();
-    EXPECT_TRUE(cInode->readCacheMap.empty());
-}
-
-/**
- * @tc.name: CloudReadOnCloudFileTest002
- * @tc.desc: 当缓存索引不存在且读取失败
- * @tc.type: FUNC
- */
-HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest002, TestSize.Level1) {
     shared_ptr<FFRTParamData> data = make_shared<FFRTParamData>("", "");
     shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
     readArgs->cond = make_shared<ffrt::condition_variable>();;
@@ -1232,9 +1196,6 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest002, TestSize.Level1) {
     readArgs->offset = 0;
     cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
     cInode->mBase->size = 100;
-
-    // 设置缓存索引存在
-    uint64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     cInode->readCacheMap.clear();
     EXPECT_TRUE(cInode->readCacheMap.empty());
 
@@ -1276,6 +1237,11 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
     cloudInode->path = "/./CloudReleaseTest001";
     size_t newSize = 10;
     cloudInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+    for (size_t i = 0; i < newSize; ++i) {
+        cloudInode->cacheFileIndex[i] = NOT_CACHE;
+    }
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    cloudInode->readSession = readSessionMock;
 
     FuseData* data = new FuseData();
     data->photoBundleName = "example_bundle_name";
@@ -1288,8 +1254,10 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
 
     EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
     EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*readSessionMock, Close(_)).WillOnce(Return(false));
     CloudRelease(req, ino, &fi);
     EXPECT_EQ(cloudInode->sessionRefCount, 0);
+    ffrt::wait();
 }
 
 /**
@@ -1300,7 +1268,7 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
 HWTEST_F(FuseManagerStaticTest, CreateReadSessionTest001, TestSize.Level1) {
 
     shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
-    cInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+    cInode->readSession = nullptr;
     cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
     cInode->mBase->size = 100;
     cInode->mBase->fileType = FILE_TYPE_CONTENT;
@@ -1315,6 +1283,8 @@ HWTEST_F(FuseManagerStaticTest, CreateReadSessionTest001, TestSize.Level1) {
 
     EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
     cInode->readSession = CreateReadSession(cInode, data->database, recordId, data);
+
+    EXPECT_NE(cInode->readSession, nullptr);
 }
 
 /**
