@@ -459,7 +459,7 @@ napi_value GetBundlesLocalFilePresentStatus(napi_env env, napi_callback_info inf
     };
 
     std::string procedureName = "GetBundlesLocalFilePresentStatus";
-    std::string taskName = "CloudSyncManager.getBundlesLocalFilePresentStatus";
+    std::string taskName = "cloudSyncManager.getBundlesLocalFilePresentStatus";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
