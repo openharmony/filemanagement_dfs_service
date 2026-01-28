@@ -34,30 +34,30 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void CloudDiskRdbStoreStaticTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
 }
 
 void CloudDiskRdbStoreStaticTest::TearDownTestCase(void)
 {
-    Assistant::ins = nullptr;
-    insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void CloudDiskRdbStoreStaticTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
 }
 
 void CloudDiskRdbStoreStaticTest::TearDown(void)
 {
+    Assistant::ins = nullptr;
+    insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -1409,7 +1409,6 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, RecycleSetValueTest001, TestSize.Level1)
         ValuesBucket setXAttr;
         int32_t position = -1;
         int32_t dirtyType = -1;
-
         int32_t result = RecycleSetValue(val, setXAttr, position, dirtyType);
         EXPECT_EQ(result, E_OK);
     } catch (...) {

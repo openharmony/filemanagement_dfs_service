@@ -14,6 +14,7 @@
  */
 
 #include "clouddisk_rdbstore.h"
+#include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
@@ -274,6 +275,9 @@ int32_t CloudDiskRdbStore::UpdateTHMStatus(shared_ptr<CloudDiskMetaFile> metaFil
 
 int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string &srcCloudId)
 {
+    if (strcmp(cloudId.c_str(), "GetNewSessionTest001") == 0) {
+        return E_RDB;
+    }
     return E_OK;
 }
 

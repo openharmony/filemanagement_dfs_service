@@ -37,8 +37,6 @@ napi_status RegisterCallbackManagerNapi::RegisterCallback(napi_value callback)
 
     callbackList_.push_back(std::make_pair(true, ref));
     validRefNum_++;
-    LOGI("After register, callback list size: %{public}zu, validRefNum_=%{public}d", callbackList_.size(),
-         validRefNum_.load());
     return napi_ok;
 }
 

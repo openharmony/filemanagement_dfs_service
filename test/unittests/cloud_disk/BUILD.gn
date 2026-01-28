@@ -170,17 +170,20 @@ ohos_unittest("file_operations_cloud_static_test") {
 sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "file_operations_cloud_static_test.cpp",
-    "mock/assistant.cpp",
     "mock/libfuse_mock.cpp",
   ]
 
   deps = [
-    "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -202,6 +205,7 @@ sources = [
     "ipc:ipc_single",
     "json:nlohmann_json_static",
     "libfuse:libfuse",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
   ]
 
