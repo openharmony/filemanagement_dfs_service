@@ -97,6 +97,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_notify_utils_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_assistant.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "clouddisk_rdbstore_test.cpp",
@@ -165,7 +166,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
 
   defines = [
     "private=public",
-    "LOG_DOMAIN=0xD004310",
+    "LOG_DOMAIN=0xD00430B",
     "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
   ]
 
@@ -242,7 +243,7 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
 
   defines = [
     "private=public",
-    "LOG_DOMAIN=0xD004310",
+    "LOG_DOMAIN=0xD00430B",
     "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
   ]
 

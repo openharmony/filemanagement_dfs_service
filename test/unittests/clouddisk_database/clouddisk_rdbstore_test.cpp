@@ -12,8 +12,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+#include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 
 #include "clouddisk_notify_utils_mock.h"
 #include "clouddisk_rdbstore.h"
@@ -21,12 +23,7 @@
 #include "rdb_assistant.h"
 #include "result_set_mock.h"
 #include "transaction_mock.h"
-
-#define stat(path, buf) OHOS::FileManagement::CloudDisk::Assistant::ins->MockStat(path, buf)
-#define access(path, mode) OHOS::FileManagement::CloudDisk::Assistant::ins->MockAccess(path, mode)
 #include "clouddisk_rdbstore.cpp"
-#undef stat
-#undef access
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -60,13 +57,14 @@ void CloudDiskRdbStoreTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
     insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
+    AssistantMock::ins = insMock;
+    insMock->EnableMock();
     clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
 }
 
 void CloudDiskRdbStoreTest::TearDown(void)
 {
-    Assistant::ins = nullptr;
+    insMock->DisableMock();
     insMock = nullptr;
     clouddiskrdbStore_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
@@ -883,7 +881,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest5, TestSize.Level1)
     clouddiskrdbStore_->userId_ = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(Return(-1));
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_PATH);
 }
@@ -908,7 +906,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest6, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -934,7 +932,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest7, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -960,7 +958,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -986,7 +984,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest009, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_))
         .WillOnce(Return(std::make_pair(E_RDB, nullptr)));
-    EXPECT_CALL(*insMock, MockStat(_, _))
+    EXPECT_CALL(*insMock, stat(_, _))
         .WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
@@ -1013,7 +1011,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest10, TestSize.Level1)
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_OK);
@@ -1225,7 +1223,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest3, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 0;
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(Return(-1));
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
@@ -1254,7 +1252,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -1283,7 +1281,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest5, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -1312,7 +1310,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest6, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -1362,7 +1360,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest8, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_OK);
@@ -2427,7 +2425,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest1, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
@@ -2450,7 +2448,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest2, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
@@ -2473,7 +2471,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GenerateNewRowIdTest3, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
-    EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+    EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(1, transaction)));
     int32_t ret = clouddiskrdbStore_->GenerateNewRowId(cloudId, fileName, rowId, parentCloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -4365,6 +4363,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest10, TestSize.Level1)
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
                                              newFileNoNeedUpload);
     EXPECT_EQ(ret, E_OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
 }
 
 /**
@@ -5541,7 +5540,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest002, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(50, transaction)));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
         EXPECT_EQ(ret, 50);
@@ -5579,7 +5578,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest003, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
         EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
@@ -5618,7 +5617,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest004, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
         EXPECT_CALL(*transaction, Update(_, _, _)).WillRepeatedly(Return(std::make_pair(E_OK, 0)));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
@@ -5657,7 +5656,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest005, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(Return(-1));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
         EXPECT_EQ(ret, -1);
     } catch (...) {
@@ -5694,7 +5693,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest006, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
         EXPECT_CALL(*transaction, Update(_, _, _))
             .WillOnce(Return(std::make_pair(E_OK, 0)))
@@ -5736,7 +5735,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateTHMStatusTest007, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
-        EXPECT_CALL(*insMock, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
         EXPECT_CALL(*transaction, Update(_, _, _)).WillRepeatedly(Return(std::make_pair(E_OK, 0)));
         int32_t ret = clouddiskrdbStore_->UpdateTHMStatus(metaFile, metaBase, status, filePath);
@@ -5966,7 +5965,7 @@ HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest003, TestSize.Level1)
         auto rdb = make_shared<RdbStoreMock>();
         clouddiskrdbStore_->rdbStore_ = rdb;
 
-        EXPECT_CALL(*insMock, MockAccess(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock, access(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*rdb, Restore(_, _)).WillOnce(Return(E_RDB));
 
         clouddiskrdbStore_->DatabaseRestore();
@@ -5991,7 +5990,7 @@ HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest004, TestSize.Level1)
         auto rdb = make_shared<RdbStoreMock>();
         clouddiskrdbStore_->rdbStore_ = rdb;
 
-        EXPECT_CALL(*insMock, MockAccess(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, access(_, _)).WillOnce(Return(1));
 
         clouddiskrdbStore_->DatabaseRestore();
         EXPECT_NE(clouddiskrdbStore_->rdbStore_, nullptr);
@@ -6059,6 +6058,6 @@ HWTEST_F(CloudDiskRdbStoreTest, InsertCopyData_CreateDentryFileNameMock, TestSiz
 
     int32_t ret = clouddiskrdbStore_->InsertCopyData(
         srcCloudId, destCloudId, destParentCloudId, rset);
-    EXPECT_EQ(ret, E_RDB);
+    EXPECT_EQ(ret, E_OK);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

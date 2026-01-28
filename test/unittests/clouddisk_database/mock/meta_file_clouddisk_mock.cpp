@@ -109,7 +109,7 @@ std::string CloudDiskMetaFile::GetDentryFilePath()
 
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
-    if (name == "mock") {
+    if (name == "mock" || name.find("mock") == 0) {
         return E_RDB;
     }
     return E_OK;
