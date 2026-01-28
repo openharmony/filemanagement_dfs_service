@@ -15,9 +15,22 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#define TEST_LOCAL_PATH_MNT_HMDFS "/test/mnt/hmdfs/"
+#include "directory_ex.h"
+
+static bool g_forceCreateDirectoryShouldFail = false;
+
+static bool MockForceCreateDirectory(const std::string& path)
+{
+    if (g_forceCreateDirectoryShouldFail) {
+        errno = EACCES;
+        return false;
+    }
+    return OHOS::ForceCreateDirectory(path);
+}
+
+#define ForceCreateDirectory MockForceCreateDirectory
 #include "clouddisk_rdbstore.cpp"
-#undef TEST_LOCAL_PATH_MNT_HMDFS
+#undef ForceCreateDirectory
 #include "rdb_assistant.h"
 #include "result_set_mock.h"
 
@@ -1641,10 +1654,13 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, UpdateParentTest003, TestSize.Level1)
         string bundleName = "test";
         string srcPath = "/should_fail";
 
+        g_forceCreateDirectoryShouldFail = true;
         int32_t ret = UpdateParent(userId, bundleName, srcPath, parentCloudId);
+        g_forceCreateDirectoryShouldFail = false;
 
         EXPECT_NE(ret, E_OK) << "ForceCreateDirectory should fail and return errno.";
     } catch (...) {
+        g_forceCreateDirectoryShouldFail = false;
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UpdateParentTest003 failed";
     }
