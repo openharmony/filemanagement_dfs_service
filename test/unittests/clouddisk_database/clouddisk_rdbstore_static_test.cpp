@@ -33,6 +33,7 @@ static bool MockForceCreateDirectory(const std::string& path)
 #undef ForceCreateDirectory
 #include "rdb_assistant.h"
 #include "result_set_mock.h"
+#include "transaction_mock.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -1247,8 +1248,10 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest001, TestSize.Level1)
         ValuesBucket write;
         int32_t position = LOCAL;
         struct stat statInfo;
+        const int64_t localFlag = 0;
+        const bool isWrite = false;
 
-        HandleWriteValue(write, position, statInfo);
+        HandleWriteValue(write, position, statInfo, isWrite, localFlag);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleWriteValueTest001 failed";
@@ -1268,8 +1271,10 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest002, TestSize.Level1)
         ValuesBucket write;
         int32_t position = 1;
         struct stat statInfo;
+        const int64_t localFlag = 0;
+        const bool isWrite = true;
 
-        HandleWriteValue(write, position, statInfo);
+        HandleWriteValue(write, position, statInfo, isWrite, localFlag);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleWriteValueTest002 failed";
@@ -1289,9 +1294,11 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest003, TestSize.Level1)
         ValuesBucket write;
         int32_t position = CLOUD;
         struct stat statInfo;
+        const int64_t localFlag = 0;
+        const bool isWrite = false;
         statInfo.st_size = 100;
 
-        HandleWriteValue(write, position, statInfo);
+        HandleWriteValue(write, position, statInfo, isWrite, localFlag);
 
         ValueObject obj;
         write.GetObject(FileColumn::FILE_SIZE, obj);
@@ -1310,6 +1317,123 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, HandleWriteValueTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleWriteValueTest003 end";
 }
 
+/**
+ * @tc.name: GetLocalFlagTest001
+ * @tc.desc: Verify the GetLocalFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetLocalFlagTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalFlagTest001 start";
+    try {
+        auto transaction = make_shared<TransactionMock>();
+        const std::string cloudId = "100";
+        int64_t localFlag = 0;
+        bool preCount = true;
+
+        EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+        An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(nullptr));
+
+        int32_t ret = GetLocalFlag(transaction, cloudId, localFlag);
+
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLocalFlagTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetLocalFlagTest001 end";
+}
+
+/**
+ * @tc.name: GetLocalFlagTest002
+ * @tc.desc: Verify the GetLocalFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetLocalFlagTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalFlagTest002 start";
+    try {
+        auto transaction = make_shared<TransactionMock>();
+        const std::string cloudId = "100";
+        int64_t localFlag = 0;
+        std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+        bool preCount = true;
+
+        EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+        An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(E_RDB));
+
+        int32_t ret = GetLocalFlag(transaction, cloudId, localFlag);
+
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLocalFlagTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetLocalFlagTest002 end";
+}
+
+/**
+ * @tc.name: GetLocalFlagTest003
+ * @tc.desc: Verify the GetLocalFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetLocalFlagTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalFlagTest003 start";
+    try {
+        auto transaction = make_shared<TransactionMock>();
+        const std::string cloudId = "100";
+        int64_t localFlag = -1;
+        std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+        bool preCount = true;
+
+        EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+        An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_RDB));
+
+        int32_t ret = GetLocalFlag(transaction, cloudId, localFlag);
+
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLocalFlagTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetLocalFlagTest003 end";
+}
+
+/**
+ * @tc.name: GetLocalFlagTest004
+ * @tc.desc: Verify the GetLocalFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetLocalFlagTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLocalFlagTest004 start";
+    try {
+        auto transaction = make_shared<TransactionMock>();
+        const std::string cloudId = "100";
+        int64_t localFlag = 0;
+        std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+        bool preCount = true;
+
+        EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+        An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
+
+        int32_t ret = GetLocalFlag(transaction, cloudId, localFlag);
+
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLocalFlagTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "GetLocalFlagTest004 end";
+}
 
 /**
  * @tc.name: WriteUpdateDentryTest001

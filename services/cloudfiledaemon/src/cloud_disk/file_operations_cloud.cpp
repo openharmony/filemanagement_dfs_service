@@ -1926,7 +1926,7 @@ static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileNam
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RELEASE,
             CloudFile::FaultType::QUERY_DATABASE, res, "get file status fail, err: " + std::to_string(res)});
     }
-    res = rdbStore->Write(fileName, parentCloudId, inoPtr->cloudId);
+    res = rdbStore->Write(fileName, parentCloudId, inoPtr->cloudId, isWrite);
     if (res != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RELEASE,
             CloudFile::FaultType::MODIFY_DATABASE, res, "write file fail"});
@@ -2035,7 +2035,7 @@ static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName
                 CloudFile::FaultOperation::RELEASE, CloudFile::FaultType::DRIVERKIT_DATABASE, ret,
                 "get file status fail, err: " + std::to_string(ret)});
         }
-        ret = rdbStore->Write(fileName, parentCloudId, inoPtr->cloudId);
+        ret = rdbStore->Write(fileName, parentCloudId, inoPtr->cloudId, isWrite);
         if (ret != 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RELEASE,
                 CloudFile::FaultType::DRIVERKIT_DATABASE, ret, "write file fail"});
