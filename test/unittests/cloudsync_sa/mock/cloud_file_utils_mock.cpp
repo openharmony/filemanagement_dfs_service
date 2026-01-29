@@ -139,6 +139,31 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     return false;
 }
+
+bool CloudFileUtils::CheckIsHasLCD(const string &key)
+{
+    return false;
+}
+
+bool CloudFileUtils::CheckIsHasTHM(const string &key)
+{
+    return false;
+}
+
+bool CloudFileUtils::CheckIsTimeRecycled(const string &key)
+{
+    return false;
+}
+
+bool CloudFileUtils::CheckIsRecyclePath(const string &key)
+{
+    return false;
+}
+
+string CloudFileUtils::GetRealPath(const string &path)
+{
+    return "";
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

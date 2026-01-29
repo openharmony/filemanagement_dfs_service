@@ -157,6 +157,8 @@ ohos_unittest("file_operations_cloud_static_test") {
 
   include_dirs = [
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/utils/log/include",
@@ -167,9 +169,19 @@ ohos_unittest("file_operations_cloud_static_test") {
     "mock",
   ]
 
-sources = [
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_asset_read_session.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_assets_downloader.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_database.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_sync_helper.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
@@ -180,14 +192,14 @@ sources = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "file_operations_cloud_static_test.cpp",
+    "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/meta_file_mock.cpp",
     "mock/libfuse_mock.cpp",
+    "mock/timer_mock.cpp",
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
