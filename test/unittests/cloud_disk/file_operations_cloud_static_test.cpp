@@ -19,15 +19,12 @@
 #include <memory>
 
 #include "assistant.h"
+#include "clouddisk_rdbstore_mock.cpp"
 #include "cloud_asset_read_session_mock.h"
 #include "cloud_file_kit_mock.h"
 #include "dfs_error.h"
 
-#define open MyOpen
-#define pread(fd, buf, size, off) MyPread(fd, buf, size, off)
 #include "file_operations_cloud.cpp"
-#define MyOpen open
-#define MyPread(fd, buf, size, off) pread(fd, buf, size, off)
 
 #include "ffrt_inner.h"
 
@@ -97,14 +94,15 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<FileOperationsCloud> fileOperationsCloud_ = nullptr;
     static inline shared_ptr<AssistantMock> insMock = nullptr;
 };
 
 void FileOperationsCloudStaticTest::SetUpTestCase(void)
 {
+    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
-    AssistantMock::EnableMock();
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
@@ -112,16 +110,23 @@ void FileOperationsCloudStaticTest::TearDownTestCase(void)
 {
     Assistant::ins = nullptr;
     insMock = nullptr;
+    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
 void FileOperationsCloudStaticTest::SetUp(void)
 {
+    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FileOperationsCloudStaticTest::TearDown(void)
 {
+    Assistant::ins = nullptr;
+    insMock = nullptr;
+    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -138,7 +143,7 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest001, TestSize.Level1
         string path = "/data";
         string cloudId = "100";
         string assets = "content";
-        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
         data->userId = 100;
         std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
         std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
@@ -147,8 +152,9 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest001, TestSize.Level1
         data->readSessionCache[path] = readSession;
         data->readSessionCache[path]->sessionCount = 1;
 
-        HandleNewSession(data.get(), sessionParam, filePtr, database);
+        HandleNewSession(data, sessionParam, filePtr, database);
         EXPECT_EQ(filePtr->readSession->sessionCount, data->readSessionCache[path]->sessionCount);
+        delete data;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleNewSessionTest001 ERROR";
@@ -169,7 +175,7 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest002, TestSize.Level1
         string path = "/data";
         string cloudId = "100";
         string assets = "content";
-        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
         std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
         std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
         SessionCountParams sessionParam = {path, cloudId, assets};
@@ -177,8 +183,9 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest002, TestSize.Level1
             data->readSessionCache.erase(path);
         }
 
-        HandleNewSession(data.get(), sessionParam, filePtr, database);
+        HandleNewSession(data, sessionParam, filePtr, database);
         EXPECT_EQ(filePtr->readSession->sessionCount, 0);
+        delete data;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleNewSessionTest002 ERROR";
@@ -199,7 +206,7 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest003, TestSize.Level1
         string path = "/data";
         string cloudId = "100";
         string assets = "content";
-        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
         data->userId = 100;
         std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
         std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
@@ -208,8 +215,9 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleNewSessionTest003, TestSize.Level1
         data->readSessionCache[path] = readSession;
         data->readSessionCache[path]->sessionCount = 2;
 
-        HandleNewSession(data.get(), sessionParam, filePtr, database);
+        HandleNewSession(data, sessionParam, filePtr, database);
         EXPECT_EQ(filePtr->readSession->sessionCount, data->readSessionCache[path]->sessionCount);
+        delete data;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleNewSessionTest003 ERROR";
@@ -290,13 +298,14 @@ HWTEST_F(FileOperationsCloudStaticTest, ErasePathCacheTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ErasePathCacheTest001 Start";
     try {
         string path = "/data";
-        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
         if (data->readSessionCache.find(path) != data->readSessionCache.end()) {
             data->readSessionCache.erase(path);
         }
 
-        ErasePathCache(path, data.get());
+        ErasePathCache(path, data);
         EXPECT_EQ(data->readSessionCache.count(path), 0);
+        delete data;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ErasePathCacheTest001 ERROR";
@@ -315,7 +324,7 @@ HWTEST_F(FileOperationsCloudStaticTest, ErasePathCacheTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ErasePathCacheTest002 Start";
     try {
         string path = "/data";
-        shared_ptr<CloudDiskFuseData> data = make_shared<CloudDiskFuseData>();
+        CloudDiskFuseData *data = new CloudDiskFuseData;
         string cloudId = "100";
         string assets = "content";
         data->userId = 100;
@@ -325,8 +334,9 @@ HWTEST_F(FileOperationsCloudStaticTest, ErasePathCacheTest002, TestSize.Level1)
         auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
         data->readSessionCache[path] = readSession;
 
-        ErasePathCache(path, data.get());
+        ErasePathCache(path, data);
         EXPECT_EQ(data->readSessionCache.count(path), 0);
+        delete data;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ErasePathCacheTest002 ERROR";
@@ -537,6 +547,554 @@ HWTEST_F(FileOperationsCloudStaticTest, GenerateCloudId008, TestSize.Level1)
         GTEST_LOG_(INFO) << "GenerateCloudId008 ERROR";
     }
     GTEST_LOG_(INFO) << "GenerateCloudId008 End";
+}
+
+/**
+ * @tc.name: GetNewSessionTest001
+ * @tc.desc: Verify the GetNewSession function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetNewSessionTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNewSessionTest001 Start";
+    try {
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "GetNewSessionTest001";
+        inoPtr->bundleName = "com.example.test";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(0, "com.example.test");
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_THUMBNAIL;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = GetNewSession(inoPtr, path, data, database, cloudOpenParams);
+        EXPECT_EQ(ret, E_RDB);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetNewSessionTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetNewSessionTest001 End";
+}
+
+/**
+ * @tc.name: GetNewSessionTest002
+ * @tc.desc: Verify the GetNewSession function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetNewSessionTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNewSessionTest002 Start";
+    try {
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "123";
+        inoPtr->bundleName = "com.example.test";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(0, "com.example.test");
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_CONTENT;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = GetNewSession(inoPtr, path, data, database, cloudOpenParams);
+        EXPECT_EQ(filePtr->readSession->sessionCount, data->readSessionCache[path]->sessionCount);
+        EXPECT_EQ(ret, E_OK);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetNewSessionTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetNewSessionTest002 End";
+}
+
+/**
+ * @tc.name: GetNewSessionTest003
+ * @tc.desc: Verify the GetNewSession function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetNewSessionTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNewSessionTest003 Start";
+    try {
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "GetNewSessionTest002";
+        inoPtr->bundleName = "com.example.test";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(0, "com.example.test");
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_THUMBNAIL;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = GetNewSession(inoPtr, path, data, database, cloudOpenParams);
+        EXPECT_EQ(ret, E_OK);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetNewSessionTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetNewSessionTest03 End";
+}
+
+/**
+ * @tc.name: HandleReleaseTest001
+ * @tc.desc: Verify the ReleaseHandle function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleReleaseTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleReleaseTest001 Start";
+    try {
+        string path = "/data";
+        string cloudId = "100";
+        string assets = "content";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->bundleName = "Test";
+        inoPtr->cloudId = "100";
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        struct SessionCountParams sessionParam = {path, cloudId, assets};
+        auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        filePtr->readSession = readSession;
+        filePtr->readSession->sessionCount = 1;
+
+        HandleRelease(filePtr, inoPtr, data);
+        EXPECT_EQ(filePtr->readSession, nullptr);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleReleaseTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleReleaseTest001 End";
+}
+
+/**
+ * @tc.name: HandleReleaseTest002
+ * @tc.desc: Verify the ReleaseHandle function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleReleaseTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleReleaseTest002 Start";
+    try {
+        string path = "/data";
+        string cloudId = "100";
+        string assets = "content";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->bundleName = "Test";
+        inoPtr->cloudId = "100";
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        struct SessionCountParams sessionParam = {path, cloudId, assets};
+        auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        filePtr->readSession = readSession;
+        filePtr->readSession->sessionCount = 2;
+
+        HandleRelease(filePtr, inoPtr, data);
+        EXPECT_EQ(filePtr->readSession->sessionCount, 1);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleReleaseTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleReleaseTest002 End";
+}
+
+/**
+ * @tc.name: HandleReleaseTest003
+ * @tc.desc: Verify the ReleaseHandle function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleReleaseTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleReleaseTest003 Start";
+    try {
+        string path = "/data";
+        string cloudId = "100";
+        string assets = "content";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->bundleName = "Test";
+        inoPtr->cloudId = "100";
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        struct SessionCountParams sessionParam = {path, cloudId, assets};
+        auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        filePtr->readSession = readSession;
+        filePtr->readSession->sessionCount = 0;
+
+        HandleRelease(filePtr, inoPtr, data);
+        EXPECT_EQ(filePtr->readSession->sessionCount, -1);
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleReleaseTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleReleaseTest003 End";
+}
+
+/**
+ * @tc.name: HandleOpenFailTest001
+ * @tc.desc: Verify the ReleaseHandle function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleOpenFailTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOpenFailTest001 Start";
+    try {
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_file_info *fi = new fuse_file_info;
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        filePtr->readSession = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->fileName = "Test";
+        fuse_ino_t ino = 0;
+        HandleOpenErrorParams params = {filePtr, inoPtr, ino};
+        string cloudId = "100";
+        string assets = "content";
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        data->readSessionCache[path] = readSession;
+
+        HandleOpenFail(params, path, data, fi);
+        EXPECT_EQ(data->readSessionCache.count(path), 0);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleOpenFailTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOpenFailTest001 End";
+}
+
+/**
+ * @tc.name: HandleSessionNullTest001
+ * @tc.desc: Verify the HandleSessionNull function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleSessionNullTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleSessionNullTest001 Start";
+    try {
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_file_info *fi = new fuse_file_info;
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        filePtr->readSession = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->fileName = "Test";
+        fuse_ino_t ino = 0;
+        HandleOpenErrorParams params = {filePtr, inoPtr, ino};
+        string cloudId = "100";
+        string assets = "content";
+        data->userId = 100;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        auto readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        data->readSessionCache[path] = readSession;
+
+        HandleSessionNull(params, data, fi);
+        EXPECT_EQ(data->readSessionCache[path], readSession);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleSessionNullTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleSessionNullTest001 End";
+}
+
+/**
+ * @tc.name: HandleCloudReopenTest001
+ * @tc.desc: Verify the HandleCloudReopen function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest001 start";
+    try {
+        string cloudId = "100";
+        string assets = "content";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        fuse_file_info *fi = new fuse_file_info;
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        filePtr->readSession = nullptr;
+        filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->fileName = "Test";
+        MetaBase metaBase(inoPtr->fileName);
+        metaBase.fileType = FILE_TYPE_CONTENT;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        CloudOpenParams params = {metaBase, metaFile, filePtr};
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        EXPECT_CALL(*insMock, fuse_reply_open(_, _)).WillOnce(Return(E_OK));
+
+        HandleCloudReopen(fi, data, inoPtr, params, req);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_CLOUD);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudReopenTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest001 end";
+}
+
+/**
+ * @tc.name: HandleCloudReopenTest002
+ * @tc.desc: Verify the HandleCloudReopen function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest002 start";
+    try {
+        string cloudId = "100";
+        string assets = "content";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 0;
+        fuse_file_info *fi = new fuse_file_info;
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        filePtr->readSession = nullptr;
+        filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->fileName = "Test";
+        MetaBase metaBase(inoPtr->fileName);
+        metaBase.fileType = FILE_TYPE_LCD;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        CloudOpenParams params = {metaBase, metaFile, filePtr};
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HandleCloudReopen(fi, data, inoPtr, params, req);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudReopenTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest002 end";
+}
+
+/**
+ * @tc.name: HandleCloudReopenTest003
+ * @tc.desc: Verify the HandleCloudReopen function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest003 start";
+    try {
+        string cloudId = "100";
+        string assets = "content";
+        string path = "/data";
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        fuse_file_info *fi = new fuse_file_info;
+        std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
+        filePtr->readSession = nullptr;
+        filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->fileName = "Test";
+        MetaBase metaBase(inoPtr->fileName);
+        metaBase.fileType = FILE_TYPE_LCD;
+        std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        CloudOpenParams params = {metaBase, metaFile, filePtr};
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDatabase> database = make_shared<CloudDatabase>(100, "test");
+        filePtr->readSession = database->NewAssetReadSession(data->userId, "file", cloudId, assets, path);
+        EXPECT_CALL(*insMock, fuse_reply_open(_, _)).WillOnce(Return(E_OK));
+
+        HandleCloudReopen(fi, data, inoPtr, params, req);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_LOCAL);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudReopenTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudReopenTest003 end";
+}
+
+/**
+ * @tc.name: CallBackTest001
+ * @tc.desc: Verify the CallBack function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CallBackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallBackTest001 start";
+    try {
+        fuse_session *se = nullptr;
+        fuse_ino_t parentIno = 0;
+        fuse_ino_t childIno = 0;
+        string childName = "";
+        FuseInvalData *fuseInvalData = new FuseInvalData(se, parentIno, childIno, childName);
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillOnce(Return(0));
+        CallBack(static_cast<void *>(fuseInvalData));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CallBackTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CallBackTest001 end";
+}
+
+/**
+ * @tc.name: CallBackTest002
+ * @tc.desc: Verify the CallBack function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CallBackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallBackTest002 start";
+    try {
+        fuse_session *se = nullptr;
+        fuse_ino_t parentIno = 0;
+        fuse_ino_t childIno = 0;
+        string childName = "";
+        FuseInvalData *fuseInvalData = new FuseInvalData(se, parentIno, childIno, childName);
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_inode(_, _, _, _)).WillOnce(Return(0));
+        CallBack(static_cast<void *>(fuseInvalData));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CallBackTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "CallBackTest002 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest001
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest001 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "mock";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, 1);
+        ret = rdbStore->GenerateNewRowId(inoPtr->cloudId, inoPtr->fileName, rowId, otherCloudId);
+        EXPECT_EQ(ret, 1);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_EQ(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest001 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest002
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest002 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "mock";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, 1);
+        ret = rdbStore->GenerateNewRowId(otherCloudId, inoPtr->fileName, rowId, otherCloudId);
+        EXPECT_EQ(ret, E_OK);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_EQ(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest002 end";
+}
+
+/**
+ * @tc.name: GetRecyclePathTest003
+ * @tc.desc: Verify the GetRecyclePath function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetRecyclePathTest003 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "123";
+        inoPtr->bundleName = "com.example.test";
+        inoPtr->fileName = "test";
+        int32_t userId = 100;
+        std::string otherCloudId = "123";
+        int64_t rowId = 0;
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
+        int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
+        EXPECT_EQ(ret, E_OK);
+        std::string res = GetRecyclePath(req, inoPtr);
+        EXPECT_NE(res, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRecyclePathTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetRecyclePathTest003 end";
 }
 
 /**
@@ -1106,90 +1664,6 @@ HWTEST_F(FileOperationsCloudStaticTest, GetDatabaseTest006, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetDatabaseTest006 ERROR";
     }
     GTEST_LOG_(INFO) << "GetDatabaseTest006 End";
-}
-
-/**
- * @tc.name: ReadFileToBufTest001
- * @tc.desc: 读取缓存成功,读取到1024字节
- * @tc.type: FUNC
- */
-HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest001, TestSize.Level1) {
-    std::string path = "/path/to/file";
-    char buf[1024];
-    size_t size = 1024;
-    off_t off = 0;
-
-    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
-    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(1024));
-    int64_t result = ReadFileToBuf(path, buf, size, off);
-    EXPECT_EQ(result, 1024);
-}
-
-/**
- * @tc.name: ReadFileToBufTest002
- * @tc.desc: 读取缓存失败,读取到0字节
- * @tc.type: FUNC
- */
-HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest002, TestSize.Level1) {
-    std::string path = "/path/to/file";
-    char buf[1024];
-    size_t size = 1024;
-    off_t off = 0;
-
-    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
-    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(0));
-    int64_t result = ReadFileToBuf(path, buf, size, off);
-    EXPECT_EQ(result, 0);
-}
-
-/**
- * @tc.name: ReadFileToBufTest003
- * @tc.desc: 读取缓存成功,读取到末尾0字节
- * @tc.type: FUNC
- */
-HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest003, TestSize.Level1) {
-    std::string path = "/path/to/file";
-    char buf[1024];
-    size_t size = 1024;
-    off_t off = 0;
-
-    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
-    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(Return(-1));
-    int64_t result = ReadFileToBuf(path, buf, size, off);
-    EXPECT_EQ(result, 0);
-}
-
-/**
- * @tc.name: ReadFileToBufTest004
- * @tc.desc: 读取缓存成功,中间有中断信号
- * @tc.type: FUNC
- */
-HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest004, TestSize.Level1) {
-    std::string path = "/path/to/file";
-    char buf[1024];
-    size_t size = 1024;
-    off_t off = 0;
-
-    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
-    EXPECT_CALL(*insMock, MyPread(_, _, _, _)).WillOnce(SetErrnoAndReturn(EINTR, 1024));
-    int64_t result = ReadFileToBuf(path, buf, size, off);
-    EXPECT_EQ(result, 1024);
-}
-
-/**
- * @tc.name: ReadFileToBufTest005
- * @tc.desc: open文件失败,读取到0字节
- * @tc.type: FUNC
- */
-HWTEST_F(FileOperationsCloudStaticTest, ReadFileToBufTest005, TestSize.Level1) {
-    std::string path = "/path/to/file";
-    char buf[1024];
-    size_t size = 1024;
-    off_t off = 0;
-
-    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(-1));
-    int64_t result = ReadFileToBuf(path, buf, size, off);
-    EXPECT_EQ(result, -1);
 }
 
 /**
