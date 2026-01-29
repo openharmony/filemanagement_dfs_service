@@ -13,8 +13,12 @@
  * limitations under the License.
  */
 
+#include "gallery_download_file_stat.cpp"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include "assistant.h"
 #include "gallery_download_file_stat.h"
 
 namespace OHOS::FileManagement::CloudFile::Test {
@@ -49,6 +53,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    shared_ptr<AssistantMock> insMock_ = nullptr;
 };
 
 void GalleryDownloadFileStatTest::SetUpTestCase(void)
@@ -64,11 +69,17 @@ void GalleryDownloadFileStatTest::TearDownTestCase(void)
 void GalleryDownloadFileStatTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    AssistantMock::EnableMock();
+    insMock_ = make_shared<AssistantMock>();
+    Assistant::ins = insMock_;
 }
 
 void GalleryDownloadFileStatTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    AssistantMock::DisableMock();
+    Assistant::ins = nullptr;
+    insMock_ = nullptr;
 }
 
 HWTEST_F(GalleryDownloadFileStatTest, GalleryDownloadFileStatTest_001, TestSize.Level1)
@@ -465,5 +476,94 @@ HWTEST_F(GalleryDownloadFileStatTest, HandleBundleNameTest_005, TestSize.Level1)
         GTEST_LOG_(INFO) << "HandleBundleNameTest_005 ERROR";
     }
     GTEST_LOG_(INFO) << "HandleBundleNameTest_005 End";
+}
+
+/**
+ * @tc.name: CreateDownloadFileStatDataTest001
+ * @tc.desc: Verify the CreateDownloadFileStatData function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest001 Start";
+    try {
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(0));
+
+        int32_t ret = CreateDownloadFileStatData();
+        EXPECT_EQ(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest001 End";
+}
+
+/**
+ * @tc.name: CreateDownloadFileStatDataTest002
+ * @tc.desc: Verify the CreateDownloadFileStatData function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 Start";
+    try {
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(-1));
+
+        int32_t ret = CreateDownloadFileStatData();
+        EXPECT_NE(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest002 End";
+}
+
+/**
+ * @tc.name: CreateDownloadFileStatDataTest003
+ * @tc.desc: Verify the CreateDownloadFileStatData function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 Start";
+    try {
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, close(_)).WillOnce(Return(-1));
+
+        int32_t ret = CreateDownloadFileStatData();
+        EXPECT_NE(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest003 End";
+}
+
+/**
+ * @tc.name: CreateDownloadFileStatDataTest004
+ * @tc.desc: Verify the CreateDownloadFileStatData function
+ * @tc.type: FUNC
+ * @tc.require: ICQTGD
+ */
+HWTEST_F(GalleryDownloadFileStatTest, CreateDownloadFileStatDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 Start";
+    try {
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, creat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, close(_)).WillOnce(Return(0));
+
+        int32_t ret = CreateDownloadFileStatData();
+        EXPECT_EQ(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateDownloadFileStatDataTest004 End";
 }
 }
