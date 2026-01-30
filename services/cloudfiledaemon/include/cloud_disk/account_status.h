@@ -16,6 +16,8 @@
 #ifndef CLOUD_FILE_DAEMON_ACCOUNT_STATUS_H
 #define CLOUD_FILE_DAEMON_ACCOUNT_STATUS_H
 
+#include <mutex>
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
@@ -32,6 +34,7 @@ public:
 private:
     static inline AccountState preAccountState_{AccountState::ACCOUNT_LOGIN};
     static inline AccountState accountState_{AccountState::ACCOUNT_LOGIN};
+    static std::mutex stateMutex_;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

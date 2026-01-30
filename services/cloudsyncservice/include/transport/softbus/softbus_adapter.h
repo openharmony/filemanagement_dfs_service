@@ -86,6 +86,7 @@ private:
     std::unordered_map<int32_t, std::string> sessionAndPackageMap_;
     static constexpr const int QOS_COUNT = 3;
     static inline std::string pathDir_;
+    static std::mutex pathDirMutex_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
