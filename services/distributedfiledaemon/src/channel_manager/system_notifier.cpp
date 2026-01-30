@@ -41,7 +41,7 @@ int32_t SystemNotifier::CreateNotification(const std::string &networkId)
 {
     LOGI("CreateNotification enter, networkId is %{public}.6s", networkId.c_str());
     {
-        std::shared_lock<std::shared_mutex> readLock(mutex);
+        std::shared_lock<std::shared_mutex> readLock(mutex_);
         if (notificationMap_.find(networkId) != notificationMap_.end()) {
             LOGI("Notification %{public}.6s already exists.", networkId.c_str());
             return E_OK;
@@ -113,7 +113,7 @@ std::string SystemNotifier::GetRemoteDeviceName(const std::string &networkId)
 void SystemNotifier::ClearAllConnect()
 {
     LOGI("ClearALLConnect start.");
-    std::shared_lock<std::shared_mutex> readLock(mutex);
+    std::shared_lock<std::shared_mutex> readLock(mutex_);
     std::vector<std::string> needClearItems;
     for (const auto &pair : notificationMap_) {
         needClearItems.push_back(pair.first);
@@ -126,7 +126,7 @@ void SystemNotifier::ClearAllConnect()
 
 int32_t SystemNotifier::GetNotificationMapSize()
 {
-    std::shared_lock<std::shared_mutex> readLock(mutex);
+    std::shared_lock<std::shared_mutex> readLock(mutex_);
     LOGI("GetNotificationMapSize size is %{public}zu", notificationMap_.size());
     return notificationMap_.size();
 }
@@ -134,7 +134,7 @@ int32_t SystemNotifier::GetNotificationMapSize()
 bool SystemNotifier::IsNetworkIdConnected(const std::string &networkId)
 {
     LOGI("IsNetworkIdConnected enter, networkId is %{public}.6s", networkId.c_str());
-    std::shared_lock<std::shared_mutex> readLock(mutex);
+    std::shared_lock<std::shared_mutex> readLock(mutex_);
     return notificationMap_.find(networkId) != notificationMap_.end();
 }
 } // namespace DistributedFile
