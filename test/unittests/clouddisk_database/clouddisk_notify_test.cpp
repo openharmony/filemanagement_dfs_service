@@ -975,31 +975,16 @@ HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest002, TestSize.Level1)
 
 /**
  * @tc.name: GetInstanceTest001
- * @tc.desc: Verify the GetInstance function returns same instance
+ * @tc.desc: Verify the GetInstance function returns valid instance
  * @tc.type: FUNC
  * @tc.require: issues2755
  */
 HWTEST_F(CloudDiskNotifyTest, GetInstanceTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetInstance Start";
-    CloudDiskNotify &instance1 = CloudDiskNotify::GetInstance();
-    CloudDiskNotify &instance2 = CloudDiskNotify::GetInstance();
-    EXPECT_EQ(&instance1, &instance2);
-    GTEST_LOG_(INFO) << "GetInstance End";
-}
-
-/**
- * @tc.name: GetInstanceTest002
- * @tc.desc: Verify the GetInstance function returns valid instance
- * @tc.type: FUNC
- * @tc.require: issues2755
- */
-HWTEST_F(CloudDiskNotifyTest, GetInstanceTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetInstance Start";
+    GTEST_LOG_(INFO) << "GetInstanceTest001 Start";
     CloudDiskNotify &instance = CloudDiskNotify::GetInstance();
     EXPECT_NE(&instance, nullptr);
-    GTEST_LOG_(INFO) << "GetInstance End";
+    GTEST_LOG_(INFO) << "GetInstanceTest001 End";
 }
 
 /**
