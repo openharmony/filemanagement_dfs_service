@@ -251,6 +251,7 @@ struct FuseData {
     map<uint64_t, shared_ptr<CloudInode>> inodeCache;
     map<uint64_t, shared_ptr<CloudFdInfo>> cloudFdCache;
     std::shared_mutex cacheLock;
+    std::mutex dbLock;
     shared_ptr<CloudFile::CloudDatabase> database;
     struct fuse_session *se;
     string photoBundleName{""};
@@ -403,6 +404,7 @@ static void XcollieCallback(void *xcollie)
 
 static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
 {
+    std::lock_guard<std::mutex> lock(data->dbLock);
     if (!data->database) {
         auto instance = CloudFile::CloudFileKit::GetInstance();
         if (instance == nullptr) {
@@ -2009,6 +2011,7 @@ void SettingDataHelper::SetActiveBundle(int32_t userId, string bundle)
     }
     struct FuseData *data = static_cast<struct FuseData *>(it->second);
     LOGI("reset database, %{public}d %{public}s -> %{public}s", curUserId, data->activeBundle.c_str(), bundle.c_str());
+    std::lock_guard<std::mutex> lock(data->dbLock);
     if (data->activeBundle != bundle) {
         data->activeBundle = bundle;
         data->database = nullptr;

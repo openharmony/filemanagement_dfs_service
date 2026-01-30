@@ -17,8 +17,12 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+
+std::mutex AccountStatus::stateMutex_;
+
 bool AccountStatus::IsNeedCleanCache()
 {
+    std::lock_guard<std::mutex> lock(stateMutex_);
     AccountState tempPreAccountState = preAccountState_;
     AccountState tempAccountState = accountState_;
     preAccountState_ = AccountState::ACCOUNT_LOGIN;
@@ -29,12 +33,14 @@ bool AccountStatus::IsNeedCleanCache()
 
 void AccountStatus::SetAccountState(AccountState accountState)
 {
+    std::lock_guard<std::mutex> lock(stateMutex_);
     preAccountState_ = accountState_;
     accountState_ = accountState;
 }
 
 AccountStatus::AccountState AccountStatus::GetAccountState()
 {
+    std::lock_guard<std::mutex> lock(stateMutex_);
     return accountState_;
 }
 } // namespace CloudDisk

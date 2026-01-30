@@ -31,6 +31,7 @@ constexpr int MIN_LATENCY = 1000;
 const string SERVICE_NAME = "OHOS.Filemanagement.Dfs.ICloudSyncService";
 const std::string HMDFS_PERV_PATH = "/mnt/hmdfs/";
 const std::string DATA_DIR_PATH = "/account/device_view/local/data/";
+mutex SoftbusAdapter::pathDirMutex_;
 SoftbusAdapter &SoftbusAdapter::GetInstance()
 {
     static SoftbusAdapter instance;
@@ -203,6 +204,7 @@ void SoftbusAdapter::OnReceiveFileFinished(int sessionId, const char *files, int
 
 const char* SoftbusAdapter::GetRecvPath()
 {
+    lock_guard<mutex> lock(pathDirMutex_);
     const char *path = pathDir_.c_str();
     return path;
 }
@@ -423,6 +425,7 @@ void SoftbusAdapter::RemoveSesion(int sessionId)
 
 void SoftbusAdapter::UpdateFileRecvPath(const std::string &bundleName, int32_t userId)
 {
+    lock_guard<mutex> lock(pathDirMutex_);
     pathDir_ = HMDFS_PERV_PATH + std::to_string(userId) + DATA_DIR_PATH + bundleName;
     LOGI("recv path: %{public}s", GetAnonyString(pathDir_).c_str());
 }

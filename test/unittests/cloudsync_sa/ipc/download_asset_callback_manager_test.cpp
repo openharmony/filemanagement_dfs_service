@@ -16,6 +16,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "asset_callback_mock.h"
 #include "download_asset_callback_manager.h"
 #include "dfs_error.h"
 
@@ -112,6 +113,29 @@ HWTEST_F(DownloadAssetCallbackManagerTest, OnDownloadFinshedTest001, TestSize.Le
         GTEST_LOG_(INFO) << "OnDownloadFinshedTest FAILED";
     }
     GTEST_LOG_(INFO) << "OnDownloadFinshedTest End";
+}
+
+/**
+ * @tc.name: OnDownloadFinshedTest002
+ * @tc.desc: Verify the OnDownloadFinshed function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(DownloadAssetCallbackManagerTest, OnDownloadFinshedTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDownloadFinshedTest002 Start";
+    try {
+        uint64_t taskId = 100;
+        std::string uri = "";
+        int32_t result = 1;
+        DownloadAssetCallbackManager callbackManager;
+        callbackManager.callbackProxy_ = sptr(new DownloadAssetCallbackMock());
+        callbackManager.OnDownloadFinshed(taskId, uri, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnDownloadFinshedTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnDownloadFinshedTest002 End";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync
