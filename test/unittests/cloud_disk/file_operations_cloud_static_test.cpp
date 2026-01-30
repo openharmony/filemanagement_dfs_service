@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "assistant.h"
-#include "clouddisk_rdbstore_mock.cpp"
 #include "cloud_asset_read_session_mock.h"
 #include "cloud_file_kit_mock.h"
 #include "dfs_error.h"

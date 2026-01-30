@@ -503,8 +503,8 @@ static void DoSessionInit(SessionInitParams sessionInitParams, shared_ptr<ffrt::
                 unique_lock lck(sessionInitParams.filePtr->openLock);
                 *sessionInitParams.openFinish = true;
             }
-            cond->notify_one();
             *sessionInitParams.error = CloudError::CK_LOCAL_ERROR;
+            cond->notify_one();
             return;
         }
         *sessionInitParams.error = session->InitSession();
