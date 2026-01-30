@@ -17,11 +17,11 @@
 
 #include <cstring>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
-#include <filesystem>
 
 #include "assistant.h"
 #include "application_state_observer_stub.h"
