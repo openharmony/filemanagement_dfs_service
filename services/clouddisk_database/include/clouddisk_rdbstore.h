@@ -59,7 +59,8 @@ public:
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
         std::string &name, const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-        const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload);
+        const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
+        bool needSyncAndNotify);
     int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
     int32_t RecycleSetXattr(std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
@@ -121,6 +122,8 @@ private:
     int32_t CheckIsConflict(const std::string &name, const std::string &parentCloudId, std::string &newName);
     int32_t RestoreUpdateRdb(const std::string &cloudId, const struct RestoreInfo &restoreInfo,
         const NativeRdb::ValuesBucket &setXattr);
+    int32_t RenameParmsCheck(const std::string &oldParentCloudId, const std::string &oldFileName,
+        const std::string &newParentCloudId, const std::string &newFileName);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};

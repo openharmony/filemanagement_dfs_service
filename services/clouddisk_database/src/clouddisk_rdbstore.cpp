@@ -1890,20 +1890,13 @@ int32_t CloudDiskRdbStore::HandleRenameValue(ValuesBucket &rename, int32_t posit
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload)
+    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
+    bool needSyncAndNotify)
 {
-    int32_t ret = CheckName(newFileName);
-    if (ret != E_OK) {
-        return ret;
-    }
-    RDBPTR_IS_NULLPTR(rdbStore_);
-    if (oldParentCloudId.empty() || oldFileName.empty() || newParentCloudId.empty() || newFileName.empty()) {
-        LOGE("rename parameters is invalid");
-        return E_INVAL_ARG;
-    }
+    RETURN_ON_ERR(RenameParmsCheck(oldParentCloudId, oldFileName, newParentCloudId, newFileName));
     MetaBase metaBase(oldFileName);
     auto oldMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, oldParentCloudId);
-    ret = oldMetaFile->DoLookup(metaBase);
+    int32_t ret = oldMetaFile->DoLookup(metaBase);
     if (ret != E_OK) {
         LOGE("lookup dentry failed, ret = %{public}d", ret);
         return EINVAL;
@@ -1926,6 +1919,9 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGE("rename dentry failed, ret = %{public}d", ret);
         return EINVAL;
     }
+    if (!needSyncAndNotify) {
+        return E_OK;
+    }
     function<void()> rdbUpdate = [this, rename, bindArgs,
         oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName] {
         int32_t changedRows = -1;
@@ -1939,6 +1935,22 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         }
     };
     ffrt::thread(rdbUpdate).detach();
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::RenameParmsCheck(const std::string &oldParentCloudId, const std::string &oldFileName,
+    const std::string &newParentCloudId, const std::string &newFileName)
+{
+    int32_t ret = CheckName(newFileName);
+    if (ret != E_OK) {
+        return ret;
+    }
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (oldParentCloudId.empty() || oldFileName.empty() || newParentCloudId.empty() || newFileName.empty()) {
+        LOGE("rename parameters is invalid");
+        return E_INVAL_ARG;
+    }
+
     return E_OK;
 }
 

@@ -202,7 +202,8 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload)
+    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
+    bool needSyncAndNotify)
 {
     if (oldFileName == "mock" || newFileName == "mock") {
         return 1;

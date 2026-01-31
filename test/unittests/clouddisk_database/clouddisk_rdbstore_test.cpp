@@ -4161,11 +4161,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest1, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4181,11 +4182,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest2, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -4201,11 +4203,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest3, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -4221,11 +4224,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest4, TestSize.Level1)
     const std::string newParentCloudId = "";
     const std::string newFileName = "newFileName";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -4241,11 +4245,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest5, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFileName";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4261,11 +4266,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest6, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "..";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4281,11 +4287,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest7, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "mock";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4301,11 +4308,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest8, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "mock";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
  
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4321,6 +4329,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest9, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "mock";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
@@ -4332,7 +4341,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest9, TestSize.Level1)
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -4348,6 +4357,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest10, TestSize.Level1)
     const std::string newParentCloudId = "100";
     const std::string newFileName = "newFile";
     const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
@@ -4361,7 +4371,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest10, TestSize.Level1)
         .WillOnce(Return(E_RDB));
 
     int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
-                                             newFileNoNeedUpload);
+                                             newFileNoNeedUpload, needSyncAndNotify);
     EXPECT_EQ(ret, E_OK);
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
 }
