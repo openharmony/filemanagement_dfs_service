@@ -39,9 +39,12 @@ public:
     virtual int32_t DoLookup(MetaBase &base) = 0;
     virtual int32_t DoCreate(const MetaBase &base) = 0;
     virtual int32_t DoLookupAndRemove(MetaBase &metaBase) = 0;
+    virtual int32_t MyOpen(const char* s, int flag, mode_t mode) = 0;
 public:
     static inline shared_ptr<BaseInterfaceLib> baseInterfaceLib_ = nullptr;
 };
+
+int32_t MyOpen(const char* s, int flag, mode_t mode);
 
 class InterfaceLibMock : public BaseInterfaceLib {
 public:
@@ -56,15 +59,9 @@ public:
     MOCK_METHOD1(DoLookup, int32_t(MetaBase &base));
     MOCK_METHOD1(DoCreate, int32_t(const MetaBase &base));
     MOCK_METHOD1(DoLookupAndRemove, int32_t(MetaBase &metaBase));
+    MOCK_METHOD3(MyOpen, int32_t(const char* s, int flag, mode_t mode));
 };
 
-enum ErrStatus {
-    E_FAIL = -1,
-    E_SUCCESS = 0,
-    E_EINVAL = 22,
-    DENTRY_PER_GROUP = 60,
-    MAX_BUCKET_LEVEL = 63
-};
 } // FileManagement
 } // OHOS
 #endif  // BASE_INTERFACE_LIB_MOCK_H
