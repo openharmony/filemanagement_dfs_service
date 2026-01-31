@@ -53,7 +53,8 @@ public:
         const std::string &directoryName, bool noNeedUpload);
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName, bool noNeedUpload);
-    int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
+    int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId,
+        bool isWrite);
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
         const CacheNode &node = {}, const std::string &extAttrKey = "");
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,

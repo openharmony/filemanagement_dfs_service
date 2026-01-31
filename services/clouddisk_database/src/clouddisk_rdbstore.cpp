@@ -687,7 +687,28 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     return E_OK;
 }
 
-static void HandleWriteValue(ValuesBucket &write, int32_t position, struct stat &statInfo)
+static int32_t GetLocalFlag(shared_ptr<Transaction> transaction, const string &cloudId, int64_t &localFlag)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = transaction->QueryByStep(predicates, {FileColumn::LOCAL_FLAG});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t ret = CloudDiskRdbUtils::GetLong(FileColumn::LOCAL_FLAG, localFlag, resultSet);
+    if (ret != E_OK) {
+        LOGE("get localFlag failed");
+    }
+    return ret;
+}
+
+static void HandleWriteValue(ValuesBucket &write, int32_t position, struct stat &statInfo, bool isWrite,
+    int64_t localFlag)
 {
     write.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     write.PutLong(FileColumn::FILE_TIME_EDITED, CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim));
@@ -699,6 +720,11 @@ static void HandleWriteValue(ValuesBucket &write, int32_t position, struct stat 
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
     } else {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    }
+    if (isWrite) {
+        int64_t newFlag =
+            static_cast<int64_t>(static_cast<uint64_t>(localFlag) | FileColumn::LOCAL_FLAG_MASK_ISLOCALDIRTY);
+        write.PutLong(FileColumn::LOCAL_FLAG, newFlag);
     }
 }
 
@@ -738,7 +764,7 @@ void CloudDiskRdbStore::TriggerSyncForWrite(const std::string &fileName, const s
 }
 
 int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string &parentCloudId,
-    const std::string &cloudId)
+    const std::string &cloudId, bool isWrite)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
@@ -764,8 +790,10 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         return E_RDB;
     }
     int32_t position = static_cast<int32_t>(info.location);
+    int64_t localFlag;
+    RETURN_ON_ERR(GetLocalFlag(transaction, cloudId, localFlag));
     ValuesBucket write;
-    HandleWriteValue(write, position, statInfo);
+    HandleWriteValue(write, position, statInfo, isWrite, localFlag);
     int32_t changedRows = -1;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);

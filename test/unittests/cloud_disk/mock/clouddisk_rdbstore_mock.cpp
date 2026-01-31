@@ -106,7 +106,7 @@ void CloudDiskRdbStore::TriggerSyncForWrite(const std::string &fileName, const s
 }
 
 int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string &parentCloudId,
-    const std::string &cloudId)
+    const std::string &cloudId, bool isWrite)
 {
     return E_OK;
 }

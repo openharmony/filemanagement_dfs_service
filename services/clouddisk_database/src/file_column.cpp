@@ -57,6 +57,7 @@ const std::string FileColumn::LOCAL_FLAG = "local_flag";
 
 //  description for LOCAL_FLAG shift
 const uint64_t FileColumn::LOCAL_FLAG_MASK_ISCONFLICT = (1 << 0);
+const uint64_t FileColumn::LOCAL_FLAG_MASK_ISLOCALDIRTY = (1 << 1);
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
@@ -216,7 +217,7 @@ const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
     FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE, FILE_NAME, PARENT_CLOUD_ID, ROW_ID,
     IS_DIRECTORY, FILE_TIME_ADDED, FILE_TYPE, ROOT_DIRECTORY, DIRECTLY_RECYCLED,
-    THM_FLAG, LCD_FLAG,
+    THM_FLAG, LCD_FLAG, LOCAL_FLAG,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {

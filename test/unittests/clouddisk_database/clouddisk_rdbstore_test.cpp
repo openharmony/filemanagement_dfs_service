@@ -1186,10 +1186,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest1, TestSize.Level1)
     const std::string cloudId = "";
     const std::string parentCloudId = "100";
     const std::string fileName = "file";
+    const bool isWrite = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -1203,10 +1204,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest2, TestSize.Level1)
     const std::string cloudId = "rootId";
     const std::string fileName = "file";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -1220,13 +1222,14 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest3, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "file";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 0;
     EXPECT_CALL(*insMock, stat(_, _)).WillOnce(Return(-1));
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_PATH);
 }
 
@@ -1240,6 +1243,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "mock";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     struct stat st;
     st.st_size = 1;
     bool preCount = true;
@@ -1254,7 +1258,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -1268,6 +1272,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest5, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "mock";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     struct stat st;
     st.st_size = 1;
     bool preCount = true;
@@ -1280,10 +1285,14 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest5, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -1297,6 +1306,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest6, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "mock";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     struct stat st;
     st.st_size = 1;
     bool preCount = true;
@@ -1309,10 +1319,14 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest6, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -1326,13 +1340,14 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest7, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "file";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
     EXPECT_CALL(*rdb, CreateTransaction(_))
         .WillOnce(Return(std::make_pair(E_RDB, nullptr)));
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -1346,6 +1361,7 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest8, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string fileName = "test";
     const std::string parentCloudId = "rootId";
+    const bool isWrite = false;
     struct stat st;
     st.st_size = 1;
     bool preCount = true;
@@ -1359,10 +1375,14 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest8, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     EXPECT_CALL(*insMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
 
-    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
+    int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId, isWrite);
     EXPECT_EQ(ret, E_OK);
 }
 
