@@ -2096,7 +2096,7 @@ HWTEST_F(FileOperationsCloudTest, RenameTest005, TestSize.Level1)
  
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(fc));
+        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2128,7 +2128,7 @@ HWTEST_F(FileOperationsCloudTest, RenameTest006, TestSize.Level1)
  
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(fc));
+        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         EXPECT_TRUE(true);
     } catch (...) {
