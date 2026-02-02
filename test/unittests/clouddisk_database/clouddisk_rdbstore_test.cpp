@@ -4377,6 +4377,27 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest10, TestSize.Level1)
 }
 
 /**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RenameTest11, TestSize.Level1)
+{
+    const std::string oldParentCloudId = "10";
+    const std::string oldFileName = "oldFileName";
+    const std::string newParentCloudId = "100";
+    const std::string newFileName = "mock";
+    const bool newFileNoNeedUpload = false;
+    const bool needSyncAndNotify = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+ 
+    int32_t ret = clouddiskrdbStore_->Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName,
+                                             newFileNoNeedUpload, needSyncAndNotify);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
  * @tc.name: GetHasChild
  * @tc.desc: Verify the CloudDiskRdbStore::GetHasChild function
  * @tc.type: FUNC
