@@ -35,6 +35,7 @@ void DownloadAssetCallbackManager::AddCallback(const sptr<IDownloadAssetCallback
     callbackProxy_ = callback;
     auto remoteObject = callback->AsObject();
     auto deathCb = [this](const wptr<IRemoteObject> &obj) {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
         callbackProxy_ = nullptr;
         LOGE("client died");
     };
@@ -44,10 +45,14 @@ void DownloadAssetCallbackManager::AddCallback(const sptr<IDownloadAssetCallback
 
 void DownloadAssetCallbackManager::OnDownloadFinshed(const TaskId taskId, const std::string &uri, const int32_t result)
 {
-    auto callback = callbackProxy_;
-    if (callback == nullptr) {
-        LOGE("callbackProxy_ is nullptr");
-        return;
+    sptr<IDownloadAssetCallback> callback = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callback = callbackProxy_;
+        if (callback == nullptr) {
+            LOGE("callbackProxy_ is nullptr");
+            return;
+        }
     }
     LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d",
           taskId, GetAnonyString(uri).c_str(), result);

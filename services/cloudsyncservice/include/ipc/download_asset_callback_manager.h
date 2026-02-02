@@ -32,6 +32,7 @@ public:
 private:
     sptr<IDownloadAssetCallback> callbackProxy_;
     sptr<SvcDeathRecipient> deathRecipient_;
+    std::mutex callbackMutex_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

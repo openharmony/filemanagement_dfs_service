@@ -84,6 +84,7 @@ static void CheckOverflow(uint32_t &data, uint32_t addValue)
 
 void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
 {
+    lock_guard<mutex> lock(mutex_);
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, OPEN_SIZE_RANGE_VECTOR);
     if (index >= OPEN_SIZE_MAX) {
         LOGE("update open size stat fail, index overflow, index = %{public}u.", index);
@@ -94,6 +95,7 @@ void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
 
 void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
 {
+    lock_guard<mutex> lock(mutex_);
     uint32_t index = GetRangeIndex(time, OPEN_TIME_RANGE_VECTOR);
     if (index >= OPEN_TIME_MAX) {
         LOGE("update open time stat fail, index overflow, index = %{public}u.", index);
@@ -104,6 +106,7 @@ void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
 
 void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
 {
+    lock_guard<mutex> lock(mutex_);
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, READ_SIZE_RANGE_VECTOR);
     if (index >= READ_SIZE_MAX) {
         LOGE("update read size stat fail, index overflow, index = %{public}u.", index);
@@ -114,6 +117,7 @@ void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
 
 void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
 {
+    lock_guard<mutex> lock(mutex_);
     uint32_t indexSize = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, READ_SIZE_RANGE_VECTOR);
     uint32_t indexTime = GetRangeIndex(time, READ_TIME_RANGE_VECTOR);
     if (indexSize >= READ_SIZE_MAX || indexTime >= READ_TIME_MAX) {
@@ -126,6 +130,7 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
 
 void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
 {
+    lock_guard<mutex> lock(mutex_);
     if (index >= VIDEO_READ_INFO) {
         return;
     }
@@ -134,6 +139,7 @@ void CloudDaemonStatistic::UpdateReadInfo(uint32_t index)
 
 void CloudDaemonStatistic::UpdateBundleName(const std::string &bundleName)
 {
+    lock_guard<mutex> lock(mutex_);
     bundleName_ = bundleName;
 }
 
