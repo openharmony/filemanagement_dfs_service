@@ -42,6 +42,10 @@ public:
 
     void ReportLinkConnectionAdapter(const RadarParaInfo &info);
     void ReportGenerateDisUriAdapter(const RadarParaInfo &info);
+    void RptConnectAdapter(RadarParaInfo &info,
+        ReportLevel faultLevel, int32_t resultCode, const std::string &errorInfo);
+    void RptFileAccAdapter(RadarParaInfo &info,
+        ReportLevel faultLevel, int32_t resultCode, const std::string &errorInfo);
     void ReportFileAccessAdapter(const RadarParaInfo &info);
 
 private:
