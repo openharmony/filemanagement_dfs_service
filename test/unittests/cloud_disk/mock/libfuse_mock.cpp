@@ -102,3 +102,8 @@ int fuse_lowlevel_notify_inval_inode(struct fuse_session *se, fuse_ino_t ino, of
 {
     return Assistant::ins->fuse_lowlevel_notify_inval_inode(se, ino, off, len);
 }
+
+const struct fuse_ctx*(fuse_req_t req)
+{
+    return Assistant::ins->fuse_req_ctx(req);
+}
