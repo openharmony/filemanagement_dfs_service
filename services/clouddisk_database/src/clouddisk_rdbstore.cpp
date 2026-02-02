@@ -86,9 +86,7 @@ static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &ar
 {
     size_t size = args.size();
     if (size != ARGS_SIZE) {
-        std::string msg = "CloudSyncTriggerFunc args size error, size = " + std::to_string(size);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::DATABASEINIT,
-            CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, msg});
+        LOGE("CloudSyncTriggerFunc args size error, %{public}zu", size);
         return "";
     }
     int32_t userId = std::strtol(args[ARG_USER_ID].c_str(), nullptr, 0);
@@ -113,19 +111,15 @@ int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
     LOGI("database need to be rebuilded");
     int32_t errCode = RdbHelper::DeleteRdbStore(databasePath);
     if (errCode != NativeRdb::E_OK) {
-        std::string msg = "Delete CloudDisk Database is failed, err = " + std::to_string(errCode);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::DATABASE, errCode, msg});
+        LOGE("Delete CloudDisk Database is failed, err = %{public}d", errCode);
         return errCode;
     }
     errCode = 0;
     CloudDiskDataCallBack rdbDataCallBack;
     rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
     if (rdbStore_ == nullptr) {
-        std::string msg = "ReGetRdbStore is failed, userId_ = " + std::to_string(userId_) +
-            ", bundleName_ = " + bundleName_ + ", errCode = " + std::to_string(errCode);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::DATABASE, errCode, msg});
+        LOGE("ReGetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
+             userId_, bundleName_.c_str(), errCode);
         return errCode;
     }
     DatabaseRestore();
@@ -145,9 +139,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     int32_t errCode = 0;
     string databasePath = RdbSqlUtils::GetDefaultDatabasePath(customDir, CLOUD_DISK_DATABASE_NAME, errCode);
     if (errCode != NativeRdb::E_OK) {
-        std::string msg = "Create Default Database Path is failed, errCode = " + std::to_string(errCode);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::FILE, errCode, msg});
+        LOGE("Create Default Database Path is failed, errCode = %{public}d", errCode);
         return E_PATH;
     }
     config_.SetName(name);
@@ -159,14 +151,12 @@ int32_t CloudDiskRdbStore::RdbInit()
     CloudDiskDataCallBack rdbDataCallBack;
     rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
     if (rdbStore_ == nullptr) {
-        std::string msg = "GetRdbStore is failed, userId_ = " + std::to_string(userId_) +
-            ", bundleName_ = " + bundleName_ + ", errCode = " + std::to_string(errCode);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::DATABASE, errCode, msg});
-        if (errCode == NativeRdb::E_SQLITE_CORRUPT && ReBuildDatabase(databasePath)) {
-            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-                CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::DATABASE,
-                errCode, "clouddisk db image is malformed, ReBuild failed"});
+        LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
+             userId_, bundleName_.c_str(), errCode);
+        if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+            if (ReBuildDatabase(databasePath)) {
+                LOGE("clouddisk db image is malformed, ReBuild failed");
+            }
         }
         return errCode;
     } else if (errCode == NativeRdb::E_SQLITE_CORRUPT) { DatabaseRestore(); }
@@ -202,14 +192,10 @@ void CloudDiskRdbStore::DatabaseRestore()
             ret = rdbStore_->Restore(fileName);
         }
         if (ret != 0) {
-            std::string msg = "clouddisk restore failed, ret = " + std::to_string(ret);
-            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-                CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::DATABASE, ret, msg});
+            LOGE("cloudisk restore failed, ret %{public}d", ret);
         }
     } else {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::DATABASEINIT, CloudFile::FaultType::FILE,
-            ENOENT, "clouddisk backup db is not exist"});
+        LOGE("clouddisk backup db is not exist");
     }
 }
 
@@ -446,14 +432,12 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
         return EINVAL;
     }
     if (fileName[0] == ' ') {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::CHECK,
-            CloudFile::FaultType::FILE, EINVAL, "Illegal name"});
+        LOGE("Illegal name");
         return EINVAL;
     }
     if (isDir == DIRECTORY) {
         if ((fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ') || fileName == RECYCLE_FILE_NAME) {
-            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::CHECK,
-                CloudFile::FaultType::FILE, EINVAL, "Illegal name"});
+            LOGE("Illegal name");
             return EINVAL;
         }
     }
@@ -481,9 +465,7 @@ static int32_t CheckName(const std::string &fileName)
     };
     for (char c : fileName) {
         if (illegalCharacter.find(c) != illegalCharacter.end()) {
-            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-                CloudFile::FaultOperation::CHECK, CloudFile::FaultType::FILE,
-                EINVAL, "Illegal name"});
+            LOGE("Illegal name");
             return EINVAL;
         }
     }
@@ -526,9 +508,7 @@ static int32_t CreateDentry(MetaBase &metaBase, uint32_t userId, const std::stri
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
     int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
     if (ret != E_OK) {
-        std::string msg = "update new dentry failed in CreateDentry, ret " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName,
-            CloudFile::FaultOperation::CREATE, CloudFile::FaultType::DENTRY_FILE, ret, msg});
+        LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
     }
     return E_OK;
@@ -739,9 +719,7 @@ static int32_t WriteUpdateDentry(MetaBase &metaBase, uint32_t userId, const std:
     LOGD("write update dentry start");
     int32_t ret = metaFile->DoChildUpdate(fileName, callback);
     if (ret != E_OK) {
-        std::string msg = "update new dentry failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName,
-            CloudFile::FaultOperation::RELEASE, CloudFile::FaultType::DENTRY_FILE, ret, msg});
+        LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
     }
     return ret;
@@ -753,9 +731,7 @@ void CloudDiskRdbStore::TriggerSyncForWrite(const std::string &fileName, const s
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != E_OK) {
-        std::string msg = "lookup dentry failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::RELEASE, CloudFile::FaultType::DENTRY_FILE, ret, msg});
+        LOGE("lookup dentry failed, ret = %{public}d", ret);
         return;
     }
     if (metaBase.noUpload == NEED_UPLOAD) {
@@ -870,9 +846,7 @@ static int32_t UpdateValueBuckets(const MetaBase &metaBase, const string &filePa
     struct stat statInfo{};
     auto res = stat(filePath.c_str(), &statInfo);
     if (res != E_OK) {
-        std::string msg = "filePath " + GetAnonyString(filePath) + " is invalid, errno=" + std::to_string(errno);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::OPEN, CloudFile::FaultType::FILE, res, msg});
+        LOGE("filePath %{public}s is invalid, errno=%{public}d", GetAnonyString(filePath).c_str(), errno);
         return res;
     }
     fileSize = static_cast<int64_t>(statInfo.st_size);
@@ -1032,9 +1006,7 @@ static int32_t RecycleSetValue(TrashOptType val, ValuesBucket &setXAttr, int32_t
         setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, SET_STATE);
         setXAttr.PutLong(FileColumn::META_TIME_EDITED, recycledTime);
     } else {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::INNER_ERROR,
-            E_RDB, "invalid value"});
+        LOGE("invalid value");
         return E_RDB;
     }
     return E_OK;
@@ -1047,24 +1019,16 @@ int32_t CloudDiskRdbStore::GetParentCloudId(const std::string &cloudId, std::str
     getParentCloudIdPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = rdbStore_->QueryByStep(getParentCloudIdPredicates, { FileColumn::PARENT_CLOUD_ID });
     if (resultSet == nullptr) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
-            E_RDB, "get nullptr parentCloudId resultSet"});
+        LOGE("get nullptr parentCloudId resultSet");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        std::string msg = "get parentCloudId go to next row failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
-            ret, msg});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get parentCloudId go to next row failed");
         return E_RDB;
     }
-    ret = CloudDiskRdbUtils::GetString(FileColumn::PARENT_CLOUD_ID, parentCloudId, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::PARENT_CLOUD_ID, parentCloudId, resultSet);
     if (ret != E_OK) {
-        std::string msg = "get parent cloudId failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("get parent cloudId failed");
         return ret;
     }
     return E_OK;
@@ -1082,9 +1046,7 @@ static string ConvertUriToSrcPath(const string &uriStr)
     string uriString = uri.ToString();
     string uriPath = CloudDisk::CloudFileUtils::GetPathFromUri(uriString);
     if (uriPath.find(sandboxPrefix) != 0) {
-        std::string msg = "uriPath invalid: " + GetAnonyString(uriPath);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::FILE, E_PATH, msg});
+        LOGE("uriPath invalid: %{public}s", GetAnonyString(uriPath).c_str());
         return "/";
     }
 
@@ -1111,9 +1073,7 @@ int32_t CloudDiskRdbStore::GetSourcePath(const string &attr, const string &paren
     if (ret == E_OK) {
         sourcePath = ConvertUriToSrcPath(uri);
     } else {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
-            ret, "file src path fail, restore to root dir"});
+        LOGI("file src path fail, restore to root dir");
     }
     return E_OK;
 }
@@ -1126,9 +1086,7 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
     RETURN_ON_ERR(GetCurNode(cloudId, cacheNode));
     int32_t ret = GetNotifyUri(cacheNode, uri);
     if (ret != E_OK) {
-        std::string msg = "failed to get source path, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::FILE, ret, msg});
+        LOGE("failed to get source path, ret=%{public}d", ret);
         return ret;
     }
     string filePath = ConvertUriToSrcPath(uri);
@@ -1142,9 +1100,7 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
     try {
         attrStr = jsonObject.dump();
     } catch (nlohmann::json::type_error& err) {
-        std::string msg = "failed to dump json object, reason: " + std::string(err.what());
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::FILE, E_INVAL_ARG, msg});
+        LOGE("failed to dump json object, reason: %{public}s", err.what());
         return E_INVAL_ARG;
     }
     setXattr.PutString(FileColumn::ATTRIBUTE, attrStr);
@@ -1162,9 +1118,7 @@ static int32_t UpdateParent(const int32_t userId, const string &bundleName, cons
 
     string parentDir = LOCAL_PATH_MNT_HMDFS + to_string(userId) + LOCAL_PATH_CLOUD_DATA + bundleName + srcPath;
     if (!ForceCreateDirectory(parentDir)) {
-        std::string msg = "create parent dir fail, " + GetAnonyString(parentDir);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::FILE, errno, msg});
+        LOGE("create parent dir fail, %{public}s", GetAnonyString(parentDir).c_str());
         return errno;
     }
     parentCloudId = CloudFileUtils::GetCloudId(parentDir);
@@ -1198,9 +1152,7 @@ int32_t CloudDiskRdbStore::CheckIsConflict(const string &name, const string &par
             LOGD("no conflict file at target dir.");
             return E_OK;
         }
-        std::string msg = "lookup conflict name fail, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DENTRY_FILE, ret, msg});
+        LOGE("lookup conflict name fail, ret = %{public}d", ret);
         return ret;
     }
 
@@ -1215,9 +1167,7 @@ int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct 
     TransactionOperations rdbTransactionUpdate(rdbStore_);
     auto [ret, transaction] = rdbTransactionUpdate.Start();
     if (ret != E_OK) {
-        std::string msg = "rdbstore begin transaction failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
 
@@ -1227,17 +1177,13 @@ int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct 
     int32_t changedRows = -1;
     tie(ret, changedRows) = transaction->Update(setXattr, predicates);
     if (ret != E_OK) {
-        std::string msg = "restore update rdb failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("resotre update rdb failed, ret = %{public}d", ret);
         return E_RDB;
     }
 
     ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId_, bundleName_, restoreInfo);
     if (ret != E_OK) {
-        std::string msg = "recycled restore set dentry failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DENTRY_FILE, ret, msg});
+        LOGE("recycled restore set dentry failed, ret = %{public}d", ret);
         return ret;
     }
     rdbTransactionUpdate.Finish();
@@ -1274,10 +1220,8 @@ int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const st
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
     int32_t res = metaFile->DoLookup(metaBase);
     if (res != E_OK) {
-        std::string msg = "lookup dentry failed, fileName is " + GetAnonyString(fileName) +
-            ", cloudId is " + GetAnonyString(cloudId) + "ret = " + std::to_string(res);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::DENTRY_FILE, res, msg});
+        LOGE("lookup dentry failed, fileName is %{public}s, cloudId is %{public}s, ret = %{public}d",
+            GetAnonyString(fileName).c_str(), GetAnonyString(cloudId).c_str(), res);
         return ENOENT;
     }
     ValuesBucket fileInfo;
@@ -1297,16 +1241,12 @@ int32_t CloudDiskRdbStore::GenerateNewRowId(const std::string &cloudId, const st
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
-        std::string msg = "rdbstore begin transaction failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return E_RDB;
     }
     std::tie(ret, rowId) = transaction->Insert(FileColumn::FILES_TABLE, fileInfo);
     if (ret != E_OK) {
-        std::string msg = "insert new file record in DB failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INSERT_DATABASE, ret, msg});
+        LOGE("insert new file record in DB failed, ret = %{public}d", ret);
         return E_RDB;
     }
     rdbTransaction.Finish();
@@ -1418,20 +1358,14 @@ int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, c
                                               {FileColumn::ROW_ID, FileColumn::POSITION, FileColumn::ATTRIBUTE,
                                                FileColumn::DIRTY_TYPE});
     if (resultSet == nullptr) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
-            E_RDB, "get nullptr result set"});
+        LOGE("get nullptr result set");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        std::string msg =
-            "getRowIdAndPositionPredicates result set go to next row failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getRowIdAndPositionPredicates result set go to next row failed");
         return E_RDB;
     }
-    ret = CloudDiskRdbUtils::GetLong(FileColumn::ROW_ID, rowId, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetLong(FileColumn::ROW_ID, rowId, resultSet);
     if (ret != E_OK) {
         LOGE("get rowId failed");
         return ret;
@@ -1781,9 +1715,7 @@ static int32_t ExtAttributeSetValue(std::string &jsonValue, const std::string &k
     try {
         jsonValue = jsonObj.dump();
     } catch (nlohmann::json::type_error& err) {
-        std::string msg = "failed to dump json object, reason: " + std::string(err.what());
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::FILE, E_INVAL_ARG, msg});
+        LOGE("failed to dump json object, reason: %{public}s", err.what());
         return E_INVAL_ARG;
     }
     return E_OK;
@@ -1980,9 +1912,7 @@ int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChil
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     auto resultSet = rdbStore_->QueryByStep(readDirPredicates, {FileColumn::FILE_NAME});
     if (resultSet == nullptr) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::CHECK, CloudFile::FaultType::QUERY_DATABASE,
-            E_RDB, "get nullptr result set"});
+        LOGE("get nullptr result set");
         return E_RDB;
     }
     if (resultSet->GoToNextRow() == E_OK) {
@@ -2004,9 +1934,7 @@ int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
     int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, updateValue, FileColumn::CLOUD_ID + " = ?",
         whereArgs);
     if (ret != E_OK) {
-        std::string msg = "unlink synced directory fail, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::UNLINK, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("unlink synced directory fail, ret %{public}d", ret);
         return E_RDB;
     }
     return E_OK;
@@ -2020,9 +1948,7 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
     vector<string> whereArgs = {cloudId};
     int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE, FileColumn::CLOUD_ID + " = ?", whereArgs);
     if (ret != E_OK) {
-        std::string msg = "unlink local directory fail, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::UNLINK, CloudFile::FaultType::DELETE_DATABASE, ret, msg});
+        LOGE("unlink local directory fail, ret %{public}d", ret);
         return E_RDB;
     }
     return E_OK;
@@ -2053,24 +1979,17 @@ int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dir
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::DIRTY_TYPE});
     if (resultSet == nullptr) {
-        std::string msg = "get null result";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, E_RDB, msg});
+        LOGE("get null result");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        std::string msg = "get current node resultSet fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
         return E_RDB;
     }
 
-    ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
     if (ret != E_OK) {
-        std::string msg = "get file status fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("get file status fail");
         return ret;
     }
     return E_OK;
@@ -2083,24 +2002,17 @@ int32_t CloudDiskRdbStore::GetSrcCloudId(const std::string &cloudId, std::string
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::SOURCE_CLOUD_ID});
     if (resultSet == nullptr) {
-        std::string msg = "get null result";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, E_RDB, msg});
+        LOGE("get null result");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        std::string msg = "get current node resultSet fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
         return E_RDB;
     }
     
-    ret = CloudDiskRdbUtils::GetString(FileColumn::SOURCE_CLOUD_ID, srcCloudId, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::SOURCE_CLOUD_ID, srcCloudId, resultSet);
     if (ret != E_OK) {
-        std::string msg = "get file src_cloudid failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("get file src_cloudid failed, ret = %{public}d", ret);
         return ret;
     }
     return E_OK;
@@ -2110,9 +2022,7 @@ int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &cur
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
-        std::string msg = "parameter invalid";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, msg});
+        LOGE("parameter invalid");
         return E_INVAL_ARG;
     }
     AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
@@ -2120,24 +2030,16 @@ int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &cur
     auto resultSet = rdbStore_->QueryByStep(
         predicates, {FileColumn::PARENT_CLOUD_ID, FileColumn::IS_DIRECTORY, FileColumn::FILE_NAME});
     if (resultSet == nullptr) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, E_RDB,
-            "get null result"});
+        LOGE("get null result");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret,
-            "get current node resultSet fail"});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
         return E_RDB;
     }
     RowEntity rowEntity;
-    ret = resultSet->GetRow(rowEntity);
-    if (ret != E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret,
-            "result set to file info get row failed"});
+    if (resultSet->GetRow(rowEntity) != E_OK) {
+        LOGE("result set to file info get row failed");
         return E_RDB;
     }
 
@@ -2155,33 +2057,23 @@ int32_t CloudDiskRdbStore::GetParentNode(const std::string &parentCloudId, std::
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (parentCloudId.empty()) {
-        std::string msg = "parameter invalid";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, msg});
+        LOGE("parameter invalid");
         return E_INVAL_ARG;
     }
     AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, parentCloudId);
     auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::PARENT_CLOUD_ID, FileColumn::FILE_NAME});
     if (resultSet == nullptr) {
-        std::string msg = "get null result";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, E_RDB, msg});
+        LOGE("get null result");
         return E_RDB;
     }
-    int32_t ret = resultSet->GoToNextRow();
-    if (ret != E_OK) {
-        std::string msg = "get current node resultSet fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
         return E_RDB;
     }
     RowEntity rowEntity;
-    ret = resultSet->GetRow(rowEntity);
-    if (ret != E_OK) {
-        std::string msg = "result set to file info get row failed";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (resultSet->GetRow(rowEntity) != E_OK) {
+        LOGE("result set to file info get row failed");
         return E_RDB;
     }
     rowEntity.Get(FileColumn::PARENT_CLOUD_ID).GetString(nextCloudId);
@@ -2202,9 +2094,7 @@ int32_t CloudDiskRdbStore::GetUriFromDB(const std::string &parentCloudId, std::s
     string fileName;
     int32_t ret = GetParentNode(parentCloudId, nextCloudId, fileName);
     if (ret != E_OK) {
-        std::string msg = "get parentnode fail, parentCloudId: " + parentCloudId;
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGI("get parentnode fail, parentCloudId: %{public}s", parentCloudId.c_str());
         return ret;
     }
     uri = fileName + BACKFLASH + uri;
@@ -2228,9 +2118,7 @@ int32_t CloudDiskRdbStore::GetNotifyUri(const CacheNode &cacheNode, std::string 
 {
     int32_t ret = CheckRootIdValid();
     if (ret != E_OK) {
-        std::string msg = "rootId is invalid";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, ret, msg});
+        LOGE("rootId is invalid");
         return ret;
     }
     ret = CloudDiskNotifyUtils::GetUriFromCache(bundleName_, rootId_, cacheNode, uri);
@@ -2243,7 +2131,7 @@ int32_t CloudDiskRdbStore::GetNotifyUri(const CacheNode &cacheNode, std::string 
     if (ret == E_OK) {
         return ret;
     }
-    LOGI("get uri from db fail, name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
+    LOGE("get uri from db fail, name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
     return ret;
 }
 
@@ -2264,9 +2152,7 @@ int32_t CloudDiskRdbStore::CheckRootIdValid()
     CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
     cloudPrefImpl.GetString(ROOT_CLOUD_ID, rootId_);
     if (rootId_.empty()) {
-        std::string msg = "get rootId fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, msg});
+        LOGE("get rootId fail");
         return E_INVAL_ARG;
     }
     LOGD("load rootis succ, rootId: %{public}s", rootId_.c_str());
@@ -2291,9 +2177,7 @@ static void GenCloudSyncTriggerFuncParams(RdbStore &store, std::string &userId, 
             return;
         }
     }
-    CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName,
-        CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG,
-        "generate CloudSyncTriggerFunc parameters fail"});
+    LOGE("generate CloudSyncTriggerFunc parameters fail");
     return;
 }
 
@@ -2384,64 +2268,45 @@ static void VersionAddParentCloudIdIndex(RdbStore &store)
 static void VersionFixFileTrigger(RdbStore &store)
 {
     const string dropFilesUpdateTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
-    int32_t ret = store.ExecuteSql(dropFilesUpdateTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_update_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFilesUpdateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
     }
     const string addUpdateFileTrigger = UpdateFileTriggerSync(store);
-    ret = store.ExecuteSql(addUpdateFileTrigger);
+    int32_t ret = store.ExecuteSql(addUpdateFileTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add update file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add update file trigger fail, err %{public}d", ret);
     }
     const string addDeleteFileTrigger = DeleteFileTriggerSync(store);
     ret = store.ExecuteSql(addDeleteFileTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add delete file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add delete file trigger fail, err %{public}d", ret);
     }
     const string addLocalFileTrigger = LocalFileTriggerSync(store);
     ret = store.ExecuteSql(addLocalFileTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add local file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add local file trigger fail, err %{public}d", ret);
     }
 }
 
 static void VersionFixCreateAndLocalTrigger(RdbStore &store)
 {
     const string dropFilesCreateTrigger = "DROP TRIGGER IF EXISTS files_new_cloud_sync_trigger";
-    int32_t ret = store.ExecuteSql(dropFilesCreateTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_new_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFilesCreateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_new_cloud_sync_trigger fail");
     }
     const string dropFilesLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
-    ret = store.ExecuteSql(dropFilesLocalTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_local_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFilesLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_local_cloud_sync_trigger fail");
     }
     const string addLocalFileTrigger = LocalFileTriggerSync(store);
-    ret = store.ExecuteSql(addLocalFileTrigger);
+    int32_t ret = store.ExecuteSql(addLocalFileTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add local file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add local file trigger fail, err %{public}d", ret);
     }
     const string addCreateFolderTrigger = CreateFolderTriggerSync(store);
     ret = store.ExecuteSql(addCreateFolderTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add create folder trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add create folder trigger fail, err %{public}d", ret);
     }
 }
 
@@ -2450,9 +2315,7 @@ static void VersionAddFileStatusAndErrorCode(RdbStore &store)
     const string addIsFavorite = FileColumn::ADD_IS_FAVORITE;
     int32_t ret = store.ExecuteSql(addIsFavorite);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add is_favorite fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add is_favorite fail, err %{public}d", ret);
     }
 }
 
@@ -2461,9 +2324,7 @@ static void VersionAddFileStatus(RdbStore &store)
     const string addFileStatus = FileColumn::ADD_FILE_STATUS;
     int32_t ret = store.ExecuteSql(addFileStatus);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add file_status fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add file_status fail, err %{public}d", ret);
     }
 }
 
@@ -2472,78 +2333,53 @@ static void VersionSetFileStatusDefault(RdbStore &store)
     const string setFileStatus = FileColumn::SET_FILE_STATUS_DEFAULT;
     int32_t ret = store.ExecuteSql(setFileStatus);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "set file_status fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("set file_status fail, err %{public}d", ret);
     }
 }
 
 static void VersionFixSyncMetatimeTrigger(RdbStore &store)
 {
     const string dropFilesUpdateTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
-    int32_t ret = store.ExecuteSql(dropFilesUpdateTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_update_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFilesUpdateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
     }
     const string addUpdateFileTrigger = UpdateFileTriggerSync(store);
-    ret = store.ExecuteSql(addUpdateFileTrigger);
+    int32_t ret = store.ExecuteSql(addUpdateFileTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add update file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add update file trigger fail, err %{public}d", ret);
     }
 }
 
 static void VersionFixRetryTrigger(RdbStore &store)
 {
     const string dropFilesLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
-    int32_t ret = store.ExecuteSql(dropFilesLocalTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop local file trigger fail"});
+    if (store.ExecuteSql(dropFilesLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop local file trigger fail");
     }
     const string addFilesLocalTrigger = LocalFileTriggerSync(store);
-    ret = store.ExecuteSql(addFilesLocalTrigger);
+    int32_t ret = store.ExecuteSql(addFilesLocalTrigger);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add local file trigger fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "add local file trigger fail"});
+        LOGE("add local file trigger fail, err %{public}d", ret);
     }
 }
 
 static void VersionRemoveCloudSyncFuncTrigger(RdbStore &store)
 {
     const string dropNewFolderTrigger = "DROP TRIGGER IF EXISTS folders_new_cloud_sync_trigger";
-    int32_t ret = store.ExecuteSql(dropNewFolderTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop folders_new_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropNewFolderTrigger) != NativeRdb::E_OK) {
+        LOGE("drop folders_new_cloud_sync_trigger fail");
     }
     const string dropUpdateFileTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
-    ret = store.ExecuteSql(dropUpdateFileTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_update_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropUpdateFileTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
     }
     const string dropFileDeleteTrigger = "DROP TRIGGER IF EXISTS files_delete_cloud_sync_trigger";
-    ret = store.ExecuteSql(dropFileDeleteTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_delete_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFileDeleteTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_delete_cloud_sync_trigger fail");
     }
     const string dropFileLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
-    ret = store.ExecuteSql(dropFileLocalTrigger);
-    if (ret != NativeRdb::E_OK) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
-            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret,
-            "drop files_local_cloud_sync_trigger fail"});
+    if (store.ExecuteSql(dropFileLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_local_cloud_sync_trigger fail");
     }
 }
 
@@ -2552,23 +2388,17 @@ static void VersionAddThmFlag(RdbStore &store)
     const string addThmFlag = FileColumn::ADD_THM_FLAG;
     int32_t ret = store.ExecuteSql(addThmFlag);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add thm_flag fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add thm_flag fail, err %{public}d", ret);
     }
     const string addLcdFlag = FileColumn::ADD_LCD_FLAG;
     ret = store.ExecuteSql(addLcdFlag);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add lcd_flag fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add lcd_flag fail, err %{public}d", ret);
     }
     const string addUploadFlag = FileColumn::ADD_UPLOAD_FLAG;
     ret = store.ExecuteSql(addUploadFlag);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add no_need_upload fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add no_need_upload fail, err %{public}d", ret);
     }
 }
 
@@ -2577,9 +2407,7 @@ static void VersionAddSrcCloudId(RdbStore &store)
     const string addSrcCloudId = FileColumn::ADD_SRC_CLOUD_ID;
     int32_t ret = store.ExecuteSql(addSrcCloudId);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add src_cloud_id fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add src_cloud_id fail, err %{public}d", ret);
     }
 }
 
@@ -2588,23 +2416,17 @@ static void VersionAddThmSize(RdbStore &store)
     const string addThmSize = FileColumn::ADD_THM_SIZE;
     int32_t ret = store.ExecuteSql(addThmSize);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add thm_size fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add thm_size fail, err %{public}d", ret);
     }
     const string addLcdSize = FileColumn::ADD_LCD_SIZE;
     ret = store.ExecuteSql(addLcdSize);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add thm_size fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add lcd_size fail, err %{public}d", ret);
     }
     const string addSourceCloudId = FileColumn::ADD_SOURCE_CLOUD_ID;
     ret = store.ExecuteSql(addSourceCloudId);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add source_cloud_id fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add source_cloud_id fail, err %{public}d", ret);
     }
 }
 
@@ -2613,9 +2435,7 @@ static void VersionAddLocalFlag(RdbStore &store)
     const string addLocalFlag = FileColumn::ADD_LOCAL_FLAG;
     int32_t ret = store.ExecuteSql(addLocalFlag);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add local_flag fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add local_flag fail, err %{public}d", ret);
     }
 }
 
@@ -2650,9 +2470,7 @@ static int32_t GetUserIdAndBundleName(RdbStore &store, uint32_t &userId, string 
     GenCloudSyncTriggerFuncParams(store, userIdStr, bundleName);
     bool isValid = std::all_of(userIdStr.begin(), userIdStr.end(), ::isdigit);
     if (!isValid) {
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG,
-            "invalid user Id"});
+        LOGE("invalid user Id");
         return E_INVAL_ARG;
     }
     userId = static_cast<uint32_t>(std::stoi(userIdStr));
@@ -2767,23 +2585,15 @@ static void VersionAddCheckFlag(RdbStore &store)
     const string addCheckFlag = FileColumn::ADD_CHECK_FLAG;
     int32_t ret = store.ExecuteSql(addCheckFlag);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add check_flag fail, ret =" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add check_flag fail, ret = %{public}d", ret);
     }
     ret = GenerateDentryRecursively(store, ROOT_CLOUD_ID);
     if (ret != E_OK) {
-        std::string msg = "failed to generate dentry recursively, ret =" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(
-            CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::CREATE,
-                                          CloudFile::FaultType::FILE, ret, msg});
+        LOGE("failed to generate dentry recursively, ret = %{public}d", ret);
     }
     ret = GenerateRecycleDentryRecursively(store);
     if (ret != E_OK) {
-        std::string msg = "failed to generate recycle dentry recursively, ret =" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(
-            CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::CREATE,
-                                          CloudFile::FaultType::FILE, ret, msg});
+        LOGE("failed to generate recycle ndentry recursively, ret = %{public}d", ret);
     }
 }
 
@@ -2793,9 +2603,7 @@ static void VersionAddRootDirectory(RdbStore &store)
         " ADD COLUMN " + FileColumn::ROOT_DIRECTORY + " TEXT";
     int32_t ret = store.ExecuteSql(addRootDirectory);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add root_directory fail, ret =" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add root_directory fail, ret = %{public}d", ret);
     }
     ValuesBucket rootDirectory;
     rootDirectory.PutString(FileColumn::ROOT_DIRECTORY, system::GetParameter(FILEMANAGER_KEY, ""));
@@ -2803,9 +2611,7 @@ static void VersionAddRootDirectory(RdbStore &store)
     vector<ValueObject> bindArgs;
     ret = store.Update(changedRows, FileColumn::FILES_TABLE, rootDirectory, "", bindArgs);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "set root_directory fail, err" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("set root_directory fail, err %{public}d", ret);
     }
 }
 
@@ -2814,9 +2620,7 @@ static void VersionAddAttribute(RdbStore &store)
     const string attrbute = FileColumn::ADD_ATTRIBUTE;
     int32_t ret = store.ExecuteSql(attrbute);
     if (ret != NativeRdb::E_OK) {
-        std::string msg = "add attribute fail, ret =" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
-                                                              CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        LOGE("add attrbute fail, ret = %{public}d", ret);
     }
 }
 
@@ -2898,9 +2702,7 @@ int32_t CloudDiskRdbStore::CreateDentryFile(MetaBase metaBase, std::string destP
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, destParentCloudId);
     int32_t ret = metaFile->DoLookupAndCreate(metaBase.name, metaFileCallBack);
     if (ret != E_OK) {
-        std::string msg = "create new dentry failed, ret :" + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::CREATE,
-                                                              CloudFile::FaultType::FILE, ret, msg});
+        LOGE("create new dentry failed, ret : %{public}d", ret);
     }
     return ret;
 }

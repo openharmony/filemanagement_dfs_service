@@ -72,9 +72,7 @@ enum class FaultOperation {
     RENAME = 1800,
     RMDIR = 1900,
     SESSION = 2000,
-    DOWNLOAD = 2100,
-    DATABASEINIT = 2200,
-    CHECK = 2300
+    DOWNLOAD = 2100
 };
 
 enum class FaultType {

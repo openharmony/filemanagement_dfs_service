@@ -22,7 +22,6 @@
 #include "securec.h"
 #include "uri.h"
 #include "utils_log.h"
-#include "cloud_file_fault_event.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 const string BUNDLENAME_FLAG = "<BundleName>";
@@ -76,9 +75,7 @@ static int32_t TrashUriAddRowId(shared_ptr<CloudDiskRdbStore> rdbStore, const st
     int64_t rowId = 0;
     int32_t ret = rdbStore->GetRowId(cloudId, rowId);
     if (ret != E_OK) {
-        std::string msg = "Get rowId fail, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{
-            "", CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("Get rowId fail, ret: %{public}d", ret);
         return ret;
     }
     uri = uri + "_" + std::to_string(rowId);
@@ -96,10 +93,7 @@ static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notify
             paramDisk.ino, notifyData);
     }
     if (ret != E_OK) {
-        std::string msg = "GetNotifyData Not E_OK when GetDataInner, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGI("GetNotifyData Not E_OK when GetDataInner ret = %{public}d", ret);
     }
     return ret;
 }
@@ -118,10 +112,7 @@ static int32_t GetDataInnerWithName(const NotifyParamDisk &paramDisk, NotifyData
             paramDisk.ino, paramDisk.name, notifyData);
     }
     if (ret != E_OK) {
-        std::string msg = "GetNotifyData Not E_OK when GetDataInner, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGI("GetNotifyData Not E_OK when GetDataInnerWithName ret = %{public}d", ret);
     }
     return ret;
 }
@@ -140,20 +131,13 @@ static void HandleSetAttr(const NotifyParamDisk &paramDisk)
 static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
 {
     NotifyData trashNotifyData;
-    int32_t ret = GetTrashNotifyData(paramDisk, trashNotifyData);
-    if (ret != E_OK) {
-        std::string msg = "Get trash notify data fail ";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::INNER_ERROR, ret, msg});
+    if (GetTrashNotifyData(paramDisk, trashNotifyData) != E_OK) {
+        LOGE("Get trash notify data fail");
         return;
     }
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramDisk.inoPtr->bundleName, paramDisk.data->userId);
     if (rdbStore == nullptr) {
-        std::string msg = "Get rdb store fail, bundleName = " + paramDisk.inoPtr->bundleName;
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::DATABASE, E_RDB, msg});
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramDisk.inoPtr->bundleName.c_str());
         return;
     }
     if (TrashUriAddRowId(rdbStore, paramDisk.inoPtr->cloudId, trashNotifyData.uri) != E_OK) {
@@ -161,12 +145,8 @@ static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
     }
 
     NotifyData originNotifyData;
-    ret = GetDataInner(paramDisk, originNotifyData);
-    if (ret != E_OK) {
-        std::string msg = "Get origin notify data fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (GetDataInner(paramDisk, originNotifyData) != E_OK) {
+        LOGE("Get origin notify data fail");
         return;
     }
 
@@ -234,19 +214,13 @@ static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers
     int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.ino,
         paramDisk.name, oldNotifyData);
     if (ret != E_OK) {
-        std::string msg = "get notify data fail, name: " + GetAnonyString(paramDisk.name);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("get notify data fail, name: %{public}s", GetAnonyString(paramDisk.name).c_str());
         return;
     }
     ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.newIno,
         paramDisk.newName, newNotifyData);
     if (ret != E_OK) {
-        std::string msg = "get new notify data fail, name: " + GetAnonyString(paramDisk.newName);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramDisk.inoPtr ? paramDisk.inoPtr->bundleName : "",
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGE("get new notify data fail, name: %{public}s", GetAnonyString(paramDisk.newName).c_str());
         return;
     }
     NotifyData notifyData;
@@ -292,9 +266,7 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
 {
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
     if (rdbStore == nullptr) {
-        std::string msg = "Get rdb store fail, bundleName = " + paramOthers.bundleName;
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::DATABASE, E_RDB, msg});
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
         return;
     }
     NotifyData notifyData;
@@ -312,10 +284,7 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
     } else {
-        std::string msg = "HandleInsert failed, ret = " + std::to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        LOGI("HandleInsert failed. ret = %{public}d", ret);
     }
 }
 
@@ -323,9 +292,7 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
 {
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
     if (rdbStore == nullptr) {
-        std::string msg = "Get rdb store fail, ret = " + std::to_string(E_RDB);
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::DATABASE, E_RDB, msg});
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
         return;
     }
     NotifyData notifyData;
@@ -346,9 +313,7 @@ static void HandleUpdateRecycle(const NotifyParamService &paramService, const Pa
 {
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
     if (rdbStore == nullptr) {
-        std::string msg = "Get rdb store fail, bundleName = " + paramOthers.bundleName;
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-            CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::DATABASE, E_RDB, msg});
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
         return;
     }
     NotifyData trashNotifyData;
@@ -358,12 +323,8 @@ static void HandleUpdateRecycle(const NotifyParamService &paramService, const Pa
     }
 
     NotifyData originNotifyData;
-    int32_t ret = rdbStore->GetNotifyData(paramService.node, originNotifyData);
-    if (ret != E_OK) {
-        std::string msg = "Get origin notify data fail";
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+    if (rdbStore->GetNotifyData(paramService.node, originNotifyData) != E_OK) {
+        LOGE("Get origin notify data fail");
         return;
     }
     trashNotifyData.isDir = paramService.node.isDir == TYPE_DIR_STR;
@@ -432,10 +393,7 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
 {
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
     if (rdbStore == nullptr) {
-        std::string msg = "Get rdb store fail, bundleName = " + paramOthers.bundleName;
-        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{paramOthers.bundleName,
-                                                              CloudFile::FaultOperation::GETEXTATTR,
-                                                              CloudFile::FaultType::QUERY_DATABASE, E_RDB, msg});
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
         return E_RDB;
     }
     for (auto deleteId : deleteIds) {
