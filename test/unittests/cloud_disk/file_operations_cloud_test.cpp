@@ -2139,6 +2139,38 @@ HWTEST_F(FileOperationsCloudTest, RenameTest006, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RenameTest007
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest007 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 3;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+        fuse_ctx fc;
+        fc.uid = 1010;
+ 
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest007 End";
+}
+
+/**
  * @tc.name: ReadTest001
  * @tc.desc: Verify the ReadDir function
  * @tc.type: FUNC
