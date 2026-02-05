@@ -2087,16 +2087,14 @@ HWTEST_F(FileOperationsCloudTest, RenameTest005, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_ino_t parent = 2;
         fuse_ino_t newParent = 1;
-        fuse_req_t req = nullptr;
+        fuse_req_t req = new struct fuse_req;
         const char *name = "test";
         const char *newName = "test";
         unsigned int flags = 0;
-        fuse_ctx fc;
-        fc.uid = 1009;
- 
+        req->ctx.uid = 1009;
+
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2119,16 +2117,14 @@ HWTEST_F(FileOperationsCloudTest, RenameTest006, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_ino_t parent = 2;
         fuse_ino_t newParent = 3;
-        fuse_req_t req = nullptr;
+        fuse_req_t req = new struct fuse_req;
         const char *name = "test";
         const char *newName = "test";
         unsigned int flags = 0;
-        fuse_ctx fc;
-        fc.uid = 1009;
- 
+        req->ctx.uid = 1009;
+
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2151,16 +2147,14 @@ HWTEST_F(FileOperationsCloudTest, RenameTest007, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_ino_t parent = 2;
         fuse_ino_t newParent = 3;
-        fuse_req_t req = nullptr;
+        fuse_req_t req = new struct fuse_req;
         const char *name = "test";
         const char *newName = "test";
         unsigned int flags = 0;
-        fuse_ctx fc;
-        fc.uid = 1010;
- 
+        req->ctx.uid = 1009;
+
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, fuse_req_ctx(_)).WillOnce(Return(&fc));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         EXPECT_TRUE(true);
     } catch (...) {

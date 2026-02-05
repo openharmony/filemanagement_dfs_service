@@ -1889,6 +1889,25 @@ int32_t CloudDiskRdbStore::HandleRenameValue(ValuesBucket &rename, int32_t posit
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::UpdateRdbForThumb(const std::string &newFileName, bool newFileNoNeedUpload, 
+        NativeRdb::ValuesBucket rename, std::vector<NativeRdb::ValueObject> bindArgs, uint8_t oldFileNoNeedUpload)
+{
+    function<void()> rdbUpdate = [this, rename, bindArgs,
+        oldFileNoNeedUpload, newFileNoNeedUpload, newFileName] {
+        int32_t changedRows = -1;
+        int32_t ret = E_OK;
+        if ((oldFileNoNeedUpload == NO_UPLOAD) || (newFileNoNeedUpload == NO_UPLOAD)) {
+            ret = rdbStore_ ->Update(changedRows, FileColumn::FILES_TABLE, rename,
+                                         FileColumn::CLOUD_ID + " = ?", bindArgs);
+        }
+        if (ret != E_OK) {
+            LOGE("rename file fail, ret %{public}d", ret);
+        }
+    };
+    ffrt::thread(rdbUpdate).detach();
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
     const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
     bool needSyncAndNotify)

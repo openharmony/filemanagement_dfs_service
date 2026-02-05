@@ -6091,4 +6091,124 @@ HWTEST_F(CloudDiskRdbStoreTest, InsertCopyData_CreateDentryFileNameMock, TestSiz
         srcCloudId, destCloudId, destParentCloudId, rset);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest001, TestSize.Level1)
+{   
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest001 start";
+    try
+    {
+        const std::string newFileName = "newFileName";
+        const bool newFileNoNeedUpload = false;
+        uint8_t oldFileNoNeedUpload = 1;
+        auto rdb = make_shared<RdbStoreMock>();
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        std::vector<ValueObject> bindArgs = { ValueObject(1) };
+        OHOS::NativeRdb::ValuesBucket rename;
+    
+        int32_t ret = clouddiskrdbStore_->UpdateRdbForThumb(newFileName, newFileNoNeedUpload,  rename, 
+            bindArgs, oldFileNoNeedUpload);
+        ffrt::wait();
+        EXPECT_EQ(ret, E_OK);
+    }
+    catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateRdbForThumbTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest001 end";
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest002, TestSize.Level1)
+{   
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest002 start";
+    try
+    {
+        const std::string newFileName = "newFileName";
+        const bool newFileNoNeedUpload = false;
+        uint8_t oldFileNoNeedUpload = 1;
+        auto rdb = make_shared<RdbStoreMock>();
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        std::vector<ValueObject> bindArgs = { ValueObject(1) };
+        OHOS::NativeRdb::ValuesBucket rename;
+    
+        int32_t ret = clouddiskrdbStore_->UpdateRdbForThumb(newFileName, newFileNoNeedUpload,  rename, 
+            bindArgs, oldFileNoNeedUpload);
+        ffrt::wait();
+        EXPECT_EQ(ret, E_OK);
+    }
+    catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateRdbForThumbTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest002 end";
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest003, TestSize.Level1)
+{   
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest003 start";
+    try
+    {
+        const std::string newFileName = "newFileName";
+        const bool newFileNoNeedUpload = false;
+        uint8_t oldFileNoNeedUpload = 1;
+        auto rdb = make_shared<RdbStoreMock>();
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        std::vector<ValueObject> bindArgs = { ValueObject(1) };
+        OHOS::NativeRdb::ValuesBucket rename;
+    
+        int32_t ret = clouddiskrdbStore_->UpdateRdbForThumb(newFileName, newFileNoNeedUpload,  rename, 
+            bindArgs, oldFileNoNeedUpload);
+        ffrt::wait();
+        EXPECT_EQ(ret, E_OK);
+    }
+    catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateRdbForThumbTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest003 end";
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest004, TestSize.Level1)
+{   
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest004 start";
+    try
+    {
+        const std::string newFileName = "newFileName";
+        const bool newFileNoNeedUpload = false;
+        uint8_t oldFileNoNeedUpload = 1;
+        auto rdb = make_shared<RdbStoreMock>();
+        clouddiskrdbStore_->rdbStore_ = rdb;
+        std::vector<ValueObject> bindArgs = { ValueObject(1) };
+        OHOS::NativeRdb::ValuesBucket rename;
+    
+        int32_t ret = clouddiskrdbStore_->UpdateRdbForThumb(newFileName, newFileNoNeedUpload,  rename, 
+            bindArgs, oldFileNoNeedUpload);
+        ffrt::wait();
+        EXPECT_EQ(ret, E_OK);
+    }
+    catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateRdbForThumbTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateRdbForThumbTest004 end";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
