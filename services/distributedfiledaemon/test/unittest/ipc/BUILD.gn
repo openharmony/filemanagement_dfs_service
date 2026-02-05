@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -237,6 +237,7 @@ ohos_unittest("daemon_test") {
     "${distributedfile_path}/services/distributedfiledaemon/include/device",
     "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
+    "${distributedfile_path}/services/distributedfiledaemon/include/hiaudit",
     "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
     "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
     "${distributedfile_path}/test/mock/",
@@ -253,6 +254,8 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/hiaudit/hi_audit.cpp",
+    "${services_path}/distributedfiledaemon/src/hiaudit/zip_utils.cpp",
     "${distributedfile_path}/dfs_utils/src/dfs_radar.cpp",
     "${distributedfile_path}/services/distributedfiledaemon/src/dfx/radar_report.cpp",
     "daemon_test.cpp",

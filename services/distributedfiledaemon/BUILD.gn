@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -28,6 +28,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "include/network/softbus",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/dfx",
+    "${distributedfile_path}/services/distributedfiledaemon/include/hiaudit",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
   ]
@@ -54,6 +55,8 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/device/device_manager_agent.cpp",
     "src/device/device_profile_adapter.cpp",
     "src/dfx/radar_report.cpp",
+    "src/hiaudit/hi_audit.cpp",
+    "src/hiaudit/zip_utils.cpp",
     "src/ipc/asset_callback_manager.cpp",
     "src/ipc/asset_recv_callback_proxy.cpp",
     "src/ipc/asset_send_callback_proxy.cpp",
