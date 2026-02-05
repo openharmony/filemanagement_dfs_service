@@ -6104,7 +6104,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest001, TestSize.Level1)
     {
         const std::string newFileName = "newFileName";
         const bool newFileNoNeedUpload = false;
-        uint8_t oldFileNoNeedUpload = 1;
+        uint8_t oldFileNoNeedUpload = 0;
         auto rdb = make_shared<RdbStoreMock>();
         clouddiskrdbStore_->rdbStore_ = rdb;
         std::vector<ValueObject> bindArgs = { ValueObject(1) };
@@ -6163,8 +6163,8 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest003, TestSize.Level1)
     try
     {
         const std::string newFileName = "newFileName";
-        const bool newFileNoNeedUpload = false;
-        uint8_t oldFileNoNeedUpload = 1;
+        const bool newFileNoNeedUpload = true;
+        uint8_t oldFileNoNeedUpload = 0;
         auto rdb = make_shared<RdbStoreMock>();
         clouddiskrdbStore_->rdbStore_ = rdb;
         std::vector<ValueObject> bindArgs = { ValueObject(1) };
@@ -6193,7 +6193,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UpdateRdbForThumbTest004, TestSize.Level1)
     try
     {
         const std::string newFileName = "newFileName";
-        const bool newFileNoNeedUpload = false;
+        const bool newFileNoNeedUpload = true;
         uint8_t oldFileNoNeedUpload = 1;
         auto rdb = make_shared<RdbStoreMock>();
         clouddiskrdbStore_->rdbStore_ = rdb;

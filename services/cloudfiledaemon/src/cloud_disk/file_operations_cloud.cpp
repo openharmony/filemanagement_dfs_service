@@ -38,7 +38,6 @@
 #include "hitrace_meter.h"
 #include "securec.h"
 #include "utils_log.h"
-#include "fuse.h"
 
 namespace OHOS {
 namespace FileManagement {

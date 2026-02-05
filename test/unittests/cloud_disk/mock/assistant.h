@@ -61,7 +61,6 @@ public:
         const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData) = 0;
     virtual int fuse_lowlevel_notify_inval_entry(struct fuse_session *, fuse_ino_t, const char *, size_t) = 0;
     virtual int fuse_lowlevel_notify_inval_inode(struct fuse_session *, fuse_ino_t, off_t, off_t) = 0;
-    virtual struct fuse_ctx* fuse_req_ctx(fuse_req_t) = 0;
     
     static int access(const char *name, int type)
     {
@@ -113,7 +112,6 @@ public:
         const struct fuse_lowlevel_ops *op, size_t opSize, struct libfuse_version *version, void *userData));
     MOCK_METHOD4(fuse_lowlevel_notify_inval_entry, int(struct fuse_session *, fuse_ino_t, const char *, size_t));
     MOCK_METHOD4(fuse_lowlevel_notify_inval_inode, int(struct fuse_session *, fuse_ino_t, off_t, off_t));
-    MOCK_METHOD1(fuse_req_ctx, struct fuse_ctx*(fuse_req_t));
 
 public:
     MOCK_METHOD3(lseek, off_t(int, off_t, int));
