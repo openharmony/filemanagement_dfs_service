@@ -1748,7 +1748,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         inoPtr->parent = newParent;
         isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
-    if (sync) {
+    if (sync || noNeedUpload) {
         CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
             NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName}, {FileStatus::UNKNOW, isDir});
     }
