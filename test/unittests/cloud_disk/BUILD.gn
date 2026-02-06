@@ -409,14 +409,26 @@ ohos_unittest("file_operations_local_test") {
   module_out_path = "dfs_service/dfs_service"
 
   include_dirs = [
-    "${distributedfile_path}/utils/log/include",
-    "${distributedfile_path}/utils/ioctl/include",
-    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
+    "${services_path}/clouddisk_database/include/",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
   ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_asset_read_session.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp"
     "${distributedfile_path}/test/unittests/cloud_disk/mock/file_operations_helper_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
@@ -431,8 +443,6 @@ ohos_unittest("file_operations_local_test") {
   ]
 
   deps = [
-    "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
   ]
@@ -455,6 +465,7 @@ ohos_unittest("file_operations_local_test") {
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
   ]
 
