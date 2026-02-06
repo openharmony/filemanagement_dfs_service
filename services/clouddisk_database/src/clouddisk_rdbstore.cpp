@@ -1928,7 +1928,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         rename.Delete(FileColumn::DIRTY_TYPE);
     }
     function<void()> rdbUpdate = [this, rename, bindArgs,
-        oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName] {
+        oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName, needSyncAndNotify] {
         int32_t changedRows = -1;
         int32_t ret = rdbStore_ ->Update(changedRows, FileColumn::FILES_TABLE, rename,
                                          FileColumn::CLOUD_ID + " = ?", bindArgs);
