@@ -1890,7 +1890,7 @@ int32_t CloudDiskRdbStore::HandleRenameValue(ValuesBucket &rename, int32_t posit
 }
 
 int32_t CloudDiskRdbStore::UpdateRdbForThumb(const std::string &newFileName, bool newFileNoNeedUpload, 
-        NativeRdb::ValuesBucket rename, std::vector<NativeRdb::ValueObject> bindArgs, uint8_t oldFileNoNeedUpload)
+        NativeRdb::ValuesBucket &rename, std::vector<NativeRdb::ValueObject> &bindArgs, uint8_t oldFileNoNeedUpload)
 {
     function<void()> rdbUpdate = [this, rename, bindArgs,
         oldFileNoNeedUpload, newFileNoNeedUpload, newFileName] {
@@ -1944,7 +1944,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         return EINVAL;
     }
     if (!needSyncAndNotify) {
-        return E_OK;
+        return UpdateRdbForThumb(newFileName, newFileNoNeedUpload, rename, bindArgs, oldFileNoNeedUpload);
     }
     function<void()> rdbUpdate = [this, rename, bindArgs,
         oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName] {

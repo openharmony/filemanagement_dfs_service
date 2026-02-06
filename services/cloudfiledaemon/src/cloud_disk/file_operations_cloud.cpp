@@ -1730,7 +1730,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
             return (void) fuse_reply_err(req, err);
         }
     }
-    bool sync = fuse_req_ctx(req)->uid != SERVICE_UID;
+    bool sync = req->ctx.uid != SERVICE_UID;
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
     int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName, noNeedUpload, sync);
