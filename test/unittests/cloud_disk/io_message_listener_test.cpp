@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
+
 #include "assistant.h"
 #include "application_state_observer_stub.h"
 #include "dfs_error.h"
