@@ -27,7 +27,6 @@
 #include "file_column.h"
 #include "meta_file.h"
 #include "transaction.h"
-#include "rdb_sql_utils.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -111,8 +110,6 @@ public:
                              const std::string &parentCloudId);
     int32_t UpdateDirtyTypeByPath(const std::string &cloudId, NativeRdb::ValuesBucket &fileInfo,
                                   const MetaBase &metaBase);
-    int32_t UpdateRdbForThumb(const std::string &newFileName, bool newFileNoNeedUpload, 
-        NativeRdb::ValuesBucket &rename, std::vector<NativeRdb::ValueObject> &bindArgs, uint8_t oldFileNoNeedUpload);
     void DatabaseRestore();
 
     static const int32_t BATCH_LIMIT_SIZE = 500;
