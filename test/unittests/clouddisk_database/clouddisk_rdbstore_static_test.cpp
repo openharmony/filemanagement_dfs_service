@@ -3236,4 +3236,49 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, GenerateRecycleDentryRecursivelyNameMockTe
     int32_t ret = GenerateRecycleDentryRecursively(store);
     EXPECT_EQ(ret, E_RDB);
 }
+
+/**
+ * @tc.name: ExecuteSqlTest001
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExecuteSqlTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest001 start";
+    try {
+        RdbStoreMock store;
+        RdbStoreMock *rdb = &store;
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(E_OK));
+
+        int32_t result = ExecuteSql(store);
+        EXPECT_EQ(result, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest001 end";
+}
+
+/**
+ * @tc.name: ExecuteSqlTest002
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, ExecuteSqlTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        RdbStoreMock store;
+        RdbStoreMock *rdb = &store;
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(E_ERROR));
+
+        int32_t result = ExecuteSql(store);
+        EXPECT_EQ(result, E_ERROR);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test
