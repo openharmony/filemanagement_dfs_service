@@ -66,6 +66,12 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandlePushAsset;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL)] =
         &DaemonStub::HandleGetDfsUrisDirFromLocal;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL)] =
+        &DaemonStub::HandleGetRemoteCopyInfoACL;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL)] =
+        &DaemonStub::HandleRequestSendFileACL;
     InitDFileFunction();
 }
 
@@ -89,12 +95,6 @@ void DaemonStub::InitDFileFunction()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE)] =
         &DaemonStub::HandleIsSameAccountDevice;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL)] =
-        &DaemonStub::HandleGetRemoteCopyInfoACL;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL)] =
-        &DaemonStub::HandleRequestSendFileACL;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)

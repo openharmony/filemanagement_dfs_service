@@ -535,7 +535,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
             RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             return E_ZIP;
         }
-        
+
         if (CompressFileInner(rootFile, outputFile) != E_OK) {
             return E_ZIP;
         }
