@@ -18,12 +18,12 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "ipc_skeleton.h"
+#include "os_account_manager.h"
 #include "tokenid_kit.h"
 #include "uri_permission_manager_client.h"
 #include "uri.h"
 #include "utils_log.h"
 #include "want.h"
-#include "os_account_manager.h"
 
 namespace OHOS::FileManagement {
 using namespace std;
