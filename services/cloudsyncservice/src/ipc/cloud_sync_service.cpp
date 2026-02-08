@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <sys/xattr.h>
 
 #include "account_utils.h"
 #include "battery_status.h"
@@ -52,8 +53,11 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+constexpr int MAX_PATH_SIZE = 20;
 constexpr mode_t DEFAULT_UMASK = 0002;
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
+const std::string ACL_XATTR_ACCESS = "system.posix_acl_access";
+const std::string ACL_XATTR_DEFAULT = "system.posix_acl_default";
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -1283,5 +1287,69 @@ int32_t CloudSyncService::GetDentryFileOccupy(int64_t &occupyNum)
         LOGE("GetDentryFileOccupy failed: %{public}d", ret);
     }
     return ret;
+}
+
+static std::vector<uint8_t> GetXattrValue(const std::string &path, const std::string &name)
+{
+    // realpath
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    const string mediaPrefix = "/storage/media/local";
+    const string hmfsPrefix = "/data/service/el2/" + to_string(callerUserId) + "/hmdfs/account";
+
+    if (path.find(mediaPrefix) != 0) {
+        LOGE("path is invalid: %{public}s", GetAnonyString(path).c_str());
+        return {};
+    }
+    string hmfsPath = path;
+    hmfsPath.replace(0, mediaPrefix.length(), hmfsPrefix);
+
+    char resolvedPath[PATH_MAX + 1]{'\0'};
+    if (realpath(hmfsPath.c_str(), resolvedPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
+        return {};
+    }
+    if (string(resolvedPath, strlen(resolvedPath)).find(hmfsPrefix) != 0) {
+        LOGE("resolvedPath is invalid");
+        return {};
+    }
+
+    // getxattr
+    ssize_t size = getxattr(resolvedPath, name.c_str(), nullptr, 0);
+    if (size < 0) {
+        LOGE("getxattr failed: %{public}d", errno);
+        return {};
+    }
+
+    std::vector<uint8_t> buffer(size + 1, 0);
+    ssize_t result = getxattr(resolvedPath, name.c_str(), buffer.data(), size + 1);
+    if (result < 0) {
+        buffer.clear();
+    }
+
+    return buffer;
+}
+
+int32_t CloudSyncService::GetAclXattrBatch(const bool isAccess, const std::vector<std::string> &filePaths,
+                                           std::vector<XattrResult> &aclXattrResults)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    if (filePaths.size() > MAX_PATH_SIZE) {
+        return E_INVAL_ARG;
+    }
+    std::string aclXattr = isAccess ? ACL_XATTR_ACCESS : ACL_XATTR_DEFAULT;
+    for (const auto &path : filePaths) {
+        XattrResult res;
+        res.isSuccess = false;
+
+        auto value = GetXattrValue(path, aclXattr);
+        if (!value.empty()) {
+            res.isSuccess = true;
+            res.xattrValue = std::move(value);
+        }
+
+        aclXattrResults.push_back(std::move(res));
+    }
+
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

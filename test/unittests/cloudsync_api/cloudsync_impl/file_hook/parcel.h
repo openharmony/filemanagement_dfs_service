@@ -38,6 +38,8 @@ public:
     virtual bool ReadString(std::string &value) = 0;
     virtual bool WriteStringVector(const std::vector<std::string> &value) = 0;
     virtual bool ReadStringVector(std::vector<std::string> *value) = 0;
+    virtual bool WriteUInt8Vector(const std::vector<uint8_t> &value) = 0;
+    virtual bool ReadUInt8Vector(std::vector<uint8_t> *value) = 0;
 
     static inline std::shared_ptr<IParcel> parcel_{nullptr};
 };
@@ -58,6 +60,8 @@ public:
     MOCK_METHOD1(ReadString, bool(std::string &value));
     MOCK_METHOD1(WriteStringVector, bool(const std::vector<std::string> &value));
     MOCK_METHOD1(ReadStringVector, bool(std::vector<std::string> *value));
+    MOCK_METHOD1(WriteUInt8Vector, bool(const std::vector<uint8_t> &value));
+    MOCK_METHOD1(ReadUInt8Vector, bool(std::vector<uint8_t> *value));
 };
 
 class Parcel {
@@ -78,6 +82,8 @@ public:
     bool ReadString(std::string &value);
     bool WriteStringVector(const std::vector<std::string> &value);
     bool ReadStringVector(std::vector<std::string> *value);
+    bool WriteUInt8Vector(const std::vector<uint8_t> &value);
+    bool ReadUInt8Vector(std::vector<uint8_t> *value);
 };
 
 class Parcelable {

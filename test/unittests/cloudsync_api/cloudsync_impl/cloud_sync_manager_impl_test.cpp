@@ -2075,5 +2075,77 @@ HWTEST_F(CloudSyncManagerImplTest, IsFinishPullTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IsFinishPullTest001 End";
 }
+
+/**
+ * @tc.name: GetAclXattrBatchTest001
+ * @tc.desc: Verify the GetAclXattrBatch function.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 Start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 End";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest002
+ * @tc.desc: Verify the GetAclXattrBatch function.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 Start";
+    try {
+        bool isAccess = false;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetAclXattrBatch(_, _, _)).WillOnce(Return(E_OK));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 End";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest003
+ * @tc.desc: Verify the GetAclXattrBatch function.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 Start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths =
+            {"/storage/media/local/test/file1.txt", "/storage/media/local/test/file2.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetAclXattrBatch(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

@@ -86,4 +86,14 @@ bool Parcel::ReadStringVector(std::vector<std::string> *value)
 {
     return IParcel::parcel_->ReadStringVector(value);
 }
+
+bool Parcel::WriteUInt8Vector(const std::vector<uint8_t> &value)
+{
+    return IParcel::parcel_->WriteUInt8Vector(value);
+}
+
+bool Parcel::ReadUInt8Vector(std::vector<uint8_t> *value)
+{
+    return IParcel::parcel_->ReadUInt8Vector(value);
+}
 } // namespace OHOS::FileManagement::CloudSync

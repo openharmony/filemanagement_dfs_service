@@ -70,6 +70,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/screen_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/system_mock.cpp",
     "${distributedfile_path}/test/mock/account_sa/src/os_account_manager_mock.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
@@ -104,6 +105,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/mock/account_sa/include",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${distributedfile_path}/test/unittests/ani_core",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
 
