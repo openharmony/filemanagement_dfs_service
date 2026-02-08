@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <cstring>
 
 #include "battersrvclient_mock.h"
 #include "cloud_file_kit.h"
@@ -24,6 +25,7 @@
 #include "os_account_manager_mock.h"
 #include "service_callback_mock.h"
 #include "system_ability_manager_client_mock.h"
+#include "system_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -59,6 +61,10 @@ public:
     static inline sptr<CloudSyncService> servicePtr_ = nullptr;
     static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
     static inline std::shared_ptr<OsAccountManagerMethodMock> OsAccountMethodMock_ = nullptr;
+    static inline std::shared_ptr<SystemMock> sysMock_ = nullptr;
+    static inline char validPath1_[PATH_MAX + 1] = {'\0'};
+    static inline char validPath2_[PATH_MAX + 1] = {'\0'};
+    static inline char invalidPath_[PATH_MAX + 1] = {'\0'};
 };
 
 void CloudSyncServiceTest::SetUpTestCase(void)
@@ -75,6 +81,11 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
     OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
     OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
+
+    // Initialize SystemMock for GetAclXattrBatch tests
+    sysMock_ = std::make_shared<SystemMock>();
+    SystemMock::EnableMock();
+    System::ins = sysMock_;
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
@@ -89,6 +100,9 @@ void CloudSyncServiceTest::TearDownTestCase(void)
     dfsBatterySrvClient_ = nullptr;
     OsAccountMethodMock_ = nullptr;
     OsAccountManagerMethod::osMethod_ = nullptr;
+
+    System::ins = nullptr;
+    sysMock_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -1843,6 +1857,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DownloadFilesTest002 start";
+    CloudFileKitMock* cloudFileKitMock = nullptr;
     try {
         EXPECT_NE(servicePtr_, nullptr);
         int32_t userId = 100;
@@ -1855,7 +1870,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
         std::vector<bool> assetResultMap;
         assetResultMap.push_back(true);
         int32_t connectTime = 1;
-        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
         CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
 
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
@@ -1868,6 +1883,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest002 failed";
     }
+    CloudFile::CloudFileKit::instance_ = nullptr;
+    delete cloudFileKitMock;
     GTEST_LOG_(INFO) << "DownloadFilesTest002 end";
 }
 
@@ -1880,6 +1897,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DownloadFilesTest003 start";
+    CloudFileKitMock* cloudFileKitMock = nullptr;
     try {
         EXPECT_NE(servicePtr_, nullptr);
         int32_t userId = 100;
@@ -1892,7 +1910,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         std::vector<bool> assetResultMap;
         assetResultMap.push_back(true);
         int32_t connectTime = 1;
-        auto cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
         CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
 
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
@@ -1906,6 +1924,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
     }
+    CloudFile::CloudFileKit::instance_ = nullptr;
+    delete cloudFileKitMock;
     GTEST_LOG_(INFO) << "DownloadFilesTest003 end";
 }
 
@@ -2259,6 +2279,320 @@ HWTEST_F(CloudSyncServiceTest, GetDentryFileOccupyTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 failed";
     }
     GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest001
+ * @tc.desc: Verify the GetAclXattrBatch function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest001 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest002
+ * @tc.desc: Verify the GetAclXattrBatch function with invalid argument (exceeds MAX_PATH_SIZE).
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 start";
+    try {
+        bool isAccess = false;
+        std::vector<std::string> filePaths(21, "/storage/media/local/test/file1.txt"); // MAX_PATH_SIZE is 20
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest002 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest003
+ * @tc.desc: Verify the GetAclXattrBatch function with success.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt",
+                                              "/storage/media/local/test/file2.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillRepeatedly(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillRepeatedly(Return(100));
+
+        // Mock realpath to return nullptr (file doesn't exist in test environment)
+        EXPECT_CALL(*sysMock_, realpath(_, _)).Times(2).WillRepeatedly(Return(nullptr));
+
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 2);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest004
+ * @tc.desc: Verify the GetAclXattrBatch function with isAccess = false.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest004 start";
+    try {
+        bool isAccess = false;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        // Mock realpath to return nullptr (file doesn't exist in test environment)
+        EXPECT_CALL(*sysMock_, realpath(_, _)).WillOnce(Return(nullptr));
+
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 1);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest004 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest005
+ * @tc.desc: Verify the GetAclXattrBatch function with invalid path prefix.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest005 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/invalid/path/file.txt"};
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 1);
+        EXPECT_FALSE(aclXattrResults[0].isSuccess);
+        EXPECT_TRUE(aclXattrResults[0].xattrValue.empty());
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest005 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest006
+ * @tc.desc: Verify the GetAclXattrBatch function when realpath fails.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest006 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file.txt"};
+        std::vector<XattrResult> aclXattrResults;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        // Mock realpath to return nullptr (simulating failure)
+        EXPECT_CALL(*sysMock_, realpath(_, _)).WillOnce(Return(nullptr));
+
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 1);
+        EXPECT_FALSE(aclXattrResults[0].isSuccess);
+        EXPECT_TRUE(aclXattrResults[0].xattrValue.empty());
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest006 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest007
+ * @tc.desc: Verify the GetAclXattrBatch function with empty file list.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest007 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths;
+        std::vector<XattrResult> aclXattrResults;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 0);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest007 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest008
+ * @tc.desc: Verify the GetAclXattrBatch function when realpath returns invalid path.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest008 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file.txt"};
+        std::vector<XattrResult> aclXattrResults;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        // Initialize static variable for invalid path
+        std::fill(std::begin(invalidPath_), std::end(invalidPath_), '\0');
+        const char* tempPath = "/invalid/resolved/path";
+        std::copy(tempPath, tempPath + std::strlen(tempPath), invalidPath_);
+
+        // Mock realpath to return a path that doesn't start with hmfsPrefix and fill in resolved_path
+        EXPECT_CALL(*sysMock_, realpath(_, _))
+            .WillOnce(testing::DoAll(
+                testing::WithArgs<1>(testing::Invoke([this](char* resolvedPath) {
+                    if (resolvedPath) {
+                        std::fill(resolvedPath, resolvedPath + PATH_MAX + 1, '\0');
+                        std::copy(std::begin(invalidPath_),
+                            std::begin(invalidPath_) + std::strlen(invalidPath_), resolvedPath);
+                    }
+                })),
+                testing::Return(invalidPath_)
+            ));
+
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 1);
+        EXPECT_FALSE(aclXattrResults[0].isSuccess);
+        EXPECT_TRUE(aclXattrResults[0].xattrValue.empty());
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest008 end";
+}
+
+/**
+ * @tc.name: GetAclXattrBatchTest009
+ * @tc.desc: Verify the GetAclXattrBatch function with successful xattr retrieval.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest011 start";
+    try {
+        bool isAccess = true;
+        std::vector<std::string> filePaths = {"/storage/media/local/test/file.txt"};
+        std::vector<XattrResult> aclXattrResults;
+
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+
+        // Clear and initialize static variable for valid path
+        std::fill(std::begin(validPath1_), std::end(validPath1_), '\0');
+        const char* tempPath1 = "/data/service/el2/100/hmdfs/account/test/file.txt";
+        std::copy(tempPath1, tempPath1 + std::strlen(tempPath1), validPath1_);
+
+        // Mock realpath to return valid path and fill in resolved_path parameter
+        EXPECT_CALL(*sysMock_, realpath(_, _))
+            .WillOnce(testing::DoAll(
+                testing::WithArgs<1>(testing::Invoke([this](char* resolvedPath) {
+                    if (resolvedPath) {
+                        std::fill(resolvedPath, resolvedPath + PATH_MAX + 1, '\0');
+                        std::copy(std::begin(validPath1_),
+                            std::begin(validPath1_) + std::strlen(validPath1_), resolvedPath);
+                    }
+                })),
+                testing::Return(validPath1_)
+            ));
+
+        // Mock getxattr: successful retrieval
+        std::vector<uint8_t> expectedValue = {0x01, 0x02, 0x03, 0x04, 0x05};
+
+        // Use a lambda to handle both getxattr calls
+        int callCount = 0;
+        auto getxattrFunc = [&expectedValue, &callCount](const char *, const char *, void *value, size_t size) -> int {
+            callCount++;
+            if (callCount == 1) {
+                // First call: get size
+                return expectedValue.size();
+            } else if (callCount == 2 && value != nullptr && size >= expectedValue.size()) {
+                // Second call: get value
+                std::copy(expectedValue.begin(), expectedValue.end(), static_cast<uint8_t*>(value));
+                return expectedValue.size();
+            }
+            return -1;
+        };
+
+        EXPECT_CALL(*sysMock_, getxattr(_, _, testing::_, testing::_))
+            .Times(2)
+            .WillRepeatedly(testing::Invoke(getxattrFunc));
+
+        auto ret = servicePtr_->GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(aclXattrResults.size(), 1);
+        EXPECT_TRUE(aclXattrResults[0].isSuccess);
+        // The GetXattrValue function creates a buffer of size+1, so there's an extra '\0' at the end
+        std::vector<uint8_t> expectedValueWithNull = {0x01, 0x02, 0x03, 0x04, 0x05, 0x00};
+        EXPECT_EQ(aclXattrResults[0].xattrValue, expectedValueWithNull);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetAclXattrBatchTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "GetAclXattrBatchTest011 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

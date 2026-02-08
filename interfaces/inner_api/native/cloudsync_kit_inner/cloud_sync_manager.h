@@ -185,6 +185,8 @@ public:
     virtual int32_t IsFinishPull(bool &finishFlag) = 0;
     // get dentryfile occupy
     virtual int32_t GetDentryFileOccupy(int64_t &occupyNum);
+    virtual int32_t GetAclXattrBatch(const bool isAccess, const std::vector<std::string> &filePaths,
+                                     std::vector<XattrResult> &aclXattrResults);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

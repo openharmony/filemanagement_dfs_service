@@ -253,5 +253,17 @@ struct LocalFilePresentStatus : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static LocalFilePresentStatus *Unmarshalling(Parcel &parcel);
 };
+
+/*
+ * 文件的acl属性
+ */
+struct XattrResult : public Parcelable {
+    bool isSuccess;
+    std::vector<uint8_t> xattrValue;
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static XattrResult *Unmarshalling(Parcel &parcel);
+};
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H

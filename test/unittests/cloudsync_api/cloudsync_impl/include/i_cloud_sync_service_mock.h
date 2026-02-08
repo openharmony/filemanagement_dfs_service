@@ -106,6 +106,10 @@ public:
     MOCK_METHOD2(GetBundlesLocalFilePresentStatus,
                  int32_t(const std::vector<std::string> &bundleNames,
                  std::vector<LocalFilePresentStatus> &localFilePresentStatusList));
+    MOCK_METHOD3(GetAclXattrBatch,
+                 int32_t(bool isAccess,
+                         const std::vector<std::string> &filePaths,
+                         std::vector<XattrResult> &aclXattrResults));
     MOCK_METHOD1(IsFinishPull, int32_t(bool &finishPull));
     MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
 private:

@@ -1709,5 +1709,227 @@ HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusReadFromParcelTest003, TestS
     }
     GTEST_LOG_(INFO) << "LocalFilePresentStatusReadFromParcelTest003 End";
 }
+
+/*
+ * @tc.name: XattrResultMarshallingTest001
+ * @tc.desc: Verify the XattrResult::Marshalling function with isSuccess write failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultMarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest001 Start";
+    try {
+        XattrResult xattrResult;
+        xattrResult.isSuccess = true;
+        xattrResult.xattrValue = {0x01, 0x02, 0x03};
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(false));
+        auto res = xattrResult.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultMarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest001 End";
+}
+
+/*
+ * @tc.name: XattrResultMarshallingTest002
+ * @tc.desc: Verify the XattrResult::Marshalling function with xattrValue write failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultMarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest002 Start";
+    try {
+        XattrResult xattrResult;
+        xattrResult.isSuccess = true;
+        xattrResult.xattrValue = {0x01, 0x02, 0x03};
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUInt8Vector(_)).WillOnce(Return(false));
+        auto res = xattrResult.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultMarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest002 End";
+}
+
+/*
+ * @tc.name: XattrResultMarshallingTest003
+ * @tc.desc: Verify the XattrResult::Marshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultMarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest003 Start";
+    try {
+        XattrResult xattrResult;
+        xattrResult.isSuccess = true;
+        xattrResult.xattrValue = {0x01, 0x02, 0x03};
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteUInt8Vector(_)).WillOnce(Return(true));
+        auto res = xattrResult.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultMarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultMarshallingTest003 End";
+}
+
+/*
+ * @tc.name: XattrResultUnmarshallingTest001
+ * @tc.desc: Verify the XattrResult::Unmarshalling function with isSuccess read failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultUnmarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest001 Start";
+    try {
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
+        auto res = XattrResult::Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest001 End";
+}
+
+/*
+ * @tc.name: XattrResultUnmarshallingTest002
+ * @tc.desc: Verify the XattrResult::Unmarshalling function with xattrValue read failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultUnmarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest002 Start";
+    try {
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUInt8Vector(_)).WillOnce(Return(false));
+        auto res = XattrResult::Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest002 End";
+}
+
+/*
+ * @tc.name: XattrResultUnmarshallingTest003
+ * @tc.desc: Verify the XattrResult::Unmarshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultUnmarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest003 Start";
+    try {
+        Parcel parcel;
+        std::vector<uint8_t> testValue = {0x01, 0x02, 0x03};
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(true), Return(true)));
+        EXPECT_CALL(*parcel_, ReadUInt8Vector(_)).WillOnce(DoAll(SetArgPointee<0>(testValue), Return(true)));
+        auto res = XattrResult::Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+        if (res != nullptr) {
+            EXPECT_EQ(res->isSuccess, true);
+            EXPECT_EQ(res->xattrValue, testValue);
+            delete res;
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultUnmarshallingTest003 End";
+}
+
+/*
+ * @tc.name: XattrResultReadFromParcelTest001
+ * @tc.desc: Verify the XattrResult::ReadFromParcel function with isSuccess read failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest001 Start";
+    try {
+        XattrResult xattrResult;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(false));
+        auto res = xattrResult.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: XattrResultReadFromParcelTest002
+ * @tc.desc: Verify the XattrResult::ReadFromParcel function with xattrValue read failure.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultReadFromParcelTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest002 Start";
+    try {
+        XattrResult xattrResult;
+        Parcel parcel;
+
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadUInt8Vector(_)).WillOnce(Return(false));
+        auto res = xattrResult.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest002 End";
+}
+
+/*
+ * @tc.name: XattrResultReadFromParcelTest003
+ * @tc.desc: Verify the XattrResult::ReadFromParcel function with success.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncCommonTest, XattrResultReadFromParcelTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest003 Start";
+    try {
+        XattrResult xattrResult;
+        Parcel parcel;
+        std::vector<uint8_t> testValue = {0x04, 0x05, 0x06};
+
+        EXPECT_CALL(*parcel_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(false), Return(true)));
+        EXPECT_CALL(*parcel_, ReadUInt8Vector(_)).WillOnce(DoAll(SetArgPointee<0>(testValue), Return(true)));
+        auto res = xattrResult.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+        EXPECT_EQ(xattrResult.isSuccess, false);
+        EXPECT_EQ(xattrResult.xattrValue, testValue);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest003 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

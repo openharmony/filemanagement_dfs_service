@@ -763,4 +763,43 @@ LocalFilePresentStatus *LocalFilePresentStatus::Unmarshalling(Parcel &parcel)
     }
     return info;
 }
+
+bool XattrResult::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadBool(isSuccess)) {
+        LOGE("failed to read isSuccess");
+        return false;
+    }
+    if (!parcel.ReadUInt8Vector(&xattrValue)) {
+        LOGE("failed to read xattrValue");
+        return false;
+    }
+
+    return true;
+}
+
+bool XattrResult::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteBool(isSuccess)) {
+        LOGE("failed to write isSuccess");
+        return false;
+    }
+    if (!parcel.WriteUInt8Vector(xattrValue)) {
+        LOGE("failed to write xattrValue");
+        return false;
+    }
+
+    return true;
+}
+
+XattrResult *XattrResult::Unmarshalling(Parcel &parcel)
+{
+    XattrResult *info = new (std::nothrow) XattrResult();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
 } // namespace OHOS::FileManagement::CloudSync

@@ -92,6 +92,8 @@ public:
                                              std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
     int32_t IsFinishPull(bool &finishFlag) override;
     int32_t GetDentryFileOccupy(int64_t &occupyNum) override;
+    int32_t GetAclXattrBatch(const bool isAccess, const std::vector<std::string> &filePaths,
+                             std::vector<XattrResult> &aclXattrResults) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);

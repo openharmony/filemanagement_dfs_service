@@ -23,6 +23,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.SwitchDataObj;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CloudFileInfo;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.HistoryVersion;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.LocalFilePresentStatus;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.XattrResult;
 option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
@@ -82,4 +83,5 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
                                           [out] LocalFilePresentStatus[] localFilePresentStatusList);
     void IsFinishPull([out] boolean finishFlag);
     void GetDentryFileOccupy([out] long occupyNum);
+    void GetAclXattrBatch([in] boolean isAccess, [in] String[] filePaths, [out] XattrResult[] aclXattrResults);
 }
