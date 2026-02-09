@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -655,7 +655,7 @@ export default namespace cloudSync {
             let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
             Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
                 let res: Array<FileSyncState> = re.map((result: int) => {
-                    return result as FileSyncState;
+                    return FileSyncState.fromValue(result);
                 });
                 resolve(res);
             }).catch((e: Error): void => {
@@ -669,7 +669,7 @@ export default namespace cloudSync {
         let promises = uri.map((v: string): Promise<int> => { return getPromiseFileSyncState(v) });
         Promise.all<int>(promises).then<void, void>((re: Array<int>): void => {
             let res: Array<FileSyncState> = re.map((result: int) => {
-                return result as FileSyncState;
+                return FileSyncState.fromValue(result);
             });
             callback(null, res);
         }).catch((e: Error): void => {
@@ -679,12 +679,12 @@ export default namespace cloudSync {
 
     export function getFileSyncState(uri: string): FileSyncState {
         let res: int = StaticFunction.getFileSyncStateInner(uri);
-        return res as FileSyncState;
+        return FileSyncState.fromValue(res);
     }
 
     export function getCoreFileSyncState(uri: string): FileState {
         let res: int = StaticFunction.getCoreFileSyncStateInner(uri);
-        return res as FileState;
+        return FileState.fromValue(res);
     }
 
     export function registerChange(uri: string, recursion: boolean, callback: Callback<ChangeData>): void {
