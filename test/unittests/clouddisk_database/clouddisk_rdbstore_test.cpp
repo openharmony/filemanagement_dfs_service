@@ -6080,4 +6080,397 @@ HWTEST_F(CloudDiskRdbStoreTest, InsertCopyData_CreateDentryFileNameMock, TestSiz
         srcCloudId, destCloudId, destParentCloudId, rset);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: OnUpgradeTest003
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest003 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 1;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest003 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest004
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest004 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 2;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest004 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest005
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest005 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 3;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest005 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest006
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest006 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 4;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest006 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest007
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest007 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 5;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest007 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest008
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest008 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 6;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest008 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest009
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest009 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 7;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest009 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest010
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest010 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 9;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest010 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest010 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest011
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest011 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 10;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest011 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest012
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest012 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 11;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest012 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest012 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest013
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest013 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 12;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest013 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest013 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest014
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest014 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 13;
+        int32_t newVersion = 14;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest014 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest014 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest015
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest015 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 14;
+        int32_t newVersion = 16;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest015 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest015 End";
+}
+
+/**
+ * @tc.name: OnUpgradeTest016
+ * @tc.desc: Verify the OnUpgrade function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUpgradeTest016 Start";
+    try {
+        // 预制测试数据
+        RdbStoreMock store;
+        int32_t oldVersion = 15;
+        int32_t newVersion = 16;
+        CloudDiskDataCallBack CloudDiskDataCallBack;
+
+        // 调用被测接口
+        int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+
+        // 验证结果
+        EXPECT_EQ(ret, E_OK);
+
+    } catch (...) {
+        GTEST_LOG_(INFO) << "OnUpgradeTest016 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUpgradeTest016 End";
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test
