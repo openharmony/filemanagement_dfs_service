@@ -21,8 +21,8 @@
 
 #include "cloud_disk_service_error.h"
 
-#define TEST_ID 100;
-#define INVALID_USER_ID -1;
+#define TEST_ID (100)
+#define INVALID_USER_ID (-1)
 
 namespace {
 bool g_queryActiveOsAccountIds = 0;

@@ -23,6 +23,7 @@ group("cloudsyncunittests") {
       "cloud_file_kit_inner:cloud_file_kit_inner_test",
       "clouddisk_database:clouddisk_database_test",
       "clouddiskservice:clouddisk_service_test",
+      "clouddisk_service:clouddisk_service_test_new",
       "cloudsync_api:cloudsync_api_test",
       "cloudsync_sa:cloudsync_sa_test",
       "ndk:ndk_test",
