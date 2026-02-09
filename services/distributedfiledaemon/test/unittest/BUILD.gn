@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2026 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -1529,29 +1529,6 @@ ohos_unittest("radar_report_test") {
   }
 }
 
-ohos_unittest("hi_audit_test") {
-  module_out_path = "dfs_service/dfs_service_daemon/distributedfiledaemon"
-
-  sources = [ "hiaudit/hi_audit_test.cpp" ]
-
-  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/hiaudit" ]
-
-  deps = [ "${services_path}/distributedfiledaemon:libdistributedfiledaemon" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "zlib:shared_libz"
-  ]
-
-  defines = [ "private=public" ]
-  defines += [
-    "LOG_DOMAIN=0xD00430B",
-  ]
-  use_exceptions = true
-}
-
 group("unittest") {
   if (dfs_service_feature_enable_distributed_ability) {
     testonly = true
@@ -1560,7 +1537,6 @@ group("unittest") {
       ":device_manager_agent_sup_test",
       ":device_manager_agent_test",
       ":devsl_dispatcher_test",
-      ":hi_audit_test",
       ":kernel_talker_test",
       ":os_account_observer_test",
       ":session_pool_test",
