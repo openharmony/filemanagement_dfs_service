@@ -49,11 +49,13 @@ public:
         return instance;
     }
     bool IsRemoteDfsVersionLowerThanLocal(const std::string &remoteNetworkId,
-        VersionPackageName packageName = VersionPackageName::DFS_VERSION);
+                                          VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool IsRemoteDfsVersionLowerThanGiven(const std::string &remoteNetworkId,
-        const DfsVersion& thresholdDfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
+                                          const DfsVersion& thresholdDfsVersion,
+                                          VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     int32_t GetDfsVersionFromNetworkId(const std::string &networkId,
-        DfsVersion &dfsVersion, VersionPackageName packageName = VersionPackageName::DFS_VERSION);
+                                       DfsVersion &dfsVersion,
+                                       VersionPackageName packageName = VersionPackageName::DFS_VERSION);
     bool CompareDfsVersion(const DfsVersion &dfsVersion, const DfsVersion &thresholdDfsVersion);
     int32_t GetDeviceStatus(const std::string &networkId, bool &status);
     int32_t PutDeviceStatus(bool status);
@@ -85,4 +87,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_H
+#endif // FILEMANAGEMENT_DFS_SERVICE_DEVICE_PROFILE_ADAPTER_H
