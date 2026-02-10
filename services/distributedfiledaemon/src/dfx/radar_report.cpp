@@ -108,15 +108,6 @@ void RadarReportAdapter::ReportDfxStatistics()
     opStatistics_.clear();
 }
 
-void RadarReportAdapter::RptConnectAdapter(RadarParaInfo &info,
-    ReportLevel faultLevel, int32_t resultCode, const std::string &errorInfo)
-{
-    info.faultLevel = faultLevel;
-    info.resultCode = resultCode;
-    info.errorInfo = errorInfo;
-    ReportLinkConnectionAdapter(info);
-}
-
 void RadarReportAdapter::ReportLinkConnectionAdapter(const RadarParaInfo &info)
 {
     std::string localDeviceNetId;
@@ -149,15 +140,6 @@ void RadarReportAdapter::ReportGenerateDisUriAdapter(const RadarParaInfo &info)
         .peerDeviceUdid = peerDeviceUdid
     };
     DfsRadar::GetInstance().ReportGenerateDisUri(info, radarIdInfo);
-}
-
-void RadarReportAdapter::RptFileAccAdapter(RadarParaInfo &info,
-    ReportLevel faultLevel, int32_t resultCode, const std::string &errorInfo)
-{
-    info.faultLevel = faultLevel;
-    info.resultCode = resultCode;
-    info.errorInfo = errorInfo;
-    ReportFileAccessAdapter(info);
 }
 
 void RadarReportAdapter::ReportFileAccessAdapter(const RadarParaInfo &info)

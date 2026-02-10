@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,6 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
-#include "hi_audit.h"
 #include "i_file_dfs_listener.h"
 #include "ipc_skeleton.h"
 #include "iremote_object.h"
@@ -211,7 +210,6 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 
 int32_t Daemon::ConnectDfs(const std::string &networkId)
 {
-    HiAudit::GetInstance().WriteStart("ConnectDfs");
     std::lock_guard<std::mutex> lock(connectMutex_);
     RadarParaInfo info = {"ConnectDfs", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_OPENP2P,
         DEFAULT_PKGNAME, networkId, E_OK, "ConnectDfs Begin"};
@@ -219,14 +217,12 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
     uint32_t callingTokenId = IPCSkeleton::GetCallingTokenID();
     if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
         LOGE("Daemon::ConnectDfs networkId length is invalid.");
-        HiAudit::GetInstance().WriteEnd("ConnectDfs", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
         LOGE("ConnectDfs strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-        HiAudit::GetInstance().WriteEnd("ConnectDfs", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
 
@@ -250,14 +246,12 @@ int32_t Daemon::ConnectDfs(const std::string &networkId)
         CleanUp(networkId);
     }
     RadarReportAdapter::GetInstance().SetUserStatistics(ret == E_OK ? CONNECT_DFS_SUCC_CNT : CONNECT_DFS_FAIL_CNT);
-    HiAudit::GetInstance().WriteEnd("ConnectDfs", ret);
     return ret;
 }
 
 int32_t Daemon::DisconnectDfs(const std::string &networkId)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
-    HiAudit::GetInstance().WriteStart("DisconnectDfs");
     RadarParaInfo info = {"DisconnectDfs", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_CLOSEP2P,
         DEFAULT_PKGNAME, networkId, E_OK, "DisconnectDfs Begin"};
     RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
@@ -266,7 +260,6 @@ int32_t Daemon::DisconnectDfs(const std::string &networkId)
          Utils::GetAnonyNumber(callingTokenId).c_str());
     ConnectCount::GetInstance().RemoveConnect(callingTokenId, networkId);
     CleanUp(networkId);
-    HiAudit::GetInstance().WriteEnd("DisconnectDfs", E_OK);
     return 0;
 }
 
@@ -400,13 +393,12 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}.6s", networkId.c_str());
-    HiAudit::GetInstance().WriteStart("OpenP2PConnectionEx");
     RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_OPENP2P,
         DEFAULT_PKGNAME, networkId, E_OK, "OpenP2PConnectionEx Begin"};
     RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     int32_t ret = CheckPermission(networkId);
     if (ret != E_OK) {
-        HiAudit::GetInstance().WriteEnd("OpenP2PConnectionEx", ret);
+        LOGE("permission denied");
         return ret;
     }
     std::lock_guard<std::mutex> lock(connectMutex_);
@@ -418,10 +410,10 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         }
         if (dfsListenerDeathRecipient_ == nullptr) {
             LOGE("Daemon::OpenP2PConnectionEx failed to allocate memory for dfsListenerDeathRecipient_");
-            RadarReportAdapter::GetInstance().RptConnectAdapter(info,
-                ReportLevel::INTERFACE, E_INVAL_ARG_NAPI, "OpenP2PConnectionEx failed");
+            info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+                DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "OpenP2PConnectionEx failed"};
+            RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
-            HiAudit::GetInstance().WriteEnd("OpenP2PConnectionEx", E_INVAL_ARG_NAPI);
             return E_INVAL_ARG_NAPI;
         }
         remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
@@ -431,9 +423,10 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-        RadarReportAdapter::GetInstance().RptConnectAdapter(info, ReportLevel::INTERFACE, res, "strcpy_s failed");
+        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, res, "strcpy_s failed"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("OpenP2PConnectionEx", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
 
@@ -441,43 +434,44 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     RadarReportAdapter::GetInstance().SetUserStatistics(ret == E_OK ? CONNECT_DFS_SUCC_CNT : CONNECT_DFS_FAIL_CNT);
     if (ret != NO_ERROR) {
         LOGE("ConnectionAndMount ret is %{public}d", ret);
-        RadarReportAdapter::GetInstance().RptConnectAdapter(info, ReportLevel::INTERFACE, ret, "ConAndMount failed");
+        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+            DEFAULT_PKGNAME, networkId, ret, "ConnectionAndMount failed"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         CleanUp(networkId);
-        HiAudit::GetInstance().WriteEnd("OpenP2PConnectionEx", E_CONNECTION_FAILED);
         return E_CONNECTION_FAILED;
     }
     LOGI("Daemon::OpenP2PConnectionEx end");
-    HiAudit::GetInstance().WriteEnd("OpenP2PConnectionEx", ret);
     return ret;
 }
 
 int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
 {
     LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}.6s", networkId.c_str());
-    HiAudit::GetInstance().WriteStart("CloseP2PConnectionEx");
     RadarParaInfo info = {"CloseP2PConnectionEx", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_CLOSEP2P,
         DEFAULT_PKGNAME, networkId, E_OK, "CloseP2PConnectionEx Begin"};
     RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) &&
         ControlCmdParser::IsLocalItDevice()) {
         LOGW("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
-        RadarReportAdapter::GetInstance().RptConnectAdapter(info, ReportLevel::INNER, E_PERMISSION, "Perm Denied");
-        HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", E_PERMISSION);
+        info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
+            DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_PERMISSION;
     }
 
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
-        RadarReportAdapter::GetInstance().RptConnectAdapter(info, ReportLevel::INNER, E_PERMISSION, "Perm Denied");
-        HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", E_PERMISSION);
+        info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
+            DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission denied"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_PERMISSION;
     }
 
     if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
         LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid. len: %{public}zu", networkId.length());
-        RadarReportAdapter::GetInstance().RptConnectAdapter(info,
-            ReportLevel::INNER, E_INVAL_ARG_NAPI, "networkId invalid");
-        HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", E_INVAL_ARG_NAPI);
+        info = {"CloseP2PConnectionEx", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
+            DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId invalid"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return E_INVAL_ARG_NAPI;
     }
     std::lock_guard<std::mutex> lock(connectMutex_);
@@ -486,7 +480,6 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         if (DeviceManagerAgent::GetInstance()->UMountDfsDocs(networkId, networkId.substr(0, VALID_MOUNT_NETWORKID_LEN),
                                                              false) != NO_ERROR) {
             LOGE("[UMountDfsDocs] failed");
-            HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", E_UNMOUNT);
             return E_UNMOUNT;
         } else {
             auto res = NotifyRemoteCancelNotification(networkId);
@@ -497,11 +490,9 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     int32_t ret = CleanUp(networkId);
     if (ret != NO_ERROR) {
         LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
-        HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", E_CONNECTION_FAILED);
         return E_CONNECTION_FAILED;
     }
     LOGI("Daemon::CloseP2PConnectionEx end");
-    HiAudit::GetInstance().WriteEnd("CloseP2PConnectionEx", ret);
     return 0;
 }
 
@@ -607,7 +598,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                HmdfsInfo &info)
 {
     LOGI("PrepareSession networkId: %{public}.6s", networkId.c_str());
-    HiAudit::GetInstance().WriteStart("PrepareSession");
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
@@ -615,7 +605,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, networkId, E_NULLPTR, "Get src path failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
-        HiAudit::GetInstance().WriteEnd("PrepareSession", E_NULLPTR);
         return E_NULLPTR;
     }
 
@@ -626,7 +615,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
             DEFAULT_PKGNAME, networkId, EINVAL, "Get src path failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         LOGE("Get src path failed, invalid uri");
-        HiAudit::GetInstance().WriteEnd("PrepareSession", EINVAL);
         return EINVAL;
     }
 
@@ -653,7 +641,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
             DEFAULT_PKGNAME, networkId, result, "copy failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
     }
-    HiAudit::GetInstance().WriteEnd("PrepareSession", result);
     return result;
 }
 
@@ -870,24 +857,20 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
-    HiAudit::GetInstance().WriteStart("GetRemoteCopyInfo");
     LOGI("GetRemoteCopyInfo begin.");
 #ifdef SUPPORT_SAME_ACCOUNT
     if (!IsCallingDeviceTrusted()) {
         LOGE("Check calling device permission failed");
-        HiAudit::GetInstance().WriteEnd("GetRemoteCopyInfo", FileManagement::E_PERMISSION_DENIED);
         return FileManagement::E_PERMISSION_DENIED;
     }
 #endif
     auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
     if (physicalPath.empty()) {
         LOGE("GetRemoteCopyInfo GetRealPath failed.");
-        HiAudit::GetInstance().WriteEnd("GetRemoteCopyInfo", E_SOFTBUS_SESSION_FAILED);
         return E_SOFTBUS_SESSION_FAILED;
     }
     isSrcFile = Utils::IsFile(physicalPath);
     srcIsDir = Utils::IsFolder(physicalPath);
-    HiAudit::GetInstance().WriteEnd("GetRemoteCopyInfo", E_OK);
     return E_OK;
 }
 
@@ -945,18 +928,16 @@ int32_t Daemon::Copy(const std::string &srcUri,
                      const std::string &sessionName,
                      const std::string &srcNetworkId)
 {
-    HiAudit::GetInstance().WriteStart("Copy");
     if (daemon == nullptr) {
         LOGE("Daemon::Copy daemon is nullptr");
-        HiAudit::GetInstance().WriteEnd("Copy", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
         !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
+        LOGE("Path is forbidden");
         RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_INVAL_ARG, "path is forbidden"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        HiAudit::GetInstance().WriteEnd("Copy", E_INVAL_ARG);
         return E_INVAL_ARG;
     }
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -964,7 +945,6 @@ int32_t Daemon::Copy(const std::string &srcUri,
     int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
     if (errCode != E_OK) {
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
-        HiAudit::GetInstance().WriteEnd("Copy", E_GET_DEVICE_ID);
         return E_GET_DEVICE_ID;
     }
     LOGI("Copy localDeviceInfo.networkId: %{public}s", Utils::GetAnonyString(localDeviceInfo.networkId).c_str());
@@ -973,13 +953,13 @@ int32_t Daemon::Copy(const std::string &srcUri,
     if (!DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(srcNetworkId, FILEMANAGER_VERSION)) {
         LOGI("Version >= 6.0.1, need ACL check");
         if (!SoftBusPermissionCheck::CheckSrcPermission(srcNetworkId)) {
-            HiAudit::GetInstance().WriteEnd("Copy", ERR_ACL_FAILED);
+            LOGE("CheckSrcPermission failed");
             return ERR_ACL_FAILED;
         }
 
         AccountInfo localAccountInfo;
         if (!SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo)) {
-            HiAudit::GetInstance().WriteEnd("Copy", ERR_ACL_FAILED);
+            LOGE("GetLocalAccountInfo failed");
             return ERR_ACL_FAILED;
         }
 
@@ -987,7 +967,6 @@ int32_t Daemon::Copy(const std::string &srcUri,
     } else {
         ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceInfo.networkId, sessionName);
     }
-    HiAudit::GetInstance().WriteEnd("Copy", ret);
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
         RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
@@ -1000,7 +979,6 @@ int32_t Daemon::Copy(const std::string &srcUri,
 
 int32_t Daemon::CancelCopyTask(const std::string &sessionName)
 {
-    HiAudit::GetInstance().WriteStart("CancelCopyTask");
     LOGI("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
     SoftBusSessionPool::SessionInfo sessionInfo{};
     bool isExist = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
@@ -1009,7 +987,6 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
         RadarParaInfo info = {"CancelCopyTask", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", E_INVAL_ARG, "CancelCopyTask failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        HiAudit::GetInstance().WriteEnd("CancelCopyTask", E_INVAL_ARG);
         return E_INVAL_ARG;
     }
     auto callingUid = IPCSkeleton::GetCallingUid();
@@ -1019,19 +996,15 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
         RadarParaInfo info = {"CancelCopyTask", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             "softbus", "", E_PERMISSION_DENIED, "ipc call failed"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        HiAudit::GetInstance().WriteEnd("CancelCopyTask", E_PERMISSION_DENIED);
         return E_PERMISSION_DENIED;
     }
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
-    HiAudit::GetInstance().WriteEnd("CancelCopyTask", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::CancelCopyTask(const std::string &srcUri, const std::string &dstUri)
 {
-    HiAudit::GetInstance().WriteStart("CancelCopyTask");
     Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCancel(srcUri, dstUri);
-    HiAudit::GetInstance().WriteEnd("CancelCopyTask", E_OK);
     return E_OK;
 }
 
@@ -1101,27 +1074,27 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    HiAudit::GetInstance().WriteStart("PushAsset");
     if (JudgeEmpty(assetObj, sendCallback) != E_OK) {
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_NULLPTR);
         return E_NULLPTR;
     }
-    RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-        DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
-    for (const auto &uri : assetObj->uris_) {
+    const auto &uriVec = assetObj->uris_;
+    for (const auto &uri : uriVec) {
         if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
+            LOGE("Path is forbidden");
+            RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+                DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
             RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-            HiAudit::GetInstance().WriteEnd("PushAsset", OHOS::FileManagement::E_ILLEGAL_URI);
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     if (taskId.empty()) {
         LOGE("assetObj info is null.");
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_NULLPTR, "TaskId Empt.");
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_NULLPTR, "assetObj info is null."};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_NULLPTR);
         return E_NULLPTR;
     }
     AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
@@ -1132,50 +1105,44 @@ int32_t Daemon::PushAsset(int32_t userId,
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info,
-            ReportLevel::INTERFACE, E_EVENT_HANDLER, "eventHandler not find");
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+            DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_EVENT_HANDLER, "eventHandler has not find"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_EVENT_HANDLER);
         return E_EVENT_HANDLER;
     }
     bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     if (!isSucc) {
         LOGE("Daemon event handler post push asset event fail.");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_EVENT_HANDLER, "Push err");
+        RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+            "AppExecFwk", assetObj->dstNetworkId_, E_EVENT_HANDLER, "event Handler fail"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_EVENT_HANDLER);
         return E_EVENT_HANDLER;
     }
-    HiAudit::GetInstance().WriteEnd("PushAsset", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::RegisterAssetCallback begin.");
-    HiAudit::GetInstance().WriteStart("RegisterAssetCallback");
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
-        HiAudit::GetInstance().WriteEnd("RegisterAssetCallback", E_NULLPTR);
         return E_NULLPTR;
     }
     AssetCallbackManager::GetInstance().AddRecvCallback(recvCallback);
-    HiAudit::GetInstance().WriteEnd("RegisterAssetCallback", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
-    HiAudit::GetInstance().WriteStart("UnRegisterAssetCallback");
     LOGI("Daemon::UnRegisterAssetCallback begin.");
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr.");
-        HiAudit::GetInstance().WriteEnd("UnRegisterAssetCallback", E_NULLPTR);
         return E_NULLPTR;
     }
     AssetCallbackManager::GetInstance().RemoveRecvCallback(recvCallback);
-    HiAudit::GetInstance().WriteEnd("UnRegisterAssetCallback", E_OK);
     return E_OK;
 }
 
@@ -1208,7 +1175,6 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
                                        std::unordered_map<std::string,
                                        AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps)
 {
-    HiAudit::GetInstance().WriteStart("GetDfsUrisDirFromLocal");
     LOGI("Daemon::GetDfsUrisDirFromLocal start");
     RadarParaInfo info = {"GetDfsUrisDirFromLocal", ReportLevel::DEFAULT, DfxBizStage::GENERATE_DIS_URI,
         DEFAULT_PKGNAME, "", E_OK, "GetDfsUrisDirFromLocal Begin"};
@@ -1220,7 +1186,6 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
             DEFAULT_PKGNAME, "", E_PERMISSION_DENIED, "Permission Denied"};
         RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(GENERATE_DIS_URI_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("GetDfsUrisDirFromLocal", E_PERMISSION_DENIED);
         return E_PERMISSION_DENIED;
     }
     for (const auto &uri : uriList) {
@@ -1230,7 +1195,6 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
                 DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidde"};
             RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(GENERATE_DIS_URI_FAIL_CNT);
-            HiAudit::GetInstance().WriteEnd("GetDfsUrisDirFromLocal", OHOS::FileManagement::E_ILLEGAL_URI);
             return OHOS::FileManagement::E_ILLEGAL_URI;
         }
     }
@@ -1243,48 +1207,39 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         info = {"GetDfsUrisDirFromLocal", ReportLevel::INTERFACE, DfxBizStage::GENERATE_DIS_URI,
             "AFS", "", ret, "GetDfsUrisDirFromLocal Failed"};
         RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info);
-        HiAudit::GetInstance().WriteEnd("GetDfsUrisDirFromLocal", ret);
         return ret;
     }
-    HiAudit::GetInstance().WriteEnd("GetDfsUrisDirFromLocal", FileManagement::E_OK);
     return FileManagement::E_OK;
 }
 
 int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
 {
     LOGI("GetDfsSwitchStatus enter.");
-    HiAudit::GetInstance().WriteStart("GetDfsSwitchStatus");
     if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
         LOGE("GetDfsSwitchStatus networkId length is invalid.");
-        HiAudit::GetInstance().WriteEnd("GetDfsSwitchStatus", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     bool tempStatus = false;
     int32_t ret = DeviceProfileAdapter::GetInstance().GetDeviceStatus(networkId, tempStatus);
     if (ret == E_OK) {
         switchStatus = tempStatus;
-        HiAudit::GetInstance().WriteEnd("GetDfsSwitchStatus", ret);
         return E_OK;
     }
     if (ret == ERR_DP_CAN_NOT_FIND) {
         LOGE("NetworkId: %{public}s not support switch", Utils::GetAnonyString(networkId).c_str());
         switchStatus = DEFAULT_DP_CANNOTFIND_VALUE;
-        HiAudit::GetInstance().WriteEnd("GetDfsSwitchStatus", ret);
         return ret;
     }
     LOGE("Get switch status failed, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
-    HiAudit::GetInstance().WriteEnd("GetDfsSwitchStatus", ret);
     return ret;
 }
 
 int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
 {
     LOGI("UpdateDfsSwitchStatus enter, switch status: %{public}d", switchStatus);
-    HiAudit::GetInstance().WriteStart("UpdateDfsSwitchStatus");
     int32_t ret = DeviceProfileAdapter::GetInstance().PutDeviceStatus(switchStatus);
     if (ret != E_OK) {
         LOGE("UpdateDfsSwitchStatus failed, err: %{public}d", ret);
-        HiAudit::GetInstance().WriteEnd("UpdateDfsSwitchStatus", ret);
         return ret;
     }
     if (switchStatus == 0) {
@@ -1298,64 +1253,51 @@ int32_t Daemon::UpdateDfsSwitchStatus(int32_t switchStatus)
             ret = CleanUp(networkId);
             if (ret != NO_ERROR) {
                 LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
-                HiAudit::GetInstance().WriteEnd("UpdateDfsSwitchStatus", E_CONNECTION_FAILED);
                 return E_CONNECTION_FAILED;
             }
         }
     }
-    HiAudit::GetInstance().WriteEnd("UpdateDfsSwitchStatus", ret);
     return ret;
 }
 
 int32_t Daemon::GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList)
 {
-    HiAudit::GetInstance().WriteStart("GetConnectedDeviceList");
     LOGI("GetConnectedDeviceList enter.");
     DeviceManagerAgent::GetInstance()->GetConnectedDeviceList(deviceList);
-    HiAudit::GetInstance().WriteEnd("GetConnectedDeviceList", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::RegisterFileDfsListener(const std::string &instanceId, const sptr<IFileDfsListener> &listener)
 {
-    HiAudit::GetInstance().WriteStart("RegisterFileDfsListener");
     LOGI("RegisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
     if (instanceId.empty()) {
         LOGE("InstanceId length is invalid.");
-        HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     if (listener == nullptr) {
         LOGE("listener is nullptr");
-        HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     ConnectCount::GetInstance().AddFileConnect(instanceId, listener);
-    HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::UnregisterFileDfsListener(const std::string &instanceId)
 {
-    HiAudit::GetInstance().WriteStart("UnregisterFileDfsListener");
     LOGI("UnregisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
     if (instanceId.empty()) {
         LOGE("InstanceId length is invalid.");
-        HiAudit::GetInstance().WriteEnd("UnregisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     if (!ConnectCount::GetInstance().RmFileConnect(instanceId)) {
         LOGE("RmFileConnect failed");
-        HiAudit::GetInstance().WriteEnd("UnregisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
-    HiAudit::GetInstance().WriteEnd("UnregisterFileDfsListener", E_OK);
     return E_OK;
 }
 
 int32_t Daemon::IsSameAccountDevice(const std::string &networkId, bool &isSameAccount)
 {
-    HiAudit::GetInstance().WriteStart("IsSameAccountDevice");
     LOGI("IsSameAccountDevice enter, instanceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
 #ifdef SUPPORT_SAME_ACCOUNT
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
@@ -1363,23 +1305,19 @@ int32_t Daemon::IsSameAccountDevice(const std::string &networkId, bool &isSameAc
     if (deviceList.empty()) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         isSameAccount = false;
-        HiAudit::GetInstance().WriteEnd("IsSameAccountDevice", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
     for (const auto &deviceInfo : deviceList) {
         if (std::string(deviceInfo.networkId) == networkId) {
             isSameAccount = (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
-            HiAudit::GetInstance().WriteEnd("IsSameAccountDevice", E_OK);
             return E_OK;
         }
     }
     LOGE("The source and sink device is not same account, not support.");
     isSameAccount = false;
-    HiAudit::GetInstance().WriteEnd("IsSameAccountDevice", E_INVAL_ARG_NAPI);
     return E_INVAL_ARG_NAPI;
 #else
     isSameAccount = true;
-    HiAudit::GetInstance().WriteEnd("IsSameAccountDevice", E_OK);
     return E_OK;
 #endif
 }
