@@ -68,7 +68,7 @@ void NetworkAgentTemplate::DisconnectAllDevices()
     ConnectCount::GetInstance().RemoveAllConnect();
 }
 
- // for closeP2P
+// for closeP2P
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const std::string networkId)
 {
     LOGI("CloseP2P, networkId:%{public}s", Utils::GetAnonyString(networkId).c_str());
