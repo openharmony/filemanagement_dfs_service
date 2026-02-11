@@ -120,8 +120,6 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "dsoftbus:softbus_client",
     "e2fsprogs:libext2_uuid",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
@@ -143,7 +141,10 @@ ohos_shared_library("libdistributedfileutils") {
   }
 
   if (dfs_service_feature_enable_distributed_ability) {
-    external_deps += [ "device_manager:devicemanagersdk" ]
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
