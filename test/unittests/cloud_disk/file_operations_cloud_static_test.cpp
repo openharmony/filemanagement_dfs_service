@@ -925,11 +925,13 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest003, TestSize.Level
         CloudDiskFuseData *data = new CloudDiskFuseData;
         data->userId = 100;
         fuse_file_info *fi = new fuse_file_info;
+        fi->flags = O_RDONLY;
         std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
         filePtr->readSession = nullptr;
         filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
         inoPtr->fileName = "Test";
+        inoPtr->bundleName = "com.ohos.photos";
         MetaBase metaBase(inoPtr->fileName);
         metaBase.fileType = FILE_TYPE_CONTENT;
         std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
