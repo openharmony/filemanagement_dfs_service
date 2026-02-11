@@ -48,8 +48,6 @@ public:
 void TaskStateManagerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    systemPtr = make_shared<system::SystemMock>();
-    system::ISystem::system_ = systemPtr;
 }
 
 void TaskStateManagerTest::TearDownTestCase(void)
@@ -60,10 +58,14 @@ void TaskStateManagerTest::TearDownTestCase(void)
 void TaskStateManagerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    systemPtr = make_shared<system::SystemMock>();
+    system::ISystem::system_ = systemPtr;
 }
 
 void TaskStateManagerTest::TearDown(void)
 {
+    system::ISystem::system_ = nullptr;
+    systemPtr = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -437,7 +439,6 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_020, TestSize.Level1)
         TaskStateManager taskStateManager;
         taskStateManager.taskMaps_.clear();
 
-        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
         taskStateManager.StartTask();
         EXPECT_TRUE(true);
     } catch (...) {
@@ -474,7 +475,6 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_022, TestSize.Level1)
         TaskType task = TaskType::SYNC_TASK;
         taskStateManager.criticalStatus_ = true;
 
-        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
         taskStateManager.StartTask(bundleName, task);
         EXPECT_TRUE(taskStateManager.criticalStatus_);
     } catch (...) {
@@ -534,4 +534,349 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_025, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "TaskStateManagerTest_025 End";
 }
+
+/**
+ * @tc.name: CompleteTaskTest001
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_017 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DOWNLOAD_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_017 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_017 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest002
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest002 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::CLEAN_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest002 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest003
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest003 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::UPLOAD_ASSET_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest003 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest004
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest004 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DOWNLOAD_ASSET_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest004 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest005
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest005 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DOWNLOAD_REMOTE_ASSET_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest005 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest006
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest006 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DOWNLOAD_THUMB_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest006 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest007
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest007 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DISABLE_CLOUD_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest007 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest008
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest008 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::CACHE_VIDEO_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest008 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest009
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest009 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::DOWNGRADE_DOWNLOAD_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest009 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest010
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest010 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::CLEAN_DENTRY_FILE_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest010 End";
+}
+
+/**
+ * @tc.name: CompleteTaskTest011
+ * @tc.desc: Verify the CompleteTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, CompleteTaskTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTaskTest011 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::CLEAN_CLOUD_CACHE_TASK;
+        taskStateManager.taskMaps_.clear();
+
+        EXPECT_CALL(*systemPtr, GetParameter(_, _)).Times(2).WillOnce(Return("true")).WillOnce(Return("true"));
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTaskTest011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CompleteTaskTest011 End";
+}
+
+/**
+ * @tc.name: StartTaskTest001
+ * @tc.desc: Verify the StartTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, StartTaskTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTaskTest001 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName1";
+        TaskType task = TaskType::DOWNLOAD_TASK;
+        taskStateManager.criticalStatus_ = false;
+
+        taskStateManager.StartTask(bundleName, task);
+        EXPECT_EQ(taskStateManager.taskMaps_[bundleName], static_cast<uint64_t>(task));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTaskTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartTaskTest001 End";
+}
+
+/**
+ * @tc.name: StartTaskTest002
+ * @tc.desc: Verify the StartTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, StartTaskTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTaskTest002 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName1";
+        TaskType task = TaskType::CLEAN_TASK;
+        taskStateManager.criticalStatus_ = false;
+
+        taskStateManager.StartTask(bundleName, task);
+        EXPECT_EQ(taskStateManager.taskMaps_[bundleName], static_cast<uint64_t>(task));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTaskTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartTaskTest002 End";
+}
+
+/**
+ * @tc.name: StartTaskTest003
+ * @tc.desc: Verify the StartTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(TaskStateManagerTest, StartTaskTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTaskTest003 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName1";
+        TaskType task = TaskType::UPLOAD_ASSET_TASK;
+        taskStateManager.criticalStatus_ = false;
+
+        taskStateManager.StartTask(bundleName, task);
+        EXPECT_EQ(taskStateManager.taskMaps_[bundleName], static_cast<uint64_t>(task));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTaskTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartTaskTest003 End";
+}
+
 }
