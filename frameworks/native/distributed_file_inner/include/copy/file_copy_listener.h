@@ -102,7 +102,6 @@ private:
 
     std::condition_variable notifyCv_;
     std::mutex cvLock_;
-    std::mutex processMutex_;
     bool isMtpPath_ = false;
 };
 } // namespace DistributedFile
