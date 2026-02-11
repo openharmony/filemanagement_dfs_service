@@ -40,7 +40,8 @@ using namespace std;
 static constexpr int BUF_SIZE = 1024;
 static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
 static constexpr int SLEEP_TIME_US = 100000;
-constexpr uint64_t DEFAULT_SPEED_SIZE = 2.8 * 1024 * 1024;
+static constexpr int MTP_SLEEP_TIME_US = 10000;
+constexpr uint64_t DEFAULT_SPEED_SIZE = 0.28 * 1024 * 1024;
 const uint64_t NEW_TAG = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
 
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
@@ -113,7 +114,7 @@ void FileCopyLocalListener::GetNotifyEvent4Mtp()
             progressSize_ = totalSize_;
         }
         processCallback_(progressSize_, totalSize_);
-        usleep(SLEEP_TIME_US);
+        usleep(MTP_SLEEP_TIME_US);
     }
 }
 
