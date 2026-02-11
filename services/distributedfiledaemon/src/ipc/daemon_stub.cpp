@@ -527,6 +527,7 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
         LOGE("read userId failed");
         return E_IPC_READ_FAILED;
     }
+
     std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> uriToDfsUriMaps;
     int32_t res = GetDfsUrisDirFromLocal(uriList, userId, uriToDfsUriMaps);
     if (!reply.WriteInt32(res)) {
@@ -537,6 +538,7 @@ int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessagePar
         LOGE("GetDfsUrisDirFromLocal failed");
         return FileManagement::E_OK;
     }
+
     std::vector<std::string> total;
     for (auto it = uriToDfsUriMaps.begin(); it != uriToDfsUriMaps.end(); ++it) {
         total.push_back(it->first);
