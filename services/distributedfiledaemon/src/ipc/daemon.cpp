@@ -312,6 +312,7 @@ int32_t Daemon::CleanUp(const std::string &networkId)
 {
     LOGI("CleanUp start, networkId is %{public}.6s", networkId.c_str());
     if (!ConnectCount::GetInstance().CheckCount(networkId)) {
+        LOGI("Close P2P Connection immediately");
         DisconnectDevice(networkId);
         auto ret = CancelControlLink(networkId);
         LOGI("cancel control link ret is %{public}d", ret);
@@ -343,7 +344,6 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
         }
         return ret;
     }
-
     ConnectCount::GetInstance().AddConnect(callingTokenId, networkId, remoteReverseObj);
 
     if (!hasFileAccessManager) {
