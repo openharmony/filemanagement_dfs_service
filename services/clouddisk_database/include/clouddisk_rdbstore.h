@@ -60,7 +60,8 @@ public:
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
         std::string &name, const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-        const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload);
+        const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
+        bool needSyncAndNotify);
     int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
     int32_t RecycleSetXattr(std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
