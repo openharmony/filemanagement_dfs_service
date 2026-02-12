@@ -1850,7 +1850,8 @@ int32_t CloudDiskRdbStore::HandleRenameValue(ValuesBucket &rename, int32_t posit
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
-    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload)
+    const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
+    bool needSyncAndNotify)
 {
     int32_t ret = CheckName(newFileName);
     if (ret != E_OK) {
@@ -1870,10 +1871,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     }
     uint8_t oldFileNoNeedUpload = metaBase.noUpload;
     metaBase.noUpload = (newFileNoNeedUpload == NEED_UPLOAD)? NEED_UPLOAD : NO_UPLOAD;
-    ret = CheckNameForSpace(newFileName, S_ISDIR(metaBase.mode));
-    if (ret != E_OK) {
-        return ret;
-    }
+    RETURN_ON_ERR(CheckNameForSpace(newFileName, S_ISDIR(metaBase.mode)));
     ValuesBucket rename;
     CacheNode newNode = {.cloudId = metaBase.cloudId, .parentCloudId = newParentCloudId, .fileName = newFileName};
     CacheNode oldNode = {.cloudId = metaBase.cloudId, .parentCloudId = oldParentCloudId, .fileName = oldFileName};
@@ -1886,15 +1884,18 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGE("rename dentry failed, ret = %{public}d", ret);
         return EINVAL;
     }
+    if (!needSyncAndNotify) {
+        rename.Delete(FileColumn::DIRTY_TYPE);
+    }
     function<void()> rdbUpdate = [this, rename, bindArgs,
-        oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName] {
+        oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName, needSyncAndNotify] {
         int32_t changedRows = -1;
         int32_t ret = rdbStore_ ->Update(changedRows, FileColumn::FILES_TABLE, rename,
                                          FileColumn::CLOUD_ID + " = ?", bindArgs);
         if (ret != E_OK) {
             LOGE("rename file fail, ret %{public}d", ret);
         }
-        if ((oldFileNoNeedUpload == NEED_UPLOAD) || (newFileNoNeedUpload == NEED_UPLOAD)) {
+        if (needSyncAndNotify && ((oldFileNoNeedUpload == NEED_UPLOAD) || (newFileNoNeedUpload == NEED_UPLOAD))) {
             CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
         }
     };

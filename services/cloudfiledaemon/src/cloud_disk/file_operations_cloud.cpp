@@ -73,6 +73,7 @@ namespace {
     static const std::chrono::seconds READ_TIMEOUT_S = 16s;
     static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
     static const uint64_t INVAL_TIMEOUT_MS = 5;
+    static const uint32_t SERVICE_UID = 1009;
 }
 
 const int32_t MAX_SIZE = 4096;
@@ -1721,7 +1722,6 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
             CloudFile::FaultType::INODE_FILE, EINVAL, "rename old or new parent not found"});
         return (void) fuse_reply_err(req, EINVAL);
     }
-
     bool noNeedUpload = false;
     if (newParentInode->cloudId != ROOT_CLOUD_ID) {
         int32_t err = GetParentUpload(newParentInode, data, noNeedUpload);
@@ -1730,10 +1730,10 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
             return (void) fuse_reply_err(req, err);
         }
     }
-
+    bool sync = req->ctx.uid != SERVICE_UID;
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
-    int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName, noNeedUpload);
+    int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName, noNeedUpload, sync);
     if (err != 0) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{parentInode->bundleName,
             CloudFile::FaultOperation::RENAME, CloudFile::FaultType::DATABASE, err,
@@ -1741,16 +1741,17 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         return (void) fuse_reply_err(req, EINVAL);
     }
     bool isDir = false;
-    string key = std::to_string(parent) + name;
-    int64_t localId = FileOperationsHelper::FindLocalId(data, key);
+    int64_t localId = FileOperationsHelper::FindLocalId(data, std::to_string(parent) + name);
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
     if (inoPtr != nullptr) {
         inoPtr->fileName = newName;
         inoPtr->parent = newParent;
         isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
-    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-        NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName}, {FileStatus::UNKNOW, isDir});
+    if (sync || noNeedUpload) {
+        CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
+            NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName}, {FileStatus::UNKNOW, isDir});
+    }
     return (void) fuse_reply_err(req, 0);
 }
 
