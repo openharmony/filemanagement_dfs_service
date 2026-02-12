@@ -50,6 +50,11 @@ int32_t DataSyncManager::StopUploadTask(const std::string &bundleName, const int
     return E_OK;
 }
 
+void DataSyncManager::StopDownloadAndUploadTask()
+{
+    return;
+}
+
 int32_t DataSyncManager::ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool status)
 {
     return E_OK;
