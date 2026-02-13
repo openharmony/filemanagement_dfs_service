@@ -1411,9 +1411,8 @@ HWTEST_F(CloudSyncManagerImplTest, SubscribeListener003, TestSize.Level1)
     try {
         CloudSyncManagerImpl::GetInstance().listener_ = new CloudSyncManagerImpl::SystemAbilityStatusChange();
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(saMgr_));
-        EXPECT_CALL(*saMgr_, UnSubscribeSystemAbility(_, _)).WillOnce(Return(0));
         CloudSyncManagerImpl::GetInstance().SubscribeListener();
-        EXPECT_EQ(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
+        EXPECT_NE(CloudSyncManagerImpl::GetInstance().listener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SubscribeListener003 FAILED";

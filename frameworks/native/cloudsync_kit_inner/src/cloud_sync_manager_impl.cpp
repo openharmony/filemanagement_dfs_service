@@ -765,15 +765,13 @@ void CloudSyncManagerImpl::SubscribeListener(void)
         return;
     }
     if (listener_ != nullptr) {
-        auto ret = samgr->UnSubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
-        LOGI("unsubscribed to systemAbility ret %{public}d", ret);
+        LOGI("The callback has already been subscribed to, no need to subscribe to it again.");
+        return;
     }
     if (!CloudSyncCallbackClientManager::GetInstance().IsEmpty()) {
         listener_ = new SystemAbilityStatusChange();
         auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("subscribed to systemAbility ret %{public}d", ret);
-    } else {
-        listener_ = nullptr;
     }
 }
 
