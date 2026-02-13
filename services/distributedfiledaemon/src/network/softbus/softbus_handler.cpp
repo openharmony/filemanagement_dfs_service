@@ -320,25 +320,21 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
         LOGI("sessionName is empty");
         return;
     }
-    {
-        if (!serverIdMap_.empty()) {
-            std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-            auto it = serverIdMap_.find(sessionName);
-            if (it != serverIdMap_.end()) {
-                int32_t serverId = it->second;
-                serverIdMap_.erase(it);
-                Shutdown(serverId);
-                LOGI("RemoveSessionServer success.");
-            }
+    if (!serverIdMap_.empty()) {
+        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
+        auto it = serverIdMap_.find(sessionName);
+        if (it != serverIdMap_.end()) {
+            int32_t serverId = it->second;
+            serverIdMap_.erase(it);
+            Shutdown(serverId);
+            LOGI("RemoveSessionServer success.");
         }
     }
-    {
-        if (!clientSessNameMap_.empty()) {
-            std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
-            auto it = clientSessNameMap_.find(sessionId);
-            if (it != clientSessNameMap_.end()) {
-                clientSessNameMap_.erase(it->first);
-            }
+    if (!clientSessNameMap_.empty()) {
+        std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
+        auto it = clientSessNameMap_.find(sessionId);
+        if (it != clientSessNameMap_.end()) {
+            clientSessNameMap_.erase(it->first);
         }
     }
     {

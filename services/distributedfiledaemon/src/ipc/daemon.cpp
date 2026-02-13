@@ -360,10 +360,13 @@ int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &devi
 int32_t Daemon::CheckPermission(const std::string &networkId)
 {
     LOGI("Daemon::CheckPermission start, networkId %{public}.6s", networkId.c_str());
+    RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_OPENP2P,
+        DEFAULT_PKGNAME, networkId, E_OK, "OpenP2PConnectionEx Begin"};
+    RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION) &&
         ControlCmdParser::IsLocalItDevice()) {
         LOGE("FILE_ACCESS_MANAGER_PERMISSION permission has not support it situation");
-        RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
@@ -372,7 +375,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
 
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CheckPermission] DATASYNC permission denied");
-        RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_PERMISSION, "permission not support"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
@@ -381,7 +384,7 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
 
     if (networkId.length() < MIN_NETWORKID_LENGTH || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
         LOGE("Daemon::OpenP2PConnectionEx networkId length is invalid.");
-        RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "networkId length is invalid"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
@@ -393,9 +396,6 @@ int32_t Daemon::CheckPermission(const std::string &networkId)
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}.6s", networkId.c_str());
-    RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::DEFAULT, DfxBizStage::SOFTBUS_OPENP2P,
-        DEFAULT_PKGNAME, networkId, E_OK, "OpenP2PConnectionEx Begin"};
-    RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
     int32_t ret = CheckPermission(networkId);
     if (ret != E_OK) {
         LOGE("permission denied");
@@ -410,7 +410,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         }
         if (dfsListenerDeathRecipient_ == nullptr) {
             LOGE("Daemon::OpenP2PConnectionEx failed to allocate memory for dfsListenerDeathRecipient_");
-            info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+            RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
                 DEFAULT_PKGNAME, networkId, E_INVAL_ARG_NAPI, "OpenP2PConnectionEx failed"};
             RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
             RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
@@ -423,7 +423,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != 0) {
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d, errno = %{public}d", res, errno);
-        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+        RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, res, "strcpy_s failed"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         RadarReportAdapter::GetInstance().SetUserStatistics(CONNECT_DFS_FAIL_CNT);
@@ -434,7 +434,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     RadarReportAdapter::GetInstance().SetUserStatistics(ret == E_OK ? CONNECT_DFS_SUCC_CNT : CONNECT_DFS_FAIL_CNT);
     if (ret != NO_ERROR) {
         LOGE("ConnectionAndMount ret is %{public}d", ret);
-        info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
+        RadarParaInfo info = {"OpenP2PConnectionEx", ReportLevel::INTERFACE, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "ConnectionAndMount failed"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         CleanUp(networkId);
@@ -1348,30 +1348,30 @@ int32_t Daemon::CreatControlLink(const std::string &networkId)
     LOGI("start CreatControlLink");
     if (ChannelManager::GetInstance().HasExistChannel(networkId)) {
         LOGI("exist channel, networkId: %{public}.6s", networkId.c_str());
-        return ERR_OK;
+        return FileManagement::ERR_OK;
     }
 
     if (ChannelManager::GetInstance().CreateClientChannel(networkId) != ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
-    return ERR_OK;
+    return FileManagement::ERR_OK;
 }
 
 int32_t Daemon::CancelControlLink(const std::string &networkId)
 {
     if (!ChannelManager::GetInstance().HasExistChannel(networkId)) {
         LOGI("not exist channel, networkId: %{public}.6s", networkId.c_str());
-        return ERR_OK;
+        return FileManagement::ERR_OK;
     }
-    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != ERR_OK) {
+    if (ChannelManager::GetInstance().DestroyClientChannel(networkId) != FileManagement::ERR_OK) {
         LOGE("create channel failed, networkId: %{public}.6s", networkId.c_str());
         RadarParaInfo info = {"CancelControlLink", ReportLevel::INNER, DfxBizStage::SOFTBUS_CLOSEP2P,
             DEFAULT_PKGNAME, networkId, ERR_BAD_VALUE, "CancelControlLink failed"};
         RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
         return FileManagement::ERR_BAD_VALUE;
     }
-    return ERR_OK;
+    return FileManagement::ERR_OK;
 }
 
 int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
@@ -1386,7 +1386,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
     }
 
     int32_t ret = CreatControlLink(networkId);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("CheckRemoteAllowConnect ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "CreatControlLink fail"};
@@ -1409,7 +1409,7 @@ int32_t Daemon::CheckRemoteAllowConnect(const std::string &networkId)
     request.networkId = srcNetId;
 
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response, true);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"CheckRemoteAllowConnect", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
@@ -1441,7 +1441,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 
     std::string srcNetId;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         return ret;
     }
@@ -1449,7 +1449,7 @@ int32_t Daemon::NotifyRemotePublishNotification(const std::string &networkId)
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"NotifyRemotePublishNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
@@ -1468,7 +1468,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
     }
 
     int32_t ret = CreatControlLink(networkId);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("NotifyRemoteCancelNotification ret = %{public}d", ret);
         return ret;
     }
@@ -1477,7 +1477,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 
     std::string srcNetId;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceNetWorkId(IDaemon::SERVICE_NAME, srcNetId);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("DeviceManager GetLocalDeviceNetWorkId failed. ret is %{public}d", ret);
         RadarParaInfo info = {"NotifyRemoteCancelNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             "DM", networkId, ret, "GetLocalDeviceNetWorkId failed"};
@@ -1488,7 +1488,7 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
 
     ControlCmd response;
     ret = ChannelManager::GetInstance().SendRequest(networkId, request, response);
-    if (ret != ERR_OK) {
+    if (ret != FileManagement::ERR_OK) {
         LOGE("SendRequest ret = %{public}d", ret);
         RadarParaInfo info = {"NotifyRemoteCancelNotification", ReportLevel::INNER, DfxBizStage::SOFTBUS_OPENP2P,
             DEFAULT_PKGNAME, networkId, ret, "SendRequest fail"};
