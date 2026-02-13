@@ -15,6 +15,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <chrono>
+#include <thread>
 
 #include "ipc/cloud_daemon.h"
 #include "setting_data_helper.h"
@@ -27,6 +29,7 @@ using namespace testing::ext;
 using namespace system;
 using namespace std;
 const string REGION_PARAMETER = "const.global.region";
+const int SLEEP_TIME = 100;
 const string VERSION_TYPE_PARAMETER = "const.logsystem.versiontype";
 
 class CloudDaemonTest : public testing::Test {
@@ -144,6 +147,7 @@ HWTEST_F(CloudDaemonTest, OnStartTest1, TestSize.Level1)
         EXPECT_CALL(*systemMock, GetParameter(StrEq(VERSION_TYPE_PARAMETER), _)).WillRepeatedly(Return("beta"));
         cloudDaemon_->OnStart();
         EXPECT_TRUE(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStartTest1  ERROR";
