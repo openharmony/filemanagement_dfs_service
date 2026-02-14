@@ -14,6 +14,7 @@
  */
 
 #include "cloud_disk_sync_folder.h"
+#include "cloud_disk_service_error.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -143,13 +144,13 @@ void CloudDiskSyncFolder::RemoveXattr(string &path, const string &attrName)
 }
 
 /* Verify the path specified by inputPath, replace its prefix oldPrefix with the new prefix newPrefix. */
-bool CloudDiskSyncFolder::ReplacePathPrefix(const string &oldPrefix, const string &newPrefix,
-                                            const string &inputPath, string &outputPath)
+int32_t CloudDiskSyncFolder::ReplacePathPrefix(const string &oldPrefix, const string &newPrefix,
+                                               const string &inputPath, string &outputPath)
 {
     if ((inputPath.size() < oldPrefix.size()) || (inputPath.substr(0, oldPrefix.size()) != oldPrefix)) {
         LOGE("Invalid path prefix: %{public}s, input: %{public}s",
             GetAnonyStringStrictly(oldPrefix).c_str(), GetAnonyStringStrictly(inputPath).c_str());
-        return false;
+        return E_INVALID_ARG;
     }
 
     string newPath = newPrefix + inputPath.substr(oldPrefix.size());
@@ -157,21 +158,21 @@ bool CloudDiskSyncFolder::ReplacePathPrefix(const string &oldPrefix, const strin
     char realPathBuffer[PATH_MAX + 1] { '\0' };
     if (realpath(newPath.c_str(), realPathBuffer) == nullptr) {
         LOGE("Realpath error: %{public}d, path=%{public}s", errno, GetAnonyStringStrictly(newPath).c_str());
-        return false;
+        return (errno == ENOENT) ? E_SYNC_FOLDER_PATH_NOT_EXIST : E_INVALID_ARG;
     }
 
     string newRealPath = string(realPathBuffer);
     if (newRealPath.substr(0, newPrefix.size()) != newPrefix) {
         LOGE("Path traversal prefix: %{public}s, newRealPath: %{public}s",
             GetAnonyStringStrictly(newPrefix).c_str(), GetAnonyStringStrictly(newRealPath).c_str());
-        return false;
+        return E_INVALID_ARG;
     }
 
     outputPath = newRealPath;
-    return true;
+    return E_OK;
 }
 
-bool CloudDiskSyncFolder::PathToPhysicalPath(const string &path, const string &userId, string &realPath)
+int32_t CloudDiskSyncFolder::PathToPhysicalPath(const string &path, const string &userId, string &realPath)
 {
     string sandboxPath = "/storage/Users/currentUser";
     string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
@@ -179,9 +180,9 @@ bool CloudDiskSyncFolder::PathToPhysicalPath(const string &path, const string &u
     return ReplacePathPrefix(sandboxPath, replacementPath, path, realPath);
 }
 
-bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const string &path,
-                                                     const string &userId,
-                                                     string &realPath)
+int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const string &path,
+                                                        const string &userId,
+                                                        string &realPath)
 {
     string sandboxPath = "/storage/Users/currentUser";
     string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";

@@ -14,6 +14,7 @@
  */
 
 #include "cloud_disk_sync_folder.h"
+#include "cloud_disk_service_error.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 #define E_OK 0
@@ -62,19 +63,23 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
 {
 }
 
-bool CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath)
+int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
+                                                const std::string &userId, std::string &realpath)
 {
     if (path == "") {
-        return true;
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
     } else {
-        return false;
+        return E_OK;
     }
 }
 
-bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
-                                                     const std::string &userId, std::string &realpath)
+int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
+                                                        const std::string &userId, std::string &realpath)
 {
-    return true;
+    if (path == "/test/mockFailed") {
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+    return E_OK;
 }
 
 bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,

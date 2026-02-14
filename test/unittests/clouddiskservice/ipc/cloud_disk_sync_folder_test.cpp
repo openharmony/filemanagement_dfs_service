@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "cloud_disk_sync_folder.h"
+#include "cloud_disk_service_error.h"
 
 #include "assistant.h"
 #include "cloud_disk_sync_folder_system_mock.h"
@@ -614,8 +615,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest001, TestSize.Level1)
         string userId = "100";
         string realpath;
         EXPECT_CALL(*syncFolderMock, realpath(_, _)).WillOnce(Return(nullptr));
-        bool ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
-        EXPECT_EQ(ret, false);
+        int32_t ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PathToPhysicalPathTest001 failed";
@@ -637,8 +638,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest002, TestSize.Level1)
         string path = "/storage/Users/otherUser/testfile.txt";
         string userId = "100";
         string realpath;
-        bool ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
-        EXPECT_EQ(ret, false);
+        int32_t ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
         EXPECT_TRUE(realpath.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -667,8 +668,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest003, TestSize.Level1)
                 SetArrayArgument<1>(resolvedPath, resolvedPath + strlen(resolvedPath) + 1),
                 Return(const_cast<char*>(resolvedPath))
             ));
-        bool ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
-        EXPECT_EQ(ret, true);
+        int32_t ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(realpath, resolvedPath);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -697,8 +698,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest001, TestSize.Le
                 SetArrayArgument<1>(resolvedPath, resolvedPath + strlen(resolvedPath) + 1),
                 Return(const_cast<char*>(resolvedPath))
             ));
-        bool ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
-        EXPECT_EQ(ret, true);
+        int32_t ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(realpath, resolvedPath);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -721,8 +722,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest002, TestSize.Le
         string path = "/storage/Users/otherUser/testfile.txt";
         string userId = "100";
         string realpath;
-        bool ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
-        EXPECT_EQ(ret, false);
+        int32_t ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
         EXPECT_TRUE(realpath.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -746,8 +747,8 @@ HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest003, TestSize.Le
         string userId = "100";
         string realpath;
         EXPECT_CALL(*syncFolderMock, realpath(_, _)).WillOnce(Return(nullptr));
-        bool ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
-        EXPECT_EQ(ret, false);
+        int32_t ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest003 failed";
@@ -893,8 +894,8 @@ HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest001, TestSize.Level1)
                 SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
                 Return(const_cast<char*>(outputRealPath))
             ));
-        bool ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
-        EXPECT_EQ(ret, true);
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(outputPath, outputPathTrue);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -925,8 +926,8 @@ HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest002, TestSize.Level1)
                 SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
                 Return(const_cast<char*>(outputRealPath))
             ));
-        bool ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
-        EXPECT_EQ(ret, false);
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
         EXPECT_EQ(outputPath, outputPathTrue);
     } catch (...) {
         EXPECT_TRUE(false);
