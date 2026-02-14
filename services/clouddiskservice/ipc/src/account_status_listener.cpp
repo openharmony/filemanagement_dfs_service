@@ -54,7 +54,7 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
         OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
         for (auto item : syncFolders) {
             std::string path;
-            if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path)) {
+            if (CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path) != 0) {
                 LOGE("Get path failed");
                 continue;
             }
@@ -106,7 +106,7 @@ void AccountStatusListener::Start()
 
 void AccountStatusListener::Stop()
 {
-    if (osAccountSubscriber_!= nullptr) {
+    if (osAccountSubscriber_ != nullptr) {
         ErrCode errCode = OsAccountManager::UnsubscribeOsAccount(osAccountSubscriber_);
         osAccountSubscriber_ = nullptr;
     }

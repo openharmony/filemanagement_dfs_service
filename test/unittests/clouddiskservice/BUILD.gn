@@ -98,6 +98,7 @@ ohos_unittest("service_account_status_listener_test") {
     "${distributedfile_path}/utils/inner_api",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${services_path}/clouddiskservice/sync_folder/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "${distributedfile_path}/utils/inner_api",
     "${distributedfile_path}/utils/system/include",
     "${distributedfile_path}/utils/ioctl/include",
@@ -252,6 +253,7 @@ ohos_unittest("cloud_disk_sync_folder_test") {
 
   include_dirs = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/utils/include",
     "${services_path}/clouddiskservice/monitor/include",

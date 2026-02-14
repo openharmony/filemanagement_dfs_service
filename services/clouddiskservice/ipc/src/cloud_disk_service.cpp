@@ -85,7 +85,7 @@ void CloudDiskService::OnStart()
     }
     for (const auto &item : syncFolders) {
         std::string path;
-        if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path)) {
+        if (CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path) != E_OK) {
             LOGE("Get path failed");
             continue;
         }
@@ -143,18 +143,15 @@ int32_t CloudDiskService::RegisterSyncFolderChangesInner(const std::string &sync
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
-        LOGE("Get path failed");
-        return E_INVALID_ARG;
-    }
 
-    if (access(path.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     std::string bundleName = "";
-    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -191,18 +188,15 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
-        LOGE("Get path failed");
-        return E_INVALID_ARG;
-    }
 
-    if (access(path.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     std::string bundleName = "";
-    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -244,18 +238,15 @@ int32_t CloudDiskService::GetSyncFolderChangesInner(const std::string &syncFolde
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
-        LOGE("Get path failed");
-        return E_INVALID_ARG;
-    }
 
-    if (access(path.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     std::string bundleName = "";
-    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -304,14 +295,14 @@ static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userI
     const string &syncFolder)
 {
     std::string setXattrPath;
-    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
-                                                                       setXattrPath)) {
+    if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
+        setXattrPath) != E_OK) {
         LOGE("Get path failed");
         failed.path = fileSyncStates.path;
         failed.error = ErrorReason::NO_SUCH_FILE;
         return false;
     }
-    string actualSyncFolder = syncFolder;
+    std::string actualSyncFolder = syncFolder;
     if (!syncFolder.empty() && syncFolder.back() != '/') {
         actualSyncFolder += "/";
     }
@@ -351,20 +342,16 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
     }
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
-
     std::string path;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
-        LOGE("Get path failed");
-        return E_INVALID_ARG;
-    }
 
-    if (access(path.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     std::string bundleName = "";
-    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -392,14 +379,21 @@ int32_t CloudDiskService::SetFileSyncStatesInner(const std::string &syncFolder,
 #endif
 }
 
+static ResultList MakeResult(const std::string &path)
+{
+    ResultList result;
+    result.path = path;
+    result.isSuccess = false;
+    return result;
+}
+
 static ResultList GetFileSyncState(const std::string &path, int32_t &userId, const string &syncFolder)
 {
-    ResultList getResult;
-    getResult.isSuccess = false;
-    getResult.path = path;
+    ResultList getResult = MakeResult(path);
     std::string getXattrPath;
 
-    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId), getXattrPath)) {
+    if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
+                                                                      getXattrPath) != E_OK) {
         LOGE("Get path failed");
         getResult.error = ErrorReason::NO_SUCH_FILE;
         return getResult;
@@ -465,18 +459,14 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string path;
 
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path)) {
-        LOGE("Get path failed");
-        return E_INVALID_ARG;
-    }
-
-    if (access(path.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), path);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     std::string bundleName = "";
-    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
         LOGE("Get bundleName failed, ret:%{public}d", ret);
         return E_TRY_AGAIN;
@@ -511,18 +501,15 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
     std::string registerSyncFolder;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path, std::to_string(userId), registerSyncFolder)) {
-        LOGE("Get registerSyncFolder failed");
-        return E_INVALID_ARG;
-    }
-
-    if (access(registerSyncFolder.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path,
+        std::to_string(userId), registerSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get path failed, ret = %{public}d", ret);
+        return ret;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(registerSyncFolder);
-    int32_t ret = CloudDiskServiceSyncFolder::RegisterSyncFolder(userId, syncFolderIndex, registerSyncFolder);
+    ret = CloudDiskServiceSyncFolder::RegisterSyncFolder(userId, syncFolderIndex, registerSyncFolder);
     if (ret != E_OK) {
         LOGE("RegisterSyncFolder failed");
         return ret;
@@ -552,18 +539,15 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
     std::string unregisterSyncFolder;
-    if (!CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path, std::to_string(userId), unregisterSyncFolder)) {
-        LOGE("Get unregisterSyncFolder failed");
-        return E_INVALID_ARG;
-    }
-
-    if (access(unregisterSyncFolder.c_str(), E_OK) != 0) {
-        LOGE("SyncFolder path does not exist, errno=%{public}d", errno);
-        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path,
+        std::to_string(userId), unregisterSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get unregisterSyncFolder failed, ret = %{public}d", ret);
+        return ret;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
-    int32_t ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
+    ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
     if (ret != E_OK) {
         LOGE("UnRegisterSyncFolder failed");
         return ret;
@@ -572,10 +556,11 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(bundleName, syncFolderIndex);
 
-    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
-                                                                       unregisterSyncFolder)) {
-        LOGE("Get unregisterSyncFolder failed");
-        return E_INVALID_ARG;
+    ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
+        unregisterSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get unregisterSyncFolder failed, ret = %{public}d", ret);
+        return ret;
     }
 
     CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolder, FILE_SYNC_STATE);
