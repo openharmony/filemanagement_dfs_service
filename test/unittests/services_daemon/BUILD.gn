@@ -88,9 +88,7 @@ ohos_unittest("fuse_manager_test") {
     "${services_path}/cloudfiledaemon/src/fuse_manager",
   ]
 
-  deps = [
-    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
-  ]
+  deps = [ ]
 
   external_deps = [
     "ability_base:zuri",
