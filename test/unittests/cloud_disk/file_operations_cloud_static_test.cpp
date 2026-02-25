@@ -927,11 +927,11 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest003, TestSize.Level
         fuse_file_info *fi = new fuse_file_info;
         std::shared_ptr<CloudDiskFile> filePtr = make_shared<CloudDiskFile>();
         filePtr->readSession = nullptr;
-        filePtr->type = CLOUD_DISK_FILE_TYPE_UNKNOWN;
+        filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
         std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
         inoPtr->fileName = "Test";
         MetaBase metaBase(inoPtr->fileName);
-        metaBase.fileType = FILE_TYPE_LCD;
+        metaBase.fileType = FILE_TYPE_CONTENT;
         std::shared_ptr<CloudDiskMetaFile> metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
         CloudOpenParams params = {metaBase, metaFile, filePtr};
         fuse_req_t req = nullptr;
@@ -940,7 +940,7 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleCloudReopenTest003, TestSize.Level
         EXPECT_CALL(*insMock, fuse_reply_open(_, _)).WillOnce(Return(E_OK));
 
         HandleCloudReopen(fi, data, inoPtr, params, req);
-        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_LOCAL);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_CLOUD);
         delete fi;
         delete data;
     } catch (...) {
