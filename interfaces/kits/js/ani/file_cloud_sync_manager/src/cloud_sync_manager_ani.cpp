@@ -349,7 +349,7 @@ static ani_status GetAniArrayObject(ani_env *env, const std::vector<LocalFilePre
             LOGE("convert ani obj fail.");
             continue;
         }
-        std::string setSign = Builder::BuildSignatureDescriptor({Builder::BuildInt(), Builder::BuildNull()});
+        std::string setSign = Builder::BuildSignatureDescriptor({Builder::BuildInt(), Builder::BuildUndefined()});
         ret = env->Object_CallMethodByName_Void(obj, "$_set", setSign.c_str(), index, pg);
         if (ret != ANI_OK) {
             LOGE("set array localFilePresentStatus value failed. ret = %{public}d", static_cast<int32_t>(ret));
@@ -363,7 +363,7 @@ static ani_status GetAniArrayObject(ani_env *env, const std::vector<LocalFilePre
 static ani_status CreateLocalFilePresentStatusArray(ani_env *env,
     const std::vector<LocalFilePresentStatus> &localFilePresentStatusList, ani_object &obj)
 {
-    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.LocalFilePresentStatus");
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.LocalFilePresentStatusInner");
     ani_class cls;
     ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
     if (ret != ANI_OK) {

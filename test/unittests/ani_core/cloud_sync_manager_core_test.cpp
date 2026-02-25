@@ -166,4 +166,129 @@ HWTEST_F(CloudSyncManagerCoreTest, DoCleanTest1, TestSize.Level1)
     auto data = CloudSyncManagerCore::DoClean(accoutId, cleanOptions);
     EXPECT_FALSE(data.IsSuccess());
 }
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest001";
+    try {
+        std::vector<std::string> bundleNames;
+        for (int i = 0; i < 25; ++i) {
+            bundleNames.emplace_back("com.example.test" + std::to_string(i));
+        }
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest001 End";
+}
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest002";
+    try {
+        std::vector<std::string> bundleNames;
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest002 End";
+}
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest003";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetBundlesLocalFilePresentStatus(_, _))
+            .WillOnce(Return(JsErrCode::E_INVALID_ARGUMENT));
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest003 End";
+}
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest004";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetBundlesLocalFilePresentStatus(_, _))
+            .WillOnce(Return(E_OK));
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_TRUE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest004 End";
+}
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest005";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetBundlesLocalFilePresentStatus(_, _))
+            .WillOnce(Return(JsErrCode::E_IPCSS));
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest005 End";
+}
+
+/**
+ * @tc.name: DoGetLocalFilePresentStatus
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetLocalFilePresentStatus function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest006";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetBundlesLocalFilePresentStatus(_, _))
+            .WillOnce(Return(JsErrCode::E_TRY_AGAIN));
+        auto data = CloudSyncManagerCore::DoGetLocalFilePresentStatus(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetLocalFilePresentStatusTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest006 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
