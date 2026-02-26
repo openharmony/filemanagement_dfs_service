@@ -39,7 +39,6 @@ int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundle
         return E_NULLPTR;
     }
     auto dataSyncManager_ = GetDataSyncManager();
-
     int32_t agingDays = -1;
     int32_t agingPolicy = -1;
     if (bundleName == HDC_BUNDLE_NAME) {
