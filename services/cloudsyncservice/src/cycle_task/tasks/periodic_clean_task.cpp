@@ -143,7 +143,7 @@ int32_t PeriodicCleanTask::CleanTempDir(const std::string &dir, const std::strin
         return E_OK;
     }
 
-    for (const auto &entry: std::filesystem::directory_iterator(dir)) {
+    for (const auto &entry: std::filesystem::directory_iterator(dir, ec)) {
         std::string childDirName = entry.path().filename();
         if (entry.is_directory() && childDirName.find(prefix) == 0) {
             std::string tmpDir = dir + "/" + childDirName;
