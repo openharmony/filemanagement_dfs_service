@@ -204,6 +204,13 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(SyncType type, SyncPromptState st
     return;
 }
 
+void CloudOptimizeCallbackImpl::DeleteReference()
+{
+    if (cbOnRef_) {
+        cbOnRef_.DeleteJsEnv();
+    }
+}
+
 void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, const int32_t progress)
 {
     napi_env env = env_;
@@ -225,9 +232,12 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
         obj.AddProp("state", NVal::CreateInt32(env, (int32_t)state).val_);
         obj.AddProp("progress", NVal::CreateInt32(env, (int32_t)progress).val_);
         napi_value retVal = nullptr;
-        status = napi_call_function(env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+        status = napi_call_function(env, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
         if (status != napi_ok) {
             LOGE("napi call function failed, status: %{public}d", status);
+        }
+        if (state != OptimizeState::OPTIMIZE_RUNNING) {
+            cbOnRef_.DeleteJsEnv();
         }
         napi_close_handle_scope(env, scope);
     };
@@ -761,6 +771,8 @@ napi_value CloudSyncNapi::StartOptimizeStorage(napi_env env, napi_callback_info 
     auto cbExec = [optimizeOptions, callback]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(optimizeOptions, callback);
         if (ret != E_OK) {
+            // Delete reference
+            callback->DeleteReference();
             LOGE("StartOptimizeStorage error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
         }

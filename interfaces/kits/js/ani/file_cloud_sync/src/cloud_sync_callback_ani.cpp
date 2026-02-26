@@ -449,24 +449,19 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
             LOGE("crete local scope failed. ret = %{public}d", ret);
             return;
         }
-        ani_namespace ns {};
-        Namespace nsSign = Builder::BuildNamespace("@ohos.file.cloudSync.cloudSync");
-        ret = tmpEnv->FindNamespace(nsSign.Descriptor().c_str(), &ns);
-        if (ret != ANI_OK) {
-            LOGE("find namespace failed. ret = %{public}d", ret);
-            return;
-        }
-        Type clsName = Builder::BuildClass("OptimizeSpaceProgressInner");
         ani_class cls;
-        ret = tmpEnv->Namespace_FindClass(ns, clsName.Descriptor().c_str(), &cls);
+        Type nsSign = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.OptimizeSpaceProgressInner");
+        ret = tmpEnv->FindClass(nsSign.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ani_object optimProgressData;
         ret = GetOptimProgress(tmpEnv, state, progress, cls, optimProgressData);
         if (ret != ANI_OK) {
             LOGE("GetOptimProgress failed. ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ani_ref ref_;
@@ -475,7 +470,9 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
         ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
         if (ret != ANI_OK) {
             LOGE("ani call function failed. ret = %{public}d", ret);
-            return;
+        }
+        if (state != OptimizeState::OPTIMIZE_RUNNING) {
+            this->DeleteReference();
         }
         ret = tmpEnv->DestroyLocalScope();
         if (ret != ANI_OK) {
@@ -485,5 +482,18 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
     if (!ANIUtils::SendEventToMainThread(task)) {
         LOGE("failed to send event");
     }
+}
+
+void CloudOptimizeCallbackAniImpl::DeleteReference()
+{
+    if (cbOnRef_ != nullptr && env_ != nullptr) {
+        env_->GlobalReference_Delete(cbOnRef_);
+        cbOnRef_ = nullptr;
+    }
+}
+
+CloudOptimizeCallbackAniImpl::~CloudOptimizeCallbackAniImpl()
+{
+    DeleteReference();
 }
 } // namespace OHOS::FileManagement::CloudSync

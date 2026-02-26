@@ -99,6 +99,7 @@ struct CloudDiskFuseData {
     std::shared_mutex fileLock;
     std::shared_mutex fileIdLock;
     std::shared_mutex localIdLock;
+    std::shared_mutex readSessionLock;
     struct fuse_session *se;
 };
 } // namespace CloudDisk
