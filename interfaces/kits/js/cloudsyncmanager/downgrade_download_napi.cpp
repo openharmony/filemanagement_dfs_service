@@ -226,6 +226,11 @@ napi_value DowngradeDownloadNapi::StartDownload(napi_env env, napi_callback_info
             return NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR));
         }
         int32_t ret = CloudSyncManager::GetInstance().StartDowngrade(bundleName, callbackImpl);
+        if (ret == OHOS::FileManagement::E_AGAIN) {
+            LOGE("Start downgrade failed, need to try again! ret = %{public}d", ret);
+            return NError(Convert2JsErrNum(OHOS::FileManagement::E_AGAIN),
+                "The cloud drive metadata is being downloaded, Try again.");
+        }
         if (ret != E_OK) {
             LOGE("Start downgrade failed! ret = %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
