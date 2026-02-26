@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <cstring>
 
 #include "battersrvclient_mock.h"
 #include "cloud_file_kit.h"
@@ -82,7 +81,6 @@ void CloudSyncServiceTest::SetUpTestCase(void)
     OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
     OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
 
-    // Initialize SystemMock for GetAclXattrBatch tests
     sysMock_ = std::make_shared<SystemMock>();
     SystemMock::EnableMock();
     System::ins = sysMock_;
@@ -264,6 +262,7 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest2, TestSize.Level1)
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
         int ret = servicePtr_->UnRegisterCallbackInner(callbackId, bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -313,6 +312,7 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterFileSyncCallbackInnerTest1, TestSize.Le
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
         int ret = servicePtr_->UnRegisterFileSyncCallbackInner(callbackId, bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -409,6 +409,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest003, TestSize.Level1)
         EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
         int ret = servicePtr_->RegisterCallbackInner(callback, callbackId, bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -460,6 +461,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterFileSyncCallbackInnerTest001, TestSize.Le
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(2).WillRepeatedly(Return(E_OK));
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
         int ret = servicePtr_->RegisterFileSyncCallbackInner(callback, callbackId, bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -932,6 +934,7 @@ HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnStop start";
     try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
         servicePtr_->OnStop();
     } catch (...) {
         EXPECT_TRUE(false);
@@ -973,6 +976,7 @@ HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest002, TestSize.Level1)
         int32_t MEMORY_MANAGER_SA_ID = 1909;
         int32_t systemAbilityId = MEMORY_MANAGER_SA_ID;
         std::string deviceId = "";
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
         servicePtr_->OnAddSystemAbility(systemAbilityId, deviceId);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1196,6 +1200,7 @@ HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest002, TestSize.Level1)
     try {
         EXPECT_NE(servicePtr_, nullptr);
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*OsAccountMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(0));
         SystemAbilityOnDemandReason startReason;
         startReason.reasonName_ = "usual.event.SCREEN_OFF";
         servicePtr_->HandleStartReason(startReason);
@@ -1218,6 +1223,7 @@ HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest003, TestSize.Level1)
     try {
         EXPECT_NE(servicePtr_, nullptr);
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*OsAccountMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(0));
         SystemAbilityOnDemandReason startReason;
         startReason.reasonName_ = "usual.event.POWER_CONNECTED";
         servicePtr_->HandleStartReason(startReason);
@@ -1857,7 +1863,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest001, TestSize.Level1)
 HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DownloadFilesTest002 start";
-    CloudFileKitMock* cloudFileKitMock = nullptr;
     try {
         EXPECT_NE(servicePtr_, nullptr);
         int32_t userId = 100;
@@ -1870,7 +1875,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
         std::vector<bool> assetResultMap;
         assetResultMap.push_back(true);
         int32_t connectTime = 1;
-        cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        auto cloudFileKitMock = new(nothrow)CloudFileKitMock();
         CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
 
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
@@ -1883,8 +1888,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest002 failed";
     }
-    CloudFile::CloudFileKit::instance_ = nullptr;
-    delete cloudFileKitMock;
     GTEST_LOG_(INFO) << "DownloadFilesTest002 end";
 }
 
@@ -1897,7 +1900,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DownloadFilesTest003 start";
-    CloudFileKitMock* cloudFileKitMock = nullptr;
     try {
         EXPECT_NE(servicePtr_, nullptr);
         int32_t userId = 100;
@@ -1910,7 +1912,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         std::vector<bool> assetResultMap;
         assetResultMap.push_back(true);
         int32_t connectTime = 1;
-        cloudFileKitMock = new (std::nothrow) CloudFileKitMock();
+        auto cloudFileKitMock = new(nothrow)CloudFileKitMock();
         CloudFile::CloudFileKit::instance_ = cloudFileKitMock;
 
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
@@ -1924,8 +1926,6 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
     }
-    CloudFile::CloudFileKit::instance_ = nullptr;
-    delete cloudFileKitMock;
     GTEST_LOG_(INFO) << "DownloadFilesTest003 end";
 }
 
