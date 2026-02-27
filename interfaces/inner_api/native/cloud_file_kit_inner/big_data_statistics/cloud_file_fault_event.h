@@ -122,7 +122,10 @@ enum class FaultType {
     INNER_ERROR = 90000000,
 
     /* warning */
-    WARNING = 100000000
+    WARNING = 100000000,
+
+    /* notify abnormal */
+    NOTIFY_ABNORMAL = 200000000
 };
 
 struct CloudSyncFaultInfo {
