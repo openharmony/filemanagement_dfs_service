@@ -1389,7 +1389,7 @@ static int64_t ReadFileToBuf(const std::string& path, char* buf, size_t size, of
     while (readLen < size) {
         n = pread(fd, buf + readLen, size - readLen, off + readLen);
         if (n > 0) {
-            readLen += n;
+            readLen += static_cast<size_t>(n);
         } else if (n == 0) {
             break;
         } else {
