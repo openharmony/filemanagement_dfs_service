@@ -864,7 +864,6 @@ HWTEST_F(CloudDiskSyncFolderTest, ClearMapTest001, TestSize.Level1)
     try {
         CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
         syncFolder.ClearMap();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ClearMapTest001 failed";
@@ -934,6 +933,302 @@ HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "ReplacePathPrefixTest002 failed";
     }
     GTEST_LOG_(INFO) << "ReplacePathPrefixTest002 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest003
+ * @tc.desc: Verify the ReplacePathPrefix function with invalid prefix
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest003 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users/otherUser/testfile.txt";
+        string outputPath = "";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest003 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest004
+ * @tc.desc: Verify the ReplacePathPrefix function with short input path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest004 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users";
+        string outputPath = "";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest004 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest005
+ * @tc.desc: Verify the ReplacePathPrefix function with path traversal
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest005 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users/currentUser/testfile.txt";
+        const char *outputRealPath = "/data/service/el2/100/hmdfs/account/files/testfile.txt";
+        string outputPath = "";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
+                Return(const_cast<char*>(outputRealPath))
+            ));
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest005 end";
+;
+}
+
+/**
+ * @tc.name: GetSyncFolderValueByIndexTest001
+ * @tc.desc: Verify the GetSyncFolderValueByIndex function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, GetSyncFolderValueByIndexTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTest001 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        for (const auto &item : syncFolder.GetSyncFolderMap()) {
+            syncFolder.DeleteSyncFolder(item.first);
+        }
+        uint32_t syncFolderIndex = 12345;
+        SyncFolderValue value;
+        value.bundleName = "com.test.example";
+        value.path = "/test123";
+        syncFolder.AddSyncFolder(syncFolderIndex, value);
+        
+        SyncFolderValue resultValue;
+        bool ret = syncFolder.GetSyncFolderValueByIndex(syncFolderIndex, resultValue);
+        EXPECT_EQ(ret, true);
+        EXPECT_EQ(resultValue.bundleName, "com.test.example");
+        EXPECT_EQ(resultValue.path, "/test123");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTest001 end";
+}
+
+/**
+ * @tc.name: GetSyncFolderValueByIndexTest002
+ * @tc.desc: Verify the GetSyncFolderValueByIndex function with non-existent index
+ * @tc.type: FUNC FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, GetSyncFolderValueByIndexTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTest002 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        for (const auto &item : syncFolder.GetSyncFolderMap()) {
+            syncFolder.DeleteSyncFolder(item.first);
+        }
+        uint32_t syncFolderIndex = 12345;
+        SyncFolderValue value;
+        value.bundleName = "com.test.example";
+        value.path = "/test123";
+        syncFolder.AddSyncFolder(syncFolderIndex, value);
+        
+        SyncFolderValue resultValue;
+        uint32_t notExistsIndex = 999;
+        bool ret = syncFolder.GetSyncFolderValueByIndex(notExistsIndex, resultValue);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTestTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetSyncFolderValueByIndexTest002 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest006
+ * @tc.desc: Verify the RemoveXattr function with invalid path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest006 start";
+    try {
+        string path = "/invalid/path/does/not/exist";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest006 end";
+}
+
+/**
+ * @tc.name: RemoveXattrTest007
+ * @tc.desc: Verify the RemoveXattr function with realpath failure
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, RemoveXattrTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveXattrTest007 start";
+    try {
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test.txt");
+        
+        EXPECT_CALL(*syncFolderMock, realpath(_, _)).WillOnce(Return(nullptr));
+        
+        string path = "/data/test_tdd";
+        string attrName = "user.test_attr";
+        CloudDiskSyncFolder::GetInstance().RemoveXattr(path, attrName);
+        std::system("rm -rf /data/test_tdd");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RemoveXattrTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "RemoveXattrTest007 end";
+}
+
+/**
+ * @tc.name: DeleteSyncFolderTest002
+ * @tc.desc: Verify the DeleteSyncFolder function with non-existent index
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, DeleteSyncFolderTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteSyncFolderTest002 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        for (const auto &item : syncFolder.GetSyncFolderMap()) {
+            syncFolder.DeleteSyncFolder(item.first);
+        }
+        uint32_t syncFolderIndex = 12345;
+        SyncFolderValue value;
+        value.bundleName = "com.test.example";
+        value.path = "/test123";
+        syncFolder.AddSyncFolder(syncFolderIndex, value);
+        EXPECT_EQ(syncFolder.GetSyncFolderSize(), 1);
+        
+        uint32_t notExistsIndex = 999;
+        syncFolder.DeleteSyncFolder(notExistsIndex);
+        EXPECT_EQ(syncFolder.GetSyncFolderSize(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteSyncFolderTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DeleteSyncFolderTest002 end";
+}
+
+/**
+ * @tc.name: PathToPhysicalPathTest004
+ * @tc.desc: Verify the PathToPhysicalPath function with short input path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, PathToPhysicalPathTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToPhysicalPathTest004 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        string path = "/storage/Users";
+        string userId = "100";
+        string realpath;
+        int32_t ret = syncFolder.PathToPhysicalPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToPhysicalPathTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToPhysicalPathTest004 end";
+}
+
+/**
+ * @tc.name: PathToMntPathBySandboxPathTest004
+ * @tc.desc: Verify the PathToMntPathBySandboxPath function with short input path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, PathToMntPathBySandboxPathTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest004 start";
+    try {
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        string path = "/storage/Users";
+        string userId = "100";
+        string realpath;
+        int32_t ret = syncFolder.PathToMntPathBySandboxPath(path, userId, realpath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest004 end";
+}
+
+/**
+ * @tc.name: ReplacePathPrefixTest006
+ * @tc.desc: Verify the ReplacePathPrefix function with invalid prefix
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskSyncFolderTest, ReplacePathPrefixTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest006 start";
+    try {
+        string oldPrefix = "/storage/Users/currentUser";
+        string newPrefix = "/data/service/el2/100/hmdfs/account/files/Docs";
+        string inputPath = "/storage/Users/currentUser";
+        string outputPath = "";
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        const char *outputRealPath = "/data/service/el2/100/hmdfs/account/files/Docs";
+        EXPECT_CALL(*syncFolderMock, realpath(_, _))
+            .WillOnce(DoAll(
+                SetArrayArgument<1>(outputRealPath, outputRealPath + strlen(outputRealPath) + 1),
+                Return(const_cast<char*>(outputRealPath))
+            ));
+        int32_t ret = syncFolder.ReplacePathPrefix(oldPrefix, newPrefix, inputPath, outputPath);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(outputPath, outputRealPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReplacePathPrefixTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "ReplacePathPrefixTest006 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService

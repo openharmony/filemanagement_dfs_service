@@ -848,4 +848,108 @@ HWTEST_F(DiskMonitorTest, GetSyncFolderIndexTest004, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetSyncFolderIndexTest004 End";
 }
+
+/**
+ * @tc.name: PostEventTest001
+ * @tc.desc: Verify PostEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, PostEventTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PostEventTest001 Begin";
+    try {
+        EventInfo eventInfo(100, 1, OperationType::CREATE, "/test/path/file.txt");
+        DiskMonitor::GetInstance().PostEvent(eventInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PostEventTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "PostEventTest001 End";
+}
+
+/**
+ * @tc.name: HandleEventsTest001
+ * @tc.desc: Verify HandleEvents function with null fileHandle
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleEventsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleEventsTest001 Begin";
+    try {
+        char eventsBuf[4096]{};
+        struct fanotify_event_metadata *metaData = reinterpret_cast<struct fanotify_event_metadata *>(eventsBuf);
+        metaData->event_len = sizeof(struct fanotify_event_metadata) + sizeof(struct fanotify_event_info_fid);
+        metaData->metadata_len = 0;
+        DiskMonitor::GetInstance().HandleEvents(0, eventsBuf, sizeof(eventsBuf));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleEventsTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleEventsTest001 End";
+}
+
+/**
+ * @tc.name: HandleEventsTest002
+ * @tc.desc: Verify HandleEvents function with valid event
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleEventsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleEventsTest002 Begin";
+    try {
+        char eventsBuf[4096]{};
+        struct fanotify_event_metadata *metaData = reinterpret_cast<struct fanotify_event_metadata *>(eventsBuf);
+        metaData->event_len = sizeof(struct fanotify_event_metadata)
+            + sizeof(struct fanotify_event_info_fid)
+            + sizeof(struct file_handle);
+        metaData->metadata_len = 0;
+        struct fanotify_event_info_fid *fID = reinterpret_cast<struct fanotify_event_info_fid *>(metaData + 1);
+        fID->hdr.info_type = FAN_EVENT_INFO_TYPE_FID;
+        struct file_handle *fileHandle = reinterpret_cast<struct file_handle *>(fID->handle);
+        fileHandle->handle_type = 0;
+        fileHandle->handle_bytes = 0;
+        DiskMonitor::GetInstance().HandleEvents(0, eventsBuf, sizeof(eventsBuf));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleEventsTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleEventsTest002 End";
+}
+
+/**
+ * @tc.name: CollectEventsTest001
+ * @tc.desc: Verify CollectEvents function with isRunning false
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, CollectEventsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CollectEventsTest001 Begin";
+    try {
+        DiskMonitor::GetInstance().isRunning_ = false;
+        DiskMonitor::GetInstance().CollectEvents();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CollectEventsTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "CollectEventsTest001 End";
+}
+
+/**
+ * @tc.name: CollectEventsTest002
+ * @tc.desc: Verify CollectEvents function with read returning -1
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, CollectEventsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CollectEventsTest002 Begin";
+    try {
+        DiskMonitor::GetInstance().isRunning_ = false;
+        DiskMonitor::GetInstance().fanotifyFd_ = -1;
+        DiskMonitor::GetInstance().CollectEvents();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CollectEventsTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "CollectEventsTest002 End";
+}
 } // namespace OHOS::FileManagement::CloudDiskService::Test

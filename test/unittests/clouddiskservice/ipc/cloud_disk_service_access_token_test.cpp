@@ -17,16 +17,10 @@
 #include <gtest/gtest.h>
 
 #include "accesstoken_kit.h"
+#include "accesstoken_kit_mock.h"
 #include "cloud_disk_service_access_token.h"
 #include "cloud_disk_service_error.h"
 #include "ipc_skeleton.h"
-
-extern void MockGetTokenTypeFlag(int32_t mockRet);
-extern void MockVerifyAccessToken(int32_t mockRet);
-extern void MockGetHapTokenInfo(int32_t mockRet);
-extern void MockGetNativeTokenInfo(int32_t mockRet);
-extern void MockQueryActiveOsAccountIds(bool mockRet);
-extern void MockIsOsAccountVerified(bool mockRet);
 
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -446,6 +440,148 @@ HWTEST_F(CloudDiskServiceAccessTokenTest, IsUserVerifyed002, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsUserVerifyed002 failed";
     }
     GTEST_LOG_(INFO) << "IsUserVerifyed002 end";
+}
+
+/**
+ * @tc.name: CheckCallerPermission004
+ * @tc.desc: Verify the CheckCallerPermission function with TOKEN_HAP granted
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, CheckCallerPermission004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckCallerPermission004 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_HAP);
+        MockVerifyAccessToken(PermissionState::PERMISSION_GRANTED);
+        std::string permissionName = "test.permission";
+        bool res = CloudDiskServiceAccessToken::CheckCallerPermission(permissionName);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckCallerPermission004 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckCallerPermission004 end";
+}
+
+/**
+ * @tc.name: CheckCallerPermission005
+ * @tc.desc: Verify the CheckCallerPermission function with TOKEN_NATIVE granted
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, CheckCallerPermission005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckCallerPermission005 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_NATIVE);
+        MockVerifyAccessToken(PermissionState::PERMISSION_GRANTED);
+        std::string permissionName = "test.permission";
+        bool res = CloudDiskServiceAccessToken::CheckCallerPermission(permissionName);
+        EXPECT_EQ(res, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckCallerPermission005 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckCallerPermission005 end";
+}
+
+/**
+ * @tc.name: CheckCallerPermission006
+ * @tc.desc: Verify the CheckCallerPermission function with TOKEN_NATIVE denied
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, CheckCallerPermission006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckCallerPermission006 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_NATIVE);
+        MockVerifyAccessToken(PermissionState::PERMISSION_DENIED);
+        std::string permissionName = "test.permission";
+        bool res = CloudDiskServiceAccessToken::CheckCallerPermission(permissionName);
+        EXPECT_EQ(res, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckCallerPermission006 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckCallerPermission006 end";
+}
+
+/**
+ * @tc.name: GetBundleNameByToken006
+ * @tc.desc: Verify the GetBundleNameByToken function with TOKEN_HAP success
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, GetBundleNameByToken006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameByToken006 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_HAP);
+        MockGetHapTokenInfo(0);
+        MockSetHapBundleName("com.example.test");
+        MockSetHapInstIndex(0);
+        uint32_t tokenId = 0;
+        std::string bundleName = "";
+        int32_t res = CloudDiskServiceAccessToken::GetBundleNameByToken(tokenId, bundleName);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(bundleName, "com.example.test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameByToken006 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameByToken006 end";
+}
+
+/**
+ * @tc.name: GetBundleNameByToken007
+ * @tc.desc: Verify the GetBundleNameByToken function with TOKEN_HAP instIndex != 0
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, GetBundleNameByToken007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameByToken007 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_HAP);
+        MockGetHapTokenInfo(0);
+        MockSetHapBundleName("com.example.test");
+        MockSetHapInstIndex(1);
+        uint32_t tokenId = 0;
+        std::string bundleName = "";
+        int32_t res = CloudDiskServiceAccessToken::GetBundleNameByToken(tokenId, bundleName);
+        EXPECT_EQ(res, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameByToken007 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameByToken007 end";
+}
+
+/**
+ * @tc.name: GetBundleNameByToken008
+ * @tc.desc: Verify the GetBundleNameByToken function with TOKEN_SHELL success
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, GetBundleNameByToken008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameByToken008 start";
+    try {
+        MockGetTokenTypeFlag(TOKEN_SHELL);
+        MockGetNativeTokenInfo(0);
+        MockSetNativeProcessName("shell_process");
+        uint32_t tokenId = 0;
+        std::string bundleName = "";
+        int32_t res = CloudDiskServiceAccessToken::GetBundleNameByToken(tokenId, bundleName);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(bundleName, "shell_process");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameByToken008 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameByToken008 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService

@@ -378,12 +378,307 @@ HWTEST_F(CloudDiskServiceCallbackManagerTest, ClearMapTest001, TestSize.Level1)
     try {
         CloudDiskServiceCallbackManager callbackManager;
         callbackManager.ClearMap();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ClearMapTest001 failed";
     }
     GTEST_LOG_(INFO) << "ClearMapTest001 end";
+}
+
+/**
+ * @tc.name: RegisterSyncFolderMapTest002
+ * @tc.desc: Verify the RegisterSyncFolderMap function with existing bundle
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, RegisterSyncFolderMapTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest002 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.example";
+        uint32_t syncFolderIndex1 = 1;
+        uint32_t syncFolderIndex2 = 2;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex1, callback);
+        EXPECT_TRUE(result);
+        result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex2, callback);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].syncFolderIndexs.size(), 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "RegisterSyncFolderMapTest002 end";
+}
+
+/**
+ * @tc.name: UnregisterSyncFolderMapTest002
+ * @tc.desc: Verify the UnregisterSyncFolderMap function with non-existent index
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderMapTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest002 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.example";
+        uint32_t syncFolderIndex = 3;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        callbackManager.UnregisterSyncFolderMap(bundleName, syncFolderIndex);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest002 end";
+}
+
+/**
+ * @tc.name: UnregisterSyncFolderMapTest003
+ * @tc.desc: Verify the UnregisterSyncFolderMap function with non-existent bundle
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderMapTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest003 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.example";
+        uint32_t syncFolderIndex = 3;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        EXPECT_TRUE(result);
+        string nonExistentBundle = "com.test.nonexistent";
+        callbackManager.UnregisterSyncFolderMap(nonExistentBundle, syncFolderIndex);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderMapTest003 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest005
+ * @tc.desc: Verify the OnChangeData function with null callback
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest005 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        uint32_t syncFolderIndex = 5;
+        ChangeData data;
+        data.updateSequenceNumber = 1;
+        data.fileId = "fileId123";
+        vector<ChangeData> changeData = {data};
+        string bundleName = "com.test.example";
+        sptr<ICloudDiskServiceCallback> callback = nullptr;
+        callbackManager.callbackIndexMap_[syncFolderIndex] = callback;
+        callbackManager.OnChangeData(syncFolderIndex, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest005 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest006
+ * @tc.desc: Verify the OnChangeData function with valid userId
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, OnChangeDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest006 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        uint32_t syncFolderIndex = 6;
+        ChangeData data;
+        data.updateSequenceNumber = 1;
+        data.fileId = "fileId123";
+        vector<ChangeData> changeData = {data};
+        string bundleName = "com.test.example";
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetUserId()).WillOnce(Return(456));
+        CloudDiskSyncFolder &syncFolder = CloudDiskSyncFolder::GetInstance();
+        for (const auto &item : syncFolder.GetSyncFolderMap()) {
+            syncFolder.DeleteSyncFolder(item.first);
+        }
+        SyncFolderValue value;
+        value.bundleName = bundleName;
+        value.path = "/data/service/el2/456/hmdfs/account/files/Docs/testfile.txt";
+        syncFolder.AddSyncFolder(syncFolderIndex, value);
+        callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        callbackManager.OnChangeData(syncFolderIndex, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest006 end";
+}
+
+/**
+ * @tc.name: AddCallbackTest003
+ * @tc.desc: Verify the AddCallback function with death callback
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, AddCallbackTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCallbackTest003 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.death";
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetUserId()).WillRepeatedly(Return(789));
+        callbackManager.AddCallback(bundleName, callback);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].callback, callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "AddCallbackTest003 end";
+}
+
+/**
+ * @tc.name: AddCallbackTest004
+ * @tc.desc: Verify the AddCallback function with death callback and sync folders
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, AddCallbackTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCallbackTest004 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.death2";
+        uint32_t syncFolderIndex1 = 10;
+        uint32_t syncFolderIndex2 = 11;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetUserId()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetAccountId(_)).WillRepeatedly(Return(true));
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex1, callback);
+        EXPECT_TRUE(result);
+        result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex2, callback);
+        EXPECT_TRUE(result);
+        callbackManager.AddCallback(bundleName, callback);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].callback, callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "AddCallbackTest004 end";
+}
+
+/**
+ * @tc.name: UnregisterSyncFolderForChangesMapTest003
+ * @tc.desc: Verify the UnregisterSyncFolderForChangesMap function with non-existent index in vector
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, UnregisterSyncFolderForChangesMapTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderForChangesMapTest003 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.example";
+        uint32_t syncFolderIndex1 = 7;
+        uint32_t syncFolderIndex2 = 8;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex1, callback);
+        EXPECT_TRUE(result);
+        result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex2, callback);
+        EXPECT_TRUE(result);
+        auto ret = callbackManager.UnregisterSyncFolderForChangesMap(bundleName, syncFolderIndex1);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 1);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].syncFolderIndexs.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterSyncFolderForChangesMapTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderForChangesMapTest003 end";
+}
+
+/**
+ * @tc.name: ClearMapTest002
+ * @tc.desc: Verify the ClearMap function with data
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, ClearMapTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearMapTest002 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.example";
+        uint32_t syncFolderIndex = 9;
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        bool result = callbackManager.RegisterSyncFolderMap(bundleName, syncFolderIndex, callback);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 1);
+        EXPECT_EQ(callbackManager.callbackAppMap_.size(), 1);
+        callbackManager.ClearMap();
+        EXPECT_EQ(callbackManager.callbackIndexMap_.size(), 0);
+        EXPECT_EQ(callbackManager.callbackAppMap_.size(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ClearMapTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ClearMapTest002 end";
+}
+
+/**
+ * @tc.name: AddCallbackTest005
+ * @tc.desc: Verify the AddCallback function with empty sync folder index
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, AddCallbackTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCallbackTest005 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.empty";
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetUserId()).WillRepeatedly(Return(999));
+        callbackManager.AddCallback(bundleName, callback);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].callback, callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "AddCallbackTest005 end";
+}
+
+/**
+ * @tc.name: AddCallbackTest006
+ * @tc.desc: Verify the AddCallback function death callback with non-existent bundle
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackManagerTest, AddCallbackTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCallbackTest006 start";
+    try {
+        CloudDiskServiceCallbackManager callbackManager;
+        string bundleName = "com.test.nonexist";
+        sptr<ICloudDiskServiceCallback> callback = sptr(new CloudDiskServiceCallbackMock());
+        EXPECT_CALL(*dfsuAccessTokenMock_, GetUserId()).WillRepeatedly(Return(888));
+        callbackManager.AddCallback(bundleName, callback);
+        EXPECT_EQ(callbackManager.callbackAppMap_[bundleName].callback, callback);
+        string nonExistentBundle = "com.test.notfound";
+        callbackManager.callbackAppMap_.erase(nonExistentBundle);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "AddCallbackTest006 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
