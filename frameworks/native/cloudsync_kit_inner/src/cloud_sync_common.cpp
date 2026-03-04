@@ -547,19 +547,19 @@ std::string DownloadProgressObj::to_string()
 {
     std::stringstream ss;
     std::string pathAnony = GetAnonyString(path);
-    ss << "DownloadProgressObj [path: " << pathAnony;
-    ss << " state: " << state;
-    ss << " downloaded: " << downloadedSize;
-    ss << " total: " << totalSize;
-    ss << " downloadErrorType: " << downloadErrorType;
+    ss << "[" << pathAnony;
+    ss << " , " << state;
+    ss << " , " << downloadedSize;
+    ss << " , " << totalSize;
+    ss << " , " << downloadErrorType;
 
-    ss << " downloadId: " << downloadId;
-    ss << " batchState: " << batchState;
-    ss << " batchDownloadSize: " << batchDownloadSize;
-    ss << " batchTotalSize: " << batchTotalSize;
-    ss << " batchSuccNum: " << batchSuccNum;
-    ss << " batchFailNum: " << batchFailNum;
-    ss << " batchTotalNum: " << batchTotalNum << "]";
+    ss << " , " << downloadId;
+    ss << " , " << batchState;
+    ss << " , " << batchDownloadSize;
+    ss << " , " << batchTotalSize;
+    ss << " , " << batchSuccNum;
+    ss << " , " << batchFailNum;
+    ss << " , " << batchTotalNum << "]";
     return ss.str();
 }
 
