@@ -29,6 +29,7 @@ CloudDiskSyncFolder &CloudDiskSyncFolder::GetInstance()
 
 void CloudDiskSyncFolder::AddSyncFolder(const uint32_t &syncFolderIndex, const SyncFolderValue &syncFolderValu)
 {
+    syncFolderMap[syncFolderIndex] = syncFolderValu;
 }
 
 void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
@@ -37,11 +38,7 @@ void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
 
 int32_t CloudDiskSyncFolder::GetSyncFolderSize()
 {
-    if (syncFolderMap.empty()) {
-        return 0;
-    } else {
-        return 1;
-    }
+    return static_cast<int32_t>(syncFolderMap.size());
 }
 
 bool CloudDiskSyncFolder::CheckSyncFolder(const uint32_t &syncFolderIndex)
@@ -68,6 +65,9 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
 {
     if (path == "") {
         return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    } else if (path == "/storage/Users/currentUser/Download/test_success") {
+        realpath = "/data/test/path";
+        return E_OK;
     } else {
         return E_OK;
     }

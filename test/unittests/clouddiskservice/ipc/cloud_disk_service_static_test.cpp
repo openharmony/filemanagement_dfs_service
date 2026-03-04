@@ -349,6 +349,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest006, TestSize.Level1)
         string syncFolder = "/test";
         int32_t userId = 1;
         FailedList failed;
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).Times(0);
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
     } catch (...) {

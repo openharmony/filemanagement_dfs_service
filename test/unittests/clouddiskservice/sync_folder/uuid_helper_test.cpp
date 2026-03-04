@@ -111,6 +111,95 @@ HWTEST_F(UuidHelperTest, GenerateUuidOnlyTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GenerateUuidOnlyTest001 end";
 }
+
+/**
+ * @tc.name: GenerateUuidTest002
+ * @tc.desc: Verify the GenerateUuid function generates unique UUIDs
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(UuidHelperTest, GenerateUuidTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateUuidTest002 start";
+    try {
+        string uuid1 = UuidHelper::GenerateUuid();
+        string uuid2 = UuidHelper::GenerateUuid();
+        EXPECT_EQ(uuid1.length(), 36);
+        EXPECT_EQ(uuid2.length(), 36);
+        EXPECT_NE(uuid1, uuid2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateUuidTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateUuidTest002 end";
+}
+
+/**
+ * @tc.name: GenerateUuidTest003
+ * @tc.desc: Verify the GenerateUuid function format (8-4-4-4-12)
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(UuidHelperTest, GenerateUuidTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateUuidTest003 start";
+    try {
+        string uuid = UuidHelper::GenerateUuid();
+        EXPECT_EQ(uuid.length(), 36);
+        EXPECT_EQ(uuid[8], '-');
+        EXPECT_EQ(uuid[13], '-');
+        EXPECT_EQ(uuid[18], '-');
+        EXPECT_EQ(uuid[23], '-');
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateUuidTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateUuidTest003 end";
+}
+
+/**
+ * @tc.name: GenerateUuidWithoutDelimTest002
+ * @tc.desc: Verify the GenerateUuidWithoutDelim function generates unique UUIDs
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(UuidHelperTest, GenerateUuidWithoutDelimTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateUuidWithoutDelimTest002 start";
+    try {
+        string uuid1 = UuidHelper::GenerateUuidWithoutDelim();
+        string uuid2 = UuidHelper::GenerateUuidWithoutDelim();
+        EXPECT_EQ(uuid1.length(), 32);
+        EXPECT_EQ(uuid2.length(), 32);
+        EXPECT_NE(uuid1, uuid2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateUuidWithoutDelimTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateUuidWithoutDelimTest002 end";
+}
+
+/**
+ * @tc.name: GenerateUuidOnlyTest002
+ * @tc.desc: Verify the GenerateUuidOnly function generates unique UUIDs
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(UuidHelperTest, GenerateUuidOnlyTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateUuidOnlyTest002 start";
+    try {
+        string uuid1 = UuidHelper::GenerateUuidOnly();
+        string uuid2 = UuidHelper::GenerateUuidOnly();
+        EXPECT_EQ(uuid1.length(), 16);
+        EXPECT_EQ(uuid2.length(), 16);
+        EXPECT_NE(uuid1, uuid2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateUuidOnlyTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateUuidOnlyTest002 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
 } // namespace OHOS

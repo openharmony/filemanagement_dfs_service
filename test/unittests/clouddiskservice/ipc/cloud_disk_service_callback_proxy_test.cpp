@@ -90,7 +90,7 @@ HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest001, TestSize.Level1
 
 /**
  * @tc.name: OnChangeDataTest002
- * @tc.desc: Verify the OnChangeData function
+ * @tc.desc: Verify the OnChangeData function with SendRequest failure
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -110,6 +110,123 @@ HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest002, TestSize.Level1
         GTEST_LOG_(INFO) << "OnChangeDataTest002 failed";
     }
     GTEST_LOG_(INFO) << "OnChangeDataTest002 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest003
+ * @tc.desc: Verify the OnChangeData function with empty changeData
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest003 start";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+        string sandboxPath = "/sandbox";
+        vector<ChangeData> changeData;
+        proxy_->OnChangeData(sandboxPath, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest003 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest004
+ * @tc.desc: Verify the OnChangeData function with multiple ChangeData items
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest004 start";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+        string sandboxPath = "/sandbox";
+        ChangeData data1;
+        data1.updateSequenceNumber = 1;
+        data1.fileId = "file123";
+        ChangeData data2;
+        data2.updateSequenceNumber = 2;
+        data2.fileId = "file456";
+        vector<ChangeData> changeData = {data1, data2};
+        proxy_->OnChangeData(sandboxPath, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest004 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest005
+ * @tc.desc: Verify the OnChangeData function with empty sandboxPath
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest005 start";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+        string sandboxPath = "";
+        ChangeData data;
+        data.updateSequenceNumber = 1;
+        data.fileId = "file123";
+        vector<ChangeData> changeData = {data};
+        proxy_->OnChangeData(sandboxPath, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest005 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest006
+ * @tc.desc: Verify the OnChangeData function with large changeData exceeding VECTOR_MAX_SIZE
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest006 start";
+    try {
+        string sandboxPath = "/sandbox";
+        vector<ChangeData> changeData;
+        changeData.resize(102401);
+        proxy_->OnChangeData(sandboxPath, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest006 end";
+}
+
+/**
+ * @tc.name: OnChangeDataTest007
+ * @tc.desc: Verify the OnChangeData function with nullptr remote
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnChangeDataTest007 start";
+    try {
+        auto proxy = make_shared<CloudDiskServiceCallbackProxy>(nullptr);
+        string sandboxPath = "/sandbox";
+        ChangeData data;
+        data.updateSequenceNumber = 1;
+        data.fileId = "file123";
+        vector<ChangeData> changeData = {data};
+        proxy->OnChangeData(sandboxPath, changeData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnChangeDataTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnChangeDataTest007 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService

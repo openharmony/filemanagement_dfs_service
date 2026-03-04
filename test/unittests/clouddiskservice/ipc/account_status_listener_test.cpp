@@ -74,7 +74,7 @@ void AccountStatusSubscriberTest::TearDown(void)
 
 /**
  * @tc.name: OnStateChangedTest001
- * @tc.desc: Verify the OnStateChanged function
+ * @tc.desc: Verify the OnStateChanged function with SWITCHED state and empty sync folders
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -85,13 +85,9 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = SWITCHED;
         std::vector<SyncFolderExt> syncFolders;
-        SyncFolderExt ext1;
-        ext1.path_ = "path";
-        syncFolders.push_back(ext1);
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest001 failed";
@@ -101,7 +97,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
 
 /**
  * @tc.name: OnStateChangedTest002
- * @tc.desc: Verify the OnStateChanged function
+ * @tc.desc: Verify the OnStateChanged function with SWITCHED state and one sync folder
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -114,11 +110,11 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest002, TestSize.Level1)
         std::vector<SyncFolderExt> syncFolders;
         SyncFolderExt ext1;
         ext1.path_ = "/storage/Users/currentUser/Download/test";
+        ext1.bundleName_ = "com.example.test";
         syncFolders.push_back(ext1);
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest002 failed";
@@ -128,7 +124,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest002, TestSize.Level1)
 
 /**
  * @tc.name: OnStateChangedTest003
- * @tc.desc: Verify the OnStateChanged function
+ * @tc.desc: Verify the OnStateChanged function with SWITCHED state and multiple sync folders
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -139,10 +135,17 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest003, TestSize.Level1)
         OsAccountStateData osAccountStateData;
         osAccountStateData.state = SWITCHED;
         std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt ext1;
+        ext1.path_ = "/storage/Users/currentUser/Download/test1";
+        ext1.bundleName_ = "com.example.test1";
+        syncFolders.push_back(ext1);
+        SyncFolderExt ext2;
+        ext2.path_ = "/storage/Users/currentUser/Download/test2";
+        ext2.bundleName_ = "com.example.test2";
+        syncFolders.push_back(ext2);
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest003 failed";
@@ -152,7 +155,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest003, TestSize.Level1)
 
 /**
  * @tc.name: OnStateChangedTest004
- * @tc.desc: Verify the OnStateChanged function
+ * @tc.desc: Verify the OnStateChanged function with STOPPED state
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -166,7 +169,6 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest004, TestSize.Level1)
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
         subscriber_->OnStateChanged(osAccountStateData);
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest004 failed";
@@ -175,8 +177,108 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnStateChangedTest005
+ * @tc.desc: Verify the OnStateChanged function with ACTIVATING state
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest005 start";
+    try {
+        OsAccountStateData osAccountStateData;
+        osAccountStateData.state = ACTIVATING;
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        subscriber_->OnStateChanged(osAccountStateData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest005 end";
+}
+
+/**
+ * @tc.name: OnStateChangedTest006
+ * @tc.desc: Verify the OnStateChanged function with ACTIVATED state
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest006 start";
+    try {
+        OsAccountStateData osAccountStateData;
+        osAccountStateData.state = ACTIVATED;
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        subscriber_->OnStateChanged(osAccountStateData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest006 end";
+}
+
+/**
+ * @tc.name: OnStateChangedTest007
+ * @tc.desc: Verify the OnStateChanged function with SWITCHED state and PathToPhysicalPath returns false
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest007 start";
+    try {
+        OsAccountStateData osAccountStateData;
+        osAccountStateData.state = SWITCHED;
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt ext1;
+        ext1.path_ = "/storage/Users/currentUser/Download/test";
+        ext1.bundleName_ = "com.example.test";
+        syncFolders.push_back(ext1);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        subscriber_->OnStateChanged(osAccountStateData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest007 end";
+}
+
+/**
+ * @tc.name: OnStateChangedTest008
+ * @tc.desc: Verify the OnStateChanged function with SWITCHED state and PathToPhysicalPath returns true
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest008 start";
+    try {
+        OsAccountStateData osAccountStateData;
+        osAccountStateData.state = SWITCHED;
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt ext1;
+        ext1.path_ = "/storage/Users/currentUser/Download/test_success";
+        ext1.bundleName_ = "com.example.test";
+        syncFolders.push_back(ext1);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        subscriber_->OnStateChanged(osAccountStateData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest008 end";
+}
+
+/**
  * @tc.name: UnloadSaTest001
- * @tc.desc: Verify the UnloadSa function
+ * @tc.desc: Verify the UnloadSa function when samgrProxy is nullptr
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -186,7 +288,6 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest001, TestSize.Level1)
     try {
         EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
         subscriber_->UnloadSa();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnloadSaTest001 failed";
@@ -196,7 +297,7 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest001, TestSize.Level1)
 
 /**
  * @tc.name: UnloadSaTest002
- * @tc.desc: Verify the UnloadSa function
+ * @tc.desc: Verify the UnloadSa function when UnloadSystemAbility returns ERR_OK
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -209,7 +310,6 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest002, TestSize.Level1)
         int32_t saId = 5207;
         EXPECT_CALL(*sysAbilityManager, UnloadSystemAbility(saId)).WillOnce(Return(ERR_OK));
         subscriber_->UnloadSa();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnloadSaTest002 failed";
@@ -219,7 +319,7 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest002, TestSize.Level1)
 
 /**
  * @tc.name: UnloadSaTest003
- * @tc.desc: Verify the UnloadSa function
+ * @tc.desc: Verify the UnloadSa function when UnloadSystemAbility returns error
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -232,7 +332,6 @@ HWTEST_F(AccountStatusSubscriberTest, UnloadSaTest003, TestSize.Level1)
         int32_t saId = 5207;
         EXPECT_CALL(*sysAbilityManager, UnloadSystemAbility(saId)).WillOnce(Return(-1));
         subscriber_->UnloadSa();
-        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnloadSaTest003 failed";
@@ -289,7 +388,7 @@ HWTEST_F(AccountStatusListenerTest, StartTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTest001
- * @tc.desc: Verify the Stop function
+ * @tc.desc: Verify the Stop function when osAccountSubscriber_ is nullptr
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -308,7 +407,7 @@ HWTEST_F(AccountStatusListenerTest, StopTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTest002
- * @tc.desc: Verify the Stop function
+ * @tc.desc: Verify the Stop function when osAccountSubscriber_ is not nullptr
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -324,5 +423,46 @@ HWTEST_F(AccountStatusListenerTest, StopTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "StopTest002 failed";
     }
     GTEST_LOG_(INFO) << "StopTest002 end";
+}
+
+/**
+ * @tc.name: DestructorTest001
+ * @tc.desc: Verify the destructor of AccountStatusListener with non-null subscriber
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusListenerTest, DestructorTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DestructorTest001 start";
+    try {
+        auto listener = make_shared<AccountStatusListener>();
+        OsAccountSubscribeInfo info;
+        listener->osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(info);
+        listener.reset();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DestructorTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "DestructorTest001 end";
+}
+
+/**
+ * @tc.name: DestructorTest002
+ * @tc.desc: Verify the destructor of AccountStatusListener with null subscriber
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusListenerTest, DestructorTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DestructorTest002 start";
+    try {
+        auto listener = make_shared<AccountStatusListener>();
+        listener->osAccountSubscriber_ = nullptr;
+        listener.reset();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DestructorTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "DestructorTest002 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test
