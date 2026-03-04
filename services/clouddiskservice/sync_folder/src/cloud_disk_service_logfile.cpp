@@ -594,6 +594,7 @@ int32_t LogFileMgr::PraseRequest(const int32_t userId, const uint32_t syncFolder
     uint64_t startLine = start;
     if (startLine == 0) {
         startLine = logFile->GetStartLine();
+        nextUsn = startLine + count;
     }
     for (uint64_t line = startLine; line < startLine + count; line++) {
         struct ChangeData changeData;
