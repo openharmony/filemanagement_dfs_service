@@ -404,6 +404,12 @@ int32_t FileCopyManager::ExecCopy(std::shared_ptr<FileInfos> infos)
         return CopyFile(infos->srcPath, infos->destPath, infos);
     }
     if (!infos->srcUriIsFile && IsDirectory(infos->destPath)) {
+        if (infos->srcPath.back() != '/') {
+            infos->srcPath += '/';
+        }
+        if (infos->destPath.back() != '/') {
+            infos->destPath += '/';
+        }
         // copyDir
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
@@ -560,7 +566,14 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
         ReportRemoteCopy(infos->srcUri, info);
         return EINVAL;
     }
-    return CopySubDir(src, dest, infos);
+
+    std::filesystem::path srcPath = std::filesystem::u8path(src);
+    std::string dirName;
+    if (srcPath.has_parent_path()) {
+        dirName = srcPath.parent_path().filename();
+    }
+    std::string destStr = dest + "/" + dirName;
+    return CopySubDir(src, destStr, infos);
 }
 
 int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
