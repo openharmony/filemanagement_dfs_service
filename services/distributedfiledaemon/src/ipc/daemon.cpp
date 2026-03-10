@@ -800,6 +800,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
     if (!FileSizeUtils::IsFilePathValid(physicalPath)) {
+        LOGE("Path is forbidden");
         RadarParaInfo info = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
