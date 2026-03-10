@@ -421,7 +421,7 @@ export default namespace cloudSyncManager  {
         public isLocalFilePresent: boolean;
     }
 
-    export function GetBundlesLocalFilePresentStatus(bundleNames: Array<string>): 
+    export function getBundlesLocalFilePresentStatus(bundleNames: Array<string>): 
         Promise<Array<LocalFilePresentStatus>> {
         return new Promise<Array<LocalFilePresentStatus>>((resolve: (result: Array<LocalFilePresentStatus>) => void,
             reject: (e: BusinessError<void>) => void): void => {

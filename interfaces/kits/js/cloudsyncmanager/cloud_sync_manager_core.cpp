@@ -23,6 +23,9 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+namespace {
+    static constexpr int32_t BUNDLES_MAX_SIZE = 20;
+    }
 
 FsResult<void> CloudSyncManagerCore::DoChangeAppCloudSwitch(
     const string &accountId, const string &bundleName, bool status)
@@ -102,6 +105,11 @@ FsResult<std::vector<LocalFilePresentStatus>> CloudSyncManagerCore::DoGetLocalFi
     const std::vector<std::string> &bundleNames)
 {
     LOGI("GetLocalFilePresentStatus entrance");
+    if (bundleNames.empty() || bundleNames.size() > BUNDLES_MAX_SIZE) {
+        LOGE("bundleNames is empty or exceed max size.");
+        return FsResult<std::vector<LocalFilePresentStatus>>::Error(JsErrCode::E_INVALID_ARGUMENT);
+    }
+
     std::vector<LocalFilePresentStatus> localFilePresentStatusList;
     int32_t result =
         CloudSyncManager::GetInstance().GetBundlesLocalFilePresentStatus(bundleNames, localFilePresentStatusList);
