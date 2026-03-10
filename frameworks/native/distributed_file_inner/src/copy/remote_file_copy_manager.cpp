@@ -209,6 +209,13 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
         dstPhysicalPath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/account/data/" + bundleName +
             "/" + copyPath + "/" + fileName;
     }
+    if (!FileSizeUtils::IsFilePathValid(srcPhysicalPath) || !FileSizeUtils::IsFilePathValid(dstPhysicalPath)) {
+        LOGE("path is forbidden");
+        RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+        return EINVAL;
+    }
     infos->srcPath = srcPhysicalPath;
     infos->destPath = dstPhysicalPath;
     infos->srcUriIsFile = IsFile(infos->srcPath, srcUri);
