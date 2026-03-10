@@ -2307,5 +2307,157 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
 
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
 }
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_001
+ * @tc.desc: Test HandleDestinationPathAndPermissions when GetHapTokenInfo fails
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_001 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test GetHapTokenInfo failure
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_FAILED;
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, E_GET_USER_ID);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_002
+ * @tc.desc: Test HandleDestinationPathAndPermissions when GetPhysicalPath fails
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_002 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test GetPhysicalPath failure
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    g_getPhysicalPath = EINVAL;
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, E_GET_PHYSICAL_PATH_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_003
+ * @tc.desc: Test HandleDestinationPathAndPermissions when IsFilePathValid returns false
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_003 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test IsFilePathValid failure with invalid path containing ../
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    g_getPhysicalPath = E_OK;
+    g_physicalPath = "/data/test/../test.txt";
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, OHOS::FileManagement::E_ILLEGAL_URI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_004
+ * @tc.desc: Test HandleDestinationPathAndPermissions when CheckCopyRule fails
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_004 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test CheckCopyRule failure
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    g_getPhysicalPath = E_OK;
+    g_physicalPath = "/data/storage/test.txt";
+    g_checkValidPath = false;
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, E_GET_PHYSICAL_PATH_FAILED);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_004 end";
+}
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_005
+ * @tc.desc: Test HandleDestinationPathAndPermissions success case
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_005 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test success case
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    g_getPhysicalPath = E_OK;
+    g_physicalPath = "/data/storage/test.txt";
+    g_checkValidPath = true;
+    g_isFolder = false;
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_005 end";
+}
+
+/**
+ * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_006
+ * @tc.desc: Test HandleDestinationPathAndPermissions with folder destination
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_006 begin";
+
+    HmdfsInfo info;
+    std::string physicalPath;
+    std::string dstUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    bool isSrcFile = true;
+
+    // Test with folder destination
+    g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
+    g_getPhysicalPath = E_OK;
+    g_physicalPath = "/data/storage/test";
+    g_checkValidPath = true;
+    g_isFolder = true;
+    int32_t ret = daemon_->HandleDestinationPathAndPermissions(dstUri, isSrcFile, info, physicalPath);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_006 end";
+}
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile
