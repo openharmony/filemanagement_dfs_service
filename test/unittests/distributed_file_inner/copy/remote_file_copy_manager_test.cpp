@@ -263,6 +263,29 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
 }
 
 /**
+ * @tc.name: RemoteFileCopyManager_CreateFileInfos_0002
+ * @tc.desc: Test CreateFileInfos with invalid path containing ../
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0002 Start";
+    auto infos = std::make_shared<FileInfos>();
+    int32_t userId = 100;
+    string copyPath = "/data/storage/el2/distributedfiles/123412345/test.txt";
+    string srcUri = "file://docs/storage/media/100/local/files/Docs/test.txt";
+    string destUri = "file://docs/storage/media/100/local/files/Docs/dest.txt";
+
+    // Set invalid physical path with ../ to trigger the branch at line 212
+    g_physicalPath = "/data/test/../test.txt";
+    g_getPhysicalPath = 0;
+    int32_t ret = RemoteFileCopyManager::GetInstance().CreateFileInfos(srcUri, destUri, infos, userId, copyPath);
+    EXPECT_EQ(ret, EINVAL);
+    GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0002 End";
+}
+
+/**
  * @tc.name: FileCopyManager_Cancel_0001
  * @tc.desc: The execution of the cancel succeed.
  * @tc.type: FUNC
