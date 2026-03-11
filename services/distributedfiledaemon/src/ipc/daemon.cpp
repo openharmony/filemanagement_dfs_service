@@ -799,7 +799,13 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
-
+    if (!FileSizeUtils::IsFilePathValid(physicalPath)) {
+        LOGE("Path is forbidden");
+        RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+            DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
+        return OHOS::FileManagement::E_ILLEGAL_URI;
+    }
     LOGI("GetRealPath userId %{public}s", std::to_string(hapTokenInfo.userID).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
