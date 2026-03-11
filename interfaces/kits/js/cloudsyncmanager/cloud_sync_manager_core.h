@@ -34,6 +34,8 @@ public:
     static FsResult<void> DoDisableCloud(const std::string &accountId);
     static FsResult<std::vector<LocalFilePresentStatus>> DoGetLocalFilePresentStatus(
         const std::vector<std::string> &bundleNames);
+    static FsResult<std::vector<DowngradeProgress>> DoGetDowngradeTaskState(
+        const std::vector<std::string> &bundleNames);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_CORE_H

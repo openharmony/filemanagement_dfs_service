@@ -75,6 +75,7 @@ struct DowngradeProgress : public Parcelable {
         RUNNING = 0,
         COMPLETED,
         STOPPED,
+        MISSING,
     };
     enum StopReason : int32_t {
         NO_STOP = 0,

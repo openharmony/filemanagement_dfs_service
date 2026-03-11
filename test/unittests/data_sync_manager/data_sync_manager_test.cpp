@@ -95,6 +95,28 @@ HWTEST_F(DataSyncManagerTest, IsFinishPullTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IsFinishPullTest001 end";
 }
+
+/**
+ * @tc.name: GetDowngradeTaskStateTest001
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DataSyncManagerTest, GetDowngradeTaskStateTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 start";
+    try {
+        std::vector<std::string> bundleNames = {"com.ohos.photos", "com.ohos.gallery"};
+        int32_t userId = 100;
+        std::vector<CloudSync::DowngradeProgress> downgradeProgressList;
+        int32_t ret = manager_->GetDowngradeDownloadTaskState(bundleNames, userId, downgradeProgressList);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

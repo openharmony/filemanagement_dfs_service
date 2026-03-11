@@ -280,4 +280,10 @@ void DataSyncManager::PeriodicCleanUnlock()
     LOGI("PeriodicClean unlock");
     periodicCleanMutex_.unlock();
 }
+
+int32_t DataSyncManager::GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+    const int32_t &userId, std::vector<CloudSync::DowngradeProgress> &downgradeProgressList)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudFile

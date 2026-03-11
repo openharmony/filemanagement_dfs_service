@@ -90,6 +90,8 @@ public:
             std::vector<XattrResult> &aclXattrResults));
     MOCK_METHOD1(IsFinishPull, int32_t(bool &finishFlag));
     MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
+    MOCK_METHOD2(GetDowngradeDownloadTaskState, int32_t(const std::vector<std::string> &bundleNames,
+            std::vector<DowngradeProgress> &downgradeProgressList));
 };
 }
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK

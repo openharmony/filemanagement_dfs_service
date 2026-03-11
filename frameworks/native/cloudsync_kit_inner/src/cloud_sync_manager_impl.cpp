@@ -976,4 +976,18 @@ void CloudSyncManagerImpl::SetStartSyncPending()
     unique_lock<mutex> lock(startSyncPendingMtx_);
     startSyncPending_ = false;
 }
+
+int32_t CloudSyncManagerImpl::GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+    std::vector<DowngradeProgress> &downgradeProgressList)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetDowngradeDownloadTaskState"));
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync

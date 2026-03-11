@@ -1361,4 +1361,15 @@ void CloudSyncService::ReportServiceStart(const SystemAbilityOnDemandReason &sta
     string event = startReason.GetName();
     CloudFileServiceStartReport(event);
 }
+
+int32_t CloudSyncService::GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+    std::vector<DowngradeProgress> &downgradeProgressList)
+{
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+
+    int32_t ret = dataSyncManager_->GetDowngradeDownloadTaskState(bundleNames, userId, downgradeProgressList);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync

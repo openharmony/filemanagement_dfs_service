@@ -291,4 +291,129 @@ HWTEST_F(CloudSyncManagerCoreTest, DoGetLocalFilePresentStatusTest006, TestSize.
     }
     GTEST_LOG_(INFO) << "DoGetLocalFilePresentStatusTest006 End";
 }
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest001
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskState function with empty bundleNames
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest001 Start";
+    try {
+        std::vector<std::string> bundleNames;
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest001 End";
+}
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest002
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskState function with valid bundleNames and success
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest002 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetDowngradeDownloadTaskState(_, _))
+            .WillOnce(Return(E_OK));
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_TRUE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest002 End";
+}
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest003
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskState function with permission denied
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest003 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetDowngradeDownloadTaskState(_, _))
+            .WillOnce(Return(E_PERMISSION_DENIED));
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest003 End";
+}
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest004
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskState function with invalid argument
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest004 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetDowngradeDownloadTaskState(_, _))
+            .WillOnce(Return(E_INVAL_ARG));
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest004 End";
+}
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest005
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskState function with service load failed
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest005 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        EXPECT_CALL(CloudSyncManagerImplMock::GetInstance(), GetDowngradeDownloadTaskState(_, _))
+            .WillOnce(Return(E_SA_LOAD_FAILED));
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest005 End";
+}
+
+/**
+ * @tc.name: DoGetDowngradeTaskStateTest006
+ * @tc.desc: Verify the CloudSyncManagerCore::DoGetDowngradeTaskStateTest006 function with over 20 bundleNames
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerCoreTest, DoGetDowngradeTaskStateTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest006 Start";
+    try {
+        std::vector<std::string> bundleNames;
+        for (int i = 0; i < 25; ++i) {
+            bundleNames.emplace_back("com.example.test" + std::to_string(i));
+        }
+        auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNames);
+        EXPECT_FALSE(data.IsSuccess());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DoGetDowngradeTaskStateTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoGetDowngradeTaskStateTest006 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

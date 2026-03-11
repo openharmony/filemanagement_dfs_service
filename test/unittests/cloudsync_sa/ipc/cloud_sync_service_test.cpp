@@ -2594,6 +2594,54 @@ HWTEST_F(CloudSyncServiceTest, GetAclXattrBatchTest011, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetAclXattrBatchTest011 end";
 }
+
+/**
+ * @tc.name: GetDowngradeTaskStateTest001
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function when permission denied.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetDowngradeTaskStateTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::vector<std::string> bundleNames = {"com.ohos.aaa"};
+        std::vector<CloudSync::DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 end";
+}
+
+/**
+ * @tc.name: GetDowngradeTaskStateTest002
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with success.
+ * @tc.type: FUNC
+ * @tc.require: #NA
+ */
+HWTEST_F(CloudSyncServiceTest, GetDowngradeTaskStateTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::vector<std::string> bundleNames = {"com.ohos.aaa", "com.ohos.photos"};
+        std::vector<CloudSync::DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest002 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

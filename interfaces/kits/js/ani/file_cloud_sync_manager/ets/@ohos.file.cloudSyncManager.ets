@@ -199,6 +199,7 @@ export default namespace cloudSyncManager  {
         static native cleanInner(accountId: string, appActions: Record<string, Action>): void;
         static native notifyEventChangeInner(userId: int, extraData: ExtraData): void;
         static native getBundlesLocalFilePresentStatusInner(bundleNames: Array<string>): Array<LocalFilePresentStatus>;
+        static native getDowngradeTaskStateInner(bundleNames: Array<string>): Array<DownloadProgress>;
     };
 
     export function changeAppCloudSwitch(accountId: string, bundleName: string, status: boolean): Promise<void> {
@@ -432,6 +433,23 @@ export default namespace cloudSyncManager  {
             }, bundleNames);
             promise.then<void, void>((ret: Any): void => {
                 resolve(ret as Array<LocalFilePresentStatus>);
+            }, (e: Error): void => {
+                reject(e as BusinessError<void>);
+            });
+        });
+    }
+
+    export function getDowngradeDownloadTaskState(bundleNames: Array<string>): 
+        Promise<Array<DownloadProgress>> {
+        return new Promise<Array<DownloadProgress>>((resolve: (result: Array<DownloadProgress>) => void,
+            reject: (e: BusinessError<void>) => void): void => {
+            let promise = taskpool.execute((
+                bundleNames: Array<string>
+            ): Array<DownloadProgress> => {
+                return StaticFunction.getDowngradeTaskStateInner(bundleNames);
+            }, bundleNames);
+            promise.then<void, void>((ret: Any): void => {
+                resolve(ret as Array<DownloadProgress>);
             }, (e: Error): void => {
                 reject(e as BusinessError<void>);
             });

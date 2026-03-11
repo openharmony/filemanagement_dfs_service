@@ -118,6 +118,10 @@ public:
     void PeriodicCleanLock();
     void PeriodicCleanUnlock();
 
+    virtual int32_t GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+        const int32_t &userId,
+        std::vector<CloudSync::DowngradeProgress> &downgradeProgressList);
+
 private:
     std::mutex periodicCleanMutex_;
 };
