@@ -66,7 +66,7 @@ HiAudit& HiAudit::GetInstance()
 void HiAudit::Init()
 {
     if (access(HIAUDIT_CONFIG.logPath.c_str(), F_OK) != 0) {
-        int32_t ret = mkdir(HIAUDIT_CONFIG.logPath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+        int32_t ret = mkdir(HIAUDIT_CONFIG.logPath.c_str(), S_IRWXU | S_IRWXG);
         if (ret != 0) {
             LOGE("Failed to create directory %{public}s.", HIAUDIT_CONFIG.logPath.c_str());
         }
@@ -74,7 +74,7 @@ void HiAudit::Init()
 
     std::lock_guard<std::mutex> lock(mutex_);
     writeFd_ = open(HIAUDIT_LOG_NAME.c_str(), O_CREAT | O_APPEND | O_RDWR,
-        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        S_IRUSR | S_IWUSR | S_IRGRP);
     if (writeFd_ < 0) {
         LOGE("writeFd_ open error, errno: %{public}d.", errno);
     } else {
@@ -118,7 +118,7 @@ void HiAudit::Write(const AuditLog& auditLog)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (writeLogSize_ == 0) {
-        WriteToFile(auditLog.TitleString() + "\n");
+        WriteToFile(auditLog.TitleString());
     }
     std::string writeLog = GetFormattedTimestampEndWithMilli() + ", " +
         HIAUDIT_CONFIG.logName + ", NO, " + auditLog.ToString();
@@ -158,7 +158,7 @@ void HiAudit::GetWriteFilePath()
     ZipAuditLog();
     CleanOldAuditFile();
     writeFd_ = open(HIAUDIT_LOG_NAME.c_str(), O_CREAT | O_TRUNC | O_RDWR,
-        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        S_IRUSR | S_IWUSR | S_IRGRP);
     if (writeFd_ < 0) {
         LOGE("writeFd_ open error, errno: %{public}d.", errno);
     } else {
@@ -196,6 +196,7 @@ void HiAudit::CleanOldAuditFile()
             struct stat oldestSt;
             if (stat(oldestAuditFile.c_str(), &oldestSt) != 0) {
                 LOGE("stat failed, errno: %{public}d, file: %{public}s.", errno, oldestAuditFile.c_str());
+                oldestAuditFile = "";
                 continue;
             }
             if (st.st_mtime < oldestSt.st_mtime) {
