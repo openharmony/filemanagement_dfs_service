@@ -14,6 +14,7 @@
 */
 
 #include "copy/file_copy_manager.h"
+#include "copy/file_size_utils.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -48,13 +49,108 @@ public:
     ProcessCallback emptyCallback_;
 };
 
+void CreateFile(string filename)
+{
+    const std::size_t targetSize = 200 * 1024 * 1024;
+    const std::size_t bufferSize = 1024 * 1024;
+
+    std::ofstream ofs(filename.c_str(), std::ios::binary);
+    if (!ofs) {
+        return;
+    }
+    std::vector<char> buffer(bufferSize, 0);
+    std::size_t written = 0;
+    while (written < targetSize) {
+        std::size_t toWrite = std::min(bufferSize, targetSize - written);
+        ofs.write(buffer.data(), toWrite);
+        if (!ofs) {
+            GTEST_LOG_(INFO) << "ofs is null, break";
+            break;
+        }
+        written += toWrite;
+    }
+    ofs.close();
+    GTEST_LOG_(INFO) << "create file success, filename = " << filename;
+}
+
+void PrepareData(string srcpath, string dstpath)
+{
+    std::error_code errCode;
+    string tmpPath = srcpath;
+    if (!std::filesystem::exists(tmpPath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(tmpPath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    tmpPath = srcpath + "test1/";
+    if (!std::filesystem::exists(tmpPath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(tmpPath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    tmpPath = srcpath + "test1/test2/";
+    if (!std::filesystem::exists(tmpPath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(tmpPath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    CreateFile(srcpath + "1.txt");
+    CreateFile(srcpath + "2.txt");
+
+    std::ofstream outfile3(srcpath + "3.txt");
+    outfile3 << "Test 3.txt";
+    outfile3.close();
+
+    std::ofstream outfile4(srcpath + "test1/4.txt");
+    outfile4 << "Test 4.txt";
+    outfile4.close();
+
+    std::ofstream outfile5(srcpath + "test1/5.txt");
+    outfile5 << "Test 5.txt";
+    outfile5.close();
+
+    CreateFile(srcpath + "test1/test2/6.txt");
+
+    std::ofstream outfile7(srcpath + "test1/test2/7.txt");
+    outfile7 << "Test 7.txt";
+    outfile7.close();
+    GTEST_LOG_(INFO) << "PrepareData";
+}
+
+void DeleteData(string srcpath, string dstpath)
+{
+    ForceRemoveDirectory(srcpath.c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest1").c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest2").c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest3").c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest4").c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest5").c_str());
+    ForceRemoveDirectory(string(dstpath + "dsttest6").c_str());
+    GTEST_LOG_(INFO) << "DeleteData";
+}
+
 void FileCopyManagerTest::SetUpTestCase(void)
 {
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/";
+    PrepareData(srcpath, destpath);
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void FileCopyManagerTest::TearDownTestCase(void)
 {
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/";
+    DeleteData(srcpath, destpath);
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -67,6 +163,8 @@ void FileCopyManagerTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
 }
+
+using callBack = std::function<void(uint64_t processSize, uint64_t totalFileSize)>;
 
 /**
 * @tc.name: FileCopyManager_Copy_0001
@@ -1046,5 +1144,329 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
     EXPECT_EQ(res, E_OK);
     ASSERT_EQ(ForceRemoveDirectory(srcpath.c_str()), true);
     GTEST_LOG_(INFO) << "FileCopyManager_MakeDir_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_ExecCopy_0001
+ * @tc.desc: ExecCopy with srcUriIsFile false and destPath is a directory
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecCopy_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_0001 Start";
+    string srcPath = "/storage/media/100/local/files/Docs/test_src_dir";
+    string destPath = "/storage/media/100/local/files/Docs/test_dest_dir";
+
+    std::error_code errCode;
+    if (!std::filesystem::exists(srcPath, errCode) && errCode.value() == E_OK) {
+        Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(srcPath);
+    }
+    if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
+        Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destPath);
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUriIsFile = false;
+    infos->srcPath = srcPath;
+    infos->destPath = destPath;
+    infos->srcUri = "file://docs/storage/media/100/local/files/Docs/test_src_dir";
+    infos->localListener = std::make_shared<FileCopyLocalListener>("", false, nullptr);
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecCopy(infos);
+    EXPECT_EQ(ret, E_OK);
+
+    ForceRemoveDirectory(srcPath.c_str());
+    ForceRemoveDirectory(destPath.c_str());
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_ExecCopy_0002
+ * @tc.desc: ExecCopy with srcUriIsFile false and destPath is a directory, both paths end with '/'
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecCopy_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_0002 Start";
+    string srcPath = "/storage/media/100/local/files/Docs/test_src_dir/";
+    string destPath = "/storage/media/100/local/files/Docs/test_dest_dir/";
+
+    std::error_code errCode;
+    if (!std::filesystem::exists(srcPath, errCode) && errCode.value() == E_OK) {
+        Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(srcPath);
+    }
+    if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
+        Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destPath);
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUriIsFile = false;
+    infos->srcPath = srcPath;
+    infos->destPath = destPath;
+    infos->srcUri = "file://docs/storage/media/100/local/files/Docs/test_src_dir/";
+    infos->localListener = std::make_shared<FileCopyLocalListener>("", false, nullptr);
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecCopy(infos);
+    EXPECT_EQ(ret, E_OK);
+
+    ForceRemoveDirectory(srcPath.c_str());
+    ForceRemoveDirectory(destPath.c_str());
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_0002 End";
+}
+
+void JudgeCopyFile1(string srcpath, string destpath)
+{
+    uint64_t srcSize = 0;
+    uint64_t dstSize = 0;
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "1.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/1.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "2.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/2.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "3.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/3.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test1/4.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/test1/4.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test1/5.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/test1/5.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test1/test2/6.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/test1/test2/6.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test1/test2/7.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "srctest1/test1/test2/7.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+}
+
+void JudgeCopyFile2(string srcpath, string destpath)
+{
+    uint64_t srcSize = 0;
+    uint64_t dstSize = 0;
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "4.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "test1/4.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "5.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "test1/5.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test2/6.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "test1/test2/6.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+
+    EXPECT_EQ(FileSizeUtils::GetFileSize(srcpath + "test2/7.txt", srcSize), E_OK);
+    EXPECT_EQ(FileSizeUtils::GetFileSize(destpath + "test1/test2/7.txt", dstSize), E_OK);
+    EXPECT_EQ(srcSize, dstSize);
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0001
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0001 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest1";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest1/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+
+    callBack listener_ = [&](uint64_t processSize, uint64_t totalFileSize) {
+        GTEST_LOG_(INFO) << "processSize = " << processSize << "totalFileSize = " << totalFileSize;
+    };
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, listener_);
+    EXPECT_EQ(ret, E_OK);
+    JudgeCopyFile1(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0001 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0002
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0002 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest2";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest2/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    callBack listener_ = [&](uint64_t processSize, uint64_t totalFileSize) {
+        GTEST_LOG_(INFO) << "processSize = " << processSize << "totalFileSize = " << totalFileSize;
+    };
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, listener_);
+    EXPECT_EQ(ret, E_OK);
+    JudgeCopyFile1(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0002 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0003
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0004 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest3/";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest3/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    callBack listener_ = [&](uint64_t processSize, uint64_t totalFileSize) {
+        GTEST_LOG_(INFO) << "processSize = " << processSize << "totalFileSize = " << totalFileSize;
+    };
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, listener_);
+    EXPECT_EQ(ret, E_OK);
+    JudgeCopyFile1(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0003 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0004
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0004, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0005 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1/";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest4/";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest4/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, emptyCallback_);
+    EXPECT_EQ(ret, E_OK);
+    JudgeCopyFile1(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0004 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0005
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0005, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0006 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1/test1";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest5";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/test1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest5/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    callBack listener_ = [&](uint64_t processSize, uint64_t totalFileSize) {
+        GTEST_LOG_(INFO) << "processSize = " << processSize << "totalFileSize = " << totalFileSize;
+    };
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, listener_);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_FALSE(std::filesystem::exists(destpath + "srctest1/1.txt"));
+    EXPECT_FALSE(std::filesystem::exists(destpath + "srctest1/2.txt"));
+    EXPECT_FALSE(std::filesystem::exists(destpath + "srctest1/3.txt"));
+    JudgeCopyFile2(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0005 End";
+}
+
+/**
+ * @tc.name: FileCopyManager_TestCopy_0006
+ * @tc.desc: test MakeDir function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileCopyManagerTest, FileCopyManager_TestCopy_0006, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0007 Start";
+    string srcuri = "file://docs/storage/media/100/local/files/Docs/srctest1";
+    string desturi = "file://docs/storage/media/100/local/files/Docs/dsttest6";
+    string srcpath = "/storage/media/100/local/files/Docs/srctest1/";
+    string destpath = "/storage/media/100/local/files/Docs/dsttest6/";
+    std::error_code errCode;
+    if (!std::filesystem::exists(destpath, errCode) && errCode.value() == E_OK) {
+        int res = Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(destpath);
+        if (res != E_OK) {
+            GTEST_LOG_(INFO) <<"Failed to mkdir";
+        }
+    } else if (errCode.value() != E_OK) {
+        GTEST_LOG_(INFO) <<"fs exists failed";
+    }
+    std::ofstream outfile1(destpath + "d1.txt");
+    outfile1 << "Test d1.txt";
+    outfile1.close();
+
+    std::ofstream outfile2(destpath + "d2.txt");
+    outfile2 << "Test d2.txt";
+    outfile2.close();
+
+    callBack listener_ = [&](uint64_t processSize, uint64_t totalFileSize) {
+        GTEST_LOG_(INFO) << "processSize = " << processSize << "totalFileSize = " << totalFileSize;
+    };
+
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().Copy(srcuri, desturi, listener_);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(std::filesystem::exists(destpath + "d1.txt"));
+    EXPECT_TRUE(std::filesystem::exists(destpath + "d2.txt"));
+    JudgeCopyFile1(srcpath, destpath);
+    GTEST_LOG_(INFO) << "FileCopyManager_TestCopy_0006 End";
 }
 }
