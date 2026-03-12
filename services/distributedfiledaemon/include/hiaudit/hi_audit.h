@@ -17,6 +17,7 @@
 #define FILEMANAGEMENT_DFS_HI_AUDIT_H
 #include <cstdio>
 #include <mutex>
+#include <sstream>
 #include <sys/stat.h>
 
 #include "nocopyable.h"
@@ -39,8 +40,10 @@ struct AuditLog {
 
     const std::string ToString() const
     {
-        return cause + ", " + std::to_string(isUserBehavior) + ", " + operationType + ", " + operationScenario +
-            ", " + operationStatus + ", " + std::to_string(operationCount) + ", " + extend;
+        std::ostringstream oss;
+        oss << cause << ", " << std::to_string(isUserBehavior) << ", " << operationType << ", " << operationScenario <<
+            ", " << operationStatus << ", " << std::to_string(operationCount) << ", " << extend;
+        return oss.str();
     }
 };
 
