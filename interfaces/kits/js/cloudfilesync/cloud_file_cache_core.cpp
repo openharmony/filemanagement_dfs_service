@@ -62,7 +62,7 @@ FsResult<void> CloudFileCacheCore::DoStart(const string &uri)
     auto callbackImpl = GetCallbackImpl(PROGRESS, true);
     int32_t ret = callbackImpl->StartDownloadInner(uri, FieldKey::FIELDKEY_CONTENT);
     if (ret != E_OK) {
-        LOGE("Stop Download failed! ret = %{public}d", ret);
+        LOGE("Start Download failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
 
@@ -75,7 +75,8 @@ FsResult<int64_t> CloudFileCacheCore::DoStart(const std::vector<std::string> &ur
     int64_t downloadId = 0;
     int32_t ret = callbackImpl->StartDownloadInner(uriList, downloadId, fieldKey);
     if (ret != E_OK) {
-        LOGE("Stop Download failed! ret = %{public}d", ret);
+        ret = (ret == E_CLOUD_SDK) ? E_SERVICE_INNER_ERROR : ret;
+        LOGE("Start Download failed! ret = %{public}d", ret);
         return FsResult<int64_t>::Error(Convert2ErrNum(ret));
     }
 
