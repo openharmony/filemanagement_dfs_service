@@ -124,7 +124,7 @@ void FileSyncAni::FileSyncConstructor1(ani_env *env, ani_object object, ani_stri
 
 void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_object fun)
 {
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
@@ -146,7 +146,7 @@ void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_object fun)
         LOGE("file sync do on failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
-else
+#else
     LOGI("FileSyncOn for watch!!");
     return;
 #endif
