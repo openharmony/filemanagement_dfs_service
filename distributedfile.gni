@@ -40,7 +40,7 @@ declare_args() {
   dfs_service_feature_enable_cloud_disk = false
   dfs_service_feature_enable_dist_file_daemon = true
   dfs_service_feature_enable_distributed_ability = true
-  dfs_service_feature_enable_watch_lite_device = false
+  dfs_service_feature_enable_watch_lite_device = true
 
   if (defined(global_parts_info) &&
       defined(global_parts_info.powermgr_thermal_manager)) {
