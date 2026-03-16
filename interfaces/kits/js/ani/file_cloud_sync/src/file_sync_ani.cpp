@@ -196,6 +196,7 @@ void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object)
 void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
 {
 #ifdef SUPPORT_WATCH_LITE
+    LOGI("FileSyncStart for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
@@ -217,6 +218,7 @@ void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
 void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
 {
 #ifdef SUPPORT_WATCH_LITE
+    LOGI("FileSyncStop for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
@@ -238,6 +240,7 @@ void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
 ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
 {
 #ifdef SUPPORT_WATCH_LITE
+    LOGI("FileSyncGetLastSyncTime for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
