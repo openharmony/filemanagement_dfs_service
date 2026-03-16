@@ -119,8 +119,8 @@ ohos_shared_library("cloudfiledaemon") {
   }
 
   if (dfs_service_feature_enable_watch_lite_device) {
- 	     defines += [ "SUPPORT_WATCH_LITE" ]
- 	}
+    defines += [ "SUPPORT_WATCH_LITE" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
