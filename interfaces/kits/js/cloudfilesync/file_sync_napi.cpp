@@ -35,6 +35,8 @@ struct SyncTimeArg {
 
 napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 {
+    LOGI("[TEST]GetLastSyncTime for watch in file sync napi!!");
+#ifdef SUPPORT_WATCH_LITE
     LOGI("GetLastSyncTime Start");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
@@ -79,6 +81,9 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
         return nullptr;
     }
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
+#else
+    return nullptr;
+#endif
 }
 
 napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
@@ -146,7 +151,8 @@ napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
 
 napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]Start for watch in file sync napi");
+    LOGI("[TEST]Start for watch in file sync napi!!");
+#ifdef SUPPORT_WATCH_LITE
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         LOGE("Failed to init args");
@@ -175,10 +181,14 @@ napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
     std::string taskName = "cloudSync.FileSync.start";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+#else
+    return nullptr;
+#endif
 }
 
 napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
 {
+#ifdef SUPPORT_WATCH_LITE
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(E_PARAMS).ThrowErr(env);
@@ -206,6 +216,9 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
     std::string taskName = "cloudSync.FileSync.stop";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+#else
+    return nullptr;
+#endif
 }
 
 struct SyncStateArg {
