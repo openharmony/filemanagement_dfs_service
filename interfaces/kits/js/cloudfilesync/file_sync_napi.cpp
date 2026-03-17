@@ -146,6 +146,7 @@ napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
 
 napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
 {
+    LOGI("[TEST]Start for watch in file sync napi");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         LOGE("Failed to init args");
