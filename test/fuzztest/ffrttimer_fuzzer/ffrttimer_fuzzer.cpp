@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "cloud_fuzzer_helper.h"
 #include "ffrt_timer.h"
@@ -28,12 +29,12 @@ using namespace std;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
 {
-    FuzzData fuzzData(data, size);
-    int len = static_cast<int>(size - (U32_AT_SIZE << 1));
-    string name = fuzzData.GetStringFromData(len + 1);
+    FuzzedDataProvider provider(data, size);
+    uint32_t interval = provider.ConsumeIntegral<uint32_t>();
+    uint32_t repatTimes = provider.ConsumeIntegral<uint32_t>();
+    string name = provider.ConsumeRandomLengthString();
+
     FfrtTimer fTimer{name};
-    uint32_t interval = fuzzData.GetData<uint32_t>();
-    uint32_t repatTimes = fuzzData.GetData<uint32_t>();
     fTimer.Start([]() -> void {}, interval, repatTimes);
     fTimer.Start([]() -> void {}, interval, repatTimes);
     fTimer.Stop();
