@@ -162,11 +162,15 @@ napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_i
 
 static int32_t GetCleanCacheErrPublic(int32_t result)
 {
+#ifdef SUPPORT_WATCH_LITE
     LOGE("cleanCache failed, errno : %{public}d", result);
     if (errForSingleFileSync.find(result) != errForSingleFileSync.end()) {
         return result;
     }
     return E_SERVICE_INNER_ERROR;
+#else
+    return 0;
+#endif
 }
 
 napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info info)
@@ -244,12 +248,16 @@ static std::shared_ptr<CloudFileCacheCallbackImplNapi> GetCallbackImpl(napi_env 
 
 static std::tuple<int32_t, std::string> ParseUriFromParam(napi_env env, NFuncArg &funcArg)
 {
+#ifdef SUPPORT_WATCH_LITE
     auto [succ, uri, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!succ || size == 0) {
         LOGE("Parse URI from parameter failed!");
         return {E_PARAMS, ""};
     }
     return {E_OK, string(uri.get())};
+#else
+    return {E_OK, ""};;
+#endif
 }
 
 napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info info)
@@ -305,6 +313,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
 
 static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
 {
+#ifdef SUPPORT_WATCH_LITE
     bool succ = true;
     bool needClean = false;
     size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
@@ -320,6 +329,9 @@ static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &
         }
     }
     return {E_OK, needClean, maxArgSize};
+#else
+    return {E_OK, true, 0};;
+#endif
 }
 
 napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info info)
@@ -388,6 +400,7 @@ struct FileCacheArg {
 static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForBatchStart(napi_env env,
                                                                                           NFuncArg &funcArg)
 {
+#ifdef SUPPORT_WATCH_LITE
     size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
     auto [succ, uriArray, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToStringArray();
     if (!succ || size == 0) {
@@ -413,6 +426,9 @@ static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForB
     fileCache->fieldKey = fieldKey;
     fileCache->callbackImpl = GetCallbackImpl(env, funcArg, MULTI_PROGRESS, true);
     return {E_OK, fileCache, maxArgSize};
+#else
+    return {E_OK, nullptr, 0};
+#endif
 }
 
 napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_info info)
@@ -521,6 +537,7 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
 
 static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncArg &funcArg)
 {
+#ifdef SUPPORT_WATCH_LITE
     auto [succProgress, progress, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!succProgress || size == 0) {
         LOGE("Parase event from parameter failed");
@@ -536,6 +553,9 @@ static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncA
         return {EINVAL, ""};
     }
     return {E_OK, eventType};
+#else
+    return {E_OK, 0};
+#endif
 }
 
 napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
