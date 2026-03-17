@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <string>
 
 #include "copy/ipc_wrapper.h"
@@ -47,8 +48,13 @@ using namespace OHOS::Storage::DistributedFile;
 
 void WriteUriByRawDataFuzzTest(const uint8_t *data, size_t size)
 {
+    if ((data == nullptr) || (size == 0)){
+        return;
+    }
+    FuzzedDataProvider fdp(data, size);
+    std::string value = fdp.ConsumeRandomLengthString();
     MessageParcel datas;
-    std::vector<std::string> uriVec { std::string(reinterpret_cast<const char *>(data), size) };
+    std::vector<std::string> uriVec { value };
 
     IpcWrapper::WriteUriByRawData(datas, uriVec);
     IpcWrapper::WriteBatchUris(datas, uriVec);

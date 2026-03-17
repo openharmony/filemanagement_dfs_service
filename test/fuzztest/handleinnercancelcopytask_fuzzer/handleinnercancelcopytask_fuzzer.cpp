@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <string>
 
 #include "copy/ipc_wrapper.h"
@@ -176,14 +177,19 @@ public:
 
 void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
 {
+    if ((data == nullptr) || (size == 0)){
+        return;
+    }
+    FuzzedDataProvider fdp(data, size);
     OHOS::g_uid = DATA_UID;
     uint32_t code =
     static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_INNER_COPY_TASK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    int len = size >> 1;
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data), len));
-    datas.WriteString(std::string(reinterpret_cast<const char *>(data + len), len));
+    std::string value1 = fdp.ConsumeRandomLengthString();
+    std::string value2 = fdp.ConsumeRandomLengthString();
+    datas.WriteString(value1);
+    datas.WriteString(value2);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
