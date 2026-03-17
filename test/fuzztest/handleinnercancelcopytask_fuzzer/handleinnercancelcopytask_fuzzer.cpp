@@ -177,7 +177,7 @@ public:
 
 void HandleInnerCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,  const uint8_t *data, size_t size)
 {
-    if ((data == nullptr) || (size == 0)){
+    if ((data == nullptr) || (size == 0)) {
         return;
     }
     FuzzedDataProvider fdp(data, size);
