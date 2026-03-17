@@ -35,9 +35,9 @@ struct SyncTimeArg {
 
 napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]GetLastSyncTime for watch in file sync napi!!");
+    LOGI("[TEST]GetLastSyncTime in file sync napi!!");
 #ifdef SUPPORT_WATCH_LITE
-    LOGI("GetLastSyncTime Start");
+    LOGI("[TEST]GetLastSyncTime for watch in file sync napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(E_PARAMS).ThrowErr(env);
@@ -82,12 +82,16 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
     }
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
 #else
+    LOGI("[TEST]GetLastSyncTime for phone in file sync napi!!");
     return nullptr;
 #endif
 }
 
 napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
+    LOGI("[TEST]OnCallback in file sync napi!!");
+#ifdef SUPPORT_WATCH_LITE
+    LOGI("[TEST]OnCallback for watch in file sync napi!!");
     NFuncArg funcArg(env, info);
     if (!InitArgsOnCallback(env, funcArg)) {
         NError(E_PARAMS).ThrowErr(env);
@@ -118,10 +122,17 @@ napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
     }
 
     return NVal::CreateUndefined(env).val_;
+#else
+    LOGI("[TEST]OnCallback for phone in file sync napi!!");
+    return nullptr;
+#endif
 }
 
 napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
+    LOGI("[TEST]OffCallback in file sync napi!!");
+#ifdef SUPPORT_WATCH_LITE
+    LOGI("[TEST]OffCallback for watch in file sync napi!!");
     NFuncArg funcArg(env, info);
     if (!InitArgsOffCallback(env, funcArg)) {
         NError(E_PARAMS).ThrowErr(env);
@@ -147,12 +158,17 @@ napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
         bundleEntity->callbackInfo.callback = nullptr;
     }
     return NVal::CreateUndefined(env).val_;
+#else
+    LOGI("[TEST]OffCallback for phone in file sync napi!!");
+    return nullptr;
+#endif
 }
 
 napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]Start for watch in file sync napi!!");
+    LOGI("[TEST]Start in file sync napi!!");
 #ifdef SUPPORT_WATCH_LITE
+    LOGI("[TEST]Start for WATHC in file sync napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         LOGE("Failed to init args");
@@ -182,13 +198,16 @@ napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 #else
+    LOGI("[TEST]Start for phone in file sync napi!!");
     return nullptr;
 #endif
 }
 
 napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
 {
+    LOGI("[TEST]Stop in file sync napi!!");
 #ifdef SUPPORT_WATCH_LITE
+    LOGI("[TEST]Stop for watch in file sync napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(E_PARAMS).ThrowErr(env);
@@ -217,6 +236,7 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 #else
+    LOGI("[TEST]Stop for phone in file sync napi!!");
     return nullptr;
 #endif
 }
