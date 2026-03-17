@@ -48,7 +48,7 @@ using namespace OHOS::Storage::DistributedFile;
 
 void WriteUriByRawDataFuzzTest(const uint8_t *data, size_t size)
 {
-    if ((data == nullptr) || (size == 0)){
+    if ((data == nullptr) || (size == 0)) {
         return;
     }
     FuzzedDataProvider fdp(data, size);
