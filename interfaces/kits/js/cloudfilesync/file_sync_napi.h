@@ -31,6 +31,11 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
+    static napi_value GetLastSyncTimeForWatch(napi_env env, napi_callback_info info);
+    static napi_value StartForWatch(napi_env env, napi_callback_info info);
+    static napi_value StopForWatch(napi_env env, napi_callback_info info);
+    static napi_value OnCallbackForWatch(napi_env env, napi_callback_info info);
+    static napi_value OffCallbackForWatch(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_SYNC_NAPI_H

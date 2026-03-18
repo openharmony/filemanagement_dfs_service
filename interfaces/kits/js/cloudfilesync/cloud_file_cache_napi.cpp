@@ -210,10 +210,10 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::OffForWatch),
         NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCacheForWatch),
         NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCacheForWatch),
-        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCache),
+        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCacheForWatch),
         NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCacheForWatch),
-        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
-        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCacheForWatch),
     };
 #endif
 
