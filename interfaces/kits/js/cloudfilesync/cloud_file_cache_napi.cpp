@@ -130,9 +130,6 @@ bool CloudFileCacheNapi::ToExport(std::vector<napi_property_descriptor> props)
 
 napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]CleanCloudFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]CleanCloudFileCache for watch in cloud file cache napi!!");
     LOGI("CleanCache start");
     NFuncArg funcArg(env, info);
 
@@ -154,10 +151,6 @@ napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_i
         return nullptr;
     }
     return NVal::CreateUndefined(env).val_;
-#else
-    LOGI("[TEST]CleanCloudFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 static int32_t GetCleanCacheErrPublic(int32_t result)
@@ -171,9 +164,6 @@ static int32_t GetCleanCacheErrPublic(int32_t result)
 
 napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]CleanFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]CleanFileCache for watch in cloud file cache napi!!");
     LOGI("CleanCache start");
     NFuncArg funcArg(env, info);
 
@@ -198,10 +188,6 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
         return nullptr;
     }
     return NVal::CreateUndefined(env).val_;
-#else
-    LOGI("[TEST]CleanFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 bool CloudFileCacheNapi::Export()
@@ -268,9 +254,6 @@ static std::tuple<int32_t, std::string> ParseUriFromParam(napi_env env, NFuncArg
 
 napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StartFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]StartFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Start Number of arguments unmatched");
@@ -311,10 +294,6 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
     string taskName = "cloudSync.CloudFileCache.start";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
-#else
-    LOGI("[TEST]StartFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
@@ -338,9 +317,6 @@ static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &
 
 napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StopFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]StopFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Stop Number of arguments unmatched");
@@ -386,10 +362,6 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
     string taskName = "cloudSync.CloudFileCache.stop";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
-#else
-    LOGI("[TEST]StopFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 struct FileCacheArg {
@@ -431,7 +403,6 @@ static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForB
 
 napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StartBatchFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Start Number of arguments unmatched");
@@ -474,7 +445,6 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
 
 napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StopBatchFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Start Number of arguments unmatched");
@@ -542,9 +512,6 @@ static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncA
 
 napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]On in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]On for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         LOGE("Batch-On Number of arguments unmatched");
@@ -578,17 +545,10 @@ napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
     }
 
     return NVal::CreateUndefined(env).val_;
-#else
-    LOGI("[TEST]On for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]Off in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
-    LOGI("[TEST]Off for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Off Number of arguments unmatched");
@@ -621,10 +581,6 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     callbackImpl->TryCleanCallback();
 
     return NVal::CreateUndefined(env).val_;
-#else
-    LOGI("[TEST]Off for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 napi_value CloudFileCacheNapi::OnForWatch(napi_env env, napi_callback_info info)

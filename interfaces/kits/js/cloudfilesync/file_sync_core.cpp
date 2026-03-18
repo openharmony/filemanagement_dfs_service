@@ -115,7 +115,6 @@ FsResult<void> FileSyncCore::DoOff(const string &event, const optional<shared_pt
 
 FsResult<void> FileSyncCore::DoStart()
 {
-    LOGI("[TEST]DoStart for watch in core");
     string bundleName = GetBundleName();
     int32_t ret = CloudSyncManager::GetInstance().StartFileSync(bundleName);
     if (ret != E_OK) {
