@@ -106,7 +106,9 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
     std::string stopBatchSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildLong(), Builder::BuildBoolean()});
-    std::array methods = {
+    std::array methods;
+#ifdef SUPPORT_WATCH_LITE
+    methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
         ani_native_function{"onProgress", onOffSign.c_str(),
@@ -131,6 +133,33 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatch)},
         ani_native_function{"offBatchDownloadInner", onOffSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatch)}};
+#else
+    methods = {
+        ani_native_function{ct.c_str(), vSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
+        ani_native_function{"onProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0)},
+        ani_native_function{"offProgress", vSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1)},
+        ani_native_function{"CloudFileCacheStart", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStart)},
+        ani_native_function{"CloudFileCacheStop", sbSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStop)},
+        ani_native_function{"cleanCache", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCache)},
+        ani_native_function{"cleanFileCache", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCache)},
+        ani_native_function{"CloudFileCacheStartBatch", startBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartBatch)},
+        ani_native_function{"CloudFileCacheStopBatch", stopBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopBatch)},
+        ani_native_function{"onBatchDownload", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatch)},
+        ani_native_function{"offBatchDownloadInner", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatch)}};
+#endif
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
         LOGE("bind native method failed. ret = %{public}d", ret);
