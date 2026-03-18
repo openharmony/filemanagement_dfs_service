@@ -118,7 +118,6 @@ void CloudFileCacheAni::CloudFileCacheOff1(ani_env *env, ani_object object)
 
 void CloudFileCacheAni::CloudFileCacheStart(ani_env *env, ani_object object, ani_string uri)
 {
-    LOGI("[TEST]CloudFileCacheStart ani for watch!!");
     std::string uriInput;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriInput);
     if (ret != ANI_OK) {

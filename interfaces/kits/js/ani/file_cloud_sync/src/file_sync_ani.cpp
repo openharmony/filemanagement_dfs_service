@@ -41,6 +41,54 @@ static FileSyncCore *FileSyncUnwrap(ani_env *env, ani_object object)
     return fileSync;
 }
 
+void FileSyncAni::FileSyncConstructor0ForWatch(ani_env *env, ani_object object)
+{
+    LOGI("[TEST]FileSyncConstructor0ForWatch in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncConstructor1ForWatch(ani_env *env, ani_object object, ani_string bundleName)
+{
+    LOGI("[TEST]FileSyncConstructor1ForWatch in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncOnForWatch(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGI("[TEST]FileSyncOn in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGI("[TEST]FileSyncOff0 in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object)
+{
+    LOGI("[TEST]FileSyncOff1 in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
+{
+    LOGI("[TEST]FileSyncStart in ani!!");
+    return;
+}
+
+void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
+{
+    LOGI("[TEST]FileSyncStop in ani!!");
+    return;
+}
+
+ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
+{
+    LOGI("[TEST]FileSyncGetLastSyncTime in ani!!");
+    return 0;
+}
+
 void FileSyncAni::FileSyncConstructor0(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
@@ -124,7 +172,6 @@ void FileSyncAni::FileSyncConstructor1(ani_env *env, ani_object object, ani_stri
 
 void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_object fun)
 {
-#ifdef SUPPORT_WATCH_LITE
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
@@ -146,10 +193,6 @@ void FileSyncAni::FileSyncOn(ani_env *env, ani_object object, ani_object fun)
         LOGE("file sync do on failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
-#else
-    LOGI("FileSyncOn for watch!!");
-    return;
-#endif
 }
 
 void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_object fun)
@@ -195,7 +238,6 @@ void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object)
 
 void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
 {
-#ifdef SUPPORT_WATCH_LITE
     LOGI("FileSyncStart for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
@@ -209,15 +251,10 @@ void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
         LOGE("file sync do start failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
-#else
-    LOGI("FileSyncStart for watch!!");
-    return;
-#endif
 }
 
 void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
 {
-#ifdef SUPPORT_WATCH_LITE
     LOGI("FileSyncStop for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
@@ -231,15 +268,10 @@ void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
         LOGE("file sync do stop failed, ret = %{public}d", err.GetErrNo());
         ErrorHandler::Throw(env, err);
     }
-#else
-    LOGI("FileSyncStop for watch!!");
-    return;
-#endif
 }
 
 ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
 {
-#ifdef SUPPORT_WATCH_LITE
     LOGI("FileSyncGetLastSyncTime for phone!!");
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
@@ -258,9 +290,5 @@ ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
 
     const int64_t lastSyncTime = data.GetData().value();
     return lastSyncTime;
-#else
-    LOGI("FileSyncGetLastSyncTime for watch!!");
-    return 0;
-#endif
 }
 } // namespace OHOS::FileManagement::CloudSync

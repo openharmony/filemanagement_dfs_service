@@ -151,7 +151,6 @@ void CloudSyncAni::CloudSyncOff1(ani_env *env, ani_object object)
 
 void CloudSyncAni::CloudSyncStart(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]CloudSyncStart ani for watch!!");
     auto cloudSync = CloudSyncUnwrap(env, object);
     if (cloudSync == nullptr) {
         LOGE("Cannot wrap cloudsync.");
