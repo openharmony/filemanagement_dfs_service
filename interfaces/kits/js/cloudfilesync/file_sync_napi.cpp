@@ -65,6 +65,7 @@ napi_value FileSyncNapi::StopForWatch(napi_env env, napi_callback_info info)
 
 napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 {
+    LOGI("GetLastSyncTime Start");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(E_PARAMS).ThrowErr(env);
