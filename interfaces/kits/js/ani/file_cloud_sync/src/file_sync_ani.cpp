@@ -55,37 +55,37 @@ void FileSyncAni::FileSyncConstructor1ForWatch(ani_env *env, ani_object object, 
 
 void FileSyncAni::FileSyncOnForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]FileSyncOn in ani!!");
+    LOGI("[TEST]FileSyncOnForWatch in ani!!");
     return;
 }
 
-void FileSyncAni::FileSyncOff0(ani_env *env, ani_object object, ani_object fun)
+void FileSyncAni::FileSyncOff0ForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]FileSyncOff0 in ani!!");
+    LOGI("[TEST]FileSyncOff0ForWatch in ani!!");
     return;
 }
 
-void FileSyncAni::FileSyncOff1(ani_env *env, ani_object object)
+void FileSyncAni::FileSyncOff1ForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]FileSyncOff1 in ani!!");
+    LOGI("[TEST]FileSyncOff1ForWatch in ani!!");
     return;
 }
 
-void FileSyncAni::FileSyncStart(ani_env *env, ani_object object)
+void FileSyncAni::FileSyncStartForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]FileSyncStart in ani!!");
+    LOGI("[TEST]FileSyncStartForWatch in ani!!");
     return;
 }
 
-void FileSyncAni::FileSyncStop(ani_env *env, ani_object object)
+void FileSyncAni::FileSyncStopForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]FileSyncStop in ani!!");
+    LOGI("[TEST]FileSyncStopForWatch in ani!!");
     return;
 }
 
-ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
+ani_long FileSyncAni::FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]FileSyncGetLastSyncTime in ani!!");
+    LOGI("[TEST]FileSyncGetLastSyncTimeForWatch in ani!!");
     return 0;
 }
 

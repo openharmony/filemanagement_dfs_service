@@ -136,29 +136,29 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
 #else
     methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructorForWatch)},
         ani_native_function{"onProgress", onOffSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOn)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnForWatch)},
         ani_native_function{"offProgress", onOffSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0ForWatch)},
         ani_native_function{"offProgress", vSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1ForWatch)},
         ani_native_function{"CloudFileCacheStart", sSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStart)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartForWatch)},
         ani_native_function{"CloudFileCacheStop", sbSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStop)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopForWatch)},
         ani_native_function{"cleanCache", sSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCache)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCacheForWatch)},
         ani_native_function{"cleanFileCache", sSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCache)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCacheForWatch)},
         ani_native_function{"CloudFileCacheStartBatch", startBatchSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartBatch)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartBatchForWatch)},
         ani_native_function{"CloudFileCacheStopBatch", stopBatchSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopBatch)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopBatchForWatch)},
         ani_native_function{"onBatchDownload", onOffSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatch)},
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatchForWatch)},
         ani_native_function{"offBatchDownloadInner", onOffSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatch)}};
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatchForWatch)}};
 #endif
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
