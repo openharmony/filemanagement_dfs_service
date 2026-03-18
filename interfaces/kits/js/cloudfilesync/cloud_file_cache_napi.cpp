@@ -160,7 +160,6 @@ napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_i
 #endif
 }
 
-#ifdef SUPPORT_WATCH_LITE
 static int32_t GetCleanCacheErrPublic(int32_t result)
 {
     LOGE("cleanCache failed, errno : %{public}d", result);
@@ -169,7 +168,6 @@ static int32_t GetCleanCacheErrPublic(int32_t result)
     }
     return E_SERVICE_INNER_ERROR;
 }
-#endif
 
 napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info info)
 {
@@ -208,7 +206,9 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
 
 bool CloudFileCacheNapi::Export()
 {
-    std::vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props;
+#ifdef SUPPORT_WATCH_LITE
+    props = {
         NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
         NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCache),
@@ -218,11 +218,22 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
         NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
     };
+#else
+    props = {
+        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::OnForWatch),
+        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::OffForWatch),
+        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCacheForWatch),
+        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCache),
+        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
+        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
+    };
+#endif
 
     return ToExport(props);
 }
 
-#ifdef SUPPORT_WATCH_LITE
 static std::shared_ptr<CloudFileCacheCallbackImplNapi> GetCallbackImpl(napi_env env, NFuncArg &funcArg,
     const std::string &eventType, bool isInit)
 {
@@ -244,9 +255,7 @@ static std::shared_ptr<CloudFileCacheCallbackImplNapi> GetCallbackImpl(napi_env 
     }
     return callbackImpl;
 }
-#endif
 
-#ifdef SUPPORT_WATCH_LITE
 static std::tuple<int32_t, std::string> ParseUriFromParam(napi_env env, NFuncArg &funcArg)
 {
     auto [succ, uri, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
@@ -256,7 +265,6 @@ static std::tuple<int32_t, std::string> ParseUriFromParam(napi_env env, NFuncArg
     }
     return {E_OK, string(uri.get())};
 }
-#endif
 
 napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info info)
 {
@@ -309,7 +317,6 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
 #endif
 }
 
-#ifdef SUPPORT_WATCH_LITE
 static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &funcArg)
 {
     bool succ = true;
@@ -328,7 +335,6 @@ static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &
     }
     return {E_OK, needClean, maxArgSize};
 }
-#endif
 
 napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info info)
 {
@@ -393,7 +399,6 @@ struct FileCacheArg {
     int32_t fieldKey = FieldKey::FIELDKEY_CONTENT;
 };
 
-#ifdef SUPPORT_WATCH_LITE
 static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForBatchStart(napi_env env,
                                                                                           NFuncArg &funcArg)
 {
@@ -423,12 +428,9 @@ static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForB
     fileCache->callbackImpl = GetCallbackImpl(env, funcArg, MULTI_PROGRESS, true);
     return {E_OK, fileCache, maxArgSize};
 }
-#endif
 
 napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StartBatchFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
     LOGI("[TEST]StartBatchFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
@@ -468,16 +470,10 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
     string taskName = "cloudSync.CloudFileCache.startBatch";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
-#else
-    LOGI("[TEST]StartBatchFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
 napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StopBatchFileCache in cloud file cache napi!!");
-#ifdef SUPPORT_WATCH_LITE
     LOGI("[TEST]StopBatchFileCache for watch in cloud file cache napi!!");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
@@ -523,13 +519,8 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
     string taskName = "cloudSync.CloudFileCache.stopBatch";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
-#else
-    LOGI("[TEST]StopBatchFileCache for phone in cloud file cache napi!!");
-    return nullptr;
-#endif
 }
 
-#ifdef SUPPORT_WATCH_LITE
 static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncArg &funcArg)
 {
     auto [succProgress, progress, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
@@ -548,7 +539,6 @@ static std::tuple<int32_t, std::string> ParseEventFromParam(napi_env env, NFuncA
     }
     return {E_OK, eventType};
 }
-#endif
 
 napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
 {
@@ -635,6 +625,54 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     LOGI("[TEST]Off for phone in cloud file cache napi!!");
     return nullptr;
 #endif
+}
+
+napi_value CloudFileCacheNapi::OnForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]OnForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::OffForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]OffForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StartBatchFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]StartBatchFileCacheForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StopBatchFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]StopBatchFileCacheForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StartFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]StartFileCacheForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StopFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]StopFileCacheForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::CleanCloudFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]CleanCloudFileCacheForWatch in napi!!");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::CleanFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGI("[TEST]CleanFileCacheForWatch in napi!!");
+    return nullptr;
 }
 
 string CloudFileCacheNapi::GetClassName()
