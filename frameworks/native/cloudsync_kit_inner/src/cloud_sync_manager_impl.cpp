@@ -151,7 +151,6 @@ int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
 
 int32_t CloudSyncManagerImpl::StartFileSync(const std::string &bundleName)
 {
-    LOGI("[TEST]StartFileSync in management");
     if (!AccountUtils::IsAccountAvailable()) {
         return E_INVAL_ARG;
     }

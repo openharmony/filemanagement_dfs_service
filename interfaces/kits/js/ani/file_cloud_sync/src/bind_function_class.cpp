@@ -153,7 +153,9 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
-    std::array methods = {
+    std::array methods;
+#ifdef SUPPORT_WATCH_LITE
+    methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
         ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
@@ -164,6 +166,19 @@ static ani_status BindContextOnFileSync(ani_env *env)
         ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
                             reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTime)},
     };
+#else
+    methods = {
+        ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0ForWatch)},
+        ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1ForWatch)},
+        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOnForWatch)},
+        ani_native_function{"offProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0ForWatch)},
+        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1ForWatch)},
+        ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStartForWatch)},
+        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStopForWatch)},
+        ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTimeForWatch)},
+    };
+#endif
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
     if (ret != ANI_OK) {
