@@ -243,9 +243,8 @@ struct SyncStateArg {
 
 bool FileSyncNapi::Export()
 {
-    std::vector<napi_property_descriptor> props;
 #ifdef SUPPORT_WATCH_LITE
-    props = {
+    std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallback),
         NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallback),
         NVal::DeclareNapiFunction("start", FileSyncNapi::Start),
@@ -253,7 +252,7 @@ bool FileSyncNapi::Export()
         NVal::DeclareNapiFunction("getLastSyncTime", FileSyncNapi::GetLastSyncTime),
     };
 #else
-    props = {
+    std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallbackForWatch),
         NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallbackForWatch),
         NVal::DeclareNapiFunction("start", FileSyncNapi::StartForWatch),
