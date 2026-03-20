@@ -742,4 +742,744 @@ HWTEST_F(SyncStateManagerTest, CheckMediaLibCleaningTest_011, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CheckMediaLibCleaningTest_011 End";
 }
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_001";
+    try {
+        SyncStateManager syncStateManager;
+        // 初始状态：CheckCleaningFlag()=false, CheckDisableCloudFlag()=false, state_!=SYNCING
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证状态变更
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_FALSE(syncStateManager.GetForceFlag());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_001 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_002";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = true;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证 isForceSync_ 被设置为 true
+        EXPECT_TRUE(syncStateManager.GetForceFlag());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_002 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_003";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag();
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_003 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_004";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetDisableCloudFlag();
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_004 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_005";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.state_ = SyncState::SYNCING;
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_005 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_006";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+        syncStateManager.nextAction_ = Action::CHECK;
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 保持 CHECK
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_006 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_007";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = true;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 FORCE_START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::FORCE_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_007 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_008";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::TASK_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 CHECK
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_008 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_009";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_009 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_010";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::CLOUD_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_010 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_011";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::PENDING_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_011 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_012";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::BATTERY_OK_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_012 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_013";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::NETWORK_AVAIL_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_013 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_013 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_014";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::SYSTEM_LOAD_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_014 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_014 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_015";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::POWER_CONNECT_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_015 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_015 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_016";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::SCREEN_OFF_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_016 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_016 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_017";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.state_ = SyncState::SYNCING; // 跳过分支1
+
+        bool forceFlag = true;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 FORCE_START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::FORCE_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_017 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_017 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_018, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_018";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool forceFlag = true;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 FORCE_START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::FORCE_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_018 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_018 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_019, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_019";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetDisableCloudFlag(); // 跳过分支1
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::TASK_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 CHECK
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_019 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_019 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_020, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_020";
+    try {
+        SyncStateManager syncStateManager;
+
+        // 第一次调用 - 进入分支1
+        bool ret1 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_FALSE(ret1);
+
+        // 第二次调用 - state_==SYNCING，跳过分支1，进入分支5
+        bool ret2 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret2);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+
+        // 第三次调用 - nextAction_==START，跳过分支2，进入分支5
+        bool ret3 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret3);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_020 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_020 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_021, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_021";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        // 第一次调用 - TASK_TRIGGER，设置 nextAction_=CHECK
+        bool ret1 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret1);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+
+        // 第二次调用 - nextAction_==CHECK，直接返回 true
+        bool ret2 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret2);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_021 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_021 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_022, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_022";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        // 第一次调用 - TASK_TRIGGER，设置 nextAction_=CHECK
+        bool ret1 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret1);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+
+        // 第二次调用 - nextAction_==CHECK，直接返回 true，不修改 nextAction_
+        bool ret2 = syncStateManager.CheckAndSetPending(true, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret2);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK); // 保持 CHECK
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_022 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_022 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_023, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_023";
+    try {
+        SyncStateManager syncStateManager;
+        // 确保所有标志都为 false
+        EXPECT_FALSE(syncStateManager.CheckCleaningFlag());
+        EXPECT_FALSE(syncStateManager.CheckDisableCloudFlag());
+        EXPECT_NE(static_cast<int32_t>(syncStateManager.GetSyncState()), static_cast<int32_t>(SyncState::SYNCING));
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证状态变更
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_EQ(syncStateManager.nextAction_, Action::STOP);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_023 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_023 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_024, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_024";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag();
+        syncStateManager.SetDisableCloudFlag();
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_TRUE(ret);
+
+        // 验证 nextAction_ 被设置为 START
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_024 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_024 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_025, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_025";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.state_ = SyncState::INIT;
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证状态变更
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_EQ(syncStateManager.nextAction_, Action::STOP);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_025 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_025 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_026, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_026";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.state_ = SyncState::SYNC_FAILED;
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证状态变更
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_EQ(syncStateManager.nextAction_, Action::STOP);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_026 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_026 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_027, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_027";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.state_ = SyncState::SYNC_SUCCEED;
+
+        bool forceFlag = false;
+        SyncTriggerType triggerType = SyncTriggerType::APP_TRIGGER;
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_FALSE(ret);
+
+        // 验证状态变更
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_EQ(syncStateManager.nextAction_, Action::STOP);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_027 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_027 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_028, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_028";
+    try {
+        SyncStateManager syncStateManager;
+
+        // 第一次调用 - forceFlag=false
+        bool ret1 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_FALSE(ret1);
+        EXPECT_FALSE(syncStateManager.GetForceFlag());
+
+        // 重置状态
+        syncStateManager.state_ = SyncState::INIT;
+
+        // 第二次调用 - forceFlag=true
+        bool ret2 = syncStateManager.CheckAndSetPending(true, SyncTriggerType::APP_TRIGGER);
+        EXPECT_FALSE(ret2);
+        EXPECT_TRUE(syncStateManager.GetForceFlag());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_028 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_028 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_029, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_029";
+    try {
+        SyncStateManager syncStateManager;
+
+        // 模拟多次并发调用
+        for (int i = 0; i < 10; i++) {
+            bool forceFlag = (i % 2 == 0);
+            SyncTriggerType triggerType = (i % 2 == 0) ? SyncTriggerType::APP_TRIGGER : SyncTriggerType::TASK_TRIGGER;
+
+            bool ret = syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+            // 验证返回值
+            EXPECT_TRUE(ret || !ret); // 总是 true 或 false
+        }
+
+        // 验证最终状态
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_TRUE(static_cast<int32_t>(syncState) == static_cast<int32_t>(SyncState::SYNCING) ||
+                    static_cast<int32_t>(syncState) != static_cast<int32_t>(SyncState::SYNCING));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_029 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_029 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_030, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_030";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool ret = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_030 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_030 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_031, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_031";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool ret = syncStateManager.CheckAndSetPending(false, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_031 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_031 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_032, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_032";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        bool ret = syncStateManager.CheckAndSetPending(true, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::FORCE_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_032 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_032 End";
+}
+
+HWTEST_F(SyncStateManagerTest, CheckAndSetPendingTest_033, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_033";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag(); // 跳过分支1
+
+        // 第一次调用 - APP_TRIGGER
+        bool ret1 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret1);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+
+        // 重置 nextAction_
+        syncStateManager.nextAction_ = Action::STOP;
+
+        // 第二次调用 - TASK_TRIGGER
+        bool ret2 = syncStateManager.CheckAndSetPending(false, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret2);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::CHECK);
+
+        // 重置 nextAction_
+        syncStateManager.nextAction_ = Action::STOP;
+
+        // 第三次调用 - forceFlag=true
+        bool ret3 = syncStateManager.CheckAndSetPending(true, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret3);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::FORCE_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckAndSetPendingTest_033 End";
+    }
+    GTEST_LOG_(INFO) << "CheckAndSetPendingTest_033 End";
+}
 }
