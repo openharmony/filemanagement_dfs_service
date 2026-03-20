@@ -65,6 +65,9 @@ void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
 
 void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->SetBool(key, value);
+    }
 }
 
 void CloudPrefImpl::GetBool(const std::string& key, bool& value)
