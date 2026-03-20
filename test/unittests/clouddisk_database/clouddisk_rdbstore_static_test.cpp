@@ -3281,4 +3281,618 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ExecuteSqlTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
 }
 
+/**
+ * @tc.name: GetMetaBaseDataTest001
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟 GetString 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>())).WillOnce(Return(E_RDB));
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_TRUE(info.cloudId.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest002
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟 CLOUD_ID 成功，FILE_NAME 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(Return(E_RDB));
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_TRUE(info.name.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest003
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟 GetString 成功，GetInt 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>())).WillOnce(Return(E_RDB));
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest004
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟前几个字段成功，POSITION 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK))) // IS_DIRECTORY
+            .WillOnce(Return(E_RDB));                           // POSITION 失败
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest005
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟前几个字段成功，FILE_TIME_ADDED 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>())).WillOnce(Return(E_RDB)); // FILE_TIME_ADDED 失败
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest006
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟前几个字段成功，FILE_TIME_EDITED 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(Return(E_RDB));                              // FILE_TIME_EDITED 失败
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest007
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟前几个字段成功，FILE_SIZE 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(Return(E_RDB));                              // FILE_SIZE 失败
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest008
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟前几个字段成功，ROW_ID 失败
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(1024), Return(E_OK))) // FILE_SIZE
+            .WillOnce(Return(E_RDB));                              // ROW_ID 失 fancils
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+        EXPECT_EQ(info.size, 1024);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest009
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY = false
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION = LOCAL
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(1024), Return(E_OK))) // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(123), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+        EXPECT_EQ(info.size, 1024);
+        EXPECT_EQ(info.rowId, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest0010
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest0010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("dir_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_directory"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK)))  // IS_DIRECTORY = true
+            .WillOnce(DoAll(SetArgReferee<1>(2), Return(E_OK))); // POSITION = CLOUD
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(3000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(4000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))    // FILE_SIZE = 0 for directory
+            .WillOnce(DoAll(SetArgReferee<1>(456), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "dir_cloud_id");
+        EXPECT_EQ(info.name, "test_directory");
+        EXPECT_TRUE(info.IsDirectory);
+        EXPECT_EQ(info.location, 2);
+        EXPECT_EQ(info.atime, 3000);
+        EXPECT_EQ(info.mtime, 4000);
+        EXPECT_EQ(info.size, 0);
+        EXPECT_EQ(info.rowId, 456);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest011
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功，使用最大值
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("max_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("max_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK)))          // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(INT32_MAX), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(INT64_MAX), Return(E_OK)))  // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(INT64_MAX), Return(E_OK)))  // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(INT64_MAX), Return(E_OK)))  // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(INT64_MAX), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "max_cloud_id");
+        EXPECT_EQ(info.name, "max_file.txt");
+        EXPECT_TRUE(info.IsDirectory);
+        EXPECT_EQ(info.location, static_cast<uint32_t>(INT32_MAX));
+        EXPECT_EQ(info.atime, static_cast<uint64_t>(INT64_MAX));
+        EXPECT_EQ(info.mtime, static_cast<uint64_t>(INT64_MAX));
+        EXPECT_EQ(info.size, static_cast<uint64_t>(INT64_MAX));
+        EXPECT_EQ(info.rowId, static_cast<uint64_t>(INT64_MAX));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest012
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功，使用零值
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(""), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>(""), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_TRUE(info.cloudId.empty());
+        EXPECT_TRUE(info.name.empty());
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 0);
+        EXPECT_EQ(info.atime, 0);
+        EXPECT_EQ(info.mtime, 0);
+        EXPECT_EQ(info.size, 0);
+        EXPECT_EQ(info.rowId, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest013
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功，文件名包含特殊字符
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("file_测试_!@#$%^&*().txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(1024), Return(E_OK))) // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(123), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "file_测试_!@#$%^&*().txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+        EXPECT_EQ(info.size, 1024);
+        EXPECT_EQ(info.rowId, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest014
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+
+        // 模拟所有字段都成功，position = 3 (LOCAL_AND_CLOUD)
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>("test_file.txt"), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(3), Return(E_OK))); // POSITION = LOCAL_AND_CLOUD
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(1024), Return(E_OK))) // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(123), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, "test_file.txt");
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 3);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+        EXPECT_EQ(info.size, 1024);
+        EXPECT_EQ(info.rowId, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: GetMetaBaseDataTest015
+ * @tc.desc: Verify the ExecuteSql
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 start";
+    try {
+        // Arrange
+        CloudDiskFileInfo info;
+        auto mockResultSet_ = make_shared<ResultSetMock>();
+        std::string longFileName(246, 'a'); // 最大文件名长度
+
+        // 模拟所有字段都成功，使用长文件名
+        EXPECT_CALL(*mockResultSet_, GetString(_, An<std::string &>()))
+            .WillOnce(DoAll(SetArgReferee<1>("test_cloud_id"), Return(E_OK)))
+            .WillOnce(DoAll(SetArgReferee<1>(longFileName), Return(E_OK)));
+
+        EXPECT_CALL(*mockResultSet_, GetInt(_, An<int32_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(0), Return(E_OK)))  // IS_DIRECTORY
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(E_OK))); // POSITION
+
+        EXPECT_CALL(*mockResultSet_, GetLong(_, An<int64_t &>()))
+            .WillOnce(DoAll(SetArgReferee<1>(1000), Return(E_OK))) // FILE_TIME_ADDED
+            .WillOnce(DoAll(SetArgReferee<1>(2000), Return(E_OK))) // FILE_TIME_EDITED
+            .WillOnce(DoAll(SetArgReferee<1>(1024), Return(E_OK))) // FILE_SIZE
+            .WillOnce(DoAll(SetArgReferee<1>(123), Return(E_OK))); // ROW_ID
+        // Act
+        int32_t ret = GetMetaBaseData(info, mockResultSet_);
+        // Assert
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(info.cloudId, "test_cloud_id");
+        EXPECT_EQ(info.name, longFileName);
+        EXPECT_FALSE(info.IsDirectory);
+        EXPECT_EQ(info.location, 1);
+        EXPECT_EQ(info.atime, 1000);
+        EXPECT_EQ(info.mtime, 2000);
+        EXPECT_EQ(info.size, 1024);
+        EXPECT_EQ(info.rowId, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test
