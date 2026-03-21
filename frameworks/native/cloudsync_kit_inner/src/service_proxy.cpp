@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "cloud_sync_start_event.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -26,7 +27,7 @@ using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 2000;
 
-sptr<ICloudSyncService> ServiceProxy::GetInstance()
+sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
 {
     LOGD("getinstance");
     unique_lock<mutex> lock(instanceMutex_);
@@ -63,7 +64,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
         LOGE("Load CloudSynd SA timeout");
         return nullptr;
     }
-    LOGI("Load successfully");
+    CloudFileServiceLoadRequestReport(callerInfo.bundleName, callerInfo.callerMethod);
+    LOGI("Load by bundleName: %{public}s, method: %{public}s",
+        callerInfo.bundleName.c_str(), callerInfo.callerMethod.c_str());
     return serviceProxy_;
 }
 

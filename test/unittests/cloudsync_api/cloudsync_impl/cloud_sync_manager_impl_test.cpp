@@ -127,7 +127,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
         callbackInfo.callbackId = "0x0000005a40d3b670";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -152,7 +152,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
         callbackInfo.callbackId = "0x0000005a40d3b660";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_OK);
@@ -200,7 +200,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterFileSyncCallbackTest001, TestSize.L
         callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, UnRegisterFileSyncCallbackInner(_, _)).WillOnce(Return(E_OK));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterFileSyncCallback(callbackInfo);
         EXPECT_EQ(res, E_OK);
@@ -248,7 +248,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -275,7 +275,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
@@ -326,7 +326,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest004, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -353,7 +353,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
@@ -431,7 +431,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileSyncTest001, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartFileSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartFileSync(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -479,7 +479,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetSyncTimeTest001, TestSize.Level1)
     try {
         int64_t syncTime = 0;
         string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetSyncTimeInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetSyncTime(syncTime, bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -504,7 +504,7 @@ HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
         int32_t userId = 100;
         EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
             .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, TriggerSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -526,7 +526,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopSyncTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
         string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int res = CloudSyncManagerImpl::GetInstance().StopSync(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -550,7 +550,7 @@ HWTEST_F(CloudSyncManagerImplTest, ChangeAppSwitchTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
         bool status = true;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ChangeAppSwitch(_, _, _)).WillOnce(Return(E_INVAL_ARG));
         auto res = CloudSyncManagerImpl::GetInstance().ChangeAppSwitch(accoutId, bundleName, status);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -574,7 +574,7 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyEventChangeTest, TestSize.Level1)
         int32_t userId = 100;
         std::string eventId = "eventId";
         std::string extraData = "extraData";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, NotifyEventChange(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().NotifyEventChange(userId, eventId, extraData);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -598,7 +598,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest001, TestSize.Level1)
         std::string uri = "uri";
         int64_t downloadId = 0;
         shared_ptr<CloudDownloadCallback> callback = make_shared<CloudDownloadCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartDownloadFile).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri, callback, downloadId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -621,7 +621,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest002, TestSize.Level1)
     try {
         std::string uri = "uri";
         int64_t downloadId = 0;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri, nullptr, downloadId);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -643,7 +643,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest, TestSize.Level1)
     try {
         std::string uri = "uri";
         int64_t downloadId = 0;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartFileCache).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().StartFileCache({uri}, downloadId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -665,7 +665,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         int64_t downloadId = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopDownloadFile(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().StopDownloadFile(downloadId, true);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -688,7 +688,7 @@ HWTEST_F(CloudSyncManagerImplTest, EnableCloudTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         SwitchDataObj switchData;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, EnableCloud(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().EnableCloud(accoutId, switchData);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -710,7 +710,7 @@ HWTEST_F(CloudSyncManagerImplTest, DisableCloudTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string accoutId = "accoutId";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, DisableCloud(_)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().DisableCloud(accoutId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -733,7 +733,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         CleanOptions cleanOptions;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, Clean(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().Clean(accoutId, cleanOptions);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -755,7 +755,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanCacheTest Start";
     try {
         string uri = "uri";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, CleanCacheInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().CleanCache(uri);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -777,7 +777,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanFileCacheTest001 Start";
     try {
         string uri = "uri";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
         EXPECT_EQ(res, E_OK);
@@ -799,7 +799,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanFileCacheTest002 Start";
     try {
         string uri = "uri";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, CleanFileCacheInner(_)).WillOnce(Return(E_INVAL_ARG));
         auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -821,7 +821,7 @@ HWTEST_F(CloudSyncManagerImplTest, CleanFileCacheTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanFileCacheTest003 Start";
     try {
         string uri = "uri";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().CleanFileCache(uri);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -839,7 +839,7 @@ HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)
         std::vector<CleanFileInfo> fileInfo;
         fileInfo.emplace_back(cleanFileInfo);
         std::vector<std::string> failCloudId;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, BatchCleanFile(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().BatchCleanFile(fileInfo, failCloudId);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -853,7 +853,7 @@ HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)
 HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";
-    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+    EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
     EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
     int res = CloudSyncManagerImpl::GetInstance().ResetCursor(bundleName);
     EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -862,7 +862,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
 HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest002, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";
-    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+    EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
     EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
     int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
     EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -871,7 +871,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest002, TestSize.Level1)
 HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest003, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";
-    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+    EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
     EXPECT_CALL(*serviceProxy_, ResetCursor(_, _)).Times(0);
     int res = CloudSyncManagerImpl::GetInstance().ResetCursor(false, bundleName);
     EXPECT_EQ(res, E_SA_LOAD_FAILED);
@@ -879,7 +879,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest003, TestSize.Level1)
 
 HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
 {
-    EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+    EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
     EXPECT_CALL(*serviceProxy_, DownloadThumb()).WillOnce(Return(E_PERMISSION_DENIED));
     int32_t res = CloudSyncManagerImpl::GetInstance().DownloadThumb();
     EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -897,7 +897,7 @@ HWTEST_F(CloudSyncManagerImplTest, BatchDentryFileInsertTest002, TestSize.Level1
     try {
         std::vector<DentryFileInfo> fileInfo(MAX_DENTRY_FILE_SIZE - 1);
         std::vector<std::string> failCloudId;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, BatchDentryFileInsert(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t result = CloudSyncManagerImpl::GetInstance().BatchDentryFileInsert(fileInfo, failCloudId);
 
@@ -923,7 +923,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopFileCacheTest1, TestSize.Level1)
         bool needClean = true;
         int32_t timeout = 10;
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopFileCache(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t result = CloudSyncManagerImpl::GetInstance().StopFileCache(downloadId, needClean, timeout);
 
@@ -993,7 +993,7 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyDataChangeTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, NotifyDataChange(_, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().NotifyDataChange(accoutId, bundleName);
         EXPECT_EQ(res, E_OK);
@@ -1120,7 +1120,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest001 Start";
     try {
         uint32_t retryCount = 3;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, false);
     } catch (...) {
@@ -1141,7 +1141,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ResetProxyCallbackTest002 Start";
     try {
         uint32_t retryCount = 3;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
     } catch (...) {
@@ -1168,7 +1168,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
@@ -1197,7 +1197,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
@@ -1244,7 +1244,7 @@ HWTEST_F(CloudSyncManagerImplTest, OnAddSystemAbilityTest001, TestSize.Level1)
         CloudSyncManagerImpl::SystemAbilityStatusChange statusChange;
         int32_t systemAbilityId = 1;
         std::string deviceId = "testDeviceId";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr))
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr))
             .WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
         EXPECT_NO_THROW(statusChange.OnAddSystemAbility(systemAbilityId, deviceId));
     } catch (...) {
@@ -1432,7 +1432,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDowngradeTest001, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.aaa";
         shared_ptr<DowngradeDlCallback> downloadCallback = make_shared<DowngradeDlCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StartDowngrade(_, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().StartDowngrade(bundleName, downloadCallback);
         EXPECT_EQ(res, E_OK);
@@ -1455,7 +1455,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDowngradeTest002, TestSize.Level1)
     try {
         std::string bundleName = "";
         shared_ptr<DowngradeDlCallback> downloadCallback = make_shared<DowngradeDlCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().StartDowngrade(bundleName, downloadCallback);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -1477,7 +1477,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDowngradeTest003, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.aaa";
         shared_ptr<DowngradeDlCallback> downloadCallback = make_shared<DowngradeDlCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().StartDowngrade(bundleName, downloadCallback);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -1498,7 +1498,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartDowngradeTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartDowngradeTest004 Start";
     try {
         std::string bundleName = "com.ohos.aaa";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().StartDowngrade(bundleName, nullptr);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -1519,7 +1519,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopDowngradeTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopDowngradeTest001 Start";
     try {
         std::string bundleName = "com.ohos.aaa";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopDowngrade(_)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().StopDowngrade(bundleName);
         EXPECT_EQ(res, E_OK);
@@ -1541,7 +1541,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopDowngradeTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopDowngradeTest002 Start";
     try {
         std::string bundleName = "";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().StopDowngrade(bundleName);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -1562,7 +1562,7 @@ HWTEST_F(CloudSyncManagerImplTest, StopDowngradeTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopDowngradeTest003 Start";
     try {
         std::string bundleName = "";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().StopDowngrade(bundleName);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -1584,7 +1584,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetCloudFileInfoTest001, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.aaa";
         CloudFileInfo cloudFileInfo;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetCloudFileInfo(_, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().GetCloudFileInfo(bundleName, cloudFileInfo);
         EXPECT_EQ(res, E_OK);
@@ -1607,7 +1607,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetCloudFileInfoTest002, TestSize.Level1)
     try {
         std::string bundleName = "";
         CloudFileInfo cloudFileInfo;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().GetCloudFileInfo(bundleName, cloudFileInfo);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -1629,7 +1629,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetCloudFileInfoTest003, TestSize.Level1)
     try {
         std::string bundleName = "com.ohos.aaa";
         CloudFileInfo cloudFileInfo;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().GetCloudFileInfo(bundleName, cloudFileInfo);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -1652,13 +1652,13 @@ HWTEST_F(CloudSyncManagerImplTest, GetHistoryVersionListTest001, TestSize.Level1
         string uri = "";
         int32_t numLimit = 0;
         vector<CloudSync::HistoryVersion> historyVersionList;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
         uri = "";
         numLimit = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
         EXPECT_EQ(res, E_ILLEGAL_URI);
     } catch (...) {
@@ -1681,19 +1681,19 @@ HWTEST_F(CloudSyncManagerImplTest, GetHistoryVersionListTest002, TestSize.Level1
         string uri = "path/file/1.txt";
         int32_t numLimit = 0;
         vector<CloudSync::HistoryVersion> historyVersionList;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
         EXPECT_EQ(res, E_INVAL_ARG);
 
         uri = "";
         numLimit = 0;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         uri = "path/file/1.txt";
         numLimit = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetHistoryVersionList(_, _, _)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().GetHistoryVersionList(uri, numLimit, historyVersionList);
         EXPECT_EQ(res, E_OK);
@@ -1719,18 +1719,18 @@ HWTEST_F(CloudSyncManagerImplTest, DownloadHistoryVersionTest001, TestSize.Level
         uint64_t versionId = 0;
         shared_ptr<CloudDownloadCallback> callback = nullptr;
         string versionUri;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance()
             .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance()
             .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         uri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance()
             .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1756,13 +1756,13 @@ HWTEST_F(CloudSyncManagerImplTest, DownloadHistoryVersionTest002, TestSize.Level
         uint64_t versionId = 0;
         shared_ptr<CloudDownloadCallback> callback = make_shared<CloudDownloadCallbackDerived>();
         string versionUri;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance()
             .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         uri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, DownloadHistoryVersion(_, _, _, _, _)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance()
             .DownloadHistoryVersion(uri, downloadId, versionId, callback, versionUri);
@@ -1786,27 +1786,27 @@ HWTEST_F(CloudSyncManagerImplTest, ReplaceFileWithHistoryVersionTest001, TestSiz
     try {
         string oriUri = "";
         string uri = "";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         oriUri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         oriUri = "";
         uri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         oriUri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ReplaceFileWithHistoryVersion(_, _)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().ReplaceFileWithHistoryVersion(oriUri, uri);
         EXPECT_EQ(res, E_OK);
@@ -1829,16 +1829,16 @@ HWTEST_F(CloudSyncManagerImplTest, IsFileConflictTest001, TestSize.Level1)
     try {
         string uri = "";
         bool isConflict;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         uri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, IsFileConflict(_, _)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().IsFileConflict(uri, isConflict);
         EXPECT_EQ(res, E_OK);
@@ -1860,16 +1860,16 @@ HWTEST_F(CloudSyncManagerImplTest, ClearFileConflictTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ClearFileConflictTest001 Start";
     try {
         string uri = "";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
         EXPECT_EQ(res, E_ILLEGAL_URI);
 
         uri = "path/file/1.txt";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, ClearFileConflict(_)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().ClearFileConflict(uri);
         EXPECT_EQ(res, E_OK);
@@ -1932,7 +1932,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest001, Test
     try {
         std::vector<std::string> emptyBundles;
         std::vector<LocalFilePresentStatus> outList;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(emptyBundles, outList);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -1954,7 +1954,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest002, Test
     try {
         std::vector<std::string> emptyBundles;
         std::vector<LocalFilePresentStatus> outList;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(emptyBundles, outList);
         EXPECT_EQ(res, EINVAL);
     } catch (...) {
@@ -1976,7 +1976,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetBundlesLocalFilePresentStatusTest003, Test
     try {
         std::vector<std::string> NotEmptyBundles = {"com.ohos.test1", "com.ohos.test2"};
         std::vector<LocalFilePresentStatus> outList;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetBundlesLocalFilePresentStatus(_, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().GetBundlesLocalFilePresentStatus(NotEmptyBundles, outList);
         EXPECT_EQ(res, E_OK);
@@ -2001,7 +2001,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Lev
         callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterFileSyncCallback(callbackInfo);
@@ -2025,16 +2025,16 @@ HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 Start";
     try {
         int64_t num = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
         EXPECT_EQ(res, E_OK);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_PERMISSION_DENIED));
         res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -2055,16 +2055,16 @@ HWTEST_F(CloudSyncManagerImplTest, IsFinishPullTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsFinishPullTest001 Start";
     try {
         bool finishFlag = false;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, IsFinishPull(_)).WillOnce(Return(E_OK));
         res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
         EXPECT_EQ(res, E_OK);
 
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, IsFinishPull(_)).WillOnce(Return(E_PERMISSION_DENIED));
         res = CloudSyncManagerImpl::GetInstance().IsFinishPull(finishFlag);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -2088,7 +2088,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest001, TestSize.Level1)
         bool isAccess = true;
         std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
         std::vector<XattrResult> aclXattrResults;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -2111,7 +2111,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest002, TestSize.Level1)
         bool isAccess = false;
         std::vector<std::string> filePaths = {"/storage/media/local/test/file1.txt"};
         std::vector<XattrResult> aclXattrResults;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetAclXattrBatch(_, _, _)).WillOnce(Return(E_OK));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
         EXPECT_EQ(res, E_OK);
@@ -2136,7 +2136,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest003, TestSize.Level1)
         std::vector<std::string> filePaths =
             {"/storage/media/local/test/file1.txt", "/storage/media/local/test/file2.txt"};
         std::vector<XattrResult> aclXattrResults;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetAclXattrBatch(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetAclXattrBatch(isAccess, filePaths, aclXattrResults);
         EXPECT_EQ(res, E_PERMISSION_DENIED);

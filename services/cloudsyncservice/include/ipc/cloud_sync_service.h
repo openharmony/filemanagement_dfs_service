@@ -130,6 +130,7 @@ private:
     void PreInit();
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
+    void ReportServiceStart(const SystemAbilityOnDemandReason &startReason);
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
     void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
     void CovertBundleName(std::string &bundleName);

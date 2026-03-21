@@ -18,6 +18,7 @@
 
 #include "cloud_file_sync_service_interface_code.h"
 #include "cloud_sync_common.h"
+#include "cloud_sync_start_event.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -66,7 +67,7 @@ int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, c
     return reply.ReadInt32();
 }
 
-sptr<ICloudSyncService> ServiceProxy::GetInstance()
+sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
 {
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -102,7 +103,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance()
         LOGE("Load CloudSync SA timeout");
         return nullptr;
     }
-    LOGI("Load successfully");
+    CloudFileServiceLoadRequestReport(callerInfo.bundleName, callerInfo.callerMethod);
+    LOGI("Load by bundleName: %{public}s, method: %{public}s",
+        callerInfo.bundleName.c_str(), callerInfo.callerMethod.c_str());
     return serviceProxy_;
 }
 

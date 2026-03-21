@@ -16,14 +16,25 @@
 #ifndef OHOS_FILEMGMT_SERVICE_PROXY_H
 #define OHOS_FILEMGMT_SERVICE_PROXY_H
 
+#include <string>
+
 #include "icloud_sync_service.h"
 #include "iremote_proxy.h"
 #include "system_ability_load_callback_stub.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
+struct CallerInfo {
+    std::string bundleName;
+    std::string callerMethod;
+    
+    CallerInfo() = default;
+    explicit CallerInfo(const std::string &bundle, const std::string &method)
+        : bundleName(bundle), callerMethod(method) {}
+};
 class ServiceProxy : public IRemoteProxy<ICloudSyncService> {
 public:
-    static sptr<ICloudSyncService> GetInstance();
+    static sptr<ICloudSyncService> GetInstance(const CallerInfo &callerInfo);
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

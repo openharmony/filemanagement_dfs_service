@@ -44,7 +44,7 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
         LOGE("callbackId or callback is null");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(callbackInfo.bundleName, "RegisterCallback"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -69,7 +69,8 @@ int32_t CloudSyncManagerImpl::RegisterFileSyncCallback(const CallbackInfo &callb
         LOGE("callbackId or callback is null");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(
+        CallerInfo(callbackInfo.bundleName, "RegisterFileSyncCallback"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -95,7 +96,7 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback(const CallbackInfo &callbackInf
         return E_INVAL_ARG;
     }
 
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(callbackInfo.bundleName, "UnRegisterCallback"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -119,7 +120,8 @@ int32_t CloudSyncManagerImpl::UnRegisterFileSyncCallback(const CallbackInfo &cal
         return E_INVAL_ARG;
     }
 
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(
+        CallerInfo(callbackInfo.bundleName, "UnRegisterFileSyncCallback"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -140,7 +142,7 @@ int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
     if (!AccountUtils::IsAccountAvailable()) {
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StartSync001"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -154,7 +156,7 @@ int32_t CloudSyncManagerImpl::StartFileSync(const std::string &bundleName)
     if (!AccountUtils::IsAccountAvailable()) {
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StartFileSync"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -166,7 +168,7 @@ int32_t CloudSyncManagerImpl::StartFileSync(const std::string &bundleName)
 int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime, const std::string &bundleName)
 {
     LOGI("GetSyncTime Start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "GetSyncTime"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -179,7 +181,7 @@ int32_t CloudSyncManagerImpl::OptimizeStorage(const OptimizeSpaceOptions &optimi
     const std::shared_ptr<CloudOptimizeCallback> optimizeCallback)
 {
     LOGI("OptimizeStorage Start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "OptimizeStorage"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -203,7 +205,7 @@ int32_t CloudSyncManagerImpl::OptimizeStorage(const OptimizeSpaceOptions &optimi
 int32_t CloudSyncManagerImpl::StopOptimizeStorage()
 {
     LOGI("StopOptimizeStorage Start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StopOptimizeStorage"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -224,7 +226,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
         return E_INVAL_ARG;
     }
     
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StartSync002"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -257,7 +259,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "TriggerSync001"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -268,7 +270,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
 
 int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName, bool forceFlag)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StopSync"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -279,7 +281,7 @@ int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName, bool force
 
 int32_t CloudSyncManagerImpl::StopFileSync(const std::string &bundleName, bool forceFlag)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StopFileSync"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -290,7 +292,7 @@ int32_t CloudSyncManagerImpl::StopFileSync(const std::string &bundleName, bool f
 
 int32_t CloudSyncManagerImpl::ResetCursor(const std::string &bundleName)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "ResetCursor001"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -301,7 +303,7 @@ int32_t CloudSyncManagerImpl::ResetCursor(const std::string &bundleName)
 
 int32_t CloudSyncManagerImpl::ResetCursor(bool flag, const std::string &bundleName)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "ResetCursor002"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -312,7 +314,7 @@ int32_t CloudSyncManagerImpl::ResetCursor(bool flag, const std::string &bundleNa
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "ChangeAppSwitch"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -327,7 +329,7 @@ int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const
 
 int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "NotifyDataChange"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -343,7 +345,7 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
 int32_t CloudSyncManagerImpl::NotifyEventChange(
     int32_t userId, const std::string &eventId, const std::string &extraData)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(eventId, "NotifyEventChange"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -361,7 +363,7 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri,
                                                 int64_t &downloadId)
 {
     LOGI("StartDownloadFile start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StartDownloadFile"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -384,7 +386,7 @@ int32_t CloudSyncManagerImpl::BatchCleanFile(const std::vector<CleanFileInfo> &f
         LOGE("BatchCleanFile size over max limit");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "BatchCleanFile"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -415,7 +417,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
         LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
         return E_EXCEED_MAX_SIZE;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StartFileCache"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -434,7 +436,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
 int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("StopDownloadFile start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StopDownloadFile"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -448,7 +450,7 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClea
 int32_t CloudSyncManagerImpl::StopFileCache(int64_t downloadId, bool needClean, int32_t timeout)
 {
     LOGI("StopFileCache start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StopFileCache"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -463,7 +465,7 @@ int32_t CloudSyncManagerImpl::StartDowngrade(const std::string &bundleName,
                                              const std::shared_ptr<DowngradeDlCallback> downloadCallback)
 {
     LOGI("StartDowngrade start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StartDowngrade"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -483,7 +485,7 @@ int32_t CloudSyncManagerImpl::StartDowngrade(const std::string &bundleName,
 int32_t CloudSyncManagerImpl::StopDowngrade(const std::string &bundleName)
 {
     LOGI("StartDowngrade start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "StopDowngrade"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -502,7 +504,7 @@ int32_t CloudSyncManagerImpl::StopDowngrade(const std::string &bundleName)
 int32_t CloudSyncManagerImpl::GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo)
 {
     LOGI("StartDowngrade start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "GetCloudFileInfo"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -522,7 +524,7 @@ int32_t CloudSyncManagerImpl::GetHistoryVersionList(const std::string &uri, cons
     std::vector<CloudSync::HistoryVersion> &historyVersionList)
 {
     LOGI("GetHistoryVersionList start, versionNumLimit is %{public}d", versionNumLimit);
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetHistoryVersionList"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -548,7 +550,7 @@ int32_t CloudSyncManagerImpl::DownloadHistoryVersion(const std::string &uri, int
 {
     LOGI("DownloadHistoryVersion start, versionId is %{public}lld, Callback is null: %{public}d",
          static_cast<long long>(versionId), (downloadCallback == nullptr));
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "DownloadHistoryVersion"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -580,7 +582,7 @@ int32_t CloudSyncManagerImpl::DownloadHistoryVersion(const std::string &uri, int
 int32_t CloudSyncManagerImpl::ReplaceFileWithHistoryVersion(const std::string &uri, const std::string &versionUri)
 {
     LOGI("ReplaceFileWithHistoryVersion start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "ReplaceFileWithHistoryVersion"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -598,7 +600,7 @@ int32_t CloudSyncManagerImpl::ReplaceFileWithHistoryVersion(const std::string &u
 int32_t CloudSyncManagerImpl::IsFileConflict(const std::string &uri, bool &isConflict)
 {
     LOGI("IsFileConflict start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "IsFileConflict"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -615,7 +617,7 @@ int32_t CloudSyncManagerImpl::IsFileConflict(const std::string &uri, bool &isCon
 
 int32_t CloudSyncManagerImpl::ClearFileConflict(const std::string &uri)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "ClearFileConflict"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -633,7 +635,7 @@ int32_t CloudSyncManagerImpl::ClearFileConflict(const std::string &uri)
 int32_t CloudSyncManagerImpl::DownloadThumb()
 {
     LOGI("DownloadThumb start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "DownloadThumb"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -671,7 +673,7 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
 int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
                                           const SwitchDataObj &switchData)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "EnableCloud"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -684,7 +686,7 @@ int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
 
 int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "DisableCloud"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -696,7 +698,7 @@ int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
 
 int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "Clean"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -710,7 +712,7 @@ int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOpt
 int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
 {
     LOGI("CleanCache Start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "CleanCache"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -722,7 +724,7 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
 int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
 {
     LOGI("CleanFileCache Start");
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "CleanFileCache"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -740,7 +742,7 @@ int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFile
         LOGE("BatchDentryFileInsert parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "BatchDentryFileInsert"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -777,7 +779,7 @@ void CloudSyncManagerImpl::SubscribeListener(void)
 
 bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount)
 {
-    auto cloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto cloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "ResetProxyCallback"));
     if (cloudSyncServiceProxy == nullptr) {
         LOGE("proxy is null");
         return false;
@@ -895,7 +897,7 @@ void CloudSyncManagerImpl::CleanGalleryDentryFile(const std::string path)
 int32_t CloudSyncManagerImpl::GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
     std::vector<LocalFilePresentStatus> &localFilePresentStatusList)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetBundlesLocalFilePresentStatus"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -913,7 +915,7 @@ int32_t CloudSyncManagerImpl::GetBundlesLocalFilePresentStatus(const std::vector
 
 int32_t CloudSyncManagerImpl::IsFinishPull(bool &finishFlag)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "IsFinishPull"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -928,7 +930,7 @@ int32_t CloudSyncManagerImpl::IsFinishPull(bool &finishFlag)
 
 int32_t CloudSyncManagerImpl::GetDentryFileOccupy(int64_t &occupyNum)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetDentryFileOccupy"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -945,7 +947,7 @@ int32_t CloudSyncManagerImpl::GetAclXattrBatch(const bool isAccess,
                                                const std::vector<std::string> &filePaths,
                                                std::vector<XattrResult> &aclXattrResults)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetAclXattrBatch"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;

@@ -85,7 +85,9 @@ ohos_shared_library("cloudsync_kit_inner") {
     "ability_runtime:ability_manager",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
@@ -136,7 +138,9 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -184,7 +188,9 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
 
   external_deps = [
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

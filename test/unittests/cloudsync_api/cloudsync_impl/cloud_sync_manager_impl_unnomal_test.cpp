@@ -82,7 +82,7 @@ HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
         callbackInfo.callbackId = "0x0000005a40d3b680";
         callbackInfo.bundleName = "com.ohos.photos";
         callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->RegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -104,10 +104,10 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
     try {
         bool forceFlag = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->StartSync();
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         res = managePtr_->StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -127,7 +127,7 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int res = managePtr_->StopSync();
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -150,7 +150,7 @@ HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
         bool status = true;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->ChangeAppSwitch(accoutId, bundleName, status);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -172,7 +172,7 @@ HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->NotifyDataChange(accoutId, bundleName);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -194,7 +194,7 @@ HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
     try {
         std::string uri = "uri";
         int64_t downloadId = 0;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->StartDownloadFile(uri, nullptr, downloadId);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -215,7 +215,7 @@ HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         int64_t downloadId = 0;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->StopDownloadFile(downloadId, true);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -237,7 +237,7 @@ HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         SwitchDataObj switchData;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->EnableCloud(accoutId, switchData);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -258,7 +258,7 @@ HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string accoutId = "accoutId";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->DisableCloud(accoutId);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -280,7 +280,7 @@ HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         CleanOptions cleanOptions;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = managePtr_->Clean(accoutId, cleanOptions);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {

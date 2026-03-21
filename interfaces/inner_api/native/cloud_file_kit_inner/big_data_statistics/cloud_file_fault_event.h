@@ -124,6 +124,11 @@ enum class FaultType {
     /* warning */
     WARNING = 100000000,
 
+    /* triggered internally or externally */
+    TRIGGER = 110000000,
+    TRIGGER_INTERN = 110000001,
+    TRIGGER_EXTERN = 110000002,
+
     /* notify abnormal */
     NOTIFY_ABNORMAL = 200000000
 };
