@@ -39,74 +39,74 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
 
 void CloudFileCacheAni::CloudFileCacheConstructorForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]CloudFileCacheConstructorForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheConstructorForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]CloudFileCacheOnForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheOnForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]CloudFileCacheOff0ForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheOff0ForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheOff1ForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST]CloudFileCacheOff1ForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheOff1ForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheStartForWatch(ani_env *env, ani_object object, ani_string uri)
 {
-    LOGI("[TEST]CloudFileCacheStartForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheStartForWatch in ani!!");
     return;
 }
 
 ani_long CloudFileCacheAni::CloudFileCacheStartBatchForWatch(ani_env *env, ani_object object,
     ani_array uriList, ani_enum_item fileType)
 {
-    LOGI("[TEST]CloudFileCacheStartBatchForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheStartBatchForWatch in ani!!");
     return 0;
 }
 
 void CloudFileCacheAni::CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean)
 {
-    LOGI("[TEST]CloudFileCacheStopForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheStopForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId, ani_boolean needClean)
 {
-    LOGI("[TEST]CloudFileCacheStopBatchForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheStopBatchForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheCleanCacheForWatch(ani_env *env, ani_object object, ani_string uri)
 {
-    LOGI("[TEST]CloudFileCacheCleanCacheForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheCleanCacheForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheCleanFileCacheForWatch(ani_env *env, ani_object object, ani_string uri)
 {
-    LOGI("[TEST]CloudFileCacheCleanFileCacheForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheCleanFileCacheForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheOnBatchForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]CloudFileCacheOnBatchForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheOnBatchForWatch in ani!!");
     return;
 }
 
 void CloudFileCacheAni::CloudFileCacheOffBatchForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST]CloudFileCacheOffBatchForWatch in ani!!");
+    LOGI("[TEST FOR WATCH]CloudFileCacheOffBatchForWatch in ani!!");
     return;
 }
 

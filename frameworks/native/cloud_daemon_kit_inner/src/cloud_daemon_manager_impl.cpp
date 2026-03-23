@@ -42,6 +42,7 @@ int32_t CloudDaemonManagerImpl::StartFuse(int32_t userId, int32_t devFd, const s
 
     return CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
 #else
+    LOGI("Start fuse for watch");
     return E_SA_LOAD_FAILED;
 #endif
 }

@@ -106,7 +106,7 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
     std::string stopBatchSign = Builder::BuildSignatureDescriptor(
         {Builder::BuildLong(), Builder::BuildBoolean()});
-#ifdef SUPPORT_WATCH_LITE
+#ifndef SUPPORT_WATCH_LITE
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
@@ -181,7 +181,7 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
-#ifdef SUPPORT_WATCH_LITE
+#ifndef SUPPORT_WATCH_LITE
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},

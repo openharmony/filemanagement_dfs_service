@@ -35,31 +35,31 @@ struct SyncTimeArg {
 
 napi_value FileSyncNapi::GetLastSyncTimeForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]GetLastSyncTimeForWatch in napi!!");
+    LOGI("[TEST FOR WATCH]GetLastSyncTimeForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::OnCallbackForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]OnCallbackForWatch in napi!!");
+    LOGI("[TEST FOR WATCH]OnCallbackForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::OffCallbackForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]OffCallbackForWatch in napi!!");
+    LOGI("[TEST FOR WATCH]OffCallbackForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::StartForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StartForWatch in napi!!");
+    LOGI("[TEST FOR WATCH]StartForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::StopForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST]StopForWatch in napi!!");
+    LOGI("[TEST FOR WATCH]StopForWatch in napi!!");
     return nullptr;
 }
 
@@ -243,7 +243,7 @@ struct SyncStateArg {
 
 bool FileSyncNapi::Export()
 {
-#ifdef SUPPORT_WATCH_LITE
+#ifndef SUPPORT_WATCH_LITE
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallback),
         NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallback),
