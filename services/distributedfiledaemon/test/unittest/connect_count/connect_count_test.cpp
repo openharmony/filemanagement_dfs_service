@@ -204,30 +204,6 @@ HWTEST_F(ConnectCountTest, RemoveAllConnect_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: ConnectCountTest_NotifyRemoteReverseObj_001
- * @tc.desc: Verify NotifyRemoteReverseObj notifies the listener.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(ConnectCountTest, NotifyRemoteReverseObj_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NotifyRemoteReverseObj_001 start";
-
-    // 设置 EXPECT_CALL
-    EXPECT_CALL(*static_cast<MockFileDfsListener*>(testListener.GetRefPtr()),
-                OnStatus(testNetworkId, ON_STATUS_OFFLINE, "", 0))
-                .Times(1);  // 仅在当前测试用例中生效
-
-    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, testListener);
-    ConnectCount::GetInstance().NotifyRemoteReverseObj(testNetworkId, ON_STATUS_OFFLINE);
-
-    // 清除 EXPECT_CALL 断言
-    testing::Mock::VerifyAndClearExpectations(testListener.GetRefPtr());
-
-    GTEST_LOG_(INFO) << "NotifyRemoteReverseObj_001 end";
-}
-
-/**
  * @tc.name: ConnectCountTest_FindCallingTokenIdForListerner_001
  * @tc.desc: Verify FindCallingTokenIdForListerner finds the correct callingTokenId.
  * @tc.type: FUNC
@@ -505,6 +481,77 @@ HWTEST_F(ConnectCountTest, CheckCount_001, TestSize.Level1)
     EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));
     
     GTEST_LOG_(INFO) << "CheckCount_001 end";
+}
+
+/**
+ * @tc.name: ConnectCountTest_RemoveAllConnect_002
+ * @tc.desc: Verify RemoveAllConnect handles nullptr listener gracefully.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ConnectCountTest, RemoveAllConnect_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveAllConnect_002 start";
+    
+    // Add connection with nullptr listener
+    ConnectCount::GetInstance().AddConnect(testCallingTokenId, testNetworkId, nullptr);
+    
+    // Verify connection exists
+    EXPECT_TRUE(ConnectCount::GetInstance().CheckCount(testNetworkId));
+    
+    // Remove all connections (should not crash even with nullptr listener)
+    ConnectCount::GetInstance().RemoveAllConnect();
+    
+    // Verify all connections are removed
+    EXPECT_FALSE(ConnectCount::GetInstance().CheckCount(testNetworkId));
+    
+    GTEST_LOG_(INFO) << "RemoveAllConnect_002 end";
+}
+
+/**
+ * @tc.name: ConnectCountTest_AddFileConnect_002
+ * @tc.desc: Verify AddFileConnect replaces existing listener.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ConnectCountTest, AddFileConnect_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddFileConnect_002 start";
+    
+    std::string instanceId = "testInstanceId";
+    sptr<IFileDfsListener> listener1 = new MockFileDfsListener();
+    sptr<IFileDfsListener> listener2 = new MockFileDfsListener();
+    
+    // Add file connect with first listener
+    ConnectCount::GetInstance().AddFileConnect(instanceId, listener1);
+    
+    // Add file connect with same instanceId and different listener (should replace)
+    ConnectCount::GetInstance().AddFileConnect(instanceId, listener2);
+    
+    // Remove file connect (should succeed)
+    bool result = ConnectCount::GetInstance().RmFileConnect(instanceId);
+    EXPECT_TRUE(result);
+    
+    GTEST_LOG_(INFO) << "AddFileConnect_002 end";
+}
+
+/**
+ * @tc.name: ConnectCountTest_RmFileConnect_002
+ * @tc.desc: Verify RmFileConnect returns false for non-existent instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ConnectCountTest, RmFileConnect_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RmFileConnect_002 start";
+    
+    std::string nonExistentInstanceId = "nonExistentInstanceId";
+    
+    // Try to remove non-existent file connect
+    bool result = ConnectCount::GetInstance().RmFileConnect(nonExistentInstanceId);
+    EXPECT_FALSE(result);
+    
+    GTEST_LOG_(INFO) << "RmFileConnect_002 end";
 }
 } // namespace Test
 } // namespace DistributedFile

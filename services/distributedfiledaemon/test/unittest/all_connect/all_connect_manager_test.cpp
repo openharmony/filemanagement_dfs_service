@@ -925,6 +925,66 @@ HWTEST_F(AllConnectManagerTest, GetPublicState_001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetPublicState_001 end";
 }
+
+/**
+ * @tc.name: AllConnectManagerTest_UnInitAllConnectManager_002
+ * @tc.desc: verify UnInitAllConnectManager UnRegisterLifecycleCallback fail.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_002 start";
+    try {
+        auto &allConnectManager = AllConnectManager::GetInstance();
+
+        int test = 0;
+        EXPECT_CALL(*libraryFuncMock_, dlclose(_)).WillOnce(Return(0));
+        allConnectManager.dllHandle_ = &test;
+        auto tmpfunc = [](const char *servcieName) -> int32_t {
+            return FileManagement::ERR_ALLCONNECT;
+        };
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = tmpfunc;
+        int32_t ret = allConnectManager.UnInitAllConnectManager();
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+        allConnectManager.dllHandle_ = nullptr;
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_002 end";
+}
+
+/**
+ * @tc.name: AllConnectManagerTest_PublishServiceState_005
+ * @tc.desc: verify PublishServiceState GetPublicState return false.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AllConnectManagerTest, PublishServiceState_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PublishServiceState_005 start";
+    ServiceCollaborationManagerBussinessStatus state = ServiceCollaborationManagerBussinessStatus::SCM_IDLE;
+    try {
+        auto &allConnectManager = AllConnectManager::GetInstance();
+
+        allConnectManager.dllHandle_ = (void *)0x1;
+        allConnectManager.allConnect_.ServiceCollaborationManager_PublishServiceState = [](
+            const char *peerNetworkId, const char *serviceName, const char *extraInfo,
+            ServiceCollaborationManagerBussinessStatus state) -> int32_t {
+            return 0;
+        };
+        allConnectManager.connectStates_.clear();
+        allConnectManager.connectStates_.emplace(peerNetworkId,
+            std::map<DfsConnectCode, ServiceCollaborationManagerBussinessStatus>{{DfsConnectCode::COPY_FILE, state}});
+
+        int32_t ret = allConnectManager.PublishServiceState(DfsConnectCode::COPY_FILE, peerNetworkId, state);
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "PublishServiceState_005 end";
+}
 }
 } // namespace DistributedFile
 } // namespace Storage

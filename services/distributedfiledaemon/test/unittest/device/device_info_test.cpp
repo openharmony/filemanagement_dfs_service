@@ -188,6 +188,26 @@ HWTEST_F(DeviceInfoTest, DeviceInfoTest_OperateEqual_0100, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DeviceInfoTest_OperateEqual_0100 start";
 }
+
+/**
+ * @tc.name: DeviceInfoTest_SetCid_0200
+ * @tc.desc: Verify SetCid when initCidFlag is true.
+ * @tc.type: FUNC
+ * @tc.require: IAGNEY
+ */
+HWTEST_F(DeviceInfoTest, DeviceInfoTest_SetCid_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoTest_SetCid_0200 start";
+    DeviceInfo devInfo(deviceInfo);
+    try {
+        string testCid = "newCid";
+        devInfo.SetCid(testCid);
+        EXPECT_EQ(devInfo.GetCid(), NETWORKID);
+        GTEST_LOG_(INFO) << "DeviceInfoTest_SetCid_0200 end";
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+}
 }
 } // namespace Test
 } // namespace DistributedFile

@@ -138,9 +138,9 @@ HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnFile_0300, Tes
     GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnFile_0300 start";
     try {
         FileEvent event = {.type = FILE_EVENT_RECV_START,
-                           .fileCnt = 0,
-                           .bytesProcessed = 0,
-                           .bytesTotal = 0};
+                            .fileCnt = 0,
+                            .bytesProcessed = 0,
+                            .bytesTotal = 0};
         int32_t socket = 1;
         sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
         SoftBusHandlerAsset::GetInstance().AddAssetObj(socket, assetObj);
@@ -152,6 +152,73 @@ HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnFile_0300, Tes
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnFile_0300 end";
+}
+
+/**
+ * @tc.name: SoftBusAssetSendListener_OnSendAssetFinished_001
+ * @tc.desc: test OnSendAssetFinished with fileCnt=0
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendAssetFinished_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendAssetFinished_001 start";
+    try {
+        FileEvent event = {.type = FILE_EVENT_SEND_FINISH,
+                            .fileCnt = 0,
+                            .bytesProcessed = 0,
+                            .bytesTotal = 0};
+        int32_t socket = 1;
+        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnFile(socket, &event));
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendAssetFinished_001 end";
+}
+
+/**
+ * @tc.name: SoftBusAssetSendListener_OnSendAssetError_001
+ * @tc.desc: test OnSendAssetError with fileCnt=0
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendAssetError_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendAssetError_001 start";
+    try {
+        FileEvent event = {.type = FILE_EVENT_SEND_ERROR,
+                            .fileCnt = 0,
+                            .bytesProcessed = 0,
+                            .bytesTotal = 0,
+                            .errorCode = -1};
+        int32_t socket = 1;
+        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnFile(socket, &event));
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendAssetError_001 end";
+}
+
+/**
+ * @tc.name: SoftBusAssetSendListener_OnSendShutdown_001
+ * @tc.desc: test OnSendShutdown
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendShutdown_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendShutdown_001 start";
+    try {
+        int32_t sessionId = 1;
+        ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
+        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnSendShutdown(sessionId, reason));
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftBusAssetSendListener_OnSendShutdown_001 end";
 }
 } // namespace Test
 } // namespace DistributedFile

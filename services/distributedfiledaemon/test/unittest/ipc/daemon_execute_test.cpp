@@ -607,4 +607,47 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePrepareSession_005, TestSize.Le
 
     GTEST_LOG_(INFO) << "DaemonExecute_ExecutePrepareSession_005 end";
 }
+
+/**
+ * @tc.name: DaemonExecute_ProcessEvent_001
+ * @tc.desc: Verify ProcessEvent with nullptr event
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ProcessEvent_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ProcessEvent_001 start";
+    AppExecFwk::InnerEvent::Pointer event = AppExecFwk::InnerEvent::Get();
+    EXPECT_NO_THROW(daemonExecute_->ProcessEvent(event));
+    GTEST_LOG_(INFO) << "DaemonExecute_ProcessEvent_001 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ProcessEvent_002
+ * @tc.desc: Verify ProcessEvent with unknown event id
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ProcessEvent_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ProcessEvent_002 start";
+    auto testData = std::make_shared<int>(999);
+    auto event = AppExecFwk::InnerEvent::Get(999, testData, 0);
+    EXPECT_NO_THROW(daemonExecute_->ProcessEvent(event));
+    GTEST_LOG_(INFO) << "DaemonExecute_ProcessEvent_002 end";
+}
+
+/**
+ * @tc.name: DaemonExecute_ExecutePushAsset_003
+ * @tc.desc: Verify ExecutePushAsset with nullptr event
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_003 start";
+    auto event = AppExecFwk::InnerEvent::Get();
+    EXPECT_NO_THROW(daemonExecute_->ExecutePushAsset(event));
+    GTEST_LOG_(INFO) << "DaemonExecute_ExecutePushAsset_003 end";
+}
 } // namespace OHOS::Storage::DistributedFile::Test

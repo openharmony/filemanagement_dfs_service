@@ -99,9 +99,9 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GenerateSessionName_0100
     string sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
     EXPECT_EQ(sessionName, "DistributedFileService0");
     SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = SESSION_ID_ONE,
-                                                 .srcUri = "file://com.demo.a/test/1",
-                                                 .dstPath = "/data/test/1",
-                                                 .uid = UID_ONE};
+                                                  .srcUri = "file://com.demo.a/test/1",
+                                                  .dstPath = "/data/test/1",
+                                                  .uid = UID_ONE};
     for (int32_t i = 1; i < SESSION_COUNT - 1; i++) {
         std::string testName = std::string(SESSION_NAME_PREFIX) + std::to_string(i);
         SoftBusSessionPool::GetInstance().AddSessionInfo(testName, sessionInfo1);
@@ -121,6 +121,54 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GenerateSessionName_0100
     sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo1);
     EXPECT_EQ(sessionName, "DistributedFileService0");
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_GenerateSessionName_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionPoolTest_AddSessionInfo_001
+ * @tc.desc: test AddSessionInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I9JKYU
+ */
+HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_AddSessionInfo_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_AddSessionInfo_001 start";
+    SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = SESSION_ID_ONE,
+                                                  .srcUri = "file://com.demo.a/test/1",
+                                                  .dstPath = "/data/test/1",
+                                                  .uid = UID_ONE};
+    std::string sessionName = "DistributedFileService0";
+    EXPECT_NO_FATAL_FAILURE(SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo));
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_AddSessionInfo_001 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionPoolTest_DeleteSessionInfo_001
+ * @tc.desc: test DeleteSessionInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I9JKYU
+ */
+HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_DeleteSessionInfo_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_DeleteSessionInfo_001 start";
+    std::string sessionName = "DistributedFileService0";
+    EXPECT_NO_FATAL_FAILURE(SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName));
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_DeleteSessionInfo_001 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionPoolTest_GetSessionInfo_001
+ * @tc.desc: test GetSessionInfo not found.
+ * @tc.type: FUNC
+ * @tc.require: I9JKYU
+ */
+HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GetSessionInfo_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_GetSessionInfo_001 start";
+    SoftBusSessionPool::SessionInfo sessionInfo;
+    std::string sessionName = "DistributedFileService99";
+    bool flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
+    EXPECT_EQ(flag, false);
+    GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_GetSessionInfo_001 end";
 }
 } // namespace Test
 } // namespace DistributedFile

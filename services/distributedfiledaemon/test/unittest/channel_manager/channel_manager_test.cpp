@@ -885,6 +885,193 @@ HWTEST_F(ChannelManagerTest, ChannelManagerTest_NotifyClient_004, TestSize.Level
     GTEST_LOG_(INFO) << "ChannelManagerTest_NotifyClient_004 end";
 }
 
+/**
+ * @tc.name: ChannelManagerTest_CreateClientChannel_006
+ * @tc.desc: Verify CreateClientChannel fails when IsSameAccount returns false
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_CreateClientChannel_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_006 start";
+
+    // Test IsSameAccount failure path
+    EXPECT_CALL(*softBusPermissionCheckMock_, IsSameAccount(_)).WillOnce(Return(false));
+    EXPECT_EQ(ChannelManager::GetInstance().CreateClientChannel(defaultNetworkId), ERR_CHECK_PERMISSION_FAILED);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_CreateClientChannel_006 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendBytes_001
+ * @tc.desc: Verify SendBytes returns error when networkId not found
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendBytes_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendBytes_001 start";
+
+    // Test with non-existent networkId
+    int32_t ret = ChannelManager::GetInstance().SendBytes("invalid_network", "test_data");
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendBytes_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnSocketConnected_001
+ * @tc.desc: Verify OnSocketConnected handles invalid socket ID
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnSocketConnected_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnSocketConnected_001 start";
+
+    PeerSocketInfo peerSocketInfo;
+    char networkId[] = "test-networkId";
+    peerSocketInfo.networkId = networkId;
+
+    // Test with invalid socket ID
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnSocketConnected(-1, peerSocketInfo));
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnSocketConnected(0, peerSocketInfo));
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnSocketConnected_001 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnSocketClosed_002
+ * @tc.desc: Verify OnSocketClosed handles invalid socket ID
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnSocketOnClosed_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnSocketClosed_002 start";
+
+    // Test with invalid socket ID
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnSocketClosed(-1, SHUTDOWN_REASON_UNKNOWN));
+    EXPECT_NO_THROW(ChannelManager::GetInstance().OnSocketClosed(0, SHUTDOWN_REASON_UNKNOWN));
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnSocketClosed_002 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnNegotiate2_002
+ * @tc.desc: Verify OnNegotiate2 fails when CheckSinkPermission returns false
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnNegotiate2_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnNegotiate2_002 start";
+
+    PeerSocketInfo peerSocketInfo;
+    char networkId[] = "test-networkId";
+    peerSocketInfo.networkId = networkId;
+
+    SocketAccessInfo socketAccessInfo;
+    SocketAccessInfo socketAccessInfo2;
+
+    // Test CheckSinkPermission failure case
+    EXPECT_CALL(*softBusPermissionCheckMock_, TransCallerInfo(_, _, _)).WillOnce(Return(true));
+    EXPECT_CALL(*softBusPermissionCheckMock_, FillLocalInfo(_)).WillOnce(Return(true));
+    EXPECT_CALL(*softBusPermissionCheckMock_, CheckSinkPermission(_)).WillOnce(Return(false));
+    EXPECT_FALSE(
+        ChannelManager::GetInstance().OnNegotiate2(100, peerSocketInfo, &socketAccessInfo, &socketAccessInfo2));
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnNegotiate2_002 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_006
+ * @tc.desc: Verify HandleRemoteBytes handles HandleRequest failure
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_006 start";
+
+    // Init
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_EQ(ChannelManager::GetInstance().Init(), ERR_OK);
+
+    // Mock a request that will fail HandleRequest
+    nlohmann::json requestJson = {{"msgId", 888}, {"msgType", -2}, {"msgBody", "invalid"}};
+    std::string jsonStr = requestJson.dump();
+
+    // Expect no SendBytes is called
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).Times(0);
+
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_006 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_OnBytesReceived_007
+ * @tc.desc: Verify HandleRemoteBytes handles unknown message type
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_OnBytesReceived_007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_007 start";
+
+    // Init
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_EQ(ChannelManager::GetInstance().Init(), ERR_OK);
+
+    // Mock serialization failure for response
+    g_resSerializeToJson = false;
+    nlohmann::json requestJson =
+        {{"msgId", 999}, {"msgType", ControlCmdType::CMD_CHECK_ALLOW_CONNECT}, {"msgBody", "test"}};
+    std::string jsonStr = requestJson.dump();
+
+    // Expect no SendBytes is called due to serialization failure
+    EXPECT_CALL(*socketMock_, SendBytes(_, _, _)).Times(0);
+
+    ChannelManager::GetInstance().OnBytesReceived(1, jsonStr.data(), jsonStr.size());
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_OnBytesReceived_007 end";
+}
+
+/**
+ * @tc.name: ChannelManagerTest_SendRequest_007
+ * @tc.desc: Verify SendRequest handles serialization failure in DoSendBytesAsync
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(ChannelManagerTest, ChannelManagerTest_SendRequest_007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_007 start";
+
+    // init
+    InitChannelManager();
+
+    ControlCmd request, response;
+    request.msgId = 7;
+    request.msgType = ControlCmdType::CMD_CHECK_ALLOW_CONNECT;
+
+    // Setup valid networkId
+    ChannelManager::GetInstance().clientNetworkSocketMap_["valid_network"] = 1;
+
+    // Mock serialization failure
+    g_resSerializeToJson = false;
+
+    int32_t ret = ChannelManager::GetInstance().SendRequest("valid_network", request, response, false);
+    EXPECT_EQ(ret, E_OK);
+
+    // Wait for async task to complete
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    GTEST_LOG_(INFO) << "ChannelManagerTest_SendRequest_007 end";
+}
+
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
