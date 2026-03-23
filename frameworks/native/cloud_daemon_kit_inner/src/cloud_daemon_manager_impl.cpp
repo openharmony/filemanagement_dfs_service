@@ -29,6 +29,7 @@ CloudDaemonManagerImpl &CloudDaemonManagerImpl::GetInstance()
 
 int32_t CloudDaemonManagerImpl::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
+#ifndef SUPPORT_WATCH_LITE
     auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
     if (!CloudDaemonServiceProxy) {
         LOGE("proxy is null");
@@ -40,6 +41,9 @@ int32_t CloudDaemonManagerImpl::StartFuse(int32_t userId, int32_t devFd, const s
     }
 
     return CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
+#else
+    return E_SA_LOAD_FAILED;
+#endif
 }
 
 void CloudDaemonManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
