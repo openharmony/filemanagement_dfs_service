@@ -49,6 +49,7 @@ int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
 int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel &reply)
 {
+#ifndef SUPPORT_WATCH_LITE
     LOGI("Begin StartFuseInner");
     auto userId = data.ReadInt32();
     auto fd = data.ReadFileDescriptor();
@@ -57,6 +58,10 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     reply.WriteInt32(res);
     LOGI("End StartFuseInner");
     return E_OK;
+#else
+    LOGI("Begin StartFuseInner for watch");
+    return E_OK;
+#endif
 }
 } // namespace CloudFile
 } // namespace FileManagement
