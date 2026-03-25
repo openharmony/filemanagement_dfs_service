@@ -35,6 +35,7 @@ public:
     bool Export() override;
     bool ToExport(std::vector<napi_property_descriptor> props);
     std::string GetClassName() override;
+#ifndef SUPPORT_WATCH_LITE
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static napi_value StartFileCache(napi_env env, napi_callback_info info);
     static napi_value StartBatchFileCache(napi_env env, napi_callback_info info);
@@ -44,6 +45,7 @@ public:
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
     static napi_value CleanFileCache(napi_env env, napi_callback_info info);
+#else
     static napi_value StartFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value StartBatchFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value StopFileCacheForWatch(napi_env env, napi_callback_info info);
@@ -52,6 +54,7 @@ public:
     static napi_value OffForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanFileCacheForWatch(napi_env env, napi_callback_info info);
+#endif
 
 private:
     inline static std::string className_ = "CloudFileCache";
