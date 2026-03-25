@@ -178,9 +178,7 @@ static ani_status BindContextOnFileSyncForWatch(ani_env *env)
 
     return ANI_OK;
 }
-#endif
-
-#ifndef SUPPORT_WATCH_LITE
+#else
 static ani_status BindContextOnCloudFileCache(ani_env *env)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");

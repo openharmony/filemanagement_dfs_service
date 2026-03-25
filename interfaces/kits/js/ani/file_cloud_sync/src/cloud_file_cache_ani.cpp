@@ -112,8 +112,7 @@ void CloudFileCacheAni::CloudFileCacheOffBatchForWatch(ani_env *env, ani_object 
     LOGI("[TEST FOR WATCH]CloudFileCacheOffBatchForWatch in ani!!");
     return;
 }
-#endif
-
+#else
 void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
@@ -380,4 +379,5 @@ void CloudFileCacheAni::CloudFileCacheOffBatch(ani_env *env, ani_object object, 
     }
     callbackImpl->TryCleanCallback();
 }
+#endif
 } // namespace OHOS::FileManagement::CloudSync

@@ -37,7 +37,6 @@ public:
     static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
 #else
-#ifdef SUPPORT_WATCH_LITE
     static void CloudFileCacheConstructorForWatch(ani_env *env, ani_object object);
     static void CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun);
