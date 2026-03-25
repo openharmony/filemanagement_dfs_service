@@ -405,7 +405,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifdef SUPPORT_WATCH_LITE
+#ifndef SUPPORT_WATCH_LITE
     status = BindContextOnCloudFileCache(env);
 #else
     status = BindContextOnCloudFileCacheForWatch(env);
@@ -413,7 +413,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifdef SUPPORT_WATCH_LITE
+#ifndef SUPPORT_WATCH_LITE
     status = BindContextOnFileSync(env);
 #else
     status = BindContextOnFileSyncForWatch(env);
