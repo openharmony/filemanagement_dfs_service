@@ -43,7 +43,8 @@ public:
     static ani_long CloudFileCacheStartBatchForWatch(ani_env *env, ani_object object,
         ani_array uriList, ani_enum_item fileType);
     static void CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean);
-    static void CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId, ani_boolean needClean);
+    static void CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId, 
+        ani_boolean needClean);
     static void CloudFileCacheCleanCacheForWatch(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheCleanFileCacheForWatch(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatchForWatch(ani_env *env, ani_object object, ani_object fun);
