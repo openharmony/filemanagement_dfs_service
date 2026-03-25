@@ -205,7 +205,7 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
@@ -382,7 +382,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     status = BindContextOnCloudFileCache(env);
 #else
     status = BindContextOnCloudFileCacheForWatch(env);

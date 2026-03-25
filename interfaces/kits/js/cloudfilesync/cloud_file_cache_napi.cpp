@@ -192,7 +192,7 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
 
 bool CloudFileCacheNapi::Export()
 {
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
