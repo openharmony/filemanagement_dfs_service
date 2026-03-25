@@ -35,6 +35,7 @@ public:
     static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
+#ifdef SUPPORT_WATCH_LITE
     static void CloudFileCacheConstructorForWatch(ani_env *env, ani_object object);
     static void CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun);
@@ -43,12 +44,13 @@ public:
     static ani_long CloudFileCacheStartBatchForWatch(ani_env *env, ani_object object,
         ani_array uriList, ani_enum_item fileType);
     static void CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri, ani_boolean needClean);
-    static void CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId, 
+    static void CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId,
         ani_boolean needClean);
     static void CloudFileCacheCleanCacheForWatch(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheCleanFileCacheForWatch(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatchForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatchForWatch(ani_env *env, ani_object object, ani_object fun);
+#endif
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_ANI_H
