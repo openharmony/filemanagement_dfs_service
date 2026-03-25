@@ -33,7 +33,6 @@ struct SyncTimeArg {
     int64_t time = 0;
 };
 
-#ifdef SUPPORT_WATCH_LITE
 napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 {
     LOGI("GetLastSyncTime Start");
@@ -207,7 +206,7 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
-#else
+
 napi_value FileSyncNapi::GetLastSyncTimeForWatch(napi_env env, napi_callback_info info)
 {
     LOGI("[TEST FOR WATCH]GetLastSyncTimeForWatch in napi!!");
@@ -237,7 +236,6 @@ napi_value FileSyncNapi::StopForWatch(napi_env env, napi_callback_info info)
     LOGI("[TEST FOR WATCH]StopForWatch in napi!!");
     return nullptr;
 }
-#endif
 
 struct SyncStateArg {
     vector<int32_t> stateList {};

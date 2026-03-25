@@ -41,7 +41,6 @@ static FileSyncCore *FileSyncUnwrap(ani_env *env, ani_object object)
     return fileSync;
 }
 
-#ifdef SUPPORT_WATCH_LITE
 void FileSyncAni::FileSyncConstructor0(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
@@ -241,7 +240,7 @@ ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
     const int64_t lastSyncTime = data.GetData().value();
     return lastSyncTime;
 }
-#else
+
 void FileSyncAni::FileSyncConstructor0ForWatch(ani_env *env, ani_object object)
 {
     LOGI("[TEST FOR WATCH]FileSyncConstructor0ForWatch in ani!!");
@@ -289,5 +288,4 @@ ani_long FileSyncAni::FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object o
     LOGI("[TEST FOR WATCH]FileSyncGetLastSyncTimeForWatch in ani!!");
     return 0;
 }
-#endif
 } // namespace OHOS::FileManagement::CloudSync

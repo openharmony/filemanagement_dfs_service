@@ -22,7 +22,6 @@ namespace OHOS::FileManagement::CloudSync {
 
 class CloudFileCacheAni final {
 public:
-#ifdef SUPPORT_WATCH_LITE
     static void CloudFileCacheConstructor(ani_env *env, ani_object object);
     static void CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun);
@@ -36,7 +35,6 @@ public:
     static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
-#else
     static void CloudFileCacheConstructorForWatch(ani_env *env, ani_object object);
     static void CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun);
@@ -51,7 +49,6 @@ public:
     static void CloudFileCacheCleanFileCacheForWatch(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatchForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatchForWatch(ani_env *env, ani_object object, ani_object fun);
-#endif
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_ANI_H

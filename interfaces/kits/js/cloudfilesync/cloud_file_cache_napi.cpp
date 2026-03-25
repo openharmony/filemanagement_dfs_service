@@ -128,6 +128,35 @@ bool CloudFileCacheNapi::ToExport(std::vector<napi_property_descriptor> props)
     return exports_.AddProp(className, classValue);
 }
 
+bool CloudFileCacheNapi::Export()
+{
+#ifdef SUPPORT_WATCH_LITE
+    std::vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
+        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
+        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCache),
+        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCache),
+        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCache),
+        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCache),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
+        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
+    };
+#else
+    std::vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::OnForWatch),
+        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::OffForWatch),
+        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCacheForWatch),
+        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCacheForWatch),
+        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCacheForWatch),
+    };
+#endif
+
+    return ToExport(props);
+}
+
 napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_info info)
 {
     LOGI("CleanCache start");
@@ -190,36 +219,6 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
     return NVal::CreateUndefined(env).val_;
 }
 
-bool CloudFileCacheNapi::Export()
-{
-#ifdef SUPPORT_WATCH_LITE
-    std::vector<napi_property_descriptor> props = {
-        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
-        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
-        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCache),
-        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCache),
-        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCache),
-        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCache),
-        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
-        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
-    };
-#else
-    std::vector<napi_property_descriptor> props = {
-        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::OnForWatch),
-        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::OffForWatch),
-        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCacheForWatch),
-        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCacheForWatch),
-        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCacheForWatch),
-        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCacheForWatch),
-        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCacheForWatch),
-        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCacheForWatch),
-    };
-#endif
-
-    return ToExport(props);
-}
-
-#ifdef SUPPORT_WATCH_LITE
 static std::shared_ptr<CloudFileCacheCallbackImplNapi> GetCallbackImpl(napi_env env, NFuncArg &funcArg,
     const std::string &eventType, bool isInit)
 {
@@ -582,7 +581,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
 
     return NVal::CreateUndefined(env).val_;
 }
-#else
+
 napi_value CloudFileCacheNapi::OnForWatch(napi_env env, napi_callback_info info)
 {
     LOGI("[TEST FOR WATCH]OnForWatch in napi!!");
@@ -630,7 +629,6 @@ napi_value CloudFileCacheNapi::CleanFileCacheForWatch(napi_env env, napi_callbac
     LOGI("[TEST FOR WATCH]CleanFileCacheForWatch in napi!!");
     return nullptr;
 }
-#endif
 
 string CloudFileCacheNapi::GetClassName()
 {

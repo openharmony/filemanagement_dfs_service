@@ -31,13 +31,13 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
     if (ret != ANI_OK) {
         LOGE("Unwrap cloudFileCacheCore err: %{public}d", static_cast<int32_t>(ret));
         return nullptr;
+
     }
     std::uintptr_t ptrValue = static_cast<std::uintptr_t>(nativePtr);
     CloudFileCacheCore *cloudFileCache = reinterpret_cast<CloudFileCacheCore *>(ptrValue);
     return cloudFileCache;
 }
 
-#ifdef SUPPORT_WATCH_LITE
 void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
@@ -304,7 +304,7 @@ void CloudFileCacheAni::CloudFileCacheOffBatch(ani_env *env, ani_object object, 
     }
     callbackImpl->TryCleanCallback();
 }
-#else
+
 void CloudFileCacheAni::CloudFileCacheConstructorForWatch(ani_env *env, ani_object object)
 {
     LOGI("[TEST FOR WATCH]CloudFileCacheConstructorForWatch in ani!!");
@@ -379,5 +379,4 @@ void CloudFileCacheAni::CloudFileCacheOffBatchForWatch(ani_env *env, ani_object 
     LOGI("[TEST FOR WATCH]CloudFileCacheOffBatchForWatch in ani!!");
     return;
 }
-#endif
 } // namespace OHOS::FileManagement::CloudSync

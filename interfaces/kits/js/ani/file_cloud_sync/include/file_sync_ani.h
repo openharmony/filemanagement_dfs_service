@@ -21,7 +21,6 @@
 namespace OHOS::FileManagement::CloudSync {
 class FileSyncAni final {
 public:
-#ifdef SUPPORT_WATCH_LITE
     static void FileSyncConstructor0(ani_env *env, ani_object object);
     static void FileSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName);
     static void FileSyncOn(ani_env *env, ani_object object, ani_object fun);
@@ -30,7 +29,6 @@ public:
     static void FileSyncStart(ani_env *env, ani_object object);
     static void FileSyncStop(ani_env *env, ani_object object);
     static ani_long FileSyncGetLastSyncTime(ani_env *env, ani_object object);
-#else
     static void FileSyncConstructor0ForWatch(ani_env *env, ani_object object);
     static void FileSyncConstructor1ForWatch(ani_env *env, ani_object object, ani_string bundleName);
     static void FileSyncOnForWatch(ani_env *env, ani_object object, ani_object fun);
@@ -39,7 +37,6 @@ public:
     static void FileSyncStartForWatch(ani_env *env, ani_object object);
     static void FileSyncStopForWatch(ani_env *env, ani_object object);
     static ani_long FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object object);
-#endif
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_SYNC_ANI_H
