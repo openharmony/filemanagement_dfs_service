@@ -87,7 +87,7 @@ static ani_status BindContextOnMultiDlProgress(ani_env *env)
     return ANI_OK;
 }
 
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
 static ani_status BindContextOnCloudFileCache(ani_env *env)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
@@ -405,7 +405,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     status = BindContextOnCloudFileCache(env);
 #else
     status = BindContextOnCloudFileCacheForWatch(env);
@@ -413,7 +413,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     status = BindContextOnFileSync(env);
 #else
     status = BindContextOnFileSyncForWatch(env);

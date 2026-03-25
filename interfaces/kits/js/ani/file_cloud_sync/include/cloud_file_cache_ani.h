@@ -22,7 +22,7 @@ namespace OHOS::FileManagement::CloudSync {
 
 class CloudFileCacheAni final {
 public:
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     static void CloudFileCacheConstructor(ani_env *env, ani_object object);
     static void CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun);

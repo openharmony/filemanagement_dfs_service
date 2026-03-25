@@ -37,7 +37,7 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
     return cloudFileCache;
 }
 
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
 void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");

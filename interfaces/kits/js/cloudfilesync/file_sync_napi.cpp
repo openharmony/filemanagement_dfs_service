@@ -33,7 +33,7 @@ struct SyncTimeArg {
     int64_t time = 0;
 };
 
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
 napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
 {
     LOGI("GetLastSyncTime Start");
@@ -245,7 +245,7 @@ struct SyncStateArg {
 
 bool FileSyncNapi::Export()
 {
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallback),
         NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallback),

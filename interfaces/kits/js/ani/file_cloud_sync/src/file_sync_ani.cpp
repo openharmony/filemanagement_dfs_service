@@ -41,7 +41,7 @@ static FileSyncCore *FileSyncUnwrap(ani_env *env, ani_object object)
     return fileSync;
 }
 
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
 void FileSyncAni::FileSyncConstructor0(ani_env *env, ani_object object)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");

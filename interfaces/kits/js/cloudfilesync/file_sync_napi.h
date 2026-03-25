@@ -26,7 +26,7 @@ public:
     
     FileSyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {};
     ~FileSyncNapi() = default;
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     static napi_value GetLastSyncTime(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);

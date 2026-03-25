@@ -21,7 +21,7 @@
 namespace OHOS::FileManagement::CloudSync {
 class FileSyncAni final {
 public:
-#ifndef SUPPORT_WATCH_LITE
+#ifdef SUPPORT_WATCH_LITE
     static void FileSyncConstructor0(ani_env *env, ani_object object);
     static void FileSyncConstructor1(ani_env *env, ani_object object, ani_string bundleName);
     static void FileSyncOn(ani_env *env, ani_object object, ani_object fun);
