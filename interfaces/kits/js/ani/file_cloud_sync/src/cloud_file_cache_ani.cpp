@@ -31,7 +31,6 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
     if (ret != ANI_OK) {
         LOGE("Unwrap cloudFileCacheCore err: %{public}d", static_cast<int32_t>(ret));
         return nullptr;
-
     }
     std::uintptr_t ptrValue = static_cast<std::uintptr_t>(nativePtr);
     CloudFileCacheCore *cloudFileCache = reinterpret_cast<CloudFileCacheCore *>(ptrValue);

@@ -23,22 +23,18 @@ namespace OHOS::FileManagement::CloudSync {
 class FileSyncNapi final : public CloudSyncNapi {
 public:
     bool Export() override;
-    
+    static napi_value GetLastSyncTime(napi_env env, napi_callback_info info);
     FileSyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {};
     ~FileSyncNapi() = default;
-#ifdef SUPPORT_WATCH_LITE
-    static napi_value GetLastSyncTime(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
-#else
     static napi_value GetLastSyncTimeForWatch(napi_env env, napi_callback_info info);
     static napi_value StartForWatch(napi_env env, napi_callback_info info);
     static napi_value StopForWatch(napi_env env, napi_callback_info info);
     static napi_value OnCallbackForWatch(napi_env env, napi_callback_info info);
     static napi_value OffCallbackForWatch(napi_env env, napi_callback_info info);
-#endif
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_SYNC_NAPI_H
