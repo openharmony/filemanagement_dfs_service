@@ -37,6 +37,7 @@ static CloudFileCacheCore *CloudFileCacheUnwrap(ani_env *env, ani_object object)
     return cloudFileCache;
 }
 
+#ifdef SUPPORT_WATCH_LITE
 void CloudFileCacheAni::CloudFileCacheConstructorForWatch(ani_env *env, ani_object object)
 {
     LOGI("[TEST FOR WATCH]CloudFileCacheConstructorForWatch in ani!!");
@@ -111,6 +112,7 @@ void CloudFileCacheAni::CloudFileCacheOffBatchForWatch(ani_env *env, ani_object 
     LOGI("[TEST FOR WATCH]CloudFileCacheOffBatchForWatch in ani!!");
     return;
 }
+#endif
 
 void CloudFileCacheAni::CloudFileCacheConstructor(ani_env *env, ani_object object)
 {

@@ -41,6 +41,7 @@ static FileSyncCore *FileSyncUnwrap(ani_env *env, ani_object object)
     return fileSync;
 }
 
+#ifdef SUPPORT_WATCH_LITE
 void FileSyncAni::FileSyncConstructor0ForWatch(ani_env *env, ani_object object)
 {
     LOGI("[TEST FOR WATCH]FileSyncConstructor0ForWatch in ani!!");
@@ -88,6 +89,7 @@ ani_long FileSyncAni::FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object o
     LOGI("[TEST FOR WATCH]FileSyncGetLastSyncTimeForWatch in ani!!");
     return 0;
 }
+#endif
 
 void FileSyncAni::FileSyncConstructor0(ani_env *env, ani_object object)
 {
