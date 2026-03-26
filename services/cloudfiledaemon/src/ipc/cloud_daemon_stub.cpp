@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
+using namespace std;
 CloudDaemonStub::CloudDaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE)] =
