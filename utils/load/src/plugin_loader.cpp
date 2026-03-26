@@ -58,7 +58,11 @@ string GetPluginPath(const string &pluginFileName)
 void PluginLoader::LoadCloudKitPlugin(bool isSupportCloudSync)
 {
     std::vector<std::string> pluginFileNames;
+#ifdef CLOUD_ADAPTER_ENABLED
     pluginFileNames.emplace_back(isSupportCloudSync ? "libcloudfile_ext.z.so" : "libcloudfile_ext_core.z.so");
+#else
+    LOGE("cloud adapter not enable");
+#endif
     pluginFileNames.emplace_back("libcloud_adapter.z.so");
     for (auto &pluginFileName : pluginFileNames) {
         auto pluginFilePath = GetPluginPath(pluginFileName);
