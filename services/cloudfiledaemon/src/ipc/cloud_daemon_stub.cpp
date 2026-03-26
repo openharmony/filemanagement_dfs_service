@@ -54,7 +54,7 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     auto fd = data.ReadFileDescriptor();
     auto path = data.ReadString();
 #ifdef SUPPORT_WATCH_LITE
-    if (path == "cloud_fuse") {
+    if (path.find("cloud_fuse") != string::npos) {
         LOGI("End StartFuseInner for watch!!");
         return E_OK;
     }
