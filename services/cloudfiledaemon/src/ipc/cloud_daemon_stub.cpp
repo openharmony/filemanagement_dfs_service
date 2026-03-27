@@ -54,12 +54,12 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     auto userId = data.ReadInt32();
     auto fd = data.ReadFileDescriptor();
     auto path = data.ReadString();
-// #ifndef SUPPORT_WATCH_LITE
-//     if (path.find("cloud_fuse") != std::string::npos) {
-//         LOGI("End StartFuseInner for watch!!");
-//         return E_OK;
-//     }
-// #endif
+#ifndef SUPPORT_WATCH_LITE
+    if (path.find("cloud_fuse") != std::string::npos) {
+        LOGI("End StartFuseInner for watch!!");
+        return -EINVAL;
+    }
+#endif
     int32_t res = StartFuse(userId, int32_t(fd), path);
     reply.WriteInt32(res);
     LOGI("End StartFuseInner");
