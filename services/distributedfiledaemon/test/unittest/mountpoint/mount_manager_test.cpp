@@ -39,7 +39,7 @@ public:
 
 /**
  * @tc.name: MountManagerTest_MountManager_0100
- * @tc.desc: Verify the MountManager class.
+ * @tc.desc: Verify to MountManager class.
  * @tc.type: FUNC
  * @tc.require: I9KETY
  */
@@ -49,8 +49,8 @@ HWTEST_F(MountManagerTest, MountManagerTest_MountManager_0100, TestSize.Level1)
     ASSERT_NE(MountManager::GetInstance(), nullptr);
     MountManager::GetInstance()->Umount("test");
     Utils::MountArgument mountArg{.userId_ = 100,
-                                  .relativePath_ = "data/test",
-                                  .accountless_ = true};
+                                   .relativePath_ = "data/test",
+                                   .accountless_ = true};
     unique_ptr<MountPoint> uniquePoint = std::make_unique<MountPoint>(mountArg);
     MountManager::GetInstance()->Mount(move(uniquePoint));
 
@@ -59,6 +59,21 @@ HWTEST_F(MountManagerTest, MountManagerTest_MountManager_0100, TestSize.Level1)
     MountManager::GetInstance()->Umount(weakPoint);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "MountManagerTest_MountManager_0100 end";
+}
+
+/**
+ * @tc.name: MountManagerTest_Umount_001
+ * @tc.desc: Verify Umount with groupId
+ * @tc.type: FUNC
+ * @tc.require: I9KETY
+ */
+HWTEST_F(MountManagerTest, MountManagerTest_Umount_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MountManagerTest_Umount_001 start";
+    ASSERT_NE(MountManager::GetInstance(), nullptr);
+    std::string groupId = "test_group";
+    EXPECT_NO_FATAL_FAILURE(MountManager::GetInstance()->Umount(groupId));
+    GTEST_LOG_(INFO) << "MountManagerTest_Umount_001 end";
 }
 } // namespace Test
 } // namespace DistributedFile

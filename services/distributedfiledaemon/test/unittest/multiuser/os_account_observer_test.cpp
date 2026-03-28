@@ -30,6 +30,7 @@ using namespace testing;
 using namespace testing::ext;
 using Want = OHOS::AAFwk::Want;
 constexpr int32_t USER_ID = 101;
+constexpr int32_t INVALID_USER_ID = -1;
 std::shared_ptr<OsAccountObserver> g_subScriber = nullptr;
 
 class OsAccountObserverTest : public testing::Test {
@@ -73,7 +74,7 @@ void OsAccountObserverTest::TearDown(void)
 
 /**
  * @tc.name: OsAccountObserverTest_OnReceiveEvent_0100
- * @tc.desc: Verify the OnReceiveEvent function.
+ * @tc.desc: Verify to OnReceiveEvent function.
  * @tc.type: FUNC
  * @tc.require: SR000H0387
  */
@@ -112,6 +113,101 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_OnReceiveEvent_0100, TestS
     }
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "OsAccountObserverTest_OnReceiveEvent_0100 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_Constructor_001
+ * @tc.desc: Verify constructor
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_Constructor_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_Constructor_001 start";
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto observer = std::make_shared<OsAccountObserver>(subscribeInfo);
+    ASSERT_NE(observer, nullptr);
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_Constructor_001 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_GetCurrentUserId_001
+ * @tc.desc: Verify GetCurrentUserId success
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_GetCurrentUserId_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_GetCurrentUserId_001 start";
+    if (g_subScriber != nullptr) {
+        auto userId = g_subScriber->GetCurrentUserId();
+        EXPECT_NE(userId, INVALID_USER_ID);
+    }
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_GetCurrentUserId_001 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_AddMountPointInfo_001
+ * @tc.desc: Verify AddMountPointInfo success
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_AddMountPointInfo_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_AddMountPointInfo_001 start";
+    if (g_subScriber != nullptr) {
+        EXPECT_NO_FATAL_FAILURE(g_subScriber->AddMountPointInfo(USER_ID, "test_path"));
+    }
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_AddMountPointInfo_001 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_RemoveMountPointInfo_001
+ * @tc.desc: Verify RemoveMountPointInfo success
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_RemoveMountPointInfo_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_RemoveMountPointInfo_001 start";
+    if (g_subScriber != nullptr) {
+        EXPECT_NO_FATAL_FAILURE(g_subScriber->RemoveMountPointInfo(USER_ID));
+    }
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_RemoveMountPointInfo_001 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_OnEventUserSwitched_001
+ * @tc.desc: Verify OnEventUserSwitched normal switch
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_OnEventUserSwitched_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_OnEventUserSwitched_001 start";
+    if (g_subScriber != nullptr) {
+        EXPECT_NO_FATAL_FAILURE(g_subScriber->OnEventUserSwitched(USER_ID));
+    }
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_OnEventUserSwitched_001 end";
+}
+
+/**
+ * @tc.name: OsAccountObserverTest_OnEventUserUnlocked_001
+ * @tc.desc: Verify OnEventUserUnlocked normal unlock
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_OnEventUserUnlocked_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_OnEventUserUnlocked_001 start";
+    if (g_subScriber != nullptr) {
+        g_subScriber->needAddUserId_.store(USER_ID);
+        EXPECT_NO_FATAL_FAILURE(g_subScriber->OnEventUserUnlocked(USER_ID));
+    }
+    GTEST_LOG_(INFO) << "OsAccountObserverTest_OnEventUserUnlocked_001 end";
 }
 } // namespace Test
 } // namespace DistributedFile

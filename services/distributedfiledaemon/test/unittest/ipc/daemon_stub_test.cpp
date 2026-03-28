@@ -1281,4 +1281,73 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleIsSameAccountDevice, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubHandleIsSameAccountDevice End";
 }
+
+/**
+ * @tc.name: DaemonStubTest_OnRemoteRequest_001
+ * @tc.desc: Verify OnRemoteRequest with invalid interface token
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonStubTest, DaemonStubTest_OnRemoteRequest_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_001 start";
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(u"invalid_token"));
+    auto ret = daemonStub_->OnRemoteRequest(1, data, reply, option);
+    EXPECT_EQ(ret, MockDaemonStub::DFS_DAEMON_DESCRIPTOR_IS_EMPTY);
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_001 end";
+}
+
+/**
+ * @tc.name: DaemonStubTest_OnRemoteRequest_002
+ * @tc.desc: Verify OnRemoteRequest with remote call not allowed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonStubTest, DaemonStubTest_OnRemoteRequest_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_002 start";
+    g_isLocalCalling = false;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
+    auto ret = daemonStub_->OnRemoteRequest(999, data, reply, option);
+    EXPECT_EQ(ret, E_ALLOW_LOCAL_CALL_ONLY);
+    g_isLocalCalling = true;
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_002 end";
+}
+
+/**
+ * @tc.name: DaemonStubTest_OnRemoteRequest_003
+ * @tc.desc: Verify OnRemoteRequest with unknown transaction
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonStubTest, DaemonStubTest_OnRemoteRequest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_003 start";
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IDaemon::GetDescriptor()));
+    auto ret = daemonStub_->OnRemoteRequest(999, data, reply, option);
+    EXPECT_NE(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubTest_OnRemoteRequest_003 end";
+}
+
+/**
+ * @tc.name: DaemonStubTest_InitDFileFunction_001
+ * @tc.desc: Verify InitDFileFunction
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonStubTest, DaemonStubTest_InitDFileFunction_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubTest_InitDFileFunction_001 start";
+    EXPECT_NO_FATAL_FAILURE(daemonStub_->InitDFileFunction());
+    GTEST_LOG_(INFO) << "DaemonStubTest_InitDFileFunction_001 end";
+}
 } // namespace OHOS::Storage::DistributedFile::Test

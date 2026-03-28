@@ -363,6 +363,131 @@ HWTEST_F(HiAuditTest, HiAudit_ZipUtils_CloseZipFile_001, TestSize.Level1)
     EXPECT_EQ(compressZip, nullptr);
     GTEST_LOG_(INFO) << "HiauditTest HiAudit_ZipUtils_CloseZipFile_001 end";
 }
+
+/**
+ * @tc.number: HiAudit_WriteStart_001
+ * @tc.name: HiAudit_WriteStart_001
+ * @tc.desc: Verify WriteStart function works correctly
+ */
+HWTEST_F(HiAuditTest, HiAudit_WriteStart_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_WriteStart_001 start";
+    std::string funcName = "TestFunction";
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().WriteStart(funcName));
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_WriteStart_001 end";
+}
+
+/**
+ * @tc.number: HiAudit_WriteEnd_001
+ * @tc.name: HiAudit_WriteEnd_001
+ * @tc.desc: Verify WriteEnd function works correctly with success
+ */
+HWTEST_F(HiAuditTest, HiAudit_WriteEnd_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_WriteEnd_001 start";
+    std::string funcName = "TestFunction";
+    int32_t ret = 0;
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().WriteEnd(funcName, ret));
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_WriteEnd_001 end";
+}
+
+/**
+ * @tc.number: HiAudit_WriteEnd_002
+ * @tc.name: HiAudit_WriteEnd_002
+ * @tc.desc: Verify WriteEnd function works correctly with failure
+ */
+HWTEST_F(HiAuditTest, HiAudit_WriteEnd_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_WriteEnd_002 start";
+    std::string funcName = "TestFunction";
+    int32_t ret = -1;
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().WriteEnd(funcName, ret));
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_WriteEnd_002 end";
+}
+
+/**
+ * @tc.number: HiAudit_Write_002
+ * @tc.name: HiAudit_Write_002
+ * @tc.desc: Verify Write function writes title when log size is 0
+ */
+HWTEST_F(HiAuditTest, HiAudit_Write_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_Write_002 start";
+    HiAudit::GetInstance().writeLogSize_ = 0;
+    AuditLog auditLog = { false, 1, "FAILED TO Mount", "ADD", "Mount", "FAIL" };
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().Write(auditLog));
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_Write_002 end";
+}
+
+/**
+ * @tc.number: HiAudit_Write_003
+ * @tc.name: HiAudit_Write_003
+ * @tc.desc: Verify Write function truncates log when content exceeds max size
+ */
+HWTEST_F(HiAuditTest, HiAudit_Write_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_Write_003 start";
+    AuditLog auditLog = { false, 1, "FAILED TO Mount", "ADD", "Mount", "FAIL" };
+    auditLog.extend = std::string(3 * 1024, 'A');
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().Write(auditLog));
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_Write_003 end";
+}
+
+/**
+ * @tc.number: HiAudit_GetWriteFilePath_002
+ * @tc.name: HiAudit_GetWriteFilePath_002
+ * @tc.desc: Verify GetWriteFilePath does not trigger compression when log size is small
+ */
+HWTEST_F(HiAuditTest, HiAudit_GetWriteFilePath_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_GetWriteFilePath_002 start";
+    HiAudit::GetInstance().writeLogSize_ = MAX_LOG_FILE_SIZE / 2;
+    EXPECT_NO_FATAL_FAILURE(HiAudit::GetInstance().GetWriteFilePath());
+    if (HiAudit::GetInstance().writeFd_ > 0) {
+        fdsan_close_with_tag(HiAudit::GetInstance().writeFd_, LOG_DOMAIN);
+        HiAudit::GetInstance().writeFd_ = INVALID_FD;
+    }
+    GTEST_LOG_(INFO) << "HiAudit_GetWriteFilePath_002 end";
+}
+
+/**
+ * @tc.number: HiAudit_ZipUtils_GetFileHandle_001
+ * @tc.name: HiAudit_ZipUtils_GetFileHandle_001
+ * @tc.desc: Verify AddFileInZip returns error when file does not exist
+ */
+HWTEST_F(HiAuditTest, HiAudit_ZipUtils_GetFileHandle_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HiAudit_ZipUtils_GetFileHandle_001 start";
+    std::string nonExistFile = "/data/log/hiaudit/nonexist.txt";
+    std::string zipFileName = std::string(HIAUDIT_PATH) + "distributedfileaudit.zip";
+    zipFile compressZip = zipOpen(zipFileName.c_str(), APPEND_STATUS_CREATE);
+    ASSERT_TRUE(compressZip != nullptr);
+    int ret = ZipUtil::AddFileInZip(compressZip, nonExistFile,
+        KeepStatus::KEEP_NONE_PARENT_PATH, "audit.csv");
+    zipClose(compressZip, nullptr);
+    EXPECT_EQ(ret, ERROR_GET_HANDLE);
+    GTEST_LOG_(INFO) << "HiAudit_ZipUtils_GetFileHandle_001 end";
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

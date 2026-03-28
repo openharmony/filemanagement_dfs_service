@@ -2459,5 +2459,33 @@ HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_006, TestSiz
 
     GTEST_LOG_(INFO) << "DaemonTest_HandleDestinationPathAndPermissions_006 end";
 }
+
+/**
+ * @tc.name: DaemonTest_RegisterOsAccount_002
+ * @tc.desc: Verify RegisterOsAccount
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterOsAccount_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterOsAccount_002 start";
+    EXPECT_NO_FATAL_FAILURE(daemon_->RegisterOsAccount());
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterOsAccount_002 end";
+}
+
+/**
+ * @tc.name: DaemonTest_Dump_001
+ * @tc.desc: Verify Dump
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(DaemonTest, DaemonTest_Dump_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_Dump_001 start";
+    int fd = 1;
+    std::vector<std::u16string> args;
+    EXPECT_NO_FATAL_FAILURE(daemon_->Dump(fd, args));
+    GTEST_LOG_(INFO) << "DaemonTest_Dump_001 end";
+}
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

@@ -35,12 +35,55 @@ public:
 
 namespace OHOS::Storage::DistributedFile {
 int32_t GetNodeKeyInfo(const char *pkgName, const char *networkId, NodeDeviceInfoKey key,
-                       uint8_t *info, int32_t infoLen)
+    uint8_t *info, int32_t infoLen)
 {
     GTEST_LOG_(INFO) << "GetNodeKeyInfo start";
     return ISoftBusServer::dfsSoftBusServer->GetNodeKeyInfo(pkgName, networkId, key, info, infoLen);
 }
 } // namespace OHOS::Storage::DistributedFile
+
+namespace OHOS::FileManagement {
+class DfsRadarMock {
+public:
+    MOCK_METHOD(void, ReportLinkConnection, (const RadarParaInfo&, const RadarIDInfo&));
+    MOCK_METHOD(void, ReportGenerateDisUri, (const RadarParaInfo&, const RadarIDInfo&));
+    MOCK_METHOD(void, ReportFileAccess, (const RadarParaInfo&, const RadarIDInfo&));
+    MOCK_METHOD(void, ReportStatistics, (const RadarStatisticInfo&));
+    static inline std::shared_ptr<DfsRadarMock> dfsRadarMock = nullptr;
+};
+
+void DfsRadar::ReportLinkConnection(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
+{
+    GTEST_LOG_(INFO) << "DfsRadar::ReportLinkConnection start";
+    if (DfsRadarMock::dfsRadarMock != nullptr) {
+        DfsRadarMock::dfsRadarMock->ReportLinkConnection(info, radarIdInfo);
+    }
+}
+
+void DfsRadar::ReportGenerateDisUri(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
+{
+    GTEST_LOG_(INFO) << "DfsRadar::ReportGenerateDisUri start";
+    if (DfsRadarMock::dfsRadarMock != nullptr) {
+        DfsRadarMock::dfsRadarMock->ReportGenerateDisUri(info, radarIdInfo);
+    }
+}
+
+void DfsRadar::ReportFileAccess(const RadarParaInfo &info, const RadarIDInfo &radarIdInfo)
+{
+    GTEST_LOG_(INFO) << "DfsRadar::ReportFileAccess start";
+    if (DfsRadarMock::dfsRadarMock != nullptr) {
+        DfsRadarMock::dfsRadarMock->ReportFileAccess(info, radarIdInfo);
+    }
+}
+
+void DfsRadar::ReportStatistics(const RadarStatisticInfo radarInfo)
+{
+    GTEST_LOG_(INFO) << "DfsRadar::ReportStatistics start";
+    if (DfsRadarMock::dfsRadarMock != nullptr) {
+        DfsRadarMock::dfsRadarMock->ReportStatistics(radarInfo);
+    }
+}
+} // namespace OHOS::FileManagement
 
 namespace OHOS::Storage::DistributedFile {
 using namespace std;
@@ -58,6 +101,7 @@ public:
     void TearDown();
     static inline std::shared_ptr<Storage::DistributedFile::DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
     static inline std::shared_ptr<SoftBusServerMock> softBusServerMock_ = nullptr;
+    static inline std::shared_ptr<DfsRadarMock> dfsRadarMock_ = nullptr;
 };
 
 void RadarReportAdapterTest::SetUpTestCase()
@@ -212,5 +256,162 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_GetAnonymStr_001, TestSi
     res = RadarReportAdapter::GetInstance().GetAnonymStr(value);
     EXPECT_EQ(res, "12345**78901");
     GTEST_LOG_(INFO) << "DfsRadarTest_GetAnonymStr_001 End";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_ReportDfxStatistics_002
+ * @tc.desc: verify ReportDfxStatistics with non-empty statistics.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_002 begin";
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarReportAdapter::GetInstance().opStatistics_.connectSuccCount = 1;
+    EXPECT_CALL(*dfsRadarMock_, ReportStatistics(_)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().ReportDfxStatistics());
+    EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_002 end";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_ReportLinkConnectionAdapter_001
+ * @tc.desc: verify ReportLinkConnectionAdapter.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportLinkConnectionAdapter_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportLinkConnectionAdapter_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarParaInfo info;
+    info.peerNetId = "testNetworkId";
+    EXPECT_CALL(*deviceManagerImplMock_,
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dfsRadarMock_, ReportLinkConnection(_, _)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info));
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+#endif
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportLinkConnectionAdapter_001 end";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_ReportGenerateDisUriAdapter_001
+ * @tc.desc: verify ReportGenerateDisUriAdapter.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportGenerateDisUriAdapter_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportGenerateDisUriAdapter_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarParaInfo info;
+    info.peerNetId = "testNetworkId";
+    EXPECT_CALL(*deviceManagerImplMock_,
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dfsRadarMock_, ReportGenerateDisUri(_, _)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().ReportGenerateDisUriAdapter(info));
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+#endif
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportGenerateDisUriAdapter_001 end";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_ReportFileAccessAdapter_001
+ * @tc.desc: verify ReportFileAccessAdapter.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportFileAccessAdapter_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportFileAccessAdapter_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarParaInfo info;
+    info.peerNetId = "testNetworkId";
+    EXPECT_CALL(*deviceManagerImplMock_,
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dfsRadarMock_, ReportFileAccess(_, _)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info));
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+#endif
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportFileAccessAdapter_001 end";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_RptConnectAdapter_001
+ * @tc.desc: verify RptConnectAdapter.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_RptConnectAdapter_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_RptConnectAdapter_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarParaInfo info;
+    info.peerNetId = "testNetworkId";
+    ReportLevel level = OHOS::FileManagement::ReportLevel::DEFAULT;
+    int32_t result = 0;
+    std::string error = "test error";
+    EXPECT_CALL(*deviceManagerImplMock_,
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dfsRadarMock_, ReportLinkConnection(_, _)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().RptConnectAdapter(info, level, result, error));
+    EXPECT_EQ(info.faultLevel, level);
+    EXPECT_EQ(info.resultCode, result);
+    EXPECT_EQ(info.errorInfo, error);
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+#endif
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_RptConnectAdapter_001 end";
+}
+
+/**
+ * @tc.name: RadarReportAdapterTest_RptFileAccAdapter_001
+ * @tc.desc: verify RptFileAccAdapter.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_RptFileAccAdapter_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_RptFileAccAdapter_001 begin";
+#ifdef SUPPORT_SAME_ACCOUNT
+    dfsRadarMock_ = std::make_shared<DfsRadarMock>();
+    DfsRadarMock::dfsRadarMock = dfsRadarMock_;
+    RadarParaInfo info;
+    info.peerNetId = "testNetworkId";
+    ReportLevel level = OHOS::FileManagement::ReportLevel::DEFAULT;
+    int32_t result = 0;
+    std::string error = "test error";
+    EXPECT_CALL(*deviceManagerImplMock_,
+                GetLocalDeviceNetWorkId(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(NETWORKID_ONE), Return(0)));
+    EXPECT_CALL(*softBusServerMock_, GetNodeKeyInfo(_, _, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dfsRadarMock_, ReportFileAccess(_, _)).Times(1);
+    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().RptFileAccAdapter(info, level, result, error));
+    EXPECT_EQ(info.faultLevel, level);
+    EXPECT_EQ(info.resultCode, result);
+    EXPECT_EQ(info.errorInfo, error);
+    DfsRadarMock::dfsRadarMock = nullptr;
+    dfsRadarMock_ = nullptr;
+#endif
+    GTEST_LOG_(INFO) << "RadarReportAdapterTest_RptFileAccAdapter_001 end";
 }
 } // namespace OHOS::Storage::DistributedFile
