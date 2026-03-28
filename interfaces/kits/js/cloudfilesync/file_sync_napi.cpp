@@ -207,38 +207,12 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
-napi_value FileSyncNapi::GetLastSyncTimeForWatch(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
-
-napi_value FileSyncNapi::OnCallbackForWatch(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
-
-napi_value FileSyncNapi::OffCallbackForWatch(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
-
-napi_value FileSyncNapi::StartForWatch(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
-
-napi_value FileSyncNapi::StopForWatch(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
-
 struct SyncStateArg {
     vector<int32_t> stateList {};
 };
 
 bool FileSyncNapi::Export()
 {
-#ifndef SUPPORT_WATCH_LITE
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallback),
         NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallback),
@@ -246,15 +220,6 @@ bool FileSyncNapi::Export()
         NVal::DeclareNapiFunction("stop", FileSyncNapi::Stop),
         NVal::DeclareNapiFunction("getLastSyncTime", FileSyncNapi::GetLastSyncTime),
     };
-#else
-    std::vector<napi_property_descriptor> props = {
-        NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallbackForWatch),
-        NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallbackForWatch),
-        NVal::DeclareNapiFunction("start", FileSyncNapi::StartForWatch),
-        NVal::DeclareNapiFunction("stop", FileSyncNapi::StopForWatch),
-        NVal::DeclareNapiFunction("getLastSyncTime", FileSyncNapi::GetLastSyncTimeForWatch),
-    };
-#endif
 
     SetClassName("FileSync");
     return ToExport(props);

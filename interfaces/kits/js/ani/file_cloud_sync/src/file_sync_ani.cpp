@@ -240,44 +240,4 @@ ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
     const int64_t lastSyncTime = data.GetData().value();
     return lastSyncTime;
 }
-
-void FileSyncAni::FileSyncConstructor0ForWatch(ani_env *env, ani_object object)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncConstructor1ForWatch(ani_env *env, ani_object object, ani_string bundleName)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncOnForWatch(ani_env *env, ani_object object, ani_object fun)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncOff0ForWatch(ani_env *env, ani_object object, ani_object fun)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncOff1ForWatch(ani_env *env, ani_object object)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncStartForWatch(ani_env *env, ani_object object)
-{
-    return;
-}
-
-void FileSyncAni::FileSyncStopForWatch(ani_env *env, ani_object object)
-{
-    return;
-}
-
-ani_long FileSyncAni::FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object object)
-{
-    return 0;
-}
 } // namespace OHOS::FileManagement::CloudSync

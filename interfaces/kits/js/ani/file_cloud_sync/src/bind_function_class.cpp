@@ -139,42 +139,6 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
     };
     return ANI_OK;
 }
-
-static ani_status BindContextOnFileSync(ani_env *env)
-{
-    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
-    ani_class cls;
-    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
-    if (ret != ANI_OK) {
-        LOGE("find class failed. ret = %{public}d", ret);
-        return ret;
-    }
-    std::string ct = Builder::BuildConstructorName();
-    std::string vSign = Builder::BuildSignatureDescriptor({});
-    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
-    std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
-    std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
-    std::array methods = {
-        ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
-        ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
-        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
-        ani_native_function{"offProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0)},
-        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1)},
-        ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStart)},
-        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStop)},
-        ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTime)},
-    };
-
-    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
-    if (ret != ANI_OK) {
-        LOGE("bind native method failed. ret = %{public}d", ret);
-        return ret;
-    };
-
-    return ANI_OK;
-}
-
 #else
 static ani_status BindContextOnCloudFileCacheForWatch(ani_env *env)
 {
@@ -227,8 +191,9 @@ static ani_status BindContextOnCloudFileCacheForWatch(ani_env *env)
     };
     return ANI_OK;
 }
+#endif
 
-static ani_status BindContextOnFileSyncForWatch(ani_env *env)
+static ani_status BindContextOnFileSync(ani_env *env)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.FileSync");
     ani_class cls;
@@ -243,19 +208,15 @@ static ani_status BindContextOnFileSyncForWatch(ani_env *env)
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
     std::array methods = {
-        ani_native_function{ct.c_str(), vSign.c_str(), 
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0ForWatch)},
-        ani_native_function{ct.c_str(), sSign.c_str(), 
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1ForWatch)},
-        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOnForWatch)},
-        ani_native_function{"offProgress", onOffSign.c_str(), 
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncOff0ForWatch)},
-        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1ForWatch)},
-        ani_native_function{"FileSyncStart", vSign.c_str(), 
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncStartForWatch)},
-        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStopForWatch)},
+        ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
+        ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
+        ani_native_function{"onProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOn)},
+        ani_native_function{"offProgress", onOffSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff0)},
+        ani_native_function{"offProgress", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncOff1)},
+        ani_native_function{"FileSyncStart", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStart)},
+        ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStop)},
         ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
-                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTimeForWatch)},
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTime)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -266,7 +227,6 @@ static ani_status BindContextOnFileSyncForWatch(ani_env *env)
 
     return ANI_OK;
 }
-#endif
 
 static ani_status BindContextOnStaticFunction(ani_env *env)
 {
@@ -414,11 +374,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
-#ifndef SUPPORT_WATCH_LITE
     status = BindContextOnFileSync(env);
-#else
-    status = BindContextOnFileSyncForWatch(env);
-#endif
     if (status != ANI_OK) {
         return status;
     }
