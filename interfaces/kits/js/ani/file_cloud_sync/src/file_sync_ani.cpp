@@ -243,49 +243,41 @@ ani_long FileSyncAni::FileSyncGetLastSyncTime(ani_env *env, ani_object object)
 
 void FileSyncAni::FileSyncConstructor0ForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST FOR WATCH]FileSyncConstructor0ForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncConstructor1ForWatch(ani_env *env, ani_object object, ani_string bundleName)
 {
-    LOGI("[TEST FOR WATCH]FileSyncConstructor1ForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncOnForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST FOR WATCH]FileSyncOnForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncOff0ForWatch(ani_env *env, ani_object object, ani_object fun)
 {
-    LOGI("[TEST FOR WATCH]FileSyncOff0ForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncOff1ForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST FOR WATCH]FileSyncOff1ForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncStartForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST FOR WATCH]FileSyncStartForWatch in ani!!");
     return;
 }
 
 void FileSyncAni::FileSyncStopForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST FOR WATCH]FileSyncStopForWatch in ani!!");
     return;
 }
 
 ani_long FileSyncAni::FileSyncGetLastSyncTimeForWatch(ani_env *env, ani_object object)
 {
-    LOGI("[TEST FOR WATCH]FileSyncGetLastSyncTimeForWatch in ani!!");
     return 0;
 }
 } // namespace OHOS::FileManagement::CloudSync

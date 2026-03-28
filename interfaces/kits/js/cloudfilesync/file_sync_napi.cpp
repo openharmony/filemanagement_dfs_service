@@ -209,31 +209,26 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
 
 napi_value FileSyncNapi::GetLastSyncTimeForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST FOR WATCH]GetLastSyncTimeForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::OnCallbackForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST FOR WATCH]OnCallbackForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::OffCallbackForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST FOR WATCH]OffCallbackForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::StartForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST FOR WATCH]StartForWatch in napi!!");
     return nullptr;
 }
 
 napi_value FileSyncNapi::StopForWatch(napi_env env, napi_callback_info info)
 {
-    LOGI("[TEST FOR WATCH]StopForWatch in napi!!");
     return nullptr;
 }
 
