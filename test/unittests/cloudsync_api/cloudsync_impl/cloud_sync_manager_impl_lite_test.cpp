@@ -131,7 +131,7 @@ HWTEST_F(CloudSyncManagerImplLiteTest, RemovedCleanTest003, TestSize.Level1)
     try {
         string bundleName = "test.bundle.name";
         int32_t userId = 101;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         auto res = CloudSyncManagerImplLite::GetInstance().RemovedClean(bundleName, userId);
         EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
@@ -153,7 +153,7 @@ HWTEST_F(CloudSyncManagerImplLiteTest, RemovedCleanTest004, TestSize.Level1)
     try {
         string bundleName = "test.bundle.name";
         int32_t userId = 101;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         CloudSyncManagerImplLite::GetInstance().RemovedClean(bundleName, userId);
     } catch (...) {
         EXPECT_TRUE(false);

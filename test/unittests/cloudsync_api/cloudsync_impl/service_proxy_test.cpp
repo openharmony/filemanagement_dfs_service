@@ -18,6 +18,7 @@
 #include <memory>
 #include <sstream>
 
+#include "cloud_sync_start_event.h"
 #include "dfs_error.h"
 #include "i_cloud_download_callback_mock.h"
 #include "i_cloud_sync_service_mock.h"
@@ -52,6 +53,7 @@ void ServiceProxyTest::SetUpTestCase(void)
 void ServiceProxyTest::TearDownTestCase(void)
 {
     smc_ = nullptr;
+    SystemAbilityManagerClientMock::smc = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -76,7 +78,7 @@ HWTEST_F(ServiceProxyTest, GetInstanceTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetInstanceTest001 Start";
     try {
         EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
-        auto ServiceProxy = ServiceProxy::GetInstance();
+        auto ServiceProxy = ServiceProxy::GetInstance(CallerInfo());
         EXPECT_TRUE(ServiceProxy == nullptr);
     } catch (...) {
         GTEST_LOG_(ERROR) << "GetInstanceTest001 occurs an exception.";
@@ -99,7 +101,7 @@ HWTEST_F(ServiceProxyTest, GetInstanceTest002, TestSize.Level1)
         EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
         EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(object));
 
-        auto ServiceProxy = ServiceProxy::GetInstance();
+        auto ServiceProxy = ServiceProxy::GetInstance(CallerInfo());
         EXPECT_TRUE(ServiceProxy != nullptr);
     } catch (...) {
         GTEST_LOG_(ERROR) << "GetInstanceTest002 occurs an exception.";
@@ -123,7 +125,7 @@ HWTEST_F(ServiceProxyTest, GetInstanceTest003, TestSize.Level1)
         EXPECT_CALL(*sysAbilityManager, LoadSystemAbility(An<int32_t>(), An<const sptr<ISystemAbilityLoadCallback>&>()))
             .WillOnce(Return(E_PERMISSION));
 
-        auto ServiceProxy = ServiceProxy::GetInstance();
+        auto ServiceProxy = ServiceProxy::GetInstance(CallerInfo());
         EXPECT_TRUE(ServiceProxy == nullptr);
     } catch (...) {
         GTEST_LOG_(ERROR) << "GetInstanceTest003 occurs an exception.";
@@ -146,12 +148,124 @@ HWTEST_F(ServiceProxyTest, GetInstanceTest004, TestSize.Level1)
         EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*sysAbilityManager, LoadSystemAbility(An<int32_t>(), An<const sptr<ISystemAbilityLoadCallback>&>()))
             .WillOnce(Return(ERR_OK));
-        auto ServiceProxy = ServiceProxy::GetInstance();
+        auto ServiceProxy = ServiceProxy::GetInstance(CallerInfo());
         EXPECT_TRUE(ServiceProxy == nullptr);
     } catch (...) {
         GTEST_LOG_(ERROR) << "GetInstanceTest004 occurs an exception.";
     }
     GTEST_LOG_(INFO) << "GetInstanceTest004 End";
+}
+
+
+/**
+ * @tc.name: GetInstanceTest005
+ * @tc.desc: Verify GetInstance with CallerInfo parameter when SA already exists.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceTest005 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        auto object = sptr<CloudSyncServiceMock>(new CloudSyncServiceMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(object));
+
+        CallerInfo callerInfo("com.ohos.photos", "StartSync");
+        auto ServiceProxy = ServiceProxy::GetInstance(callerInfo);
+        EXPECT_TRUE(ServiceProxy != nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceTest005 occurs an exception.";
+    }
+    GTEST_LOG_(INFO) << "GetInstanceTest005 End";
+}
+
+/**
+ * @tc.name: GetInstanceTest006
+ * @tc.desc: Verify GetInstance with CallerInfo parameter when SA needs to be loaded.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceTest006 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*sysAbilityManager, LoadSystemAbility(An<int32_t>(), An<const sptr<ISystemAbilityLoadCallback>&>()))
+            .WillOnce(Return(E_PERMISSION));
+
+        CallerInfo callerInfo("com.ohos.photos", "DownloadFile");
+        auto ServiceProxy = ServiceProxy::GetInstance(callerInfo);
+        EXPECT_TRUE(ServiceProxy == nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceTest006 occurs an exception.";
+    }
+    GTEST_LOG_(INFO) << "GetInstanceTest006 End";
+}
+
+/**
+ * @tc.name: GetInstanceTest007
+ * @tc.desc: Verify GetInstance with empty CallerInfo
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceTest007 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*sysAbilityManager, LoadSystemAbility(An<int32_t>(), An<const sptr<ISystemAbilityLoadCallback>&>()))
+            .WillOnce(Return(E_PERMISSION));
+
+        auto ServiceProxy = ServiceProxy::GetInstance(CallerInfo());
+        EXPECT_TRUE(ServiceProxy == nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceTest007 occurs an exception.";
+    }
+    GTEST_LOG_(INFO) << "GetInstanceTest007 End";
+}
+
+/**
+ * @tc.name: CallerInfoTest001
+ * @tc.desc: Verify CallerInfo default constructor
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(ServiceProxyTest, CallerInfoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallerInfoTest001 Start";
+    try {
+        CallerInfo callerInfo;
+        EXPECT_TRUE(callerInfo.bundleName.empty());
+        EXPECT_TRUE(callerInfo.callerMethod.empty());
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "CallerInfoTest001 occurs an exception.";
+    }
+    GTEST_LOG_(INFO) << "CallerInfoTest001 End";
+}
+
+/**
+ * @tc.name: CallerInfoTest002
+ * @tc.desc: Verify CallerInfo parameterized constructor
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(ServiceProxyTest, CallerInfoTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallerInfoTest002 Start";
+    try {
+        CallerInfo callerInfo("com.ohos.photos", "StartSync");
+        EXPECT_EQ(callerInfo.bundleName, "com.ohos.photos");
+        EXPECT_EQ(callerInfo.callerMethod, "StartSync");
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "CallerInfoTest002 occurs an exception.";
+    }
+    GTEST_LOG_(INFO) << "CallerInfoTest002 End";
 }
 
 /**

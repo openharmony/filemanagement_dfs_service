@@ -22,6 +22,7 @@
 #include "battery_status.h"
 #include "cloud_file_kit.h"
 #include "cloud_status.h"
+#include "cloud_sync_start_event.h"
 #include "clouddisk_rdb_utils.h"
 #include "cycle_task/cycle_task_runner.h"
 #include "data_sync_const.h"
@@ -199,6 +200,8 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     LOGI("init service successfully");
     system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
+    ReportServiceStart(startReason);
+    
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         SettingsDataManager::InitSettingsDataManager();
@@ -1351,5 +1354,11 @@ int32_t CloudSyncService::GetAclXattrBatch(const bool isAccess, const std::vecto
     }
 
     return E_OK;
+}
+
+void CloudSyncService::ReportServiceStart(const SystemAbilityOnDemandReason &startReason)
+{
+    string event = startReason.GetName();
+    CloudFileServiceStartReport(event);
 }
 } // namespace OHOS::FileManagement::CloudSync

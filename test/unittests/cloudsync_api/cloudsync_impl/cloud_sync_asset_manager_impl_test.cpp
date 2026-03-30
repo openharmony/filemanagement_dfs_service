@@ -97,7 +97,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
         int32_t userId = 100;
         std::string request = "";
         std::string result = "";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
 
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().UploadAsset(userId, request, result);
         EXPECT_EQ(res, E_OK);
@@ -121,7 +121,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
         int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
         AssetInfo assetInfo;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
 
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(userId, bundleName, assetInfo);
         EXPECT_EQ(res, E_OK);
@@ -147,7 +147,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest001, TestSize.Level1)
         std::vector<AssetInfo> assetInfo;
         std::vector<bool> assetResultMap;
         int32_t connectTime = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
 
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFiles(userId,
                                                     bundleName, assetInfo, assetResultMap, connectTime);
@@ -174,7 +174,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFilesTest002, TestSize.Level1)
         std::vector<AssetInfo> assetInfo;
         std::vector<bool> assetResultMap;
         int32_t connectTime = 1;
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
 
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFiles(userId,
                                                     bundleName, assetInfo, assetResultMap, connectTime);
@@ -198,7 +198,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DeleteAssetTest, TestSize.Level1)
     try {
         int32_t userId = 100;
         std::string uri = "uri";
-        EXPECT_CALL(*proxy_, GetInstance()).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
 
         int32_t res = CloudSyncAssetManagerImpl::GetInstance().DeleteAsset(userId, uri);
         EXPECT_EQ(res, E_OK);

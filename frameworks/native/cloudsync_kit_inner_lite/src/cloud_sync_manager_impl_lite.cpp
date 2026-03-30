@@ -34,7 +34,7 @@ int32_t CloudSyncManagerImplLite::TriggerSync(const std::string &bundleName, con
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "TriggerSync002"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -49,7 +49,7 @@ int32_t CloudSyncManagerImplLite::RemovedClean(const std::string &bundleName, in
         LOGE("RemovedClean parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance();
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "RemovedClean"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
