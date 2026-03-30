@@ -60,6 +60,7 @@
           "init",
           "ipc",
           "json",
+          "libuv",
           "napi",
           "preferences",
           "memmgr",
