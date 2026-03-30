@@ -802,4 +802,82 @@ XattrResult *XattrResult::Unmarshalling(Parcel &parcel)
     }
     return info;
 }
+
+bool UploadProgressObj::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt32(state)) {
+        LOGE("failed to write upload state");
+        return false;
+    }
+    if (!parcel.WriteInt64(processed)) {
+        LOGE("failed to write processed");
+        return false;
+    }
+    if (!parcel.WriteInt64(size)) {
+        LOGE("failed to write size");
+        return false;
+    }
+    if (!parcel.WriteString(uri)) {
+        LOGE("failed to write uri");
+        return false;
+    }
+    if (!parcel.WriteInt32(error)) {
+        LOGE("failed to write error");
+        return false;
+    }
+
+    return true;
+}
+
+bool UploadProgressObj::ReadFromParcel(Parcel &parcel)
+{
+    int32_t tempState = 0;
+    if (!parcel.ReadInt32(tempState)) {
+        LOGE("failed to read download state");
+        return false;
+    }
+    state = static_cast<UploadState>(tempState);
+    if (!parcel.ReadInt64(processed)) {
+        LOGE("failed to read processed");
+        return false;
+    }
+    if (!parcel.ReadInt64(size)) {
+        LOGE("failed to read size");
+        return false;
+    }
+    if (!parcel.ReadString(uri)) {
+        LOGE("failed to read uri");
+        return false;
+    }
+    int32_t tempError = 0;
+    if (!parcel.ReadInt32(tempError)) {
+        LOGE("failed to read error");
+        return false;
+    }
+    error = static_cast<ErrorType>(tempError);
+    return true;
+}
+
+UploadProgressObj *UploadProgressObj::Unmarshalling(Parcel &parcel)
+{
+    UploadProgressObj *info = new (std::nothrow) UploadProgressObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+std::string UploadProgressObj::to_string()
+{
+    std::stringstream ss;
+    std::string uriAnony = GetAnonyString(uri);
+    ss << "[" << uriAnony;
+    ss << " , " << state;
+    ss << " , " << processed;
+    ss << " , " << size;
+    ss << " , " << error << "]";
+    return ss.str();
+}
 } // namespace OHOS::FileManagement::CloudSync

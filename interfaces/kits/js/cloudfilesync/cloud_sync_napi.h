@@ -20,6 +20,7 @@
 
 #include "cloud_sync_callback.h"
 #include "cloud_sync_callback_info.h"
+#include "cloud_upload_callback.h"
 #include "cloud_optimize_callback.h"
 #include "cloud_sync_common.h"
 #include "data_ability_observer_interface.h"
@@ -33,6 +34,7 @@ const int32_t ARGS_ONE = 1;
 
 struct BundleEntity {
     CallbackInfo callbackInfo;
+    UploadCallbackInfo uploadCallbackInfo;
 };
 
 struct CloudChangeListener {

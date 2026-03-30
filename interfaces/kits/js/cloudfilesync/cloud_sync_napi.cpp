@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <set>
+#include <string>
 #include <sys/types.h>
 #include <sys/xattr.h>
 
@@ -330,6 +331,7 @@ napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
             return nullptr;
         }
         bundleEntity->callbackInfo.bundleName = string(bundleName.get());
+        bundleEntity->uploadCallbackInfo.bundleName = string(bundleName.get());
         LOGI("init with bundleName");
     }
 

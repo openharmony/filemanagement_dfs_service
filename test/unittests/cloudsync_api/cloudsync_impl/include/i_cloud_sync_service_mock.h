@@ -24,6 +24,7 @@
 #include "iremote_broker.h"
 #include "cloud_sync_constants.h"
 #include "dfs_error.h"
+#include "iremote_stub.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncServiceMock : public IRemoteStub<ICloudSyncService> {
@@ -115,7 +116,15 @@ public:
     MOCK_METHOD2(GetDowngradeDownloadTaskState,
                  int32_t(const std::vector<std::string> &bundleNames,
                  std::vector<DowngradeProgress> &downgradeProgressList));
-private:
+    MOCK_METHOD2(GetDownloadList, int32_t(const std::vector<std::string> &uriVec,
+        std::vector<DownloadProgressObj> &downloadList));
+    MOCK_METHOD2(GetUploadList, int32_t(const std::vector<std::string> &uriVec,
+        std::vector<UploadProgressObj> &uploadList));
+    MOCK_METHOD3(RegisterUploadCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject,
+        const std::string &callbackId, const std::string &bundleName));
+    MOCK_METHOD2(UnRegisterUploadCallbackInner, int32_t(const std::string &callbackId,
+        const std::string &bundleName));
+ private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,
                                       const std::vector<std::string> &uriVec,
                                       std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,

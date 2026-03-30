@@ -76,6 +76,14 @@ public:
     }
 };
 
+class CloudUploadCallbackDerived : public CloudUploadCallback {
+public:
+    void OnUploadProgress(const UploadProgressObj &progress)
+    {
+        std::cout << "OnUploadProgress" << std::endl;
+    }
+};
+
 void CloudSyncManagerImplTest::SetUpTestCase(void)
 {
     std::cout << "SetUpTestCase" << std::endl;
@@ -1211,7 +1219,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest002, TestSize.Level1)
 }
 
 /*
- * @tc.name: ResetProxyCallbackTest002
+ * @tc.name: ResetProxyCallbackTest003
  * @tc.desc: proxy 不为空，但callback 不为空, RegisterCallbackInner返回异常
  * @tc.type: FUNC
  * @tc.require: 2544
@@ -1227,11 +1235,21 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest003, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
+
+        UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "0x0000005a40d3b680";
+        uploadCallbackInfo.bundleName = "com.ohos.photos";
+        uploadCallbackInfo.callback = make_shared<CloudUploadCallback>();
+        CloudUploadCallbackClientManager::GetInstance().callbackList_.clear();
+        CloudUploadCallbackClientManager::GetInstance().AddCallback(uploadCallbackInfo);
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
+        CloudUploadCallbackClientManager::GetInstance().RemoveCallback(uploadCallbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ResetProxyCallbackTest003 FAILED";
@@ -1256,11 +1274,21 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest004, TestSize.Level1)
         callbackInfo.callback = make_shared<CloudSyncCallback>();
         CloudSyncCallbackClientManager::GetInstance().callbackList_.clear();
         CloudSyncCallbackClientManager::GetInstance().AddCallback(callbackInfo);
+
+        UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "0x0000005a40d3b680";
+        uploadCallbackInfo.bundleName = "com.ohos.photos";
+        uploadCallbackInfo.callback = make_shared<CloudUploadCallback>();
+        CloudUploadCallbackClientManager::GetInstance().callbackList_.clear();
+        CloudUploadCallbackClientManager::GetInstance().AddCallback(uploadCallbackInfo);
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterFileSyncCallbackInner(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount);
         EXPECT_EQ(res, true);
         CloudSyncCallbackClientManager::GetInstance().RemoveCallback(callbackInfo);
+        CloudUploadCallbackClientManager::GetInstance().RemoveCallback(uploadCallbackInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ResetProxyCallbackTest004 FAILED";
@@ -2204,6 +2232,417 @@ HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 End";
+}
+
+/**
+ * @tc.name: GetUploadListTest001
+ * @tc.desc: Verify GetUploadList function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUploadListTest001 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1", "file://path2"};
+        std::vector<CloudSync::UploadProgressObj> uploadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetUploadList(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::UploadProgressObj>()),
+                           Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUploadListTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetUploadListTest001 End";
+}
+
+/**
+ * @tc.name: GetUploadListTest002
+ * @tc.desc: Verify GetUploadList function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUploadListTest002 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::UploadProgressObj> uploadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetUploadList(_, _))
+            .WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUploadListTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetUploadListTest002 End";
+}
+
+/**
+ * @tc.name: GetUploadListTest003
+ * @tc.desc: Verify GetDownloadList function uriVec isempty
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUploadListTest003 Start";
+    try {
+        std::vector<std::string> uriVec;
+        std::vector<CloudSync::UploadProgressObj> uploadList;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUploadListTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetUploadListTest003 End";
+}
+
+/**
+ * @tc.name: GetUploadListTest004
+ * @tc.desc: Verify GetDownloadList function with nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUploadListTest004 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::UploadProgressObj> uploadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUploadListTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetUploadListTest004 End";
+}
+
+/**
+ * @tc.name: GetDownloadListTest001
+ * @tc.desc: Verify GetDownloadList function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDownloadListTest001 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1", "file://path2"};
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDownloadList(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::DownloadProgressObj>()),
+                           Return(E_OK)));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDownloadListTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDownloadListTest001 End";
+}
+
+/**
+ * @tc.name: GetDownloadListTest002
+ * @tc.desc: Verify GetDownloadList function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDownloadListTest002 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDownloadList(_, _))
+            .WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDownloadListTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDownloadListTest002 End";
+}
+
+/**
+ * @tc.name: GetDownloadListTest003
+ * @tc.desc: Verify GetDownloadList function uriVec isempty
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDownloadListTest003 Start";
+    try {
+        std::vector<std::string> uriVec;
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDownloadListTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDownloadListTest003 End";
+}
+
+/**
+ * @tc.name: GetDownloadListTest004
+ * @tc.desc: Verify GetDownloadList function with nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDownloadListTest004 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDownloadListTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDownloadListTest004 End";
+}
+
+/**
+ * @tc.name: RegisterUploadCallbackTest001
+ * @tc.desc: Verify RegisterUploadCallback function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest001 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _))
+            .WillOnce(Return(E_OK));
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterUploadCallbackTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest001 End";
+}
+
+/**
+ * @tc.name: RegisterUploadCallbackTest002
+ * @tc.desc: Verify RegisterUploadCallback function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest002 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _))
+            .WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterUploadCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest002 End";
+}
+
+/**
+ * @tc.name: RegisterUploadCallbackTest003
+ * @tc.desc: Verify RegisterUploadCallback function with error callback = nullptr
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest003 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        uploadCallbackInfo.callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterUploadCallbackTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest003 End";
+}
+
+/**
+ * @tc.name: RegisterUploadCallbackTest004
+ * @tc.desc: Verify RegisterUploadCallback function with error callbackId = "".
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest004 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterUploadCallbackTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest004 End";
+}
+
+/**
+ * @tc.name: RegisterUploadCallbackTest005
+ * @tc.desc: Verify RegisterUploadCallback function with error nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest005 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterUploadCallbackTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterUploadCallbackTest005 End";
+}
+
+/**
+ * @tc.name: UnRegisterUploadCallbackTest001
+ * @tc.desc: Verify UnRegisterUploadCallback function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest001 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, UnRegisterUploadCallbackInner(_, _))
+            .WillOnce(Return(E_OK));
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest001 End";
+}
+
+/**
+ * @tc.name: UnRegisterUploadCallbackTest002
+ * @tc.desc: Verify UnRegisterUploadCallback function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest002 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, UnRegisterUploadCallbackInner(_, _))
+            .WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest002 End";
+}
+
+/**
+ * @tc.name: UnRegisterUploadCallbackTest003
+ * @tc.desc: Verify RegisterUploadCallback function with error callback = nullptr
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest003 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest003 End";
+}
+
+/**
+ * @tc.name: UnRegisterUploadCallbackTest004
+ * @tc.desc: Verify RegisterUploadCallback function with error nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest004 Start";
+    try {
+        CloudSync::UploadCallbackInfo uploadCallbackInfo;
+        uploadCallbackInfo.callbackId = "test_callback_id";
+        uploadCallbackInfo.bundleName = "com.example.test";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterUploadCallback(uploadCallbackInfo);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest004 End";
 }
 
 /**

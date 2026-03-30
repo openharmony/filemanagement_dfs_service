@@ -44,6 +44,7 @@ public:
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
     static napi_value CleanFileCache(napi_env env, napi_callback_info info);
+    static napi_value GetDownloadList(napi_env env, napi_callback_info info);
     static napi_value StartFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value StartBatchFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value StopFileCacheForWatch(napi_env env, napi_callback_info info);

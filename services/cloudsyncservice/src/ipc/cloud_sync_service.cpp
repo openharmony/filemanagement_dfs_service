@@ -23,9 +23,11 @@
 #include "cloud_file_kit.h"
 #include "cloud_status.h"
 #include "cloud_sync_start_event.h"
+#include "cloud_sync_common.h"
 #include "clouddisk_rdb_utils.h"
 #include "cycle_task/cycle_task_runner.h"
 #include "data_sync_const.h"
+#include "data_sync_manager.h"
 #include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -433,6 +435,59 @@ int32_t CloudSyncService::UnRegisterCallbackInner(const string &callbackId, cons
     }
     dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, bundleNameUserInfo, callbackId);
     LOGI("End UnRegisterCallbackInner");
+    return E_OK;
+}
+
+int32_t CloudSyncService::RegisterUploadCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                                      const string &callbackId, const string &bundleName)
+{
+    LOGI("Begin RegisterUploadCallbackInner");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+
+    if (remoteObject == nullptr) {
+        LOGE("remoteObject is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    string targetBundleName = bundleName;
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+
+    BundleNameUserInfo bundleNameUserInfo;
+    ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto callback = iface_cast<ICloudUploadCallback>(remoteObject);
+    dataSyncManager_->RegisterUploadCallback(targetBundleName, bundleNameUserInfo, callbackId, callback);
+    LOGI("End RegisterUploadCallbackInner");
+    return E_OK;
+}
+
+int32_t CloudSyncService::UnRegisterUploadCallbackInner(const string &callbackId, const string &bundleName)
+{
+    LOGI("Begin UnRegisterUploadCallbackInner");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+
+    string targetBundleName = bundleName;
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+
+    BundleNameUserInfo bundleNameUserInfo;
+    ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
+    dataSyncManager_->UnRegisterUploadCallback(targetBundleName, bundleNameUserInfo, callbackId);
+    LOGI("End UnRegisterUploadCallbackInner");
     return E_OK;
 }
 
@@ -880,6 +935,38 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
     }
     ret = dataSyncManager_->StartFileCache(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
     LOGI("End StartFileCache, ret: %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::GetDownloadList(const std::vector<std::string> &uriVec,
+    std::vector<DownloadProgressObj> &downloadList)
+{
+    LOGI("Begin GetDownloadList, uris size: %{public}zu", uriVec.size());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    BundleNameUserInfo bundleNameUserInfo;
+    int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+    ret = dataSyncManager_->GetDownloadList(bundleNameUserInfo, uriVec, downloadList);
+    LOGI("End GetDownloadList, ret: %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::GetUploadList(const std::vector<std::string> &uriVec,
+                                        std::vector<UploadProgressObj> &uploadList)
+{
+    LOGI("Begin GetUploadList, uris size: %{public}zu", uriVec.size());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    BundleNameUserInfo bundleNameUserInfo;
+    int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+    ret = dataSyncManager_->GetUploadList(bundleNameUserInfo, uriVec, uploadList);
+    LOGI("End GetUploadList, ret: %{public}d", ret);
     return ret;
 }
 

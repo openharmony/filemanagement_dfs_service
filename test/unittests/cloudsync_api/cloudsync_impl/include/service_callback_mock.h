@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "i_cloud_sync_callback.h"
+#include "i_cloud_upload_callback.h"
 #include "i_downgrade_dl_callback.h"
 #include "iremote_stub.h"
 #include "dfs_error.h"
@@ -41,6 +42,23 @@ public:
     }
 
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override {}
+};
+
+class CloudUploadCallbackMock : public IRemoteStub<ICloudUploadCallback> {
+public:
+    int code_;
+    CloudUploadCallbackMock() : code_(0) {}
+    virtual ~CloudUploadCallbackMock() {}
+
+    MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
+
+    int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+    {
+        code_ = code;
+        return E_OK;
+    }
+
+    void OnUploadProgress(const UploadProgressObj& progress) {}
 };
 
 class DowngradeDlCallbackMock : public IRemoteStub<IDowngradeDlCallback> {

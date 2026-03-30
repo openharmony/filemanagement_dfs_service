@@ -16,10 +16,15 @@
 #ifndef OHOS_FILEMGMT_FILE_SYNC_NAPI_H
 #define OHOS_FILEMGMT_FILE_SYNC_NAPI_H
 
+#include "cloud_sync_common.h"
+#include "cloud_sync_constants.h"
 #include "gallery_sync_napi.h"
 #include "cloud_sync_napi.h"
+#include "register_callback_manager_napi.h"
+#include "cloud_upload_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
+class CloudUploadCallbackImpl;
 class FileSyncNapi final : public CloudSyncNapi {
 public:
     bool Export() override;
@@ -31,6 +36,36 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
+    static napi_value RegisterUploadProgress(napi_env env, napi_callback_info info);
+    static napi_value UnRegisterUploadProgress(napi_env env, napi_callback_info info);
+    static napi_value GetUploadList(napi_env env, napi_callback_info info);
+};
+
+class CloudUploadCallbackImpl : public CloudUploadCallback,
+                                public std::enable_shared_from_this<CloudUploadCallbackImpl> {
+public:
+    CloudUploadCallbackImpl(napi_env env, napi_value fun);
+    ~CloudUploadCallbackImpl();
+    void OnUploadProgress(const UploadProgressObj& progress) override;
+    void DeleteReference() override;
+    void DeleteReferenceAsync();
+
+    class UvChangeMsg {
+    public:
+        UvChangeMsg(std::shared_ptr<CloudUploadCallbackImpl> cloudUploadCallbackIn, const UploadProgressObj& progress)
+            : cloudUploadCallback_(cloudUploadCallbackIn), progress_(progress)
+        {
+        }
+        ~UvChangeMsg() {}
+        std::weak_ptr<CloudUploadCallbackImpl> cloudUploadCallback_;
+        UploadProgressObj progress_;
+    };
+
+private:
+    static void OnComplete(UvChangeMsg *msg);
+    napi_env env_;
+    std::shared_ptr<AutoRef> cbOnRef_{nullptr};
+    static inline std::string taskName_ = "fileSync.UploadProgress";
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_SYNC_NAPI_H

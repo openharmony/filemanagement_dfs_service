@@ -25,6 +25,7 @@
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "multi_download_progress_napi.h"
+#include "n_error.h"
 #include "register_callback_manager_napi.h"
 #include "utils_log.h"
 
@@ -202,6 +203,7 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCache),
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
         NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
+        NVal::DeclareNapiFunction("getDownloadList", CloudFileCacheNapi::GetDownloadList),
     };
 #else
     std::vector<napi_property_descriptor> props = {
@@ -439,6 +441,85 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
     string procedureName = "cloudFileCache";
     string taskName = "cloudSync.CloudFileCache.startBatch";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize, taskName);
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+static NVal CreateDownloadProgressObject(napi_env env, const CloudSync::DownloadProgressObj &progress)
+{
+    NVal progressObj = NVal::CreateObject(env);
+    progressObj.AddProp("state", NVal::CreateInt32(env, static_cast<int32_t>(progress.state)).val_);
+    progressObj.AddProp("processed", NVal::CreateInt64(env, progress.downloadedSize).val_);
+    progressObj.AddProp("size", NVal::CreateInt64(env, progress.totalSize).val_);
+    progressObj.AddProp("uri", NVal::CreateUTF8String(env, progress.path).val_);
+    progressObj.AddProp("error", NVal::CreateInt32(env, progress.downloadErrorType).val_);
+    return progressObj;
+}
+
+static NVal CreateDownloadListResultArray(napi_env env,
+    const std::vector<CloudSync::DownloadProgressObj> &downloadList)
+{
+    napi_value resultArray = nullptr;
+    napi_status status = napi_create_array(env, &resultArray);
+    if (status != napi_ok) {
+        LOGE("Failed to create array");
+        return {env, NError(JsErrCode::E_INNER_FAILED).GetNapiErr(env)};
+    }
+    
+    for (size_t i = 0; i < downloadList.size(); ++i) {
+        auto progressObj = CreateDownloadProgressObject(env, downloadList[i]);
+        status = napi_set_element(env, resultArray, i, progressObj.val_);
+        if (status != napi_ok) {
+            LOGE("Failed to set array element");
+            return {env, NError(JsErrCode::E_INNER_FAILED).GetNapiErr(env)};
+        }
+    }
+    
+    return {env, resultArray};
+}
+
+napi_value CloudFileCacheNapi::GetDownloadList(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        LOGE("GetDownloadList Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succ, uriArray, size] = NVal(env, funcArg[NARG_POS::FIRST]).ToStringArray();
+    if (!succ || size == 0) {
+        LOGE("GetDownloadList get uri array parameter failed!");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    struct DownloadListArg {
+        std::vector<std::string> uriVec;
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+    };
+
+    auto arg = make_shared<DownloadListArg>();
+    arg->uriVec.swap(uriArray);
+
+    auto cbExec = [arg]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().GetDownloadList(arg->uriVec, arg->downloadList);
+        if (ret != E_OK) {
+            LOGE("GetDownloadList error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return CreateDownloadListResultArray(env, arg->downloadList);
+    };
+
+    string procedureName = "cloudFileCache";
+    string taskName = "cloudSync.CloudFileCache.getDownloadList";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 

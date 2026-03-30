@@ -85,7 +85,7 @@ bool ObserverImpl::DeleteObserver(const Uri &uri, const shared_ptr<CloudNotifyOb
     });
 }
 
-CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun)
+CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun) : vm_(nullptr), cbOnRef_(nullptr)
 {
     if (env == nullptr || env->GetVM(&vm_)) {
         LOGE("CloudSyncCallbackAniImpl get vm failed.");
@@ -96,8 +96,10 @@ CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun)
     }
 }
 
-void CloudSyncCallbackAniImpl::GetSyncProgress(
-    CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg)
+void CloudSyncCallbackAniImpl::GetSyncProgress(CloudSyncState state,
+                                               ErrorType error,
+                                               const ani_class &cls,
+                                               ani_object &pg)
 {
     ani_env *env = nullptr;
     if (vm_ == nullptr || vm_->GetEnv(ANI_VERSION_1, &env)) {

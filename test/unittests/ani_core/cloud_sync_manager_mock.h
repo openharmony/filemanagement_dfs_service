@@ -92,6 +92,12 @@ public:
     MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
     MOCK_METHOD2(GetDowngradeDownloadTaskState, int32_t(const std::vector<std::string> &bundleNames,
             std::vector<DowngradeProgress> &downgradeProgressList));
+    MOCK_METHOD2(GetUploadList, int32_t(const std::vector<std::string> &uriVec,
+        std::vector<CloudSync::UploadProgressObj> &uploadList));
+    MOCK_METHOD2(GetDownloadList, int32_t(const std::vector<std::string> &uriVec,
+        std::vector<CloudSync::DownloadProgressObj> &downloadList));
+    MOCK_METHOD1(RegisterUploadCallback, int32_t(const UploadCallbackInfo &uploadCallbackInfo));
+    MOCK_METHOD1(UnRegisterUploadCallback, int32_t(const UploadCallbackInfo &uploadCallbackInfo));
 };
-}
+} // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK

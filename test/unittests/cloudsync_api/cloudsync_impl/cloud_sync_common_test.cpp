@@ -175,6 +175,77 @@ HWTEST_F(CloudSyncCommonTest, Marshalling003, TestSize.Level1)
 }
 
 /*
+ * @tc.name: to_string
+ * @tc.desc: Verify the to_string function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, upload_progress_to_string, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "to_string Start";
+    try {
+        UploadProgressObj uploadProgressObj;
+        auto res = uploadProgressObj.to_string();
+        std::string expectStr = "[******** , 0 , 0 , 0 , 0]";
+        EXPECT_EQ(res, expectStr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " to_string FAILED";
+    }
+    GTEST_LOG_(INFO) << "to_string End";
+}
+
+/*
+ * @tc.name: UploadProgressMarshalling001
+ * @tc.desc: Verify UploadProgressObj::Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncCommonTest, UploadProgressMarshalling001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadProgressMarshalling001 Start";
+    try {
+        UploadProgressObj uploadProgressObj;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(false));
+        auto res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(false));
+        res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));
+        res = uploadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UploadProgressMarshalling001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UploadProgressMarshalling001 End";
+}
+
+/*
  * @tc.name: Marshalling004
  * @tc.desc: Verify the Marshalling004 function.
  * @tc.type: FUNC
@@ -595,6 +666,28 @@ HWTEST_F(CloudSyncCommonTest, Unmarshalling005, TestSize.Level1)
 }
 
 /*
+ * @tc.name: UploadProgressUnmarshalling001
+ * @tc.desc: Verify that UploadProgressObj::Unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncCommonTest, UploadProgressUnmarshalling001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadProgressUnmarshalling001 Start";
+    try {
+        auto uploadProgressObj = make_shared<UploadProgressObj>();
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        auto res = uploadProgressObj->Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UploadProgressUnmarshalling001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UploadProgressUnmarshalling001 End";
+}
+
+/*
  * @tc.name: ReadFromParcel001
  * @tc.desc: Verify the ReadFromParcel001 function.
  * @tc.type: FUNC
@@ -671,6 +764,56 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel003, TestSize.Level1)
         GTEST_LOG_(INFO) << " ReadFromParcel003 FAILED";
     }
     GTEST_LOG_(INFO) << "ReadFromParcel003 End";
+}
+
+/*
+ * @tc.name: UploadProgressReadFromParcel001
+ * @tc.desc: Verify that UploadProgressObj::ReadFromParcel function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncCommonTest, UploadProgressReadFromParcel001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadProgressReadFromParcel001 Start";
+    try {
+        UploadProgressObj uploadProgressObj;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        auto res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        res = uploadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UploadProgressReadFromParcel001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "UploadProgressReadFromParcel001 End";
 }
 
 /*
@@ -1550,7 +1693,7 @@ HWTEST_F(CloudSyncCommonTest, LocalFilePresentStatusMarshallingTest003, TestSize
     try {
         LocalFilePresentStatus status;
         status.bundleName = "com.example.app";
-            status.isLocalFilePresents = true;
+        status.isLocalFilePresents = true;
         Parcel parcel;
 
         EXPECT_CALL(*parcel_, WriteString(_)).WillOnce(Return(true));

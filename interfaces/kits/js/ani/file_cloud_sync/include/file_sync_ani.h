@@ -29,6 +29,9 @@ public:
     static void FileSyncStart(ani_env *env, ani_object object);
     static void FileSyncStop(ani_env *env, ani_object object);
     static ani_long FileSyncGetLastSyncTime(ani_env *env, ani_object object);
+    static void FileSyncRegisterUploadProgress(ani_env *env, ani_object object, ani_object fun);
+    static void FileSyncUnRegisterUploadProgress(ani_env *env, ani_object object);
+    static ani_array FileSyncGetUploadList(ani_env *env, ani_object object, ani_array uriVec);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_FILE_SYNC_ANI_H

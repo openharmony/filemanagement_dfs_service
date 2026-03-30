@@ -27,6 +27,7 @@ ohos_unittest("cloud_sync_core_test") {
     "${interfaces_js_path}/ani/file_cloud_sync/src/file_version_callback_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/multi_download_progress_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync/src/register_callback_manager_ani.cpp",
+    "${interfaces_js_path}/ani/file_cloud_sync/src/upload_callback_impl_ani.cpp",
     "${interfaces_js_path}/ani/file_cloud_sync_manager/src/downgrade_callback_ani.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_cache_core.cpp",
     "${interfaces_js_path}/cloudfilesync/cloud_file_core.cpp",

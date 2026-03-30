@@ -105,8 +105,9 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
         {Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
     std::string startBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.Array"),
         Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
-    std::string stopBatchSign = Builder::BuildSignatureDescriptor(
-        {Builder::BuildLong(), Builder::BuildBoolean()});
+    std::string stopBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildLong(), Builder::BuildBoolean()});
+    std::string getDownloadListSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.Array")}, Builder::BuildClass("std.core.Array"));
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructor)},
@@ -131,13 +132,10 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
         ani_native_function{"onBatchDownload", onOffSign.c_str(),
             reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatch)},
         ani_native_function{"offBatchDownloadInner", onOffSign.c_str(),
-            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatch)}};
-    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
-    if (ret != ANI_OK) {
-        LOGE("bind native method failed. ret = %{public}d", ret);
-        return ret;
-    };
-    return ANI_OK;
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatch)},
+        ani_native_function{"CloudFileCacheGetDownloadList", getDownloadListSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheGetDownloadList)}};
+    return env->Class_BindNativeMethods(cls, methods.data(), methods.size());
 }
 #else
 static ani_status BindContextOnCloudFileCacheForWatch(ani_env *env)
@@ -207,6 +205,8 @@ static ani_status BindContextOnFileSync(ani_env *env)
     std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
     std::string dSign = Builder::BuildSignatureDescriptor({}, Builder::BuildLong());
+    std::string getUploadListSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.Array")}, Builder::BuildClass("std.core.Array"));
     std::array methods = {
         ani_native_function{ct.c_str(), vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor0)},
         ani_native_function{ct.c_str(), sSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncConstructor1)},
@@ -217,6 +217,12 @@ static ani_status BindContextOnFileSync(ani_env *env)
         ani_native_function{"FileSyncStop", vSign.c_str(), reinterpret_cast<void *>(FileSyncAni::FileSyncStop)},
         ani_native_function{"GallerySyncGetLastSyncTime", dSign.c_str(),
                             reinterpret_cast<void *>(FileSyncAni::FileSyncGetLastSyncTime)},
+        ani_native_function{"FileSyncRegisterUploadProgress", onOffSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncRegisterUploadProgress)},
+        ani_native_function{"FileSyncUnRegisterUploadProgress", vSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncUnRegisterUploadProgress)},
+        ani_native_function{"FileSyncGetUploadList", getUploadListSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncGetUploadList)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
@@ -332,7 +338,7 @@ static ani_status BindContextOnFileVersion(ani_env *env)
         ani_native_function{"getHistoryVersionListInner", getHisListSign.c_str(),
             reinterpret_cast<void *>(FileVersionAni::FileVersionGetHistoryVersionList)},
         ani_native_function{"downloadHistoryVersionInner", downloadHisVerSign.c_str(),
-            reinterpret_cast<void *>(FileVersionAni::FileVersionDownloadHistoryVersion)},
+                            reinterpret_cast<void *>(FileVersionAni::FileVersionDownloadHistoryVersion)},
         ani_native_function{"replaceFileWithHistoryVersionInner", replaceSign.c_str(),
             reinterpret_cast<void *>(FileVersionAni::FileVersionReplaceFileWithHistoryVersion)},
         ani_native_function{"isFileConflictInner", isConflictSign.c_str(),

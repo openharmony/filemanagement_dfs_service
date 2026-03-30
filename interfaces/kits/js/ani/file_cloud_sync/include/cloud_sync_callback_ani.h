@@ -20,6 +20,7 @@
 #include <ani_signature_builder.h>
 
 #include "cloud_sync_callback_info.h"
+#include "cloud_upload_callback.h"
 #include "cloud_sync_callback_middle.h"
 #include "cloud_optimize_callback_middle.h"
 #include "data_ability_observer_interface.h"
@@ -34,6 +35,7 @@ class CloudNotifyObserver;
 
 struct BundleEntity {
     CallbackInfo callbackInfo;
+    UploadCallbackInfo uploadCallbackInfo;
 };
 
 struct CloudChangeListener {

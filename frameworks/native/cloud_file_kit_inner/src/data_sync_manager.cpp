@@ -269,6 +269,36 @@ int32_t DataSyncManager::GetDentryFileOccupy(const int32_t userId, int64_t &occu
     return E_OK;
 }
 
+int32_t DataSyncManager::GetDownloadList(const BundleNameUserInfo &bundleNameUserInfo,
+                                         const std::vector<std::string> &uriVec,
+                                         std::vector<CloudSync::DownloadProgressObj> &downloadList)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetUploadList(const BundleNameUserInfo &bundleNameUserInfo,
+                                       const std::vector<std::string> &uriVec,
+                                       std::vector<CloudSync::UploadProgressObj> &uploadList)
+{
+    // default
+    return E_OK;
+}
+
+void DataSyncManager::RegisterUploadCallback(const std::string &bundleName,
+                                             const BundleNameUserInfo &bundleNameUserInfo,
+                                             const std::string &callbackId,
+                                             const sptr<CloudSync::ICloudUploadCallback> &callback)
+{
+    return;
+}
+
+void DataSyncManager::UnRegisterUploadCallback(const std::string &bundleName,
+                                               const BundleNameUserInfo &bundleNameUserInfo,
+                                               const std::string &callbackId)
+{
+    return;
+}
+
 void DataSyncManager::PeriodicCleanLock()
 {
     LOGI("PeriodicClean lock");

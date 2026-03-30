@@ -42,6 +42,8 @@ public:
     ModuleFileIO::FsResult<void> DoStop(int64_t downloadId, bool needClean = false);
     ModuleFileIO::FsResult<void> CleanCache(const std::string &uri);
     ModuleFileIO::FsResult<void> CleanFileCache(const std::string &uri);
+    ModuleFileIO::FsResult<void> GetDownloadList(const std::vector<std::string> &uriVec,
+            std::vector<CloudSync::DownloadProgressObj> &downloadList);
     std::shared_ptr<CloudFileCacheCallbackImplAni> GetCallbackImpl(const std::string &eventType, bool isInit);
 
 private:

@@ -17,7 +17,9 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_H
 
 #include <map>
+#include <vector>
 
+#include "cloud_sync_common.h"
 #include "iservice_registry.h"
 #include "nocopyable.h"
 #include "system_ability.h"
@@ -122,6 +124,15 @@ public:
                              std::vector<XattrResult> &aclXattrResults) override;
     ErrCode GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
                                           std::vector<DowngradeProgress> &downgradeProgressList) override;
+    ErrCode GetDownloadList(const std::vector<std::string> &uriVec,
+                            std::vector<DownloadProgressObj> &downloadList) override;
+    ErrCode GetUploadList(const std::vector<std::string> &uriVec,
+                            std::vector<UploadProgressObj> &uploadList) override;
+    ErrCode RegisterUploadCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                  const std::string &callbackId = "",
+                                  const std::string &bundleName = "") override;
+    ErrCode UnRegisterUploadCallbackInner(const std::string &callbackId = "",
+                                        const std::string &bundleName = "") override;
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason &startReason) override;
