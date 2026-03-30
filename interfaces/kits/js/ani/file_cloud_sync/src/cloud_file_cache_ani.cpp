@@ -341,14 +341,14 @@ ani_long CloudFileCacheAni::CloudFileCacheStartBatchForWatch(ani_env *env, ani_o
     return 0;
 }
 
-void CloudFileCacheAni::CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri, 
+void CloudFileCacheAni::CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri,
     ani_boolean needClean)
 {
     LOGD("Start CloudFileCacheStopForWatch in ani");
     return;
 }
 
-void CloudFileCacheAni::CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId, 
+void CloudFileCacheAni::CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId,
     ani_boolean needClean)
 {
     LOGD("Start CloudFileCacheStopBatchForWatch in ani");
