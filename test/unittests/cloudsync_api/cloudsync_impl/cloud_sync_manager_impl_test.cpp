@@ -97,6 +97,7 @@ void CloudSyncManagerImplTest::SetUp(void)
     OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMock>();
     OsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
     CloudSyncManagerImpl::GetInstance().isFirstCall_.test_and_set();
+    CloudSyncManagerImpl::GetInstance().startSyncPending_ = false;
     std::cout << "SetUp" << std::endl;
 }
 
@@ -278,6 +279,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        CloudSyncManagerImpl::GetInstance().startSyncPending_ = false;
         EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
@@ -348,6 +350,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest005, TestSize.Level1)
     try {
         bool forceFlag = true;
         CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        CloudSyncManagerImpl::GetInstance().startSyncPending_ = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
@@ -416,6 +419,62 @@ HWTEST_F(CloudSyncManagerImplTest, StartSyncTest007, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "StartSyncTest End";
 }
+
+/**
+ * @tc.name: StartSyncTest008
+ * @tc.desc: Verify the StartSync function when startSyncPending is true.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest008 Start";
+    try {
+        bool forceFlag = true;
+        CloudSyncManagerImpl::GetInstance().startSyncPending_ = true;
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_OK);
+        CloudSyncManagerImpl::GetInstance().startSyncPending_ = false;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest008 End";
+}
+
+/**
+ * @tc.name: StartSyncTest009
+ * @tc.desc: Verify the StartSync function resets startSyncPending after completion.
+ * @tc.type: FUNC
+ * @tc.require: 2544
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest009 Start";
+    try {
+        bool forceFlag = true;
+        CloudSyncManagerImpl::GetInstance().isFirstCall_.clear();
+        CloudSyncManagerImpl::GetInstance().startSyncPending_ = false;
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        EXPECT_CALL(*OsAccountMethodMock_, GetOsAccountLocalIdFromProcess)
+            .WillOnce(DoAll(SetArgReferee<0>(userId), Return(E_OK)));
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, StartSyncInner(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(CloudSyncManagerImpl::GetInstance().startSyncPending_, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest009 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest009 End";
+}
+
 
 /**
  * @tc.name: StartFileSyncTest001
