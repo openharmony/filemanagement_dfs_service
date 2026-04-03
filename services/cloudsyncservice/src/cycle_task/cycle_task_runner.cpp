@@ -27,6 +27,7 @@
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/periodic_clean_task.h"
+#include "tasks/periodic_chown_task.h"
 #include "tasks/report_statistics_task.h"
 #include "tasks/save_subscription_task.h"
 #include "utils_log.h"
@@ -81,6 +82,7 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.emplace_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<DatabaseBackupTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<PeriodicChownTask>(dataSyncManager_));
 
     // do periodic check task last
     cycleTasks_.emplace_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
