@@ -217,6 +217,13 @@ int32_t CloudSyncManagerImpl::StopOptimizeStorage()
 
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
+    {
+        unique_lock<mutex> lock(startSyncPendingMtx_);
+        if (startSyncPending_) {
+            return E_OK;
+        }
+        startSyncPending_ = true;
+    }
     if (!callback) {
         LOGE("callback is null");
         return E_INVAL_ARG;
@@ -246,7 +253,12 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 
-    return CloudSyncServiceProxy->StartSyncInner(forceFlag, "");
+    auto ret = CloudSyncServiceProxy->StartSyncInner(forceFlag, "");
+    {
+        unique_lock<mutex> lock(startSyncPendingMtx_);
+        startSyncPending_ = false;
+    }
+    return ret;
 }
 
 int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const int32_t &userId)

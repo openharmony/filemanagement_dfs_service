@@ -59,6 +59,7 @@ void CloudSyncManagerTest::TearDownTestCase(void)
 void CloudSyncManagerTest::SetUp(void)
 {
     managePtr_ = make_shared<CloudSyncManagerImpl>();
+    managePtr_->startSyncPending_ = false;
     std::cout << "SetUp" << std::endl;
 }
 

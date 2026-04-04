@@ -108,6 +108,8 @@ private:
     sptr<SvcDeathRecipient> deathRecipient_;
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
+    std::mutex startSyncPendingMtx_;
+    bool startSyncPending_ = false;
     void SubscribeListener(void);
 };
 } // namespace OHOS::FileManagement::CloudSync
