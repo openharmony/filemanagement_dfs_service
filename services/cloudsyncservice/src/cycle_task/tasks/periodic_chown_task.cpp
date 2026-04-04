@@ -51,7 +51,6 @@ static const int32_t MODE_REG = 0660;
 static constexpr uid_t MEDIA_UID = 1008;
 static constexpr uid_t DFS_UID = 1009;
 static constexpr size_t USER_ID_PLACEHOLDER_LENGTH = 8;
-constexpr const char *DATA_DEV_PATH = "/dev/block/by-name/userdata";
 
 static const std::vector<std::string> DIRECTORY_TEMPLATES = {
     "/data/service/el2/{userId}/hmdfs/account/files/Photo",
@@ -73,9 +72,7 @@ int32_t PeriodicChownTask::RunTaskForBundle(int32_t userId, std::string bundleNa
         LOGI("CheckChownCondition failed, stop PeriodicChownTask");
         return E_STOP;
     }
-
-    int32_t ret = E_OK;
-    if (periodicChownConfig_ == nullptr || userId != userId_) {
+    if (periodicChownConfig_ == nullptr) {
         periodicChownConfig_ = std::make_unique<CloudPrefImpl>(userId, "", SPACE_OCCUPY_FILE_PATH);
     }
     
@@ -84,7 +81,8 @@ int32_t PeriodicChownTask::RunTaskForBundle(int32_t userId, std::string bundleNa
         LOGI("All directories already processed, skip PeriodicChownTask");
         return E_OK;
     }
-    
+
+    int32_t ret = E_OK;
     ret = ExecuteChownTask(userId);
     LOGI("PeriodicChownTask end, ret: %{public}d", ret);
     return ret;
