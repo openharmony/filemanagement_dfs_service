@@ -47,6 +47,7 @@ constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint64_t DELTA = 0x9E3779B9; /* Hashing code copied from f2fs */
 constexpr uint64_t HMDFS_HASH_COL_BIT = (0x1ULL) << 63;
 constexpr uint32_t FILE_TYPE_OFFSET = 2;
+constexpr uint32_t INVAL_USER_ID = 100;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -547,7 +548,7 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
 
 int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
 {
-    if (bundleName != "com.ohos.photos") {
+    if (userId != INVAL_USER_ID) {
         return EINVAL;
     }
     return E_OK;
