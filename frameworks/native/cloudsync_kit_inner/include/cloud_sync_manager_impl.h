@@ -103,6 +103,7 @@ private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     bool ResetProxyCallback(uint32_t retryCount);
+    void SetStartSyncPending();
 
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;

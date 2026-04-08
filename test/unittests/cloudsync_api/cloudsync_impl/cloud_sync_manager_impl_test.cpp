@@ -2205,5 +2205,23 @@ HWTEST_F(CloudSyncManagerImplTest, GetAclXattrBatchTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetAclXattrBatchTest003 End";
 }
+
+/**
+ * @tc.name: SetStartSyncPending001
+ * @tc.desc: Verify the GetAclXattrBatch function.
+ * @tc.type: FUNC
+ * @tc.require: issue3881
+ */
+HWTEST_F(CloudSyncManagerImplTest, SetStartSyncPending001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetStartSyncPending001 Start";
+    try {
+        CloudSyncManagerImpl::GetInstance().SetStartSyncPending();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetStartSyncPending001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetStartSyncPending001 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

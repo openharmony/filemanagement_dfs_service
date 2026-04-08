@@ -217,13 +217,6 @@ int32_t CloudSyncManagerImpl::StopOptimizeStorage()
 
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
-    {
-        unique_lock<mutex> lock(startSyncPendingMtx_);
-        if (startSyncPending_) {
-            return E_OK;
-        }
-        startSyncPending_ = true;
-    }
     if (!callback) {
         LOGE("callback is null");
         return E_INVAL_ARG;
@@ -232,10 +225,18 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
     if (!AccountUtils::IsAccountAvailable()) {
         return E_INVAL_ARG;
     }
-    
+
+    {
+        unique_lock<mutex> lock(startSyncPendingMtx_);
+        if (startSyncPending_) {
+            return E_OK;
+        }
+        startSyncPending_ = true;
+    }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "StartSync002"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
+        SetStartSyncPending();
         return E_SA_LOAD_FAILED;
     }
 
@@ -246,6 +247,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
         if (ret) {
             LOGE("Register callback failed");
             isFirstCall_.clear();
+            SetStartSyncPending();
             return ret;
         }
         CallbackInfo callbackInfo = {CLOUDSYNC_MEDIA_CALLBACK_ID, callback, ""};
@@ -254,10 +256,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
     }
 
     auto ret = CloudSyncServiceProxy->StartSyncInner(forceFlag, "");
-    {
-        unique_lock<mutex> lock(startSyncPendingMtx_);
-        startSyncPending_ = false;
-    }
+    SetStartSyncPending();
     return ret;
 }
 
@@ -970,5 +969,11 @@ int32_t CloudSyncManagerImpl::GetAclXattrBatch(const bool isAccess,
         LOGE("ret is %{public}d", ret);
     }
     return ret;
+}
+
+void CloudSyncManagerImpl::SetStartSyncPending()
+{
+    unique_lock<mutex> lock(startSyncPendingMtx_);
+    startSyncPending_ = false;
 }
 } // namespace OHOS::FileManagement::CloudSync
