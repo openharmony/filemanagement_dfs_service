@@ -82,6 +82,7 @@ bool IpcWrapper::GetData(void *&buffer, size_t size, const void *data)
     }
     if (memcpy_s(buffer, size, data, size) != FileManagement::E_OK) {
         free(buffer);
+        buffer = nullptr;
         LOGE("memcpy failed");
         return false;
     }
