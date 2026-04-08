@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
+using namespace std;
 CloudDaemonStub::CloudDaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE)] =
@@ -53,6 +54,12 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     auto userId = data.ReadInt32();
     auto fd = data.ReadFileDescriptor();
     auto path = data.ReadString();
+#ifdef SUPPORT_WATCH_LITE
+    if (path.find("cloud_fuse") != std::string::npos) {
+        reply.WriteInt32(-EINVAL);
+        return -EINVAL;
+    }
+#endif
     int32_t res = StartFuse(userId, int32_t(fd), path);
     reply.WriteInt32(res);
     LOGI("End StartFuseInner");

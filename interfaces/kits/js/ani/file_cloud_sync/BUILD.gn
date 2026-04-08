@@ -65,6 +65,11 @@ ohos_shared_library("cloud_sync_ani") {
     "LOG_DOMAIN=0xD004309",
     "LOG_TAG=\"CLOUD_FILE_SYNC\"",
   ]
+
+  if (dfs_service_feature_enable_watch_lite_device) {
+    defines += [ "SUPPORT_WATCH_LITE" ]
+  }
+
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",

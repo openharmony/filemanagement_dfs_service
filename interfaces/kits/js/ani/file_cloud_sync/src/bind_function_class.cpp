@@ -87,6 +87,7 @@ static ani_status BindContextOnMultiDlProgress(ani_env *env)
     return ANI_OK;
 }
 
+#ifndef SUPPORT_WATCH_LITE
 static ani_status BindContextOnCloudFileCache(ani_env *env)
 {
     Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
@@ -138,6 +139,59 @@ static ani_status BindContextOnCloudFileCache(ani_env *env)
     };
     return ANI_OK;
 }
+#else
+static ani_status BindContextOnCloudFileCacheForWatch(ani_env *env)
+{
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSync.cloudSync.CloudFileCache");
+    ani_class cls;
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+    std::string ct = Builder::BuildConstructorName();
+    std::string vSign = Builder::BuildSignatureDescriptor({});
+    std::string onOffSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
+    std::string sSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String")});
+    std::string sbSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildClass("std.core.String"), Builder::BuildBoolean()});
+    std::string startBatchSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.Array"),
+        Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.DownloadFileType")}, Builder::BuildLong());
+    std::string stopBatchSign = Builder::BuildSignatureDescriptor(
+        {Builder::BuildLong(), Builder::BuildBoolean()});
+    std::array methods = {
+        ani_native_function{ct.c_str(), vSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheConstructorForWatch)},
+        ani_native_function{"onProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnForWatch)},
+        ani_native_function{"offProgress", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff0ForWatch)},
+        ani_native_function{"offProgress", vSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOff1ForWatch)},
+        ani_native_function{"CloudFileCacheStart", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartForWatch)},
+        ani_native_function{"CloudFileCacheStop", sbSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopForWatch)},
+        ani_native_function{"cleanCache", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanCacheForWatch)},
+        ani_native_function{"cleanFileCache", sSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheCleanFileCacheForWatch)},
+        ani_native_function{"CloudFileCacheStartBatch", startBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStartBatchForWatch)},
+        ani_native_function{"CloudFileCacheStopBatch", stopBatchSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheStopBatchForWatch)},
+        ani_native_function{"onBatchDownload", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOnBatchForWatch)},
+        ani_native_function{"offBatchDownloadInner", onOffSign.c_str(),
+            reinterpret_cast<void *>(CloudFileCacheAni::CloudFileCacheOffBatchForWatch)}};
+    ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
+    if (ret != ANI_OK) {
+        LOGE("bind native method failed. ret = %{public}d", ret);
+        return ret;
+    };
+    return ANI_OK;
+}
+#endif
 
 static ani_status BindContextOnFileSync(ani_env *env)
 {
@@ -312,7 +366,11 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (status != ANI_OK) {
         return status;
     }
+#ifndef SUPPORT_WATCH_LITE
     status = BindContextOnCloudFileCache(env);
+#else
+    status = BindContextOnCloudFileCacheForWatch(env);
+#endif
     if (status != ANI_OK) {
         return status;
     }

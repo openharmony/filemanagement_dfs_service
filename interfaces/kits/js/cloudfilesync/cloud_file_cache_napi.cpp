@@ -192,6 +192,7 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
 
 bool CloudFileCacheNapi::Export()
 {
+#ifndef SUPPORT_WATCH_LITE
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
@@ -202,6 +203,18 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
         NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
     };
+#else
+    std::vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("on", CloudFileCacheNapi::OnForWatch),
+        NVal::DeclareNapiFunction("off", CloudFileCacheNapi::OffForWatch),
+        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCacheForWatch),
+        NVal::DeclareNapiFunction("startBatch", CloudFileCacheNapi::StartBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::StopFileCacheForWatch),
+        NVal::DeclareNapiFunction("stopBatch", CloudFileCacheNapi::StopBatchFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCacheForWatch),
+        NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCacheForWatch),
+    };
+#endif
 
     return ToExport(props);
 }
@@ -567,6 +580,54 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     callbackImpl->TryCleanCallback();
 
     return NVal::CreateUndefined(env).val_;
+}
+
+napi_value CloudFileCacheNapi::OnForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start OnForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::OffForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start OffForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StartBatchFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start StartBatchFileCacheForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StopBatchFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start StopBatchFileCacheForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StartFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start StartFileCacheForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::StopFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start StopFileCacheForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::CleanCloudFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start CleanCloudFileCacheForWatch in napi");
+    return nullptr;
+}
+
+napi_value CloudFileCacheNapi::CleanFileCacheForWatch(napi_env env, napi_callback_info info)
+{
+    LOGD("Start CleanFileCacheForWatch in napi");
+    return nullptr;
 }
 
 string CloudFileCacheNapi::GetClassName()

@@ -303,4 +303,79 @@ void CloudFileCacheAni::CloudFileCacheOffBatch(ani_env *env, ani_object object, 
     }
     callbackImpl->TryCleanCallback();
 }
+
+void CloudFileCacheAni::CloudFileCacheConstructorForWatch(ani_env *env, ani_object object)
+{
+    LOGD("Start CloudFileCacheConstructorForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGD("Start CloudFileCacheOnForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGD("Start CloudFileCacheOff0ForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheOff1ForWatch(ani_env *env, ani_object object)
+{
+    LOGD("Start CloudFileCacheOff1ForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheStartForWatch(ani_env *env, ani_object object, ani_string uri)
+{
+    LOGD("Start CloudFileCacheStartForWatch in ani");
+    return;
+}
+
+ani_long CloudFileCacheAni::CloudFileCacheStartBatchForWatch(ani_env *env, ani_object object,
+    ani_array uriList, ani_enum_item fileType)
+{
+    LOGD("Start CloudFileCacheStartBatchForWatch in ani");
+    return 0;
+}
+
+void CloudFileCacheAni::CloudFileCacheStopForWatch(ani_env *env, ani_object object, ani_string uri,
+    ani_boolean needClean)
+{
+    LOGD("Start CloudFileCacheStopForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheStopBatchForWatch(ani_env *env, ani_object object, ani_long taskId,
+    ani_boolean needClean)
+{
+    LOGD("Start CloudFileCacheStopBatchForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheCleanCacheForWatch(ani_env *env, ani_object object, ani_string uri)
+{
+    LOGD("Start CloudFileCacheCleanCacheForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheCleanFileCacheForWatch(ani_env *env, ani_object object, ani_string uri)
+{
+    LOGD("Start CloudFileCacheCleanFileCacheForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheOnBatchForWatch(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGD("Start CloudFileCacheOnBatchForWatch in ani");
+    return;
+}
+
+void CloudFileCacheAni::CloudFileCacheOffBatchForWatch(ani_env *env, ani_object object, ani_object fun)
+{
+    LOGD("Start CloudFileCacheOffBatchForWatch in ani");
+    return;
+}
 } // namespace OHOS::FileManagement::CloudSync
