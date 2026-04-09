@@ -68,8 +68,9 @@ const std::set<std::string> DATA_SYNCER_COL = {
     DATA_SYNCER_ID, USER_ID, BUNDLE_NAME, SYNC_STATE, LAST_SYNC_TIME, DATA_SYNCER_UNIQUE_ID, SYNC_ERROR_TYPE
 };
 
-const std::string EL1_CLOUDFILE_DIR = "/data/service/el1/public/cloudfile";
+const std::string EL1_CLOUDFILE_DIR = "/data/service/el1/public/database/CloudFileSyncService";
 const std::string DATA_SYNCER_DB = "DataSyncers.db";
+const std::string DATA_SYNCER_SRC_PATH = "/data/service/el1/public/cloudfile/rdb/DataSyncers.db";
 
 const int32_t CLOUD_DISK_RDB_VERSION = 3;
 enum {

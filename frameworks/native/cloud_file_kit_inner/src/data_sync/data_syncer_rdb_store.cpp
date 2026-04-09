@@ -15,6 +15,9 @@
 
 #include "data_syncer_rdb_store.h"
 
+#include <filesystem>
+#include <system_error>
+
 #include "data_syncer_rdb_col.h"
 #include "dfs_error.h"
 #include "rdb_helper.h"
@@ -32,25 +35,71 @@ DataSyncerRdbStore &DataSyncerRdbStore::GetInstance()
     return instance;
 }
 
+int32_t DataSyncerRdbStore::RdbInitInner(const std::string &databasePath)
+{
+    int32_t errCode = E_OK;
+    NativeRdb::RdbStoreConfig config{""};
+    config.SetName(move(DATA_SYNCER_DB));
+    config.SetArea(0);
+    config.SetBundleName("CloudFileSyncService");
+    config.SetPath(move(databasePath));
+    config.SetSilentAccessible(true);
+    DataSyncerRdbCallBack rdbDataCallBack;
+    rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
+    if (rdb_ == nullptr) {
+        LOGE("GetRdbStore is failed,  errCode = %{public}d", errCode);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
 int32_t DataSyncerRdbStore::RdbInit()
 {
     LOGI("Init rdb store");
+    bool restoreFlag = false;
+    std::error_code srcErr;
+    std::error_code dstErr;
     int32_t errCode = 0;
+    int32_t ret = E_OK;
     string databasePath = NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(EL1_CLOUDFILE_DIR, DATA_SYNCER_DB, errCode);
 
     if (errCode != E_OK) {
         LOGE("Create Default Database Path is failed, errCode = %{public}d", errCode);
         return E_RDB;
     }
-    NativeRdb::RdbStoreConfig config{""};
-    config.SetName(move(DATA_SYNCER_DB));
-    config.SetPath(move(databasePath));
-    errCode = E_OK;
-    DataSyncerRdbCallBack rdbDataCallBack;
-    rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
-    if (rdb_ == nullptr) {
-        LOGE("GetRdbStore is failed,  errCode = %{public}d", errCode);
-        return E_RDB;
+    //当目标不存在时，查看源路径是否存在，存在就进行数据库迁移
+    if (!std::filesystem::exists(databasePath, dstErr)) {
+        if (dstErr.value()) {
+            LOGE("Check dst path failed, dsterr = %{public}d, dstmsg = %{public}s",
+                dstErr.value(), dstErr.message().c_str());
+            return E_RDB;
+        }
+        if (std::filesystem::exists(DATA_SYNCER_SRC_PATH, srcErr)) {
+            restoreFlag = true;
+            LOGI("Migrating database from old path to new path");
+        } else if (srcErr.value()) {
+            LOGE("Check source path failed, srcerr = %{public}d, srcmsg = %{public}s",
+                srcErr.value(), srcErr.message().c_str());
+        }
+    }
+
+    ret = RdbInitInner(databasePath);
+    if (ret != E_OK) {
+        LOGE("RdbInitInner failed, err = %{public}d", ret);
+        return ret;
+    }
+    if (restoreFlag) {
+        ret = rdb_->ExecuteSql("SELECT import_db_from_path('" + DATA_SYNCER_SRC_PATH + "')");
+        if (ret != NativeRdb::E_OK) {
+            LOGE("Import db fail, err is %{public}d", ret);
+        }
+    }
+    if (std::filesystem::exists(databasePath, dstErr) && std::filesystem::exists(DATA_SYNCER_SRC_PATH, srcErr)) {
+        ret = NativeRdb::RdbHelper::DeleteRdbStore(DATA_SYNCER_SRC_PATH);
+        if (ret != NativeRdb::E_OK) {
+            LOGE("Delete source database is failed, err = %{public}d", ret);
+        }
     }
 
     return E_OK;
