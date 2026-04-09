@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_SETTINGS_DATA_MANAGER_H
 
 #include <string>
+#include <vector>
 
 #include "data_ability_observer_stub.h"
 #include "safe_map.h"
@@ -41,12 +42,20 @@ private:
 class SettingsDataManager {
 public:
     static void InitSettingsDataManager();
+    static void UpdateIsSupportUserSettingsData(bool isDemon = false);
+    static void OnUserSwitched(int32_t userId);
+    static std::string GetSettingsDataCommonUri();
+    static std::string GetSettingsDataUri(const std::string &key);
+    static std::string GetUserSettingsDataUri(const std::string &key);
+    static void UpdateCurrentUserId();
 
-    static int32_t QuerySwitchStatus();
-    static int32_t QueryNetworkConnectionStatus();
-    static int32_t QueryMobileDataStatus();
-    static int32_t QueryLocalSpaceFreeStatus();
-    static int32_t QueryLocalSpaceFreeDays();
+    static int32_t QueryParamInSettingsData(const std::string &key, std::string &value);
+
+    static int32_t QuerySwitchStatus(std::string &value);
+    static int32_t QueryNetworkConnectionStatus(std::string &value);
+    static int32_t QueryMobileDataStatus(std::string &value);
+    static int32_t QueryLocalSpaceFreeStatus(std::string &value);
+    static int32_t QueryLocalSpaceFreeDays(std::string &value);
 
     static SwitchStatus GetSwitchStatus();
     static SwitchStatus GetSwitchStatusByCache();
@@ -59,10 +68,20 @@ public:
     static void RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver);
 
 private:
-    static int32_t QueryParamInSettingsData(const std::string &key, std::string &value);
+    static void ReregisterAllObservers(int32_t userId);
     static void UnregisterObserver(const std::string &key);
+    static void ReregisterDemonObserver(const std::string &key);
+    static void UnregisterDemonObserver(const std::string &key);
 
+    static int32_t InitUserSettings();
+    static int32_t InitAndQuerySettingsData(const std::string &key, std::string &value, bool isFirst = false);
+    static int32_t QueryParamInUserSettingsData(const std::string &key, std::string &value);
+
+    static inline bool supportUserSettingsData_ = false;
+    static inline int32_t currentUserId_ = 100;
     static inline SafeMap<const std::string, std::string> settingsDataMap_;
+    static inline SafeMap<const std::string, sptr<AAFwk::DataAbilityObserverStub>> observerMap_;
+    static inline std::vector<sptr<AAFwk::DataAbilityObserverStub>> observerDemon_;
 };
 } // OHOS
 

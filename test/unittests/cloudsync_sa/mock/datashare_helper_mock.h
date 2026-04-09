@@ -27,8 +27,12 @@ class DataShareHelperMock : public DataShareHelper {
 public:
     MOCK_METHOD3(Creator, std::shared_ptr<DataShareHelper>(const std::string &, const CreateOptions &,
         const std::string &));
+    MOCK_METHOD5(Creator, std::shared_ptr<DataShareHelper>(const sptr<IRemoteObject> &, const std::string &,
+        const std::string &, const int, bool));
     MOCK_METHOD4(Query, std::shared_ptr<DataShareResultSet>(Uri &, const DataSharePredicates &,
         std::vector<std::string> &, DatashareBusinessError *));
+    MOCK_METHOD3(UpdateEx, std::pair<int32_t, int32_t>(Uri &, const DataSharePredicates &,
+        const DataShareValuesBucket &));
     MOCK_METHOD2(RegisterObserver, void(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
     MOCK_METHOD2(UnregisterObserver, void(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
     MOCK_METHOD0(Release, bool());

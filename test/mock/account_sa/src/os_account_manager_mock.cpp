@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "os_account_manager_mock.h"
+#include "os_account_manager_mock_ext.h"
 
 namespace OHOS {
 ErrCode AccountSA::OsAccountManager::GetOsAccountType(int32_t userId, OsAccountType &accountType)
@@ -53,5 +54,13 @@ ErrCode AccountSA::OsAccountManager::QueryActiveOsAccountIds(std::vector<int32_t
         return 0;
     }
     return OsAccountManagerMethod::osMethod_->QueryActiveOsAccountIds(ids);
+}
+
+ErrCode AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(int32_t &foregroundLocalId)
+{
+    if (IOsAccountManagerMethod::osMethod_ == nullptr) {
+        return 0;
+    }
+    return IOsAccountManagerMethod::osMethod_->GetForegroundOsAccountLocalId(foregroundLocalId);
 }
 }

@@ -67,23 +67,24 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
 {
 }
 
-bool CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId, std::string &realpath)
+int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId,
+    std::string &realpath)
 {
     // 实际实现：只有以 "/storage/Users/currentUser" 开头的路径才能转换成功
     const std::string sandboxPath = "/storage/Users/currentUser";
     if (path.empty() || path.find(sandboxPath) != 0) {
-        return false;
+        return 0;
     }
     // 模拟路径转换：将 sandboxPath 替换为物理路径
     std::string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
     realpath = replacementPath + path.substr(sandboxPath.length());
-    return true;
+    return 1;
 }
 
-bool CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
-                                                     const std::string &userId, std::string &realpath)
+int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path, const std::string &userId,
+    std::string &realpath)
 {
-    return true;
+    return 1;
 }
 
 bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,

@@ -31,6 +31,7 @@ static const string SETTINGS_DATA_COMMON_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
 static const string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 static const string SYNC_SWITCH_KEY = "photos_sync_options";
+static const std::string AI_FAMILY_STATUS = "2";
 } // namespace
 
 SettingDataHelper &SettingDataHelper::GetInstance()
@@ -68,6 +69,7 @@ bool SettingDataHelper::IsDataShareReady()
         return false;
     }
 
+    std::string settingsDataUri = SettingsDataManager::GetSettingsDataCommonUri();
     pair<int, shared_ptr<DataShare::DataShareHelper>> ret =
         DataShare::DataShareHelper::Create(remoteObj, SETTINGS_DATA_COMMON_URI, SETTINGS_DATA_EXT_URI);
     LOGI("create datashare helper, ret=%{public}d", ret.first);
@@ -91,8 +93,9 @@ bool SettingDataHelper::IsDataShareReady()
 string SettingDataHelper::GetActiveBundle()
 {
     // get from datashare
-    SwitchStatus status = SettingsDataManager::GetSwitchStatus();
-    if (status == AI_FAMILY) {
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInSettingsData(SYNC_SWITCH_KEY, value);
+    if (value == AI_FAMILY_STATUS) {
         return HDC_BUNDLE_NAME;
     }
     return GALLERY_BUNDLE_NAME;
@@ -115,6 +118,13 @@ bool SettingDataHelper::InitActiveBundle()
 
 void SettingDataHelper::UpdateActiveBundle(int32_t userId)
 {
+    if (isDataShareReady_ == false) {
+        return;
+    }
+
+    SettingsDataManager::UpdateCurrentUserId();
+    SettingsDataManager::UpdateIsSupportUserSettingsData(true);
+
     // get latest data
     string bundle = GetActiveBundle();
     // update FuseData

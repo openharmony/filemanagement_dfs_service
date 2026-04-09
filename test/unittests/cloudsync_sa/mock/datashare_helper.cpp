@@ -38,6 +38,15 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
     return instance_;
 }
 
+std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token,
+    const std::string &strUri, const std::string &extUri, const int waitTime, bool isSystem)
+{
+    if (DataShareHelperMock::proxy_ != nullptr) {
+        return DataShareHelperMock::proxy_->Creator(token, strUri, extUri, waitTime, isSystem);
+    }
+    return nullptr;
+}
+
 std::shared_ptr<DataShareResultSet> DataShareHelper::Query(Uri &uri, const DataSharePredicates &predicates,
     std::vector<std::string> &columns, DatashareBusinessError *businessError)
 {
@@ -49,6 +58,15 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(Uri &uri, const DataS
     }
     resultSet_ = std::make_shared<DataShareResultSet>();
     return resultSet_;
+}
+
+std::pair<int32_t, int32_t> DataShareHelper::UpdateEx(
+    Uri &uri, const DataSharePredicates &predicates, const DataShareValuesBucket &value)
+{
+    if (DataShareHelperMock::proxy_ != nullptr) {
+        return DataShareHelperMock::proxy_->UpdateEx(uri, predicates, value);
+    }
+    return std::make_pair(0, 0);
 }
 
 void DataShareHelper::RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver)
