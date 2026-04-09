@@ -40,6 +40,7 @@ public:
 private:
     int32_t Query(NativeRdb::AbsRdbPredicates predicates, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
     int32_t RdbInit();
+    int32_t RdbInitInner(const std::string &databasePath);
     DataSyncerRdbStore()
     {
         RdbInit();
