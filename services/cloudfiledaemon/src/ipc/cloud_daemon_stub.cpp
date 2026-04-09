@@ -51,9 +51,21 @@ int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StartFuseInner");
-    auto userId = data.ReadInt32();
-    auto fd = data.ReadFileDescriptor();
-    auto path = data.ReadString();
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        LOGE("read userId failed");
+        return E_INVAL_ARG;
+    }
+    int fd = data.ReadFileDescriptor();
+    if (fd < 0) {
+        LOGE("read fd failed, fd = %{public}d", fd);
+        return E_INVAL_ARG;
+    }
+    std::string path;
+    if (!data.ReadString(path)) {
+        LOGE("read path failed");
+        return E_INVAL_ARG;
+    }
 #ifdef SUPPORT_WATCH_LITE
     if (path.find("cloud_fuse") != std::string::npos) {
         reply.WriteInt32(-EINVAL);

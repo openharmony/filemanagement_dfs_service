@@ -69,13 +69,17 @@ ohos_unittest("cloud_sync_callback_client_manager_test") {
 ohos_unittest("cloud_sync_callback_stub_test") {
   module_out_path = "dfs_service/dfs_service"
 
-  sources = [ "cloud_sync_callback_stub_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "cloud_sync_callback_stub_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/test/mock",
   ]
 
 
@@ -88,7 +92,11 @@ ohos_unittest("cloud_sync_callback_stub_test") {
     "ipc:ipc_single",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUDSYNC_API\"",
+  ]
 
   use_exceptions = true
 }
@@ -508,6 +516,7 @@ ohos_unittest("download_asset_callback_stub_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "../../../mock/cloud_download_uri_manager_hook.cpp",
     "download_asset_callback_stub_test.cpp",
   ]
@@ -516,6 +525,7 @@ ohos_unittest("download_asset_callback_stub_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/mock",
   ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
@@ -532,8 +542,8 @@ ohos_unittest("download_asset_callback_stub_test") {
   defines = [
     "private=public",
     "protected=public",
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_ASSET_API\"",
   ]
 
   use_exceptions = true
