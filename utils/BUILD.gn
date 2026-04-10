@@ -113,6 +113,10 @@ ohos_shared_library("libdistributedfileutils") {
     }
   }
 
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -263,6 +267,10 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CloudFileDaemon\"",
   ]
+
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
 
   deps = []
 
