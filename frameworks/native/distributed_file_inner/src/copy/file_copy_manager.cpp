@@ -56,6 +56,7 @@
 #define LOG_DOMAIN 0xD00430B
 #define LOG_TAG "distributedfile_daemon"
 #define FDSAN_TAG 1
+#define O_UNCACHE  010000000000
 
 namespace OHOS {
 namespace Storage {
@@ -469,9 +470,9 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
 
     int32_t destFd = -1;
     if (g_apiCompatibleVersion >= OPEN_TRUC_VERSION) {
-        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     } else {
-        destFd = open(dest.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        destFd = open(dest.c_str(), O_RDWR | O_CREAT | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
     if (destFd < 0) {
         LOGE("Error opening dest file descriptor. errno = %{public}d", errno);
@@ -711,7 +712,7 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
             return EPERM;
         }
     } else {
-        srcFd = open(srcPth.c_str(), O_RDONLY);
+        srcFd = open(srcPth.c_str(), O_RDONLY | O_UNCACHE);
         if (srcFd < 0) {
             LOGE("Error opening src file descriptor. errno = %{public}d", errno);
             RadarParaInfo info = {"OpenSrcFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
@@ -759,7 +760,7 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
         LOGI("destPath not exist");
         uint64_t new_tag = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
-        auto file = open(destPath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        auto file = open(destPath.c_str(), O_RDWR | O_CREAT | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (file < 0) {
             LOGE("Error opening file descriptor. errno = %{public}d", errno);
 #ifdef DFS_ENABLE_RADAR
