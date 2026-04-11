@@ -120,4 +120,24 @@ FsResult<std::vector<LocalFilePresentStatus>> CloudSyncManagerCore::DoGetLocalFi
 
     return FsResult<std::vector<LocalFilePresentStatus>>::Success(localFilePresentStatusList);
 }
+
+FsResult<std::vector<DowngradeProgress>> CloudSyncManagerCore::DoGetDowngradeTaskState(
+    const std::vector<std::string> &bundleNames)
+{
+    LOGI("GetDowngradeDownloadTaskState entrance");
+    if (bundleNames.empty() || bundleNames.size() > BUNDLES_MAX_SIZE) {
+        LOGE("bundleNames is empty or exceed max size.");
+        return FsResult<std::vector<DowngradeProgress>>::Error(JsErrCode::E_INVALID_ARGUMENT);
+    }
+
+    std::vector<DowngradeProgress> downgradeProgressList;
+    int32_t result =
+        CloudSyncManager::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+    if (result != E_OK) {
+        LOGE("GetDowngradeDownloadTaskState failed. ret = %{public}d", result);
+        return FsResult<std::vector<DowngradeProgress>>::Error(Convert2ErrNum(result));
+    }
+
+    return FsResult<std::vector<DowngradeProgress>>::Success(downgradeProgressList);
+}
 } // namespace OHOS::FileManagement::CloudSync

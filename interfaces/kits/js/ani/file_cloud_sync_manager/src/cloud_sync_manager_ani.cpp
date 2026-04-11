@@ -409,4 +409,145 @@ ani_ref CloudSyncManagerAni::GetBundlesLocalFilePresentStatus(ani_env *env, ani_
 
     return result;
 }
+
+static ani_status ConvertDowngradeProgressAniObj(ani_env *env, DowngradeProgress &progress,
+    ani_class &cls, ani_method &ctor, ani_object &obj)
+{
+    ani_enum stateEnum;
+    Type stateSign = Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadState");
+    ani_status ret = env->FindEnum(stateSign.Descriptor().c_str(), &stateEnum);
+    if (ret != ANI_OK) {
+        LOGE("Find DownloadState enum failed, ret = %{public}d", ret);
+        return ret;
+    }
+    
+    ani_enum downloadStopReasonEnum;
+    Type errorSign = Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadStopReason");
+    ret = env->FindEnum(errorSign.Descriptor().c_str(), &downloadStopReasonEnum);
+    if (ret != ANI_OK) {
+        LOGE("Find DownloadStopReason enum failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    ani_enum_item stateEnumItem;
+    ani_enum_item downloadStopReasonEnumItem;
+    env->Enum_GetEnumItemByIndex(stateEnum, progress.state, &stateEnumItem);
+    env->Enum_GetEnumItemByIndex(downloadStopReasonEnum, progress.stopReason, &downloadStopReasonEnumItem);
+    
+    ani_long downloadedSizeAni = progress.downloadedSize;
+    ani_long totalSizeAni = progress.totalSize;
+    ani_int successfulCountAni = progress.successfulCount;
+    ani_int failedCountAni = progress.failedCount;
+    ani_int totalCountAni = progress.totalCount;
+    
+    ret = env->Object_New(cls, ctor, &obj, stateEnumItem, successfulCountAni, failedCountAni,
+        totalCountAni, downloadedSizeAni, totalSizeAni, downloadStopReasonEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("DowngradeProgress obj new failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    return ANI_OK;
+}
+
+static ani_status GetDowngradeProgressAniArrayObject(ani_env *env,
+    const std::vector<DowngradeProgress> &downgradeProgressList, ani_object &obj, ani_class &cls, ani_method &ctor)
+{
+    ani_class arrayCls = nullptr;
+    Type arrSign = Builder::BuildClass("std.core.Array");
+    ani_status ret = env->FindClass(arrSign.Descriptor().c_str(), &arrayCls);
+    if (ret != ANI_OK) {
+        LOGE("find ani array failed. ret = %{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    ani_method arrayCtor;
+    std::string ct = Builder::BuildConstructorName();
+    std::string ctSign = Builder::BuildSignatureDescriptor({Builder::BuildInt()});
+    ret = env->Class_FindMethod(arrayCls, ct.c_str(), ctSign.c_str(), &arrayCtor);
+    if (ret != ANI_OK) {
+        LOGE("array find method failed. ret = %{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    ret = env->Object_New(arrayCls, arrayCtor, &obj, downgradeProgressList.size());
+    if (ret != ANI_OK) {
+        LOGE("set array downgradeProgress new object failed. ret = %{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    ani_size index = 0;
+    for (auto item : downgradeProgressList) {
+        ani_object pg;
+        if (ConvertDowngradeProgressAniObj(env, item, cls, ctor, pg) != ANI_OK) {
+            LOGE("convert ani obj fail.");
+            continue;
+        }
+        std::string setSign = Builder::BuildSignatureDescriptor({Builder::BuildInt(), Builder::BuildUndefined()});
+        ret = env->Object_CallMethodByName_Void(obj, "$_set", setSign.c_str(), index, pg);
+        if (ret != ANI_OK) {
+            LOGE("set array downgradeProgress value failed. ret = %{public}d", static_cast<int32_t>(ret));
+            return ret;
+        }
+        index++;
+    }
+    return ANI_OK;
+}
+
+static ani_status CreateDowngradeProgressArray(ani_env *env,
+    const std::vector<DowngradeProgress> &downgradeProgressList, ani_object &obj)
+{
+    Type clsName = Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadProgress");
+    ani_class cls;
+    ani_status ret = env->FindClass(clsName.Descriptor().c_str(), &cls);
+    if (ret != ANI_OK) {
+        LOGE("find class failed. ret = %{public}d", ret);
+        return ret;
+    }
+    ani_method ctor;
+    std::string ct = Builder::BuildConstructorName();
+    std::string argSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadState"),
+        Builder::BuildInt(),
+        Builder::BuildInt(),
+        Builder::BuildInt(),
+        Builder::BuildLong(),
+        Builder::BuildLong(),
+        Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.DownloadStopReason")
+    });
+    ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
+    if (ret != ANI_OK) {
+        LOGE("find ctor method failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    return GetDowngradeProgressAniArrayObject(env, downgradeProgressList, obj, cls, ctor);
+}
+
+ani_ref CloudSyncManagerAni::GetDowngradeDownloadTaskState(ani_env *env, ani_class clazz, ani_array bundleNames)
+{
+    auto [ret, bundleNameInputArray] = ANIUtils::AniToStringArray(env, bundleNames);
+    if (!ret) {
+        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        return nullptr;
+    }
+
+    auto data = CloudSyncManagerCore::DoGetDowngradeTaskState(bundleNameInputArray);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("cloud sync manager get downgrade task state info failed, err is %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+        return nullptr;
+    }
+    
+    auto downgradeProgressList = data.GetData().value();
+    ani_object result = nullptr;
+    if (CreateDowngradeProgressArray(env, downgradeProgressList, result) != ANI_OK) {
+        LOGE("create DowngradeProgress array failed");
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return nullptr;
+    }
+
+    return result;
+}
 } // namespace OHOS::FileManagement::CloudSync

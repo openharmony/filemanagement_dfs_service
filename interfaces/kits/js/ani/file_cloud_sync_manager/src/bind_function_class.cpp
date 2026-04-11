@@ -60,6 +60,8 @@ static ani_status BindContextOnCloudSyncManager(ani_env *env)
             reinterpret_cast<void *>(CloudSyncManagerAni::NotifyEventChange) },
         ani_native_function { "getBundlesLocalFilePresentStatusInner", getLoListSign.c_str(),
             reinterpret_cast<void *>(CloudSyncManagerAni::GetBundlesLocalFilePresentStatus) },
+        ani_native_function { "getDowngradeTaskStateInner", getLoListSign.c_str(),
+            reinterpret_cast<void *>(CloudSyncManagerAni::GetDowngradeDownloadTaskState) },
     };
 
     ret = env->Class_BindStaticNativeMethods(cls, methods.data(), methods.size());

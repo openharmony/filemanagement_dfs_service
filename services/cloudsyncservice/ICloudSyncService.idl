@@ -24,6 +24,7 @@ sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.CloudFileInfo;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.HistoryVersion;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.LocalFilePresentStatus;
 sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.XattrResult;
+sequenceable cloud_sync_common..OHOS.FileManagement.CloudSync.DowngradeProgress;
 option_stub_hooks on;
 
 interface OHOS.FileManagement.CloudSync.ICloudSyncService
@@ -84,4 +85,6 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void IsFinishPull([out] boolean finishFlag);
     void GetDentryFileOccupy([out] long occupyNum);
     void GetAclXattrBatch([in] boolean isAccess, [in] String[] filePaths, [out] XattrResult[] aclXattrResults);
+    void GetDowngradeDownloadTaskState([in] String[] bundleNames,
+                               [out] DowngradeProgress[] downgradeProgressList);
 }

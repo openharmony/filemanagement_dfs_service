@@ -2223,5 +2223,117 @@ HWTEST_F(CloudSyncManagerImplTest, SetStartSyncPending001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SetStartSyncPending001 End";
 }
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskStateTest001
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with empty bundleNames
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest001 Start";
+    try {
+        std::vector<std::string> bundleNames;
+        std::vector<DowngradeProgress> downgradeProgressList;
+        int32_t res =
+            CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest001 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskStateTest002
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with service load failed
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest002 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        std::vector<DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res =
+            CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest002 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskStateTest003
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with success
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest003 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1", "com.example.test2"};
+        std::vector<DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDowngradeDownloadTaskState(_, _)).WillOnce(Return(E_OK));
+        int32_t res =
+            CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest003 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskStateTest004
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with permission denied
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest004 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        std::vector<DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDowngradeDownloadTaskState(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res =
+            CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest004 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskStateTest005
+ * @tc.desc: Verify the GetDowngradeDownloadTaskState function with invalid argument
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest005 Start";
+    try {
+        std::vector<std::string> bundleNames = {"com.example.test1"};
+        std::vector<DowngradeProgress> downgradeProgressList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetDowngradeDownloadTaskState(_, _)).WillOnce(Return(E_INVAL_ARG));
+        int32_t res =
+            CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest005 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

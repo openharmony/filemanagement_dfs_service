@@ -120,6 +120,8 @@ public:
     ErrCode GetDentryFileOccupy(int64_t &occupyNum) override;
     ErrCode GetAclXattrBatch(const bool isAccess, const std::vector<std::string> &filePaths,
                              std::vector<XattrResult> &aclXattrResults) override;
+    ErrCode GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+                                          std::vector<DowngradeProgress> &downgradeProgressList) override;
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason &startReason) override;
