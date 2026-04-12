@@ -40,6 +40,7 @@ ohos_shared_library("cloud_sync_ani") {
     "src/cloud_file_cache_ani.cpp",
     "src/cloud_sync_ani.cpp",
     "src/cloud_sync_callback_ani.cpp",
+    "src/upload_callback_impl_ani.cpp",
     "src/download_callback_impl_ani.cpp",
     "src/download_callback_middle_ani.cpp",
     "src/download_progress_ani.cpp",

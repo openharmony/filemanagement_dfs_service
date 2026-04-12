@@ -96,6 +96,12 @@ public:
                              std::vector<XattrResult> &aclXattrResults) override;
     int32_t GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
                                           std::vector<DowngradeProgress> &downgradeProgressList) override;
+    int32_t GetDownloadList(const std::vector<std::string> &uriVec,
+                            std::vector<CloudSync::DownloadProgressObj> &downloadList) override;
+    int32_t GetUploadList(const std::vector<std::string> &uriVec,
+                        std::vector<CloudSync::UploadProgressObj> &uploadList) override;
+    int32_t RegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) override;
+    int32_t UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);

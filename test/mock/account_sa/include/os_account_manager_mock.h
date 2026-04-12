@@ -42,6 +42,7 @@ public:
     MOCK_METHOD2(GetOsAccountType, int(int32_t userId, AccountSA::OsAccountType &accountType));
     MOCK_METHOD1(GetOsAccountTypeFromProcess, int(AccountSA::OsAccountType &accountType));
     MOCK_METHOD1(GetOsAccountLocalIdFromProcess, int(int32_t &userId));
+    MOCK_METHOD2(GetOsAccountLocalIdFromId, int(const int32_t userId, int32_t &localId));
     MOCK_METHOD2(IsOsAccountVerified, int(const int id, bool &isVerified));
     MOCK_METHOD1(QueryActiveOsAccountIds, int(std::vector<int32_t>& ids));
 };

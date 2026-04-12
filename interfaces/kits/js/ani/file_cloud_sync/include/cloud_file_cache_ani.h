@@ -35,6 +35,7 @@ public:
     static void CloudFileCacheCleanFileCache(ani_env *env, ani_object object, ani_string uri);
     static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
+    static ani_array CloudFileCacheGetDownloadList(ani_env *env, ani_object object, ani_array uriVec);
     static void CloudFileCacheConstructorForWatch(ani_env *env, ani_object object);
     static void CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun);

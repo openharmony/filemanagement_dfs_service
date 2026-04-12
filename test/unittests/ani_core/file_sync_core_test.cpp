@@ -284,4 +284,210 @@ HWTEST_F(FileSyncCoreTest, DoGetLastSyncTimeTest1, TestSize.Level1)
     auto ret = fileSync->DoGetLastSyncTime();
     EXPECT_FALSE(ret.IsSuccess());
 }
+
+/**
+ * @tc.name: DoGetUploadList
+ * @tc.desc: Verify to FileSyncCore::DoGetUploadList function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoGetUploadListTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::vector<std::string> uriVec = {"file://path1", "file://path2"};
+    std::vector<CloudSync::UploadProgressObj> uploadList;
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetUploadList(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::UploadProgressObj>()),
+                       Return(OHOS::FileManagement::E_OK)));
+    
+    auto ret = fileSync->DoGetUploadList(uriVec, uploadList);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoGetUploadList
+ * @tc.desc: Verify to FileSyncCore::DoGetUploadList function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoGetUploadListTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::vector<std::string> uriVec = {"file://path1"};
+    std::vector<CloudSync::UploadProgressObj> uploadList;
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetUploadList(_, _))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = fileSync->DoGetUploadList(uriVec, uploadList);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoRegisterUploadProgress function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoRegisterUploadProgressTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoRegisterUploadProgress function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoRegisterUploadProgressTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoRegisterUploadProgress function with duplicate callback
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoRegisterUploadProgressTest3, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret.IsSuccess());
+    
+    auto ret2 = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret2.IsSuccess());
+}
+
+/**
+ * @tc.name: DoRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoRegisterUploadProgress function with duplicate callback
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoRegisterUploadProgressTest4, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    fileSync->bundleEntity = nullptr;
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret.IsSuccess());
+    
+    auto ret2 = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret2.IsSuccess());
+}
+
+/**
+ * @tc.name: DoUnRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoUnRegisterUploadProgress function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoUnRegisterUploadProgressTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    EXPECT_CALL(cloudMock, UnRegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret.IsSuccess());
+    
+    auto ret2 = fileSync->DoUnRegisterUploadProgress();
+    EXPECT_TRUE(ret2.IsSuccess());
+}
+
+/**
+ * @tc.name: DoUnRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoUnRegisterUploadProgress function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoUnRegisterUploadProgressTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    auto callback = std::make_shared<CloudUploadCallbackImplAni>(nullptr, nullptr);
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, RegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_OK));
+    EXPECT_CALL(cloudMock, UnRegisterUploadCallback(_))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = fileSync->DoRegisterUploadProgress(callback);
+    EXPECT_TRUE(ret.IsSuccess());
+    
+    auto ret2 = fileSync->DoUnRegisterUploadProgress();
+    EXPECT_FALSE(ret2.IsSuccess());
+    const auto &err = ret2.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoUnRegisterUploadProgress
+ * @tc.desc: Verify to FileSyncCore::DoUnRegisterUploadProgress function without callback
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoUnRegisterUploadProgressTest4, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    fileSync->bundleEntity = nullptr;
+    auto ret = fileSync->DoUnRegisterUploadProgress();
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test

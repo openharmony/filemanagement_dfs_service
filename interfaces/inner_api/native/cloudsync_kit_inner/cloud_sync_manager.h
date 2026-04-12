@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_H
 
 #include <memory>
+#include <stdint.h>
 
 #include "cloud_download_callback.h"
 #include "cloud_optimize_callback.h"
@@ -24,6 +25,7 @@
 #include "cloud_sync_callback_info.h"
 #include "cloud_sync_common.h"
 #include "downgrade_dl_callback.h"
+#include "cloud_upload_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManager {
@@ -189,6 +191,40 @@ public:
                                      std::vector<XattrResult> &aclXattrResults);
     virtual int32_t GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
                                                   std::vector<DowngradeProgress> &downgradeProgressList) = 0;
+
+    /**
+     * @brief 获取下载传输列表
+     *
+     * @param uriVec 文件uri list
+     * @param downloadCallback 检测结果列表
+     * @return int32_t 获取下载列表执行结果
+     */
+    virtual int32_t GetDownloadList(const std::vector<std::string> &uriVec,
+                                    std::vector<CloudSync::DownloadProgressObj> &downloadList) = 0;
+
+    /**
+     * @brief 获取上传传输列表
+     *
+     * @param downloadCallback 回调函数
+     * @return int32_t 获取上传列表执行结果
+     */
+    virtual int32_t GetUploadList(const std::vector<std::string> &uriVec,
+                                std::vector<CloudSync::UploadProgressObj> &uploadList) = 0;
+
+    /**
+     * @brief 注册
+     *
+     * @param callback 注册上传回调
+     * @return int32_t 返回执行结果
+     */
+    virtual int32_t RegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) = 0;
+    /**
+     * @brief 解除注册的回调
+     *
+     * @param callback 注册上传回调
+     * @return int32_t 返回执行结果
+     */
+    virtual int32_t UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

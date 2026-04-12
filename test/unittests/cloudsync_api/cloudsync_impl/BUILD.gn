@@ -93,6 +93,94 @@ ohos_unittest("cloud_sync_callback_stub_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_upload_callback_client_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "cloud_upload_callback_client_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_upload_callback_client_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "cloud_upload_callback_client_manager_test.cpp" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_upload_callback_stub_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "cloud_upload_callback_stub_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_manager_impl_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -662,6 +750,9 @@ group("cloudsync_impl_test") {
     ":cloud_sync_manager_impl_lite_test",
     ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
+    ":cloud_upload_callback_client_test",
+    ":cloud_upload_callback_client_manager_test",
+    ":cloud_upload_callback_stub_test",
     ":download_asset_callback_client_test",
     ":download_asset_callback_stub_test",
     ":downgrade_dl_callback_client_test",

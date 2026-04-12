@@ -346,6 +346,45 @@ export default namespace cloudSync {
         uris: Array<string>;
     };
 
+    export enum UploadState {
+        WAITING = 0,
+        RUNNING = 1,
+        COMPLETED = 2,
+        FAILED = 3,
+        STOPPED = 4,
+        PAUSED = 5
+    };
+
+    export interface UploadProgress {
+        state: UploadState;
+        processed: long;
+        size: long;
+        uri: string;
+        error: ErrorType;
+    };
+
+    export class UploadProgressInner implements UploadProgress {
+        constructor(
+            state: UploadState,
+            processed: long,
+            size: long,
+            uri: string,
+            error: ErrorType
+        ) {
+            this.state = state;
+            this.processed = processed;
+            this.size = size;
+            this.uri = uri;
+            this.error = error;
+        }
+        state: UploadState;
+        processed: long;
+        size: long;
+        uri: string;
+        error: ErrorType;
+    };
+
+
     export class FileSync {
         static {
             loadLibraryWithPermissionCheck("cloud_sync_ani", "@ohos.file.cloudSync");
@@ -429,9 +468,45 @@ export default namespace cloudSync {
             });
         }
 
+        getUploadList(uris: Array<string>): Promise<Array<UploadProgress>> {
+            return new Promise<Array<UploadProgress>>((resolve: (result: Array<UploadProgress>) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((urisIn: Array<string>): Array<UploadProgress> => {
+                    return this.GetUploadListInner(urisIn);
+                }, uris);
+                promise.then<void, void>((ret: Any): void => {
+                    resolve(ret as Array<UploadProgress>);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
+                });
+            });
+        }
+
+        registerUploadProgress(callback: Callback<UploadProgress>): void {
+            this.RegisterUploadProgressInner(callback);
+        }
+
+        unregisterUploadProgress(): void {
+            this.UnRegisterUploadProgressInner();
+        }
+
         native FileSyncStart(): void;
         native FileSyncStop(): void;
         native GallerySyncGetLastSyncTime(): long;
+        native FileSyncRegisterUploadProgress(callback: Callback<UploadProgress>): void;
+        native FileSyncUnRegisterUploadProgress(): void;
+        native FileSyncGetUploadList(uris: Array<string>): Array<UploadProgress>;
+
+
+        RegisterUploadProgressInner(callback: Callback<UploadProgress>): void {
+            this.FileSyncRegisterUploadProgress(callback);
+        }
+        UnRegisterUploadProgressInner(): void {
+            this.FileSyncUnRegisterUploadProgress();
+        }
+        GetUploadListInner(uris: Array<string>): Array<UploadProgress> {
+            return this.FileSyncGetUploadList(uris);
+        }
 
         StartInner(): int {
             this.FileSyncStart();
@@ -560,13 +635,31 @@ export default namespace cloudSync {
             });
         }
 
+        getDownloadList(uris: Array<string>): Promise<Array<DownloadProgress>> {
+            return new Promise<Array<DownloadProgress>>((resolve: (result: Array<DownloadProgress>) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((urisIn: Array<string>): Array<DownloadProgress> => {
+                    return this.GetDownloadListInner(urisIn);
+                }, uris);
+                promise.then<void, void>((ret: Any): void => {
+                    resolve(ret as Array<DownloadProgress>);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
+                });
+            });
+        }
+
         native CloudFileCacheStart(uri: string): void;
         native CloudFileCacheStop(uri: string, clean: boolean): void;
         native CloudFileCacheStartBatch(uris: Array<string>, fieldKey: DownloadFileType): long;
         native CloudFileCacheStopBatch(downloadId: long, clean: boolean): void;
         native cleanCache(uri: string): void;
         native cleanFileCache(uri: string): void;
+        native CloudFileCacheGetDownloadList(uris: Array<string>): Array<DownloadProgress>;
 
+        GetDownloadListInner(uris: Array<string>): Array<DownloadProgress>{
+            return this.CloudFileCacheGetDownloadList(uris);
+        }
         StartInner(uri: string): int {
             this.CloudFileCacheStart(uri);
             return 0;

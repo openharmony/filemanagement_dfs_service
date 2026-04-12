@@ -17,6 +17,8 @@
 #include "cloud_download_callback_client.h"
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_manager_impl.h"
+#include "cloud_upload_callback_client.h"
+#include "cloud_upload_callback_client_manager.h"
 #include "downgrade_download_callback_client.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
@@ -44,6 +46,7 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
         LOGE("callbackId or callback is null");
         return E_INVAL_ARG;
     }
+
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(callbackInfo.bundleName, "RegisterCallback"));
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
@@ -444,6 +447,98 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::GetDownloadList(const std::vector<std::string> &uriVec,
+                                              std::vector<CloudSync::DownloadProgressObj> &downloadList)
+{
+    LOGI("GetDownloadList start");
+    if (uriVec.empty()) {
+        LOGE("The uri list is empty");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetDownloadList"));
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetDownloadList(uriVec, downloadList);
+    LOGI("GetDownloadList end, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::GetUploadList(const std::vector<std::string> &uriVec,
+                                            std::vector<CloudSync::UploadProgressObj> &uploadList)
+{
+    LOGI("GetUploadList start");
+    if (uriVec.empty()) {
+        LOGE("The uri list is empty");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetUploadList"));
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->GetUploadList(uriVec, uploadList);
+    LOGI("GetUploadList end, ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::RegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo)
+{
+    LOGI("Start RegisterUploadCallback");
+    if ((uploadCallbackInfo.callbackId.empty()) || (uploadCallbackInfo.callback == nullptr)) {
+        LOGE("callbackId or callback is null");
+        return E_INVAL_ARG;
+    }
+
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(
+        CallerInfo(uploadCallbackInfo.bundleName, "RegisterUploadCallback"));
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    auto ret = CloudSyncServiceProxy->RegisterUploadCallbackInner(
+        sptr(new (std::nothrow) CloudUploadCallbackClient(uploadCallbackInfo.callback)),
+        uploadCallbackInfo.callbackId, uploadCallbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudUploadCallbackClientManager::GetInstance().AddCallback(uploadCallbackInfo);
+        SubscribeListener();
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    LOGI("RegisterUploadCallback ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo)
+{
+    LOGI("Start UnRegisterUploadCallback");
+    if (uploadCallbackInfo.callbackId.empty()) {
+        LOGE("callbackId is null");
+        return E_INVAL_ARG;
+    }
+
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(
+        CallerInfo(uploadCallbackInfo.bundleName, "UnRegisterUploadCallback"));
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    auto ret = CloudSyncServiceProxy->UnRegisterUploadCallbackInner(uploadCallbackInfo.callbackId,
+        uploadCallbackInfo.bundleName);
+    if (ret == E_OK) {
+        CloudUploadCallbackClientManager::GetInstance().RemoveCallback(uploadCallbackInfo);
+        SubscribeListener();
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    LOGI("UnRegisterUploadCallback ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("StopDownloadFile start");
@@ -803,6 +898,17 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount)
         if ((callback == nullptr) || (cloudSyncServiceProxy->RegisterFileSyncCallbackInner(
             callback, callbackInfo.callbackId, callbackInfo.bundleName) != E_OK)) {
             LOGW("register callback failed, try time is %{public}d", retryCount);
+        } else {
+            hasCallback = true;
+        }
+    }
+    std::vector<UploadCallbackInfo> uploadCallbackInfos;
+    CloudUploadCallbackClientManager::GetInstance().GetAllCallback(uploadCallbackInfos);
+    for (auto &callbackInfo : uploadCallbackInfos) {
+        auto callback = sptr(new (std::nothrow) CloudUploadCallbackClient(callbackInfo.callback));
+        if ((callback == nullptr) || (cloudSyncServiceProxy->RegisterUploadCallbackInner(
+            callback, callbackInfo.callbackId, callbackInfo.bundleName) != E_OK)) {
+            LOGW("register upload callback failed, try time is %{public}d", retryCount);
         } else {
             hasCallback = true;
         }

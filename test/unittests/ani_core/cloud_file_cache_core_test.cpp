@@ -254,10 +254,10 @@ HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTest1, TestSize.Level1)
 
 /**
  * @tc.name: CleanFileCache
- * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function
+ * @tc.desc: Verify to CloudFileCacheCore::CleanFileCache function
  * @tc.type: FUNC
  */
-HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTest2, TestSize.Level1)
+HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTestFile2, TestSize.Level1)
 {
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     std::string uri = "testuri";
@@ -265,5 +265,86 @@ HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheTest2, TestSize.Level1)
     EXPECT_CALL(cloudMock, CleanFileCache(_)).WillOnce(Return(E_OK));
     auto ret = cloudFileCache->CleanFileCache(uri);
     EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: GetDownloadList
+ * @tc.desc: Verify to CloudFileCacheCore::GetDownloadList function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetDownloadListTest1, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::vector<std::string> uriVec = {"file://path1", "file://path2"};
+    std::vector<CloudSync::DownloadProgressObj> downloadList;
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetDownloadList(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::DownloadProgressObj>()),
+                       Return(OHOS::FileManagement::E_OK)));
+    
+    auto ret = cloudFileCache->GetDownloadList(uriVec, downloadList);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: GetDownloadList
+ * @tc.desc: Verify to CloudFileCacheCore::GetDownloadList function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetDownloadListTest2, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::vector<std::string> uriVec = {"file://path1"};
+    std::vector<CloudSync::DownloadProgressObj> downloadList;
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetDownloadList(_, _))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = cloudFileCache->GetDownloadList(uriVec, downloadList);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: GetDownloadList
+ * @tc.desc: Verify to CloudFileCacheCore::GetDownloadList function with data
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetDownloadListTest3, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    std::vector<std::string> uriVec = {"file://path1"};
+    std::vector<CloudSync::DownloadProgressObj> downloadList;
+    
+    CloudSync::DownloadProgressObj progress;
+    progress.path = "file://path1";
+    progress.downloadId = 12345;
+    progress.state = CloudSync::DownloadProgressObj::Status::RUNNING;
+    progress.downloadErrorType = CloudSync::DownloadProgressObj::DownloadErrorType::NO_ERROR;
+    progress.downloadedSize = 1024;
+    progress.totalSize = 2048;
+    
+    std::vector<CloudSync::DownloadProgressObj> expectedList = {progress};
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetDownloadList(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(expectedList),
+                       Return(OHOS::FileManagement::E_OK)));
+    
+    auto ret = cloudFileCache->GetDownloadList(uriVec, downloadList);
+    EXPECT_TRUE(ret.IsSuccess());
+    EXPECT_EQ(downloadList.size(), 1);
+    EXPECT_EQ(downloadList[0].path, "file://path1");
+    EXPECT_EQ(downloadList[0].downloadId, 12345);
+    EXPECT_EQ(downloadList[0].state, CloudSync::DownloadProgressObj::Status::RUNNING);
+    EXPECT_EQ(downloadList[0].downloadedSize, 1024);
+    EXPECT_EQ(downloadList[0].totalSize, 2048);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

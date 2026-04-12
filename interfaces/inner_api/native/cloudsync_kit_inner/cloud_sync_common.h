@@ -70,6 +70,40 @@ struct DownloadProgressObj : public Parcelable {
     std::string to_string();
 };
 
+struct UploadProgressObj : public Parcelable {
+    enum UploadState : int32_t {
+        WAITING = 0,
+        RUNNING = 1,
+        COMPLETED = 2,
+        FAILED = 3,
+        STOPPED = 4,
+        PAUSED  = 5
+    };
+    enum ErrorType : int32_t {
+        NO_ERROR = 0,
+        NETWORK_UNAVAILABLE,
+        WIFI_UNAVAILABLE,
+        BATTERY_LEVEL_LOW,
+        BATTERY_LEVEL_WARNING,
+        CLOUD_STORAGE_FULL,
+        LOCAL_STORAGE_FULL,
+        DEVICE_TEMPERATURE_TOO_HIGH,
+        REMOTE_SERVER_ABNORMAL,
+        RESPONSE_TIME_OUT,
+        UNKNOWN_ERROR
+    };
+    UploadState state;
+    int64_t processed;
+    int64_t size;
+    std::string uri;
+    ErrorType error;
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static UploadProgressObj *Unmarshalling(Parcel &parcel);
+    std::string to_string();
+};
+
 struct DowngradeProgress : public Parcelable {
     enum State : int32_t {
         RUNNING = 0,
@@ -122,7 +156,6 @@ struct OptimizeSpaceOptions : public Parcelable {
     static OptimizeSpaceOptions *Unmarshalling(Parcel &parcel);
 };
 
-
 struct DentryFileInfo {
     std::string cloudId;
     int64_t size;
@@ -132,7 +165,7 @@ struct DentryFileInfo {
     std::string fileType;
 };
 
-struct  DentryFileInfoObj : public Parcelable {
+struct DentryFileInfoObj : public Parcelable {
     std::string cloudId;
     int64_t size;
     int64_t modifiedTime;
@@ -187,7 +220,7 @@ struct CleanFileInfo {
     std::vector<std::string> attachment;
 };
 
-struct  CleanFileInfoObj : public Parcelable {
+struct CleanFileInfoObj : public Parcelable {
     int64_t size{0};
     int64_t modifiedTime{0};
     int32_t fileSourceType{0};

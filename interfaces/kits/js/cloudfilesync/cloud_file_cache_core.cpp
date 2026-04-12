@@ -143,4 +143,16 @@ FsResult<void> CloudFileCacheCore::CleanFileCache(const string &uri)
 
     return FsResult<void>::Success();
 }
+
+FsResult<void> CloudFileCacheCore::GetDownloadList(const std::vector<std::string> &uriVec,
+                                                   std::vector<CloudSync::DownloadProgressObj> &downloadList)
+{
+    int32_t ret =  CloudSyncManager::GetInstance().GetDownloadList(uriVec, downloadList);
+    if (ret != E_OK) {
+        LOGE("GetDownloadList failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    return FsResult<void>::Success();
+}
+
 } // namespace OHOS::FileManagement::CloudSync

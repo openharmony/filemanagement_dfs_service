@@ -24,6 +24,7 @@
 #include "i_cloud_optimize_callback.h"
 #include "i_cloud_sync_callback.h"
 #include "i_downgrade_dl_callback.h"
+#include "i_cloud_upload_callback.h"
 
 namespace OHOS::FileManagement::CloudFile {
 class DataSyncManager {
@@ -113,6 +114,22 @@ public:
     
     // get dentryfile occupy
     virtual int32_t GetDentryFileOccupy(const int32_t userId, int64_t &occupyNum);
+
+    virtual int32_t GetDownloadList(const BundleNameUserInfo &bundleNameUserInfo,
+                                const std::vector<std::string> &uriVec,
+                                std::vector<CloudSync::DownloadProgressObj> &downloadList);
+
+    virtual int32_t GetUploadList(const BundleNameUserInfo &bundleNameUserInfo,
+                                 const std::vector<std::string> &uriVec,
+                                 std::vector<CloudSync::UploadProgressObj> &uploadList);
+
+    virtual void RegisterUploadCallback(const std::string &bundleName,
+                                             const BundleNameUserInfo &bundleNameUserInfo,
+                                             const std::string &callbackId,
+                                             const sptr<CloudSync::ICloudUploadCallback> &callback);
+    virtual void UnRegisterUploadCallback(const std::string &bundleName,
+                                               const BundleNameUserInfo &bundleNameUserInfo,
+                                               const std::string &callbackId);
 
     // periodic clean task
     void PeriodicCleanLock();

@@ -19,6 +19,7 @@
 #include <optional>
 
 #include "cloud_sync_callback_ani.h"
+#include "upload_callback_impl_ani.h"
 #include "filemgmt_libfs.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -34,6 +35,10 @@ public:
     FsResult<void> DoOff(const std::string &event,
         const std::optional<std::shared_ptr<CloudSyncCallbackMiddle>> &callback = std::nullopt);
     FsResult<int64_t> DoGetLastSyncTime();
+    FsResult<void> DoRegisterUploadProgress(const std::shared_ptr<CloudUploadCallback> callback);
+    FsResult<void> DoUnRegisterUploadProgress();
+    FsResult<void> DoGetUploadList(const std::vector<std::string> &uriVec,
+                                    std::vector<CloudSync::UploadProgressObj> &uploadList);
 
     const std::string &GetBundleName() const;
     explicit FileSyncCore(const std::string &bundleName);

@@ -74,6 +74,15 @@ enum State {
     CLOUD_FILE_DOWNLOAD_STOPPED,
 };
 
+enum class UploadState {
+    WAITING = 0,
+    RUNNING,
+    COMPLETED,
+    FAILED,
+    STOPPED,
+    PAUSED
+};
+
 enum FileSyncState {
     FILESYNCSTATE_UPLOADING = 0,
     FILESYNCSTATE_DOWNLOADING,
