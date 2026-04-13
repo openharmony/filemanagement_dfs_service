@@ -371,7 +371,7 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest005, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync_user", "1");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "1");
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -493,7 +493,7 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest010, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync_user", "0");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photos_mobile_data_sync", "0");
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
         EXPECT_EQ(ret, false);
     } catch (...) {
@@ -538,7 +538,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.photos";
         int32_t userId = 1;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status_user", "off");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "off");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, false);
     } catch (...) {
@@ -561,7 +561,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.photos";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status_user", "on");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "on");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -584,7 +584,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest004, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status_user", "on");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "on");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, true);
     } catch (...) {
@@ -607,7 +607,7 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest005, TestSize.Level1)
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.ailife";
         int32_t userId = 100;
-        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status_user", "false");
+        SettingsDataManager::settingsDataMap_.EnsureInsert("photo_network_connection_status", "false");
         bool ret = networkStatus.CheckNetwork(bundleName, userId);
         EXPECT_EQ(ret, false);
     } catch (...) {

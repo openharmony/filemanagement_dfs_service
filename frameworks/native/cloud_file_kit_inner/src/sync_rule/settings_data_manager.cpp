@@ -35,12 +35,22 @@ static const std::string NETWORK_CONNECTION_KEY = "photo_network_connection_stat
 static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";              // "1", "0"
 static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_free_day_count";    // "30"
 static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";              // "1", "0"
+static const std::string USER_SUFFIX = "_user";
 static const std::string AI_FAMILY_STATUS = "2";
 static const std::string CLOUD_STATUS = "1";
 static const std::string OPEN_STATUS = "on";
 static const std::string ALLOW_STATUS = "1";
 static const std::string LSF_ALLOW_STATUS = "0";
 static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
+
+std::string SettingsDataManager::GetQueryKey(const std::string &key)
+{
+    if (supportUserSettingsData_) {
+        return key + USER_SUFFIX;
+    } else {
+        return key;
+    }
+}
 
 std::string SettingsDataManager::GetSettingsDataCommonUri()
 {
@@ -53,12 +63,13 @@ std::string SettingsDataManager::GetSettingsDataCommonUri()
 
 std::string SettingsDataManager::GetSettingsDataUri(const std::string &key)
 {
-    return GetSettingsDataCommonUri() + "&key=" + key;
+    return GetSettingsDataCommonUri() + "&key=" + GetQueryKey(key);
 }
 
 std::string SettingsDataManager::GetUserSettingsDataUri(const std::string &key)
 {
-    return SETTING_DATA_COMMON_URI + "/USER_SETTINGSDATA_" + std::to_string(currentUserId_) + "?Proxy=true&key=" + key;
+    return SETTING_DATA_COMMON_URI + "/USER_SETTINGSDATA_" + std::to_string(currentUserId_) + "?Proxy=true&key=" +
+        key + USER_SUFFIX;
 }
 
 void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
@@ -371,9 +382,10 @@ int32_t SettingsDataManager::InitAndQuerySettingsData(const std::string &key, st
 
 int32_t SettingsDataManager::QueryParamInUserSettingsData(const std::string &key, std::string &value)
 {
-    LOGI("Query key: %{public}s, currentUserId: %{public}d", key.c_str(), currentUserId_);
+    std::string userKey = key + USER_SUFFIX;
+    LOGI("Query userKey: %{public}s, currentUserId: %{public}d", userKey.c_str(), currentUserId_);
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo("KEYWORD", key);
+    predicates.EqualTo("KEYWORD", userKey);
     std::vector<std::string> columns = {"value"};
     DataShare::CreateOptions options;
     options.enabled_ = true;
@@ -405,15 +417,17 @@ int32_t SettingsDataManager::QueryParamInUserSettingsData(const std::string &key
         return E_RDB;
     }
 
-    LOGI("Query success, key: %{public}s, value: %{public}s", key.c_str(), value.c_str());
+    LOGI("Query success, userKey: %{public}s, value: %{public}s", userKey.c_str(), value.c_str());
     return E_OK;
 }
 
 int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)
 {
-    LOGI("Query key: %{public}s", key.c_str());
+    std::string queryKey = GetQueryKey(key);
+    LOGI("Query key: %{public}s, currentUserId: %{public}d, supportUserSettingsData_: %{public}d",
+        queryKey.c_str(), currentUserId_, supportUserSettingsData_);
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo("KEYWORD", key);
+    predicates.EqualTo("KEYWORD", queryKey);
     std::vector<std::string> columns = {"value"};
     DataShare::CreateOptions options;
     options.enabled_ = true;
@@ -445,7 +459,7 @@ int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, st
         return E_RDB;
     }
 
-    LOGI("Query success, key: %{public}s, value: %{public}s", key.c_str(), value.c_str());
+    LOGI("Query success, key: %{public}s, value: %{public}s", queryKey.c_str(), value.c_str());
     return E_OK;
 }
 
@@ -461,12 +475,13 @@ void SettingsDataManager::RegisterObserver(const std::string &key)
     }
 
     sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
-    Uri observerUri(GetSettingsDataUri(key));
+    std::string uri = GetSettingsDataUri(key);
+    Uri observerUri(uri);
     dataShareHelper->RegisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
 
     observerMap_.EnsureInsert(key, dataObserver);
-    LOGI("Register SettingsDataObserver key: %{public}s finish", key.c_str());
+    LOGI("Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
 }
 
 void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver)
@@ -480,11 +495,12 @@ void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::D
         return;
     }
 
-    Uri observerUri(GetSettingsDataUri(key));
+    std::string uri = GetSettingsDataUri(key);
+    Uri observerUri(uri);
     dataShareHelper->RegisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
     observerDemon_.emplace_back(dataObserver);
-    LOGI("Register SettingsDataObserver key: %{public}s finish", key.c_str());
+    LOGI("Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
 }
 
 void SettingsDataManager::ReregisterDemonObserver(const std::string &key)
@@ -546,12 +562,13 @@ void SettingsDataManager::UnregisterObserver(const std::string &key)
         return;
     }
 
-    Uri observerUri(GetSettingsDataUri(key));
+    std::string uri = GetSettingsDataUri(key);
+    Uri observerUri(uri);
     dataShareHelper->UnregisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
 
     observerMap_.Erase(key);
-    LOGI("Unregister SettingsDataObserver key: %{public}s finish", key.c_str());
+    LOGI("Unregister SettingsDataObserver uri: %{public}s finish", uri.c_str());
 }
 
 void SettingsDataObserver::OnChange()

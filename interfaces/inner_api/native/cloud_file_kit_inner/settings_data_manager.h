@@ -44,6 +44,7 @@ public:
     static void InitSettingsDataManager();
     static void UpdateIsSupportUserSettingsData(bool isDemon = false);
     static void OnUserSwitched(int32_t userId);
+    static std::string GetQueryKey(const std::string &key);
     static std::string GetSettingsDataCommonUri();
     static std::string GetSettingsDataUri(const std::string &key);
     static std::string GetUserSettingsDataUri(const std::string &key);

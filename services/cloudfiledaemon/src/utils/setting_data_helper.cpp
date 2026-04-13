@@ -69,7 +69,6 @@ bool SettingDataHelper::IsDataShareReady()
         return false;
     }
 
-    std::string settingsDataUri = SettingsDataManager::GetSettingsDataCommonUri();
     pair<int, shared_ptr<DataShare::DataShareHelper>> ret =
         DataShare::DataShareHelper::Create(remoteObj, SETTINGS_DATA_COMMON_URI, SETTINGS_DATA_EXT_URI);
     LOGI("create datashare helper, ret=%{public}d", ret.first);
@@ -94,7 +93,7 @@ string SettingDataHelper::GetActiveBundle()
 {
     // get from datashare
     std::string value;
-    int32_t ret = SettingsDataManager::QueryParamInSettingsData(SYNC_SWITCH_KEY, value);
+    SettingsDataManager::QueryParamInSettingsData(SYNC_SWITCH_KEY, value);
     if (value == AI_FAMILY_STATUS) {
         return HDC_BUNDLE_NAME;
     }

@@ -55,6 +55,9 @@ void SettingsDataManager::UpdateCurrentUserId()
 
 int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)
 {
+    if (IDataHelper::ins != nullptr) {
+        return IDataHelper::ins->QueryParamInSettingsData(key, value);
+    }
     return E_OK;
 }
 
