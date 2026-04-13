@@ -101,6 +101,7 @@ public:
     virtual std::pair<int, std::shared_ptr<DataShareHelper>> Create() = 0;
     virtual SwitchStatus GetSwitchStatus() = 0;
     virtual int32_t QuerySwitchStatus() = 0;
+    virtual int32_t QueryParamInSettingsData(const std::string &, std::string &) = 0;
 
 public:
     static inline std::shared_ptr<IDataHelper> ins = nullptr;
@@ -111,6 +112,7 @@ public:
     MOCK_METHOD0(Create, std::pair<int, std::shared_ptr<DataShareHelper>>());
     MOCK_METHOD0(GetSwitchStatus, SwitchStatus());
     MOCK_METHOD0(QuerySwitchStatus, int32_t());
+    MOCK_METHOD2(QueryParamInSettingsData, int32_t(const std::string &, std::string &));
 };
 
 class IOsAccountManager {

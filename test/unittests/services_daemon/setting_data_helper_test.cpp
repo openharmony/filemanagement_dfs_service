@@ -231,7 +231,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus001 start";
     try {
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(AI_FAMILY));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("2"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, HDC_BUNDLE_NAME);
     } catch (...) {
@@ -250,7 +250,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus002 start";
     try {
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, GALLERY_BUNDLE_NAME);
     } catch (...) {
@@ -269,7 +269,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus003 start";
     try {
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, GALLERY_BUNDLE_NAME);
     } catch (...) {
@@ -337,7 +337,7 @@ HWTEST_F(SettingDataHelperTest, InitActiveBundle003, TestSize.Level1)
         shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();
         EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
         EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, helper)));
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
 
         bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
@@ -358,7 +358,7 @@ HWTEST_F(SettingDataHelperTest, UpdateActiveBundle001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UpdateActiveBundle001 start";
     try {
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
 
         SettingDataHelper::GetInstance().UpdateActiveBundle();
@@ -378,7 +378,7 @@ HWTEST_F(SettingDataHelperTest, UpdateActiveBundle002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UpdateActiveBundle002 start";
     try {
-        EXPECT_CALL(*mock_, GetSwitchStatus()).WillOnce(Return(CLOUD_SPACE));
+        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(-1)));
 
         SettingDataHelper::GetInstance().UpdateActiveBundle(-1);

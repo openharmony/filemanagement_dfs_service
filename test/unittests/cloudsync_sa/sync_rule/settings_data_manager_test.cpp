@@ -35,6 +35,7 @@ static const std::string NETWORK_CONNECTION_KEY = "photo_network_connection_stat
 static const std::string LOCAL_SPACE_FREE_KEY = "photos_local_space_free";              // "1", "0"
 static const std::string LOCAL_SPACE_DAYS_KEY = "photos_local_space_free_day_count";    // "30"
 static const std::string MOBILE_DATA_SYNC_KEY = "photos_mobile_data_sync";              // "1", "0"
+static const std::string USER_SUFFIX = "_user";
 
 class SettingsDataManagerTest : public testing::Test {
 public:
@@ -82,11 +83,59 @@ void SettingsDataManagerTest::SetUp(void)
 
 void SettingsDataManagerTest::TearDown(void) {}
 
+HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetQueryKeyTest001 Start";
+    std::string expect = SYNC_SWITCH_KEY + USER_SUFFIX;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetQueryKey(SYNC_SWITCH_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetQueryKeyTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest002 Start";
+    std::string expect = SYNC_SWITCH_KEY;
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetQueryKey(SYNC_SWITCH_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetQueryKeyTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataCommonUriTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest001 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_100?Proxy=true";
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetSettingsDataCommonUri();
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataCommonUriTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest002 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetSettingsDataCommonUri();
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest002 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSettingsDataUriTest001 Start";
     std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_100?Proxy=true&key=" +
-        SYNC_SWITCH_KEY;
+        SYNC_SWITCH_KEY + USER_SUFFIX;
     SettingsDataManager::supportUserSettingsData_ = true;
     SettingsDataManager::currentUserId_ = 100;
     std::string ret = SettingsDataManager::GetSettingsDataUri(SYNC_SWITCH_KEY);
@@ -112,7 +161,7 @@ HWTEST_F(SettingsDataManagerTest, GetUserSettingsDataUriTest001, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetUserSettingsDataUriTest001 Start";
     std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_100?Proxy=true&key=" +
-        SYNC_SWITCH_KEY;
+        SYNC_SWITCH_KEY + USER_SUFFIX;
     SettingsDataManager::supportUserSettingsData_ = true;
     SettingsDataManager::currentUserId_ = 100;
     std::string ret = SettingsDataManager::GetUserSettingsDataUri(SYNC_SWITCH_KEY);
