@@ -85,6 +85,9 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY) {
         bool ret = CloudFile::SettingDataHelper::GetInstance().InitActiveBundle();
         LOGI("READY: Init active bundle, ret: %{public}d", ret);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        CloudFile::SettingDataHelper::GetInstance().UpdateActiveBundle();
+        LOGI("user swiched update active bundle");
     }
 }
 
@@ -102,6 +105,7 @@ void AccountStatusListener::Start()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<AccountStatusSubscriber>(info);
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);

@@ -20,6 +20,7 @@
 #include "common_event_support.h"
 #include "iservice_registry.h"
 #include "parameters.h"
+#include "settings_data_manager.h"
 #include "system_ability_definition.h"
 #include "task_state_manager.h"
 
@@ -36,6 +37,11 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
     if (data.state == OsAccountState::STOPPING) {
         LOGI("Stopped user");
         UnloadSa();
+    } else if (data.state == OsAccountState::SWITCHED) {
+        LOGI("User switched from %{public}d to %{public}d", data.fromId, data.toId);
+        if (data.toId > 0) {
+            CloudSync::SettingsDataManager::OnUserSwitched(data.toId);
+        }
     }
 }
 
@@ -62,7 +68,7 @@ AccountStatusListener::~AccountStatusListener()
 
 void AccountStatusListener::Start()
 {
-    std::set<OsAccountState> states = {OsAccountState::STOPPING};
+    std::set<OsAccountState> states = {OsAccountState::STOPPING, OsAccountState::SWITCHED};
     OsAccountSubscribeInfo subscribeInfo(states);
     osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo);
     ErrCode errCode = OsAccountManager::SubscribeOsAccount(osAccountSubscriber_);

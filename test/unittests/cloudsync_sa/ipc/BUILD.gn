@@ -33,10 +33,12 @@ ohos_unittest("cloudsync_sa_account_status_listener_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
   ]
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
     "common_event_service:cesfwk_innerkits",
     "c_utils:utils",
     "e2fsprogs:libext2_uuid",

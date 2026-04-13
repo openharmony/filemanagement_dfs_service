@@ -33,9 +33,29 @@ SwitchStatus SettingsDataManager::GetSwitchStatus()
     return IDataHelper::ins->GetSwitchStatus();
 }
 
-int32_t SettingsDataManager::QuerySwitchStatus()
+int32_t SettingsDataManager::QuerySwitchStatus(std::string &value)
 {
     return IDataHelper::ins->QuerySwitchStatus();
+}
+
+std::string SettingsDataManager::GetSettingsDataCommonUri()
+{
+    return "";
+}
+
+void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
+{
+    return;
+}
+
+void SettingsDataManager::UpdateCurrentUserId()
+{
+    return;
+}
+
+int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)
+{
+    return E_OK;
 }
 
 void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver)

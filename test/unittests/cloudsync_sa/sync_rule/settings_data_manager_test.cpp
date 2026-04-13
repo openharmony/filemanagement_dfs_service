@@ -20,6 +20,8 @@
 #include "datashare_helper_mock.h"
 #include "datashare_result_set_mock.h"
 #include "dfs_error.h"
+#include "os_account_manager_mock_ext.h"
+#include "service_registry_mock.h"
 #include "settings_data_manager.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
@@ -40,8 +42,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static inline shared_ptr<DataShareHelperMock> dataShareHelperMock_ = nullptr;
-    static inline shared_ptr<DataShareResultSetMock> resultSetMock_ = nullptr;
+    static inline std::shared_ptr<DataShareHelperMock> dataShareHelperMock_ = nullptr;
+    static inline std::shared_ptr<DataShareResultSetMock> resultSetMock_ = nullptr;
+    static inline std::shared_ptr<OsAccountManagerMethodMockExt> OsAccountMethodMock_ = nullptr;
+    static inline std::shared_ptr<ServiceRegistryMock> serviceRegistryMock_ = nullptr;
 };
 
 void SettingsDataManagerTest::SetUpTestCase(void)
@@ -51,6 +55,10 @@ void SettingsDataManagerTest::SetUpTestCase(void)
     resultSetMock_ = std::make_shared<DataShareResultSetMock>();
     DataShareHelperMock::proxy_ = dataShareHelperMock_;
     DataShareResultSetMock::proxy_ = resultSetMock_;
+    OsAccountMethodMock_ = make_shared<OsAccountManagerMethodMockExt>();
+    IOsAccountManagerMethod::osMethod_ = OsAccountMethodMock_;
+    serviceRegistryMock_ = make_shared<ServiceRegistryMock>();
+    ServiceRegistryMock::proxy_ = serviceRegistryMock_;
 }
 
 void SettingsDataManagerTest::TearDownTestCase(void)
@@ -60,6 +68,10 @@ void SettingsDataManagerTest::TearDownTestCase(void)
     DataShareHelperMock::proxy_ = nullptr;
     resultSetMock_ = nullptr;
     DataShareResultSetMock::proxy_ = nullptr;
+    OsAccountMethodMock_ = nullptr;
+    IOsAccountManagerMethod::osMethod_ = nullptr;
+    serviceRegistryMock_ = nullptr;
+    ServiceRegistryMock::proxy_ = nullptr;
 }
 
 void SettingsDataManagerTest::SetUp(void)
@@ -69,6 +81,45 @@ void SettingsDataManagerTest::SetUp(void)
 }
 
 void SettingsDataManagerTest::TearDown(void) {}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest001 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_100?Proxy=true&key=" +
+        SYNC_SWITCH_KEY;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetSettingsDataUri(SYNC_SWITCH_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest002 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true&key=" +
+        SYNC_SWITCH_KEY;
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetSettingsDataUri(SYNC_SWITCH_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetUserSettingsDataUriTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUserSettingsDataUriTest001 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_100?Proxy=true&key=" +
+        SYNC_SWITCH_KEY;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetUserSettingsDataUri(SYNC_SWITCH_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetUserSettingsDataUriTest001 End";
+}
 
 HWTEST_F(SettingsDataManagerTest, QueryParamInSettingsDataTest001, TestSize.Level1)
 {
@@ -186,11 +237,403 @@ HWTEST_F(SettingsDataManagerTest, QueryParamInSettingsDataTest007, TestSize.Leve
     GTEST_LOG_(INFO) << "QueryParamInSettingsDataTest007 End";
 }
 
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest001 Start";
+    DataShareResultSetMock::proxy_ = nullptr;
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest002 Start";
+    DataShareResultSetMock::proxy_ = nullptr;
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest003 Start";
+    DataShareResultSetMock::proxy_ = nullptr;
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(nullptr));
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest004 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest004 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest005 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(-1));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).Times(0);
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_INNER_RDB);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest005 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest006 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest006 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryParamInUserSettingsDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest007 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(-1));
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::QueryParamInUserSettingsData(key, value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QueryParamInUserSettingsDataTest007 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitUserSettingsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitUserSettingsTest001 Start";
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    int32_t ret = SettingsDataManager::InitUserSettings();
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitUserSettingsTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitUserSettingsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitUserSettingsTest002 Start";
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(nullptr));
+    int32_t ret = SettingsDataManager::InitUserSettings();
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitUserSettingsTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitUserSettingsTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitUserSettingsTest002 Start";
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(nullptr));
+    int32_t ret = SettingsDataManager::InitUserSettings();
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitUserSettingsTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitUserSettingsTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitUserSettingsTest002 Start";
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+    int32_t ret = SettingsDataManager::InitUserSettings();
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "InitUserSettingsTest004 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitUserSettingsTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitUserSettingsTest002 Start";
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(10, 1)));
+    int32_t ret = SettingsDataManager::InitUserSettings();
+    EXPECT_EQ(ret, 10);
+
+    GTEST_LOG_(INFO) << "InitUserSettingsTest005 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest001 Start";
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, false);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest002 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(nullptr);
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, false);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, false);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest004 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, true);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest004 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest005 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, true);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest005 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest006 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, true);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest006 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitAndQuerySettingsDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest007 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+
+    std::string key = "";
+    std::string value;
+    int32_t ret = SettingsDataManager::InitAndQuerySettingsData(key, value, true);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "InitAndQuerySettingsDataTest007 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(nullptr);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+
+    SettingsDataManager::UpdateIsSupportUserSettingsData();
+    EXPECT_EQ(SettingsDataManager::supportUserSettingsData_, false);
+
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest002 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(nullptr).WillOnce(nullptr);
+
+    SettingsDataManager::UpdateIsSupportUserSettingsData();
+    EXPECT_EQ(SettingsDataManager::supportUserSettingsData_, false);
+
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+
+    std::string key = "";
+    std::string value;
+    SettingsDataManager::UpdateIsSupportUserSettingsData();
+    EXPECT_EQ(SettingsDataManager::supportUserSettingsData_, true);
+
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest004 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+
+    std::string key = "";
+    std::string value;
+    SettingsDataManager::UpdateIsSupportUserSettingsData(true);
+    EXPECT_EQ(SettingsDataManager::supportUserSettingsData_, false);
+
+    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest004 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatusByCacheTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
@@ -204,11 +647,12 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest002, TestSize.Level1
     std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(-1));
-    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).Times(0);
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(-1));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
-    EXPECT_EQ(status, SwitchStatus::CLOUD_SPACE);
+    EXPECT_EQ(status, SwitchStatus::NONE);
 
     GTEST_LOG_(INFO) << "GetSwitchStatusByCacheTest002 End";
 }
@@ -219,6 +663,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest003, TestSize.Level1
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "0");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
@@ -232,6 +677,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest004, TestSize.Level1
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "1");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
     EXPECT_EQ(status, SwitchStatus::CLOUD_SPACE);
 
@@ -245,6 +691,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest005, TestSize.Level1
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "2");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
     EXPECT_EQ(status, SwitchStatus::AI_FAMILY);
 
@@ -262,10 +709,61 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest006, TestSize.Level1
     EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
     EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(-1));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatusByCache();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
     GTEST_LOG_(INFO) << "GetSwitchStatusByCacheTest006 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QuerySwitchStatusTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
+    std::string value;
+    int32_t ret = SettingsDataManager::QuerySwitchStatus(value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QuerySwitchStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest002 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    SettingsDataManager::supportUserSettingsData_ = true;
+    std::string value;
+    int32_t ret = SettingsDataManager::QuerySwitchStatus(value);
+    EXPECT_EQ(ret, E_RDB);
+
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QuerySwitchStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    sptr<IfSystemAbilityManagerMock> systemAbilityManagerMock = sptr(new IfSystemAbilityManagerMock);
+    sptr<IRemoteObjectMock> remoteObjectMock = sptr(new IRemoteObjectMock);
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(systemAbilityManagerMock));
+    EXPECT_CALL(*systemAbilityManagerMock, CheckSystemAbility(_)).WillOnce(Return(remoteObjectMock));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, UpdateEx(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 1)));
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
+    SettingsDataManager::supportUserSettingsData_ = true;
+    std::string value;
+    int32_t ret = SettingsDataManager::QuerySwitchStatus(value);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "QuerySwitchStatusTest003 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest001, TestSize.Level1)
@@ -273,6 +771,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetSwitchStatusTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
@@ -286,11 +785,12 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest002, TestSize.Level1)
     std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
     EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(-1));
-    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).Times(0);
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(-1));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
-    EXPECT_EQ(status, SwitchStatus::CLOUD_SPACE);
+    EXPECT_EQ(status, SwitchStatus::NONE);
 
     GTEST_LOG_(INFO) << "GetSwitchStatusTest002 End";
 }
@@ -306,6 +806,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest003, TestSize.Level1)
     EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "2");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
@@ -324,6 +825,7 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest004, TestSize.Level1)
     EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "1");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
@@ -342,11 +844,31 @@ HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest005, TestSize.Level1)
     EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(Return(E_OK));
     SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "0");
+    SettingsDataManager::supportUserSettingsData_ = false;
     SwitchStatus status = SettingsDataManager::GetSwitchStatus();
     EXPECT_EQ(status, SwitchStatus::NONE);
 
     SettingsDataManager::settingsDataMap_.Clear();
     GTEST_LOG_(INFO) << "GetSwitchStatusTest005 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSwitchStatusTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSwitchStatusTest006 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
+    EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(-1));
+    EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).Times(0);
+    EXPECT_CALL(*resultSetMock_, GetString(_, _)).Times(0);
+    SettingsDataManager::settingsDataMap_.EnsureInsert(SYNC_SWITCH_KEY, "1");
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SwitchStatus status = SettingsDataManager::GetSwitchStatus();
+    EXPECT_EQ(status, SwitchStatus::CLOUD_SPACE);
+
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "GetSwitchStatusTest006 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, GetNetworkConnectionStatusTest001, TestSize.Level1)
@@ -507,9 +1029,9 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterObserverTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::observerMap_.Clear();
     SettingsDataManager::RegisterObserver("");
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(SettingsDataManager::observerMap_.IsEmpty());
 
     GTEST_LOG_(INFO) << "RegisterObserverTest001 End";
 }
@@ -519,9 +1041,9 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserverTest002 Start";
     std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::observerMap_.Clear();
     SettingsDataManager::RegisterObserver("");
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(!SettingsDataManager::observerMap_.IsEmpty());
 
     GTEST_LOG_(INFO) << "RegisterObserverTest002 End";
 }
@@ -530,10 +1052,11 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterObserverTest003 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::observerDemon_.clear();
     SettingsDataManager::RegisterObserver("", nullptr);
-    EXPECT_TRUE(true);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 0);
 
+    SettingsDataManager::observerDemon_.clear();
     GTEST_LOG_(INFO) << "RegisterObserverTest003 End";
 }
 
@@ -542,21 +1065,109 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserverTest004 Start";
     std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
+    SettingsDataManager::observerDemon_.clear();
     SettingsDataManager::RegisterObserver("", nullptr);
-    EXPECT_TRUE(true);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
 
+    SettingsDataManager::observerDemon_.clear();
     GTEST_LOG_(INFO) << "RegisterObserverTest004 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    std::string key = "key1";
+    SettingsDataManager::observerDemon_.clear();
+    SettingsDataManager::ReregisterDemonObserver(key);
+    EXPECT_TRUE(SettingsDataManager::observerDemon_.empty());
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest002 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerDemon_.emplace_back(dataObserver);
+    SettingsDataManager::ReregisterDemonObserver(key);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerDemon_.emplace_back(dataObserver);
+    SettingsDataManager::ReregisterDemonObserver(key);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    std::string key = "key1";
+    SettingsDataManager::observerDemon_.clear();
+    SettingsDataManager::UnregisterDemonObserver(key);
+    EXPECT_TRUE(SettingsDataManager::observerDemon_.empty());
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest002 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerDemon_.emplace_back(dataObserver);
+    SettingsDataManager::UnregisterDemonObserver(key);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerDemon_.emplace_back(dataObserver);
+    SettingsDataManager::UnregisterDemonObserver(key);
+    EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
+
+    SettingsDataManager::observerDemon_.clear();
+    GTEST_LOG_(INFO) << "UnregisterDemonObserverTest003 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, UnregisterObserverTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnregisterObserverTest001 Start";
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    SettingsDataManager::UnregisterObserver("");
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerMap_.EnsureInsert(key, dataObserver);
+    SettingsDataManager::UnregisterObserver(key);
     EXPECT_TRUE(true);
 
+    SettingsDataManager::observerMap_.Clear();
     GTEST_LOG_(INFO) << "UnregisterObserverTest001 End";
 }
 
@@ -565,11 +1176,26 @@ HWTEST_F(SettingsDataManagerTest, UnregisterObserverTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnregisterObserverTest002 Start";
     std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
     EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-    EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).Times(0);
-    SettingsDataManager::UnregisterObserver("");
+    std::string key = "key1";
+    sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    SettingsDataManager::observerMap_.EnsureInsert(key, dataObserver);
+    SettingsDataManager::UnregisterObserver(key);
     EXPECT_TRUE(true);
 
+    SettingsDataManager::observerMap_.Clear();
     GTEST_LOG_(INFO) << "UnregisterObserverTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UnregisterObserverTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterObserverTest003 Start";
+    std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    SettingsDataManager::UnregisterObserver("key1");
+    EXPECT_TRUE(true);
+
+    SettingsDataManager::observerMap_.Clear();
+    GTEST_LOG_(INFO) << "UnregisterObserverTest003 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, QueryTest001, TestSize.Level1)
@@ -579,32 +1205,66 @@ HWTEST_F(SettingsDataManagerTest, QueryTest001, TestSize.Level1)
     DataShareResultSetMock::proxy_ = nullptr;
     int32_t ret = -1;
     int32_t size = -1;
-    ret = SettingsDataManager::QuerySwitchStatus();
+    std::string value;
+    ret = SettingsDataManager::QuerySwitchStatus(value);
     EXPECT_EQ(ret, E_OK);
     size = SettingsDataManager::settingsDataMap_.Size();
     EXPECT_EQ(size, 1);
 
-    ret = SettingsDataManager::QueryNetworkConnectionStatus();
+    ret = SettingsDataManager::QueryNetworkConnectionStatus(value);
     EXPECT_EQ(ret, E_OK);
     size = SettingsDataManager::settingsDataMap_.Size();
     EXPECT_EQ(size, 2);
 
-    ret = SettingsDataManager::QueryLocalSpaceFreeStatus();
+    ret = SettingsDataManager::QueryLocalSpaceFreeStatus(value);
     EXPECT_EQ(ret, E_OK);
     size = SettingsDataManager::settingsDataMap_.Size();
     EXPECT_EQ(size, 3);
 
-    ret = SettingsDataManager::QueryLocalSpaceFreeDays();
+    ret = SettingsDataManager::QueryLocalSpaceFreeDays(value);
     EXPECT_EQ(ret, E_OK);
     size = SettingsDataManager::settingsDataMap_.Size();
     EXPECT_EQ(size, 4);
 
-    ret = SettingsDataManager::QueryMobileDataStatus();
+    ret = SettingsDataManager::QueryMobileDataStatus(value);
     EXPECT_EQ(ret, E_OK);
     size = SettingsDataManager::settingsDataMap_.Size();
     EXPECT_EQ(size, 5);
 
     GTEST_LOG_(INFO) << "QueryTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, QueryTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryTest002 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
+    SettingsDataManager::settingsDataMap_.Clear();
+    int32_t ret = -1;
+    int32_t size = -1;
+    std::string value;
+
+    ret = SettingsDataManager::QueryNetworkConnectionStatus(value);
+    EXPECT_EQ(ret, E_RDB);
+    size = SettingsDataManager::settingsDataMap_.Size();
+    EXPECT_EQ(size, 0);
+
+    ret = SettingsDataManager::QueryLocalSpaceFreeStatus(value);
+    EXPECT_EQ(ret, E_RDB);
+    size = SettingsDataManager::settingsDataMap_.Size();
+    EXPECT_EQ(size, 0);
+
+    ret = SettingsDataManager::QueryLocalSpaceFreeDays(value);
+    EXPECT_EQ(ret, E_RDB);
+    size = SettingsDataManager::settingsDataMap_.Size();
+    EXPECT_EQ(size, 0);
+
+    ret = SettingsDataManager::QueryMobileDataStatus(value);
+    EXPECT_EQ(ret, E_RDB);
+    size = SettingsDataManager::settingsDataMap_.Size();
+    EXPECT_EQ(size, 0);
+
+    SettingsDataManager::settingsDataMap_.Clear();
+    GTEST_LOG_(INFO) << "QueryTest002 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, OnChangeTest001, TestSize.Level1)
@@ -629,5 +1289,69 @@ HWTEST_F(SettingsDataManagerTest, OnChangeTest001, TestSize.Level1)
     observer5.OnChange();
 
     GTEST_LOG_(INFO) << "OnChangeTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateCurrentUserIdTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest001 Start";
+    EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
+        .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
+    SettingsDataManager::currentUserId_ = 10;
+    SettingsDataManager::UpdateCurrentUserId();
+    EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+
+    GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, UpdateCurrentUserIdTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest002 Start";
+    EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
+        .WillOnce(DoAll(SetArgReferee<0>(100), Return(-1)));
+    SettingsDataManager::currentUserId_ = 10;
+    SettingsDataManager::UpdateCurrentUserId();
+    EXPECT_EQ(SettingsDataManager::currentUserId_, 10);
+
+    GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, OnUserSwitchedTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUserSwitchedTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    SettingsDataManager::currentUserId_ = 10;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::OnUserSwitched(100);
+    EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+
+    GTEST_LOG_(INFO) << "OnUserSwitchedTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, OnUserSwitchedTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUserSwitchedTest002 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
+    SettingsDataManager::currentUserId_ = 10;
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::OnUserSwitched(100);
+    EXPECT_EQ(SettingsDataManager::currentUserId_, 10);
+
+    GTEST_LOG_(INFO) << "OnUserSwitchedTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, InitSettingsDataManagerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUserSwitchedTest001 Start";
+    EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
+        .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
+    EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    SettingsDataManager::currentUserId_ = 10;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::InitSettingsDataManager();
+    EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+
+    GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 End";
 }
 }

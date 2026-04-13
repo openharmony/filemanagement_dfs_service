@@ -18,6 +18,8 @@
 
 #include <cstdint>
 #include <string>
+#include <variant>
+#include <vector>
 
 #include "data_ability_observer_interface.h"
 #include "datashare_result_set.h"
@@ -42,14 +44,34 @@ public:
 };
 class DatashareBusinessError {};
 
+class DataShareValueObject {
+public:
+    using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
+    Type value;
+
+    DataShareValueObject() = default;
+    ~DataShareValueObject() = default;
+    explicit DataShareValueObject(int val) : value(static_cast<int64_t>(val)) {};
+};
+
+class DataShareValuesBucket {
+public:
+    DataShareValuesBucket() = default;
+    void Put(const std::string &columnName, const DataShareValueObject &value = {}) {}
+};
+
 class DataShareHelper {
 public:
     DataShareHelper() = default;
     ~DataShareHelper() = default;
     static std::shared_ptr<DataShareHelper> Creator(
-    const std::string &strUri, const CreateOptions &options, const std::string &bundleName = "com.ohos.photos");
+        const std::string &strUri, const CreateOptions &options, const std::string &bundleName = "com.ohos.photos");
+    static std::shared_ptr<DataShareHelper> Creator(const sptr<IRemoteObject> &token,
+        const std::string &strUri, const std::string &extUri = "", const int waitTime = 2, bool isSystem = false);
     std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &predicates,
         std::vector<std::string> &columns, DatashareBusinessError *businessError = nullptr);
+    std::pair<int32_t, int32_t> UpdateEx(
+        Uri &uri, const DataSharePredicates &predicates, const DataShareValuesBucket &value);
 
     static void RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);
     static void UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);

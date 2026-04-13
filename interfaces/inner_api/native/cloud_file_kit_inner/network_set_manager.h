@@ -56,20 +56,16 @@ public:
     };
     static void InitNetworkSetManager(const std::string &bundleName, const int32_t userId);
     static int32_t QueryCellularConnect(int32_t userId, const std::string &bundleName);
-    static int32_t QueryNetConnect(int32_t userId, const std::string &bundleName);
     static void RegisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type);
     static void UnregisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type);
     static void GetCellularConnect(const std::string &bundleName, const int32_t userId);
-    static void GetNetConnect(const std::string &bundleName, const int32_t userId);
     static void ReleaseDataShareHelper(std::shared_ptr<DataShare::DataShareHelper> &helper);
     static bool IsAllowCellularConnect(const std::string &bundleName, const int32_t userId);
-    static bool IsAllowNetConnect(const std::string &bundleName, const int32_t userId);
     static bool GetConfigParams(const std::string &bundleName, const int32_t userId);
     static void InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void NetWorkChangeStopUploadTask();
     static void SetNetConnStatus(NetConnStatus netStatus);
     static inline SafeMap<const std::string, bool> cellularNetMap_;
-    static inline SafeMap<const std::string, bool> netMap_;
 private:
     static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     static inline NetConnStatus netStatus_{NO_NETWORK};
