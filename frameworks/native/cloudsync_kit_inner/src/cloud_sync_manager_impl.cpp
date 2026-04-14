@@ -32,6 +32,7 @@ using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
+constexpr int32_t MAX_PROGRESS_QUERY_NUM = 100;
 const string CLOUDSYNC_MEDIA_CALLBACK_ID = "cloudSyncMediaCallbackId";
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
@@ -450,10 +451,13 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
 int32_t CloudSyncManagerImpl::GetDownloadList(const std::vector<std::string> &uriVec,
                                               std::vector<CloudSync::DownloadProgressObj> &downloadList)
 {
-    LOGI("GetDownloadList start");
     if (uriVec.empty()) {
         LOGE("The uri list is empty");
         return E_INVAL_ARG;
+    }
+    if (uriVec.size() > MAX_PROGRESS_QUERY_NUM) {
+        LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
+        return E_EXCEED_MAX_SIZE;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetDownloadList"));
     if (!CloudSyncServiceProxy) {
@@ -462,17 +466,19 @@ int32_t CloudSyncManagerImpl::GetDownloadList(const std::vector<std::string> &ur
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->GetDownloadList(uriVec, downloadList);
-    LOGI("GetDownloadList end, ret %{public}d", ret);
     return ret;
 }
 
 int32_t CloudSyncManagerImpl::GetUploadList(const std::vector<std::string> &uriVec,
                                             std::vector<CloudSync::UploadProgressObj> &uploadList)
 {
-    LOGI("GetUploadList start");
     if (uriVec.empty()) {
         LOGE("The uri list is empty");
         return E_INVAL_ARG;
+    }
+    if (uriVec.size() > MAX_PROGRESS_QUERY_NUM) {
+        LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
+        return E_EXCEED_MAX_SIZE;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "GetUploadList"));
     if (!CloudSyncServiceProxy) {
@@ -481,7 +487,6 @@ int32_t CloudSyncManagerImpl::GetUploadList(const std::vector<std::string> &uriV
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->GetUploadList(uriVec, uploadList);
-    LOGI("GetUploadList end, ret %{public}d", ret);
     return ret;
 }
 

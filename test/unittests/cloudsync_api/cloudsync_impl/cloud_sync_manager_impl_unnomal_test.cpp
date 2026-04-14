@@ -291,6 +291,50 @@ HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanTest End";
 }
 
+/**
+ * @tc.name: GetUploadListTest004
+ * @tc.desc: Verify GetDownloadList function with nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, GetUploadListTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUploadListTest004 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::UploadProgressObj> uploadList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetUploadListTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetUploadListTest004 End";
+}
+
+/**
+ * @tc.name: GetDownloadListTest004
+ * @tc.desc: Verify GetDownloadList function with nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, GetDownloadListTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDownloadListTest004 Start";
+    try {
+        std::vector<std::string> uriVec = {"file://path1"};
+        std::vector<CloudSync::DownloadProgressObj> downloadList;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDownloadListTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDownloadListTest004 End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
