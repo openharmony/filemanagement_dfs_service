@@ -712,12 +712,51 @@ ohos_unittest("uuid_helper_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_disk_service_callback_stub_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_callback_stub.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "ipc/cloud_disk_service_callback_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/test/mock",
+  ]
+
+  deps = [ "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner", ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUDDISKSERVICE_API\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("clouddisk_service_test") {
   testonly = true
+
   deps = [
     ":cloud_disk_service_access_token_test",
     ":cloud_disk_service_callback_manager_test",
     ":cloud_disk_service_callback_proxy_test",
+    ":cloud_disk_service_callback_stub_test",
     ":cloud_disk_service_logfile_static_test",
     ":cloud_disk_service_logfile_test",
     ":cloud_disk_service_metafile_static_test",

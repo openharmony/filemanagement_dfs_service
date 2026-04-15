@@ -46,8 +46,28 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudSyncCallbackStub::HandleOnSyncStateChanged(MessageParcel &data, MessageParcel &reply)
 {
-    CloudSyncState state = CloudSyncState(data.ReadInt32());
-    ErrorType error = ErrorType(data.ReadInt32());
+    int32_t stateValue;
+    if (!data.ReadInt32(stateValue)) {
+        LOGE("read state failed");
+        return E_INVAL_ARG;
+    }
+    if (stateValue < UPLOADING || stateValue > STOPPED) {
+        LOGE("invalid stateValue: %{public}d", stateValue);
+        return E_INVAL_ARG;
+    }
+    CloudSyncState state = CloudSyncState(stateValue);
+    
+    int32_t errorValue;
+    if (!data.ReadInt32(errorValue)) {
+        LOGE("read error failed");
+        return E_INVAL_ARG;
+    }
+    if (errorValue < NO_ERROR || errorValue > INNER_ERROR) {
+        LOGE("invalid errorValue: %{public}d", errorValue);
+        return E_INVAL_ARG;
+    }
+    ErrorType error = ErrorType(errorValue);
+    
     OnSyncStateChanged(state, error);
     LOGI("OnSyncStateChanged, error = %{public}d, state = %{public}d", error, state);
     return E_OK;

@@ -49,8 +49,17 @@ int32_t CloudDiskServiceCallbackStub::HandleOnChangeData(MessageParcel &data, Me
 {
     std::vector<ChangeData> changesData;
 
-    std::string sandboxPath = data.ReadString();
-    auto size = data.ReadInt32();
+    std::string sandboxPath;
+    if (!data.ReadString(sandboxPath)) {
+        LOGE("read sandbox: failed");
+        return E_INVALID_ARG;
+    }
+
+    int32_t size;
+    if (!data.ReadInt32(size)) {
+        LOGE("read size failed");
+        return E_INVALID_ARG;
+    }
     if (size > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
         return ERR_INVALID_DATA;
     }

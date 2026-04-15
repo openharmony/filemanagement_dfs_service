@@ -470,6 +470,7 @@ ohos_unittest("cloud_daemon_stub_test") {
 
   sources = [
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "cloud_daemon_stub_test.cpp",
   ]
 
@@ -477,6 +478,7 @@ ohos_unittest("cloud_daemon_stub_test") {
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/test/mock",
   ]
 
   deps = [
@@ -498,7 +500,7 @@ ohos_unittest("cloud_daemon_stub_test") {
 
   defines = [
     "private=public",
-    "LOG_DOMAIN=0xD004308",
+    "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CloudFileDaemon\"",
   ]
 

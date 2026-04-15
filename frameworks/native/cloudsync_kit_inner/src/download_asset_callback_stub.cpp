@@ -46,10 +46,26 @@ int32_t DownloadAssetCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t DownloadAssetCallbackStub::HandleOnFinished(MessageParcel &data, MessageParcel &reply)
 {
-    TaskId taskId = data.ReadUint64();
-    string uri = data.ReadString();
-    int32_t result = data.ReadInt32();
+    uint64_t taskId;
+    if (!data.ReadUint64(taskId)) {
+        LOGE("read taskId failed");
+        return E_INVAL_ARG;
+    }
+    
+    std::string uri;
+    if (!data.ReadString(uri)) {
+        LOGE("read uri failed");
+        return E_INVAL_ARG;
+    }
+    
+    int32_t result;
+    if (!data.ReadInt32(result)) {
+        LOGE("read result failed");
+        return E_INVAL_ARG;
+    }
+    
     OnFinished(taskId, uri, result);
+    LOGI("HandleOnFinished end");
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync
