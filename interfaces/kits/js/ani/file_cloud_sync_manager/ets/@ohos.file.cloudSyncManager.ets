@@ -52,7 +52,8 @@ export default namespace cloudSyncManager  {
     export enum DownloadState {
         RUNNING = 0,
         COMPLETED = 1,
-        STOPPED = 2
+        STOPPED = 2,
+        MISSING = 3
     }
 
     export interface CloudFileInfo {

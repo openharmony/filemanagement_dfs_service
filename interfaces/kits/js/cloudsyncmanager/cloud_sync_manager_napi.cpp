@@ -32,6 +32,7 @@ void InitDownloadState(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("RUNNING", NVal::CreateInt32(env, (int32_t)DowngradeProgress::RUNNING).val_),
         DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, (int32_t)DowngradeProgress::COMPLETED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, (int32_t)DowngradeProgress::STOPPED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("MISSING", NVal::CreateInt32(env, (int32_t)DowngradeProgress::MISSING).val_),
     };
     napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
     napi_set_named_property(env, exports, propertyName, obj);
