@@ -14,6 +14,7 @@
  */
 #include "service_proxy.h"
 
+#include <fstream>
 #include <sstream>
 
 #include "cloud_sync_start_event.h"
@@ -27,7 +28,19 @@ using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 2000;
 
-sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
+static std::string GetCallerBundleName()
+{
+    std::ifstream cmdlineFile("/proc/self/cmdline");
+    std::string name;
+    std::getline(cmdlineFile, name, '\0');
+    size_t lastSlash = name.find_last_of('/');
+    if (lastSlash != std::string::npos) {
+        name = name.substr(lastSlash + 1);
+    }
+    return name.empty() ? "-" : name;
+}
+
+sptr<ICloudSyncService> ServiceProxy::GetInstance(const std::string &callerMethod)
 {
     LOGD("getinstance");
     unique_lock<mutex> lock(instanceMutex_);
@@ -64,9 +77,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
         LOGE("Load CloudSynd SA timeout");
         return nullptr;
     }
-    CloudFileServiceLoadRequestReport(callerInfo.bundleName, callerInfo.callerMethod);
-    LOGI("Load by bundleName: %{public}s, method: %{public}s",
-        callerInfo.bundleName.c_str(), callerInfo.callerMethod.c_str());
+    std::string bundleName = GetCallerBundleName();
+    LOGI("Load by bundleName: %{public}s, method: %{public}s", bundleName.c_str(), callerMethod.c_str());
+    CloudFileServiceLoadRequestReport(bundleName, callerMethod);
     return serviceProxy_;
 }
 

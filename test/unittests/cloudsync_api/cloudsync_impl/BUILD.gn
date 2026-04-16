@@ -743,6 +743,45 @@ ohos_unittest("service_proxy_test") {
   use_exceptions = true
 }
 
+ohos_unittest("service_proxy_static_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "service_proxy_static_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/cloudsyncservice/include/ipc",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_impl_test") {
   testonly = true
 
@@ -767,6 +806,7 @@ group("cloudsync_impl_test") {
     ":download_asset_callback_stub_test",
     ":downgrade_dl_callback_client_test",
     ":downgrade_dl_callback_stub_test",
+    ":service_proxy_static_test",
     ":service_proxy_test",
   ]
 }

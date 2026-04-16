@@ -21,8 +21,8 @@
 #include <string>
 
 #include "dfs_error.h"
-#include "hisysevent.h"
 #include "ffrt_inner.h"
+#include "hisysevent.h"
 #include "utils_log.h"
 
 #ifndef CLOUD_SYNC_START_SYS_EVENT
@@ -58,8 +58,7 @@ static void HandleServiceStart(const std::string &event)
     });
 }
 
-static void HandleLoadRequest(const std::string &bundleName,
-                              const std::string &callerMethod)
+static void HandleLoadRequest(const std::string &bundleName, const std::string &callerMethod)
 {
     ffrt::submit([bundleName, callerMethod]() {
         int32_t ret = CLOUD_SYNC_START_SYS_EVENT("CLOUD_FILE_SYNC_FAULT",

@@ -139,22 +139,22 @@ private:
 
 class IserviceProxy {
 public:
-    virtual sptr<ICloudSyncService> GetInstance(const CallerInfo &callerInfo) = 0;
+    virtual sptr<ICloudSyncService> GetInstance(const std::string &callerMethod) = 0;
     virtual ~IserviceProxy() = default;
     static inline std::shared_ptr<IserviceProxy> proxy_{nullptr};
 };
 
 class MockServiceProxy : public IserviceProxy {
 public:
-    MOCK_METHOD1(GetInstance, sptr<ICloudSyncService>(const CallerInfo &callerInfo));
+    MOCK_METHOD1(GetInstance, sptr<ICloudSyncService>(const std::string &callerMethod));
 };
 
-sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
+sptr<ICloudSyncService> ServiceProxy::GetInstance(const std::string &callerMethod)
 {
     if (IserviceProxy::proxy_ == nullptr) {
         return nullptr;
     }
-    return IserviceProxy::proxy_->GetInstance(callerInfo);
+    return IserviceProxy::proxy_->GetInstance(callerMethod);
 }
 
 } // FileManagement::CloudSync

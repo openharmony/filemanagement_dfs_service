@@ -14,6 +14,7 @@
  */
 #include "service_proxy.h"
 
+#include <fstream>
 #include <sstream>
 
 #include "cloud_file_sync_service_interface_code.h"
@@ -27,6 +28,18 @@
 namespace OHOS::FileManagement::CloudSync {
 
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+
+static std::string GetCallerBundleName()
+{
+    std::ifstream cmdlineFile("/proc/self/cmdline");
+    std::string name;
+    std::getline(cmdlineFile, name, '\0');
+    size_t lastSlash = name.find_last_of('/');
+    if (lastSlash != std::string::npos) {
+        name = name.substr(lastSlash + 1);
+    }
+    return name.empty() ? "-" : name;
+}
 
 int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
 {
@@ -67,7 +80,7 @@ int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, c
     return reply.ReadInt32();
 }
 
-sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
+sptr<ICloudSyncService> ServiceProxy::GetInstance(const std::string &callerMethod)
 {
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -103,9 +116,9 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance(const CallerInfo &callerInfo)
         LOGE("Load CloudSync SA timeout");
         return nullptr;
     }
-    CloudFileServiceLoadRequestReport(callerInfo.bundleName, callerInfo.callerMethod);
-    LOGI("Load by bundleName: %{public}s, method: %{public}s",
-        callerInfo.bundleName.c_str(), callerInfo.callerMethod.c_str());
+    std::string bundleName = GetCallerBundleName();
+    LOGI("Load by bundleName: %{public}s, method: %{public}s", bundleName.c_str(), callerMethod.c_str());
+    CloudFileServiceLoadRequestReport(bundleName, callerMethod);
     return serviceProxy_;
 }
 
