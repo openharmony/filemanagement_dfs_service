@@ -42,7 +42,7 @@ void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::Dat
         return;
     }
     thermalEvent_->SetDataSyncer(dataSyncManager);
-    int32_t ret = thermalListener_->SubscribeLevelEvent(thermalEvent_);
+    int32_t ret = thermalListener_->SubscribeLevelEvent(thermalEvent_, false);
     if (ret != E_OK) {
         LOGE("SubscribeLevelEvent failed, ret:%{public}d", ret);
         return;
