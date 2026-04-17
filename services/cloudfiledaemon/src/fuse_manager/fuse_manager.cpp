@@ -898,12 +898,18 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
+#ifndef SUPPORT_WATCH_LITE
     ffrt::submit([cInode, error, openFinish, cond, data] {
         if (IsVideoType(cInode->mBase->name)) {
             LoadCacheFileIndex(cInode, data);
         }
         DoSessionInit(cInode, error, openFinish, cond);
     });
+#else
+    ffrt::submit([cInode, error, openFinish, cond] {
+        DoSessionInit(cInode, error, openFinish, cond);
+    });
+#endif
     unique_lock lck(cInode->openLock);
     auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
         return *openFinish;
@@ -1101,6 +1107,23 @@ static void DeleteFdsan(shared_ptr<struct CloudFdInfo> cloudFdInfo)
     }
 }
 
+static void SetCacheFileIndex(shared_ptr<CloudInode> cInode, struct FuseData *data)
+{
+#ifndef SUPPORT_WATCH_LITE
+    if (cInode->cacheFileIndex) {
+        string cachePath = VideoCachePath(cInode->path, data);
+        if (cachePath == "") {
+            LOGE("cloud release cache path failed");
+        }
+        if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
+            sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
+            LOGE("setxattr fail, err: %{public}d", errno);
+        }
+    }
+#endif
+    return;
+}
+
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     pid_t pid = GetPidFromTid(req->ctx.pid);
@@ -1123,7 +1146,11 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     if (cInode->sessionRefCount == 0) {
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
             cInode->readSession->CancelSession();
-            bool needClose = IsVideoType(cInode->mBase->name);
+            bool needClose = false;
+#ifndef SUPPORT_WATCH_LITE
+            needClose = IsVideoType(cInode->mBase->name);
+#endif
+
             bool closeResult = cInode->readSession->Close(needClose);
             if (!closeResult) {
                 LOGE("Failed to close readSession of %s", needClose ? "video" : "picture");
@@ -1135,16 +1162,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             std::unique_lock<std::mutex> lock(cInode->readArgsLock);
             cInode->readCtlMap.clear();
         }
-        if (cInode->cacheFileIndex) {
-            string cachePath = VideoCachePath(cInode->path, data);
-            if (cachePath == "") {
-                LOGE("cloud release cache path failed");
-            }
-            if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
-                         sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
-                LOGE("setxattr fail, err: %{public}d", errno);
-            }
-        }
+        SetCacheFileIndex(cInode, data);
         LOGD("readSession released");
     }
     wSesLock.unlock();
@@ -1469,6 +1487,26 @@ static void CloudReadOnCloudFile(pid_t pid,
     return;
 }
 
+static void CloudReadOnCloudFileForWatch(pid_t pid,
+    shared_ptr<FFRTParamData> data,
+    shared_ptr<ReadArguments> readArgs,
+    shared_ptr<CloudInode> cInode,
+    shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    uint64_t startTime = UTCTimeMilliSeconds();
+    ExecuteCloudRead(readSession, readArgs, data);
+    uint64_t endTime = UTCTimeMilliSeconds();
+    uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
+    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
+    {
+        unique_lock lck(cInode->readLock);
+        *readArgs->readStatus = READ_FINISHED;
+    }
+    readArgs->cond->notify_one();
+    return;
+}
+
 static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudInode> cInode,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession,
@@ -1759,6 +1797,40 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
     return true;
 }
 
+static bool DoCloudReadForWatch(fuse_req_t req, shared_ptr<CloudInode> cInode,
+    shared_ptr<ReadArguments> readArgs,
+    shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+{
+    pid_t pid = GetPidFromTid(req->ctx.pid);
+    if (!readArgs) {
+        return true;
+    }
+    if (!readArgs->buf) {
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, ENOMEM, "buffer is null"});
+        return false;
+    }
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    if (!CheckAndWait(pid, cInode, readArgs->offset)) {
+        fuse_reply_err(req, ENETUNREACH);
+        return false;
+    }
+
+    std::string cachePath;
+    if (IsVideoType(cInode->mBase->name)) {
+        cachePath = VideoCachePath(cInode->path, data);
+        LOGI("IsVideoType cachePath: %{public}s", cachePath.c_str());
+    } else {
+        cachePath = GetAssetPath(cInode, data);
+    }
+    auto ffrtData = make_shared<FFRTParamData>(cachePath, data->activeBundle);
+    ffrt::submit([pid, readArgs, cInode, readSession, ffrtData] {
+        CloudReadOnCloudFileForWatch(pid, ffrtData, readArgs, cInode, readSession);
+    });
+    return true;
+}
+
 static bool CloudReadHelper(fuse_req_t req, size_t size, shared_ptr<CloudInode> cInode)
 {
     pid_t pid = GetPidFromTid(req->ctx.pid);
@@ -1841,6 +1913,59 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     EraseReadArgs(cInode, {readArgsHead, readArgsTail});
 }
 
+static void CloudReadForWatch(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
+    struct fuse_file_info *fi)
+{
+    pid_t pid = GetPidFromTid(req->ctx.pid);
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    shared_ptr<char> buf = nullptr;
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
+        return;
+    }
+    if (size > MIN_LOG_SIZE) {
+        LOGI("%{public}d %{public}d %{public}d CloudRead: %{public}s, size=%{public}zd, off=%{public}lu", pid,
+            req->ctx.pid, req->ctx.uid, GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
+    }
+    if (!CloudReadHelper(req, size, cInode)) {
+        return;
+    }
+    auto dkReadSession = cInode->readSession;
+    if (!dkReadSession) {
+        fuse_reply_err(req, EPERM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, EPERM, "readSession is nullptr"});
+        return;
+    }
+    buf.reset(new (std::nothrow) char[size], [](char *ptr) { delete[] ptr; });
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, ENOMEM, "buffer is null"});
+        return;
+    }
+    auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
+    std::string appId = "";
+    if (cloudFdInfo != nullptr) {
+        if (cloudFdInfo->fdsan != UINT64_MAX) {
+            CloudReadOnLocalFile(req, buf, size, off, cloudFdInfo->fdsan);
+            return;
+        }
+        appId = cloudFdInfo->appId;
+    }
+    auto readArgs = make_shared<ReadArguments>(size, appId, off, pid);
+    if (!DoCloudReadForWatch(req, cInode, readArgs, dkReadSession)) {
+        return;
+    }
+    InsertReadArgs(cInode, {readArgs});
+    WaitAndFixData(req, buf, size, cInode, {readArgs});
+    EraseReadArgs(cInode, {readArgs});
+}
+
 static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .lookup             = CloudDisk::FuseOperations::Lookup,
     .forget             = CloudDisk::FuseOperations::Forget,
@@ -1870,7 +1995,11 @@ static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
     .forget             = CloudForget,
     .getattr            = CloudGetAttr,
     .open               = CloudOpen,
+#ifndef SUPPORT_WATCH_LITE
     .read               = CloudRead,
+#else
+    .read               = CloudReadForWatch,
+#endif
     .release            = CloudRelease,
     .readdir            = CloudReadDir,
     .ioctl              = CloudIoctl,

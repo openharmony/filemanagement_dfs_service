@@ -1148,6 +1148,49 @@ HWTEST_F(FuseManagerStaticTest, DoReadSliceTest002, TestSize.Level1) {
 }
 
 /**
+ * @tc.name: DoCloudReadForWatchTest001
+ * @tc.desc: 测试当视频文件且缓存可用时,视频文件,DoCloudReadForWatch 应返回 true
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoCloudReadForWatchTest001, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+    pid_t pid = GetPidFromTid(req->ctx.pid);
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = 3 * MAX_READ_SIZE;
+    cInode->path = "/./DoCloudReadForWatchTest001";
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+
+    shared_ptr<ReadArguments> readArgs = nullptr;
+    bool result = DoCloudReadForWatch(req, cInode, readArgs, readSessionMock);
+    EXPECT_TRUE(result);
+
+    readArgs = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgs->buf = nullptr;
+    result = DoCloudReadForWatch(req, cInode, readArgs, readSessionMock);
+    EXPECT_TRUE(!result);
+
+    readArgs->offset = 0;
+    size_t bufferSize = 128;
+    readArgs->buf = std::shared_ptr<char>(new char[bufferSize]);
+
+    readArgs->readResult = std::make_shared<int64_t>(0);
+    readArgs->readStatus = std::make_shared<CLOUD_READ_STATUS>(READING);
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    result = DoCloudReadForWatch(req, cInode, readArgs, readSessionMock);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+}
+
+/**
  * @tc.name: CloudReadOnCacheFileTest001
  * @tc.desc: 当缓存索引不存在且读取成功时,函数应进入后续操作
  * @tc.type: FUNC
@@ -1217,6 +1260,29 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest001, TestSize.Level1) {
 }
 
 /**
+ * @tc.name: CloudReadOnCloudFileForWatchTest001
+ * @tc.desc: 落盘成功，设置标志位
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileForWatchTest001, TestSize.Level1) {
+    shared_ptr<FFRTParamData> data = make_shared<FFRTParamData>("", "");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgs->cond = make_shared<ffrt::condition_variable>();;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    pid_t pid = 1;
+    readArgs->offset = 0;
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = 100;
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(1024));
+    CloudReadOnCloudFileForWatch(pid, data, readArgs, cInode, readSessionMock);
+
+    EXPECT_EQ(*readArgs->readResult, 1024);
+}
+
+/**
  * @tc.name: CloudReleaseTest001
  * @tc.desc: close接口传递是否是视频标志成功
  * @tc.type: FUNC
@@ -1258,6 +1324,58 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
     CloudRelease(req, ino, &fi);
     EXPECT_EQ(cloudInode->sessionRefCount, 0);
     ffrt::wait();
+}
+
+/**
+ * @tc.name: CloudReadForWatchTest001
+ * @tc.desc: read接口传递是否是视频标志成功
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadForWatchTest001, TestSize.Level1) {
+    GTEST_LOG_(INFO) << "CloudReadForWatchTest001 Begin";
+    try {
+        fuse_req_t req = new struct fuse_req;
+        req->ctx.pid = 1;
+        fuse_ino_t ino = 10;
+        struct fuse_file_info fi;
+        fi.fh = 100;
+        off_t off = 0;
+
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        cloudInode->sessionRefCount = 1;
+        cloudInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+        cloudInode->mBase->size = 100;
+        cloudInode->mBase->fileType = FILE_TYPE_CONTENT;
+        cloudInode->path = "/./CloudReadForWatchTest001";
+        size_t newSize = 10;
+        cloudInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+        for (size_t i = 0; i < newSize; ++i) {
+            cloudInode->cacheFileIndex[i] = NOT_CACHE;
+        }
+        auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+        cloudInode->readSession = readSessionMock;
+
+        FuseData* data = new FuseData();
+        data->photoBundleName = "example_bundle_name";
+        data->userId = 1;
+        data->database = make_shared<CloudFile::CloudDatabase>(data->userId, data->photoBundleName);
+        data->inodeCache.insert({10, cloudInode});
+        uint64_t key = 100;
+        auto newCloudFdInfo = std::make_shared<struct CloudFdInfo>();
+        data->cloudFdCache[key] = newCloudFdInfo;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+        CloudReadForWatch(req, ino, newSize, off, &fi);
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloudReadForWatchTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "CloudReadForWatchTest001 End";
 }
 
 /**
