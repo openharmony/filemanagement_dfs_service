@@ -107,6 +107,30 @@ HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetQueryKeyTest002 End";
 }
 
+HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetQueryKeyTest003 Start";
+    std::string expect = LOCAL_SPACE_DAYS_KEY;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetQueryKey(LOCAL_SPACE_DAYS_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetQueryKeyTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetQueryKeyTest004 Start";
+    std::string expect = LOCAL_SPACE_DAYS_KEY;
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetQueryKey(LOCAL_SPACE_DAYS_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetQueryKeyTest004 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, GetSettingsDataCommonUriTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSettingsDataCommonUriTest001 Start";
@@ -155,6 +179,32 @@ HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest002, TestSize.Level1)
     EXPECT_EQ(ret, expect);
 
     GTEST_LOG_(INFO) << "GetSettingsDataUriTest002 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest003 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true&key=" +
+        LOCAL_SPACE_DAYS_KEY;
+    SettingsDataManager::supportUserSettingsData_ = true;
+    SettingsDataManager::currentUserId_ = 100;
+    std::string ret = SettingsDataManager::GetSettingsDataUri(LOCAL_SPACE_DAYS_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest003 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, GetSettingsDataUriTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest004 Start";
+    std::string expect = "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true&key=" +
+        LOCAL_SPACE_DAYS_KEY;
+    SettingsDataManager::supportUserSettingsData_ = false;
+    SettingsDataManager::currentUserId_ = 101;
+    std::string ret = SettingsDataManager::GetSettingsDataUri(LOCAL_SPACE_DAYS_KEY);
+    EXPECT_EQ(ret, expect);
+
+    GTEST_LOG_(INFO) << "GetSettingsDataUriTest004 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, GetUserSettingsDataUriTest001, TestSize.Level1)

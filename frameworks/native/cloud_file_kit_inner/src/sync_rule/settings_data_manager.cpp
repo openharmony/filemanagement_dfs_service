@@ -45,7 +45,8 @@ static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
 
 std::string SettingsDataManager::GetQueryKey(const std::string &key)
 {
-    if (supportUserSettingsData_) {
+    bool needConvertKey = key != LOCAL_SPACE_DAYS_KEY;
+    if (needConvertKey && supportUserSettingsData_) {
         return key + USER_SUFFIX;
     } else {
         return key;
@@ -63,7 +64,14 @@ std::string SettingsDataManager::GetSettingsDataCommonUri()
 
 std::string SettingsDataManager::GetSettingsDataUri(const std::string &key)
 {
-    return GetSettingsDataCommonUri() + "&key=" + GetQueryKey(key);
+    bool needConvertKey = key != LOCAL_SPACE_DAYS_KEY;
+    std::string uri;
+    if (needConvertKey) {
+        uri = GetSettingsDataCommonUri();
+    } else {
+        uri = SETTING_DATA_COMMON_URI + "/SETTINGSDATA" + "?Proxy=true";
+    }
+    return uri + "&key=" + GetQueryKey(key);
 }
 
 std::string SettingsDataManager::GetUserSettingsDataUri(const std::string &key)
