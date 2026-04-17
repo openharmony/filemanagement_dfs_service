@@ -62,6 +62,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitCloudSyncFuncs(env, exports);
     InitOptimizeState(env, exports);
     InitDownloadFileType(env, exports);
+    InitUploadState(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<MultiDlProgressNapi>(env, exports));
@@ -164,6 +165,9 @@ void InitErrorType(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("DEVICE_TEMPERATURE_TOO_HIGH",
             NVal::CreateInt32(env, DEVICE_TEMPERATURE_TOO_HIGH).val_),
         DECLARE_NAPI_STATIC_PROPERTY("REMOTE_SERVER_ABNORMAL", NVal::CreateInt32(env, REMOTE_SERVER_ABNORMAL).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("RESPONSE_TIME_OUT",
+            NVal::CreateInt32(env, UploadProgressObj::RESPONSE_TIME_OUT).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UNKNOWN_ERROR", NVal::CreateInt32(env, UploadProgressObj::UNKNOWN_ERROR).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
@@ -236,6 +240,23 @@ void InitDownloadFileType(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("CONTENT", NVal::CreateInt32(env, FieldKey::FIELDKEY_CONTENT).val_),
         DECLARE_NAPI_STATIC_PROPERTY("THUMBNAIL", NVal::CreateInt32(env, FieldKey::FIELDKEY_THUMB).val_),
         DECLARE_NAPI_STATIC_PROPERTY("LCD", NVal::CreateInt32(env, FieldKey::FIELDKEY_LCD).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitUploadState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "UploadState";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("WAITING", NVal::CreateInt32(env, UploadProgressObj::WAITING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("RUNNING", NVal::CreateInt32(env, UploadProgressObj::RUNNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, UploadProgressObj::COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FAILED", NVal::CreateInt32(env, UploadProgressObj::FAILED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, UploadProgressObj::STOPPED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("PAUSED", NVal::CreateInt32(env, UploadProgressObj::PAUSED).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
