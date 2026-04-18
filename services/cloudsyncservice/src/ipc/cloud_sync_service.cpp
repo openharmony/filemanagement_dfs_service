@@ -463,9 +463,9 @@ int32_t CloudSyncService::RegisterUploadCallbackInner(const sptr<IRemoteObject> 
         return ret;
     }
     auto callback = iface_cast<ICloudUploadCallback>(remoteObject);
-    dataSyncManager_->RegisterUploadCallback(targetBundleName, bundleNameUserInfo, callbackId, callback);
+    ret = dataSyncManager_->RegisterUploadCallback(targetBundleName, bundleNameUserInfo, callbackId, callback);
     LOGI("End RegisterUploadCallbackInner");
-    return E_OK;
+    return ret;
 }
 
 int32_t CloudSyncService::UnRegisterUploadCallbackInner(const string &callbackId, const string &bundleName)

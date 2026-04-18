@@ -508,6 +508,10 @@ int32_t CloudSyncManagerImpl::RegisterUploadCallback(const UploadCallbackInfo &u
     auto ret = CloudSyncServiceProxy->RegisterUploadCallbackInner(
         sptr(new (std::nothrow) CloudUploadCallbackClient(uploadCallbackInfo.callback)),
         uploadCallbackInfo.callbackId, uploadCallbackInfo.bundleName);
+    if (ret != E_OK) {
+        LOGE("RegisterUploadCallback failed: %{public}d", ret);
+        return ret;
+    }
     if (ret == E_OK) {
         CloudUploadCallbackClientManager::GetInstance().AddCallback(uploadCallbackInfo);
         SubscribeListener();

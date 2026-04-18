@@ -123,7 +123,7 @@ public:
                                  const std::vector<std::string> &uriVec,
                                  std::vector<CloudSync::UploadProgressObj> &uploadList);
 
-    virtual void RegisterUploadCallback(const std::string &bundleName,
+    virtual int32_t RegisterUploadCallback(const std::string &bundleName,
                                              const BundleNameUserInfo &bundleNameUserInfo,
                                              const std::string &callbackId,
                                              const sptr<CloudSync::ICloudUploadCallback> &callback);
