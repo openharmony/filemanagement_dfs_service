@@ -280,16 +280,15 @@ int32_t DataSyncManager::GetUploadList(const BundleNameUserInfo &bundleNameUserI
                                        const std::vector<std::string> &uriVec,
                                        std::vector<CloudSync::UploadProgressObj> &uploadList)
 {
-    // default
     return E_OK;
 }
 
-void DataSyncManager::RegisterUploadCallback(const std::string &bundleName,
-                                             const BundleNameUserInfo &bundleNameUserInfo,
-                                             const std::string &callbackId,
-                                             const sptr<CloudSync::ICloudUploadCallback> &callback)
+int32_t DataSyncManager::RegisterUploadCallback(const std::string &bundleName,
+                                                const BundleNameUserInfo &bundleNameUserInfo,
+                                                const std::string &callbackId,
+                                                const sptr<CloudSync::ICloudUploadCallback> &callback)
 {
-    return;
+    return E_OK;
 }
 
 void DataSyncManager::UnRegisterUploadCallback(const std::string &bundleName,
