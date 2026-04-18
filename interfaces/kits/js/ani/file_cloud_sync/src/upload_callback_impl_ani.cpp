@@ -117,9 +117,6 @@ static ani_status CallUploadCallback(ani_env *env, ani_ref callback, ani_object 
 void CloudUploadCallbackImplAni::OnUploadProgress(const UploadProgressObj &progress)
 {
     auto task = [this, progress]() {
-        LOGI("notify upload progress - state: %{public}d, processed: %{public}lld, size: %{public}lld",
-             static_cast<int32_t>(progress.state), static_cast<long long>(progress.processed),
-             static_cast<long long>(progress.size));
         if (cbOnRef_ == nullptr) {
             LOGE("callback is null");
             return;
