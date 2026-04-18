@@ -435,9 +435,6 @@ static void CallUploadProgressCallback(napi_env env, napi_ref callbackRef, const
 
 void CloudUploadCallbackImpl::OnUploadProgress(const UploadProgressObj &progress)
 {
-    LOGI("notify upload progress - state: %{public}d, processed: %{public}lld, size: %{public}lld, uri: %{public}s",
-         static_cast<int32_t>(progress.state), static_cast<long long>(progress.processed),
-         static_cast<long long>(progress.size), progress.uri.c_str());
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress);
     if (msg == nullptr) {
         LOGE("Failed to create uv message object");

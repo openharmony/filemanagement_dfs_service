@@ -52,8 +52,6 @@ int32_t CloudUploadCallbackStub::HandleOnUploadProgress(MessageParcel &data, Mes
         return E_DATA;
     }
     OnUploadProgress(*progress);
-    LOGI("OnUploadProgress, state = %{public}d, error = %{public}d", static_cast<int32_t>(progress->state),
-         static_cast<int32_t>(progress->error));
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync
