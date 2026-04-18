@@ -33,7 +33,7 @@ int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId,
                                                const std::string &request,
                                                std::string &result)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "UploadAsset"));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("UploadAsset");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -49,7 +49,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
                                                 const std::string &bundleName,
                                                 AssetInfo &assetInfo)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "DownloadFile001"));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("DownloadFile001");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -68,7 +68,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFiles(const int32_t userId,
                                                  std::vector<bool> &assetResultMap,
                                                  int32_t connectTime)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "DownloadFiles"));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("DownloadFiles");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -91,7 +91,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
                                                 AssetInfo &assetInfo,
                                                 ResultCallback resultCallback)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo(bundleName, "DownloadFile002"));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("DownloadFile002");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
@@ -123,7 +123,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
 
 int32_t CloudSyncAssetManagerImpl::DeleteAsset(const int32_t userId, const std::string &uri)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance(CallerInfo("", "DeleteAsset"));
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("DeleteAsset");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;

@@ -24,17 +24,9 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-struct CallerInfo {
-    std::string bundleName;
-    std::string callerMethod;
-    
-    CallerInfo() = default;
-    explicit CallerInfo(const std::string &bundle, const std::string &method)
-        : bundleName(bundle), callerMethod(method) {}
-};
 class ServiceProxy : public IRemoteProxy<ICloudSyncService> {
 public:
-    static sptr<ICloudSyncService> GetInstance(const CallerInfo &callerInfo);
+    static sptr<ICloudSyncService> GetInstance(const std::string &callerMethod);
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:
