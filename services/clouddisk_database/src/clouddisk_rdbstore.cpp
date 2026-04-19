@@ -1078,6 +1078,52 @@ int32_t CloudDiskRdbStore::GetSourcePath(const string &attr, const string &paren
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetSourcePathFromAttr(const std::string &cloudId, std::string &sourcePath)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
+        LOGE("get source path from attr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::ATTRIBUTE});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set for source path");
+        return E_RDB;
+    }
+
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("result set go to next row failed for source path");
+        return E_RDB;
+    }
+
+    string attr;
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::ATTRIBUTE, attr, resultSet);
+    if (ret != E_OK) {
+        LOGE("get attribute failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    const string sandboxPrefix = "/data/storage/el2/cloud";
+    nlohmann::json jsonObject = nlohmann::json::parse(attr, nullptr, false);
+    if (jsonObject.is_discarded() || (!jsonObject.is_object())) {
+        LOGD("jsonObject is discarded or not object");
+        sourcePath = sandboxPrefix + "/";
+        return E_OK;
+    }
+
+    if (jsonObject.contains(SRC_PATH_KEY) && jsonObject[SRC_PATH_KEY].is_string()) {
+        sourcePath = jsonObject[SRC_PATH_KEY].get<std::string>();
+    } else {
+        LOGD("srcPath not found in attribute, return root dir");
+    }
+    sourcePath = sandboxPrefix + sourcePath + "/";
+
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const string &attr, ValuesBucket &setXattr)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -2845,5 +2891,92 @@ int32_t CloudDiskRdbStore::CopyFile(std::string srcCloudId, std::string destClou
         LOGE("Failed to insert copy data to the rdb, ret = %{public}d", ret);
     }
     return ret;
+}
+
+int32_t CloudDiskRdbStore::HandleRestore(string &name, const string &parentCloudId,
+    const string &cloudId, string &newName, int32_t &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    value = static_cast<int32_t>(TrashOptType::RESTORE);
+    int64_t rowId = 0;
+    int32_t position = -1;
+    string attr;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        std::string msg = "rdbstore begin transaction failed, ret = " + std::to_string(ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
+            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DATABASE, ret, msg});
+        return ret;
+    }
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    if (ret != E_OK) {
+        std::string msg = "get recycle fields fail, ret = " + std::to_string(ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
+            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::QUERY_DATABASE, ret, msg});
+        return E_RDB;
+    }
+    rdbTransaction.Finish();
+
+    ValuesBucket setXAttr;
+    setXAttr.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
+    setXAttr.PutString(FileColumn::FILE_NAME, newName);
+    RETURN_ON_ERR(RecycleSetValue(TrashOptType::RESTORE, setXAttr, position, dirtyType));
+    struct RestoreInfo restoreInfo = {name, parentCloudId, newName, rowId};
+    ret = RestoreUpdateRdb(cloudId, restoreInfo, setXAttr);
+    if (ret != E_OK) {
+        std::string msg = "handle restore rdb update fail, ret = " + std::to_string(ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
+            CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
+        return ret;
+    }
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    name = newName;
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::HandleRecycle(const string &name, const string &parentCloudId,
+    const string &cloudId, int32_t &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    value = static_cast<int32_t>(TrashOptType::RECYCLE);
+    int64_t rowId = 0;
+    int32_t position = -1;
+    string attr;
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+            CloudFile::FaultType::DATABASE, ret, "rdbstore begin transaction failed"});
+    }
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    if (ret != E_OK) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+        CloudFile::FaultType::QUERY_DATABASE, ret, "get rowId and position fail"});
+        return E_RDB;
+    }
+    ValuesBucket setXAttr;
+    SourcePathSetValue(cloudId, attr, setXAttr);
+    RETURN_ON_ERR(RecycleSetValue(TrashOptType::RECYCLE, setXAttr, position, dirtyType));
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    int32_t changedRows = -1;
+    std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
+    if (ret != E_OK) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+        CloudFile::FaultType::MODIFY_DATABASE, ret, "set xAttr recycle fail"});
+        return E_RDB;
+    }
+    struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
+    ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId_, bundleName_, restoreInfo);
+    if (ret != E_OK) {
+        return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
+            CloudFile::FaultType::MODIFY_DATABASE, ret, "recycle set dentryfile failed"});
+    }
+    rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    return E_OK;
 }
 }

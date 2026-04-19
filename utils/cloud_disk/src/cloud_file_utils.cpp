@@ -269,6 +269,11 @@ bool CloudFileUtils::CheckIsRecyclePath(const string &key)
     return key == CLOUD_RECYCLE_PATH;
 }
 
+bool CloudFileUtils::CheckIsSourcePath(const string &key)
+{
+    return key == CLOUD_SOURCE_PATH;
+}
+
 bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);

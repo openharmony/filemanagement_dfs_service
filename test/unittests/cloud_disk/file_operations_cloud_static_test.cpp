@@ -1712,4 +1712,381 @@ HWTEST_F(FileOperationsCloudStaticTest, HandleReadCompletionTest003, TestSize.Le
     EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
 }
 
+/**
+ * @tc.name: GetSourcePathTest001
+ * @tc.desc: Verify the GetSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetSourcePathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSourcePathTest001 Start";
+    try {
+        fuse_req_t req = nullptr;
+        shared_ptr<CloudDiskInode> inoPtr = nullptr;
+        auto ret = GetSourcePath(req, inoPtr);
+        EXPECT_EQ(ret, "");
+
+        inoPtr = make_shared<CloudDiskInode>();
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        inoPtr->cloudId = "mock";
+        ret = GetSourcePath(req, inoPtr);
+        EXPECT_EQ(ret, "");
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        inoPtr->cloudId = "test";
+        ret = GetSourcePath(req, inoPtr);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSourcePathTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetSourcePathTest001 End";
+}
+
+/**
+ * @tc.name: GetXattrBufferTest001
+ * @tc.desc: Verify the GetXattrBuffer function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetXattrBufferTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrBufferTest001 Start";
+    try {
+        fuse_req_t req = nullptr;
+        shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+        std::string name = "user.hmdfs.perm";
+
+        auto ret = GetXattrBuffer(req, inoPtr, name.c_str());
+        name = "user.cloud.cloudid";
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.favorite";
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.filestatus";
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.location";
+        inoPtr = make_shared<CloudDiskInode>();
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(1).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+        EXPECT_EQ(ret, "null");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrBufferTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrBufferTest001 End";
+}
+
+/**
+ * @tc.name: GetXattrBufferTest002
+ * @tc.desc: Verify the GetXattrBuffer function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetXattrBufferTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrBufferTest002 Start";
+    try {
+        fuse_req_t req = nullptr;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        CloudDiskFuseData data;
+
+        std::string name = "user.cloud.deletetime";
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(1).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        auto ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.recyclePath";
+        inoPtr->cloudId = "mock";
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(1).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.sourcePath";
+        inoPtr = nullptr;
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+
+        name = "user.cloud.test";
+        ret = GetXattrBuffer(req, inoPtr, name.c_str());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrBufferTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrBufferTest002 End";
+}
+
+/**
+ * @tc.name: RenameForNormalTest001
+ * @tc.desc: Verify the RenameForNormal function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, RenameForNormalTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameForNormalTest001 Start";
+    try {
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        const char *newName = "";
+        CloudDiskFuseData data;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForNormal(req, parent, name, newParent, newName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameForNormalTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameForNormalTest001 End";
+}
+
+/**
+ * @tc.name: GetOldAndNewParentCloudIdTest001
+ * @tc.desc: Verify the GetOldAndNewParentCloudId function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetOldAndNewParentCloudIdTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetOldAndNewParentCloudIdTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        auto inoPtrOld = make_shared<CloudDiskInode>();
+        auto inoPtrNew = make_shared<CloudDiskInode>();
+        data.inodeCache[1] = inoPtrOld;
+        data.inodeCache[2] = inoPtrNew;
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        std::string oldParentCloudId;
+        std::string newParentCloudId;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        auto ret = GetOldAndNewParentCloudId(req, parent, newParent, oldParentCloudId, newParentCloudId);
+        EXPECT_EQ(ret, EINVAL);
+
+        parent = 1;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        ret = GetOldAndNewParentCloudId(req, parent, newParent, oldParentCloudId, newParentCloudId);
+        EXPECT_EQ(ret, EINVAL);
+
+        newParent = 2;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        ret = GetOldAndNewParentCloudId(req, parent, newParent, oldParentCloudId, newParentCloudId);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetOldAndNewParentCloudIdTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetOldAndNewParentCloudIdTest001 End";
+}
+
+/**
+ * @tc.name: RenameForTrashTest001
+ * @tc.desc: Verify the RenameForTrash function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, RenameForTrashTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameForTrashTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        data.localIdCache["0test"] = 100;
+        data.inodeCache[100] = inoPtr;
+        auto inoPtrOld = make_shared<CloudDiskInode>();
+        auto inoPtrNew = make_shared<CloudDiskInode>();
+        auto inoPtrTrash = make_shared<CloudDiskInode>();
+        inoPtrOld->cloudId = "mock";
+        inoPtrNew->cloudId = "mock";
+        inoPtrTrash->cloudId = "mock";
+        data.localIdCache["1test"] = 1;
+        data.localIdCache["2test"] = 2;
+        data.localIdCache["4test"] = 4;
+        data.inodeCache[1] = inoPtrOld;
+        data.inodeCache[2] = inoPtrNew;
+        data.inodeCache[4] = inoPtrTrash;
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        std::string name;
+        std::string newName;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+
+        name = "test";
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+
+        parent = 1;
+        newParent = 2;
+        data.userId = 101;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameForTrashTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameForTrashTest001 End";
+}
+
+/**
+ * @tc.name: RenameForTrashTest002
+ * @tc.desc: Verify the RenameForTrash function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, RenameForTrashTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameForTrashTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        data.localIdCache["4test"] = 4;
+        data.inodeCache[100] = inoPtr;
+        auto inoPtrOld = make_shared<CloudDiskInode>();
+        auto inoPtrNew = make_shared<CloudDiskInode>();
+        auto inoPtrTrash = make_shared<CloudDiskInode>();
+        inoPtrOld->cloudId = "mock";
+        inoPtrNew->cloudId = "mock";
+        inoPtrTrash->cloudId = "mock";
+        data.localIdCache["1test"] = 1;
+        data.localIdCache["2test"] = 2;
+        data.localIdCache["4test"] = 4;
+        data.inodeCache[1] = inoPtrOld;
+        data.inodeCache[2] = inoPtrNew;
+        data.inodeCache[4] = inoPtrTrash;
+        fuse_ino_t parent = 1;
+        fuse_ino_t newParent = 2;
+        fuse_req_t req = nullptr;
+        std::string name = "test";
+        std::string newName;
+
+        data.userId = 100;
+        parent = 4;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+
+        parent = 1;
+        newParent = 4;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+
+        parent = 1;
+        newParent = 2;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameForTrashTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameForTrashTest002 End";
+}
+
+/**
+ * @tc.name: RenameNewTest001
+ * @tc.desc: Verify the RenameNew function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameNewTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        const char *newName = "";
+        unsigned int flags = 1;
+
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+
+        flags = 0;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+
+        parent = 4;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+
+        parent = 0;
+        newParent = 4;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+
+        parent = 4;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameNewTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameNewTest001 End";
+}
+
+/**
+ * @tc.name: RenameNewTest002
+ * @tc.desc: Verify the RenameNew function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameNewTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        const char *newName = "";
+        unsigned int flags = 1;
+        size_t size = 0;
+
+        system::SetParameter("persist.kernel.move.finish", "false");
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).Times(2).WillRepeatedly(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        fileOperationsCloud_->GetXattr(req, parent, name, size);
+        system::SetParameter("persist.kernel.move.finish", "true");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameNewTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameNewTest002 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

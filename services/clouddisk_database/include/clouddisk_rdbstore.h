@@ -84,9 +84,14 @@ public:
     int32_t GetRecycleInfo(std::shared_ptr<NativeRdb::Transaction> transaction,
         const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr, int32_t &dirtyType);
     int32_t GetSourcePath(const std::string &attr, const std::string &parentCloudId, std::string &sourcePath);
+    int32_t GetSourcePathFromAttr(const std::string &cloudId, std::string &sourcePath);
     int32_t SourcePathSetValue(const std::string &cloudId, const std::string &attr, NativeRdb::ValuesBucket &setXattr);
     int32_t HandleRecycleXattr(const std::string &name, const std::string &parentCloudId, const std::string &cloudId);
     int32_t HandleRestoreXattr(std::string &name, const std::string &parentCloudId, const std::string &cloudId);
+    int32_t HandleRecycle(const std::string &name, const std::string &parentCloudId,
+        const std::string &cloudId, int32_t &value);
+    int32_t HandleRestore(std::string &name, const std::string &parentCloudId,
+        const std::string &cloudId, std::string &newName, int32_t &value);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);

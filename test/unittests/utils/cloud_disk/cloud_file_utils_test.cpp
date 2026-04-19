@@ -1160,4 +1160,23 @@ HWTEST_F(CloudFileUtilsTest, LocalWriteOpenTest010, TestSize.Level1)
     GTEST_LOG_(INFO) << "LocalWriteOpenTest010 end";
 }
 
+/**
+ * @tc.name: CheckIsSourcePathTest001
+ * @tc.desc: Verify the CheckIsSourcePath function
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(CloudFileUtilsTest, CheckIsSourcePathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckIsSourcePathTest001 start";
+    try {
+        std::string key = "test";
+        bool res = CloudFileUtils::CheckIsSourcePath(key);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckIsSourcePathTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckIsSourcePathTest001 end";
+}
 } // OHOS

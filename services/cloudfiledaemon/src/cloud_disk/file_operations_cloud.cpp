@@ -253,12 +253,13 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
     int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
     string nameStr = name;
+    string key = std::to_string(RECYCLE_LOCAL_ID) + name;
     size_t lastSlash = nameStr.find_last_of("_");
     metaBase.name = nameStr.substr(0, lastSlash);
     inoPtr = UpdateChildCache(data, inodeId, inoPtr);
     inoPtr->refCount++;
     InitInodeAttr(data, RECYCLE_LOCAL_ID, inoPtr.get(), metaBase, inodeId);
-    inoPtr->parent = UNKNOWN_INODE_ID;
+    InitLocalIdCache(data, key, inodeId);
     e->ino = static_cast<fuse_ino_t>(inodeId);
     FileOperationsHelper::GetInodeAttr(inoPtr, &e->attr);
     return 0;
@@ -1444,8 +1445,53 @@ string GetExtAttr(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const char 
     return extAttr;
 }
 
-void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
-                                   size_t size)
+string GetSourcePath(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETEXTATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "get source path inoPtr is null"});
+        return "";
+    }
+
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    
+    string relativePath;
+    int32_t ret = rdbStore->GetSourcePathFromAttr(inoPtr->cloudId, relativePath);
+    if (ret != 0) {
+        LOGE("get source path from attr failed, source path set root dir, ret = %{public}d", ret);
+    }
+
+    return relativePath + inoPtr->fileName;
+}
+
+string GetXattrBuffer(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const char *name)
+{
+    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
+        return to_string(inoPtr->layer + CLOUD_FILE_LAYER);
+    } else if (CloudFileUtils::CheckIsCloud(name)) {
+        return inoPtr->cloudId;
+    } else if (CloudFileUtils::CheckIsFavorite(name)) {
+        return GetIsFavorite(req, inoPtr);
+    } else if (CloudFileUtils::CheckFileStatus(name)) {
+        return GetFileStatus(req, inoPtr.get());
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        return GetLocation(req, inoPtr);
+    } else if (CloudFileUtils::CheckIsTimeRecycled(name)) {
+        return GetTimeRecycled(req, inoPtr);
+    } else if (CloudFileUtils::CheckIsRecyclePath(name)) {
+        return GetRecyclePath(req, inoPtr);
+    } else if (CloudFileUtils::CheckIsSourcePath(name)) {
+        return GetSourcePath(req, inoPtr);
+    } else {
+        return GetExtAttr(req, inoPtr, name);
+    }
+    return "null";
+}
+
+void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size)
 {
     if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
         LOGE("wait move error");
@@ -1460,24 +1506,7 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         fuse_reply_err(req, EINVAL);
         return;
     }
-    string buf;
-    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
-        buf = to_string(inoPtr->layer + CLOUD_FILE_LAYER);
-    } else if (CloudFileUtils::CheckIsCloud(name)) {
-        buf = inoPtr->cloudId;
-    } else if (CloudFileUtils::CheckIsFavorite(name)) {
-        buf = GetIsFavorite(req, inoPtr);
-    } else if (CloudFileUtils::CheckFileStatus(name)) {
-        buf = GetFileStatus(req, inoPtr.get());
-    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
-        buf = GetLocation(req, inoPtr);
-    } else if (CloudFileUtils::CheckIsTimeRecycled(name)) {
-        buf = GetTimeRecycled(req, inoPtr);
-    } else if (CloudFileUtils::CheckIsRecyclePath(name)) {
-        buf = GetRecyclePath(req, inoPtr);
-    } else {
-        buf = GetExtAttr(req, inoPtr, name);
-    }
+    string buf = GetXattrBuffer(req, inoPtr, name);
     if (buf == "null") {
         fuse_reply_err(req, ENODATA);
         return;
@@ -1702,18 +1731,9 @@ void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *
     return (void) fuse_reply_err(req, 0);
 }
 
-void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
-                                 fuse_ino_t newParent, const char *newName, unsigned int flags)
+void RenameForNormal(fuse_req_t req, fuse_ino_t parent, const char *name,
+    fuse_ino_t newParent, const char *newName)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (flags) {
-        LOGE("Fuse failed to support flag");
-        return (void) fuse_reply_err(req, EINVAL);
-    }
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
     auto newParentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(newParent));
@@ -1753,6 +1773,90 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
             NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName}, {FileStatus::UNKNOW, isDir});
     }
     return (void) fuse_reply_err(req, 0);
+}
+
+int32_t GetOldAndNewParentCloudId(fuse_req_t req, fuse_ino_t parent, fuse_ino_t newParent,
+    string &oldParentCloudId, string &newParentCloudId)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
+    if (parentInode == nullptr) {
+        LOGE("old parent inode not found.");
+        return EINVAL;
+    }
+    auto newParentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(newParent));
+    if (newParentInode == nullptr) {
+        LOGE("new parent inode not found.");
+        return EINVAL;
+    }
+
+    oldParentCloudId = parentInode->cloudId;
+    newParentCloudId = newParentInode->cloudId;
+
+    return 0;
+}
+
+void RenameForTrash(fuse_req_t req, fuse_ino_t parent, const char *name,
+    fuse_ino_t newParent, const char *newName)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    int64_t localId = FileOperationsHelper::FindLocalId(data, std::to_string(parent) + name);
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    string parentCloudId;
+    string newParentCloudId;
+    int32_t ret = GetOldAndNewParentCloudId(req, parent, newParent, parentCloudId, newParentCloudId);
+    if (ret != 0) {
+        LOGE("get parent cloud id failed.");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    ret = MetaFileMgr::GetInstance().CreateRecycleDentry(data->userId, inoPtr->bundleName);
+    if (ret != 0) {
+        LOGE("create recycle dentry failed");
+        fuse_reply_err(req, ret);
+        return;
+    }
+    string nName = newName;
+    int32_t val;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    if (parent == RECYCLE_LOCAL_ID && newParent != RECYCLE_LOCAL_ID) {
+        ret = rdbStore->HandleRestore(inoPtr->fileName, newParentCloudId, inoPtr->cloudId, nName, val);
+    } else if (parent != RECYCLE_LOCAL_ID && newParent == RECYCLE_LOCAL_ID) {
+        ret = rdbStore->HandleRecycle(inoPtr->fileName, parentCloudId, inoPtr->cloudId, val);
+    }
+    if (ret != 0) {
+        LOGE("set cloud recycle xattr fail, ret = %{public}d", ret);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
+        val == 0 ? NotifyOpsType::DAEMON_RESTORE : NotifyOpsType::DAEMON_RECYCLE, inoPtr});
+    fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+                                 fuse_ino_t newParent, const char *newName, unsigned int flags)
+{
+    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
+        LOGE("wait move error");
+        return (void) fuse_reply_err(req, EBUSY);
+    }
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (parent == RECYCLE_LOCAL_ID || newParent == RECYCLE_LOCAL_ID) {
+        RenameForTrash(req, parent, name, newParent, newName);
+    } else {
+        if (flags) {
+            LOGE("Fuse failed to support flag");
+            return (void) fuse_reply_err(req, EINVAL);
+        }
+        RenameForNormal(req, parent, name, newParent, newName);
+    }
 }
 
 static int64_t ReadFileToBuf(const std::string& path, char* buf, size_t size, off_t off)
