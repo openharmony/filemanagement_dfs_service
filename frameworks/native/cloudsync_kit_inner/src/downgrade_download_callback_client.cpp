@@ -28,4 +28,13 @@ void DowngradeDownloadCallbackClient::OnDownloadProcess(const DowngradeProgress 
     callback_->OnDownloadProcess(progress);
 }
 
+void DowngradeDownloadCallbackClient::OnTransferProcess(const DowngradeTfProgress &progress)
+{
+    if (!callback_) {
+        LOGE("callback_ is null, maybe not registered");
+        return;
+    }
+    callback_->OnTransferProcess(progress);
+}
+
 } // namespace OHOS::FileManagement::CloudSync

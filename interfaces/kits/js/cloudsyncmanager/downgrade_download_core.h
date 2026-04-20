@@ -33,6 +33,8 @@ public:
     FsResult<CloudFileInfo> DoDowngradeDlGetCloudFileInfo();
     FsResult<void> DoDowngradeDlStartDownload(const shared_ptr<DowngradeCallbackAniImpl> callback);
     FsResult<void> DoDowngradeDlStopDownload();
+    FsResult<void> DoDowngradeDlStartTransfer(const std::string &targetUri,
+        const shared_ptr<DowngradeCallbackAniImpl> callback);
     const string &GetBundleName() const;
 private:
     shared_ptr<DowngradeCallbackAniImpl> callback_;

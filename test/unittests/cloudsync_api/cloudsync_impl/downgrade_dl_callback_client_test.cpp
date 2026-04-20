@@ -39,6 +39,10 @@ public:
     {
         return;
     }
+    void OnTransferProcess(const DowngradeTfProgress &progress)
+    {
+        return;
+    }
 };
 
 void DowngradeDlCallbackClientTest::SetUpTestCase(void)

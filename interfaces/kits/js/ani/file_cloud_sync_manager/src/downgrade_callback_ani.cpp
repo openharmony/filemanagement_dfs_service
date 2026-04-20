@@ -93,6 +93,52 @@ ani_object DowngradeCallbackAniImpl::ConvertToObject(ani_env *env, const Downgra
     return pg;
 }
 
+ani_object DowngradeCallbackAniImpl::TfConvertToObject(ani_env *env, const DowngradeTfProgress &progress)
+{
+    ani_class cls;
+    ani_status ret;
+    string classDesc =
+        Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.TransferProgress").Descriptor();
+    if ((ret = env->FindClass(classDesc.c_str(), &cls)) != ANI_OK) {
+        LOGE("Cannot find class %{private}s, err: %{public}d", classDesc.c_str(), ret);
+        return nullptr;
+    }
+
+    ani_method ctor;
+    string ct = Builder::BuildConstructorName();
+    string argSign = Builder::BuildSignatureDescriptor({
+        Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.TransferState"),
+        Builder::BuildInt(), Builder::BuildInt(), Builder::BuildInt(),
+        Builder::BuildLong(), Builder::BuildLong(),
+        Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.TransferStopReason")});
+    ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
+    if (ret != ANI_OK) {
+        LOGE("Find ctor method failed, ret = %{public}d", ret);
+        return nullptr;
+    }
+
+    ani_enum stateEnum;
+    Type stateSign = Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.TransferState");
+    env->FindEnum(stateSign.Descriptor().c_str(), &stateEnum);
+    ani_enum transferStopReasonEnum;
+    Type errorSign = Builder::BuildEnum("@ohos.file.cloudSyncManager.cloudSyncManager.TransferStopReason");
+    env->FindEnum(errorSign.Descriptor().c_str(), &transferStopReasonEnum);
+
+    ani_enum_item stateEnumItem;
+    ani_enum_item transferStopReasonEnumItem;
+    env->Enum_GetEnumItemByIndex(transferStopReasonEnum, progress.stopReason, &transferStopReasonEnumItem);
+    env->Enum_GetEnumItemByIndex(stateEnum, progress.state, &stateEnumItem);
+    ani_object pg;
+    ret = env->Object_New(cls, ctor, &pg, stateEnumItem, static_cast<double>(progress.successfulCount),
+                          static_cast<double>(progress.failedCount), static_cast<double>(progress.totalCount),
+                          static_cast<double>(progress.transferredSize), static_cast<double>(progress.totalSize),
+                          transferStopReasonEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("create new object failed, ret = %{public}d", ret);
+    }
+    return pg;
+}
+
 void DowngradeCallbackAniImpl::UpdateDowngradeProgress(const DowngradeProgress &progress)
 {
     if (progress_ == nullptr) {
@@ -106,6 +152,21 @@ void DowngradeCallbackAniImpl::UpdateDowngradeProgress(const DowngradeProgress &
     progress_->failedCount = progress.failedCount;
     progress_->totalCount =  progress.totalCount;
     progress_->stopReason = static_cast<int32_t>(progress.stopReason);
+}
+
+void DowngradeCallbackAniImpl::UpdateDowngradeTfProgress(const DowngradeTfProgress &progress)
+{
+    if (tfprogress_) {
+        tfprogress_ = std::make_shared<BatchTfProgress>();
+    }
+
+    tfprogress_->state = static_cast<int32_t>(progress.state);
+    tfprogress_->transferredSize = progress.transferredSize;
+    tfprogress_->totalSize = progress.totalSize;
+    tfprogress_->successfulCount = progress.successfulCount;
+    tfprogress_->failedCount = progress.failedCount;
+    tfprogress_->totalCount =  progress.totalCount;
+    tfprogress_->stopReason = static_cast<int32_t>(progress.stopReason);
 }
 
 void DowngradeCallbackAniImpl::OnDownloadProcess(const DowngradeProgress &progress)
@@ -146,4 +207,44 @@ void DowngradeCallbackAniImpl::OnDownloadProcess(const DowngradeProgress &progre
         LOGE("failed to send event");
     }
 }
+
+void DowngradeCallbackAniImpl::OnTransferProcess(const DowngradeTfProgress &progress)
+{
+    UpdateDowngradeTfProgress(progress);
+    shared_ptr<DowngradeCallbackAniImpl> callbackImpl = shared_from_this();
+    auto task = [this, progress, callbackImpl]() mutable {
+        ani_env *tmpEnv = nullptr;
+        if (vm_ == nullptr || vm_->GetEnv(ANI_VERSION_1, &tmpEnv)) {
+            LOGE("DowngradeCallbackAniImpl get env failed.");
+            return;
+        }
+        if (tmpEnv == nullptr || cbOnRef_ == nullptr) {
+            LOGE("The env context is invalid");
+            return;
+        }
+        ani_size nr_refs = ANI_SCOPE_SIZE;
+        ani_status ret = tmpEnv->CreateLocalScope(nr_refs);
+        if (ret != ANI_OK) {
+            LOGE("create local scope failed, ret = %{public}d", ret);
+            return;
+        }
+        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbOnRef_);
+        ani_object pg = callbackImpl->TfConvertToObject(tmpEnv, progress);
+        ani_ref ref_;
+        vector<ani_ref> vec = { pg };
+        ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
+        if (ret != ANI_OK) {
+            LOGE("ani call function failed, ret = %{public}d", ret);
+            return;
+        }
+        ret = tmpEnv->DestroyLocalScope();
+        if (ret != ANI_OK) {
+            LOGE("failed to DestroyLocalScope, ret = %{public}d", ret);
+        }
+    };
+    if (!ANIUtils::SendEventToMainThread(task)) {
+        LOGE("failed to send event");
+    }
+}
+
 } // namespace OHOS::FileManagement::CloudSync

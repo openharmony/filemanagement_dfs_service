@@ -30,6 +30,8 @@ public:
     static ani_ref DowngradeDownloadGetCloudFileInfo(ani_env *env, ani_object object);
     static void DowngradeDownloadStartDownload(ani_env *env, ani_object object, ani_object fun);
     static void DowngradeDownloadStopDownload(ani_env *env, ani_object object);
+    static void DowngradeDownloadStartTransfer(ani_env *env, ani_object object,
+        ani_string targetUri, ani_object fun);
 };
 
 } // namespace OHOS::FileManagement::CloudSync

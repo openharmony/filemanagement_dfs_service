@@ -70,6 +70,7 @@ static napi_value Init(napi_env env, napi_value exports)
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<DowngradeDownloadNapi>(env, exports));
     products.emplace_back(std::make_unique<DowngradeProgressNapi>(env, exports));
+    products.emplace_back(std::make_unique<DowngradeTfProgressNapi>(env, exports));
     for (auto &&product : products) {
         if (!product->Export()) {
             LOGE("INNER BUG. Failed to export class %{public}s for module cloudSyncDownload ",

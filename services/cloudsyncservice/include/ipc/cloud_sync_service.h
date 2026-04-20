@@ -106,6 +106,8 @@ public:
                                   std::vector<std::string> &failCloudId) override;
     ErrCode StartDowngrade(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback) override;
     ErrCode StopDowngrade(const std::string &bundleName) override;
+    ErrCode StartTransfer(const std::string &bundleName, const std::string &targetUri,
+                          const sptr<IRemoteObject> &downloadCallback) override;
     ErrCode GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
     // file version
     ErrCode GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,

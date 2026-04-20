@@ -224,6 +224,12 @@ int32_t DataSyncManager::StopDowngrade(const std::string &bundleName)
     return E_OK;
 }
 
+int32_t DataSyncManager::StartTransfer(const std::string &bundleName, const std::string &targetUri,
+                                       const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback)
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo)
 {
     return E_OK;

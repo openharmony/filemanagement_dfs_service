@@ -25,6 +25,7 @@ class IDowngradeDlCallback : public DowngradeDlCallback, public IRemoteBroker {
 public:
     enum {
         SERVICE_CMD_ON_PROCESS = 0,
+        SERVICE_CMD_ON_TF_PROCESS = 1,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.IDowngradeDlCallback")

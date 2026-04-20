@@ -34,13 +34,25 @@ struct SingleBdProgress {
     int32_t stopReason{0};
 };
 
+struct BatchTfProgress {
+    int32_t state{0};
+    int32_t successfulCount{0};
+    int32_t failedCount{0};
+    int64_t transferredSize{0};
+    int64_t totalSize{0};
+    int32_t totalCount{0};
+    int32_t stopReason{0};
+};
+
 class DowngradeCallbackAniImpl : public DowngradeDlCallback,
                                  public std::enable_shared_from_this<DowngradeCallbackAniImpl> {
 public:
     DowngradeCallbackAniImpl(ani_env *env, ani_ref fun);
     ~DowngradeCallbackAniImpl();
     void OnDownloadProcess(const DowngradeProgress &progress) override;
+    void OnTransferProcess(const DowngradeTfProgress &progress) override;
     ani_object ConvertToObject(ani_env *env, const DowngradeProgress &progress);
+    ani_object TfConvertToObject(ani_env *env, const DowngradeTfProgress &progress);
 
 public:
     ani_ref cbOnRef_ = nullptr;
@@ -48,7 +60,9 @@ public:
 
 private:
     void UpdateDowngradeProgress(const DowngradeProgress &progress);
+    void UpdateDowngradeTfProgress(const DowngradeTfProgress &progress);
     std::shared_ptr<SingleBdProgress> progress_;
+    std::shared_ptr<BatchTfProgress> tfprogress_;
 };
 
 struct DowngradeEntity {

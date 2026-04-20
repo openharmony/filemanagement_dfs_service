@@ -117,7 +117,7 @@ ani_ref DowngradeDownloadAni::DowngradeDownloadGetCloudFileInfo(ani_env *env, an
         LOGE("Find ctor method failed, ret = %{public}d", ret);
         return nullptr;
     }
-    
+
     CloudFileInfo cloudFile = data.GetData().value();
     ani_object obj;
     ret = env->Object_New(cls, ctor, &obj, static_cast<double>(cloudFile.cloudfileCount),
@@ -171,4 +171,38 @@ void DowngradeDownloadAni::DowngradeDownloadStopDownload(ani_env *env, ani_objec
         ErrorHandler::Throw(env, err);
     }
 }
+
+void DowngradeDownloadAni::DowngradeDownloadStartTransfer(ani_env *env, ani_object object,
+    ani_string targetUri, ani_object fun)
+{
+    string uri;
+    ani_status ret = ANIUtils::AniString2String(env, targetUri, uri);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return;
+    }
+
+    auto downgradeDlSync = DowngradeDownloadUnwrap(env, object);
+    if (downgradeDlSync == nullptr) {
+        LOGE("Cannot wrap downgradeDlSync.");
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return;
+    }
+
+    ani_ref cbOnRef;
+    ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        return;
+    }
+
+    auto callback = make_shared<DowngradeCallbackAniImpl>(env, cbOnRef);
+    auto data = downgradeDlSync->DoDowngradeDlStartTransfer(uri, callback);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("downgrade download do downgradeDlStartTransfer failed, ret = %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
 } // namespace OHOS::FileManagement::CloudSync

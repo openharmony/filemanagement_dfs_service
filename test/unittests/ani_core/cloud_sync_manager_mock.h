@@ -72,6 +72,8 @@ public:
     MOCK_METHOD2(StartDowngrade, int32_t(const std::string &bundleName,
                            const std::shared_ptr<DowngradeDlCallback> downloadCallback));
     MOCK_METHOD1(StopDowngrade, int32_t(const std::string &bundleName));
+    MOCK_METHOD3(StartTransfer, int32_t(const std::string &bundleName, const std::string &targetUri,
+                 const std::shared_ptr<DowngradeDlCallback> downloadCallback));
     MOCK_METHOD2(GetCloudFileInfo, int32_t(const std::string &bundleName, CloudFileInfo &cloudFileInfo));
     // file version
     MOCK_METHOD3(GetHistoryVersionList, int32_t(const std::string &uri, const int32_t versionNumLimit,

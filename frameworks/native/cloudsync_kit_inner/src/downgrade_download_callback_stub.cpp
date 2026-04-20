@@ -25,6 +25,9 @@ DowngradeDownloadCallbackStub::DowngradeDownloadCallbackStub()
     opToInterfaceMap_[SERVICE_CMD_ON_PROCESS] = [this](MessageParcel &data, MessageParcel &reply) {
         return this->HandleOnProcess(data, reply);
     };
+    opToInterfaceMap_[SERVICE_CMD_ON_TF_PROCESS] = [this](MessageParcel &data, MessageParcel &reply) {
+        return this->HandleOnTfProcess(data, reply);
+    };
 }
 
 int32_t DowngradeDownloadCallbackStub::OnRemoteRequest(uint32_t code,
@@ -53,6 +56,18 @@ int32_t DowngradeDownloadCallbackStub::HandleOnProcess(MessageParcel &data, Mess
     }
 
     OnDownloadProcess(*progress);
+    return E_OK;
+}
+
+int32_t DowngradeDownloadCallbackStub::HandleOnTfProcess(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<DowngradeTfProgress> progress = data.ReadParcelable<DowngradeTfProgress>();
+    if (!progress) {
+        LOGE("object of DowngradeTfProgress is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    OnTransferProcess(*progress);
     return E_OK;
 }
 

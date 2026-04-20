@@ -159,6 +159,16 @@ public:
      */
     virtual int32_t StopDowngrade(const std::string &bundleName) = 0;
     /**
+     * @brief 开始数据搬迁
+     *
+     * @param bundleName 降级应用包名
+     * @param targetUri 指定搬迁地址
+     * @param downloadCallback 搬迁进度回调函数
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StartTransfer(const std::string &bundleName, const std::string &targetUri,
+                                  const std::shared_ptr<DowngradeDlCallback> downloadCallback) = 0;
+    /**
      * @brief 获取应用文件信息
      *
      * @param bundleName 应用包名
