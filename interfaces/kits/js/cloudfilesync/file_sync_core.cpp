@@ -207,4 +207,32 @@ FsResult<void> FileSyncCore::DoGetUploadList(const vector<string> &uriVec,
     LOGI("GetUploadList success, result size: %{public}zu", uploadList.size());
     return FsResult<void>::Success();
 }
+
+FsResult<void> FileSyncCore::DoPauseUpload(const string &uri)
+{
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
+        return FsResult<void>::Error(Convert2ErrNum(E_ILLEGAL_URI));
+    }
+    int32_t ret = CloudSyncManager::GetInstance().PauseUpload(uri);
+    if (ret != E_OK) {
+        LOGE("PauseUpload failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    return FsResult<void>::Success();
+}
+
+FsResult<void> FileSyncCore::DoResumeUpload(const string &uri)
+{
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
+        return FsResult<void>::Error(Convert2ErrNum(E_ILLEGAL_URI));
+    }
+    int32_t ret = CloudSyncManager::GetInstance().ResumeUpload(uri);
+    if (ret != E_OK) {
+        LOGE("ResumeUpload failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    return FsResult<void>::Success();
+}
 } // namespace OHOS::FileManagement::CloudSync

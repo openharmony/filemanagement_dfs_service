@@ -130,6 +130,10 @@ public:
                                                const BundleNameUserInfo &bundleNameUserInfo,
                                                const std::string &callbackId);
 
+    virtual int32_t PauseUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
+
+    virtual int32_t ResumeUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
+
     // periodic clean task
     void PeriodicCleanLock();
     void PeriodicCleanUnlock();

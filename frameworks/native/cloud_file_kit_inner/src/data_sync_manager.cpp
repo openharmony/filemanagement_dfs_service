@@ -299,6 +299,16 @@ void DataSyncManager::UnRegisterUploadCallback(const std::string &bundleName,
     return;
 }
 
+int32_t DataSyncManager::PauseUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::ResumeUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri)
+{
+    return E_OK;
+}
+
 void DataSyncManager::PeriodicCleanLock()
 {
     LOGI("PeriodicClean lock");

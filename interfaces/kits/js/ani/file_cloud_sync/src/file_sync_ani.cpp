@@ -447,4 +447,48 @@ ani_array FileSyncAni::FileSyncGetUploadList(ani_env *env, ani_object object, an
     }
     return result;
 }
+
+void FileSyncAni::FileSyncPauseUpload(ani_env *env, ani_object object, ani_string uri)
+{
+    auto fileSync = FileSyncUnwrap(env, object);
+    if (fileSync == nullptr) {
+        LOGE("Cannot wrap fileSync.");
+        ErrorHandler::Throw(env, E_IPCSS);
+        return;
+    }
+    std::string uriStr;
+    ani_status ret = ANIUtils::AniString2String(env, uri, uriStr);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, E_IPCSS);
+        return;
+    }
+    auto data = fileSync->DoPauseUpload(uriStr);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("file sync pause upload failed, ret: %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
+
+void FileSyncAni::FileSyncResumeUpload(ani_env *env, ani_object object, ani_string uri)
+{
+    auto fileSync = FileSyncUnwrap(env, object);
+    if (fileSync == nullptr) {
+        LOGE("Cannot wrap fileSync.");
+        ErrorHandler::Throw(env, E_IPCSS);
+        return;
+    }
+    std::string uriStr;
+    ani_status ret = ANIUtils::AniString2String(env, uri, uriStr);
+    if (ret != ANI_OK) {
+        ErrorHandler::Throw(env, E_IPCSS);
+        return;
+    }
+    auto data = fileSync->DoResumeUpload(uriStr);
+    if (!data.IsSuccess()) {
+        const auto &err = data.GetError();
+        LOGE("file sync resume upload failed, ret: %{public}d", err.GetErrNo());
+        ErrorHandler::Throw(env, err);
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync

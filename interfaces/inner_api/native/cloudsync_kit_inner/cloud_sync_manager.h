@@ -245,6 +245,10 @@ public:
      */
     virtual int32_t SetMediaPreShared(const std::string &albumId, const std::string &albumName,
         const std::string &localPath) = 0;
+
+    virtual int32_t PauseUpload(const std::string &uri) = 0;
+
+    virtual int32_t ResumeUpload(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -490,4 +490,116 @@ HWTEST_F(FileSyncCoreTest, DoUnRegisterUploadProgressTest4, TestSize.Level1)
     EXPECT_TRUE(ret.IsSuccess());
 }
 
+/**
+ * @tc.name: DoPauseUploadTest1
+ * @tc.desc: Verify to FileSyncCore::DoPauseUpload function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoPauseUploadTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "file://path1";
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, PauseUpload(_)).WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoPauseUpload(uri);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoPauseUploadTest2
+ * @tc.desc: Verify to FileSyncCore::DoPauseUpload function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoPauseUploadTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "file://path1";
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, PauseUpload(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = fileSync->DoPauseUpload(uri);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoPauseUploadTest3
+ * @tc.desc: Verify to FileSyncCore::DoPauseUpload function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoPauseUploadTest3, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "";
+    auto ret = fileSync->DoPauseUpload(uri);
+    EXPECT_EQ(ret.GetError().GetErrNo(), OHOS::FileManagement::E_INVALID_URI);
+}
+
+/**
+ * @tc.name: DoResumeUploadTest1
+ * @tc.desc: Verify to FileSyncCore::DoResumeUpload function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoResumeUploadTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "file://path1";
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, ResumeUpload(_)).WillOnce(Return(OHOS::FileManagement::E_OK));
+    
+    auto ret = fileSync->DoResumeUpload(uri);
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: DoResumeUploadTest2
+ * @tc.desc: Verify to FileSyncCore::DoResumeUpload function with error
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoResumeUploadTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "file://path1";
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, ResumeUpload(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    
+    auto ret = fileSync->DoResumeUpload(uri);
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DoResumeUploadTest3
+ * @tc.desc: Verify to FileSyncCore::DoResumeUpload function
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(FileSyncCoreTest, DoResumeUploadTest3, TestSize.Level1)
+{
+    std::string bundleName = "com.example.test";
+    FileSyncCore *fileSync = FileSyncCore::Constructor(bundleName).GetData().value();
+    std::string uri = "";
+    auto ret = fileSync->DoResumeUpload(uri);
+    EXPECT_EQ(ret.GetError().GetErrNo(), OHOS::FileManagement::E_INVALID_URI);
+}
+
 } // namespace OHOS::FileManagement::CloudDisk::Test

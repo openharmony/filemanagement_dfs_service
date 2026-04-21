@@ -58,6 +58,7 @@ const std::string FileColumn::LOCAL_FLAG = "local_flag";
 //  description for LOCAL_FLAG shift
 const uint64_t FileColumn::LOCAL_FLAG_MASK_ISCONFLICT = (1 << 0);
 const uint64_t FileColumn::LOCAL_FLAG_MASK_ISLOCALDIRTY = (1 << 1);
+const uint64_t FileColumn::LOCAL_FLAG_MASK_ISPAUSED = (1 << 2);
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +

@@ -484,6 +484,14 @@ export default namespace cloudSync {
             });
         }
 
+        pauseUpload(uri: string): void {
+            this.FileSyncPauseUpload(uri);
+        }
+
+        resumeUpload(uri: string): void {
+            this.FileSyncResumeUpload(uri);
+        }
+
         registerUploadProgress(callback: Callback<UploadProgress>): void {
             this.RegisterUploadProgressInner(callback);
         }
@@ -498,6 +506,8 @@ export default namespace cloudSync {
         native FileSyncRegisterUploadProgress(callback: Callback<UploadProgress>): void;
         native FileSyncUnRegisterUploadProgress(): void;
         native FileSyncGetUploadList(uris: Array<string>): Array<UploadProgress>;
+        native FileSyncPauseUpload(uri: string): void;
+        native FileSyncResumeUpload(uri: string): void;
 
 
         RegisterUploadProgressInner(callback: Callback<UploadProgress>): void {

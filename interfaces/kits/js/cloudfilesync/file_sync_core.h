@@ -39,6 +39,8 @@ public:
     FsResult<void> DoUnRegisterUploadProgress();
     FsResult<void> DoGetUploadList(const std::vector<std::string> &uriVec,
                                     std::vector<CloudSync::UploadProgressObj> &uploadList);
+    FsResult<void> DoPauseUpload(const std::string &uri);
+    FsResult<void> DoResumeUpload(const std::string &uri);
 
     const std::string &GetBundleName() const;
     explicit FileSyncCore(const std::string &bundleName);

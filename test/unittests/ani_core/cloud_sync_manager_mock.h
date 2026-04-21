@@ -102,6 +102,8 @@ public:
     MOCK_METHOD1(UnRegisterUploadCallback, int32_t(const UploadCallbackInfo &uploadCallbackInfo));
     MOCK_METHOD3(SetMediaPreShared, int32_t(const std::string &albumId, const std::string &albumName,
         const std::string &localPath));
+    MOCK_METHOD1(PauseUpload, int32_t(const std::string &uri));
+    MOCK_METHOD1(ResumeUpload, int32_t(const std::string &uri));
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK
