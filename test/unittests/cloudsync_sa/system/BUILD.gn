@@ -37,7 +37,6 @@ ohos_unittest("dfsu_fd_guard_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
-    "image_framework:image_native",
   ]
 
   defines = [ "private=public" ]
@@ -83,7 +82,6 @@ ohos_unittest("dfsu_access_token_helper_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
-    "image_framework:image_native",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
@@ -122,7 +120,6 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
-    "image_framework:image_native",
   ]
 
   defines = [ "private=public" ]
