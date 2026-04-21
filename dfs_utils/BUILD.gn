@@ -50,6 +50,8 @@ ohos_shared_library("libdfsutils") {
   ]
 
   external_deps = [
+    "ability_base:base",
+    "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:uri_permission_mgr",
     "access_token:libaccesstoken_sdk",
@@ -58,6 +60,8 @@ ohos_shared_library("libdfsutils") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:libaccountkits",
     "os_account:os_account_innerkits",
   ]

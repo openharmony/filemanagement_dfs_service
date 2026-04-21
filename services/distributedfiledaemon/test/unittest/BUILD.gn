@@ -872,6 +872,8 @@ ohos_unittest("softbus_handler_asset_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
     "zlib:shared_libz"
@@ -941,6 +943,8 @@ ohos_unittest("softbus_handler_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
@@ -1035,6 +1039,7 @@ ohos_unittest("softbus_session_listener_test") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
@@ -1043,6 +1048,8 @@ ohos_unittest("softbus_session_listener_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
@@ -1216,6 +1223,8 @@ ohos_unittest("softbus_permission_check_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
     "zlib:shared_libz",
@@ -1289,6 +1298,7 @@ ohos_unittest("system_notifier_test") {
     "hisysevent:libhisysevent",
     "i18n:intl_util",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "zlib:shared_libz",
