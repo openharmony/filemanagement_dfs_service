@@ -64,10 +64,6 @@ bool ControlCmdParser::ParseFromJson(const std::string &jsonStr, ControlCmd &out
     if (j.contains("msgBody") && j["msgBody"].is_string()) {
         outCmd.msgBody = j["msgBody"].get<std::string>();
     }
-
-    if (j.contains("networkId") && j["networkId"].is_string()) {
-        outCmd.networkId = j["networkId"].get<std::string>();
-    }
     return true;
 }
 
@@ -78,7 +74,6 @@ bool ControlCmdParser::SerializeToJson(const ControlCmd &cmd, std::string &outJs
     j["msgId"] = cmd.msgId;
     j["msgType"] = cmd.msgType;
     j["msgBody"] = cmd.msgBody;
-    j["networkId"] = cmd.networkId;
 
     constexpr auto indent = -1;
     constexpr auto indent_char = ' ';

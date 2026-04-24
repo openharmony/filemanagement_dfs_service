@@ -85,8 +85,7 @@ HWTEST_F(ControlCmdParserTest, ParseValidJson_001, TestSize.Level1)
         "version": 1,
         "msgId": 1001,
         "msgType": 1,
-        "msgBody": "testbody",
-        "networkId": "test-network"
+        "msgBody": "testbody"
     })";
 
     ControlCmd cmd;
@@ -95,7 +94,6 @@ HWTEST_F(ControlCmdParserTest, ParseValidJson_001, TestSize.Level1)
     EXPECT_EQ(cmd.msgId, 1001);
     EXPECT_EQ(cmd.msgType, 1);
     EXPECT_EQ(cmd.msgBody, "testbody");
-    EXPECT_EQ(cmd.networkId, "test-network");
 }
 
 /**
@@ -312,7 +310,6 @@ HWTEST_F(ControlCmdParserTest, SerializeToJson_ValidInput, TestSize.Level1)
     EXPECT_EQ(parsedCmd.msgId, cmd.msgId);
     EXPECT_EQ(parsedCmd.msgType, cmd.msgType);
     EXPECT_EQ(parsedCmd.msgBody, cmd.msgBody);
-    EXPECT_EQ(parsedCmd.networkId, cmd.networkId);
 }
 
 /**
