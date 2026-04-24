@@ -13,6 +13,7 @@
  * limitations under the License.
  */
  
+#include <filesystem>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
