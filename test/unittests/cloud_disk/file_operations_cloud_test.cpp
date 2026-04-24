@@ -3392,5 +3392,4 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest018, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SetXattrTest018 End";
 }
-
 }

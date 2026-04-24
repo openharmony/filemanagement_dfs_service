@@ -302,4 +302,27 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
 {
     return E_OK;
 }
+
+int32_t CloudDiskRdbStore::GetSourcePathFromAttr(const std::string &cloudId, std::string &sourcePath)
+{
+    if (cloudId == "mock") {
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::HandleRestore(string &name, const string &parentCloudId,
+    const string &cloudId, string &newName, int32_t &value)
+{
+    if (cloudId == "mock") {
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::HandleRecycle(const string &name, const string &parentCloudId,
+    const string &cloudId, int32_t &value)
+{
+    return E_OK;
+}
 }

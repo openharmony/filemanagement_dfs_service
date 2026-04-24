@@ -160,6 +160,11 @@ bool CloudFileUtils::CheckIsRecyclePath(const string &key)
     return false;
 }
 
+bool CloudFileUtils::CheckIsSourcePath(const string &key)
+{
+    return false;
+}
+
 string CloudFileUtils::GetRealPath(const string &path)
 {
     return "";
