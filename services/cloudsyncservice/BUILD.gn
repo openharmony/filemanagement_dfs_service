@@ -132,6 +132,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/cycle_task/tasks/report_statistics_task.cpp",
     "src/cycle_task/tasks/save_subscription_task.cpp",
     "src/cycle_task/tasks/database_backup_task.cpp",
+    "src/cycle_task/tasks/database_supplement_task.cpp",
   ]
 
   transport = [
@@ -259,6 +260,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/cycle_task/tasks/report_statistics_task.cpp",
     "src/cycle_task/tasks/save_subscription_task.cpp",
     "src/cycle_task/tasks/database_backup_task.cpp",
+    "src/cycle_task/tasks/database_supplement_task.cpp",
   ]
 
   transport = [

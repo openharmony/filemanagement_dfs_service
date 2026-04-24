@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include <ctime>
+#include <fstream>
 #include <sys/stat.h>
 #include <sstream>
 #include <functional>
@@ -30,12 +31,14 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "cloud_file_utils.h"
 #include "data_syncer_rdb_store.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "file_column.h"
 #include "ffrt_inner.h"
+#include "migration_manager.h"
 #include "nlohmann/json.hpp"
 #include "parameter.h"
 #include "parameters.h"
@@ -133,9 +136,20 @@ int32_t CloudDiskRdbStore::RdbInit()
         LOGE("wait move error");
         return EBUSY;
     }
-    LOGD("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
-    string baseDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/";
-    string customDir = baseDir.append(system::GetParameter(FILEMANAGER_KEY, ""));
+    
+    string filemanager = system::GetParameter(FILEMANAGER_KEY, "");
+    
+    string customDir;
+    if (bundleName_ == filemanager) {
+        customDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/" + filemanager;
+    } else {
+        CloudDisk::MigrationManager::GetInstance().WaitForAppMigration(userId_, bundleName_);
+        customDir = SelectDbDir(userId_, bundleName_, filemanager);
+    }
+    
+    LOGD("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s, path=%{public}s",
+         userId_, bundleName_.c_str(), GetAnonyString(customDir).c_str());
+    
     string name = CLOUD_DISK_DATABASE_NAME;
     int32_t errCode = 0;
     string databasePath = RdbSqlUtils::GetDefaultDatabasePath(customDir, CLOUD_DISK_DATABASE_NAME, errCode);
@@ -160,8 +174,41 @@ int32_t CloudDiskRdbStore::RdbInit()
             }
         }
         return errCode;
-    } else if (errCode == NativeRdb::E_SQLITE_CORRUPT) { DatabaseRestore(); }
+    }
+    
+    if (errCode == NativeRdb::E_SQLITE_CORRUPT) { DatabaseRestore(); }
     return E_OK;
+}
+
+string CloudDiskRdbStore::SelectDbDir(int32_t userId, const string& bundleName, const string& filemanager)
+{
+    string newDbDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/" + bundleName;
+    string oldDbDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/" + filemanager;
+    
+    string migratedMarker = newDbDir + "/.migrated";
+    string migratingMarker = newDbDir + "/.migrating";
+    string rdbDir = newDbDir + "/rdb";
+    
+    if (access(migratingMarker.c_str(), F_OK) == 0) {
+        return oldDbDir;
+    }
+    
+    if (access(migratedMarker.c_str(), F_OK) == 0) {
+        return newDbDir;
+    }
+    
+    if (access(rdbDir.c_str(), F_OK) != 0) {
+        if (access(newDbDir.c_str(), F_OK) != 0) {
+            if (mkdir(newDbDir.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+                LOGE("failed to create dir, err=%{public}d", errno);
+            }
+        }
+        ofstream migratedFile(migratedMarker);
+        migratedFile.close();
+        return newDbDir;
+    }
+    
+    return oldDbDir;
 }
 
 void CloudDiskRdbStore::Stop()
@@ -185,7 +232,7 @@ void CloudDiskRdbStore::DatabaseRestore()
     }
     LOGI("clouddisk db image is malformed, need to restore");
     auto fileName = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/" +
-        system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
+        bundleName_ + "/backup/clouddisk_backup.db";
     if (access(fileName.c_str(), F_OK) == 0) {
         int32_t ret = -1;
         {

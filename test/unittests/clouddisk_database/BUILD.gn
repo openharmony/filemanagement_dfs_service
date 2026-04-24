@@ -107,6 +107,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
+    "${services_path}/clouddisk_database/src/migration_manager.cpp",
   ]
 
   sources += clouddisk_database
@@ -682,6 +683,50 @@ ohos_unittest("clouddisk_notify_utils_test") {
   use_exceptions = true
 }
 
+ohos_unittest("migration_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${services_path}/clouddisk_database/src/file_column.cpp",
+    "${services_path}/clouddisk_database/src/migration_manager.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/migration_rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "migration_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${services_path}/cloudsyncservice/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DISK_DATABASE_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("clouddisk_database_test") {
   testonly = true
   deps = [
@@ -692,5 +737,6 @@ group("clouddisk_database_test") {
     ":clouddisk_rdbstore_static_test",
     ":clouddisk_rdbstore_test",
     ":clouddisk_sync_helper_test",
+    ":migration_manager_test",
   ]
 }
