@@ -54,13 +54,17 @@ void SystemLoadEvent::OnThermalLevelResult(const PowerMgr::ThermalLevel &level)
     LOGD("thermal level change, old is:%{public}d, new is %{public}d",
         static_cast<int32_t>(SystemLoadStatus::Getload()), static_cast<int32_t>(level));
     SystemLoadStatus::Setload(level);
-    if (level >= PowerMgr::ThermalLevel::HOT) {
-        LOGI("thermal over warm");
+    if (level >= PowerMgr::ThermalLevel::OVERHEATED) {
+        LOGI("thermal overheated");
         if (dataSyncManager_ == nullptr) {
             LOGE("dataSyncManager_ is nullptr");
             return;
         }
         dataSyncManager_->StopDownloadAndUploadTask();
+        return;
+    }
+    if (level >= PowerMgr::ThermalLevel::HOT) {
+        LOGI("thermal over warm");
         return;
     }
     ffrt::submit([level, this]() {

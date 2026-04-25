@@ -360,6 +360,26 @@ HWTEST_F(SytemLoadTest, OnThermalLevelResultTest0011, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnThermalLevelResultTest012
+ * @tc.desc: Verify the OnThermalLevelResult function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnThermalLevelResultTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest012 Start";
+    try {
+        systemLoadEvent_->dataSyncManager_ = nullptr;
+        systemLoadEvent_->OnThermalLevelResult(PowerMgr::ThermalLevel::OVERHEATED);
+        ffrt::wait();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnThermalLevelResultTest012 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnThermalLevelResultTest012 End";
+}
+
+/**
  * @tc.name: IsSystemLoadAllowedTest001
  * @tc.desc: Verify the IsSystemLoadAllowed function
  * @tc.type: FUNC
