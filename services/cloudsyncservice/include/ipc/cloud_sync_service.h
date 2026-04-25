@@ -121,7 +121,6 @@ public:
     ErrCode GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames,
                                              std::vector<LocalFilePresentStatus> &localFilePresentStatusList) override;
     ErrCode IsFinishPull(bool &finishFlag) override;
-    ErrCode GetDentryFileOccupy(int64_t &occupyNum) override;
     ErrCode GetAclXattrBatch(const bool isAccess, const std::vector<std::string> &filePaths,
                              std::vector<XattrResult> &aclXattrResults) override;
     ErrCode GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,

@@ -2261,27 +2261,6 @@ HWTEST_F(CloudSyncServiceTest, IsFinishPullTest005, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetDentryFileOccupyTest001
- * @tc.desc: Verify the GetDentryFileOccupy function.
- * @tc.type: FUNC
- * @tc.require: issues2770
- */
-HWTEST_F(CloudSyncServiceTest, GetDentryFileOccupyTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 start";
-    try {
-        int64_t num = 1;
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
-        auto ret = servicePtr_->GetDentryFileOccupy(num);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
-    } catch (...) {
-        EXPECT_FALSE(true);
-        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 failed";
-    }
-    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 end";
-}
-
-/**
  * @tc.name: GetAclXattrBatchTest001
  * @tc.desc: Verify the GetAclXattrBatch function with permission denied.
  * @tc.type: FUNC

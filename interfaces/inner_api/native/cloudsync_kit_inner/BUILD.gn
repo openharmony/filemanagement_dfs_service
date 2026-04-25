@@ -24,6 +24,7 @@ config("private_config") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/utils/log/include",
+    "${utils_path}/inner_api",
     "${utils_path}/system/include",
   ]
 }
@@ -68,6 +69,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${utils_path}/system/src/account_utils.cpp",
   ]
@@ -93,6 +95,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "os_account:os_account_innerkits",
+    "preferences:native_preferences",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

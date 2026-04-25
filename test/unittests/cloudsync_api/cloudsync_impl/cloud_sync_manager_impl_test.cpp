@@ -2109,31 +2109,341 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterFileSyncCallbackTest002, TestSize.Lev
  * @tc.name: GetDentryFileOccupyTest001
  * @tc.desc: Verify the GetDentryFileOccupy function.
  * @tc.type: FUNC
- * @tc.require: issues2770
  */
 HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 Start";
     try {
-        int64_t num = 1;
-        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
-        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFile = "/data/service/el2/" + std::to_string(userId) +
+            "/hmdfs/cache/account_cache/" + GLOBAL_CONFIG_FILE_PATH;
 
-        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_OK));
-        res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
+        if (fs::exists(configFile)) {
+            fs::remove(configFile);
+        }
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
         EXPECT_EQ(res, E_OK);
-
-        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
-        EXPECT_CALL(*serviceProxy_, GetDentryFileOccupy(_)).WillOnce(Return(E_PERMISSION_DENIED));
-        res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(num);
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_EQ(occupyNum, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "GetDentryFileOccupyTest001 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest002
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest002 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag=123" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 123);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest002 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest003
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest003 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag=xxx" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest003 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest004
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest004 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag123=xxx" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest004 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest005
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest005 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag123" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest005 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest006
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest006 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag=123456" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 123456);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest006 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest007
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest007 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFile);
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest007 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest008
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest008 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag=" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest008 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest009
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest009 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlag=123456789123456789123456789123456789123456789123456789123456789123456789" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest009 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest009 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest010
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest010 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        ofs << "SumOccupyFlagxxx=123" << std::endl;
+        ofs << "SumOccupyFlag" << std::endl;
+        ofs << "SumOccupyFlag=123" << std::endl;
+        ofs << "456" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 123);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest010 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest010 End";
+}
+
+/**
+ * @tc.name: GetDentryFileOccupyTest011
+ * @tc.desc: Verify the GetDentryFileOccupy function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDentryFileOccupyTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest011 Start";
+    try {
+        int32_t userId = getuid() / BASE_USER_RANGE;
+        std::string configFilePath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache";
+        std::string configFile = configFilePath + "/" + GLOBAL_CONFIG_FILE_PATH;
+        std::string rmCmd = "rm -rf " + configFile;
+        fs::create_directories(configFilePath);
+        std::ofstream ofs(configFile);
+        for (int32_t i = 0; i <= MAX_OCCUPY_LINE_LIMIT; ++i) {
+            ofs << std::to_string(i) << std::endl;
+        }
+        ofs << "SumOccupyFlag=123" << std::endl;
+        ofs.close();
+
+        int64_t occupyNum = -1;
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetDentryFileOccupy(occupyNum);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(occupyNum, 0);
+
+        std::system(rmCmd.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDentryFileOccupyTest011 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDentryFileOccupyTest011 End";
 }
 
 /**

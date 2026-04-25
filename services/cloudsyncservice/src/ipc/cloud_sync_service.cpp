@@ -1380,17 +1380,6 @@ int32_t CloudSyncService::IsFinishPull(bool &finishFlag)
     return dataSyncManager_->IsFinishPull(userId, bundleName, finishFlag);
 }
 
-int32_t CloudSyncService::GetDentryFileOccupy(int64_t &occupyNum)
-{
-    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
-    auto userId = DfsuAccessTokenHelper::GetUserId();
-    int32_t ret = dataSyncManager_->GetDentryFileOccupy(userId, occupyNum);
-    if (ret != E_OK) {
-        LOGE("GetDentryFileOccupy failed: %{public}d", ret);
-    }
-    return ret;
-}
-
 static std::vector<uint8_t> GetXattrValue(const std::string &path, const std::string &name)
 {
     // realpath
