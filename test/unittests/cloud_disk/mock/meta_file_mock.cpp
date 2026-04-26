@@ -19,6 +19,8 @@
 
 namespace OHOS {
 namespace FileManagement {
+constexpr uint32_t INVAL_USER_ID = 100;
+
 MetaFileMgr& MetaFileMgr::GetInstance()
 {
     static MetaFileMgr instance_;
@@ -100,6 +102,14 @@ int32_t CloudDiskMetaFile::DoRename(MetaBase &metaBase, const std::string &newNa
 
 int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
 {
+    return E_OK;
+}
+
+int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
+{
+    if (userId != INVAL_USER_ID) {
+        return EINVAL;
+    }
     return E_OK;
 }
 } // namespace FileManagement
