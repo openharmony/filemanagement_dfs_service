@@ -45,6 +45,23 @@ napi_value DowngradeProgressNapi::Constructor(napi_env env, napi_callback_info i
     return funcArg.GetThisVar();
 }
 
+napi_value DowngradeTfProgressNapi::Constructor(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    auto progressEntity = make_unique<DowngradeTfProgressEntity>();
+    if (progressEntity == nullptr) {
+        LOGE("Failed to request heap memory.");
+        return nullptr;
+    }
+    if (!NClass::SetEntityFor<DowngradeTfProgressEntity>(env, funcArg.GetThisVar(), move(progressEntity))) {
+        LOGE("Failed to set progressEntity.");
+        return nullptr;
+    }
+    return funcArg.GetThisVar();
+}
+
 napi_value DowngradeProgressNapi::GetState(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -54,6 +71,22 @@ napi_value DowngradeProgressNapi::GetState(napi_env env, napi_callback_info info
     auto progressEntity = NClass::GetEntityOf<DowngradeProgressEntity>(env, funcArg.GetThisVar());
     if (progressEntity == nullptr || progressEntity->progress == nullptr) {
         LOGE("Failed to get DowngradeProgressEntity.");
+    } else {
+        state = progressEntity->progress->state;
+    }
+
+    return NVal::CreateInt32(env, state).val_;
+}
+
+napi_value DowngradeTfProgressNapi::GetState(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int32_t state = static_cast<int32_t>(DowngradeTfProgress::State::STOPPED);
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
     } else {
         state = progressEntity->progress->state;
     }
@@ -77,6 +110,22 @@ napi_value DowngradeProgressNapi::GetSuccessfulCount(napi_env env, napi_callback
     return NVal::CreateInt32(env, succNum).val_;
 }
 
+napi_value DowngradeTfProgressNapi::GetSuccessfulCount(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int32_t succNum = -1;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
+    } else {
+        succNum = progressEntity->progress->successfulCount;
+    }
+
+    return NVal::CreateInt32(env, succNum).val_;
+}
+
 napi_value DowngradeProgressNapi::GetFailedCount(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -86,6 +135,22 @@ napi_value DowngradeProgressNapi::GetFailedCount(napi_env env, napi_callback_inf
     auto progressEntity = NClass::GetEntityOf<DowngradeProgressEntity>(env, funcArg.GetThisVar());
     if (progressEntity == nullptr || progressEntity->progress == nullptr) {
         LOGE("Failed to get DowngradeProgressEntity.");
+    } else {
+        failedNum = progressEntity->progress->failedCount;
+    }
+
+    return NVal::CreateInt32(env, failedNum).val_;
+}
+
+napi_value DowngradeTfProgressNapi::GetFailedCount(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int32_t failedNum = -1;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
     } else {
         failedNum = progressEntity->progress->failedCount;
     }
@@ -109,6 +174,22 @@ napi_value DowngradeProgressNapi::GetTotalCount(napi_env env, napi_callback_info
     return NVal::CreateInt32(env, totalNum).val_;
 }
 
+napi_value DowngradeTfProgressNapi::GetTotalCount(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int32_t totalNum = -1;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
+    } else {
+        totalNum = progressEntity->progress->totalCount;
+    }
+
+    return NVal::CreateInt32(env, totalNum).val_;
+}
+
 napi_value DowngradeProgressNapi::GetDownloadedSize(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -125,6 +206,22 @@ napi_value DowngradeProgressNapi::GetDownloadedSize(napi_env env, napi_callback_
     return NVal::CreateInt64(env, downloadSize).val_;
 }
 
+napi_value DowngradeTfProgressNapi::GetTransferredSize(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int64_t transferSize = INT64_MAX;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
+    } else {
+        transferSize = progressEntity->progress->transferredSize;
+    }
+
+    return NVal::CreateInt64(env, transferSize).val_;
+}
+
 napi_value DowngradeProgressNapi::GetTotalSize(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -134,6 +231,22 @@ napi_value DowngradeProgressNapi::GetTotalSize(napi_env env, napi_callback_info 
     auto progressEntity = NClass::GetEntityOf<DowngradeProgressEntity>(env, funcArg.GetThisVar());
     if (progressEntity == nullptr || progressEntity->progress == nullptr) {
         LOGE("Failed to get DowngradeProgressEntity.");
+    } else {
+        totalSize = progressEntity->progress->totalSize;
+    }
+
+    return NVal::CreateInt64(env, totalSize).val_;
+}
+
+napi_value DowngradeTfProgressNapi::GetTotalSize(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int64_t totalSize = INT64_MAX;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
     } else {
         totalSize = progressEntity->progress->totalSize;
     }
@@ -157,7 +270,28 @@ napi_value DowngradeProgressNapi::GetStopReason(napi_env env, napi_callback_info
     return NVal::CreateInt32(env, stopReason).val_;
 }
 
+napi_value DowngradeTfProgressNapi::GetStopReason(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    funcArg.InitArgs(NARG_CNT::ZERO);
+
+    int32_t stopReason = DowngradeTfProgress::StopReason::OTHER_REASON;
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env, funcArg.GetThisVar());
+    if (progressEntity == nullptr || progressEntity->progress == nullptr) {
+        LOGE("Failed to get DowngradeTfProgressEntity.");
+    } else {
+        stopReason = progressEntity->progress->stopReason;
+    }
+
+    return NVal::CreateInt32(env, stopReason).val_;
+}
+
 std::string DowngradeProgressNapi::GetClassName()
+{
+    return className_;
+}
+
+std::string DowngradeTfProgressNapi::GetClassName()
 {
     return className_;
 }
@@ -193,4 +327,37 @@ bool DowngradeProgressNapi::Export()
 
     return exports_.AddProp(className, classValue);
 }
+
+bool DowngradeTfProgressNapi::Export()
+{
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiGetter("state", GetState),
+        NVal::DeclareNapiGetter("successfulCount", GetSuccessfulCount),
+        NVal::DeclareNapiGetter("failedCount", GetFailedCount),
+        NVal::DeclareNapiGetter("totalCount", GetTotalCount),
+        NVal::DeclareNapiGetter("transferredSize", GetTransferredSize),
+        NVal::DeclareNapiGetter("totalSize", GetTotalSize),
+        NVal::DeclareNapiGetter("stopReason", GetStopReason),
+    };
+
+    string className = GetClassName();
+    bool succ = false;
+    napi_value classValue = nullptr;
+    tie(succ, classValue) =
+        NClass::DefineClass(exports_.env_, className, DowngradeTfProgressNapi::Constructor, move(props));
+    if (!succ) {
+        LOGE("Define class exceptions");
+        NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(exports_.env_);
+        return false;
+    }
+    succ = NClass::SaveClass(exports_.env_, className, classValue);
+    if (!succ) {
+        LOGE("Save class exceptions");
+        NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(exports_.env_);
+        return false;
+    }
+
+    return exports_.AddProp(className, classValue);
+}
+
 } // namespace OHOS::FileManagement::CloudSync

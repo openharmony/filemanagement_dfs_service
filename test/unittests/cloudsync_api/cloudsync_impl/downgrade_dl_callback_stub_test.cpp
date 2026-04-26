@@ -33,6 +33,7 @@ class DowngradeDownloadCallbackStubMock : public DowngradeDownloadCallbackStub {
 public:
     DowngradeDownloadCallbackStubMock() {}
     void OnDownloadProcess(const DowngradeProgress &progress) override {}
+    void OnTransferProcess(const DowngradeTfProgress &progress) override {}
 };
 
 class DowngradeDownloadCallbackStubTest : public testing::Test {

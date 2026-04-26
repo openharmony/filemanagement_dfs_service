@@ -26,6 +26,7 @@ class DowngradeDlCallback {
 public:
     virtual ~DowngradeDlCallback() = default;
     virtual void OnDownloadProcess(const DowngradeProgress &progress) = 0;
+    virtual void OnTransferProcess(const DowngradeTfProgress &progress) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -139,6 +139,40 @@ bool DowngradeProgress::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool DowngradeTfProgress::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteInt32(state)) {
+        LOGE("failed to write download state");
+        return false;
+    }
+    if (!parcel.WriteInt32(stopReason)) {
+        LOGE("failed to write stopReason");
+        return false;
+    }
+    if (!parcel.WriteInt64(transferredSize)) {
+        LOGE("failed to write transferredSize");
+        return false;
+    }
+    if (!parcel.WriteInt64(totalSize)) {
+        LOGE("failed to write totalSize");
+        return false;
+    }
+    if (!parcel.WriteInt32(successfulCount)) {
+        LOGE("failed to write successfulCount");
+        return false;
+    }
+    if (!parcel.WriteInt32(failedCount)) {
+        LOGE("failed to write failedCount");
+        return false;
+    }
+    if (!parcel.WriteInt32(totalCount)) {
+        LOGE("failed to write totalCount");
+        return false;
+    }
+
+    return true;
+}
+
 bool CloudFileInfo::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteInt32(cloudfileCount)) {
@@ -243,6 +277,17 @@ DownloadProgressObj *DownloadProgressObj::Unmarshalling(Parcel &parcel)
 DowngradeProgress *DowngradeProgress::Unmarshalling(Parcel &parcel)
 {
     DowngradeProgress *info = new (std::nothrow) DowngradeProgress();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+DowngradeTfProgress *DowngradeTfProgress::Unmarshalling(Parcel &parcel)
+{
+    DowngradeTfProgress *info = new (std::nothrow) DowngradeTfProgress();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;
@@ -483,6 +528,43 @@ bool DowngradeProgress::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
+bool DowngradeTfProgress::ReadFromParcel(Parcel &parcel)
+{
+    int32_t temp = 0;
+    if (!parcel.ReadInt32(temp)) {
+        LOGE("failed to read download state");
+        return false;
+    }
+    state = static_cast<State>(temp);
+    if (!parcel.ReadInt32(temp)) {
+        LOGE("failed to read stopReason");
+        return false;
+    }
+    stopReason = static_cast<StopReason>(temp);
+    if (!parcel.ReadInt64(transferredSize)) {
+        LOGE("failed to read transferredSize");
+        return false;
+    }
+    if (!parcel.ReadInt64(totalSize)) {
+        LOGE("failed to read totalSize");
+        return false;
+    }
+    if (!parcel.ReadInt32(successfulCount)) {
+        LOGE("failed to read successfulCount");
+        return false;
+    }
+    if (!parcel.ReadInt32(failedCount)) {
+        LOGE("failed to read failedCount");
+        return false;
+    }
+    if (!parcel.ReadInt32(totalCount)) {
+        LOGE("failed to read totalCount");
+        return false;
+    }
+
+    return true;
+}
+
 bool CloudFileInfo::ReadFromParcel(Parcel &parcel)
 {
     if (!parcel.ReadInt32(cloudfileCount)) {
@@ -573,6 +655,19 @@ std::string DowngradeProgress::to_string() const
     ss << " successfulCount: " << successfulCount;
     ss << " failedCount: " << failedCount;
     ss << " totalCount: " << totalCount << "]";
+    return ss.str();
+}
+
+std::string DowngradeTfProgress::to_string() const
+{
+    std::stringstream ss;
+    ss << "DowngradeTfProgress [Transferstate: " << state;
+    ss << " , " << successfulCount;
+    ss << " , " << failedCount;
+    ss << " , " << totalCount;
+    ss << " , " << transferredSize;
+    ss << " , " << totalSize;
+    ss << " , " << stopReason << "]";
     return ss.str();
 }
 

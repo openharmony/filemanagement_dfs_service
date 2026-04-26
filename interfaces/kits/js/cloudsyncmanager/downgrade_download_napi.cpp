@@ -76,6 +76,23 @@ napi_value DowngradeDlCallbackImpl::ConvertToValue()
     return progressVal;
 }
 
+napi_value DowngradeDlCallbackImpl::TfConvertToValue()
+{
+    napi_value progressVal = NClass::InstantiateClass(env_, DowngradeTfProgressNapi::className_, {});
+    if (progressVal == nullptr) {
+        LOGE("Failed to instantiate class");
+        return nullptr;
+    }
+    auto progressEntity = NClass::GetEntityOf<DowngradeTfProgressEntity>(env_, progressVal);
+    if (progressEntity == nullptr) {
+        LOGE("Failed to get progressEntity.");
+        return nullptr;
+    }
+
+    progressEntity->progress = tfProgress_;
+    return progressVal;
+}
+
 void DowngradeDlCallbackImpl::UpdateDownloadProgress(const DowngradeProgress &progress)
 {
     if (dlProgress_ == nullptr) {
@@ -89,6 +106,21 @@ void DowngradeDlCallbackImpl::UpdateDownloadProgress(const DowngradeProgress &pr
     dlProgress_->failedCount = progress.failedCount;
     dlProgress_->totalCount = progress.totalCount;
     dlProgress_->stopReason = static_cast<int32_t>(progress.stopReason);
+}
+
+void DowngradeDlCallbackImpl::UpdateTransferProgress(const DowngradeTfProgress &progress)
+{
+    if (tfProgress_ == nullptr) {
+        tfProgress_ = std::make_shared<BatchTransferProgress>();
+    }
+
+    tfProgress_->state = static_cast<int32_t>(progress.state);
+    tfProgress_->transferredSize = progress.transferredSize;
+    tfProgress_->totalSize = progress.totalSize;
+    tfProgress_->successfulCount = progress.successfulCount;
+    tfProgress_->failedCount = progress.failedCount;
+    tfProgress_->totalCount = progress.totalCount;
+    tfProgress_->stopReason = static_cast<int32_t>(progress.stopReason);
 }
 
 void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progress)
@@ -119,6 +151,51 @@ void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progres
                 return;
             }
             napi_value jsProgress = callbackImpl->ConvertToValue();
+            if (jsProgress == nullptr) {
+                napi_close_handle_scope(env, scope);
+                return;
+            }
+            napi_value jsResult = nullptr;
+            status = napi_call_function(env, nullptr, jsCallback, 1, &jsProgress, &jsResult);
+            if (status != napi_ok) {
+                LOGE("napi call function failed, status: %{public}d", status);
+            }
+            napi_close_handle_scope(env, scope);
+        },
+        napi_eprio_immediate, taskName_.c_str());
+    if (status != napi_ok) {
+        LOGE("Failed to execute libuv work queue, status: %{public}d", status);
+    }
+}
+
+void DowngradeDlCallbackImpl::OnTransferProcess(const DowngradeTfProgress &progress)
+{
+    LOGD("Start OnTransferProcess");
+    UpdateTransferProgress(progress);
+    std::shared_ptr<DowngradeDlCallbackImpl> callbackImpl = shared_from_this();
+    napi_status status = napi_send_event(
+        callbackImpl->env_,
+        [callbackImpl]() mutable {
+            auto env = callbackImpl->env_;
+            auto ref = callbackImpl->cbOnRef_;
+            if (env == nullptr || ref == nullptr) {
+                LOGE("The env context is invalid");
+                return;
+            }
+            napi_handle_scope scope = nullptr;
+            napi_status status = napi_open_handle_scope(env, &scope);
+            if (status != napi_ok) {
+                LOGE("Failed to open handle scope, status: %{public}d", status);
+                return;
+            }
+            napi_value jsCallback = nullptr;
+            status = napi_get_reference_value(env, ref, &jsCallback);
+            if (status != napi_ok) {
+                LOGE("Create reference failed, status: %{public}d", status);
+                napi_close_handle_scope(env, scope);
+                return;
+            }
+            napi_value jsProgress = callbackImpl->TfConvertToValue();
             if (jsProgress == nullptr) {
                 napi_close_handle_scope(env, scope);
                 return;
@@ -191,6 +268,7 @@ bool DowngradeDownloadNapi::Export()
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("startDownload", DowngradeDownloadNapi::StartDownload),
         NVal::DeclareNapiFunction("stopDownload", DowngradeDownloadNapi::StopDownload),
+        NVal::DeclareNapiFunction("startTransfer", DowngradeDownloadNapi::StartTransfer),
         NVal::DeclareNapiFunction("getCloudFileInfo", DowngradeDownloadNapi::GetCloudFileInfo),
     };
 
@@ -283,6 +361,73 @@ napi_value DowngradeDownloadNapi::StopDownload(napi_env env, napi_callback_info 
     string taskName = "cloudSyncManager.DowngradeDownload.stopDownload";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO), taskName);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+static tuple<bool, string, NVal> GetTransferParam(const napi_env &env, const NFuncArg &funcArg)
+{
+    NVal res;
+    auto [succ, targetUriVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("unavailable targetUri.");
+        return {false, "", res};
+    }
+    string targetUri = targetUriVal.get();
+    if (targetUri.empty()) {
+        LOGE("targetUri is empty.");
+        return {false, "", res};
+    }
+
+    NVal callbackVal(env, funcArg[NARG_POS::SECOND]);
+    if (!callbackVal.TypeIs(napi_function)) {
+        LOGE("transfer argument type mismatch");
+        return {false, "", res};
+    }
+
+    return make_tuple(true, move(targetUri), move(callbackVal));
+}
+
+napi_value DowngradeDownloadNapi::StartTransfer(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO)) {
+        LOGE("Start transfer Number of arguments unmatched");
+        NError(E_INVALID_ARGUMENT).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto[succ, targetUriVal, callbackVal] = GetTransferParam(env, funcArg);
+    if (!succ) {
+        LOGE("Start Transfer param is unavailable,");
+        NError(E_INVALID_ARGUMENT).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto downgradeEntity = NClass::GetEntityOf<DowngradeEntity>(env, funcArg.GetThisVar());
+    if (!downgradeEntity) {
+        LOGE("Failed to get downgrade entity.");
+        NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (downgradeEntity->callbackImpl == nullptr) {
+        downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env, callbackVal.val_);
+        if (downgradeEntity->callbackImpl == nullptr) {
+            LOGE("Failed to get transfer callback");
+            NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
+            return nullptr;
+        }
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().StartTransfer(
+        downgradeEntity->bundleName, targetUriVal, downgradeEntity->callbackImpl);
+    if (ret != E_OK) {
+        LOGE("Start transfer failed! ret = %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
+    LOGI("Start transfer success!");
+    return NVal::CreateUndefined(env).val_;
 }
 
 napi_value DowngradeDownloadNapi::GetCloudFileInfo(napi_env env, napi_callback_info info)

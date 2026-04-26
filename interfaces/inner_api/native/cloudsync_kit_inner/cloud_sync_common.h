@@ -134,6 +134,31 @@ struct DowngradeProgress : public Parcelable {
     std::string to_string() const;
 };
 
+struct DowngradeTfProgress : public Parcelable {
+    enum State : int32_t {
+        RUNNING = 0,
+        COMPLETED,
+        STOPPED
+    };
+    enum StopReason : int32_t {
+        SWITCH_OFF = 0,
+        USER_LOGOUT,
+        OTHER_REASON
+    };
+    State state;
+    StopReason stopReason;
+    int64_t transferredSize;
+    int64_t totalSize;
+    int32_t successfulCount;
+    int32_t failedCount;
+    int32_t totalCount;
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static DowngradeTfProgress *Unmarshalling(Parcel &parcel);
+    std::string to_string() const;
+};
+
 struct SwitchDataObj : public Parcelable {
     std::map<std::string, bool> switchData;
     bool ReadFromParcel(Parcel &parcel);

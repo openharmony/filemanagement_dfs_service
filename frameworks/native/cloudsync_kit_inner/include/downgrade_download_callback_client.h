@@ -26,6 +26,7 @@ public:
     }
 
     void OnDownloadProcess(const DowngradeProgress &progress) override;
+    void OnTransferProcess(const DowngradeTfProgress &progress) override;
 
 private:
     std::shared_ptr<DowngradeDlCallback> callback_;

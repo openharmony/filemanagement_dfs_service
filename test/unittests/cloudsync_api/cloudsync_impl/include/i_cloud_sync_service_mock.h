@@ -93,6 +93,8 @@ public:
                  int32_t(const std::vector<DentryFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId));
     MOCK_METHOD2(StartDowngrade, int32_t(const std::string &bundleName, const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD1(StopDowngrade, int32_t(const std::string &bundleName));
+    MOCK_METHOD3(StartTransfer, int32_t(const std::string &bundleName, const std::string &targetUri,
+                 const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD2(GetCloudFileInfo, int32_t(const std::string &bundleName, CloudFileInfo &cloudFileInfo));
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
     MOCK_METHOD3(GetHistoryVersionList, int32_t(const std::string &uri, const int32_t versionNumLimit,

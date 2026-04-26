@@ -77,6 +77,8 @@ public:
     int32_t StartDowngrade(const std::string &bundleName,
                            const std::shared_ptr<DowngradeDlCallback> downloadCallback) override;
     int32_t StopDowngrade(const std::string &bundleName) override;
+    int32_t StartTransfer(const std::string &bundleName, const std::string &targetUri,
+                          const std::shared_ptr<DowngradeDlCallback> downloadCallback) override;
     int32_t GetCloudFileInfo(const std::string &bundleName, CloudFileInfo &cloudFileInfo) override;
     // file version
     int32_t GetHistoryVersionList(const std::string &uri, const int32_t versionNumLimit,

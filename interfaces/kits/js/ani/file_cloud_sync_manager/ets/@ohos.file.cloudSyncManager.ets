@@ -49,11 +49,23 @@ export default namespace cloudSyncManager  {
         OTHER_REASON = 6
     }
 
+    export enum TransferStopReason {
+        SWITCH_OFF = 0,
+        USER_LOGOUT = 1,
+        OTHER_REASON = 2
+    }
+
     export enum DownloadState {
         RUNNING = 0,
         COMPLETED = 1,
         STOPPED = 2,
         MISSING = 3
+    }
+
+    export enum TransferState {
+        RUNNING = 0,
+        COMPLETED = 1,
+        STOPPED = 2,
     }
 
     export interface CloudFileInfo {
@@ -116,6 +128,33 @@ export default namespace cloudSyncManager  {
         stopReason: DownloadStopReason;
     }
 
+    export class TransferProgress {
+        constructor(
+            state: TransferState,
+            successfulCount: int,
+            failedCount: int,
+            totalCount: int,
+            transferredSize: long,
+            totalSize: long,
+            stopReason: TransferStopReason
+        ) {
+            this.state = state;
+            this.successfulCount = successfulCount;
+            this.failedCount = failedCount;
+            this.totalCount = totalCount;
+            this.transferredSize = transferredSize;
+            this.totalSize = totalSize;
+            this.stopReason = stopReason;
+        }
+        state: TransferState;
+        successfulCount: int;
+        failedCount: int;
+        totalCount: int;
+        transferredSize: long;
+        totalSize: long;
+        stopReason: TransferStopReason;
+    }
+
     export class DowngradeDownload {
         static {
             loadLibraryWithPermissionCheck("cloud_sync_manager_ani", "@ohos.file.cloudSyncManager");
@@ -173,6 +212,7 @@ export default namespace cloudSyncManager  {
         native DowngradeGetCloudFileInfo(): CloudFileInfo;
         native DowngradeStartDownload(callback: Callback<DownloadProgress>): void;
         native DowngradeStopDownload(): void;
+        native startTransfer(targetUri: string, callback: Callback<TransferProgress>): void;
 
         getCloudFileInfoInner(): CloudFileInfo {
             return this.DowngradeGetCloudFileInfo();
@@ -423,7 +463,7 @@ export default namespace cloudSyncManager  {
         public isLocalFilePresent: boolean;
     }
 
-    export function getBundlesLocalFilePresentStatus(bundleNames: Array<string>): 
+    export function getBundlesLocalFilePresentStatus(bundleNames: Array<string>):
         Promise<Array<LocalFilePresentStatus>> {
         return new Promise<Array<LocalFilePresentStatus>>((resolve: (result: Array<LocalFilePresentStatus>) => void,
             reject: (e: BusinessError<void>) => void): void => {
@@ -440,7 +480,7 @@ export default namespace cloudSyncManager  {
         });
     }
 
-    export function getDowngradeDownloadTaskState(bundleNames: Array<string>): 
+    export function getDowngradeDownloadTaskState(bundleNames: Array<string>):
         Promise<Array<DownloadProgress>> {
         return new Promise<Array<DownloadProgress>>((resolve: (result: Array<DownloadProgress>) => void,
             reject: (e: BusinessError<void>) => void): void => {

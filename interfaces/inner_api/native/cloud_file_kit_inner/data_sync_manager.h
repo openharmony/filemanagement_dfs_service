@@ -94,8 +94,10 @@ public:
     virtual int32_t StartDowngrade(const std::string &bundleName,
                                    const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback);
     virtual int32_t StopDowngrade(const std::string &bundleName);
+    virtual int32_t StartTransfer(const std::string &bundleName, const std::string &targetUri,
+                                  const sptr<CloudSync::IDowngradeDlCallback> &downloadCallback);
     virtual int32_t GetCloudFileInfo(const std::string &bundleName, CloudSync::CloudFileInfo &cloudFileInfo);
-    // file version
+    // file versionp
     virtual int32_t GetHistoryVersionList(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri,
                                           const int32_t versionNumLimit,
                                           std::vector<CloudSync::HistoryVersion> &historyVersionList);
@@ -111,7 +113,7 @@ public:
     virtual int32_t GetBundlesLocalFilePresentStatus(const std::vector<std::string> &bundleNames, const int32_t &userId,
                                             std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList);
     virtual int32_t IsFinishPull(const int32_t userId, const std::string &bundleName, bool &finishFlag);
-    
+
     // get dentryfile occupy
     virtual int32_t GetDentryFileOccupy(const int32_t userId, int64_t &occupyNum);
 

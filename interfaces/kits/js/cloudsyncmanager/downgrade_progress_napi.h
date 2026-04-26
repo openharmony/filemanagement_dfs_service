@@ -43,6 +43,25 @@ public:
     inline static const std::string className_ = "DownloadProgress";
 };
 
+class DowngradeTfProgressNapi final : public LibN::NExporter {
+public:
+    DowngradeTfProgressNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
+    ~DowngradeTfProgressNapi() = default;
+
+    bool Export() override;
+    std::string GetClassName() override;
+    static napi_value Constructor(napi_env env, napi_callback_info info);
+    static napi_value GetState(napi_env env, napi_callback_info info);
+    static napi_value GetSuccessfulCount(napi_env env, napi_callback_info info);
+    static napi_value GetFailedCount(napi_env env, napi_callback_info info);
+    static napi_value GetTotalCount(napi_env env, napi_callback_info info);
+    static napi_value GetTransferredSize(napi_env env, napi_callback_info info);
+    static napi_value GetTotalSize(napi_env env, napi_callback_info info);
+    static napi_value GetStopReason(napi_env env, napi_callback_info info);
+
+    inline static const std::string className_ = "TransferProgress";
+};
+
 struct SingleBundleProgress {
     int32_t state{0};
     int32_t successfulCount{0};
@@ -53,8 +72,23 @@ struct SingleBundleProgress {
     int32_t stopReason{0};
 };
 
+struct BatchTransferProgress {
+    int32_t state{0};
+    int32_t successfulCount{0};
+    int32_t failedCount{0};
+    int64_t transferredSize{0};
+    int64_t totalSize{0};
+    int32_t totalCount{0};
+    int32_t stopReason{0};
+};
+
 struct DowngradeProgressEntity {
     std::shared_ptr<SingleBundleProgress> progress;
 };
+
+struct DowngradeTfProgressEntity {
+    std::shared_ptr<BatchTransferProgress> progress;
+};
+
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_DOWNGRADE_PROGRESS_NAPI_H

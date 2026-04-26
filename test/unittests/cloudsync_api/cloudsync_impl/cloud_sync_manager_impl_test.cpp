@@ -74,6 +74,10 @@ public:
     {
         std::cout << "OnDownloadProcess" << std::endl;
     }
+    void OnTransferProcess(const DowngradeTfProgress &progress)
+    {
+        std::cout << "OnTransferProcess" << std::endl;
+    }
 };
 
 class CloudUploadCallbackDerived : public CloudUploadCallback {
@@ -2246,7 +2250,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest001, TestSize.Level1)
     try {
         std::vector<std::string> uriVec = {"file://path1", "file://path2"};
         std::vector<CloudSync::UploadProgressObj> uploadList;
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetUploadList(_, _))
             .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::UploadProgressObj>()),
@@ -2272,7 +2276,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest002, TestSize.Level1)
     try {
         std::vector<std::string> uriVec = {"file://path1"};
         std::vector<CloudSync::UploadProgressObj> uploadList;
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetUploadList(_, _))
             .WillOnce(Return(E_PERMISSION_DENIED));
@@ -2339,7 +2343,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest001, TestSize.Level1)
     try {
         std::vector<std::string> uriVec = {"file://path1", "file://path2"};
         std::vector<CloudSync::DownloadProgressObj> downloadList;
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetDownloadList(_, _))
             .WillOnce(DoAll(SetArgReferee<1>(std::vector<CloudSync::DownloadProgressObj>()),
@@ -2365,7 +2369,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest002, TestSize.Level1)
     try {
         std::vector<std::string> uriVec = {"file://path1"};
         std::vector<CloudSync::DownloadProgressObj> downloadList;
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, GetDownloadList(_, _))
             .WillOnce(Return(E_PERMISSION_DENIED));
@@ -2434,7 +2438,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest001, TestSize.Level
         uploadCallbackInfo.callbackId = "test_callback_id";
         uploadCallbackInfo.bundleName = "com.example.test";
         uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _))
             .WillOnce(Return(E_OK));
@@ -2461,7 +2465,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest002, TestSize.Level
         uploadCallbackInfo.callbackId = "test_callback_id";
         uploadCallbackInfo.bundleName = "com.example.test";
         uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterUploadCallbackInner(_, _, _))
             .WillOnce(Return(E_PERMISSION_DENIED));
@@ -2557,7 +2561,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest001, TestSize.Lev
         CloudSync::UploadCallbackInfo uploadCallbackInfo;
         uploadCallbackInfo.callbackId = "test_callback_id";
         uploadCallbackInfo.bundleName = "com.example.test";
-        
+
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, UnRegisterUploadCallbackInner(_, _))
             .WillOnce(Return(E_OK));

@@ -203,7 +203,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ReportServiceStart(startReason);
-    
+
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         SettingsDataManager::InitSettingsDataManager();
@@ -1244,6 +1244,18 @@ int32_t CloudSyncService::StopDowngrade(const std::string &bundleName)
 
     int32_t ret = dataSyncManager_->StopDowngrade(bundleName);
     LOGI("End StopDowngrade");
+    return ret;
+}
+
+int32_t CloudSyncService::StartTransfer(const std::string &bundleName, const std::string &targetUri,
+    const sptr<IRemoteObject> &downloadCallback)
+{
+    LOGI("Begin StartTransfer");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC_MANAGER, true));
+
+    sptr<IDowngradeDlCallback> transferCb = iface_cast<IDowngradeDlCallback>(downloadCallback);
+    int32_t ret = dataSyncManager_->StartTransfer(bundleName, targetUri, transferCb);
+    LOGI("End StartTransfer");
     return ret;
 }
 

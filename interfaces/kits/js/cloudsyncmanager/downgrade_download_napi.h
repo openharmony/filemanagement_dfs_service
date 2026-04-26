@@ -38,6 +38,7 @@ public:
     static napi_value GetCloudFileInfo(napi_env env, napi_callback_info info);
     static napi_value StartDownload(napi_env env, napi_callback_info info);
     static napi_value StopDownload(napi_env env, napi_callback_info info);
+    static napi_value StartTransfer(napi_env env, napi_callback_info info);
 
 private:
     inline static std::string className_ = "DowngradeDownload";
@@ -49,7 +50,9 @@ public:
     DowngradeDlCallbackImpl(napi_env env, napi_value func);
     ~DowngradeDlCallbackImpl();
     void OnDownloadProcess(const DowngradeProgress &progress) override;
+    void OnTransferProcess(const DowngradeTfProgress &progress) override;
     napi_value ConvertToValue();
+    napi_value TfConvertToValue();
 
 public:
     napi_ref cbOnRef_;
@@ -58,9 +61,10 @@ public:
 
 private:
     void UpdateDownloadProgress(const DowngradeProgress &progress);
-
+    void UpdateTransferProgress(const DowngradeTfProgress &progress);
 private:
     std::shared_ptr<SingleBundleProgress> dlProgress_;
+    std::shared_ptr<BatchTransferProgress> tfProgress_;
 };
 
 struct DowngradeEntity {

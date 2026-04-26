@@ -21,7 +21,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
- 
+
 
 const string &DowngradeDownloadCore::GetBundleName() const
 {
@@ -88,4 +88,18 @@ FsResult<void> DowngradeDownloadCore::DoDowngradeDlStopDownload()
     }
     return FsResult<void>::Success();
 }
+
+FsResult<void> DowngradeDownloadCore::DoDowngradeDlStartTransfer(
+    const std::string &targetUri, const shared_ptr<DowngradeCallbackAniImpl> callback)
+{
+    LOGI("DoDowngradeDlStartTransfer begin.");
+    string bundleName = GetBundleName();
+    int32_t ret = CloudSyncManager::GetInstance().StartTransfer(bundleName, targetUri, callback);
+    if (ret != E_OK) {
+        LOGE("DoDowngradeDlStartTransfer failed, ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    return FsResult<void>::Success();
+}
+
 } // namespace OHOS::FileManagement::CloudSync

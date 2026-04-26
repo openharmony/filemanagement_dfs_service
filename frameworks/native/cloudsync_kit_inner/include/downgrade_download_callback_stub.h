@@ -34,6 +34,7 @@ private:
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
 
     int32_t HandleOnProcess(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOnTfProcess(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

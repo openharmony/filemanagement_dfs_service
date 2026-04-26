@@ -68,6 +68,7 @@ public:
 
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
     MOCK_METHOD1(OnDownloadProcess, void(const DowngradeProgress &progress));
+    MOCK_METHOD1(OnTransferProcess, void(const DowngradeTfProgress &progress));
 };
 } // namespace OHOS::FileManagement::CloudSync
 

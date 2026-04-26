@@ -88,6 +88,8 @@ static ani_status BindContextOnDowngradeDownload(ani_env *env)
     std::string fSign = Builder::BuildSignatureDescriptor({Builder::BuildFunctionalObject(1, false)});
     std::string fileInfoSign = Builder::BuildSignatureDescriptor({},
         Builder::BuildClass("@ohos.file.cloudSyncManager.cloudSyncManager.CloudFileInfo"));
+    std::string transferSign = Builder::BuildSignatureDescriptor({Builder::BuildClass("std.core.String"),
+        Builder::BuildFunctionalObject(1, false)});
     std::array methods = {
         ani_native_function{ct.c_str(), sSign.c_str(),
             reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadConstructor)},
@@ -97,6 +99,8 @@ static ani_status BindContextOnDowngradeDownload(ani_env *env)
             reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadStartDownload)},
         ani_native_function{"DowngradeStopDownload", vSign.c_str(),
             reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadStopDownload)},
+        ani_native_function{"startTransfer", transferSign.c_str(),
+            reinterpret_cast<void *>(DowngradeDownloadAni::DowngradeDownloadStartTransfer)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
