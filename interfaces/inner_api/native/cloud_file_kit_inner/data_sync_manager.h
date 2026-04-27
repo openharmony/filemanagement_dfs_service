@@ -114,9 +114,6 @@ public:
                                             std::vector<CloudSync::LocalFilePresentStatus> &localFilePresentStatusList);
     virtual int32_t IsFinishPull(const int32_t userId, const std::string &bundleName, bool &finishFlag);
 
-    // get dentryfile occupy
-    virtual int32_t GetDentryFileOccupy(const int32_t userId, int64_t &occupyNum);
-
     virtual int32_t GetDownloadList(const BundleNameUserInfo &bundleNameUserInfo,
                                 const std::vector<std::string> &uriVec,
                                 std::vector<CloudSync::DownloadProgressObj> &downloadList);

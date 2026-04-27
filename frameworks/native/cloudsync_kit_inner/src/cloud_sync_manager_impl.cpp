@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+#include <charconv>
+#include <filesystem>
+#include <fstream>
+
 #include "account_utils.h"
 #include "cloud_download_callback_client.h"
 #include "cloud_sync_callback_client.h"
@@ -33,7 +37,11 @@ constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
 constexpr int32_t MAX_PROGRESS_QUERY_NUM = 100;
+constexpr int32_t BASE_USER_RANGE = 200000;
 const string CLOUDSYNC_MEDIA_CALLBACK_ID = "cloudSyncMediaCallbackId";
+static const std::string GLOBAL_CONFIG_FILE_PATH = "globalConfig.xml";
+static const std::string SUM_OCCUPY_FLAG = "SumOccupyFlag";
+constexpr int32_t MAX_OCCUPY_LINE_LIMIT = 10;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -1091,19 +1099,52 @@ int32_t CloudSyncManagerImpl::IsFinishPull(bool &finishFlag)
     return ret;
 }
 
+static bool ConvertToInt64(const std::string &str, int64_t &val)
+{
+    auto [ptr, ec] = std::from_chars(str.c_str(), str.c_str() + str.size(), val);
+    return ec == std::errc() && ptr == str.c_str() + str.size();
+}
+
+static int64_t ReadConfigFile(const std::string &configFilePath)
+{
+    std::error_code ec;
+    if (!std::filesystem::exists(configFilePath, ec)) {
+        LOGI("ConfigFile doesn't exist, ec: %{public}d", ec.value());
+        return 0;
+    }
+
+    std::ifstream file(configFilePath);
+    if (!file.is_open()) {
+        LOGE("open config file failed");
+        return 0;
+    }
+
+    int32_t idx = 0;
+    int64_t value = 0;
+    std::string line;
+    while (std::getline(file, line) && idx < MAX_OCCUPY_LINE_LIMIT) {
+        size_t pos = line.find('=');
+        if (pos != std::string::npos && line.substr(0, pos) == SUM_OCCUPY_FLAG) {
+            std::string valueStr = line.substr(pos + 1);
+            if (!ConvertToInt64(valueStr, value)) {
+                LOGE("ConvertToInt64 failed, value: %{public}s", valueStr.c_str());
+            }
+            break;
+        }
+        idx += 1;
+    }
+
+    return value;
+}
+
 int32_t CloudSyncManagerImpl::GetDentryFileOccupy(int64_t &occupyNum)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetDentryFileOccupy");
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->GetDentryFileOccupy(occupyNum);
-    if (ret != E_OK) {
-        LOGE("ret is %{public}d", ret);
-    }
-    return ret;
+    int32_t userId = getuid() / BASE_USER_RANGE;
+    std::string dentryFileConfigPath = "/data/service/el2/" + std::to_string(userId) +
+        "/hmdfs/cache/account_cache/" + GLOBAL_CONFIG_FILE_PATH;
+    occupyNum = ReadConfigFile(dentryFileConfigPath);
+    LOGI("client GetDentryFileOccupy: %{public}s", std::to_string(occupyNum).c_str());
+    return E_OK;
 }
 
 int32_t CloudSyncManagerImpl::GetAclXattrBatch(const bool isAccess,

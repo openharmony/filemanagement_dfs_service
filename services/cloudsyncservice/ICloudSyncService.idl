@@ -86,7 +86,6 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void GetBundlesLocalFilePresentStatus([in] String[] bundleNames,
                                           [out] LocalFilePresentStatus[] localFilePresentStatusList);
     void IsFinishPull([out] boolean finishFlag);
-    void GetDentryFileOccupy([out] long occupyNum);
     void GetAclXattrBatch([in] boolean isAccess, [in] String[] filePaths, [out] XattrResult[] aclXattrResults);
     void GetDowngradeDownloadTaskState([in] String[] bundleNames,
                                [out] DowngradeProgress[] downgradeProgressList);
