@@ -96,10 +96,11 @@ ohos_unittest("cloud_report_cacher_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics",
   ]
 
-  deps = []
+  deps = [
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
 
   external_deps = [
-    "dfs_service:libdistributedfileutils_lite",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",

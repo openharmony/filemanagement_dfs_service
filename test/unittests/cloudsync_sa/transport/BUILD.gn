@@ -49,6 +49,7 @@ ohos_unittest("cloud_sync_service_transport_manager_test") {
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -60,7 +61,6 @@ ohos_unittest("cloud_sync_service_transport_manager_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",
     "googletest:gmock",
     "googletest:gtest",
@@ -132,6 +132,7 @@ ohos_unittest("cloud_sync_service_transport_softbus_test") {
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -143,7 +144,6 @@ ohos_unittest("cloud_sync_service_transport_softbus_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",
     "googletest:gmock",
     "googletest:gtest",

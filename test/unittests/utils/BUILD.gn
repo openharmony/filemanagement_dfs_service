@@ -71,7 +71,6 @@ ohos_unittest("utils_directory_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
-    "image_framework:image_native",
     "json:nlohmann_json_static",
   ]
 
@@ -109,7 +108,6 @@ ohos_unittest("cloud_file_utils_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
-    "image_framework:image_native",
     "init:libbegetutil",
   ]
 
