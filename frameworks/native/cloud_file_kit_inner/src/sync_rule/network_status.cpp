@@ -123,6 +123,7 @@ void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> data
 
 void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
+    std::lock_guard<std::mutex> lock(netStatusMutex_);
     netStatus_ = netStatus;
     NetworkSetManager::SetNetConnStatus(static_cast<NetworkSetManager::NetConnStatus>(netStatus));
     return;
@@ -130,6 +131,7 @@ void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
+    std::lock_guard<std::mutex> lock(netStatusMutex_);
     return netStatus_;
 }
 

@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_NETWORK_STATUS_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_NETWORK_STATUS_H
 #include <cstdint>
+#include <mutex>
 #include "iremote_object.h"
 #include "net_all_capabilities.h"
 #include "data_sync_manager.h"
@@ -44,6 +45,7 @@ public:
     static bool CheckWifiOrEthernet();
 
 private:
+    static inline std::mutex netStatusMutex_;
     static inline NetConnStatus netStatus_{NO_NETWORK};
 };
 } // namespace OHOS::FileManagement::CloudSync
