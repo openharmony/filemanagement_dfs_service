@@ -25,14 +25,26 @@
 #include "service_callback_mock.h"
 #include "system_ability_manager_client_mock.h"
 #include "system_mock.h"
+#include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
+#include "accesstoken_kit_mock.h"
 
 namespace OHOS {
+pid_t g_uid = 0;
+#ifdef CONFIG_IPC_SINGLE
+using namespace IPC_SINGLE;
+#endif
+pid_t IPCSkeleton::GetCallingUid()
+{
+    return g_uid;
+}
 namespace FileManagement::CloudSync {
 namespace Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace CloudFile;
+using namespace OHOS::Security::AccessToken;
 using ChargeState = PowerMgr::BatteryChargeState;
 using PluggedType = PowerMgr::BatteryPluggedType;
 constexpr int32_t SA_ID = 5204;
@@ -1884,6 +1896,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest002, TestSize.Level1)
 
         auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
         EXPECT_EQ(ret, E_NULLPTR);
+        delete cloudFileKitMock;
+        CloudFile::CloudFileKit::instance_ = nullptr;
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest002 failed";
@@ -1922,6 +1936,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFilesTest003, TestSize.Level1)
 
         auto ret = servicePtr_->DownloadFiles(userId, bundleName, assetInfoObjs, assetResultMap, connectTime);
         EXPECT_EQ(ret, E_INVAL_ARG);
+        delete cloudFileKitMock;
+        CloudFile::CloudFileKit::instance_ = nullptr;
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "DownloadFilesTest003 failed";
@@ -2621,6 +2637,39 @@ HWTEST_F(CloudSyncServiceTest, GetDowngradeTaskStateTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest002 end";
 }
+
+/**
+ * @tc.name: SetMediaPreSharedTestTest001
+ * @tc.desc: Verify the SetMediaPreSharedTest function.
+ * @tc.type: FUNC
+ * @tc.require: issues2997
+ */
+HWTEST_F(CloudSyncServiceTest, SetMediaPreSharedTestTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 start";
+    try {
+        std::string albumId;
+        std::string albumName;
+        std::string localPath;
+        MockGetTokenTypeFlag(TOKEN_HAP);
+        auto ret = servicePtr_->SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+        MockGetTokenTypeFlag(TOKEN_NATIVE);
+        ret = servicePtr_->SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+        g_uid = 7500;
+        albumId = "err";
+        ret = servicePtr_->SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 end";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

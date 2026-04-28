@@ -134,6 +134,8 @@ public:
                                   const std::string &bundleName = "") override;
     ErrCode UnRegisterUploadCallbackInner(const std::string &callbackId = "",
                                         const std::string &bundleName = "") override;
+    ErrCode SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath) override;
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason &startReason) override;

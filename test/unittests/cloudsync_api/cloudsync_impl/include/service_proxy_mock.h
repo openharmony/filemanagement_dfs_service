@@ -125,6 +125,8 @@ public:
         const std::string &callbackId, const std::string &bundleName));
     MOCK_METHOD2(UnRegisterUploadCallbackInner, int32_t(const std::string &callbackId,
         const std::string &bundleName));
+    MOCK_METHOD3(SetMediaPreShared, int32_t(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath));
 
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,

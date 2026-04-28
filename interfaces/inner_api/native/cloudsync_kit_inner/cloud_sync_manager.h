@@ -235,6 +235,16 @@ public:
      * @return int32_t 返回执行结果
      */
     virtual int32_t UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) = 0;
+    /**
+     * @brief 设置相册预共享
+     *
+     * @param albumId 相册id
+     * @param albumName 相册名
+     * @param localPath 相册路径
+     * @return int32_t 返回执行结果
+     */
+    virtual int32_t SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

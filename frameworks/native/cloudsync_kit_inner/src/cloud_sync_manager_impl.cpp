@@ -1183,4 +1183,22 @@ int32_t CloudSyncManagerImpl::GetDowngradeDownloadTaskState(const std::vector<st
     int32_t ret = CloudSyncServiceProxy->GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
     return ret;
 }
+
+int32_t CloudSyncManagerImpl::SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+    const std::string &localPath)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("SetMediaPreShared");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->SetMediaPreShared(albumId, albumName, localPath);
+    if (ret != E_OK) {
+        LOGE("ret is %{public}d id: %{public}s name: %{public}s path: %{public}s",
+            ret, albumId.c_str(), albumName.c_str(), localPath.c_str());
+    }
+    return ret;
+}
+
 } // namespace OHOS::FileManagement::CloudSync

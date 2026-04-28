@@ -138,6 +138,8 @@ public:
         const int32_t &userId,
         std::vector<CloudSync::DowngradeProgress> &downgradeProgressList);
 
+    virtual int32_t SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath);
 private:
     std::mutex periodicCleanMutex_;
 };
