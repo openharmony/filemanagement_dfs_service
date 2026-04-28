@@ -104,6 +104,8 @@ public:
                         std::vector<CloudSync::UploadProgressObj> &uploadList) override;
     int32_t RegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) override;
     int32_t UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) override;
+    int32_t SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);

@@ -18,6 +18,7 @@
 #include <memory>
 #include <sys/xattr.h>
 
+#include "accesstoken_kit.h"
 #include "account_utils.h"
 #include "battery_status.h"
 #include "cloud_file_kit.h"
@@ -61,6 +62,7 @@ constexpr mode_t DEFAULT_UMASK = 0002;
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string ACL_XATTR_ACCESS = "system.posix_acl_access";
 const std::string ACL_XATTR_DEFAULT = "system.posix_acl_default";
+const std::uint32_t WEARD_SA_UID = 7500;
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -1460,4 +1462,32 @@ int32_t CloudSyncService::GetDowngradeDownloadTaskState(const std::vector<std::s
     int32_t ret = dataSyncManager_->GetDowngradeDownloadTaskState(bundleNames, userId, downgradeProgressList);
     return ret;
 }
+
+static int32_t SetMediaPreSharedCheckPermission(void)
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType != Security::AccessToken::TOKEN_NATIVE) {
+        LOGE("permission check failed token type is %{public}d", tokenType);
+        return E_PERMISSION_DENIED;
+    }
+    if (uid != WEARD_SA_UID) {
+        LOGE("permission check failed uid is %{public}d", uid);
+        return E_PERMISSION_DENIED;
+    }
+    return E_OK;
+}
+
+int32_t CloudSyncService::SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+    const std::string &localPath)
+{
+    RETURN_ON_ERR(SetMediaPreSharedCheckPermission());
+    int32_t ret = dataSyncManager_->SetMediaPreShared(albumId, albumName, localPath);
+    if (ret != E_OK) {
+        LOGE("SetMediaPreShared failed: %{public}d", ret);
+    }
+    return ret;
+}
+
 } // namespace OHOS::FileManagement::CloudSync

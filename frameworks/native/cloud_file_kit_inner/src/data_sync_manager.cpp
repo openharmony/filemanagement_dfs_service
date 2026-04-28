@@ -316,4 +316,11 @@ int32_t DataSyncManager::GetDowngradeDownloadTaskState(const std::vector<std::st
 {
     return E_OK;
 }
+
+int32_t DataSyncManager::SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+    const std::string &localPath)
+{
+    return E_OK;
+}
+
 } // namespace OHOS::FileManagement::CloudFile

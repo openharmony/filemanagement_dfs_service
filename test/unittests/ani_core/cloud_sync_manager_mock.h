@@ -100,6 +100,8 @@ public:
         std::vector<CloudSync::DownloadProgressObj> &downloadList));
     MOCK_METHOD1(RegisterUploadCallback, int32_t(const UploadCallbackInfo &uploadCallbackInfo));
     MOCK_METHOD1(UnRegisterUploadCallback, int32_t(const UploadCallbackInfo &uploadCallbackInfo));
+    MOCK_METHOD3(SetMediaPreShared, int32_t(const std::string &albumId, const std::string &albumName,
+        const std::string &localPath));
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK

@@ -277,6 +277,15 @@ int32_t DataSyncManager::ClearFileConflict(const BundleNameUserInfo &bundleNameU
     return E_OK;
 }
 
+int32_t DataSyncManager::SetMediaPreShared(const std::string &albumId, const std::string &albumName,
+    const std::string &localPath)
+{
+    if (albumId == "err") {
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
 void DataSyncManager::PeriodicCleanLock()
 {
 }

@@ -65,6 +65,7 @@ ohos_unittest("cloud_sync_service_test") {
       [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
   sources = [
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock/accesstoken_kit_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_sync_manager_mock.cpp",
@@ -106,6 +107,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/mock/account_sa/include",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -133,6 +135,8 @@ ohos_unittest("cloud_sync_service_test") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "app_file_service:sandbox_helper_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
@@ -175,7 +179,7 @@ ohos_unittest("cloud_sync_service_test") {
     external_deps += [ "thermal_manager:thermalsrv_client" ]
     defines += [ "support_thermal_manager" ]
   }
-  
+
   if (cloudsync_service_power) {
     external_deps += [ "battery_manager:batterysrv_client" ]
     defines += [ "SUPPORT_POWER" ]

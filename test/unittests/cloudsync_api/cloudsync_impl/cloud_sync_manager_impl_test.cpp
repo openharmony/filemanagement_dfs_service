@@ -31,7 +31,6 @@
 #include "service_proxy_mock.h"
 #include "system_ability_manager_client_mock.h"
 
-
 namespace OHOS {
 namespace FileManagement::CloudSync {
 namespace fs = std::filesystem;
@@ -136,10 +135,8 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
-        CallbackInfo callbackInfo;
-        callbackInfo.callbackId = "0x0000005a40d3b670";
-        callbackInfo.bundleName = "com.ohos.photos";
-        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
+        CallbackInfo callbackInfo = { .callbackId = "0x0000005a40d3b670", .bundleName = "com.ohos.photos",
+            .callback = make_shared<CloudSyncCallbackDerived>() };
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, RegisterCallbackInner(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callbackInfo);
@@ -161,10 +158,8 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
     try {
-        CallbackInfo callbackInfo;
-        callbackInfo.callbackId = "0x0000005a40d3b660";
-        callbackInfo.bundleName = "com.ohos.photos";
-        callbackInfo.callback = make_shared<CloudSyncCallbackDerived>();
+        CallbackInfo callbackInfo = { .callbackId = "0x0000005a40d3b660", .bundleName = "com.ohos.photos",
+            .callback = make_shared<CloudSyncCallbackDerived>() };
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, UnRegisterCallbackInner(_, _)).WillOnce(Return(E_OK));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
@@ -186,10 +181,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest002 Start";
     try {
-        CallbackInfo callbackInfo;
-        callbackInfo.callbackId = "";
-        callbackInfo.bundleName = "com.ohos.photos";
-        callbackInfo.callback = nullptr;
+        CallbackInfo callbackInfo = { .callbackId = "", .bundleName = "com.ohos.photos", .callback = nullptr };
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(callbackInfo);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -3084,5 +3076,39 @@ HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest005, TestSiz
     }
     GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest005 End";
 }
+
+/**
+ * @tc.name: SetMediaPreSharedTest001
+ * @tc.desc: Verify the SetMediaPreShared function.
+ * @tc.type: FUNC
+ * @tc.require: issues2997
+ */
+HWTEST_F(CloudSyncManagerImplTest, SetMediaPreSharedTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 Start";
+    try {
+        std::string albumId;
+        std::string albumName;
+        std::string localPath;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, SetMediaPreShared(_, _, _)).WillOnce(Return(E_OK));
+        res = CloudSyncManagerImpl::GetInstance().SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(res, E_OK);
+
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, SetMediaPreShared(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        res = CloudSyncManagerImpl::GetInstance().SetMediaPreShared(albumId, albumName, localPath);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 End";
+}
+
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
