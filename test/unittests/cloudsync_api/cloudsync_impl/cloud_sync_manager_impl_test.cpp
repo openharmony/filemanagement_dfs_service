@@ -3110,5 +3110,192 @@ HWTEST_F(CloudSyncManagerImplTest, SetMediaPreSharedTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 End";
 }
 
+/**
+ * @tc.name: StartTransferTest001
+ * @tc.desc: Verify the StartTransfer function with proxy nullptr.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest001 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest001 End";
+}
+
+/**
+ * @tc.name: StartTransferTest002
+ * @tc.desc: Verify the StartTransfer function with empty bundleName.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest002 Start";
+    try {
+        std::string bundleName = "";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_INVAL_PARAM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest002 End";
+}
+
+/**
+ * @tc.name: StartTransferTest003
+ * @tc.desc: Verify the StartTransfer function with empty targetUri.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest003 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_INVAL_PARAM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest003 End";
+}
+
+/**
+ * @tc.name: StartTransferTest004
+ * @tc.desc: Verify the StartTransfer function with nullptr callback.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest004 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        std::shared_ptr<DowngradeDlCallback> callback = nullptr;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_INVAL_PARAM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest004 End";
+}
+
+/**
+ * @tc.name: StartTransferTest005
+ * @tc.desc: Verify the StartTransfer function with invalid targetUri prefix.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest005 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://invalid/path/test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_INVAL_PARAM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest005 End";
+}
+
+/**
+ * @tc.name: StartTransferTest006
+ * @tc.desc: Verify the StartTransfer function with path traversal attack.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest006 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://docs/storage/Users/currentUser/../test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_INVAL_PARAM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest006 End";
+}
+
+/**
+ * @tc.name: StartTransferTest007
+ * @tc.desc: Verify the StartTransfer function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest007 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, StartTransfer(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest007 End";
+}
+
+/**
+ * @tc.name: StartTransferTest008
+ * @tc.desc: Verify the StartTransfer function with service error.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartTransferTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest008 Start";
+    try {
+        std::string bundleName = "com.hmos.filemanager";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, StartTransfer(_, _, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(serviceProxy_->AsObject()));
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest008 End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

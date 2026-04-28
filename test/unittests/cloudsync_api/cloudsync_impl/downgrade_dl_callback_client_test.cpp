@@ -109,6 +109,56 @@ HWTEST_F(DowngradeDlCallbackClientTest, OnDownloadProcessTest002, TestSize.Level
     GTEST_LOG_(INFO) << "OnDownloadProcess End";
 }
 
+/**
+ * @tc.name: OnTransferProcessTest001
+ * @tc.desc: Verify the OnTransferProcess function with nullptr callback.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDlCallbackClientTest, OnTransferProcessTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnTransferProcessTest001 Start";
+    try {
+        DowngradeTfProgress progress;
+        std::shared_ptr<DowngradeDlCallback> callback = nullptr;
+        DowngradeDownloadCallbackClient cloudCallback(callback);
+        cloudCallback.OnTransferProcess(progress);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnTransferProcessTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnTransferProcessTest001 End";
+}
+
+/**
+ * @tc.name: OnTransferProcessTest002
+ * @tc.desc: Verify the OnTransferProcess function with valid callback.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDlCallbackClientTest, OnTransferProcessTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnTransferProcessTest002 Start";
+    try {
+        DowngradeTfProgress progress;
+        progress.state = DowngradeTfProgress::RUNNING;
+        progress.transferredSize = 1000;
+        progress.totalSize = 5000;
+        progress.successfulCount = 10;
+        progress.failedCount = 2;
+        progress.totalCount = 20;
+        std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<MockDowngradeDlCallback>();
+        DowngradeDownloadCallbackClient cloudCallback(callback);
+        cloudCallback.OnTransferProcess(progress);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnTransferProcessTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnTransferProcessTest002 End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
