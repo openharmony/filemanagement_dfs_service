@@ -412,7 +412,7 @@ int32_t SettingsDataManager::QueryParamInUserSettingsData(const std::string &key
         return E_RDB;
     }
     if (resultSet->GoToFirstRow() != E_OK) {
-        LOGW("not found key: %{public}s", key.c_str());
+        LOGW("not found key: %{public}s", userKey.c_str());
         return E_INNER_RDB;
     }
     int32_t columnIndex = 0;
@@ -454,7 +454,7 @@ int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, st
         return E_RDB;
     }
     if (resultSet->GoToFirstRow() != E_OK) {
-        LOGW("not found key: %{public}s", key.c_str());
+        LOGW("not found key: %{public}s", queryKey.c_str());
         return E_INNER_RDB;
     }
     int32_t columnIndex = 0;
