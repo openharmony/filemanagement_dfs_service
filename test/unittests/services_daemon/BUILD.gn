@@ -280,6 +280,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
     "cloud_daemon_test.cpp",
     "mock/system_function_mock.cpp",
