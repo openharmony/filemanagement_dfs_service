@@ -471,6 +471,16 @@ void ChannelManager::HandleRemoteBytes(const std::string &jsonStr, int32_t socke
         return;
     }
 
+    {
+        std::shared_lock<std::shared_mutex> readLock(clientMutex_);
+        for (const auto &item : clientNetworkSocketMap_) {
+            if (item.second == socketId) {
+                inCmd.networkId = item.first;
+                break;
+            }
+        }
+    }
+
     if (inCmd.msgType == ControlCmdType::CMD_MSG_RESPONSE) {
         LOGI("remote bytes type is response.");
         std::unique_lock<std::mutex> lock(mtx_);
