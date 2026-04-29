@@ -1017,6 +1017,7 @@ HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest001, TestSize.Level1)
         std::string otherCloudId = "123";
         int64_t rowId = 0;
         CloudDiskFuseData data;
+        data.userId = 100;
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
         int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
@@ -1050,6 +1051,7 @@ HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest002, TestSize.Level1)
         std::string otherCloudId = "123";
         int64_t rowId = 0;
         CloudDiskFuseData data;
+        data.userId = 100;
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
         int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
@@ -1083,6 +1085,7 @@ HWTEST_F(FileOperationsCloudStaticTest, GetRecyclePathTest003, TestSize.Level1)
         std::string otherCloudId = "123";
         int64_t rowId = 0;
         CloudDiskFuseData data;
+        data.userId = 100;
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         auto rdbStore = std::make_shared<CloudDiskRdbStore>(inoPtr->bundleName, userId);
         int32_t ret = rdbStore->GetRowId(inoPtr->cloudId, rowId);
