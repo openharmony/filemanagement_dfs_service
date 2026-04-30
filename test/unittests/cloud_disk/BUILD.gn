@@ -134,6 +134,7 @@ ohos_unittest("file_operations_cloud_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]

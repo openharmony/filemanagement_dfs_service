@@ -415,6 +415,7 @@ ohos_unittest("dfs_radar_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "os_account:os_account_innerkits",
   ]
  

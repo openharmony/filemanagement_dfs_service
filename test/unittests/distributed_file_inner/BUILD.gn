@@ -393,6 +393,7 @@ ohos_unittest("file_copy_manager_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "libuv:uv",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
@@ -470,6 +471,7 @@ ohos_unittest("remote_file_copy_manager_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "libuv:uv",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
@@ -548,6 +550,7 @@ ohos_unittest("trans_listener_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "libuv:uv",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
@@ -684,6 +687,7 @@ ohos_unittest("file_copy_listener_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_single",
     "os_account:os_account_innerkits",
   ]
 
