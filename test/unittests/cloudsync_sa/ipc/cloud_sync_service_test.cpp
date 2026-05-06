@@ -2670,6 +2670,54 @@ HWTEST_F(CloudSyncServiceTest, SetMediaPreSharedTestTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 end";
 }
 
+/**
+ * @tc.name: StartTransferTest001
+ * @tc.desc: Verify the StartTransfer function when permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncServiceTest, StartTransferTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.test";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        sptr<DowngradeDlCallbackMock> callback = sptr(new DowngradeDlCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->StartTransfer(bundleName, targetUri, callback);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest001 end";
+}
+
+/**
+ * @tc.name: StartTransferTest002
+ * @tc.desc: Verify the StartTransfer function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncServiceTest, StartTransferTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string bundleName = "com.ohos.test";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        sptr<DowngradeDlCallbackMock> callback = sptr(new DowngradeDlCallbackMock());
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        auto ret = servicePtr_->StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartTransferTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest002 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

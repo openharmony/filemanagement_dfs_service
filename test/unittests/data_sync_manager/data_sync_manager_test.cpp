@@ -117,6 +117,28 @@ HWTEST_F(DataSyncManagerTest, GetDowngradeTaskStateTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetDowngradeTaskStateTest001 end";
 }
+
+/**
+ * @tc.name: StartTransferTest001
+ * @tc.desc: Verify the StartTransfer function.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DataSyncManagerTest, StartTransferTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartTransferTest001 start";
+    try {
+        std::string bundleName = "com.ohos.test";
+        std::string targetUri = "file://docs/storage/Users/currentUser/test";
+        sptr<CloudSync::IDowngradeDlCallback> callback = nullptr;
+        int32_t ret = manager_->StartTransfer(bundleName, targetUri, callback);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(true);
+        GTEST_LOG_(INFO) << "StartTransferTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "StartTransferTest001 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

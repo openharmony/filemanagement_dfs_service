@@ -190,4 +190,36 @@ HWTEST_F(DowngradeDownloadCoreTest, DoDowngradeDlStopDownloadTest1, TestSize.Lev
         GTEST_LOG_(INFO) << "DowngradeDownloadCore::DoDowngradeDlStopDownloadTest1 ERROR.";
     }
 }
+
+/**
+ * @tc.name: DoDowngradeDlStartTransfer
+ * @tc.desc: Verify the DowngradeDownloadCore::DoDowngradeDlStartTransfer function
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDownloadCoreTest, DoDowngradeDlStartTransferTest1, TestSize.Level1)
+{
+    try {
+        GTEST_LOG_(INFO) << "DowngradeDownloadCore::DoDowngradeDlStartTransferTest1 begin.";
+        string bundleName = "com.example.test";
+        string targetUri = "file://docs/storage/Users/currentUser/test";
+        DowngradeDownloadCore *downgradeDlCore =
+            DowngradeDownloadCore::Constructor(bundleName).GetData().value();
+        auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+        auto callback = make_shared<DowngradeCallbackAniImpl>(nullptr, nullptr);
+        EXPECT_CALL(cloudMock, StartTransfer(_, _, _)).WillOnce(Return(E_OK));
+        auto data = downgradeDlCore->DoDowngradeDlStartTransfer(targetUri, callback);
+        EXPECT_TRUE(data.IsSuccess());
+
+        EXPECT_CALL(cloudMock, StartTransfer(_, _, _)).WillOnce(Return(OHOS::FileManagement::E_INNER_FAILED));
+        auto ret = downgradeDlCore->DoDowngradeDlStartTransfer(targetUri, callback);
+        EXPECT_FALSE(ret.IsSuccess());
+        const auto &err = ret.GetError();
+        int errorCode = err.GetErrNo();
+        EXPECT_EQ(errorCode, OHOS::FileManagement::E_INNER_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeDownloadCore::DoDowngradeDlStartTransferTest1 ERROR.";
+    }
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

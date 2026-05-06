@@ -2071,5 +2071,495 @@ HWTEST_F(CloudSyncCommonTest, XattrResultReadFromParcelTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "XattrResultReadFromParcelTest003 End";
 }
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest001
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with state write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest001 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(false));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest001 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest002
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with stopReason write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest002 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest002 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest003
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with transferredSize write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest003 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(false));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest003 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest004
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with totalSize write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest004 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest004 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest005
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with successfulCount write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest005 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest005 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest006
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with failedCount write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest006 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest006 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest007
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with totalCount write failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest007 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest007 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressMarshallingTest008
+ * @tc.desc: Verify the DowngradeTfProgress::Marshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressMarshallingTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest008 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, WriteInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, WriteInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressMarshallingTest008 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressUnmarshallingTest001
+ * @tc.desc: Verify the DowngradeTfProgress::Unmarshalling function with state read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressUnmarshallingTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest001 Start";
+    try {
+        auto progress = make_shared<DowngradeTfProgress>();
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        auto res = progress->Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest001 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressUnmarshallingTest002
+ * @tc.desc: Verify the DowngradeTfProgress::Unmarshalling function with stopReason read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressUnmarshallingTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest002 Start";
+    try {
+        auto progress = make_shared<DowngradeTfProgress>();
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = progress->Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest002 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressUnmarshallingTest003
+ * @tc.desc: Verify the DowngradeTfProgress::Unmarshalling function with transferredSize read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressUnmarshallingTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest003 Start";
+    try {
+        auto progress = make_shared<DowngradeTfProgress>();
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        auto res = progress->Unmarshalling(parcel);
+        EXPECT_TRUE(res == nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest003 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressUnmarshallingTest004
+ * @tc.desc: Verify the DowngradeTfProgress::Unmarshalling function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressUnmarshallingTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest004 Start";
+    try {
+        auto progress = make_shared<DowngradeTfProgress>();
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress->Unmarshalling(parcel);
+        EXPECT_TRUE(res != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressUnmarshallingTest004 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest001
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with state read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest001 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(false));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest002
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with stopReason read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest002 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest002 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest003
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with transferredSize read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest003 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest003 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest004
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with totalSize read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest004 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest004 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest005
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with successfulCount read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest005 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest005 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest006
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with failedCount read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest006 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest006 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest007
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with totalCount read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest007 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest007 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgressReadFromParcelTest008
+ * @tc.desc: Verify the DowngradeTfProgress::ReadFromParcel function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgressReadFromParcelTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest008 Start";
+    try {
+        DowngradeTfProgress progress;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        auto res = progress.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgressReadFromParcelTest008 End";
+}
+
+/*
+ * @tc.name: DowngradeTfProgress_to_string
+ * @tc.desc: Verify the DowngradeTfProgress::to_string function.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DowngradeTfProgress_to_string, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DowngradeTfProgress_to_string Start";
+    try {
+        DowngradeTfProgress progress;
+        progress.state = DowngradeTfProgress::RUNNING;
+        progress.stopReason = DowngradeTfProgress::SWITCH_OFF;
+        progress.transferredSize = 1000;
+        progress.totalSize = 5000;
+        progress.successfulCount = 10;
+        progress.failedCount = 2;
+        progress.totalCount = 20;
+        auto res = progress.to_string();
+        std::string expectStr =
+            "DowngradeTfProgress [Transferstate: 0 , 10 , 2 , 20 , 1000 , 5000 , 0]";
+        EXPECT_EQ(res, expectStr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DowngradeTfProgress_to_string FAILED";
+    }
+    GTEST_LOG_(INFO) << "DowngradeTfProgress_to_string End";
+}
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

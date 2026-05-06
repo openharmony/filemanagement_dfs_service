@@ -180,6 +180,105 @@ HWTEST_F(DowngradeDownloadCallbackStubTest, HandleOnProcessTest002, TestSize.Lev
     }
     GTEST_LOG_(INFO) << "HandleOnProcess End";
 }
+
+/**
+ * @tc.name: HandleOnTfProcessTest001
+ * @tc.desc: Verify the HandleOnTfProcess function with valid progress.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDownloadCallbackStubTest, HandleOnTfProcessTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOnTfProcessTest001 Start";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        DowngradeTfProgress progress;
+        progress.state = DowngradeTfProgress::RUNNING;
+        progress.transferredSize = 1000;
+        progress.totalSize = 5000;
+        progress.successfulCount = 10;
+        progress.failedCount = 2;
+        progress.totalCount = 20;
+        bool prog = data.WriteParcelable(&progress);
+        EXPECT_TRUE(prog);
+        int ret = downgradeStub_->HandleOnTfProcess(data, reply);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleOnTfProcessTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOnTfProcessTest001 End";
+}
+
+/**
+ * @tc.name: HandleOnTfProcessTest002
+ * @tc.desc: Verify the HandleOnTfProcess function with null progress.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDownloadCallbackStubTest, HandleOnTfProcessTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOnTfProcessTest002 Start";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        int32_t ret = downgradeStub_->HandleOnTfProcess(data, reply);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleOnTfProcessTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOnTfProcessTest002 End";
+}
+
+/**
+ * @tc.name: OnRemoteRequestTfProcessTest001
+ * @tc.desc: Verify the OnRemoteRequest function for transfer process with invalid descriptor.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDownloadCallbackStubTest, OnRemoteRequestTfProcessTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest001 Start";
+    try {
+        uint32_t code = IDowngradeDlCallback::SERVICE_CMD_ON_TF_PROCESS;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        int32_t ret = downgradeStub_->OnRemoteRequest(code, data, reply, option);
+        EXPECT_EQ(E_SERVICE_DESCRIPTOR_IS_EMPTY, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest001 End";
+}
+
+/**
+ * @tc.name: OnRemoteRequestTfProcessTest002
+ * @tc.desc: Verify the OnRemoteRequest function for transfer process with valid descriptor but null progress.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(DowngradeDownloadCallbackStubTest, OnRemoteRequestTfProcessTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest002 Start";
+    try {
+        uint32_t code = IDowngradeDlCallback::SERVICE_CMD_ON_TF_PROCESS;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(IDowngradeDlCallback::GetDescriptor()));
+        int32_t ret = downgradeStub_->OnRemoteRequest(code, data, reply, option);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnRemoteRequestTfProcessTest002 End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

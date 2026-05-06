@@ -624,6 +624,30 @@ int32_t CloudSyncManagerImpl::StopDowngrade(const std::string &bundleName)
     return ret;
 }
 
+static int32_t CheckTransferTargetUri(const std::string &targetUri)
+{
+    if (targetUri.empty()) {
+        LOGE("Transfer target uri is empty.");
+        return E_INVAL_PARAM;
+    }
+
+    const std::string uriPrefix = "file://docs/storage/Users/currentUser/";
+    if (targetUri.find(uriPrefix) != 0) {
+        LOGE("Transfer target uri %{public}s is invalid", targetUri.c_str());
+        return E_INVAL_PARAM;
+    }
+
+    const std::string pathPrefix = "file:/docs/storage/Users/currentUser/";
+    std::filesystem::path targetPath(targetUri);
+    std::filesystem::path normalizedPath = targetPath.lexically_normal();
+    if (normalizedPath.string().find(pathPrefix) != 0) {
+        LOGE("Transfer target path %{public}s is invalid", targetUri.c_str());
+        return E_INVAL_PARAM;
+    }
+
+    return E_OK;
+}
+
 int32_t CloudSyncManagerImpl::StartTransfer(const std::string &bundleName, const std::string &targetUri,
                                             const std::shared_ptr<DowngradeDlCallback> downloadCallback)
 {
@@ -634,29 +658,20 @@ int32_t CloudSyncManagerImpl::StartTransfer(const std::string &bundleName, const
         return E_SA_LOAD_FAILED;
     }
 
-    if (bundleName.empty() || targetUri.empty() || downloadCallback == nullptr) {
+    if (bundleName.empty() || downloadCallback == nullptr) {
         LOGE("Invalid argument");
         return E_INVAL_PARAM;
     }
 
-    if (targetUri.find("file://docs/storage/Users/currentUser/") != 0) {
-        LOGE("Target uri %{public}s is invalid", targetUri.c_str());
-        return E_INVAL_PARAM;
-    }
-
-    std::filesystem::path targetPath(targetUri);
-    std::filesystem::path normalizedPath = targetPath.lexically_normal();
-    for (const auto& part : normalizedPath) {
-        if (part == "..") {
-            LOGE("Target uri %{public}s is invalid", targetUri.c_str());
-            return E_INVAL_PARAM;
-        }
+    int32_t ret = CheckTransferTargetUri(targetUri);
+    if (ret != E_OK) {
+        return ret;
     }
 
     sptr<DowngradeDownloadCallbackClient> dlCallback =
         sptr(new (std::nothrow) DowngradeDownloadCallbackClient(downloadCallback));
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartTransfer(bundleName, targetUri, dlCallback);
+    ret = CloudSyncServiceProxy->StartTransfer(bundleName, targetUri, dlCallback);
     LOGI("StartTransfer ret %{public}d", ret);
     return ret;
 }
