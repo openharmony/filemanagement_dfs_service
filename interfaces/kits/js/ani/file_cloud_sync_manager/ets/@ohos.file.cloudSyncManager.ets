@@ -51,7 +51,7 @@ export default namespace cloudSyncManager  {
 
     export enum TransferStopReason {
         SWITCH_OFF = 0,
-        USER_LOGOUT = 1,
+        ACCOUNT_LOGOUT = 1,
         OTHER_REASON = 2
     }
 

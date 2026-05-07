@@ -142,7 +142,7 @@ struct DowngradeTfProgress : public Parcelable {
     };
     enum StopReason : int32_t {
         SWITCH_OFF = 0,
-        USER_LOGOUT,
+        ACCOUNT_LOGOUT,
         OTHER_REASON
     };
     State state;

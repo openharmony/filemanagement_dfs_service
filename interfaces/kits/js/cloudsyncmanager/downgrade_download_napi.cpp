@@ -40,22 +40,42 @@ static int32_t CheckPermissions(const string &permission, bool isSystemApp)
     return E_OK;
 }
 
-DowngradeDlCallbackImpl::DowngradeDlCallbackImpl(napi_env env, napi_value func) : env_(env)
-{
-    napi_status status = napi_create_reference(env_, func, 1, &cbOnRef_);
-    if (status != napi_ok) {
-        LOGE("Failed to create napi ref, %{public}d", status);
-    }
-}
-
 DowngradeDlCallbackImpl::~DowngradeDlCallbackImpl()
 {
     if (cbOnRef_ != nullptr) {
         napi_status status = napi_delete_reference(env_, cbOnRef_);
         if (status != napi_ok) {
-            LOGE("Failed to delete napi ref, %{public}d", status);
+            LOGE("Failed to delete napi downgrade download cbk ref, %{public}d", status);
         }
         cbOnRef_ = nullptr;
+    }
+
+    if (tfCbOnRef_ != nullptr) {
+        napi_status status = napi_delete_reference(env_, tfCbOnRef_);
+        if (status != napi_ok) {
+            LOGE("Failed to delete napi downgrade transfer cbk ref, %{public}d", status);
+        }
+        tfCbOnRef_ = nullptr;
+    }
+}
+
+void DowngradeDlCallbackImpl::RegDlCbkOnRef(napi_value func)
+{
+    if (cbOnRef_ == nullptr) {
+        napi_status status = napi_create_reference(env_, func, 1, &cbOnRef_);
+        if (status != napi_ok) {
+            LOGE("Failed to create napi downgrade dl ref, %{public}d", status);
+        }
+    }
+}
+
+void DowngradeDlCallbackImpl::RegTfCbkOnRef(napi_value func)
+{
+    if (tfCbOnRef_ == nullptr) {
+        napi_status status = napi_create_reference(env_, func, 1, &tfCbOnRef_);
+        if (status != napi_ok) {
+            LOGE("Failed to create napi downgrade tf ref, %{public}d", status);
+        }
     }
 }
 
@@ -177,7 +197,7 @@ void DowngradeDlCallbackImpl::OnTransferProcess(const DowngradeTfProgress &progr
         callbackImpl->env_,
         [callbackImpl]() mutable {
             auto env = callbackImpl->env_;
-            auto ref = callbackImpl->cbOnRef_;
+            auto ref = callbackImpl->tfCbOnRef_;
             if (env == nullptr || ref == nullptr) {
                 LOGE("The env context is invalid");
                 return;
@@ -296,13 +316,14 @@ napi_value DowngradeDownloadNapi::StartDownload(napi_env env, napi_callback_info
         return nullptr;
     }
     if (downgradeEntity->callbackImpl == nullptr) {
-        downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env, callbackVal.val_);
-    }
-    auto cbExec = [callbackImpl{downgradeEntity->callbackImpl}, bundleName{downgradeEntity->bundleName}]() -> NError {
-        if (callbackImpl == nullptr) {
-            LOGE("Failed to get download callback");
-            return NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR));
+        downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env);
+        if (downgradeEntity->callbackImpl == nullptr) {
+            NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
+            return nullptr;
         }
+    }
+    downgradeEntity->callbackImpl->RegDlCbkOnRef(callbackVal.val_);
+    auto cbExec = [callbackImpl{downgradeEntity->callbackImpl}, bundleName{downgradeEntity->bundleName}]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StartDowngrade(bundleName, callbackImpl);
         if (ret == OHOS::FileManagement::E_AGAIN) {
             LOGE("Start downgrade failed, need to try again! ret = %{public}d", ret);
@@ -410,13 +431,14 @@ napi_value DowngradeDownloadNapi::StartTransfer(napi_env env, napi_callback_info
     }
 
     if (downgradeEntity->callbackImpl == nullptr) {
-        downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env, callbackVal.val_);
+        downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env);
         if (downgradeEntity->callbackImpl == nullptr) {
             LOGE("Failed to get transfer callback");
             NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
             return nullptr;
         }
     }
+    downgradeEntity->callbackImpl->RegTfCbkOnRef(callbackVal.val_);
 
     int32_t ret = CloudSyncManager::GetInstance().StartTransfer(
         downgradeEntity->bundleName, targetUriVal, downgradeEntity->callbackImpl);
