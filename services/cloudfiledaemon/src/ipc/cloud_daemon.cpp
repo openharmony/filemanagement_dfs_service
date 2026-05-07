@@ -28,6 +28,7 @@
 #include "ffrt_inner.h"
 #include "fuse_manager/fuse_manager.h"
 #include "iremote_object.h"
+#include "meta_file.h"
 #include "parameters.h"
 #include "plugin_loader.h"
 #include "setting_data_helper.h"
@@ -211,6 +212,16 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 
 void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)
 {
+    const string filemanagerKey = "persist.kernel.bundle_name.filemanager";
+    string bundleName = system::GetParameter(filemanagerKey, "");
+    if (bundleName.empty()) {
+        LOGE("get filemanager bundle is empty while mkdri trash.");
+    } else {
+        int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(userId, bundleName);
+        if (ret != 0) {
+            LOGE("create recycle dentry failed, ret = %{public}d", ret);
+        }
+    }
     ffrt::submit([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
