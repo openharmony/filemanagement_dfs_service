@@ -147,6 +147,10 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolderChanges(const CloudDisk_SyncFolder
                                                       size_t count,
                                                       CloudDisk_ChangesResult **changesResult)
 {
+    if (changesResult == nullptr) {
+        LOGE("Invalid argument, changesResult is nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -195,12 +199,20 @@ CloudDisk_ErrorCode OH_CloudDisk_SetFileSyncStates(const CloudDisk_SyncFolderPat
                                                    CloudDisk_FailedList **failedLists,
                                                    size_t *failedCount)
 {
+    if (fileSyncStates == nullptr || failedLists == nullptr || failedCount == nullptr) {
+        LOGE("Invalid argument, contains nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     vector<FileSyncState> syncStatesVec;
     for (size_t i = 0; i < bufferLength; ++i) {
+        if (fileSyncStates[i].filePathInfo.value == nullptr) {
+            LOGE("Invalid argument, contains nullptr");
+            return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+        }
         FileSyncState state;
         state.path = string(fileSyncStates[i].filePathInfo.value, fileSyncStates[i].filePathInfo.length);
         state.state = static_cast<SyncState>(fileSyncStates[i].syncState);
@@ -239,6 +251,10 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
                                                    CloudDisk_ResultList **resultLists,
                                                    size_t *resultCount)
 {
+    if (paths == nullptr || resultLists == nullptr || resultCount == nullptr) {
+        LOGE("Invalid argument, contains nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;

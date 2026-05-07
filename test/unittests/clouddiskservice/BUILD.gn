@@ -749,6 +749,49 @@ ohos_unittest("cloud_disk_service_callback_stub_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("oh_cloud_disk_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_manager.cpp",
+    "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_utils.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_manager_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "ndk/oh_cloud_disk_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
+    "${distributedfile_path}/interfaces/inner_api/native/clouddiskservice_kit_inner",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/include",
+    "${services_path}/clouddiskservice/ipc/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/utils/inner_api",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskManagerNDK\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("clouddisk_service_test") {
   testonly = true
 
@@ -765,6 +808,7 @@ group("clouddisk_service_test") {
     ":convertor_test",
     ":disk_monitor_test",
     ":disk_utils_test",
+    ":oh_cloud_disk_manager_test",
     ":uuid_helper_test",
   ]
 
