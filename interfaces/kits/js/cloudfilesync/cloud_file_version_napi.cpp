@@ -470,6 +470,11 @@ void VersionDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
         return;
     }
     NVal obj = NVal::CreateObject(env);
+    if (msg->downloadProgress_.totalSize == 0) {
+        LOGE("totalSize in downloadProgress is zero");
+        napi_close_handle_scope(env, scope);
+        return;
+    }
     auto process = (msg->downloadProgress_.downloadedSize * PERCENT) / msg->downloadProgress_.totalSize;
     obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.state).val_);
     obj.AddProp("progress", NVal::CreateInt64(env, process).val_);
