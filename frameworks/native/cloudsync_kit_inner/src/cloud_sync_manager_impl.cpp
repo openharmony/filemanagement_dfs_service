@@ -282,7 +282,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
     }
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("TriggerSync001");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("TriggerSync001_" + bundleName);
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
