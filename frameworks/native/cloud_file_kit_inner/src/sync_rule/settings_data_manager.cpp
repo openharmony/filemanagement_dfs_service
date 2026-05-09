@@ -93,15 +93,17 @@ void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
     LOGI("supportUserSettingsData_: %{public}d", supportUserSettingsData_);
 }
 
-void SettingsDataManager::UpdateCurrentUserId()
+bool SettingsDataManager::UpdateCurrentUserId()
 {
     int32_t foregroundLocalId = -1;
     int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(foregroundLocalId);
     if (ret == E_OK) {
         currentUserId_ = foregroundLocalId;
         LOGI("Update current user id to: %{public}d", currentUserId_);
+        return true;
     } else {
         LOGE("GetForegroundOsAccountLocalId failed, ret: %{public}d, currentUserId_: %{public}d", ret, currentUserId_);
+        return false;
     }
 }
 
@@ -126,7 +128,6 @@ void SettingsDataManager::ReregisterAllObservers(int32_t userId)
     UnregisterObserver(MOBILE_DATA_SYNC_KEY);
     UnregisterObserver(LOCAL_SPACE_FREE_KEY);
     UnregisterObserver(LOCAL_SPACE_DAYS_KEY);
-    UnregisterDemonObserver(SYNC_SWITCH_KEY);
 
     currentUserId_ = userId;
     settingsDataMap_.Clear();
@@ -137,7 +138,6 @@ void SettingsDataManager::ReregisterAllObservers(int32_t userId)
     RegisterObserver(MOBILE_DATA_SYNC_KEY);
     RegisterObserver(LOCAL_SPACE_FREE_KEY);
     RegisterObserver(LOCAL_SPACE_DAYS_KEY);
-    ReregisterDemonObserver(SYNC_SWITCH_KEY);
 }
 
 void SettingsDataManager::InitSettingsDataManager()
@@ -495,6 +495,11 @@ void SettingsDataManager::RegisterObserver(const std::string &key)
 void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver)
 {
     LOGD("register key: %{public}s", key.c_str());
+    if (dataObserver == nullptr) {
+        LOGW("dataObserver == nullptr");
+        return;
+    }
+
     DataShare::CreateOptions options;
     options.enabled_ = true;
     auto dataShareHelper = DataShare::DataShareHelper::Creator(SETTING_DATA_QUERY_URI, options);
@@ -503,17 +508,18 @@ void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::D
         return;
     }
 
-    std::string uri = GetSettingsDataUri(key);
+    std::string uri = GetUserSettingsDataUri(key);
     Uri observerUri(uri);
     dataShareHelper->RegisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
-    observerDemon_.emplace_back(dataObserver);
-    LOGI("Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
+    LOGI("demon Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
 }
 
-void SettingsDataManager::ReregisterDemonObserver(const std::string &key)
+void SettingsDataManager::UnregisterDemonObserver(const std::string &key,
+    sptr<AAFwk::DataAbilityObserverStub> dataObserver)
 {
-    if (observerDemon_.empty()) {
+    if (dataObserver == nullptr) {
+        LOGW("dataObserver == nullptr");
         return;
     }
 
@@ -525,31 +531,8 @@ void SettingsDataManager::ReregisterDemonObserver(const std::string &key)
         return;
     }
 
-    Uri observerUri(GetSettingsDataUri(key));
-    for (sptr<AAFwk::DataAbilityObserverStub> dataObserver : observerDemon_) {
-        dataShareHelper->RegisterObserver(observerUri, dataObserver);
-    }
-    dataShareHelper->Release();
-}
-
-void SettingsDataManager::UnregisterDemonObserver(const std::string &key)
-{
-    if (observerDemon_.empty()) {
-        return;
-    }
-
-    DataShare::CreateOptions options;
-    options.enabled_ = true;
-    auto dataShareHelper = DataShare::DataShareHelper::Creator(SETTING_DATA_QUERY_URI, options);
-    if (dataShareHelper == nullptr) {
-        LOGE("dataShareHelper == nullptr");
-        return;
-    }
-
-    Uri observerUri(GetSettingsDataUri(key));
-    for (sptr<AAFwk::DataAbilityObserverStub> dataObserver : observerDemon_) {
-        dataShareHelper->UnregisterObserver(observerUri, dataObserver);
-    }
+    Uri observerUri(GetUserSettingsDataUri(key));
+    dataShareHelper->UnregisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
 }
 
@@ -584,6 +567,7 @@ void SettingsDataObserver::OnChange()
     LOGD("change key: %{public}s", key_.c_str());
     std::string value;
     if (key_ == SYNC_SWITCH_KEY) {
+        LOGI("SYNC_SWITCH_KEY changed");
         SettingsDataManager::QuerySwitchStatus(value);
     } else if (key_ == NETWORK_CONNECTION_KEY) {
         SettingsDataManager::QueryNetworkConnectionStatus(value);

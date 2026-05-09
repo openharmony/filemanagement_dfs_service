@@ -86,14 +86,14 @@ bool SettingDataHelper::IsDataShareReady()
         isDataShareReady_ = true;
         return true;
     }
-    return true;
+    return false;
 }
 
 string SettingDataHelper::GetActiveBundle()
 {
     // get from datashare
     std::string value;
-    SettingsDataManager::QueryParamInSettingsData(SYNC_SWITCH_KEY, value);
+    SettingsDataManager::QueryParamInUserSettingsData(SYNC_SWITCH_KEY, value);
     if (value == AI_FAMILY_STATUS) {
         return HDC_BUNDLE_NAME;
     }
@@ -109,6 +109,10 @@ bool SettingDataHelper::InitActiveBundle()
     if (!IsDataShareReady()) {
         return false;
     }
+    if (!SettingsDataManager::UpdateCurrentUserId()) {
+        return false;
+    }
+
     UpdateActiveBundle();
     RegisterObserver();
     isBundleInited_ = true;
@@ -121,9 +125,6 @@ void SettingDataHelper::UpdateActiveBundle(int32_t userId)
         return;
     }
 
-    SettingsDataManager::UpdateCurrentUserId();
-    SettingsDataManager::UpdateIsSupportUserSettingsData(true);
-
     // get latest data
     string bundle = GetActiveBundle();
     // update FuseData
@@ -132,8 +133,23 @@ void SettingDataHelper::UpdateActiveBundle(int32_t userId)
 
 void SettingDataHelper::RegisterObserver()
 {
-    sptr<SyncSwitchObserver> observer(new (std::nothrow) SyncSwitchObserver());
-    SettingsDataManager::RegisterObserver(SYNC_SWITCH_KEY, observer);
+    userObserver_ = sptr<SyncSwitchObserver>(new (std::nothrow) SyncSwitchObserver());
+    if (userObserver_ == nullptr) {
+        LOGE("userObserver is nullptr");
+        return;
+    }
+    SettingsDataManager::RegisterObserver(SYNC_SWITCH_KEY, userObserver_);
+}
+
+void SettingDataHelper::OnUserSwitched()
+{
+    LOGI("User switched");
+    SettingsDataManager::UnregisterDemonObserver(SYNC_SWITCH_KEY, userObserver_);
+    SettingsDataManager::UpdateCurrentUserId();
+    if (userObserver_ == nullptr) {
+        userObserver_ = sptr<SyncSwitchObserver>(new (std::nothrow) SyncSwitchObserver());
+    }
+    SettingsDataManager::RegisterObserver(SYNC_SWITCH_KEY, userObserver_);
 }
 
 bool SettingDataHelper::GetForegroundUser(int32_t &userId)
@@ -150,6 +166,7 @@ bool SettingDataHelper::GetForegroundUser(int32_t &userId)
 
 void SyncSwitchObserver::OnChange()
 {
+    LOGI("SYNC_SWITCH_KEY changed");
     SettingDataHelper::GetInstance().UpdateActiveBundle();
 }
 } // namespace CloudFile

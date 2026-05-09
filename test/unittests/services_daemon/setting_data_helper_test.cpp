@@ -214,7 +214,7 @@ HWTEST_F(SettingDataHelperTest, IsDataShareReadyTest005, TestSize.Level1)
         EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_ERROR, nullptr)));
         SettingDataHelper::GetInstance().isDataShareReady_ = false;
         bool ret = SettingDataHelper::GetInstance().IsDataShareReady();
-        EXPECT_EQ(ret, true);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "IsDataShareReadyTest005 failed";
@@ -231,7 +231,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus001 start";
     try {
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("2"), Return(E_OK)));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("2"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, HDC_BUNDLE_NAME);
     } catch (...) {
@@ -250,7 +250,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus002 start";
     try {
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, GALLERY_BUNDLE_NAME);
     } catch (...) {
@@ -269,7 +269,7 @@ HWTEST_F(SettingDataHelperTest, GetSwitchStatus003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetSwitchStatus003 start";
     try {
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
         string bundle = SettingDataHelper::GetInstance().GetActiveBundle();
         EXPECT_EQ(bundle, GALLERY_BUNDLE_NAME);
     } catch (...) {
@@ -337,16 +337,44 @@ HWTEST_F(SettingDataHelperTest, InitActiveBundle003, TestSize.Level1)
         shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();
         EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
         EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, helper)));
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
+        EXPECT_CALL(*mock_, UpdateCurrentUserId()).WillOnce(Return(false));
+
+        bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitActiveBundle003 failed";
+    }
+    GTEST_LOG_(INFO) << "InitActiveBundle003 end";
+}
+
+/**
+ * @tc.name: InitActiveBundle004
+ * @tc.desc: Verify the InitActiveBundle function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SettingDataHelperTest, InitActiveBundle004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitActiveBundle004 start";
+    try {
+        SettingDataHelper::GetInstance().dataMap_.clear();
+        SettingDataHelper::GetInstance().isBundleInited_ = false;
+        SettingDataHelper::GetInstance().isDataShareReady_ = false;
+
+        shared_ptr<DataShareHelperMock> helper =  std::make_shared<DataShareHelperMock>();
+        EXPECT_CALL(*helper, Release()).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, Create()).WillOnce(Return(make_pair(DataShare::E_OK, helper)));
+        EXPECT_CALL(*mock_, UpdateCurrentUserId()).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
 
         bool ret = SettingDataHelper::GetInstance().InitActiveBundle();
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "InitActiveBundle003 failed";
+        GTEST_LOG_(INFO) << "InitActiveBundle004 failed";
     }
-    GTEST_LOG_(INFO) << "InitActiveBundle003 end";
+    GTEST_LOG_(INFO) << "InitActiveBundle004 end";
 }
 
 /**
@@ -358,7 +386,7 @@ HWTEST_F(SettingDataHelperTest, UpdateActiveBundle001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UpdateActiveBundle001 start";
     try {
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
 
         SettingDataHelper::GetInstance().UpdateActiveBundle();
@@ -378,7 +406,7 @@ HWTEST_F(SettingDataHelperTest, UpdateActiveBundle002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UpdateActiveBundle002 start";
     try {
-        EXPECT_CALL(*mock_, QueryParamInSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
+        EXPECT_CALL(*mock_, QueryParamInUserSettingsData(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
         EXPECT_CALL(*accountMock_, GetForegroundOsAccountLocalId(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(-1)));
 
         SettingDataHelper::GetInstance().UpdateActiveBundle(-1);
@@ -399,11 +427,53 @@ HWTEST_F(SettingDataHelperTest, RegisterObserver001, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserver001 start";
     try {
         SettingDataHelper::GetInstance().RegisterObserver();
+        EXPECT_TRUE(SettingDataHelper::GetInstance().userObserver_ != nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterObserver001 failed";
     }
     GTEST_LOG_(INFO) << "RegisterObserver001 end";
+}
+
+/**
+ * @tc.name: OnUserSwitched001
+ * @tc.desc: Verify the RegisterObserver function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SettingDataHelperTest, OnUserSwitched001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUserSwitched001 start";
+    try {
+        EXPECT_CALL(*mock_, UpdateCurrentUserId()).WillOnce(Return(true));
+        SettingDataHelper::GetInstance().userObserver_ = nullptr;
+        SettingDataHelper::GetInstance().OnUserSwitched();
+        EXPECT_TRUE(SettingDataHelper::GetInstance().userObserver_ != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUserSwitched001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUserSwitched001 end";
+}
+
+/**
+ * @tc.name: OnUserSwitched002
+ * @tc.desc: Verify the RegisterObserver function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SettingDataHelperTest, OnUserSwitched002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnUserSwitched002 start";
+    try {
+        EXPECT_CALL(*mock_, UpdateCurrentUserId()).WillOnce(Return(false));
+        SettingDataHelper::GetInstance().userObserver_ =
+            sptr<SyncSwitchObserver>(new (std::nothrow) SyncSwitchObserver());
+        SettingDataHelper::GetInstance().OnUserSwitched();
+        EXPECT_TRUE(SettingDataHelper::GetInstance().userObserver_ != nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnUserSwitched002 failed";
+    }
+    GTEST_LOG_(INFO) << "OnUserSwitched002 end";
 }
 
 /**
