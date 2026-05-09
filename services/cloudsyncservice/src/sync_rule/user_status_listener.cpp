@@ -32,17 +32,17 @@ UserStatusSubscriber::UserStatusSubscriber(const EventFwk::CommonEventSubscribeI
 void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
     auto action = eventData.GetWant().GetAction();
-    ffrt::submit([action, this]() {
-        if (listener_ == nullptr) {
+    ffrt::submit([action, listener = listener_]() {
+        if (listener == nullptr) {
             LOGE("listener_ is nullptr");
             return;
         }
         if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
             LOGI("user unlocked");
-            listener_->NotifyUserUnlocked();
+            listener->NotifyUserUnlocked();
         } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT) {
             LOGI("account logout");
-            listener_->DoCleanVideoCache();
+            listener->DoCleanVideoCache();
         }
     });
 }

@@ -34,8 +34,8 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     auto action = eventData.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY) {
         LOGI("Battery status changed: BATTERY_STATUS_OKAY");
-        ffrt::submit([this]() {
-            listener_->OnStatusNormal();
+        ffrt::submit([listener = listener_]() {
+            listener->OnStatusNormal();
         });
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
         LOGI("Charging status changed: discharging");

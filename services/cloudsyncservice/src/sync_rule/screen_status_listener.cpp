@@ -38,8 +38,8 @@ void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eve
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF) {
         LOGI("Screen Off!");
         ScreenStatus::SetScreenState(ScreenStatus::ScreenState::SCREEN_OFF);
-        ffrt::submit([this]() {
-            listener_->ScreenOff();
+        ffrt::submit([listener = listener_]() {
+            listener->ScreenOff();
         });
     }
 }

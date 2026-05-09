@@ -162,13 +162,17 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     values.PutInt(SYNC_ERROR_TYPE, static_cast<int32_t>(errorType));
     string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
     vector<string> whereArgs = { to_string(userId), bundleName };
-    if (rdb_ == nullptr) {
-        if (RdbInit() != E_OK) {
-            LOGE("Data Syner init rdb failed");
-            return E_RDB;
+    int32_t ret = 0;
+    {
+        std::lock_guard<std::mutex> lck(rdbMutex_);
+        if (rdb_ == nullptr) {
+            if (RdbInit() != E_OK) {
+                LOGE("Data Syner init rdb failed");
+                return E_RDB;
+            }
         }
+        ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
     }
-    int32_t ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("update sync state failed: %{public}d", ret);
         return E_RDB;
@@ -295,6 +299,7 @@ int32_t DataSyncerRdbStore::QueryCloudSync(int32_t userId,
 int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
     std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
+    std::lock_guard<std::mutex> lck(rdbMutex_);
     if (rdb_ == nullptr) {
         if (RdbInit() != E_OK) {
             LOGE("Data Syner init rdb failed");

@@ -131,23 +131,6 @@ void CloudSyncService::CovertBundleName(std::string &bundleName)
     }
 }
 
-void CloudSyncService::GetBundleNameUserInfo(const std::vector<std::string> &uriVec,
-                                             BundleNameUserInfo &bundleNameUserInfo)
-{
-    Uri uri(uriVec[0]);
-    string bundleName = uri.GetAuthority();
-    bundleNameUserInfo.bundleName = bundleName;
-
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    if (callerUserId == 0) {
-        callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
-    }
-    bundleNameUserInfo.userId = callerUserId;
-
-    auto callerPid = DfsuAccessTokenHelper::GetPid();
-    bundleNameUserInfo.pid = callerPid;
-}
-
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
 {
     const std::string HMDFS_DIR = "/mnt/hmdfs/";
