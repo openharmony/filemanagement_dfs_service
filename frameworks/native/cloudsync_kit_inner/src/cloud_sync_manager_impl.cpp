@@ -556,6 +556,28 @@ int32_t CloudSyncManagerImpl::UnRegisterUploadCallback(const UploadCallbackInfo 
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::PauseUpload(const std::string &uri)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("PauseUpload");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return  CloudSyncServiceProxy->PauseUpload(uri);
+}
+
+int32_t CloudSyncManagerImpl::ResumeUpload(const std::string &uri)
+{
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("ResumeUpload");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->ResumeUpload(uri);
+}
+
 int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("StopDownloadFile start");

@@ -972,6 +972,36 @@ int32_t CloudSyncService::GetUploadList(const std::vector<std::string> &uriVec,
     return ret;
 }
 
+int32_t CloudSyncService::PauseUpload(const std::string &uri)
+{
+    LOGI("Begin PauseUpload, uri: %{public}s", uri.c_str());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    BundleNameUserInfo bundleNameUserInfo;
+    int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+    ret = dataSyncManager_->PauseUpload(bundleNameUserInfo, uri);
+    LOGI("End PauseUpload, ret: %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncService::ResumeUpload(const std::string &uri)
+{
+    LOGI("Begin ResumeUpload, uri: %{public}s", uri.c_str());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+    BundleNameUserInfo bundleNameUserInfo;
+    int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+    ret = dataSyncManager_->ResumeUpload(bundleNameUserInfo, uri);
+    LOGI("End ResumeUpload, ret: %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncService::StartDownloadFile(const std::string &uri,
                                             const sptr<IRemoteObject> &downloadCallback,
                                             int64_t &downloadId)

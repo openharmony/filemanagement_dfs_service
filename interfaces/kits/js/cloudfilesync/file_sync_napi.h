@@ -39,6 +39,8 @@ public:
     static napi_value RegisterUploadProgress(napi_env env, napi_callback_info info);
     static napi_value UnRegisterUploadProgress(napi_env env, napi_callback_info info);
     static napi_value GetUploadList(napi_env env, napi_callback_info info);
+    static napi_value PauseUpload(napi_env env, napi_callback_info info);
+    static napi_value ResumeUpload(napi_env env, napi_callback_info info);
 };
 
 class CloudUploadCallbackImpl : public CloudUploadCallback,

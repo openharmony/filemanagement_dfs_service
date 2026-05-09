@@ -127,6 +127,8 @@ public:
         const std::string &bundleName));
     MOCK_METHOD3(SetMediaPreShared, int32_t(const std::string &albumId, const std::string &albumName,
         const std::string &localPath));
+    MOCK_METHOD1(PauseUpload, int32_t(const std::string &uri));
+    MOCK_METHOD1(ResumeUpload, int32_t(const std::string &uri));
 
 private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,

@@ -64,11 +64,12 @@ public:
     static const std::string LOCAL_FLAG;
 
     /*  description for LOCAL_FLAG shift
-     *   |-----------------bit 63 ~ 2 -------------------|----bit 1---|---bit 0----|
-     *   |------------------reserved---------------------|---isWrite--|-isConflict-|
+     *   |-----------------bit 63 ~ 3 -------------------|----bit 2---|----bit 1---|---bit 0----|
+     *   |------------------reserved---------------------|---isPaused--|---isWrite--|-isConflict-|
     */
     static const uint64_t LOCAL_FLAG_MASK_ISCONFLICT;
     static const uint64_t LOCAL_FLAG_MASK_ISLOCALDIRTY;
+    static const uint64_t LOCAL_FLAG_MASK_ISPAUSED;
 
     // table name
     static const std::string FILES_TABLE;

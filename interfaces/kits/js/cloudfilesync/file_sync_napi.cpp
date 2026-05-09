@@ -289,6 +289,69 @@ napi_value FileSyncNapi::GetUploadList(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
+napi_value FileSyncNapi::PauseUpload(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("PauseUpload Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ || uriNVal == nullptr) {
+        LOGE("PauseUpload get uri parameter failed!");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    string uri = uriNVal.get();
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
+        NError(Convert2JsErrNum(E_ILLEGAL_URI)).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().PauseUpload(uri);
+    if (ret != E_OK) {
+        LOGE("PauseUpload failed, ret:%{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value FileSyncNapi::ResumeUpload(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("ResumeUpload Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succ, uriNVal, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succ || uriNVal == nullptr) {
+        LOGE("ResumeUpload get uri parameter failed!");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    string uri = uriNVal.get();
+    if (uri.empty()) {
+        LOGE("unavailable uri.");
+        NError(Convert2JsErrNum(E_ILLEGAL_URI)).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().ResumeUpload(uri);
+    if (ret != E_OK) {
+        LOGE("ResumeUpload failed, ret:%{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
 napi_value FileSyncNapi::RegisterUploadProgress(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -519,6 +582,8 @@ bool FileSyncNapi::Export()
         NVal::DeclareNapiFunction("getUploadList", FileSyncNapi::GetUploadList),
         NVal::DeclareNapiFunction("registerUploadProgress", FileSyncNapi::RegisterUploadProgress),
         NVal::DeclareNapiFunction("unregisterUploadProgress", FileSyncNapi::UnRegisterUploadProgress),
+        NVal::DeclareNapiFunction("pauseUpload", FileSyncNapi::PauseUpload),
+        NVal::DeclareNapiFunction("resumeUpload", FileSyncNapi::ResumeUpload),
     };
 
     SetClassName("FileSync");

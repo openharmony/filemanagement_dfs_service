@@ -119,6 +119,7 @@ void CloudSyncServiceTest::TearDownTestCase(void)
 void CloudSyncServiceTest::SetUp(void)
 {
     std::cout << "SetUp" << std::endl;
+    testing::Mock::VerifyAndClear(dfsuAccessToken_.get());
 }
 
 void CloudSyncServiceTest::TearDown(void)
@@ -2717,6 +2718,146 @@ HWTEST_F(CloudSyncServiceTest, StartTransferTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "StartTransferTest002 failed";
     }
     GTEST_LOG_(INFO) << "StartTransferTest002 end";
+}
+
+/**
+ * @tc.name: PauseUploadTest001
+ * @tc.desc: Verify the PauseUpload function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, PauseUploadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->PauseUpload(uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest001 end";
+}
+
+/**
+ * @tc.name: PauseUploadTest002
+ * @tc.desc: Verify the PauseUpload function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, PauseUploadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->PauseUpload(uri);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest002 end";
+}
+
+/**
+ * @tc.name: PauseUploadTest003
+ * @tc.desc: Verify the PauseUpload function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, PauseUploadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->PauseUpload(uri);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest003 end";
+}
+
+/**
+ * @tc.name: ResumeUploadTest001
+ * @tc.desc: Verify the ResumeUpload function with success.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, ResumeUploadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        auto ret = servicePtr_->ResumeUpload(uri);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest001 end";
+}
+
+/**
+ * @tc.name: ResumeUploadTest002
+ * @tc.desc: Verify the ResumeUpload function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, ResumeUploadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest002 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+        auto ret = servicePtr_->ResumeUpload(uri);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest002 end";
+}
+
+/**
+ * @tc.name: ResumeUploadTest003
+ * @tc.desc: Verify the ResumeUpload function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncServiceTest, ResumeUploadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest003 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        std::string uri = "file://com.example.test/path1";
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
+        auto ret = servicePtr_->ResumeUpload(uri);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest003 end";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

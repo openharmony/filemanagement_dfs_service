@@ -32,6 +32,7 @@ public:
     void TearDown();
     std::shared_ptr<CloudSyncManagerImpl> managePtr_;
     static inline std::shared_ptr<MockServiceProxy> proxy_ = nullptr;
+    sptr<CloudSyncServiceMock> serviceProxy_ = nullptr;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -60,6 +61,8 @@ void CloudSyncManagerTest::SetUp(void)
 {
     managePtr_ = make_shared<CloudSyncManagerImpl>();
     managePtr_->startSyncPending_ = false;
+    serviceProxy_ = sptr(new CloudSyncServiceMock());
+    testing::Mock::VerifyAndClear(proxy_.get());
     std::cout << "SetUp" << std::endl;
 }
 
@@ -335,6 +338,141 @@ HWTEST_F(CloudSyncManagerTest, GetDownloadListTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDownloadListTest004 End";
 }
 
+/**
+ * @tc.name: PauseUploadTest001
+ * @tc.desc: Verify PauseUpload function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, PauseUploadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest001 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, PauseUpload(_)).WillOnce(Return(E_OK));
+        int32_t res = managePtr_->PauseUpload(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest001 End";
+}
+
+/**
+ * @tc.name: PauseUploadTest002
+ * @tc.desc: Verify PauseUpload function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, PauseUploadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest002 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, PauseUpload(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = managePtr_->PauseUpload(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest002 End";
+}
+
+/**
+ * @tc.name: PauseUploadTest003
+ * @tc.desc: Verify PauseUpload function with nullptr proxy.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, PauseUploadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PauseUploadTest003 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = managePtr_->PauseUpload(uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PauseUploadTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "PauseUploadTest003 End";
+}
+
+/**
+ * @tc.name: ResumeUploadTest001
+ * @tc.desc: Verify ResumeUpload function.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, ResumeUploadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest001 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, ResumeUpload(_)).WillOnce(Return(E_OK));
+        int32_t res = managePtr_->ResumeUpload(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest001 End";
+}
+
+/**
+ * @tc.name: ResumeUploadTest002
+ * @tc.desc: Verify ResumeUpload function with error.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, ResumeUploadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest002 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, ResumeUpload(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        int32_t res = managePtr_->ResumeUpload(uri);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest002 End";
+}
+
+/**
+ * @tc.name: ResumeUploadTest003
+ * @tc.desc: Verify ResumeUpload function with nullptr proxy.
+ * @tc.type: FUNC
+ * @tc.require: issueIC7I52
+ */
+HWTEST_F(CloudSyncManagerTest, ResumeUploadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResumeUploadTest003 Start";
+    try {
+        std::string uri = "file://com.example.test/path1";
+        
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        int32_t res = managePtr_->ResumeUpload(uri);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResumeUploadTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResumeUploadTest003 End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

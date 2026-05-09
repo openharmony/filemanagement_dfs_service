@@ -94,4 +94,6 @@ interface OHOS.FileManagement.CloudSync.ICloudSyncService
     void UnRegisterUploadCallbackInner([in] String callbackId, [in] String bundleName);
     void RegisterUploadCallbackInner([in] IRemoteObject remoteObject, [in] String callbackId, [in] String bundleName);
     void SetMediaPreShared([in] String albumId, [in] String albumName, [in] String localPath);
+    void PauseUpload([in] String uri);
+    void ResumeUpload([in] String uri);
 }

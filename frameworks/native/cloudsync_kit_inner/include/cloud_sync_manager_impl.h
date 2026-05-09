@@ -106,6 +106,8 @@ public:
     int32_t UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo) override;
     int32_t SetMediaPreShared(const std::string &albumId, const std::string &albumName,
         const std::string &localPath) override;
+    int32_t PauseUpload(const std::string &uri) override;
+    int32_t ResumeUpload(const std::string &uri) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);

@@ -223,6 +223,10 @@ static ani_status BindContextOnFileSync(ani_env *env)
                             reinterpret_cast<void *>(FileSyncAni::FileSyncUnRegisterUploadProgress)},
         ani_native_function{"FileSyncGetUploadList", getUploadListSign.c_str(),
                             reinterpret_cast<void *>(FileSyncAni::FileSyncGetUploadList)},
+        ani_native_function{"FileSyncPauseUpload", sSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncPauseUpload)},
+        ani_native_function{"FileSyncResumeUpload", sSign.c_str(),
+                            reinterpret_cast<void *>(FileSyncAni::FileSyncResumeUpload)},
     };
 
     ret = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
