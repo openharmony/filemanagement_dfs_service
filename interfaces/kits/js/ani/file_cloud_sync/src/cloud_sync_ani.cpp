@@ -279,7 +279,6 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
         ErrorHandler::Throw(env, E_IPCSS);
         return static_cast<int32_t>(ret);
     }
-    auto data = CloudSyncCore::DoGetFileSyncState(filePath);
 
     Uri fileUri(filePath);
     if (!CheckIsValidUri(fileUri)) {
@@ -287,6 +286,7 @@ ani_int CloudSyncAni::GetFileSyncState(ani_env *env, ani_class clazz, ani_string
         ErrorHandler::Throw(env, JsErrCode::E_INVALID_URI);
         return E_INVALID_URI;
     }
+    auto data = CloudSyncCore::DoGetFileSyncState(filePath);
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloud sync do GetFileSyncState failed, ret = %{public}d", err.GetErrNo());

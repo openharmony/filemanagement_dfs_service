@@ -84,6 +84,10 @@ ani_status VersionDownloadCallbackAniImpl::GetDownloadProgress(ani_env *env,
         LOGE("get ani enum fail.");
         return ret;
     }
+    if (progress.totalSize == 0) {
+        LOGE("totalSize in progress is zero");
+        return ANI_ERROR;
+    }
     ani_long process = (static_cast<ani_long>(progress.downloadedSize) / progress.totalSize) * PERCENT;
     ret = env->Object_New(cls, ctor, &pg, stateEnumItem, static_cast<ani_int>(process), ErrorEnumItem);
     if (ret != ANI_OK) {

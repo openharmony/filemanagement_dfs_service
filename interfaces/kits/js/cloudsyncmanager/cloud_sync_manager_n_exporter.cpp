@@ -248,9 +248,17 @@ bool ParseSwitches(napi_env env, napi_value object, SwitchDataObj &data)
         return false;
     }
     napi_value bundleNameArr = nullptr;
-    napi_get_property_names(env, object, &bundleNameArr);
+    napi_status status = napi_get_property_names(env, object, &bundleNameArr);
+    if (status != napi_ok) {
+        LOGE("ParseSwitches failed, get property names failed");
+        return false;
+    }
     uint32_t bundleNameNum = 0;
-    napi_get_array_length(env, bundleNameArr, &bundleNameNum);
+    status = napi_get_array_length(env, bundleNameArr, &bundleNameNum);
+    if (status != napi_ok) {
+        LOGE("ParseSwitches failed, get array length failed");
+        return false;
+    }
     for (uint32_t i = 0; i < bundleNameNum; ++i) {
         napi_value item = nullptr;
         napi_get_element(env, bundleNameArr, i, &item);
@@ -330,9 +338,17 @@ bool ParseAppActions(napi_env env, napi_value object, CleanOptions &cleanOptions
         return false;
     }
     napi_value bundleNameArr = nullptr;
-    napi_get_property_names(env, object, &bundleNameArr);
+    napi_status status = napi_get_property_names(env, object, &bundleNameArr);
+    if (status != napi_ok) {
+        LOGE("ParseAppActions failed, get property names failed");
+        return false;
+    }
     uint32_t bundleNameNum = 0;
-    napi_get_array_length(env, bundleNameArr, &bundleNameNum);
+    status = napi_get_array_length(env, bundleNameArr, &bundleNameNum);
+    if (status != napi_ok) {
+        LOGE("ParseAppActions failed, get array length failed");
+        return false;
+    }
     for (uint32_t i = 0; i < bundleNameNum; ++i) {
         napi_value item = nullptr;
         napi_get_element(env, bundleNameArr, i, &item);

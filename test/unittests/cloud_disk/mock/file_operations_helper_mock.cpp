@@ -32,6 +32,7 @@ namespace {
     static const string LOCAL_PATH_HMDFS_CLOUD = "/hmdfs/cloud/";
     static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
     static const int32_t STAT_MODE_DIR = 0771;
+    static const int32_t STAT_MODE_REG = 0664;
     static const int32_t NULL_PTR = -1;
     static const int32_t MOCK0 = 0;
     static const int32_t MOCK1 = 1;
@@ -42,6 +43,7 @@ namespace {
     static const int32_t MOCK6 = 6;
     static const int32_t MOCK7 = 7;
     static const int32_t MOCK8 = 8;
+    static const int32_t MOCK9 = 9;
     static const int32_t MOCKUSERID0 = 100;
     static const int32_t MOCKUSERID1 = 1;
     static const int32_t STATSIZE = 1;
@@ -137,6 +139,9 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
     } else if (key == MOCK8) {
         ptr->parent = MOCK8;
         ptr->stat.st_size = TEST_MTIME;
+    } else if (key == MOCK9) {
+        ptr->parent = MOCK9;
+        ptr->stat.st_mode = STAT_MODE_REG;
     }
     return ptr;
 }

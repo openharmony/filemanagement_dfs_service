@@ -2387,7 +2387,11 @@ void FileOperationsCloud::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *a
             fuse_reply_err(req, ENOSYS);
             return;
         }
-
+        if (inBuf == nullptr) {
+            LOGE("Ioctl inBuf is nullptr");
+            fuse_reply_err(req, EINVAL);
+            return;
+        }
         const struct CloudDiskCopy *dataCopy = reinterpret_cast<const struct CloudDiskCopy *>(inBuf);
         std::string dest(dataCopy->destPath);
         std::string destPath = CloudFileUtils::GetRealPath(dest);

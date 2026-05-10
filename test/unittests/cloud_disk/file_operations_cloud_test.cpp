@@ -3392,4 +3392,33 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest018, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SetXattrTest018 End";
 }
+
+/**
+ * @tc.name: IoctlTest003
+ * @tc.desc: Verify the Ioctl function
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudTest, IoctlTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IoctlTest003 Start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 9;
+        int cmd = 0x5000f20c;
+        void *arg = nullptr;
+        struct fuse_file_info *fi = nullptr;
+        unsigned flags = 0;
+        const void *inBuf = nullptr;
+        size_t inBufsz = 0;
+        size_t outBufsz = 0;
+
+        fileOperationsCloud_->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+ 
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IoctlTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "IoctlTest003 End";
+}
 }
