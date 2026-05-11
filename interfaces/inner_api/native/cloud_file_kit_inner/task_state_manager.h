@@ -37,6 +37,7 @@ enum class TaskType : uint64_t {
     CLEAN_DENTRY_FILE_TASK = 1 << 10,
     CLEAN_CLOUD_CACHE_TASK = 1 << 11,
     TRANSFER_TASK = 1 << 12,
+    FILE_OPTIMIZE_TASK = 1 << 13,
 };
 class TaskStateManager : public NoCopyable {
 public:
@@ -46,6 +47,7 @@ public:
     void CompleteTask(std::string bundleName, TaskType task);
     bool HasTask(std::string bundleName, TaskType task);
     void StartTask();
+
 private:
     TaskStateManager();
     void DelayUnloadTask(bool needSetCritical);
