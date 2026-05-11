@@ -1519,12 +1519,8 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterObserverTest003 Start";
     try {
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-        SettingsDataManager::observerDemon_.clear();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
         SettingsDataManager::RegisterObserver("", nullptr);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 0);
-
-        SettingsDataManager::observerDemon_.clear();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterObserverTest003 Failed";
@@ -1537,13 +1533,9 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterObserverTest004 Start";
     try {
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        SettingsDataManager::observerDemon_.clear();
-        SettingsDataManager::RegisterObserver("", nullptr);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
-
-        SettingsDataManager::observerDemon_.clear();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+        sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver("key"));
+        SettingsDataManager::RegisterObserver("", dataObserver);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterObserverTest004 Failed";
@@ -1552,64 +1544,20 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserverTest004 End";
 }
 
-HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest001, TestSize.Level1)
+HWTEST_F(SettingsDataManagerTest, RegisterObserverTest005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest001 Start";
-    try {
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
-        std::string key = "key1";
-        SettingsDataManager::observerDemon_.clear();
-        SettingsDataManager::ReregisterDemonObserver(key);
-        EXPECT_TRUE(SettingsDataManager::observerDemon_.empty());
-
-        SettingsDataManager::observerDemon_.clear();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ReregisterDemonObserverTest001 Failed";
-    }
-
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest001 End";
-}
-
-HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest002 Start";
-    try {
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-        std::string key = "key1";
-        sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
-        SettingsDataManager::observerDemon_.emplace_back(dataObserver);
-        SettingsDataManager::ReregisterDemonObserver(key);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
-
-        SettingsDataManager::observerDemon_.clear();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ReregisterDemonObserverTest002 Failed";
-    }
-
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest002 End";
-}
-
-HWTEST_F(SettingsDataManagerTest, ReregisterDemonObserverTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest003 Start";
+    GTEST_LOG_(INFO) << "RegisterObserverTest005 Start";
     try {
         std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        std::string key = "key1";
-        sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
-        SettingsDataManager::observerDemon_.emplace_back(dataObserver);
-        SettingsDataManager::ReregisterDemonObserver(key);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
-
-        SettingsDataManager::observerDemon_.clear();
+        sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver("key"));
+        SettingsDataManager::RegisterObserver("", dataObserver);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ReregisterDemonObserverTest003 Failed";
+        GTEST_LOG_(INFO) << "RegisterObserverTest005 Failed";
     }
 
-    GTEST_LOG_(INFO) << "ReregisterDemonObserverTest003 End";
+    GTEST_LOG_(INFO) << "RegisterObserverTest005 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest001, TestSize.Level1)
@@ -1618,11 +1566,7 @@ HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest001, TestSize.Level
     try {
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).Times(0);
         std::string key = "key1";
-        SettingsDataManager::observerDemon_.clear();
-        SettingsDataManager::UnregisterDemonObserver(key);
-        EXPECT_TRUE(SettingsDataManager::observerDemon_.empty());
-
-        SettingsDataManager::observerDemon_.clear();
+        SettingsDataManager::UnregisterDemonObserver(key, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnregisterDemonObserverTest001 Failed";
@@ -1638,11 +1582,7 @@ HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest002, TestSize.Level
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
         std::string key = "key1";
         sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
-        SettingsDataManager::observerDemon_.emplace_back(dataObserver);
-        SettingsDataManager::UnregisterDemonObserver(key);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
-
-        SettingsDataManager::observerDemon_.clear();
+        SettingsDataManager::UnregisterDemonObserver(key, dataObserver);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnregisterDemonObserverTest002 Failed";
@@ -1659,11 +1599,7 @@ HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest003, TestSize.Level
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
         std::string key = "key1";
         sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
-        SettingsDataManager::observerDemon_.emplace_back(dataObserver);
-        SettingsDataManager::UnregisterDemonObserver(key);
-        EXPECT_EQ(SettingsDataManager::observerDemon_.size(), 1);
-
-        SettingsDataManager::observerDemon_.clear();
+        SettingsDataManager::UnregisterDemonObserver(key, dataObserver);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnregisterDemonObserverTest003 Failed";
@@ -1847,8 +1783,9 @@ HWTEST_F(SettingsDataManagerTest, UpdateCurrentUserIdTest001, TestSize.Level1)
         EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
             .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
         SettingsDataManager::currentUserId_ = 10;
-        SettingsDataManager::UpdateCurrentUserId();
+        bool ret = SettingsDataManager::UpdateCurrentUserId();
         EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+        EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest001 Failed";
@@ -1864,8 +1801,9 @@ HWTEST_F(SettingsDataManagerTest, UpdateCurrentUserIdTest002, TestSize.Level1)
         EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
             .WillOnce(DoAll(SetArgReferee<0>(100), Return(-1)));
         SettingsDataManager::currentUserId_ = 10;
-        SettingsDataManager::UpdateCurrentUserId();
+        bool ret = SettingsDataManager::UpdateCurrentUserId();
         EXPECT_EQ(SettingsDataManager::currentUserId_, 10);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UpdateCurrentUserIdTest002 Failed";

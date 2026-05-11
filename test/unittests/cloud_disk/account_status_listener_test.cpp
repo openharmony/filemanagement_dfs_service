@@ -158,7 +158,7 @@ HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
         string data(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
         EventFwk::CommonEventData eventData(want, USER_ID, data);
-        
+
         SettingDataHelper::GetInstance().isBundleInited_ = true;
         accountStatusSubscriber_->OnReceiveEvent(eventData);
         EXPECT_TRUE(true);
@@ -167,6 +167,54 @@ HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnReceiveEventTest004  ERROR";
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest005
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_FOREGROUND);
+        string data(EventFwk::CommonEventSupport::COMMON_EVENT_USER_FOREGROUND);
+        EventFwk::CommonEventData eventData(want, USER_ID, data);
+
+        SettingDataHelper::GetInstance().isBundleInited_ = true;
+        accountStatusSubscriber_->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest005  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest005 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest006
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(AccountStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+        string data(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+        EventFwk::CommonEventData eventData(want, USER_ID, data);
+
+        SettingDataHelper::GetInstance().isBundleInited_ = true;
+        accountStatusSubscriber_->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnReceiveEventTest006  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest006 End";
 }
 
 /**

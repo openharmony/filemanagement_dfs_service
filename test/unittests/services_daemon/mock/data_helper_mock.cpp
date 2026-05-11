@@ -48,20 +48,29 @@ void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
     return;
 }
 
-void SettingsDataManager::UpdateCurrentUserId()
-{
-    return;
-}
-
-int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)
+bool SettingsDataManager::UpdateCurrentUserId()
 {
     if (IDataHelper::ins != nullptr) {
-        return IDataHelper::ins->QueryParamInSettingsData(key, value);
+        return IDataHelper::ins->UpdateCurrentUserId();
+    }
+    return true;
+}
+
+int32_t SettingsDataManager::QueryParamInUserSettingsData(const std::string &key, std::string &value)
+{
+    if (IDataHelper::ins != nullptr) {
+        return IDataHelper::ins->QueryParamInUserSettingsData(key, value);
     }
     return E_OK;
 }
 
 void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver)
+{
+    return;
+}
+
+void SettingsDataManager::UnregisterDemonObserver(const std::string &key,
+    sptr<AAFwk::DataAbilityObserverStub> dataObserver)
 {
     return;
 }

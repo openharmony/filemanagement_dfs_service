@@ -36,6 +36,7 @@ public:
     void SetUserData(int32_t userId, void *data);
     bool InitActiveBundle();
     void UpdateActiveBundle(int32_t userId = -1);
+    void OnUserSwitched();
 
 private:
     std::string GetActiveBundle();
@@ -48,6 +49,7 @@ private:
     std::map<int32_t, void *> dataMap_;
     bool isDataShareReady_ = false;
     bool isBundleInited_ = false;
+    sptr<SyncSwitchObserver> userObserver_ = nullptr;
     std::mutex dataMtx_;
     std::mutex initMtx_;
 };
