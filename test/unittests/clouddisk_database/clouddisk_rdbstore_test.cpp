@@ -24,6 +24,7 @@
 #include "result_set_mock.h"
 #include "transaction_mock.h"
 #include "clouddisk_rdbstore.cpp"
+#include "data_syncer_rdb_store.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -67,6 +68,7 @@ void CloudDiskRdbStoreTest::TearDown(void)
     insMock->DisableMock();
     insMock = nullptr;
     clouddiskrdbStore_ = nullptr;
+    DataSyncerRdbStoreMock::proxy_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -6885,5 +6887,41 @@ HWTEST_F(CloudDiskRdbStoreTest, HandleRecycleTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "HandleRecycleTest002 failed";
     }
     GTEST_LOG_(INFO) << "HandleRecycleTest002 End";
+}
+
+/**
+ * @tc.name: UpdateDownloadSizeTest001
+ * @tc.desc: Verify the UpdateDownloadSize function.
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateDownloadSizeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateDownloadSizeTest001 Start";
+    try {
+        clouddiskrdbStore_->rdbStore_ = nullptr;
+        clouddiskrdbStore_->UpdateDownloadSize(0);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "UpdateDownloadSizeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateDownloadSizeTest001 End";
+}
+
+/**
+ * @tc.name: UpdateTotalDownloadSizeTest001
+ * @tc.desc: Verify the UpdateTotalDownloadSize function.
+ * @tc.type: FUNC
+ * @tc.require: #2971
+ */
+HWTEST_F(CloudDiskRdbStoreTest, UpdateTotalDownloadSizeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateTotalDownloadSizeTest001 Start";
+    try {
+        clouddiskrdbStore_->rdbStore_ = nullptr;
+        clouddiskrdbStore_->UpdateTotalDownloadSize(0);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "UpdateTotalDownloadSizeTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdateTotalDownloadSizeTest001 End";
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

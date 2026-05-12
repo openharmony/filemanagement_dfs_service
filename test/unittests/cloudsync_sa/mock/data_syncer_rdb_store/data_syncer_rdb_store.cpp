@@ -32,4 +32,31 @@ int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<Nati
     return DataSyncerRdbStoreMock::proxy_->QueryDataSyncer(userId, resultSet);
 }
 
+int32_t DataSyncerRdbStore::GetTotalDownloadSize(int32_t userId, const std::string &bundleName,
+    int64_t &totalDownloadSize)
+{
+    if (DataSyncerRdbStoreMock::proxy_ == nullptr) {
+        return E_OK;
+    }
+    return DataSyncerRdbStoreMock::proxy_->GetTotalDownloadSize(userId, bundleName, totalDownloadSize);
+}
+
+int32_t DataSyncerRdbStore::UpdateTotalDownloadSize(int32_t userId, const std::string &bundleName,
+    int64_t totalDownloadSize)
+{
+    if (DataSyncerRdbStoreMock::proxy_ == nullptr) {
+        return E_OK;
+    }
+    return DataSyncerRdbStoreMock::proxy_->UpdateTotalDownloadSize(userId, bundleName, totalDownloadSize);
+}
+
+int32_t DataSyncerRdbStore::UpdateDownloadSize(int32_t userId, const std::string &bundleName,
+    int64_t totalDownloadSize)
+{
+    if (DataSyncerRdbStoreMock::proxy_ == nullptr) {
+        return E_OK;
+    }
+    return DataSyncerRdbStoreMock::proxy_->UpdateDownloadSize(userId, bundleName, totalDownloadSize);
+}
+
 } // namespace OHOS::FileManagement::CloudSync

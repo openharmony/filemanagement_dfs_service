@@ -722,6 +722,74 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return E_OK;
 }
 
+int32_t CloudSyncService::CleanAllFileCacheInner()
+{
+    LOGI("Begin CleanAllFileCacheInner");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
+
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName) != E_OK) {
+        return E_INVAL_ARG;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t ret = dataSyncManager_->CleanCache(bundleName, callerUserId);
+    LOGI("End CleanAllFileCacheInner");
+    return ret;
+}
+
+int32_t CloudSyncService::CleanAllFileCacheInner(const std::string &bundleName)
+{
+    LOGI("Begin CleanAllFileCacheInner for bundle: %{public}s", bundleName.c_str());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, false));
+
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    if (userId < MIN_USER_ID) {
+        LOGE("Get userId failed");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = dataSyncManager_->CleanCache(bundleName, userId);
+    LOGI("End CleanAllFileCacheInner");
+    return ret;
+}
+
+int32_t CloudSyncService::GetCachedTotalSizeInner(int64_t &totalSize)
+{
+    LOGI("Begin GetCachedTotalSizeInner");
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, false));
+
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName) != E_OK) {
+        return E_INVAL_ARG;
+    }
+
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    if (userId < MIN_USER_ID) {
+        LOGE("Get userId failed");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = dataSyncManager_->GetCachedTotalSize(bundleName, userId, totalSize);
+    LOGI("End GetCachedTotalSizeInner");
+    return ret;
+}
+
+int32_t CloudSyncService::GetCachedTotalSizeInner(const std::string &bundleName, int64_t &totalSize)
+{
+    LOGD("Begin GetCachedTotalSizeInner for bundle: %{public}s", bundleName.c_str());
+    RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, false));
+
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    if (userId < MIN_USER_ID) {
+        LOGE("Get userId failed");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = dataSyncManager_->GetCachedTotalSize(bundleName, userId, totalSize);
+    LOGD("End GetCachedTotalSizeInner");
+    return ret;
+}
+
 int32_t CloudSyncService::CleanFileCacheInner(const std::string &uri)
 {
     LOGI("Begin CleanFileCacheInner");

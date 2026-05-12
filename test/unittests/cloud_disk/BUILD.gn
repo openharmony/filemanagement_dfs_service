@@ -177,6 +177,7 @@ ohos_unittest("file_operations_cloud_static_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_sync_helper.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",

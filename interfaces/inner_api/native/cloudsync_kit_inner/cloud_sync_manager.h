@@ -135,6 +135,10 @@ public:
     virtual int32_t DownloadThumb() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
+    virtual int32_t CleanAllFileCache() = 0;
+    virtual int32_t CleanAllFileCache(const std::string &bundleName) = 0;
+    virtual int32_t GetCachedTotalSize(int64_t &totalSize) = 0;
+    virtual int32_t GetCachedTotalSize(const std::string &bundleName, int64_t &totalSize) = 0;
     virtual int32_t CleanFileCache(const std::string &uri) = 0;
     virtual void CleanGalleryDentryFile() = 0;
     virtual void CleanGalleryDentryFile(const std::string path) = 0;

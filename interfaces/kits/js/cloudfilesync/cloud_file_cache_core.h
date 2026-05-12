@@ -29,9 +29,11 @@ const std::string MULTI_PROGRESS = "batchDownload";
 class CloudFileCacheCore {
 public:
     CloudFileCacheCore() = default;
+    explicit CloudFileCacheCore(const std::string &bundleName) : bundleName_(bundleName) {}
     ~CloudFileCacheCore() = default;
 
     static ModuleFileIO::FsResult<CloudFileCacheCore *> Constructor();
+    static ModuleFileIO::FsResult<CloudFileCacheCore *> Constructor(const std::string &bundleName);
     ModuleFileIO::FsResult<void> DoOn(const std::string &event,
                                       const std::shared_ptr<CloudFileCacheCallbackImplAni> callback);
     ModuleFileIO::FsResult<void> DoOff(const std::string &event,
@@ -44,9 +46,12 @@ public:
     ModuleFileIO::FsResult<void> CleanFileCache(const std::string &uri);
     ModuleFileIO::FsResult<void> GetDownloadList(const std::vector<std::string> &uriVec,
             std::vector<CloudSync::DownloadProgressObj> &downloadList);
+    ModuleFileIO::FsResult<int64_t> GetCachedTotalSize();
+    ModuleFileIO::FsResult<void> CleanFileCache();
     std::shared_ptr<CloudFileCacheCallbackImplAni> GetCallbackImpl(const std::string &eventType, bool isInit);
 
 private:
+    std::string bundleName_;
     std::mutex registerMutex_;
     std::unordered_map<std::string, std::shared_ptr<CloudFileCacheCallbackImplAni>> registerMap_;
 };

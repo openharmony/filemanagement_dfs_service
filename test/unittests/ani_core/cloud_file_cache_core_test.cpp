@@ -63,7 +63,7 @@ void CloudFileCacheCoreTest::TearDown(void)
 
 /**
  * @tc.name: Constructor
- * @tc.desc: Verify the CloudFileCacheCore::Constructor function
+ * @tc.desc: Verify the CloudFileCacheCore::Constructor function without bundleName
  * @tc.type: FUNC
  */
 HWTEST_F(CloudFileCacheCoreTest, ConstructorTest1, TestSize.Level1)
@@ -346,5 +346,179 @@ HWTEST_F(CloudFileCacheCoreTest, GetDownloadListTest3, TestSize.Level1)
     EXPECT_EQ(downloadList[0].state, CloudSync::DownloadProgressObj::Status::RUNNING);
     EXPECT_EQ(downloadList[0].downloadedSize, 1024);
     EXPECT_EQ(downloadList[0].totalSize, 2048);
+}
+
+/**
+ * @tc.name: ConstructorWithBundleName
+ * @tc.desc: Verify the CloudFileCacheCore::Constructor function with bundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, ConstructorWithBundleNameTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    auto data = CloudFileCacheCore::Constructor(bundleName);
+    EXPECT_TRUE(data.IsSuccess());
+}
+
+/**
+ * @tc.name: ConstructorWithBundleName
+ * @tc.desc: Verify the CloudFileCacheCore::Constructor function with empty bundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, ConstructorWithBundleNameTest2, TestSize.Level1)
+{
+    std::string bundleName = "";
+    auto data = CloudFileCacheCore::Constructor(bundleName);
+    EXPECT_TRUE(data.IsSuccess());
+}
+
+/**
+ * @tc.name: GetCachedTotalSize
+ * @tc.desc: Verify the CloudFileCacheCore::GetCachedTotalSize function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetCachedTotalSizeTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    int64_t expectedSize = 1024;
+    EXPECT_CALL(cloudMock, GetCachedTotalSize(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(expectedSize), Return(OHOS::FileManagement::E_OK)));
+    auto ret = cloudFileCache->GetCachedTotalSize();
+    EXPECT_TRUE(ret.IsSuccess());
+    EXPECT_EQ(ret.GetData().value(), expectedSize);
+}
+
+/**
+ * @tc.name: GetCachedTotalSize
+ * @tc.desc: Verify the CloudFileCacheCore::GetCachedTotalSize function with error
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetCachedTotalSizeTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetCachedTotalSize(_, _))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    auto ret = cloudFileCache->GetCachedTotalSize();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: GetCachedTotalSize
+ * @tc.desc: Verify the CloudFileCacheCore::GetCachedTotalSize function with error
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetCachedTotalSizeTest3, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, GetCachedTotalSize(_))
+        .WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    auto ret = cloudFileCache->GetCachedTotalSize();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: CleanFileCache
+ * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest1, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanAllFileCache(_)).WillOnce(Return(OHOS::FileManagement::E_OK));
+    auto ret = cloudFileCache->CleanFileCache();
+    EXPECT_TRUE(ret.IsSuccess());
+}
+
+/**
+ * @tc.name: CleanFileCache
+ * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function with error
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest2, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanAllFileCache(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    auto ret = cloudFileCache->CleanFileCache();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: CleanFileCache
+ * @tc.desc: Verify the CloudFileCacheCore::CleanFileCache function with error
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest3, TestSize.Level1)
+{
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanAllFileCache()).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
+    auto ret = cloudFileCache->CleanFileCache();
+    EXPECT_FALSE(ret.IsSuccess());
+    const auto &err = ret.GetError();
+    int errorCode = err.GetErrNo();
+    EXPECT_EQ(errorCode, OHOS::FileManagement::E_PERMISSION);
+}
+
+/**
+ * @tc.name: GetCachedTotalSizeWithBundleName001
+ * @tc.desc: Verify Constructor("com.ohos.photos") + GetCachedTotalSize uses provided bundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, GetCachedTotalSizeWithBundleName001, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    int64_t expectedSize = 4096;
+    EXPECT_CALL(cloudMock, GetCachedTotalSize(_, _))
+        .WillOnce([](const std::string &bundleName, int64_t &totalSize) {
+            EXPECT_EQ(bundleName, "com.ohos.photos");
+            totalSize = 4096;
+            return OHOS::FileManagement::E_OK;
+        });
+    
+    auto ret = cloudFileCache->GetCachedTotalSize();
+    EXPECT_TRUE(ret.IsSuccess());
+    EXPECT_EQ(ret.GetData().value(), expectedSize);
+}
+
+/**
+ * @tc.name: CleanFileCacheWithBundleName001
+ * @tc.desc: Verify Constructor("com.ohos.photos") + CleanFileCache uses provided bundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheWithBundleName001, TestSize.Level1)
+{
+    std::string bundleName = "com.ohos.photos";
+    CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
+    
+    auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
+    EXPECT_CALL(cloudMock, CleanAllFileCache(_))
+        .WillOnce([](const std::string &bundleName) {
+            EXPECT_EQ(bundleName, "com.ohos.photos");
+            return OHOS::FileManagement::E_OK;
+        });
+    
+    auto ret = cloudFileCache->CleanFileCache();
+    EXPECT_TRUE(ret.IsSuccess());
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

@@ -536,6 +536,7 @@ export default namespace cloudSync {
         }
         private nativePtr: long = 0;
         native constructor();
+        native constructor(bundleName: string);
 
         bindNativePtr(ptr: long): void {
             if (this.nativePtr == 0) {
@@ -668,6 +669,44 @@ export default namespace cloudSync {
         native cleanCache(uri: string): void;
         native cleanFileCache(uri: string): void;
         native CloudFileCacheGetDownloadList(uris: Array<string>): Array<DownloadProgress>;
+        native GetCachedTotalSizeInner(): long;
+        native CleanFileCacheInner(): int;
+
+        getCachedTotalSize(): Promise<long> {
+            return new Promise<long>((resolve: (result: long) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): long => {
+                    return this.CloudFileCacheGetCachedTotalSize();
+                });
+                promise.then<void, void>((ret: Any): void => {
+                    resolve(ret as long);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
+                });
+            });
+        }
+
+        CloudFileCacheGetCachedTotalSize(): long {
+            return this.GetCachedTotalSizeInner();
+        }
+
+        cleanFileCache(): Promise<void> {
+            return new Promise<void>((resolve: (result: undefined) => void,
+                reject: (e: BusinessError<void>) => void): void => {
+                let promise = taskpool.execute((): int => {
+                    return this.CloudFileCacheCleanFileCache();
+                });
+                promise.then<void, void>((): void => {
+                    resolve(undefined);
+                }, (e: Error): void => {
+                    reject(e as BusinessError<void>);
+                });
+            });
+        }
+
+        CloudFileCacheCleanFileCache(): int {
+            return this.CleanFileCacheInner();
+        }
 
         GetDownloadListInner(uris: Array<string>): Array<DownloadProgress>{
             return this.CloudFileCacheGetDownloadList(uris);

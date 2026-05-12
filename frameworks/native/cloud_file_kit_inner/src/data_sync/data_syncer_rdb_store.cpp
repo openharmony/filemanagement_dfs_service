@@ -180,6 +180,32 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     return E_OK;
 }
 
+int32_t DataSyncerRdbStore::UpdateTotalDownloadSize(int32_t userId, const std::string &bundleName,
+    int64_t totalDownloadSize)
+{
+    int updateRows;
+    NativeRdb::ValuesBucket values;
+    values.PutLong(TOTAL_DOWNLOAD_SIZE, totalDownloadSize);
+    string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
+    vector<string> whereArgs = { to_string(userId), bundleName };
+    if (rdb_ == nullptr) {
+        if (RdbInit() != E_OK) {
+            LOGE("Data Syner init rdb failed");
+            return E_RDB;
+        }
+    }
+    int32_t ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGE("update sync state failed: %{public}d", ret);
+        return E_RDB;
+    }
+    if (updateRows <= 0) {
+        LOGE("update sync state with no lines changed");
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 static int32_t GetLong(const string &key, int64_t &val, NativeRdb::ResultSet &resultSet)
 {
     int32_t index;
@@ -275,6 +301,52 @@ int32_t DataSyncerRdbStore::GetSyncStateAndErrorType(int32_t userId, const std::
     return E_OK;
 }
 
+int32_t DataSyncerRdbStore::GetTotalDownloadSize(int32_t userId, const std::string &bundleName,
+    int64_t &totalDownloadSize)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
+    predicates.EqualTo(USER_ID, userId)->EqualTo(BUNDLE_NAME, bundleName);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
+
+    auto queryRet = Query(predicates, resultSet);
+    if (queryRet != E_OK) {
+        LOGE("get sync state query failed");
+        return queryRet;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get sync state no more rows");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = GetLong(TOTAL_DOWNLOAD_SIZE, totalDownloadSize, *resultSet);
+    if (ret != E_OK) {
+        LOGE("get sync state failed");
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t DataSyncerRdbStore::UpdateDownloadSize(int32_t userId, const string &bundleName,
+    int64_t downloadSize)
+{
+    int64_t totalDownloadSize;
+    {
+        std::lock_guard<std::mutex> lck(rdbMutex_);
+        int32_t ret = GetTotalDownloadSize(userId, bundleName, totalDownloadSize);
+        if (ret != E_OK) {
+            LOGE("get totalDownloadSize: %{public}d", ret);
+            return ret;
+        }
+        ret = UpdateTotalDownloadSize(userId, bundleName, totalDownloadSize + downloadSize);
+        if (ret != E_OK) {
+            LOGE("update totalDownloadSize: %{public}d", ret);
+            return ret;
+        }
+    }
+    return E_OK;
+}
+
 int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
@@ -356,6 +428,14 @@ static void VersionAddDataSyncerErrorType(NativeRdb::RdbStore &store)
     }
 }
 
+static void VersionAddTotalDownloadSize(NativeRdb::RdbStore &store)
+{
+    const string addDataSyncerErrorType = CREATE_TOTAL_DOWNLOAD_SIZE;
+    if (store.ExecuteSql(addDataSyncerErrorType) != NativeRdb::E_OK) {
+        LOGE("upgrade fail add errorType");
+    }
+}
+
 int32_t DataSyncerRdbCallBack::OnUpgrade(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -364,6 +444,9 @@ int32_t DataSyncerRdbCallBack::OnUpgrade(NativeRdb::RdbStore &store, int32_t old
     }
     if (oldVersion < VERSION_ADD_ERROR_TYPE) {
         VersionAddDataSyncerErrorType(store);
+    }
+    if (oldVersion < VERSION_ADD_TOTAL_DOWNLOAD_SIZE) {
+        VersionAddTotalDownloadSize(store);
     }
     return E_OK;
 }

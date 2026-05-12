@@ -27,6 +27,10 @@
 namespace OHOS::FileManagement::CloudSync {
 const std::string PROGRESS = "progress";
 const std::string MULTI_PROGRESS = "batchDownload";
+
+struct BundleEntityCloudFile {
+    std::string bundleName;
+};
 class CloudFileCacheNapi final : public LibN::NExporter {
 public:
     CloudFileCacheNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
@@ -53,6 +57,7 @@ public:
     static napi_value OffForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanFileCacheForWatch(napi_env env, napi_callback_info info);
+    static napi_value GetCachedTotalSize(napi_env env, napi_callback_info info);
 
 private:
     inline static std::string className_ = "CloudFileCache";

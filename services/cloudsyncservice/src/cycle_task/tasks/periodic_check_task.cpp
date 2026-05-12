@@ -41,7 +41,13 @@ int32_t PeriodicCheckTask::RunTaskForBundle(int32_t userId, std::string bundleNa
     }
     int32_t ret = dataSyncManager_->TriggerStartSync(bundleName, userId, false, SyncTriggerType::TASK_TRIGGER);
     if (ret != E_OK) {
-        LOGE("trigger %{public}s periodic sync failed", bundleName.c_str());
+        LOGE("trigger %{public}s periodic sync failed, ret: %{public}d", bundleName.c_str(), ret);
+        return ret;
+    }
+    
+    ret = dataSyncManager_->UpdateCachedFileSize(bundleName, userId);
+    if (ret != E_OK) {
+        LOGE("UpdateCachedFileSize failed for %{public}s, ret: %{public}d", bundleName.c_str(), ret);
     }
     return ret;
 }

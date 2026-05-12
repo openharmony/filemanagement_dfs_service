@@ -23,6 +23,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudFileCacheAni final {
 public:
     static void CloudFileCacheConstructor(ani_env *env, ani_object object);
+    static void CloudFileCacheConstructorWithBundleName(ani_env *env, ani_object object, ani_string bundleName);
     static void CloudFileCacheOn(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff1(ani_env *env, ani_object object);
@@ -36,6 +37,8 @@ public:
     static void CloudFileCacheOnBatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOffBatch(ani_env *env, ani_object object, ani_object fun);
     static ani_array CloudFileCacheGetDownloadList(ani_env *env, ani_object object, ani_array uriVec);
+    static ani_long CloudFileCacheGetCachedTotalSize(ani_env *env, ani_object object);
+    static void CloudFileCacheCleanFileCache1(ani_env *env, ani_object object);
     static void CloudFileCacheConstructorForWatch(ani_env *env, ani_object object);
     static void CloudFileCacheOnForWatch(ani_env *env, ani_object object, ani_object fun);
     static void CloudFileCacheOff0ForWatch(ani_env *env, ani_object object, ani_object fun);

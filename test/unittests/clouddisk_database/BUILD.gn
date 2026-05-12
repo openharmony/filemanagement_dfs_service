@@ -124,6 +124,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${utils_path}/log/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
   ]
 

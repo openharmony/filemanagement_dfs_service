@@ -26,7 +26,11 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
                                           SyncTriggerType triggerType,
                                           std::string prepareTraceId)
 {
-    return E_OK;
+    if (userId == USERID_SECOND_MOCK) {
+        return 1;
+    } else {
+        return E_OK;
+    }
 }
 
 int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
@@ -292,5 +296,54 @@ void DataSyncManager::PeriodicCleanLock()
 
 void DataSyncManager::PeriodicCleanUnlock()
 {
+}
+
+int32_t DataSyncManager::GetCachedTotalSize(const std::string &bundleName, const int32_t userId, int64_t &totalSize)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::UpdateCachedFileSize(const std::string &bundleName, const int32_t userId)
+{
+    if (userId == USERID_THIRD_MOCK) {
+        return 1;
+    } else {
+        return E_OK;
+    }
+}
+
+int32_t DataSyncManager::CleanCache(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetDownloadList(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::vector<std::string> &uriVec, std::vector<CloudSync::DownloadProgressObj> &downloadList)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetUploadList(const BundleNameUserInfo &bundleNameUserInfo,
+    const std::vector<std::string> &uriVec, std::vector<CloudSync::UploadProgressObj> &uploadList)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::RegisterUploadCallback(const std::string &bundleName,
+    const BundleNameUserInfo &bundleNameUserInfo, const std::string &callbackId,
+    const sptr<CloudSync::ICloudUploadCallback> &callback)
+{
+    return E_OK;
+}
+
+void DataSyncManager::UnRegisterUploadCallback(const std::string &bundleName,
+    const BundleNameUserInfo &bundleNameUserInfo, const std::string &callbackId)
+{
+}
+
+int32_t DataSyncManager::GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
+    const int32_t &userId, std::vector<CloudSync::DowngradeProgress> &downgradeProgressList)
+{
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudFile
