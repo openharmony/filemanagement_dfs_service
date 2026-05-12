@@ -1119,7 +1119,7 @@ int32_t CloudDiskRdbStore::GetSourcePathFromAttr(const std::string &cloudId, std
     } else {
         LOGD("srcPath not found in attribute, return root dir");
     }
-    sourcePath = sandboxPrefix + sourcePath + "/";
+    sourcePath = sourcePath == "/" ? sandboxPrefix + sourcePath : sandboxPrefix + sourcePath + "/";
 
     return E_OK;
 }
