@@ -30,6 +30,8 @@ public:
     int32_t Insert(int32_t userId, const std::string &bundleName);
     int32_t UpdateSyncState(int32_t userId, const std::string &bundleName,
         CloudSyncState cloudSyncState, ErrorType errorType);
+    int32_t UpdateTotalDownloadSize(int32_t userId, const std::string &bundleName,
+        int64_t totalDownloadSize);
     int32_t GetLastSyncTime(int32_t userId, const std::string &bundleName, int64_t &time);
     int32_t QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
     int32_t QueryCloudSync(int32_t userId,
@@ -37,6 +39,10 @@ public:
                            std::shared_ptr<NativeRdb::ResultSet> &resultSet);
     int32_t GetSyncStateAndErrorType(int32_t userId, const std::string &bundleName,
         CloudSyncState &cloudSyncState, ErrorType &errorType);
+    int32_t GetTotalDownloadSize(int32_t userId, const std::string &bundleName,
+        int64_t &totalDownloadSize);
+    int32_t UpdateDownloadSize(int32_t userId, const std::string &bundleName,
+        int64_t downloadSize);
 private:
     int32_t Query(NativeRdb::AbsRdbPredicates predicates, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
     int32_t RdbInit();

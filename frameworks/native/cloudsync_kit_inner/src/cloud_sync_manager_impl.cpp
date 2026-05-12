@@ -918,6 +918,54 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
     return CloudSyncServiceProxy->CleanCacheInner(uri);
 }
 
+int32_t CloudSyncManagerImpl::CleanAllFileCache()
+{
+    LOGI("CleanAllFileCache Start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("CleanAllFileCache");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->CleanAllFileCacheInner();
+}
+
+int32_t CloudSyncManagerImpl::CleanAllFileCache(const std::string &bundleName)
+{
+    LOGI("CleanAllFileCache Start for bundle: %{public}s", bundleName.c_str());
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("CleanAllFileCache");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->CleanAllFileCacheInner(bundleName);
+}
+
+int32_t CloudSyncManagerImpl::GetCachedTotalSize(int64_t &totalSize)
+{
+    LOGI("GetCachedTotalSize Start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetCachedTotalSize");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->GetCachedTotalSizeInner(totalSize);
+}
+
+int32_t CloudSyncManagerImpl::GetCachedTotalSize(const std::string &bundleName, int64_t &totalSize)
+{
+    LOGI("GetCachedTotalSize Start for bundle: %{public}s", bundleName.c_str());
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetCachedTotalSize");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->GetCachedTotalSizeInner(bundleName, totalSize);
+}
+
 int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)
 {
     LOGI("CleanFileCache Start");

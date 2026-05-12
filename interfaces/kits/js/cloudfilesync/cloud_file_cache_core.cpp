@@ -29,6 +29,12 @@ FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor()
     return FsResult<CloudFileCacheCore *>::Success(cloudFileCachePtr.release());
 }
 
+FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor(const std::string &bundleName)
+{
+    std::unique_ptr<CloudFileCacheCore> cloudFileCachePtr = std::make_unique<CloudFileCacheCore>(bundleName);
+    return FsResult<CloudFileCacheCore *>::Success(cloudFileCachePtr.release());
+}
+
 FsResult<void> CloudFileCacheCore::DoOn(const string &event, const shared_ptr<CloudFileCacheCallbackImplAni> callback)
 {
     return FsResult<void>::Success();
@@ -152,6 +158,51 @@ FsResult<void> CloudFileCacheCore::GetDownloadList(const std::vector<std::string
         LOGE("GetDownloadList failed! ret = %{public}d", ret);
         return FsResult<void>::Error(Convert2ErrNum(ret));
     }
+    return FsResult<void>::Success();
+}
+
+FsResult<int64_t> CloudFileCacheCore::GetCachedTotalSize()
+{
+    LOGI("GetCachedTotalSize start");
+    
+    std::string bundleName = bundleName_;
+    int64_t totalSize = 0;
+    int32_t ret;
+    
+    // 如果bundleName_为空，自动获取
+    if (bundleName.empty()) {
+        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(totalSize);
+    } else {
+        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(bundleName, totalSize);
+    }
+    
+    if (ret != E_OK) {
+        LOGE("Get Cached Total Size failed! ret = %{public}d", ret);
+        return FsResult<int64_t>::Error(Convert2ErrNum(ret));
+    }
+    
+    return FsResult<int64_t>::Success(totalSize);
+}
+
+FsResult<void> CloudFileCacheCore::CleanFileCache()
+{
+    LOGI("CleanFileCache start");
+    
+    std::string bundleName = bundleName_;
+    int32_t ret;
+    
+    // 如果bundleName_为空，自动获取
+    if (bundleName.empty()) {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache();
+    } else {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleName);
+    }
+    
+    if (ret != E_OK) {
+        LOGE("Clean File Cache failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    
     return FsResult<void>::Success();
 }
 

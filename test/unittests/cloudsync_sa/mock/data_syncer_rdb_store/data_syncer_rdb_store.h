@@ -30,11 +30,20 @@ public:
     ~DataSyncerRdbStore() = default;
 
     int32_t QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
+    int32_t GetTotalDownloadSize(int32_t userId, const std::string &bundleName, int64_t &totalDownloadSize);
+    int32_t UpdateTotalDownloadSize(int32_t userId, const std::string &bundleName, int64_t totalDownloadSize);
+    int32_t UpdateDownloadSize(int32_t userId, const std::string &bundleName, int64_t totalDownloadSize);
 };
 
 class DataSyncerRdbStoreMock : public DataSyncerRdbStore {
 public:
     MOCK_METHOD2(QueryDataSyncer, int32_t(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet));
+    MOCK_METHOD3(GetTotalDownloadSize, int32_t(int32_t userId, const std::string &bundleName,
+        int64_t &totalDownloadSize));
+    MOCK_METHOD3(UpdateTotalDownloadSize, int32_t(int32_t userId, const std::string &bundleName,
+        int64_t totalDownloadSize));
+    MOCK_METHOD3(UpdateDownloadSize, int32_t(int32_t userId, const std::string &bundleName,
+        int64_t totalDownloadSize));
     static inline std::shared_ptr<DataSyncerRdbStoreMock> proxy_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudSync

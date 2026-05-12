@@ -14,6 +14,9 @@
  */
 
 #include "data_sync_manager.h"
+#include <filesystem>
+#include <system_error>
+#include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -171,6 +174,29 @@ int32_t DataSyncManager::CleanVideoCache()
 
 int32_t DataSyncManager::CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri)
 {
+    return E_OK;
+}
+
+int32_t DataSyncManager::CleanCache(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::UpdateCachedFileSize(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::GetCachedTotalSize(const std::string &bundleName, const int32_t userId, int64_t &totalSize)
+{
+    LOGD("GetCachedTotalSize for bundle: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    int32_t ret = CloudSync::DataSyncerRdbStore::GetInstance().GetTotalDownloadSize(userId, bundleName, totalSize);
+    if (ret != E_OK) {
+        LOGE("GetTotalDownloadSize failed! ret = %{public}d", ret);
+        return ret;
+    }
+
+    LOGD("GetCachedTotalSize success, totalSize: %{public}lld", static_cast<long long>(totalSize));
     return E_OK;
 }
 

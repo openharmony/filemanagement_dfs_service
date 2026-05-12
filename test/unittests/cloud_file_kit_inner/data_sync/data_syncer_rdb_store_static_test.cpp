@@ -267,4 +267,28 @@ HWTEST_F(DataSyncerRdbStoreStaticTest,
     }
     GTEST_LOG_(INFO) << "VersionAddDataSyncerErrorTypeTest_002 End";
 }
+
+/**
+ * @tc.name: VersionAddTotalDownloadSize_001
+ * @tc.desc: Verify the VersionAddDataSyncerErrorType function
+ * @tc.type: FUNC
+ * @tc.require: issuesICE88S
+ */
+HWTEST_F(DataSyncerRdbStoreStaticTest,
+    VersionAddTotalDownloadSize_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "VersionAddTotalDownloadSize_001 Start";
+    try {
+        CloudDisk::RdbStoreMock store;
+
+        EXPECT_CALL(store, ExecuteSql(_, _))
+            .WillOnce(Return(E_RDB));
+
+        VersionAddTotalDownloadSize(store);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "VersionAddTotalDownloadSize_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "VersionAddTotalDownloadSize_001 End";
+}
 }

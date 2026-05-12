@@ -94,7 +94,7 @@ int32_t CloudFileCacheCallbackImplNapi::StopDownloadInner(int64_t downloadId, bo
 napi_value CloudFileCacheNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         LOGE("Start Number of arguments unmatched");
         NError(JsErrCode::E_INNER_FAILED).ThrowErr(env);
         return nullptr;
@@ -105,6 +105,26 @@ napi_value CloudFileCacheNapi::Constructor(napi_env env, napi_callback_info info
         LOGE("Failed to set file cache entity.");
         NError(JsErrCode::E_INNER_FAILED).ThrowErr(env);
         return nullptr;
+    }
+
+    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+        auto bundleEntity = make_unique<BundleEntityCloudFile>();
+        auto [succ, bundleName, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+        if (!succ || bundleName.get() == string("")) {
+            LOGE("Failed to get bundle name");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
+        bundleEntity->bundleName = string(bundleName.get());
+        LOGI("init with bundleName");
+
+        LOGD("Constructor, bundleName:%{public}s.", bundleEntity->bundleName.c_str());
+
+        if (!NClass::SetEntityFor<BundleEntityCloudFile>(env, funcArg.GetThisVar(), move(bundleEntity))) {
+            LOGE("Failed to set file entity");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
     }
     return funcArg.GetThisVar();
 }
@@ -168,20 +188,28 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
     LOGI("CleanCache start");
     NFuncArg funcArg(env, info);
 
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(EINVAL).ThrowErr(env);
         LOGE("Number of arguments unmatched");
         return nullptr;
     }
+    int32_t ret;
+    auto bundleEntity = NClass::GetEntityOf<BundleEntityCloudFile>(env, funcArg.GetThisVar());
 
-    auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
-    if (!succ) {
-        LOGE("CleanFileCache get uri parameter failed!");
-        NError(EINVAL).ThrowErr(env);
-        return nullptr;
+    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+        auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+        if (!succ) {
+            LOGE("CleanFileCache get uri parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        ret = CloudSyncManager::GetInstance().CleanFileCache(uri.get());
+    } else if (bundleEntity == nullptr) {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache();
+    } else {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleEntity->bundleName);
     }
-
-    int32_t ret = CloudSyncManager::GetInstance().CleanFileCache(uri.get());
     if (ret != E_OK) {
         int32_t err = GetCleanCacheErrPublic(ret);
         NError(Convert2JsErrNum(err)).ThrowErr(env);
@@ -189,6 +217,34 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
         return nullptr;
     }
     return NVal::CreateUndefined(env).val_;
+}
+
+napi_value CloudFileCacheNapi::GetCachedTotalSize(napi_env env, napi_callback_info info)
+{
+    LOGI("CleanCache start");
+    NFuncArg funcArg(env, info);
+
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        NError(EINVAL).ThrowErr(env);
+        LOGE("Number of arguments unmatched");
+        return nullptr;
+    }
+    auto bundleEntity = NClass::GetEntityOf<BundleEntityCloudFile>(env, funcArg.GetThisVar());
+    int32_t ret;
+    int64_t totalSize;
+    if (bundleEntity == nullptr) {
+        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(totalSize);
+    } else {
+        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(bundleEntity->bundleName, totalSize);
+    }
+
+    if (ret != E_OK) {
+        int32_t err = GetCleanCacheErrPublic(ret);
+        NError(Convert2JsErrNum(err)).ThrowErr(env);
+        LOGE("CleanFileCache failed, ret:%{public}d", err);
+        return nullptr;
+    }
+    return NVal::CreateInt64(env, totalSize).val_;
 }
 
 bool CloudFileCacheNapi::Export()
@@ -204,6 +260,7 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
         NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
         NVal::DeclareNapiFunction("getDownloadList", CloudFileCacheNapi::GetDownloadList),
+        NVal::DeclareNapiFunction("getCachedTotalSize", CloudFileCacheNapi::GetCachedTotalSize),
     };
 #else
     std::vector<napi_property_descriptor> props = {

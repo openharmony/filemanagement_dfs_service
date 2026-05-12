@@ -30,6 +30,7 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "data_syncer_rdb_store.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -2978,5 +2979,23 @@ int32_t CloudDiskRdbStore::HandleRecycle(const string &name, const string &paren
     rdbTransaction.Finish();
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
+}
+
+int32_t CloudDiskRdbStore::UpdateDownloadSize(int64_t size)
+{
+    int32_t ret = DataSyncerRdbStore::GetInstance().UpdateDownloadSize(userId_, bundleName_, size);
+    if (ret != E_OK) {
+        LOGE("Update download size unsuccess %{public}d", ret);
+    }
+    return ret;
+}
+
+int32_t CloudDiskRdbStore::UpdateTotalDownloadSize(int64_t size)
+{
+    int32_t ret = DataSyncerRdbStore::GetInstance().UpdateTotalDownloadSize(userId_, bundleName_, size);
+    if (ret != E_OK) {
+        LOGE("Update download size unsuccess %{public}d", ret);
+    }
+    return ret;
 }
 }

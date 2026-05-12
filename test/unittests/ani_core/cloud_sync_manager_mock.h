@@ -104,6 +104,10 @@ public:
         const std::string &localPath));
     MOCK_METHOD1(PauseUpload, int32_t(const std::string &uri));
     MOCK_METHOD1(ResumeUpload, int32_t(const std::string &uri));
+    MOCK_METHOD1(CleanAllFileCache, int32_t(const std::string &bundleName));
+    MOCK_METHOD0(CleanAllFileCache, int32_t());
+    MOCK_METHOD2(GetCachedTotalSize, int32_t(const std::string &bundleName, int64_t &totalSize));
+    MOCK_METHOD1(GetCachedTotalSize, int32_t(int64_t &totalSize));
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_MOCK

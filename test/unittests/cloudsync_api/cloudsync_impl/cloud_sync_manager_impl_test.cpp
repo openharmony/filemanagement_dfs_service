@@ -3110,6 +3110,339 @@ HWTEST_F(CloudSyncManagerImplTest, SetMediaPreSharedTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetMediaPreSharedTest001 End";
 }
 
+/*
+ * @tc.name: CleanCacheWithBundleNameTest001
+ * @tc.desc: Verify the CleanCache function with bundleName parameter.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanCacheWithBundleNameTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest001 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest001 End";
+}
+
+/*
+ * @tc.name: CleanCacheWithBundleNameTest002
+ * @tc.desc: Verify the CleanCache function with bundleName parameter and permission denied.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanCacheWithBundleNameTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest002 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest002 End";
+}
+
+/*
+ * @tc.name: CleanCacheWithBundleNameTest003
+ * @tc.desc: Verify the CleanCache function with bundleName parameter and success.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanCacheWithBundleNameTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest003 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner(_)).WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanCacheWithBundleNameTest003 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest001
+ * @tc.desc: Verify the GetCachedTotalSize function with bundleName parameter and proxy null.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest001 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        int64_t totalSize = 0;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(bundleName, totalSize);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest001 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest002
+ * @tc.desc: Verify the GetCachedTotalSize function with bundleName parameter and permission denied.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest002 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        int64_t totalSize = 0;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetCachedTotalSizeInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(bundleName, totalSize);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest002 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest003
+ * @tc.desc: Verify the GetCachedTotalSize function with bundleName parameter and success.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest003 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        int64_t totalSize = 0;
+        int64_t expectedSize = 1024;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetCachedTotalSizeInner(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(expectedSize), Return(E_OK)));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(bundleName, totalSize);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(totalSize, expectedSize);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest003 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest004
+ * @tc.desc: Verify the GetCachedTotalSize function without bundleName parameter and proxy null.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest004 Start";
+    try {
+        int64_t totalSize = 0;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(totalSize);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest004 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest005
+ * @tc.desc: Verify the GetCachedTotalSize function without bundleName parameter and permission denied.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest005 Start";
+    try {
+        int64_t totalSize = 0;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetCachedTotalSizeInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(totalSize);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest005 End";
+}
+
+/*
+ * @tc.name: GetCachedTotalSizeTest006
+ * @tc.desc: Verify the GetCachedTotalSize function without bundleName parameter and success.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetCachedTotalSizeTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest006 Start";
+    try {
+        int64_t totalSize = 0;
+        int64_t expectedSize = 1024;
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, GetCachedTotalSizeInner(_))
+            .WillOnce(DoAll(SetArgReferee<0>(expectedSize), Return(E_OK)));
+        auto res = CloudSyncManagerImpl::GetInstance().GetCachedTotalSize(totalSize);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(totalSize, expectedSize);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetCachedTotalSizeTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetCachedTotalSizeTest006 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest001
+ * @tc.desc: Verify the CleanAllFileCache function with bundleName parameter and proxy null.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest001 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest001 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest002
+ * @tc.desc: Verify the CleanAllFileCache function with bundleName parameter and permission denied.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest002 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner(_)).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest002 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest003
+ * @tc.desc: Verify the CleanAllFileCache function with bundleName parameter and success.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest003 Start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner(_))
+            .WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache(bundleName);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest003 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest004
+ * @tc.desc: Verify the CleanAllFileCache function without bundleName parameter and proxy null.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest004 Start";
+    try {
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache();
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest004 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest005
+ * @tc.desc: Verify the CleanAllFileCache function without bundleName parameter and permission denied.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest005 Start";
+    try {
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner()).WillOnce(Return(E_PERMISSION_DENIED));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache();
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest005 End";
+}
+
+/*
+ * @tc.name: CleanAllFileCacheTest006
+ * @tc.desc: Verify the CleanAllFileCache function without bundleName parameter and success.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanAllFileCacheTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest006 Start";
+    try {
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, CleanAllFileCacheInner())
+            .WillOnce(Return(E_OK));
+        auto res = CloudSyncManagerImpl::GetInstance().CleanAllFileCache();
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanAllFileCacheTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanAllFileCacheTest006 End";
+}
+
 /**
  * @tc.name: StartTransferTest001
  * @tc.desc: Verify the StartTransfer function with proxy nullptr.

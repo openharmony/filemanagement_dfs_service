@@ -68,6 +68,10 @@ public:
     int32_t DownloadThumb() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
+    int32_t CleanAllFileCache() override;
+    int32_t CleanAllFileCache(const std::string &bundleName) override;
+    int32_t GetCachedTotalSize(int64_t &totalSize) override;
+    int32_t GetCachedTotalSize(const std::string &bundleName, int64_t &totalSize) override;
     int32_t CleanFileCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
     void CleanGalleryDentryFile(const std::string path) override;

@@ -30,6 +30,7 @@ const std::string SYNC_STATE = "syncState";
 const std::string LAST_SYNC_TIME = "lastSyncTime";
 const std::string DATA_SYNCER_UNIQUE_ID = "dataSyncerUniqueId";
 const std::string SYNC_ERROR_TYPE = "errorType";
+const std::string TOTAL_DOWNLOAD_SIZE = "totalDownloadSize";
 
 const std::string DATA_SYNCER_TABLE = "DataSyncers";
 
@@ -48,7 +49,8 @@ const std::string CREATE_DATA_SYNCER_TABLE = "CREATE TABLE IF NOT EXISTS " +
     SYNC_STATE + " INT DEFAULT 0, " +
     LAST_SYNC_TIME + " BIGINT DEFAULT 0, " +
     DATA_SYNCER_UNIQUE_ID + " TEXT, " +
-    SYNC_ERROR_TYPE + " INT DEFAULT 0)";
+    SYNC_ERROR_TYPE + " INT DEFAULT 0, " +
+    TOTAL_DOWNLOAD_SIZE + " BIGINT DEFAULT 0)";
 
 const std::string CREATE_DATA_SYNCER_UNIQUE_INDEX =
         "CREATE UNIQUE INDEX IF NOT EXISTS " + DATA_SYNCER_UNIQUE_INDEX +
@@ -56,6 +58,9 @@ const std::string CREATE_DATA_SYNCER_UNIQUE_INDEX =
 
 const std::string CREATE_DATA_SYNCER_ERROR_TYPE = "ALTER TABLE " + DATA_SYNCER_TABLE +
     " ADD COLUMN " + SYNC_ERROR_TYPE + " INT DEFAULT 0";
+
+const std::string CREATE_TOTAL_DOWNLOAD_SIZE = "ALTER TABLE " + DATA_SYNCER_TABLE +
+    " ADD COLUMN " + TOTAL_DOWNLOAD_SIZE + " BIGINT DEFAULT 0";
 
 const std::string UPDATE_CLOUD_SYNC_STATE = "UPDATE " + DATA_SYNCER_TABLE +
     " SET " + SYNC_STATE + " = CASE WHEN " + SYNC_STATE + " = " +
@@ -65,17 +70,19 @@ const std::string UPDATE_CLOUD_SYNC_STATE = "UPDATE " + DATA_SYNCER_TABLE +
     " IN (" + SYNC_STATE_FAILED + ", " + SYNC_STATE_SUCCEED + ")";
 
 const std::set<std::string> DATA_SYNCER_COL = {
-    DATA_SYNCER_ID, USER_ID, BUNDLE_NAME, SYNC_STATE, LAST_SYNC_TIME, DATA_SYNCER_UNIQUE_ID, SYNC_ERROR_TYPE
+    DATA_SYNCER_ID, USER_ID, BUNDLE_NAME, SYNC_STATE, LAST_SYNC_TIME,
+    DATA_SYNCER_UNIQUE_ID, SYNC_ERROR_TYPE, TOTAL_DOWNLOAD_SIZE
 };
 
 const std::string EL1_CLOUDFILE_DIR = "/data/service/el1/public/database/CloudFileSyncService";
 const std::string DATA_SYNCER_DB = "DataSyncers.db";
 const std::string DATA_SYNCER_SRC_PATH = "/data/service/el1/public/cloudfile/rdb/DataSyncers.db";
 
-const int32_t CLOUD_DISK_RDB_VERSION = 3;
+const int32_t CLOUD_DISK_RDB_VERSION = 4;
 enum {
     VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX = 2,
     VERSION_ADD_ERROR_TYPE = 3,
+    VERSION_ADD_TOTAL_DOWNLOAD_SIZE = 3,
 };
 } // namespace CloudSync
 } // namespace FileManagement
