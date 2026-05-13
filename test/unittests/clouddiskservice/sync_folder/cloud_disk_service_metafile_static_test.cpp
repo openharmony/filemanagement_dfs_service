@@ -335,6 +335,200 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: FindInBlockByIdTest002
+ * @tc.desc: Verify the FindInBlockById function with matching revalidate and recordId
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest002 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].namelen = 5;
+        std::string recordId = "test_record_id";
+        (void)memcpy_s(dentryBlk.nsl[0].recordId, RECORD_ID_LEN, recordId.c_str(), recordId.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = recordId;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[0]);
+        EXPECT_EQ(ctx->bitPos, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest002 End";
+}
+
+/**
+ * @tc.name: FindInBlockByIdTest003
+ * @tc.desc: Verify the FindInBlockById function with non-matching revalidate
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest003 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = INVALIDATE;
+        dentryBlk.nsl[0].namelen = 5;
+        std::string recordId = "test_record_id";
+        (void)memcpy_s(dentryBlk.nsl[0].recordId, RECORD_ID_LEN, recordId.c_str(), recordId.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = recordId;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest003 End";
+}
+
+/**
+ * @tc.name: FindInBlockByIdTest004
+ * @tc.desc: Verify the FindInBlockById function with non-matching recordId
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest004 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].namelen = 5;
+        std::string recordId1 = "record_one_test";
+        (void)memcpy_s(dentryBlk.nsl[0].recordId, RECORD_ID_LEN, recordId1.c_str(), recordId1.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = "record_two_test";
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest004 End";
+}
+
+/**
+ * @tc.name: FindInBlockByIdTest005
+ * @tc.desc: Verify the FindInBlockById function skips non-matching dentries by slot count
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest005 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string recordId1 = "record_one_test";
+        uint32_t slots1 = GetDentrySlots(recordId1.length());
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].namelen = recordId1.length();
+        (void)memcpy_s(dentryBlk.nsl[0].recordId, RECORD_ID_LEN, recordId1.c_str(), recordId1.length());
+
+        std::string recordId2 = "record_two_test";
+        uint32_t bitPos2 = slots1;
+        BitOps::SetBit(bitPos2, dentryBlk.bitmap);
+        dentryBlk.nsl[bitPos2].revalidate = VALIDATE;
+        dentryBlk.nsl[bitPos2].namelen = recordId2.length();
+        (void)memcpy_s(dentryBlk.nsl[bitPos2].recordId, RECORD_ID_LEN, recordId2.c_str(), recordId2.length());
+        if (slots1 > 1) {
+            dentryBlk.nsl[1].namelen = 0;
+        }
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = recordId2;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[bitPos2]);
+        EXPECT_EQ(ctx->bitPos, bitPos2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest005 End";
+}
+
+/**
+ * @tc.name: FindInBlockByIdTest006
+ * @tc.desc: Verify the FindInBlockById function skips namelen==0 (continuation) slots
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest006 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].namelen = 0;
+
+        std::string recordId = "test_record_id";
+        BitOps::SetBit(1, dentryBlk.bitmap);
+        dentryBlk.nsl[1].revalidate = VALIDATE;
+        dentryBlk.nsl[1].namelen = 5;
+        (void)memcpy_s(dentryBlk.nsl[1].recordId, RECORD_ID_LEN, recordId.c_str(), recordId.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = recordId;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[1]);
+        EXPECT_EQ(ctx->bitPos, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest006 End";
+}
+
+/**
+ * @tc.name: FindInBlockByIdTest007
+ * @tc.desc: Verify the FindInBlockById function with zero revalidate mask never matches
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockByIdTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest007 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].namelen = 5;
+        std::string recordId = "test_record_id";
+        (void)memcpy_s(dentryBlk.nsl[0].recordId, RECORD_ID_LEN, recordId.c_str(), recordId.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->recordId = recordId;
+        uint8_t revalidate = 0;
+        auto ret = FindInBlockById(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockByIdTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockByIdTest007 End";
+}
+
+/**
  * @tc.name: FindInBlockTest001
  * @tc.desc: Verify the FindInBlock function
  * @tc.type: FUNC
@@ -354,6 +548,281 @@ HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "FindInBlockTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "FindInBlockTest001 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest002
+ * @tc.desc: Verify the FindInBlock function with all conditions matching
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest002 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name = "test_name";
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = name.length();
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, name.c_str(), name.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name;
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[0]);
+        EXPECT_EQ(ctx->bitPos, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest002 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest003
+ * @tc.desc: Verify the FindInBlock function with non-matching hash
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest003 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name = "test_name";
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = 42;
+        dentryBlk.nsl[0].namelen = name.length();
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, name.c_str(), name.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name;
+        ctx->hash = 100;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest003 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest004
+ * @tc.desc: Verify the FindInBlock function with non-matching namelen
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest004 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = 5;
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, "short", 5);
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = "longer_name";
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest004 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest005
+ * @tc.desc: Verify the FindInBlock function with non-matching fileName content
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest005 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = 5;
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, "aaaaa", 5);
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = "bbbbb";
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest005 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest006
+ * @tc.desc: Verify the FindInBlock function with non-matching revalidate
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest006 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name = "test_name";
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = INVALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = name.length();
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, name.c_str(), name.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name;
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest006 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest007
+ * @tc.desc: Verify the FindInBlock function skips non-matching dentries by slot count
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest007 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name1 = "12345";
+        std::string name2 = "67890";
+        uint32_t hash = 42;
+        uint32_t slots1 = GetDentrySlots(name1.length());
+
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = name1.length();
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, name1.c_str(), name1.length());
+
+        uint32_t bitPos2 = slots1;
+        BitOps::SetBit(bitPos2, dentryBlk.bitmap);
+        dentryBlk.nsl[bitPos2].revalidate = VALIDATE;
+        dentryBlk.nsl[bitPos2].hash = hash;
+        dentryBlk.nsl[bitPos2].namelen = name2.length();
+        (void)memcpy_s(dentryBlk.fileName[bitPos2], DENTRY_NAME_LEN, name2.c_str(), name2.length());
+        if (slots1 > 1) {
+            dentryBlk.nsl[1].namelen = 0;
+        }
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name2;
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[bitPos2]);
+        EXPECT_EQ(ctx->bitPos, bitPos2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest007 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest008
+ * @tc.desc: Verify the FindInBlock function skips namelen==0 continuation slots
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest008 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name = "test_name";
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].namelen = 0;
+
+        BitOps::SetBit(1, dentryBlk.bitmap);
+        dentryBlk.nsl[1].revalidate = VALIDATE;
+        dentryBlk.nsl[1].hash = hash;
+        dentryBlk.nsl[1].namelen = name.length();
+        (void)memcpy_s(dentryBlk.fileName[1], DENTRY_NAME_LEN, name.c_str(), name.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name;
+        ctx->hash = hash;
+        uint8_t revalidate = VALIDATE;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        ASSERT_NE(ret, nullptr);
+        EXPECT_EQ(ret, &dentryBlk.nsl[1]);
+        EXPECT_EQ(ctx->bitPos, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest008 End";
+}
+
+/**
+ * @tc.name: FindInBlockTest009
+ * @tc.desc: Verify the FindInBlock function with zero revalidate mask never matches
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, FindInBlockTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FindInBlockTest009 Start";
+    try {
+        CloudDiskServiceDentryGroup dentryBlk = {};
+        std::string name = "test_name";
+        uint32_t hash = 42;
+        BitOps::SetBit(0, dentryBlk.bitmap);
+        dentryBlk.nsl[0].revalidate = VALIDATE;
+        dentryBlk.nsl[0].hash = hash;
+        dentryBlk.nsl[0].namelen = name.length();
+        (void)memcpy_s(dentryBlk.fileName[0], DENTRY_NAME_LEN, name.c_str(), name.length());
+
+        auto ctx = std::make_shared<DcacheLookupCtx>();
+        ctx->name = name;
+        ctx->hash = hash;
+        uint8_t revalidate = 0;
+        auto ret = FindInBlock(dentryBlk, ctx.get(), revalidate);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FindInBlockTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "FindInBlockTest009 End";
 }
 
 /**
