@@ -676,6 +676,88 @@ HWTEST_F(PeriodicChownTaskTest, ValidateAndChownDirectoryTest004, TestSize.Level
 }
 
 /*
+ * @tc.name: ValidateAndChownDirectoryTest005
+ * @tc.desc: Verify that ValidateAndChownDirectory returns E_OK for directory with non-DFS_UID.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ValidateAndChownDirectoryTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest005 Start";
+    try {
+        std::system("mkdir -p /data/test_tdd/test_dir_non_dfs");
+        std::string path = "/data/test_tdd/test_dir_non_dfs";
+
+        struct stat beforeSt{};
+        stat(path.c_str(), &beforeSt);
+
+        int32_t ret = periodicChownTask_->ValidateAndChownDirectory(path);
+        EXPECT_EQ(ret, E_OK);
+
+        struct stat afterSt{};
+        stat(path.c_str(), &afterSt);
+        EXPECT_EQ(beforeSt.st_uid, afterSt.st_uid);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ValidateAndChownDirectoryTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest005 End";
+}
+
+/*
+ * @tc.name: ValidateAndChownDirectoryTest006
+ * @tc.desc: Verify that ValidateAndChownDirectory returns E_PATH for empty path.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ValidateAndChownDirectoryTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest006 Start";
+    try {
+        std::string path = "";
+        int32_t ret = periodicChownTask_->ValidateAndChownDirectory(path);
+        EXPECT_EQ(ret, E_PATH);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ValidateAndChownDirectoryTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest006 End";
+}
+
+/*
+ * @tc.name: ValidateAndChownDirectoryTest007
+ * @tc.desc: Verify that ValidateAndChownDirectory changes directory mode from 0755 to 0771 when uid is DFS_UID.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ValidateAndChownDirectoryTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest007 Start";
+    try {
+        std::system("mkdir -p /data/test_tdd/test_dir_dfs_mode");
+        std::system("chmod 0755 /data/test_tdd/test_dir_dfs_mode");
+        std::system("chown 1009:1009 /data/test_tdd/test_dir_dfs_mode");
+        std::string path = "/data/test_tdd/test_dir_dfs_mode";
+
+        struct stat beforeSt{};
+        stat(path.c_str(), &beforeSt);
+        ASSERT_EQ(beforeSt.st_uid, 1009);
+
+        mode_t beforeMode = beforeSt.st_mode & 0777;
+        EXPECT_EQ(beforeMode, 0755);
+
+        int32_t ret = periodicChownTask_->ValidateAndChownDirectory(path);
+        EXPECT_EQ(ret, E_OK);
+
+        struct stat afterSt{};
+        stat(path.c_str(), &afterSt);
+        mode_t afterMode = afterSt.st_mode & 0777;
+        EXPECT_EQ(afterMode, 0771);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ValidateAndChownDirectoryTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ValidateAndChownDirectoryTest007 End";
+}
+
+/*
  * @tc.name: CheckAllDirectoriesDoneTest001
  * @tc.desc: Verify that CheckAllDirectoriesDone returns true when all directories are done.
  * @tc.type: FUNC
@@ -1005,6 +1087,226 @@ HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest003, TestSize.Le
         GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest003 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest004
+ * @tc.desc: Verify that InitializeDirectoryTemplates skips leading empty entry from separator at start.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest004 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString
+            = ";/data/service/el2/100/hmdfs/account/files/Photo";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[0],
+            "/data/service/el2/100/hmdfs/account/files/Photo");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest004 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest005
+ * @tc.desc: Verify that InitializeDirectoryTemplates skips trailing empty entry from separator at end.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest005 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString
+            = "/data/service/el2/100/hmdfs/account/files/Photo;";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[0],
+            "/data/service/el2/100/hmdfs/account/files/Photo");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest005 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest006
+ * @tc.desc: Verify that InitializeDirectoryTemplates parses single entry config correctly.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest006 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString
+            = "/data/service/el2/100/hmdfs/account/files/Photo";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 1);
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[0],
+            "/data/service/el2/100/hmdfs/account/files/Photo");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest006 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest007
+ * @tc.desc: Verify that InitializeDirectoryTemplates parses config with full path templates correctly.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest007 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString
+            = "/data/service/el2/{userId}/hmdfs/account/files/Photo;"
+              "/data/service/el2/{userId}/hmdfs/account/files/.thumbs";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 2);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 2);
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[0],
+            "/data/service/el2/{userId}/hmdfs/account/files/Photo");
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[1],
+            "/data/service/el2/{userId}/hmdfs/account/files/.thumbs");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest007 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest008
+ * @tc.desc: Verify that InitializeDirectoryTemplates skips adding empty key for template that cannot generate a key.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest008 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString
+            = "/data/service/el2/100/hmdfs/account/files/Photo;/data";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 2);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 1);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest008 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest009
+ * @tc.desc: Verify that InitializeDirectoryTemplates results in empty templates when config has only separators.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest009 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+        std::string configString = ";;;";
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(configString)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_, _))
+            .Times(0);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_TRUE(periodicChownTask_->directoryTemplates_.empty());
+        EXPECT_TRUE(periodicChownTask_->directoryKeys_.empty());
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest009 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest009 End";
+}
+
+/*
+ * @tc.name: InitializeDirectoryTemplatesTest010
+ * @tc.desc: Verify that InitializeDirectoryTemplates calls SetString with correct default value when config is empty.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, InitializeDirectoryTemplatesTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest010 Start";
+    try {
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(std::string())));
+        EXPECT_CALL(*cloudPrefImplMock_, SetString(_,
+            "/data/service/el2/{userId}/hmdfs/account/files/Photo;"
+            "/data/service/el2/{userId}/hmdfs/account/files/.thumbs;"
+            "/data/service/el2/{userId}/hmdfs/account/files/.editData"))
+            .Times(1);
+
+        periodicChownTask_->InitializeDirectoryTemplates();
+
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_.size(), 3);
+        EXPECT_EQ(periodicChownTask_->directoryKeys_.size(), 3);
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[0],
+            "/data/service/el2/{userId}/hmdfs/account/files/Photo");
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[1],
+            "/data/service/el2/{userId}/hmdfs/account/files/.thumbs");
+        EXPECT_EQ(periodicChownTask_->directoryTemplates_[2],
+            "/data/service/el2/{userId}/hmdfs/account/files/.editData");
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "InitializeDirectoryTemplatesTest010 FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitializeDirectoryTemplatesTest010 End";
 }
 
 /*
@@ -1497,6 +1799,125 @@ HWTEST_F(PeriodicChownTaskTest, ChangeUidToMediaTest003, TestSize.Level1)
         GTEST_LOG_(ERROR) << "ChangeUidToMediaTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "ChangeUidToMediaTest003 End";
+}
+
+/*
+ * @tc.name: ChangeUidToMediaTest004
+ * @tc.desc: Verify that ChangeUidToMedia skips chmod and does not update counters for directory with matching mode.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChangeUidToMediaTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest004 Start";
+    try {
+        std::system("mkdir -p /data/test_tdd/test_dir_mode_match");
+        std::system("chmod 0771 /data/test_tdd/test_dir_mode_match");
+        std::string path = "/data/test_tdd/test_dir_mode_match";
+        struct stat st {};
+        st.st_mode = S_IFDIR | 0771;
+        st.st_size = 4096;
+
+        periodicChownTask_->fileCount_ = 0;
+        periodicChownTask_->totalSize_ = 0;
+        periodicChownTask_->ChangeUidToMedia(path, 0771, st);
+
+        EXPECT_EQ(periodicChownTask_->fileCount_, 0);
+        EXPECT_EQ(periodicChownTask_->totalSize_, 0);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChangeUidToMediaTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest004 End";
+}
+
+/*
+ * @tc.name: ChangeUidToMediaTest005
+ * @tc.desc: Verify that ChangeUidToMedia calls chmod when mode differs and updates counters for regular file.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChangeUidToMediaTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest005 Start";
+    try {
+        std::system("mkdir /data/test_tdd");
+        std::system("touch /data/test_tdd/test_file_mode_diff.txt");
+        std::system("chmod 0644 /data/test_tdd/test_file_mode_diff.txt");
+        std::string path = "/data/test_tdd/test_file_mode_diff.txt";
+        struct stat st {};
+        st.st_mode = S_IFREG | 0644;
+        st.st_size = 2048;
+
+        periodicChownTask_->fileCount_ = 0;
+        periodicChownTask_->totalSize_ = 0;
+        periodicChownTask_->ChangeUidToMedia(path, 0660, st);
+
+        EXPECT_EQ(periodicChownTask_->fileCount_, 1);
+        EXPECT_EQ(periodicChownTask_->totalSize_, 2048);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChangeUidToMediaTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest005 End";
+}
+
+/*
+ * @tc.name: ChangeUidToMediaTest006
+ * @tc.desc: Verify that ChangeUidToMedia correctly applies MODE_MASK to skip chmod when only extra bits differ.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChangeUidToMediaTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest006 Start";
+    try {
+        std::system("mkdir /data/test_tdd");
+        std::system("touch /data/test_tdd/test_file_extra_bits.txt");
+        std::system("chmod 0660 /data/test_tdd/test_file_extra_bits.txt");
+        std::string path = "/data/test_tdd/test_file_extra_bits.txt";
+        struct stat st {};
+        st.st_mode = S_IFREG | 0660 | S_ISUID;
+        st.st_size = 512;
+
+        periodicChownTask_->fileCount_ = 0;
+        periodicChownTask_->totalSize_ = 0;
+        periodicChownTask_->ChangeUidToMedia(path, 0660, st);
+
+        EXPECT_EQ(periodicChownTask_->fileCount_, 1);
+        EXPECT_EQ(periodicChownTask_->totalSize_, 512);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChangeUidToMediaTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest006 End";
+}
+
+/*
+ * @tc.name: ChangeUidToMediaTest007
+ * @tc.desc: Verify that ChangeUidToMedia correctly accumulates counters when non-zero values already exist.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChangeUidToMediaTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest007 Start";
+    try {
+        std::system("mkdir /data/test_tdd");
+        std::system("touch /data/test_tdd/test_file_accum.txt");
+        std::system("chmod 0660 /data/test_tdd/test_file_accum.txt");
+        std::string path = "/data/test_tdd/test_file_accum.txt";
+        struct stat st {};
+        st.st_mode = S_IFREG | 0660;
+        st.st_size = 1024;
+
+        periodicChownTask_->fileCount_ = 5;
+        periodicChownTask_->totalSize_ = 5000;
+        periodicChownTask_->ChangeUidToMedia(path, 0660, st);
+
+        EXPECT_EQ(periodicChownTask_->fileCount_, 6);
+        EXPECT_EQ(periodicChownTask_->totalSize_, 6024);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChangeUidToMediaTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeUidToMediaTest007 End";
 }
 
 /*
