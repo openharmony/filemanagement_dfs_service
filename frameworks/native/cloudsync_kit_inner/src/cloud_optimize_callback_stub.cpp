@@ -46,8 +46,21 @@ int32_t CloudOptimizeCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudOptimizeCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
-    OptimizeState state = OptimizeState(data.ReadInt32());
-    int32_t progress = data.ReadInt32();
+    int32_t readState;
+    if (!data.ReadInt32(readState)) {
+        LOGE("read state failed");
+        return E_INVAL_ARG;
+    }
+    if (readState < OPTIMIZE_RUNNING || readState > OPTIMIZE_STOPPED) {
+        LOGE("state invalid");
+        return E_INVAL_ARG;
+    }
+    OptimizeState state = OptimizeState(readState);
+    int32_t progress;
+    if (!data.ReadInt32(progress)) {
+        LOGE("read progress failed");
+        return E_INVAL_ARG;
+    }
     OnOptimizeProcess(state, progress);
     LOGI("HandleOnProcess state:%{public}d: OptimizeSize%{public}d", state, progress);
     return E_OK;

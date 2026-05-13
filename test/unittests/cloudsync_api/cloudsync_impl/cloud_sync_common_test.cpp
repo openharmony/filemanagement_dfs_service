@@ -2561,5 +2561,94 @@ HWTEST_F(CloudSyncCommonTest, DowngradeTfProgress_to_string, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DowngradeTfProgress_to_string End";
 }
+
+/*
+ * @tc.name: DentryFileInfoObjReadFromParcelTest001
+ * @tc.desc: Verify the DentryFileInfoObj::ReadFromParcel function with totalCount read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, DentryFileInfoObjReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DentryFileInfoObjReadFromParcelTest001 Start";
+    try {
+        DentryFileInfoObj obj;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        auto res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(false));
+        EXPECT_CALL(*parcel_, ReadInt64(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DentryFileInfoObjReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DentryFileInfoObjReadFromParcelTest001 End";
+}
+
+/*
+ * @tc.name: AssetInfoObjReadFromParcelTest001
+ * @tc.desc: Verify the AssetInfoObj::ReadFromParcel function with totalCount read failure.
+ * @tc.type: FUNC
+ * @tc.require: issueTDD001
+ */
+HWTEST_F(CloudSyncCommonTest, AssetInfoObjReadFromParcelTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AssetInfoObjReadFromParcelTest001 Start";
+    try {
+        AssetInfoObj obj;
+        Parcel parcel;
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(false));
+        auto res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+
+        EXPECT_CALL(*parcel_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true)).WillOnce(Return(true))
+            .WillOnce(Return(true)).WillOnce(Return(false));
+        res = obj.ReadFromParcel(parcel);
+        EXPECT_FALSE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AssetInfoObjReadFromParcelTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "AssetInfoObjReadFromParcelTest001 End";
+}
+
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

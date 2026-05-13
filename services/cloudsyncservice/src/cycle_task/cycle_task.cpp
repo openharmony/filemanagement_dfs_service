@@ -69,7 +69,7 @@ void CycleTask::GetLastRunTime(std::time_t &time)
 
 bool CycleTask::IsEligibleToRun(std::time_t currentTime, std::string bundleName)
 {
-    std::time_t lastRuntime;
+    std::time_t lastRuntime = 0;
     GetLastRunTime(lastRuntime);
     if (lastRuntime == 0) {
         SetLastRunTime(currentTime);

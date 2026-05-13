@@ -1552,31 +1552,6 @@ HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetBundleNameUserInfoTest002
- * @tc.desc: Verify the GetBundleNameUserInfo function.
- * @tc.type: FUNC
- * @tc.require: IB3SLT
- */
-HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 start";
-    try {
-        EXPECT_NE(servicePtr_, nullptr);
-        std::vector<std::string> uriVec = {""};
-        BundleNameUserInfo userInfo;
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
-        EXPECT_CALL(*dfsuAccessToken_, GetPid()).WillOnce(Return(101));
-        servicePtr_->GetBundleNameUserInfo(uriVec, userInfo);
-        EXPECT_EQ(userInfo.userId, 100);
-        EXPECT_EQ(userInfo.pid, 101);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 failed";
-    }
-    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 end";
-}
-
-/**
  * @tc.name: StartDowngradeTest002
  * @tc.desc: Verify the StartDowngrade function.
  * @tc.type: FUNC

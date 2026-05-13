@@ -673,12 +673,30 @@ std::string DowngradeTfProgress::to_string() const
 
 bool DentryFileInfoObj::ReadFromParcel(Parcel &parcel)
 {
-    parcel.ReadString(cloudId);
-    parcel.ReadInt64(size);
-    parcel.ReadInt64(modifiedTime);
-    parcel.ReadString(path);
-    parcel.ReadString(fileName);
-    parcel.ReadString(fileType);
+    if (!parcel.ReadString(cloudId)) {
+        LOGE("failed to read cloud id");
+        return false;
+    }
+    if (!parcel.ReadInt64(size)) {
+        LOGE("failed to read size");
+        return false;
+    }
+    if (!parcel.ReadInt64(modifiedTime)) {
+        LOGE("failed to read modified time");
+        return false;
+    }
+    if (!parcel.ReadString(path)) {
+        LOGE("failed to read path");
+        return false;
+    }
+    if (!parcel.ReadString(fileName)) {
+        LOGE("failed to read file name");
+        return false;
+    }
+    if (!parcel.ReadString(fileType)) {
+        LOGE("failed to read file type");
+        return false;
+    }
     return true;
 }
 
@@ -706,11 +724,26 @@ DentryFileInfoObj *DentryFileInfoObj::Unmarshalling(Parcel &parcel)
 
 bool AssetInfoObj::ReadFromParcel(Parcel &parcel)
 {
-    parcel.ReadString(uri);
-    parcel.ReadString(recordType);
-    parcel.ReadString(recordId);
-    parcel.ReadString(fieldKey);
-    parcel.ReadString(assetName);
+    if (!parcel.ReadString(uri)) {
+        LOGE("failed to read uri");
+        return false;
+    }
+    if (!parcel.ReadString(recordType)) {
+        LOGE("failed to read record type");
+        return false;
+    }
+    if (!parcel.ReadString(recordId)) {
+        LOGE("failed to read record id");
+        return false;
+    }
+    if (!parcel.ReadString(fieldKey)) {
+        LOGE("failed to read field key");
+        return false;
+    }
+    if (!parcel.ReadString(assetName)) {
+        LOGE("failed to read asset name");
+        return false;
+    }
     return true;
 }
 
