@@ -35,6 +35,7 @@ constexpr int SOFTBUS_TRANS_FILE_NETWORK_ERROR = -426114935;
 constexpr int SOFTBUS_TRANS_FILE_NOT_FOUND = -426114934;
 constexpr int SOFTBUS_TRANS_FILE_EXISTED = -426114933;
 constexpr int DFS_CANCEL_SUCCESS = 204;
+constexpr int CLOUD_INDEX_MAX = 13;
 
 enum CloudSyncServiceErrCode : ErrCode {
     E_OK = 0,
@@ -248,9 +249,26 @@ const std::unordered_map<int32_t, std::string> errMessageTable_ {
     { E_UNKNOWN_FAULT, "Unknown error. The possible causes is getxattr failed." }
 };
 
+const std::unordered_map<int32_t, int32_t> metricsIndex {
+    { E_PERMISSION, 1 },
+    { E_PERMISSION_SYS, 2 },
+    { E_PARAMS_, 3 },
+    { E_IPCSS, 4 },
+    { E_NO_FILE_OR_DIR, 5 },
+    { E_INVALID_URI, 6 },
+    { E_CLOUD_NOT_READY, 7 },
+    { E_NETWORK_ERR, 8 },
+    { E_BATTERY_WARNING, 9 },
+    { E_EXCEED_MAX_LIMIT, 10 },
+    { E_INNER_FAILED, 11 },
+    { E_OTHER_TASK_RUNNING, 12 },
+    { E_VERSION_FILE_NO_EXIST, 13 },
+};
+
 int32_t Convert2JsErrNum(int32_t errNum);
 std::string Convert2JsErrMsg(int32_t errNum);
 int32_t Convert2ErrNum(int32_t errNum);
+int32_t Convert2MetricsIndex(int32_t ret);
 } // namespace OHOS::FileManagement
 
 #endif // OHOS_FILEMGMT_DFS_ERROR_H

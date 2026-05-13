@@ -42,4 +42,13 @@ int32_t Convert2ErrNum(int32_t errNum)
         return errNum;
     }
 }
+
+int32_t Convert2MetricsIndex(int32_t ret)
+{
+    int32_t errCode = Convert2JsErrNum(ret);
+    if (metricsIndex.find(errCode) != metricsIndex.end()) {
+        return metricsIndex.at(errCode);
+    }
+    return 0;
+}
 } // namespace OHOS::FileManagement

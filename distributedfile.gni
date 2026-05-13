@@ -61,4 +61,9 @@ declare_args() {
     support_same_account = false
     support_device_profile = false
   }
+
+  cloud_hiviewdfx_api_metrics_enable = false
+  if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
+    cloud_hiviewdfx_api_metrics_enable = true
+  }
 }

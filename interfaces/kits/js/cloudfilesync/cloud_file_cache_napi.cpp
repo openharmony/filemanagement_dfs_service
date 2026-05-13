@@ -22,6 +22,7 @@
 #include <unordered_set>
 
 #include "async_work.h"
+#include "cloud_metrics.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "multi_download_progress_napi.h"
@@ -165,9 +166,10 @@ napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_i
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.CloudFileCache.cleanCache");
     int32_t ret = CloudSyncManager::GetInstance().CleanCache(uri.get());
     if (ret != E_OK) {
+        MetricsError("CoreFileKit.cloudSync.Dyn.CloudFileCache.cleanCache.Err", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
@@ -324,6 +326,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
         NError(ret).ThrowErr(env);
         return nullptr;
     }
+    MetricsCount("CoreFileKit.cloudSync.Dyn.CloudFileCache.start");
     auto callbackImpl = GetCallbackImpl(env, funcArg, PROGRESS, true);
     auto cbExec = [uri{uri}, callbackImpl{callbackImpl}]() -> NError {
         if (callbackImpl == nullptr) {
@@ -336,6 +339,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
             if (ret != E_INVAL_ARG) {
                 ret = E_BROKEN_IPC;
             }
+            MetricsError("CoreFileKit.cloudSync.Dyn.CloudFileCache.start.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
@@ -392,6 +396,7 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+    MetricsCount("CoreFileKit.cloudSync.Dyn.CloudFileCache.stop");
     auto callbackImpl = GetCallbackImpl(env, funcArg, PROGRESS, false);
     auto cbExec = [uri{uri}, needClean{needClean}, callbackImpl{callbackImpl}]() -> NError {
         if (callbackImpl == nullptr) {
@@ -404,6 +409,7 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
             if (ret != E_INVAL_ARG) {
                 ret = E_BROKEN_IPC;
             }
+            MetricsError("CoreFileKit.cloudSync.Dyn.CloudFileCache.stop.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);

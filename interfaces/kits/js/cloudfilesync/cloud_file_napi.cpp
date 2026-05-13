@@ -20,6 +20,7 @@
 #include <sys/types.h>
 
 #include "async_work.h"
+#include "cloud_metrics.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -111,7 +112,7 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.Download.start");
     auto callbackImpl = GetCallbackImpl(env, funcArg, true);
     auto cbExec = [uri{string(uri.get())}, callbackImpl{callbackImpl}]() -> NError {
         if (callbackImpl == nullptr) {
@@ -121,6 +122,7 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
         int32_t ret = callbackImpl->StartDownloadInner(uri);
         if (ret != E_OK) {
             LOGE("Start Download failed! ret = %{public}d", ret);
+            MetricsError("CoreFileKit.cloudSync.Dyn.Download.start.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         LOGI("Start Download Success!");
@@ -253,7 +255,7 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.Download.stop");
     auto callbackImpl = GetCallbackImpl(env, funcArg, false);
     auto cbExec = [uri{string(uri.get())}, callbackImpl{callbackImpl}]() -> NError {
         if (callbackImpl == nullptr) {
@@ -263,6 +265,7 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
         int32_t ret = callbackImpl->StopDownloadInner(uri);
         if (ret != E_OK) {
             LOGE("Stop Download failed! ret = %{public}d", ret);
+            MetricsError("CoreFileKit.cloudSync.Dyn.Download.stop.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
