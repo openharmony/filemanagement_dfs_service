@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <system_error>
 
+#include "cloud_file_fault_event.h"
 #include "data_syncer_rdb_col.h"
 #include "dfs_error.h"
 #include "rdb_helper.h"
@@ -139,7 +140,8 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
         LOGE("fail to insert userId %d bundleName %s, ret %{public}d", userId, bundleName.c_str(), ret);
         return E_RDB;
     }
-
+    CLOUD_SYNC_FAULT_REPORT({bundleName, CloudFile::FaultScenarioCode::CLOUD_FULL_SYNC,
+        CloudFile::FaultType::TRIGGER_RDB, E_RDB, uniqueId + "insert into DataSyncerRdb"});
     return E_OK;
 }
 

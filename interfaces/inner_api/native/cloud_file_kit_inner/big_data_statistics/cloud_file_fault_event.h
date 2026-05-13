@@ -128,6 +128,7 @@ enum class FaultType {
     TRIGGER = 110000000,
     TRIGGER_INTERN = 110000001,
     TRIGGER_EXTERN = 110000002,
+    TRIGGER_RDB = 110000003,
 
     /* notify abnormal */
     NOTIFY_ABNORMAL = 200000000
