@@ -29,6 +29,7 @@
 #include "fuse_manager/fuse_manager.h"
 #include "iremote_object.h"
 #include "meta_file.h"
+#include "migration_manager.h"
 #include "parameters.h"
 #include "plugin_loader.h"
 #include "setting_data_helper.h"
@@ -212,6 +213,10 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 
 void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)
 {
+    if (path.find("cloud_fuse") != string::npos) {
+        MigrationManager::GetInstance().StartAsyncMigration(userId);
+    }
+    
     const string filemanagerKey = "persist.kernel.bundle_name.filemanager";
     string bundleName = system::GetParameter(filemanagerKey, "");
     if (bundleName.empty()) {

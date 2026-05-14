@@ -130,6 +130,7 @@ private:
     int32_t CheckIsConflict(const std::string &name, const std::string &parentCloudId, std::string &newName);
     int32_t RestoreUpdateRdb(const std::string &cloudId, const struct RestoreInfo &restoreInfo,
         const NativeRdb::ValuesBucket &setXattr);
+    std::string SelectDbDir(int32_t userId, const std::string &bundleName, const std::string &filemanager);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};

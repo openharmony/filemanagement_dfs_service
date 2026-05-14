@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 #include <chrono>
+#include <cstdlib>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <thread>
@@ -59,8 +60,8 @@ void CloudDiskRdbStoreTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     insMock = make_shared<AssistantMock>();
     AssistantMock::ins = insMock;
-    insMock->EnableMock();
     clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
+    insMock->EnableMock();
 }
 
 void CloudDiskRdbStoreTest::TearDown(void)
@@ -183,6 +184,141 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest4, TestSize.Level1)
 
     int32_t ret = clouddiskrdbStore_->RdbInit();
     EXPECT_EQ(ret, NativeRdb::E_SQLITE_CORRUPT);
+}
+
+/**
+ * @tc.name: SelectDbDirTest001
+ * @tc.desc: Verify the CloudDiskRdbStore::SelectDbDir function with .migrating marker exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SelectDbDirTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SelectDbDirTest001 start";
+    int32_t userId = 100;
+    string bundleName = "com.test.selectdbdir001";
+    string filemanager = "com.test.filemanager001";
+    
+    string baseDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/";
+    string newDbDir = baseDir + bundleName;
+    
+    EXPECT_CALL(*insMock, access(_, _))
+        .WillOnce(Return(0));
+    
+    string result = clouddiskrdbStore_->SelectDbDir(userId, bundleName, filemanager);
+    
+    string oldDbDir = baseDir + filemanager;
+    EXPECT_EQ(result, oldDbDir);
+    
+    GTEST_LOG_(INFO) << "SelectDbDirTest001 end";
+}
+
+/**
+ * @tc.name: SelectDbDirTest002
+ * @tc.desc: Verify the CloudDiskRdbStore::SelectDbDir function with .migrated marker exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SelectDbDirTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SelectDbDirTest002 start";
+    int32_t userId = 100;
+    string bundleName = "com.test.selectdbdir002";
+    string filemanager = "com.test.filemanager002";
+    
+    string baseDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/";
+    string newDbDir = baseDir + bundleName;
+    
+    EXPECT_CALL(*insMock, access(_, _))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(0));
+    
+    string result = clouddiskrdbStore_->SelectDbDir(userId, bundleName, filemanager);
+    
+    EXPECT_EQ(result, newDbDir);
+    
+    GTEST_LOG_(INFO) << "SelectDbDirTest002 end";
+}
+
+/**
+ * @tc.name: SelectDbDirTest003
+ * @tc.desc: Verify the CloudDiskRdbStore::SelectDbDir function with no rdb dir and no markers
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SelectDbDirTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SelectDbDirTest003 start";
+    int32_t userId = 100;
+    string bundleName = "com.test.selectdbdir003";
+    string filemanager = "com.test.filemanager003";
+    
+    string baseDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/";
+    string newDbDir = baseDir + bundleName;
+    
+    EXPECT_CALL(*insMock, access(_, _))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1));
+    
+    string result = clouddiskrdbStore_->SelectDbDir(userId, bundleName, filemanager);
+    
+    EXPECT_EQ(result, newDbDir);
+    
+    GTEST_LOG_(INFO) << "SelectDbDirTest003 end";
+}
+
+/**
+ * @tc.name: SelectDbDirTest004
+ * @tc.desc: Verify the CloudDiskRdbStore::SelectDbDir function with rdb dir exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SelectDbDirTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SelectDbDirTest004 start";
+    int32_t userId = 100;
+    string bundleName = "com.test.selectdbdir004";
+    string filemanager = "com.test.filemanager004";
+    
+    string baseDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/";
+    string oldDbDir = baseDir + filemanager;
+    
+    EXPECT_CALL(*insMock, access(_, _))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(0));
+    
+    string result = clouddiskrdbStore_->SelectDbDir(userId, bundleName, filemanager);
+    
+    EXPECT_EQ(result, oldDbDir);
+    
+    GTEST_LOG_(INFO) << "SelectDbDirTest004 end";
+}
+
+/**
+ * @tc.name: SelectDbDirTest005
+ * @tc.desc: Verify the CloudDiskRdbStore::SelectDbDir function with newDbDir exists but rdb not exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, SelectDbDirTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SelectDbDirTest005 start";
+    int32_t userId = 100;
+    string bundleName = "com.test.selectdbdir005";
+    string filemanager = "com.test.filemanager005";
+    
+    string baseDir = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager/";
+    string newDbDir = baseDir + bundleName;
+    
+    EXPECT_CALL(*insMock, access(_, _))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(0));
+    
+    string result = clouddiskrdbStore_->SelectDbDir(userId, bundleName, filemanager);
+    
+    EXPECT_EQ(result, newDbDir);
+    
+    GTEST_LOG_(INFO) << "SelectDbDirTest005 end";
 }
 
 /**

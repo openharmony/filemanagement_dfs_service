@@ -60,6 +60,7 @@ ohos_shared_library("clouddisk_database") {
     "src/clouddisk_rdbstore.cpp",
     "src/clouddisk_sync_helper.cpp",
     "src/file_column.cpp",
+    "src/migration_manager.cpp",
   ]
 
   configs += [ ":clouddisk_database_config" ]

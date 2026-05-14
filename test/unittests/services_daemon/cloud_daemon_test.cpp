@@ -385,4 +385,54 @@ HWTEST_F(CloudDaemonTest, ExecuteStartFuseTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ExecuteStartFuseTest003 end";
 }
+
+/**
+ * @tc.name: ExecuteStartFuseTest004
+ * @tc.desc: Verify the ExecuteStartFuse function with cloud_fuse path
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, ExecuteStartFuseTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteStartFuseTest004 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillRepeatedly(Return("testBundle"));
+        int32_t userId = 100;
+        int32_t devFd = 100;
+        const std::string path = "/data/cloud_fuse/test";
+        cloudDaemon_->ExecuteStartFuse(userId, devFd, path);
+        ffrt::wait();
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteStartFuseTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteStartFuseTest004 end";
+}
+
+/**
+ * @tc.name: ExecuteStartFuseTest005
+ * @tc.desc: Verify the ExecuteStartFuse function with cloud_fuse path and empty bundle
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDaemonTest, ExecuteStartFuseTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExecuteStartFuseTest005 start";
+    try {
+        std::shared_ptr<SystemMock> systemMock = std::make_shared<SystemMock>();
+        ISystem::system_ = systemMock;
+        EXPECT_CALL(*systemMock, GetParameter(_, _)).WillRepeatedly(Return(""));
+        int32_t userId = 100;
+        int32_t devFd = 100;
+        const std::string path = "cloud_fuse_path";
+        cloudDaemon_->ExecuteStartFuse(userId, devFd, path);
+        ffrt::wait();
+        ISystem::system_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExecuteStartFuseTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "ExecuteStartFuseTest005 end";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
