@@ -131,9 +131,9 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
-        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*proxy_, GetInstanceWithoutLoad(_)).WillOnce(Return(nullptr));
         int res = managePtr_->StopSync();
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StopSyncTest FAILED";

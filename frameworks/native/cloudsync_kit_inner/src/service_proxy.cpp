@@ -83,6 +83,28 @@ sptr<ICloudSyncService> ServiceProxy::GetInstance(const std::string &callerMetho
     return serviceProxy_;
 }
 
+sptr<ICloudSyncService> ServiceProxy::GetInstanceWithoutLoad(const std::string &callerMethod)
+{
+    LOGD("getinstance without load, callerMethod: %{public}s", callerMethod.c_str());
+    unique_lock<mutex> lock(instanceMutex_);
+
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        LOGE("Samgr is nullptr, callerMethod: %{public}s", callerMethod.c_str());
+        return nullptr;
+    }
+    auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+    if (object != nullptr) {
+        unique_lock<mutex> proxyLock(proxyMutex_);
+        LOGI("SA check successfully");
+        serviceProxy_ = iface_cast<ICloudSyncService>(object);
+        return serviceProxy_;
+    }
+
+    LOGI("SA not exist, callerMethod: %{public}s", callerMethod.c_str());
+    return nullptr;
+}
+
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId,
     const sptr<IRemoteObject> &remoteObject)

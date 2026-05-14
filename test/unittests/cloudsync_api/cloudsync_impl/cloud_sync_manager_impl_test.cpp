@@ -579,25 +579,89 @@ HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
 }
 
 /*
- * @tc.name: StopSyncTest
- * @tc.desc: Verify the StopSync function.
+ * @tc.name: StopSyncTest001
+ * @tc.desc: Verify the StopSync function when service exists.
  * @tc.type: FUNC
- * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, StopSyncTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StopSyncTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "StopSyncTest Start";
+    GTEST_LOG_(INFO) << "StopSyncTest001 Start";
     try {
         string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*proxy_, GetInstanceWithoutLoad(_)).WillOnce(Return(serviceProxy_));
         EXPECT_CALL(*serviceProxy_, StopSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(nullptr));
         int res = CloudSyncManagerImpl::GetInstance().StopSync(bundleName);
         EXPECT_EQ(res, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " StopSyncTest FAILED";
+        GTEST_LOG_(INFO) << " StopSyncTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "StopSyncTest End";
+    GTEST_LOG_(INFO) << "StopSyncTest001 End";
+}
+
+/*
+ * @tc.name: StopSyncTest002
+ * @tc.desc: Verify the StopSync function when service not exist, should return E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, StopSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopSyncTest002 Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        EXPECT_CALL(*proxy_, GetInstanceWithoutLoad(_)).WillOnce(Return(nullptr));
+        int res = CloudSyncManagerImpl::GetInstance().StopSync(bundleName);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopSyncTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopSyncTest002 End";
+}
+
+/*
+ * @tc.name: StopFileSyncTest001
+ * @tc.desc: Verify the StopFileSync function when service exists.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, StopFileSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopFileSyncTest001 Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        bool forceFlag = false;
+        EXPECT_CALL(*proxy_, GetInstanceWithoutLoad(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, StopFileSyncInner(_, _)).WillOnce(Return(E_PERMISSION_DENIED));
+        EXPECT_CALL(*serviceProxy_, AsObject()).WillRepeatedly(Return(nullptr));
+        int res = CloudSyncManagerImpl::GetInstance().StopFileSync(bundleName, forceFlag);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopFileSyncTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopFileSyncTest001 End";
+}
+
+/*
+ * @tc.name: StopFileSyncTest002
+ * @tc.desc: Verify the StopFileSync function when service not exist, should return E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncManagerImplTest, StopFileSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopFileSyncTest002 Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        bool forceFlag = false;
+        EXPECT_CALL(*proxy_, GetInstanceWithoutLoad(_)).WillOnce(Return(nullptr));
+        int res = CloudSyncManagerImpl::GetInstance().StopFileSync(bundleName, forceFlag);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopFileSyncTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopFileSyncTest002 End";
 }
 
 /*

@@ -293,10 +293,9 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
 
 int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName, bool forceFlag)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("StopSync");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopSync");
     if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_OK;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->StopSyncInner(bundleName, forceFlag);
@@ -304,10 +303,9 @@ int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName, bool force
 
 int32_t CloudSyncManagerImpl::StopFileSync(const std::string &bundleName, bool forceFlag)
 {
-    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("StopFileSync");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopFileSync");
     if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_OK;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->StopFileSyncInner(bundleName, forceFlag);
