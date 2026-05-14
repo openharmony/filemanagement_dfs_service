@@ -1280,8 +1280,8 @@ int32_t CloudSyncManagerImpl::SetMediaPreShared(const std::string &albumId, cons
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->SetMediaPreShared(albumId, albumName, localPath);
     if (ret != E_OK) {
-        LOGE("ret is %{public}d id: %{public}s name: %{public}s path: %{public}s",
-            ret, albumId.c_str(), albumName.c_str(), localPath.c_str());
+        LOGE("ret is %{public}d id: %{public}s name: %{public}s",
+            ret, albumId.c_str(), GetAnonyString(albumName).c_str());
     }
     return ret;
 }
