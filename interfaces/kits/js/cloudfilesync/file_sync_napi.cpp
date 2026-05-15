@@ -21,6 +21,7 @@
 
 #include "async_work.h"
 #include "cloud_file_utils.h"
+#include "cloud_metrics.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_constants.h"
 #include "cloud_sync_manager.h"
@@ -104,13 +105,14 @@ napi_value FileSyncNapi::OnCallback(napi_env env, napi_callback_info info)
         LOGI("callback already exist");
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.FileSync.on");
     bundleEntity->callbackInfo.callbackId = CloudDisk::CloudFileUtils::GenerateUuid();
     bundleEntity->callbackInfo.callback =
         make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
     int32_t ret = CloudSyncManager::GetInstance().RegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OnCallback Register error, result: %{public}d", ret);
+        MetricsError("CoreFileKit.cloudSync.Dyn.FileSync.on.Err", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         bundleEntity->callbackInfo.callback = nullptr;
         return nullptr;
@@ -133,10 +135,11 @@ napi_value FileSyncNapi::OffCallback(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.FileSync.off");
     int32_t ret = CloudSyncManager::GetInstance().UnRegisterFileSyncCallback(bundleEntity->callbackInfo);
     if (ret != E_OK) {
         LOGE("OffCallback UnRegister error, result: %{public}d", ret);
+        MetricsError("CoreFileKit.cloudSync.Dyn.FileSync.off.Err", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
@@ -156,12 +159,13 @@ napi_value FileSyncNapi::Start(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.FileSync.start");
     string bundleName = GetBundleName(env, funcArg);
     auto cbExec = [bundleName]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StartFileSync(bundleName);
         if (ret != E_OK) {
             LOGE("Start Sync error, result: %{public}d", ret);
+            MetricsError("CoreFileKit.cloudSync.Dyn.FileSync.start.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
@@ -187,12 +191,13 @@ napi_value FileSyncNapi::Stop(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
+    MetricsCount("CoreFileKit.cloudSync.Dyn.FileSync.stop");
     string bundleName = GetBundleName(env, funcArg);
     auto cbExec = [bundleName]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StopFileSync(bundleName);
         if (ret != E_OK) {
             LOGE("Stop Sync error, result: %{public}d", ret);
+            MetricsError("CoreFileKit.cloudSync.Dyn.FileSync.stop.Err", ret);
             return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);

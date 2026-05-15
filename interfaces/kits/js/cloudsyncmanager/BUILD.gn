@@ -61,6 +61,13 @@ ohos_shared_library("cloudsyncmanager") {
     "LOG_TAG=\"CLOUD_FILE_SYNC\"",
   ]
 
+  if (cloud_hiviewdfx_api_metrics_enable) {
+    defines += [ "ENABLE_API_METRICS" ]
+    external_deps += [
+      "api_metrics:histogrammanager",
+    ]
+  }
+
   relative_install_dir = "module/file"
 
   part_name = "dfs_service"

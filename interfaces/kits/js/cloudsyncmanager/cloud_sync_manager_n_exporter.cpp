@@ -19,6 +19,7 @@
 
 #include <sys/types.h>
 
+#include "cloud_metrics.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
@@ -58,9 +59,11 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     }
     string accoutIdStr(accoutId.get());
     string bundleNameStr(bundleName.get());
+    MetricsCount("CoreFileKit.CloudSyncManager.Dyn.ChangeAppCloudSwitch");
     auto cbExec = [accoutIdStr, bundleNameStr, status]() -> NError {
         int32_t result = CloudSyncManager::GetInstance().ChangeAppSwitch(accoutIdStr, bundleNameStr, status);
         if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            MetricsError("CoreFileKit.CloudSyncManager.Dyn.ChangeAppCloudSwitch.Err", result);
             return result == E_PERMISSION_DENIED? NError(Convert2JsErrNum(E_PERMISSION_DENIED)) :
             NError(Convert2JsErrNum(E_PERMISSION_SYSTEM));
         }
@@ -394,9 +397,11 @@ napi_value Clean(napi_env env, napi_callback_info info)
     }
 
     std::string accoutIdStr(accoutId.get());
+    MetricsCount("CoreFileKit.CloudSyncManager.Dyn.Clean");
     auto cbExec = [accoutIdStr, cleanOptions]() -> NError {
         int32_t result = CloudSyncManager::GetInstance().Clean(accoutIdStr, cleanOptions);
         if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            MetricsError("CoreFileKit.CloudSyncManager.Dyn.Clean.Err", result);
             return result == E_PERMISSION_DENIED? NError(Convert2JsErrNum(E_PERMISSION_DENIED)) :
             NError(Convert2JsErrNum(E_PERMISSION_SYSTEM));
         }

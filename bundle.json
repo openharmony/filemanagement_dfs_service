@@ -37,6 +37,7 @@
           "ability_runtime",
           "access_token",
           "app_file_service",
+          "api_metrics",
           "battery_manager",
           "bundle_framework",
           "c_utils",

@@ -109,4 +109,26 @@ HWTEST_F(DfsErrorTest, Convert2JsErrMsgTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "Convert2JsErrMsgTest002 End";
 }
+
+/**
+ * @tc.name: Convert2MetricsIndexTest001
+ * @tc.desc: Verify the Convert2MetricsIndex function with invalid error codes
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsErrorTest, Convert2MetricsIndexTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Convert2MetricsIndexTest001 Start";
+    try {
+        int32_t ret = Convert2MetricsIndex(-1);
+        EXPECT_EQ(ret, 0);
+
+        ret = Convert2MetricsIndex(201);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "Convert2MetricsIndexTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "Convert2MetricsIndexTest001 End";
+}
 } // namespace OHOS::FileManagement::Test
