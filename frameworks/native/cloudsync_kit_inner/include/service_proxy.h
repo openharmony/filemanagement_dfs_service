@@ -27,6 +27,7 @@ namespace OHOS::FileManagement::CloudSync {
 class ServiceProxy : public IRemoteProxy<ICloudSyncService> {
 public:
     static sptr<ICloudSyncService> GetInstance(const std::string &callerMethod);
+    static sptr<ICloudSyncService> GetInstanceWithoutLoad(const std::string &callerMethod);
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

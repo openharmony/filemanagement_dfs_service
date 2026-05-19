@@ -276,6 +276,92 @@ HWTEST_F(ServiceProxyTest, OnLoadSystemAbilityTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnLoadSystemAbilityTest002 End";
 }
 
+/**
+ * @tc.name: GetInstanceWithoutLoadTest001
+ * @tc.desc: Verify GetInstanceWithoutLoad when samgr is nullptr.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceWithoutLoadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest001 Start";
+    try {
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        auto ServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopSync");
+        EXPECT_TRUE(ServiceProxy == nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceWithoutLoadTest001 occurs an exception.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest001 End";
+}
+
+/**
+ * @tc.name: GetInstanceWithoutLoadTest002
+ * @tc.desc: Verify GetInstanceWithoutLoad when SA exists, should return valid proxy.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceWithoutLoadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest002 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        auto object = sptr<CloudSyncServiceMock>(new CloudSyncServiceMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(object));
+
+        auto ServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopSync");
+        EXPECT_TRUE(ServiceProxy != nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceWithoutLoadTest002 occurs an exception.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest002 End";
+}
+
+/**
+ * @tc.name: GetInstanceWithoutLoadTest003
+ * @tc.desc: Verify GetInstanceWithoutLoad when SA not exist, should return nullptr without loading SA.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceWithoutLoadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest003 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(nullptr));
+
+        auto ServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopSync");
+        EXPECT_TRUE(ServiceProxy == nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceWithoutLoadTest003 occurs an exception.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest003 End";
+}
+
+/**
+ * @tc.name: GetInstanceWithoutLoadTest004
+ * @tc.desc: Verify GetInstanceWithoutLoad for StopFileSync.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceProxyTest, GetInstanceWithoutLoadTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest004 Start";
+    try {
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        auto object = sptr<CloudSyncServiceMock>(new CloudSyncServiceMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, CheckSystemAbility(_)).WillOnce(Return(object));
+
+        auto ServiceProxy = ServiceProxy::GetInstanceWithoutLoad("StopFileSync");
+        EXPECT_TRUE(ServiceProxy != nullptr);
+    } catch (...) {
+        GTEST_LOG_(ERROR) << "GetInstanceWithoutLoadTest004 occurs an exception.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "GetInstanceWithoutLoadTest004 End";
+}
 }
 }
 }
