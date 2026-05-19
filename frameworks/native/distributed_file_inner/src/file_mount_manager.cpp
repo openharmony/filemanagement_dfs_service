@@ -53,6 +53,20 @@ int32_t FileMountManager::GetDfsUrisDirFromLocal(
 #endif
 }
 
+int32_t FileMountManager::UMountDisShareFile(const std::string &bundleName, const int32_t userId)
+{
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (!distributedFileDaemonProxy) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->UMountDisShareFile(bundleName, userId);
+#else
+    return ERR_NOT_SUPPORT;
+#endif
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

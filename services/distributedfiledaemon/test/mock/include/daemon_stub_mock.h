@@ -59,6 +59,7 @@ public:
         int32_t(const std::vector<std::string> &uriList,
                 const int32_t userId,
                 std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps));
+    MOCK_METHOD2(UMountDisShareFile, int32_t(const std::string &bundleName, const int32_t userId));
     MOCK_METHOD2(GetDfsSwitchStatus, int32_t(const std::string &networkId, int32_t &switchStatus));
     MOCK_METHOD1(UpdateDfsSwitchStatus, int32_t(int32_t switchStatus));
     MOCK_METHOD1(GetConnectedDeviceList, int32_t(std::vector<DfsDeviceInfo> &deviceList));

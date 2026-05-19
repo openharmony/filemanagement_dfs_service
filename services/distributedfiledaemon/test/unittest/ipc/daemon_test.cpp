@@ -91,6 +91,7 @@ constexpr int32_t ERR_DP_CAN_NOT_FIND = 98566199;
 int32_t g_getDfsUrisDirFromLocal = OHOS::FileManagement::E_OK;
 constexpr pid_t PASTE_BOARD_UID = 3816;
 constexpr pid_t UDMF_UID = 3012;
+constexpr pid_t INSTALLSUSERID = 3060;
 } // namespace
 
 namespace OHOS::Storage::DistributedFile {
@@ -532,6 +533,198 @@ HWTEST_F(DaemonTest, DaemonTest_GetDfsUrisDirFromLocal_0100, TestSize.Level0)
     EXPECT_EQ(ret, OHOS::FileManagement::E_OK);
 
     GTEST_LOG_(INFO) << "DaemonTest_GetDfsUrisDirFromLocal_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0100
+ * @tc.desc: Verify the UMountDisShareFile function with permission denied.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0100 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app";
+        int32_t userId = 100;
+
+        g_getCallingUid = 1001;
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_PERMISSION_DENIED);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0200
+ * @tc.desc: Verify the UMountDisShareFile function when remote share dir not exist.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0200 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.notexist";
+        int32_t userId = 100;
+
+        g_getCallingUid = INSTALLSUSERID;
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_OK);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0200 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0300
+ * @tc.desc: Verify the UMountDisShareFile function with null storageMgrProxy.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0300 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app";
+        int32_t userId = 100;
+
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir + "networkId2/data/storage/el2/base");
+
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0300 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0350
+ * @tc.desc: Verify the UMountDisShareFile function with null storageObj.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0350, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0350 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app";
+        int32_t userId = 100;
+
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_)).WillOnce(Return(nullptr));
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0350 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0400
+ * @tc.desc: Verify the UMountDisShareFile function with empty distributeDirs.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0400 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.empty";
+        int32_t userId = 100;
+
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir);
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_OK);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app.empty");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0400 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0500
+ * @tc.desc: Verify the UMountDisShareFile function handles multiple calls gracefully.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0500 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir + "networkId2/data/storage/el2/base");
+
+        daemon_->UMountDisShareFile(bundleName, userId);
+        daemon_->UMountDisShareFile(bundleName, userId);
+        daemon_->UMountDisShareFile(bundleName, userId);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0500 end";
 }
 
 /**
@@ -1365,6 +1558,34 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_FALSE(daemon_->GetRemoteSA("") == nullptr);
     GTEST_LOG_(INFO) << "DaemonTest_GetRemoteSA_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_GetStorageManager_001
+ * @tc.desc: verify GetStorageManager.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_GetStorageManager_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_GetStorageManager_001 begin";
+    ASSERT_NE(daemon_, nullptr);
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+    EXPECT_TRUE(daemon_->GetStorageManager() == nullptr);
+
+    auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
+    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(static_cast<int32_t>(STORAGE_MANAGER_MANAGER_ID)))
+        .WillRepeatedly(Return(nullptr));
+    EXPECT_TRUE(daemon_->GetStorageManager() == nullptr);
+
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
+    ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
+    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(static_cast<int32_t>(STORAGE_MANAGER_MANAGER_ID)))
+        .WillOnce(Return(daemon));
+    EXPECT_TRUE(daemon_->GetStorageManager() == nullptr);
+    GTEST_LOG_(INFO) << "DaemonTest_GetStorageManager_001 end";
 }
 
 /**

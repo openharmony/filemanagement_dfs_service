@@ -75,6 +75,7 @@ public:
                                            const int32_t userId,
                                            std::unordered_map<std::string,
                                            AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps) = 0;
+    virtual int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId) = 0;
     virtual int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) = 0;
     virtual int32_t UpdateDfsSwitchStatus(int32_t switchStatus) = 0;
     virtual int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) = 0;

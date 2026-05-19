@@ -16,6 +16,7 @@
 #include "ipc/daemon.h"
 
 #include <exception>
+#include <filesystem>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -81,6 +82,7 @@ const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 const int32_t PASTEBOARDUSERID = 3816;
 const int32_t UDMFUSERID = 3012;
+const int32_t INSTALLSUSERID = 3060;
 constexpr mode_t DEFAULT_UMASK = 0002;
 constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 10 * 1000;
 constexpr int32_t DEFAULT_USER_ID = 100;
@@ -1255,6 +1257,66 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
     }
     HiAudit::GetInstance().WriteEnd("GetDfsUrisDirFromLocal", FileManagement::E_OK);
     return FileManagement::E_OK;
+}
+
+sptr<StorageManager::IStorageManager> Daemon::GetStorageManager()
+{
+    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        LOGE("GetSystemAbilityManager filed");
+        return nullptr;
+    }
+
+    auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+    if (storageObj == nullptr) {
+        LOGE("filed to get STORAGE_MANAGER_MANAGER_ID proxy");
+        return nullptr;
+    }
+
+    LOGI("GetStorageManager end.");
+    return iface_cast<StorageManager::IStorageManager>(storageObj);
+}
+
+int32_t Daemon::UMountDisShareFile(const std::string &bundleName, const int32_t userId)
+{
+    LOGI("Daemon::UMountDisShareFile start");
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != INSTALLSUSERID) {
+        LOGE("UMountDisShareFile permission denied, callingUid: %{public}d", callingUid);
+        return E_PERMISSION_DENIED;
+    }
+
+    std::string remoteShareDir = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/account/data/" +
+                                 bundleName + "/.remote_share/";
+    std::vector<std::string> distributeDirs;
+    std::error_code ec;
+    if (!std::filesystem::exists(remoteShareDir, ec)) {
+        LOGI("UMountDisShareFile remote share dir not exist");
+        return E_OK;
+    }
+
+    for (const auto &entry : std::filesystem::directory_iterator(remoteShareDir, ec)) {
+        if (entry.is_directory(ec)) {
+            std::string localNetworkId = entry.path().filename().string();
+            std::string distributeDir = remoteShareDir + localNetworkId + "/data/storage/el2/base";
+            distributeDirs.push_back(distributeDir);
+            LOGI("UMountDisShareFile add localNetworkId: %{public}s", localNetworkId.c_str());
+        }
+    }
+    if (distributeDirs.empty()) {
+        LOGI("UMountDisShareFile no distributeDirs found");
+        return E_OK;
+    }
+
+    auto storageMgrProxy = GetStorageManager();
+    if (storageMgrProxy == nullptr) {
+        LOGE("UMountDisShareFile storageMgrProxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    int32_t ret = storageMgrProxy->UMountDisShareFile(distributeDirs);
+    LOGI("Daemon::UMountDisShareFile end, ret: %{public}d", ret);
+    return ret;
 }
 
 int32_t Daemon::GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
