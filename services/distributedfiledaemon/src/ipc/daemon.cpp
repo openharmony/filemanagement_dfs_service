@@ -277,7 +277,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     stringstream ss;
     auto st_dev = ConnectionDetector::MocklispHash(path);
     if (st_dev == static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE)) {
-        return st_dev;
+        return FileManagement::ERR_BAD_VALUE;
     }
     ss << st_dev;
     auto targetDir = ss.str();
@@ -634,7 +634,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     uint64_t fileSize = 0;
     struct stat fileStat;
     if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
-        fileSize = fileStat.st_size;
+        fileSize = static_cast<uint64_t>(fileStat.st_size);
     } else {
         LOGE("Stat srcPhysicalPath failed.");
     }

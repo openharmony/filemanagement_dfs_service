@@ -520,6 +520,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
     for (const std::string& rootFile : fileList) {
         size_t pos = rootFile.find(relativePath);
         if (pos == std::string::npos) {
+            zipClose(outputFile, NULL);
             LOGE("rootFile not have relativePath");
             return E_ZIP;
         }
