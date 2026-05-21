@@ -61,12 +61,45 @@ void InitDownloadStopReason(napi_env env, napi_value exports)
     napi_set_named_property(env, exports, propertyName, obj);
 }
 
+void InitTransferState(napi_env env, napi_value exports)
+{
+    const char *propertyName = "TransferState";
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("RUNNING", NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::RUNNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::STOPPED).val_),
+    };
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitTransferStopReason(napi_env env, napi_value exports)
+{
+    char propertyName[] = "TransferStopReason";
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("SWITCH_OFF",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::SWITCH_OFF).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("ACCOUNT_LOGOUT",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::ACCOUNT_LOGOUT).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("OTHER_REASON",
+                                     NVal::CreateInt32(env, (int32_t)DowngradeTfProgress::OTHER_REASON).val_),
+    };
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     CloudSyncManagerExport(env, exports);
     InitENumACtions(env, exports);
     InitDownloadState(env, exports);
     InitDownloadStopReason(env, exports);
+    InitTransferState(env, exports);
+    InitTransferStopReason(env, exports);
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<DowngradeDownloadNapi>(env, exports));
     products.emplace_back(std::make_unique<DowngradeProgressNapi>(env, exports));
