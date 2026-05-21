@@ -20,8 +20,10 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 ReportStatisticsTask::ReportStatisticsTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask("report_statistics_task", {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME}, ONE_DAY, dataSyncManager)
+    : CycleTask("report_statistics_task", {GALLERY_BUNDLE_NAME, HDC_BUNDLE_NAME,
+    system::GetParameter(FILEMANAGER_KEY, "")}, ONE_DAY, dataSyncManager)
 {
 }
 
