@@ -47,21 +47,25 @@ private:
 class DowngradeDlCallbackImpl : public DowngradeDlCallback,
                                 public std::enable_shared_from_this<DowngradeDlCallbackImpl> {
 public:
-    DowngradeDlCallbackImpl(napi_env env, napi_value func);
+    explicit DowngradeDlCallbackImpl(napi_env env) : cbOnRef_(nullptr), tfCbOnRef_(nullptr), env_(env) {};
     ~DowngradeDlCallbackImpl();
     void OnDownloadProcess(const DowngradeProgress &progress) override;
     void OnTransferProcess(const DowngradeTfProgress &progress) override;
     napi_value ConvertToValue();
     napi_value TfConvertToValue();
+    void RegDlCbkOnRef(napi_value func);
+    void RegTfCbkOnRef(napi_value func);
 
 public:
     napi_ref cbOnRef_;
+    napi_ref tfCbOnRef_;
     napi_env env_;
     static inline std::string taskName_ = "cloudSyncManager.DownloadProgress";
 
 private:
     void UpdateDownloadProgress(const DowngradeProgress &progress);
     void UpdateTransferProgress(const DowngradeTfProgress &progress);
+
 private:
     std::shared_ptr<SingleBundleProgress> dlProgress_;
     std::shared_ptr<BatchTransferProgress> tfProgress_;
