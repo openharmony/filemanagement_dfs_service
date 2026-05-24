@@ -53,6 +53,7 @@ private:
     int32_t HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUMountDisShareFile(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetDfsSwitchStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUpdateDfsSwitchStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetConnectedDeviceList(MessageParcel &data, MessageParcel &reply);

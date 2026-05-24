@@ -144,6 +144,11 @@ public:
         return 0;
     }
 
+    int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId) override
+    {
+        return 0;
+    }
+
     int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override
     {
         return 0;

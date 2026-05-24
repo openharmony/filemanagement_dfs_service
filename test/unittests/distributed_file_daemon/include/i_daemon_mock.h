@@ -130,6 +130,11 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus)
     {
         return FileManagement::E_OK;

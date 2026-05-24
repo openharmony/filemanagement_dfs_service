@@ -31,6 +31,7 @@ public:
         const std::vector<std::string> &uriList,
         const int32_t userId,
         std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo> &uriToDfsUriMaps);
+    static int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId);
 };
 } // namespace DistributedFile
 } // namespace Storage

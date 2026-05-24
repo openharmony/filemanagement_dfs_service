@@ -67,6 +67,9 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::GET_DFS_URI_IS_DIR_FROM_LOCAL)] =
         &DaemonStub::HandleGetDfsUrisDirFromLocal;
     opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_MOUNT_DIS_SHARE_FILE)] =
+        &DaemonStub::HandleUMountDisShareFile;
+    opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL)] =
         &DaemonStub::HandleGetRemoteCopyInfoACL;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -697,6 +700,28 @@ int32_t DaemonStub::HandleIsSameAccountDevice(MessageParcel &data, MessageParcel
         return E_IPC_WRITE_FAILED;
     }
     return E_OK;
+}
+
+int32_t DaemonStub::HandleUMountDisShareFile(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleUMountDisShareFile");
+    std::string bundleName;
+    if (!data.ReadString(bundleName)) {
+        LOGE("Read bundleName failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        LOGE("Read userId failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t res = UMountDisShareFile(bundleName, userId);
+    if (!reply.WriteInt32(res)) {
+        LOGE("HandleUMountDisShareFile write res failed, res is %{public}d", res);
+        return E_IPC_WRITE_FAILED;
+    }
+    LOGI("End HandleUMountDisShareFile");
+    return res;
 }
 } // namespace DistributedFile
 } // namespace Storage

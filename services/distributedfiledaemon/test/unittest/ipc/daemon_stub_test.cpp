@@ -1040,6 +1040,44 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleGetDfsUrisDirFromLocalTest, TestSize.Le
 }
 
 /**
+ * @tc.name: DaemonStubHandleUMountDisShareFileTest
+ * @tc.desc: Verify the HandleUMountDisShareFile function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubTest, DaemonStubHandleUMountDisShareFileTest, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DaemonStubHandleUMountDisShareFileTest Start";
+    MessageParcel data;
+    MessageParcel reply;
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    auto ret = daemonStub_->HandleUMountDisShareFile(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleUMountDisShareFile(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, UMountDisShareFile(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = daemonStub_->HandleUMountDisShareFile(data, reply);
+    EXPECT_EQ(ret, E_IPC_WRITE_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, UMountDisShareFile(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleUMountDisShareFile(data, reply);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "DaemonStubHandleUMountDisShareFileTest End";
+}
+
+/**
  * @tc.name: DaemonStubHandleGetDfsSwitchStatus
  * @tc.desc: Verify the HandleGetDfsSwitchStatus function
  * @tc.type: FUNC

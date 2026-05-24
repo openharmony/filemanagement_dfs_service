@@ -77,6 +77,7 @@ public:
                                    const int32_t userId,
                                    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
                                    &uriToDfsUriMaps) override;
+    int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId) override;
     int32_t GetDfsSwitchStatus(const std::string &networkId, int32_t &switchStatus) override;
     int32_t UpdateDfsSwitchStatus(int32_t switchStatus) override;
     int32_t GetConnectedDeviceList(std::vector<DfsDeviceInfo> &deviceList) override;

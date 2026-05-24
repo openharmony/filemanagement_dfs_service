@@ -35,6 +35,7 @@
 #include "nocopyable.h"
 #include "refbase.h"
 #include "remote_file_share.h"
+#include "storage_manager_proxy.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
 
@@ -104,6 +105,7 @@ public:
                                    const int32_t userId,
                                    std::unordered_map<std::string, AppFileService::ModuleRemoteFileShare::HmdfsUriInfo>
                                    &uriToDfsUriMaps) override;
+    int32_t UMountDisShareFile(const std::string &bundleName, const int32_t userId) override;
     static int32_t Copy(const std::string &srcUri,
                         const std::string &dstPath,
                         const sptr<IDaemon> &daemon,
@@ -126,6 +128,7 @@ private:
     void PublishSA();
     void RegisterOsAccount();
     sptr<IDaemon> GetRemoteSA(const std::string &remoteDeviceId);
+    sptr<StorageManager::IStorageManager> GetStorageManager();
     int32_t StoreSessionAndListener(const std::string &physicalPath,
                                     std::string &sessionName,
                                     const sptr<IFileTransListener> &listener);

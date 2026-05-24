@@ -41,6 +41,7 @@ namespace DistributedFile {
         DISTRIBUTED_FILE_IS_SAME_ACCOUNT_DEVICE,
         DISTRIBUTED_FILE_REQUEST_SEND_FILE_ACL,
         DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO_ACL,
+        DISTRIBUTED_FILE_UN_MOUNT_DIS_SHARE_FILE,
     };
 } // namespace DistributedFile
 } // namespace Storage
