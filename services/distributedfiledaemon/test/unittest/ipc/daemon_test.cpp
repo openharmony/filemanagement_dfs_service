@@ -712,9 +712,12 @@ HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0500, TestSize.Level1)
         std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
         std::filesystem::create_directories(remoteShareDir + "networkId2/data/storage/el2/base");
 
-        daemon_->UMountDisShareFile(bundleName, userId);
-        daemon_->UMountDisShareFile(bundleName, userId);
-        daemon_->UMountDisShareFile(bundleName, userId);
+        auto ret1 = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret1, FileManagement::E_SA_LOAD_FAILED);
+        auto ret2 = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret2, FileManagement::E_SA_LOAD_FAILED);
+        auto ret3 = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret3, FileManagement::E_SA_LOAD_FAILED);
 
         std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
     } catch (const exception &e) {
@@ -725,6 +728,202 @@ HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0500, TestSize.Level1)
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0500 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0600
+ * @tc.desc: Verify the UMountDisShareFile function with directory containing non-directory items.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0600, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0600 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.withfiles";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir);
+        std::ofstream(remoteShareDir + "testfile.txt");
+        std::ofstream(remoteShareDir + "anotherfile.dat");
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app.withfiles");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0600 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0700
+ * @tc.desc: Verify the UMountDisShareFile function with different userId.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0700, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0700 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.userid";
+        int32_t userId = 200;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/200/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/200/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/200/hmdfs/account/data/com.example.app.userid");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0700 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0800
+ * @tc.desc: Verify the UMountDisShareFile function with empty bundleName.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0800, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0800 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_OK);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0800 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_0900
+ * @tc.desc: Verify the UMountDisShareFile function with only non-directory items.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_0900, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0900 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.onlyfiles";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir);
+        std::ofstream(remoteShareDir + "file1.txt");
+        std::ofstream(remoteShareDir + "file2.txt");
+        std::ofstream(remoteShareDir + "file3.txt");
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_OK);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app.onlyfiles");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_0900 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_1000
+ * @tc.desc: Verify the UMountDisShareFile function with multiple networkId directories.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_1000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_1000 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.multi";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "device1/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir + "device2/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir + "device3/data/storage/el2/base");
+        std::filesystem::create_directories(remoteShareDir + "device4/data/storage/el2/base");
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app.multi");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_1000 end";
+}
+
+/**
+ * @tc.name: DaemonTest_UMountDisShareFile_1100
+ * @tc.desc: Verify the UMountDisShareFile function with INSTALLSUSERID exactly.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DaemonTest, DaemonTest_UMountDisShareFile_1100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_1100 start";
+    bool res = true;
+
+    try {
+        std::string bundleName = "com.example.app.uidtest";
+        int32_t userId = 100;
+        g_getCallingUid = INSTALLSUSERID;
+        std::string remoteShareDir = "/data/service/el2/100/hmdfs/account/data/" + bundleName + "/.remote_share/";
+        std::filesystem::create_directories(remoteShareDir + "networkId1/data/storage/el2/base");
+
+        auto ret = daemon_->UMountDisShareFile(bundleName, userId);
+        EXPECT_EQ(ret, FileManagement::E_SA_LOAD_FAILED);
+
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/" + bundleName);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+        std::filesystem::remove_all("/data/service/el2/100/hmdfs/account/data/com.example.app.uidtest");
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DaemonTest_UMountDisShareFile_1100 end";
 }
 
 /**

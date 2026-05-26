@@ -78,4 +78,106 @@ HWTEST_F(FileMountManagerTest, FileMountManager_GetDfsUrisDirFromLocal_0100, Tes
     GTEST_LOG_(INFO) << "FileMountManager_GetDfsUrisDirFromLocal_0100 End";
 }
 
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0100
+ * @tc.desc: The execution of the UMountDisShareFile failed when proxy is null.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0100 Start";
+    std::string bundleName = "com.example.app";
+    int32_t userId = 100;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0100 End";
+}
+
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0200
+ * @tc.desc: The execution of the UMountDisShareFile with empty bundleName.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0200 Start";
+    std::string bundleName = "";
+    int32_t userId = 100;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0200 End";
+}
+
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0300
+ * @tc.desc: The execution of the UMountDisShareFile with different userId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0300 Start";
+    std::string bundleName = "com.example.app.test";
+    int32_t userId = 0;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0300 End";
+}
+
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0400
+ * @tc.desc: The execution of the UMountDisShareFile with negative userId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0400 Start";
+    std::string bundleName = "com.example.app.negative";
+    int32_t userId = -1;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0400 End";
+}
+
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0500
+ * @tc.desc: The execution of the UMountDisShareFile with special characters in bundleName.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0500 Start";
+    std::string bundleName = "com.example.app@special#chars";
+    int32_t userId = 100;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0500 End";
+}
+
+/**
+ * @tc.name: FileMountManager_UMountDisShareFile_0600
+ * @tc.desc: The execution of the UMountDisShareFile with long bundleName.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileMountManagerTest, FileMountManager_UMountDisShareFile_0600, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0600 Start";
+    std::string bundleName = "com.example.app.very.long.bundle.name.that.should.be.tested.for.edge.case";
+    int32_t userId = 100;
+
+    auto ret = FileMountManager::UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    GTEST_LOG_(INFO) << "FileMountManager_UMountDisShareFile_0600 End";
+}
+
 }
