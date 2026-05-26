@@ -166,7 +166,7 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_AddMountPointInfo_001, Tes
 {
     GTEST_LOG_(INFO) << "OsAccountObserverTest_AddMountPointInfo_001 start";
     if (g_subScriber != nullptr && g_deviceManagerAgentMock != nullptr) {
-        EXPECT_CALL(*g_deviceManagerAgentMock, JoinGroup(_)).WillOnce(Return(0));
+        EXPECT_CALL(*g_deviceManagerAgentMock, JoinGroup(_)).Times(1);
         try {
             g_subScriber->AddMountPointInfo(USER_ID, "test_path");
             EXPECT_TRUE(true);
