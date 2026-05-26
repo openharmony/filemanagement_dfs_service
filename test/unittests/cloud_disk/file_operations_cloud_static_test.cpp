@@ -2081,6 +2081,7 @@ HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest002, TestSize.Level1)
         size_t size = 0;
 
         system::SetParameter("persist.kernel.move.finish", "false");
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).Times(2).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
         fileOperationsCloud_->GetXattr(req, parent, name, size);

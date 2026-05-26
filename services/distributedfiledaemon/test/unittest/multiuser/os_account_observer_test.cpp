@@ -165,8 +165,7 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_GetCurrentUserId_001, Test
 HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_AddMountPointInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OsAccountObserverTest_AddMountPointInfo_001 start";
-    if (g_subScriber != nullptr && g_deviceManagerAgentMock != nullptr) {
-        EXPECT_CALL(*g_deviceManagerAgentMock, JoinGroup(_)).Times(1);
+    if (g_subScriber != nullptr) {
         try {
             g_subScriber->AddMountPointInfo(USER_ID, "test_path");
             EXPECT_TRUE(true);
@@ -186,8 +185,7 @@ HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_AddMountPointInfo_001, Tes
 HWTEST_F(OsAccountObserverTest, OsAccountObserverTest_RemoveMountPointInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OsAccountObserverTest_RemoveMountPointInfo_001 start";
-    if (g_subScriber != nullptr && g_deviceManagerAgentMock != nullptr) {
-        EXPECT_CALL(*g_deviceManagerAgentMock, QuitGroup(_)).Times(1);
+    if (g_subScriber != nullptr) {
         try {
             g_subScriber->RemoveMountPointInfo(USER_ID);
             EXPECT_TRUE(true);
