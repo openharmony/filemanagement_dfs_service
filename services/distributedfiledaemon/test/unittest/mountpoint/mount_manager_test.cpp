@@ -72,7 +72,12 @@ HWTEST_F(MountManagerTest, MountManagerTest_Umount_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "MountManagerTest_Umount_001 start";
     ASSERT_NE(MountManager::GetInstance(), nullptr);
     std::string groupId = "test_group";
-    EXPECT_NO_FATAL_FAILURE(MountManager::GetInstance()->Umount(groupId));
+    try {
+        MountManager::GetInstance()->Umount(groupId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
     GTEST_LOG_(INFO) << "MountManagerTest_Umount_001 end";
 }
 } // namespace Test

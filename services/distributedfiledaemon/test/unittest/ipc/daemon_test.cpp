@@ -2469,7 +2469,9 @@ HWTEST_F(DaemonTest, DaemonTest_HandleDestinationPathAndPermissions_006, TestSiz
 HWTEST_F(DaemonTest, DaemonTest_RegisterOsAccount_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_RegisterOsAccount_002 start";
+    g_subscribeCommonEvent = true;
     EXPECT_NO_FATAL_FAILURE(daemon_->RegisterOsAccount());
+    g_subscribeCommonEvent = false;
     GTEST_LOG_(INFO) << "DaemonTest_RegisterOsAccount_002 end";
 }
 
