@@ -991,7 +991,13 @@ HWTEST_F(PeriodicChownTaskTest, RunTaskForBundleTest006, TestSize.Level1)
             .WillOnce(DoAll(SetArgReferee<1>(std::string())));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _))
             .WillRepeatedly(DoAll(SetArgReferee<1>(false)));
+        EXPECT_CALL(*cloudPrefImplMock_, GetLong(_, _))
+            .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int64_t>(0))));
+        EXPECT_CALL(*cloudPrefImplMock_, GetInt(_, _))
+            .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int32_t>(0))));
         EXPECT_CALL(*cloudPrefImplMock_, SetBool(_, _))
+            .Times(AnyNumber());
+        EXPECT_CALL(*cloudPrefImplMock_, SetLong(_, _))
             .Times(AnyNumber());
 
         int32_t userId = 100;

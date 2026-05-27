@@ -32,6 +32,9 @@ CloudPrefImpl::CloudPrefImpl(const std::string& fileName)
 
 void CloudPrefImpl::SetString(const std::string& key, const std::string& value)
 {
+    if (CloudPrefImplMock::proxy_ != nullptr) {
+        CloudPrefImplMock::proxy_->SetString(key, value);
+    }
 }
 
 void CloudPrefImpl::GetString(const std::string& key, std::string &value)
