@@ -169,7 +169,7 @@ HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendAssetFinis
                             .bytesProcessed = 0,
                             .bytesTotal = 0};
         int32_t socket = 1;
-        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnFile(socket, &event));
+        SoftBusAssetSendListener::OnFile(socket, &event);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -193,7 +193,7 @@ HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendAssetError
                             .bytesTotal = 0,
                             .errorCode = -1};
         int32_t socket = 1;
-        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnFile(socket, &event));
+        SoftBusAssetSendListener::OnFile(socket, &event);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -213,7 +213,7 @@ HWTEST_F(SoftBusAssetSendListenerTest, SoftBusAssetSendListener_OnSendShutdown_0
     try {
         int32_t sessionId = 1;
         ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
-        EXPECT_NO_FATAL_FAILURE(SoftBusAssetSendListener::OnSendShutdown(sessionId, reason));
+        SoftBusAssetSendListener::OnSendShutdown(sessionId, reason);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

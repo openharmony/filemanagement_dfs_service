@@ -182,6 +182,7 @@ ohos_unittest("file_operations_cloud_static_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",

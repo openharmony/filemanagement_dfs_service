@@ -38,6 +38,8 @@ public:
     virtual DeviceInfo &GetLocalDeviceInfo() = 0;
     virtual sptr<IFileDfsListener> GetDfsListener() = 0;
     virtual std::unordered_map<std::string, MountCountInfo> GetAllMountInfo() = 0;
+    virtual void JoinGroup(std::weak_ptr<MountPoint> mp) = 0;
+    virtual void QuitGroup(std::shared_ptr<MountPoint> smp) = 0;
 
 public:
     static inline std::shared_ptr<IDeviceManagerAgentMock> iDeviceManagerAgentMock_ = nullptr;
@@ -61,6 +63,8 @@ public:
     MOCK_METHOD0(GetRemoteDevicesInfo, std::vector<DeviceInfo>());
     MOCK_METHOD0(GetDfsListener, sptr<IFileDfsListener>());
     MOCK_METHOD0(GetAllMountInfo, std::unordered_map<std::string, MountCountInfo>());
+    MOCK_METHOD1(JoinGroup, void(std::weak_ptr<MountPoint> mp));
+    MOCK_METHOD1(QuitGroup, void(std::shared_ptr<MountPoint> smp));
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -271,8 +271,13 @@ HWTEST_F(RadarReportAdapterTest, RadarReportAdapterTest_ReportDfxStatistics_002,
     DfsRadarMock::dfsRadarMock = dfsRadarMock_;
     RadarReportAdapter::GetInstance().opStatistics_.connectSuccCount = 1;
     EXPECT_CALL(*dfsRadarMock_, ReportStatistics(_)).Times(1);
-    EXPECT_NO_FATAL_FAILURE(RadarReportAdapter::GetInstance().ReportDfxStatistics());
-    EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
+    try {
+        RadarReportAdapter::GetInstance().ReportDfxStatistics();
+        EXPECT_TRUE(RadarReportAdapter::GetInstance().opStatistics_.empty());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
     DfsRadarMock::dfsRadarMock = nullptr;
     dfsRadarMock_ = nullptr;
     GTEST_LOG_(INFO) << "RadarReportAdapterTest_ReportDfxStatistics_002 end";

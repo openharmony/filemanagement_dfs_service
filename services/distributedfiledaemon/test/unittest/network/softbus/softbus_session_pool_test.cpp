@@ -132,12 +132,17 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GenerateSessionName_0100
 HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_AddSessionInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_AddSessionInfo_001 start";
-    SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = SESSION_ID_ONE,
-                                                  .srcUri = "file://com.demo.a/test/1",
-                                                  .dstPath = "/data/test/1",
-                                                  .uid = UID_ONE};
-    std::string sessionName = "DistributedFileService0";
-    EXPECT_NO_FATAL_FAILURE(SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo));
+    try {
+        SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = SESSION_ID_ONE,
+                                                      .srcUri = "file://com.demo.a/test/1",
+                                                      .dstPath = "/data/test/1",
+                                                      .uid = UID_ONE};
+        std::string sessionName = "DistributedFileService0";
+        SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_AddSessionInfo_001 end";
 }
 
@@ -150,8 +155,13 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_AddSessionInfo_001, Test
 HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_DeleteSessionInfo_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_DeleteSessionInfo_001 start";
-    std::string sessionName = "DistributedFileService0";
-    EXPECT_NO_FATAL_FAILURE(SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName));
+    try {
+        std::string sessionName = "DistributedFileService0";
+        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_DeleteSessionInfo_001 end";
 }
 

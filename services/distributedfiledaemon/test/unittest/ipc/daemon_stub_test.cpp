@@ -1347,7 +1347,12 @@ HWTEST_F(DaemonStubTest, DaemonStubTest_OnRemoteRequest_003, TestSize.Level1)
 HWTEST_F(DaemonStubTest, DaemonStubTest_InitDFileFunction_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubTest_InitDFileFunction_001 start";
-    EXPECT_NO_FATAL_FAILURE(daemonStub_->InitDFileFunction());
+    try {
+        daemonStub_->InitDFileFunction();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
     GTEST_LOG_(INFO) << "DaemonStubTest_InitDFileFunction_001 end";
 }
 } // namespace OHOS::Storage::DistributedFile::Test
