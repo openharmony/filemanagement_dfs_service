@@ -410,6 +410,7 @@ ohos_unittest("cloud_disk_service_test_new") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
     "ability_runtime:ability_manager",
     "os_account:os_account_innerkits",
     "hisysevent:libhisysevent",
