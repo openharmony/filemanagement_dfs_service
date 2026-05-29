@@ -670,7 +670,7 @@ export default namespace cloudSync {
         native cleanFileCache(uri: string): void;
         native CloudFileCacheGetDownloadList(uris: Array<string>): Array<DownloadProgress>;
         native GetCachedTotalSizeInner(): long;
-        native CleanFileCacheInner(): int;
+        native CleanFileCacheInner(): void;
 
         getCachedTotalSize(): Promise<long> {
             return new Promise<long>((resolve: (result: long) => void,
@@ -693,7 +693,7 @@ export default namespace cloudSync {
         cleanFileCache(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
-                let promise = taskpool.execute((): int => {
+                let promise = taskpool.execute((): void => {
                     return this.CloudFileCacheCleanFileCache();
                 });
                 promise.then<void, void>((): void => {
@@ -704,7 +704,7 @@ export default namespace cloudSync {
             });
         }
 
-        CloudFileCacheCleanFileCache(): int {
+        CloudFileCacheCleanFileCache(): void {
             return this.CleanFileCacheInner();
         }
 

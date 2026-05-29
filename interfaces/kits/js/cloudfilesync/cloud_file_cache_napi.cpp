@@ -102,30 +102,25 @@ napi_value CloudFileCacheNapi::Constructor(napi_env env, napi_callback_info info
     }
 
     auto fileCacheEntity = make_unique<FileCacheEntity>();
-    if (!NClass::SetEntityFor<FileCacheEntity>(env, funcArg.GetThisVar(), move(fileCacheEntity))) {
-        LOGE("Failed to set file cache entity.");
-        NError(JsErrCode::E_INNER_FAILED).ThrowErr(env);
-        return nullptr;
-    }
 
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
-        auto bundleEntity = make_unique<BundleEntityCloudFile>();
         auto [succ, bundleName, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
         if (!succ || bundleName.get() == string("")) {
             LOGE("Failed to get bundle name");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        bundleEntity->bundleName = string(bundleName.get());
+        LOGD("Constructor, with bundleName.");
+        fileCacheEntity->bundleName = bundleName.get();
         LOGI("init with bundleName");
 
-        LOGD("Constructor, bundleName:%{public}s.", bundleEntity->bundleName.c_str());
-
-        if (!NClass::SetEntityFor<BundleEntityCloudFile>(env, funcArg.GetThisVar(), move(bundleEntity))) {
-            LOGE("Failed to set file entity");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
+        LOGD("Constructor, bundleName:%{public}s.", fileCacheEntity->bundleName.c_str());
+    }
+    
+    if (!NClass::SetEntityFor<FileCacheEntity>(env, funcArg.GetThisVar(), move(fileCacheEntity))) {
+        LOGE("Failed to set file cache entity.");
+        NError(JsErrCode::E_INNER_FAILED).ThrowErr(env);
+        return nullptr;
     }
     return funcArg.GetThisVar();
 }
@@ -196,7 +191,11 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
         return nullptr;
     }
     int32_t ret;
-    auto bundleEntity = NClass::GetEntityOf<BundleEntityCloudFile>(env, funcArg.GetThisVar());
+    auto fileCacheEntity = NClass::GetEntityOf<FileCacheEntity>(env, funcArg.GetThisVar());
+    if (!fileCacheEntity) {
+        LOGE("Failed to get file cache entity.");
+        return nullptr;
+    }
 
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
         auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
@@ -207,10 +206,10 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
         }
 
         ret = CloudSyncManager::GetInstance().CleanFileCache(uri.get());
-    } else if (bundleEntity == nullptr) {
+    } else if (fileCacheEntity->bundleName.empty()) {
         ret = CloudSyncManager::GetInstance().CleanAllFileCache();
     } else {
-        ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleEntity->bundleName);
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache(fileCacheEntity->bundleName);
     }
     if (ret != E_OK) {
         int32_t err = GetCleanCacheErrPublic(ret);
@@ -231,13 +230,17 @@ napi_value CloudFileCacheNapi::GetCachedTotalSize(napi_env env, napi_callback_in
         LOGE("Number of arguments unmatched");
         return nullptr;
     }
-    auto bundleEntity = NClass::GetEntityOf<BundleEntityCloudFile>(env, funcArg.GetThisVar());
+    auto fileCacheEntity = NClass::GetEntityOf<FileCacheEntity>(env, funcArg.GetThisVar());
+    if (!fileCacheEntity) {
+        LOGE("Failed to get file cache entity.");
+        return nullptr;
+    }
     int32_t ret;
     int64_t totalSize;
-    if (bundleEntity == nullptr) {
+    if (fileCacheEntity->bundleName.empty()) {
         ret = CloudSyncManager::GetInstance().GetCachedTotalSize(totalSize);
     } else {
-        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(bundleEntity->bundleName, totalSize);
+        ret = CloudSyncManager::GetInstance().GetCachedTotalSize(fileCacheEntity->bundleName, totalSize);
     }
 
     if (ret != E_OK) {

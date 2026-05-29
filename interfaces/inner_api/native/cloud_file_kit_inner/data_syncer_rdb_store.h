@@ -53,6 +53,7 @@ private:
     }
     std::shared_ptr<NativeRdb::RdbStore> rdb_;
     std::mutex rdbMutex_;
+    std::mutex totalDownloadSizeMutex_;
 };
 
 class DataSyncerRdbCallBack : public NativeRdb::RdbOpenCallback {

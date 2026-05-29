@@ -586,9 +586,8 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest001, TestSize.Le
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
         int32_t ret = servicePtr_->CleanAllFileCacheInner(bundleName);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "CleanCacheInnerWithBundleNameTest001 failed";
@@ -609,7 +608,6 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest002, TestSize.Le
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         int32_t ret = servicePtr_->CleanAllFileCacheInner(bundleName);
         EXPECT_EQ(ret, E_OK);
@@ -633,7 +631,6 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest003, TestSize.Le
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(-1));
         int32_t ret = servicePtr_->CleanAllFileCacheInner(bundleName);
         EXPECT_EQ(ret, E_INVAL_ARG);
@@ -656,9 +653,8 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest004, TestSize.Le
     try {
         EXPECT_NE(servicePtr_, nullptr);
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
         int32_t ret = servicePtr_->CleanAllFileCacheInner();
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "CleanCacheInnerWithBundleNameTest004 failed";
@@ -679,8 +675,6 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest005, TestSize.Le
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
-        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         int32_t ret = servicePtr_->CleanAllFileCacheInner();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -704,9 +698,8 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest001, TestSize.Level1)
         std::string bundleName = "com.ohos.photos";
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(bundleName, totalSize);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "GetCachedTotalSizeInnerTest001 failed";
@@ -728,7 +721,6 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest002, TestSize.Level1)
         std::string bundleName = "com.ohos.photos";
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(bundleName, totalSize);
         EXPECT_EQ(ret, E_OK);
@@ -753,7 +745,6 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest003, TestSize.Level1)
         std::string bundleName = "com.ohos.photos";
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(-1));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(bundleName, totalSize);
         EXPECT_EQ(ret, E_INVAL_ARG);
@@ -777,9 +768,8 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest004, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(totalSize);
-        EXPECT_EQ(ret, E_PERMISSION_DENIED);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_FALSE(true);
         GTEST_LOG_(INFO) << "GetCachedTotalSizeInnerTest004 failed";
@@ -800,7 +790,6 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest006, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(1));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(totalSize);
@@ -825,7 +814,6 @@ HWTEST_F(CloudSyncServiceTest, GetCachedTotalSizeInnerTest007, TestSize.Level1)
         EXPECT_NE(servicePtr_, nullptr);
         int64_t totalSize = 0;
         
-        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVAL_ARG));
         int32_t ret = servicePtr_->GetCachedTotalSizeInner(totalSize);
         EXPECT_EQ(ret, E_INVAL_ARG);

@@ -23,15 +23,15 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace ModuleFileIO;
-FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor()
+FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor(const std::optional<std::string> &bundleName)
 {
-    std::unique_ptr<CloudFileCacheCore> cloudFileCachePtr = std::make_unique<CloudFileCacheCore>();
-    return FsResult<CloudFileCacheCore *>::Success(cloudFileCachePtr.release());
-}
-
-FsResult<CloudFileCacheCore *> CloudFileCacheCore::Constructor(const std::string &bundleName)
-{
-    std::unique_ptr<CloudFileCacheCore> cloudFileCachePtr = std::make_unique<CloudFileCacheCore>(bundleName);
+    std::unique_ptr<CloudFileCacheCore> cloudFileCachePtr = nullptr;
+    if (bundleName.has_value()) {
+        const string &name = *bundleName;
+        cloudFileCachePtr = std::make_unique<CloudFileCacheCore>(name);
+    } else {
+        cloudFileCachePtr = std::make_unique<CloudFileCacheCore>();
+    }
     return FsResult<CloudFileCacheCore *>::Success(cloudFileCachePtr.release());
 }
 
@@ -137,14 +137,32 @@ FsResult<void> CloudFileCacheCore::CleanCache(const string &uri)
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCacheCore::CleanFileCache(const string &uri)
+FsResult<void> CloudFileCacheCore::CleanFileCache(const optional<const string> &uri)
 {
     LOGI("CleanFileCache start");
+    int32_t ret;
 
-    int32_t ret = CloudSyncManager::GetInstance().CleanFileCache(uri);
-    if (ret != E_OK) {
-        LOGE("Clean File Cache failed! ret = %{public}d", ret);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
+    if (uri.has_value()) {
+        const string &fileUri = *uri;
+        ret = CloudSyncManager::GetInstance().CleanFileCache(fileUri);
+        if (ret != E_OK) {
+            LOGE("Clean File Cache failed! ret = %{public}d", ret);
+            return FsResult<void>::Error(Convert2ErrNum(ret));
+        }
+    } else {
+        std::string bundleName = bundleName_;
+
+        // 如果bundleName_为空，自动获取
+        if (bundleName.empty()) {
+            ret = CloudSyncManager::GetInstance().CleanAllFileCache();
+        } else {
+            ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleName);
+        }
+    
+        if (ret != E_OK) {
+            LOGE("Clean File Cache failed! ret = %{public}d", ret);
+            return FsResult<void>::Error(Convert2ErrNum(ret));
+        }
     }
 
     return FsResult<void>::Success();
@@ -182,28 +200,6 @@ FsResult<int64_t> CloudFileCacheCore::GetCachedTotalSize()
     }
     
     return FsResult<int64_t>::Success(totalSize);
-}
-
-FsResult<void> CloudFileCacheCore::CleanFileCache()
-{
-    LOGI("CleanFileCache start");
-    
-    std::string bundleName = bundleName_;
-    int32_t ret;
-    
-    // 如果bundleName_为空，自动获取
-    if (bundleName.empty()) {
-        ret = CloudSyncManager::GetInstance().CleanAllFileCache();
-    } else {
-        ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleName);
-    }
-    
-    if (ret != E_OK) {
-        LOGE("Clean File Cache failed! ret = %{public}d", ret);
-        return FsResult<void>::Error(Convert2ErrNum(ret));
-    }
-    
-    return FsResult<void>::Success();
 }
 
 } // namespace OHOS::FileManagement::CloudSync
