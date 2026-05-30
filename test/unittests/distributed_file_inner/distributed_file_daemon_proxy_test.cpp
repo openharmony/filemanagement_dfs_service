@@ -1522,4 +1522,147 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_GetRemoteCopyInfo
 
     GTEST_LOG_(INFO) << "DistributedFileDaemon_GetRemoteCopyInfoACL_0200 End";
 }
+
+/**
+ * @tc.name: DistributedFileDaemon_UMountDisShareFile_0100
+ * @tc.desc: Verify UMountDisShareFile for parameter serialization failures.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UMountDisShareFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0100 Start";
+    std::string bundleName = "com.example.app";
+    int32_t userId = 100;
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+    ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = testProxy->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_UMountDisShareFile_0200
+ * @tc.desc: Verify UMountDisShareFile for IPC and reply read failures.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UMountDisShareFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0200 Start";
+    std::string bundleName = "com.example.app";
+    int32_t userId = 100;
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    auto ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+    ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0200 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_UMountDisShareFile_0300
+ * @tc.desc: Verify UMountDisShareFile success and error return cases.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UMountDisShareFile_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0300 Start";
+    std::string bundleName = "com.example.app";
+    int32_t userId = 100;
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    auto ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_PERMISSION_DENIED), Return(true)));
+    ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_SA_LOAD_FAILED), Return(true)));
+    ret = proxy_->UMountDisShareFile(bundleName, userId);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0300 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_UMountDisShareFile_0400
+ * @tc.desc: Verify UMountDisShareFile with different parameters.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UMountDisShareFile_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0400 Start";
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    auto ret = proxy_->UMountDisShareFile("", 100);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    ret = proxy_->UMountDisShareFile("com.example.app", 0);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(E_OK), Return(true)));
+    ret = proxy_->UMountDisShareFile("com.example.app", -1);
+    EXPECT_EQ(ret, E_OK);
+
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UMountDisShareFile_0400 End";
+}
 } // namespace OHOS::Storage::DistributedFile::Test
