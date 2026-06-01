@@ -16,6 +16,7 @@
 #include "cloud_disk_service_logfile.h"
 
 #include <cerrno>
+#include <cinttypes>
 #include <dirent.h>
 #include <fcntl.h>
 #include <securec.h>
@@ -158,9 +159,12 @@ bool CloudDiskServiceLogFile::CheckLineIsValid(const uint64_t line)
         return true;
     }
     if (!reversal_ || currentLine_ >= LOG_COUNT_MAX) {
+        LOGE("CheckLineIsValid failed reversal_ is %{public}d, currentLine_ is %{public}" PRIu64 "",
+            static_cast<int>(reversal_.load()), currentLine_.load());
         return false;
     }
-
+    LOGI("CheckLineIsValid line:%{public}" PRIu64 ",startLine:%{public}" PRIu64 ",currentLine_:%{public}" PRIu64 "",
+        line, startLine, currentLine_.load());
     return line >= startLine || line < currentLine_;
 }
 
