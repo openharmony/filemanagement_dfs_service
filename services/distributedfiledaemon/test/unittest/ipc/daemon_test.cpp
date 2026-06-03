@@ -1089,6 +1089,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     g_checkValidPath = true;
     g_isFile = true;
     g_isFolder = false;
+    std::filesystem::create_directories(std::filesystem::path(g_physicalPath).parent_path());
     std::ofstream file(g_physicalPath);
     ASSERT_TRUE(file.good()) << "创建测试文件失败";
     file.close();
