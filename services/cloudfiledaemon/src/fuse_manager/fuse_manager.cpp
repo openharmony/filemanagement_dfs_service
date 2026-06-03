@@ -1198,10 +1198,13 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
 
 static bool IsPageCached(shared_ptr<CloudInode> cInode, uint64_t pageIndex)
 {
+#ifndef SUPPORT_WATCH_LITE
     if (!IsVideoType(cInode->mBase->name)) {
         return false;
     }
     return cInode->cacheFileIndex.get()[pageIndex] == HAS_CACHED;
+#endif
+    return false;
 }
 
 static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
