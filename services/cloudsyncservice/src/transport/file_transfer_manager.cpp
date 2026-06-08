@@ -58,6 +58,7 @@ void FileTransferManager::DownloadFileFromRemoteDevice(const std::string &networ
     LOGI("send data, dataLen:%{public}d, taskId: %{public}" PRIu64 "", dataLen, taskId);
     std::string bundleName = GetBundleNameForUri(uri);
     if (bundleName.empty()) {
+        DecTransTaskCount();
         return;
     }
     sessionManager_->SetFileRecvPath(bundleName, userId);
