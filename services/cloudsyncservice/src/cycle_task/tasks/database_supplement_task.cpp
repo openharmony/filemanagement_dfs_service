@@ -400,13 +400,21 @@ void DatabaseSupplementTask::ChownMigratedAppDirectory(int32_t userId, const str
     }
     
     error_code ec;
-    for (const auto& entry : filesystem::recursive_directory_iterator(appDir, ec)) {
+    auto it = filesystem::recursive_directory_iterator(
+        appDir, filesystem::directory_options::skip_permission_denied, ec);
+    if (ec) {
+        LOGE("failed to create iterator, bundle=%{public}s, ec=%{public}d", bundleName.c_str(), ec.value());
+        return;
+    }
+    auto end = filesystem::recursive_directory_iterator();
+    for (; it != end; it.increment(ec)) {
         if (ec) {
-            LOGW("iterator error, bundle=%{public}s", bundleName.c_str());
+            LOGW("iterator error, bundle=%{public}s, ec=%{public}d", bundleName.c_str(), ec.value());
+            ec.clear();
             continue;
         }
         
-        string path = entry.path().string();
+        string path = it->path().string();
         struct stat st{};
         if (stat(path.c_str(), &st) != 0) {
             LOGW("stat failed, errno=%{public}d", errno);

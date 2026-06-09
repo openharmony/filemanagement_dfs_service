@@ -169,13 +169,21 @@ int32_t PeriodicChownTask::ChownFiles(const std::string& path, int32_t index)
     std::error_code ec;
     int32_t batchCount = 0;
     
-    for (auto const& dirEntry : filesystem::recursive_directory_iterator(path, ec)) {
+    auto it = filesystem::recursive_directory_iterator(
+        path, filesystem::directory_options::skip_permission_denied, ec);
+    if (ec) {
+        LOGE("failed to create iterator, ec=%{public}d", ec.value());
+        return E_PATH;
+    }
+    auto end = filesystem::recursive_directory_iterator();
+    for (; it != end; it.increment(ec)) {
         if (ec) {
-            LOGE("recursive_directory_iterator error: %{public}s", ec.message().c_str());
+            LOGW("iterator error, ec=%{public}d", ec.value());
+            ec.clear();
             continue;
         }
         
-        std::string filePath = dirEntry.path().string();
+        std::string filePath = it->path().string();
         struct stat st{};
         if (stat(filePath.c_str(), &st) != 0) {
             LOGE("stat failed for file: %{public}s, errno: %{public}d",
@@ -270,13 +278,21 @@ int32_t PeriodicChownTask::ProcessSingleDirectory(const std::string& path, int32
 
     std::error_code ec;
     int32_t batchCount = 0;
-    for (auto const& dirEntry : filesystem::recursive_directory_iterator(path, ec)) {
+    auto it = filesystem::recursive_directory_iterator(
+        path, filesystem::directory_options::skip_permission_denied, ec);
+    if (ec) {
+        LOGE("failed to create iterator, ec=%{public}d", ec.value());
+        return E_PATH;
+    }
+    auto end = filesystem::recursive_directory_iterator();
+    for (; it != end; it.increment(ec)) {
         if (ec) {
-            LOGE("recursive_directory_iterator error: %{public}s", ec.message().c_str());
+            LOGW("iterator error, ec=%{public}d", ec.value());
+            ec.clear();
             continue;
         }
         
-        std::string entryPath = dirEntry.path().string();
+        std::string entryPath = it->path().string();
         struct stat st{};
         if (stat(entryPath.c_str(), &st) != 0) {
             LOGE("stat failed for directory: %{public}s, errno: %{public}d",

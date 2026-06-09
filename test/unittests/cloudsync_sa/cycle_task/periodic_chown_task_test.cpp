@@ -1386,7 +1386,7 @@ HWTEST_F(PeriodicChownTaskTest, ProcessSingleDirectoryTest003, TestSize.Level1)
 
 /*
  * @tc.name: ChownFilesTest001
- * @tc.desc: Verify that ChownFiles returns E_OK for non-existent directory.
+ * @tc.desc: Verify that ChownFiles returns E_PATH for non-existent directory.
  * @tc.type: FUNC
  */
 HWTEST_F(PeriodicChownTaskTest, ChownFilesTest001, TestSize.Level1)
@@ -1401,7 +1401,7 @@ HWTEST_F(PeriodicChownTaskTest, ChownFilesTest001, TestSize.Level1)
 
         std::string path = "/data/test_tdd/nonexistent_dir";
         int32_t ret = periodicChownTask_->ChownFiles(path, 0);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_PATH);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(ERROR) << "ChownFilesTest001 FAILED";
@@ -1996,6 +1996,63 @@ HWTEST_F(PeriodicChownTaskTest, ProcessSingleDirectoryTest004, TestSize.Level1)
 }
 
 /*
+ * @tc.name: ProcessSingleDirectoryTest005
+ * @tc.desc: Verify that ProcessSingleDirectory returns E_PATH when path
+ *           is a regular file (iterator constructor fails with ENOTDIR).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ProcessSingleDirectoryTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProcessSingleDirectoryTest005 Start";
+    try {
+        periodicChownTask_->directoryTemplates_ = {"/data/test_tdd/test_dir"};
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test_file_regular");
+
+        std::string path = "/data/test_tdd/test_file_regular";
+        int32_t ret = periodicChownTask_->ProcessSingleDirectory(path, 0);
+        EXPECT_EQ(ret, E_PATH);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ProcessSingleDirectoryTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ProcessSingleDirectoryTest005 End";
+}
+
+/*
+ * @tc.name: ProcessSingleDirectoryTest006
+ * @tc.desc: Verify that ProcessSingleDirectory skips entries where stat() fails (dangling symlink) and returns E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ProcessSingleDirectoryTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProcessSingleDirectoryTest006 Start";
+    try {
+        periodicChownTask_->directoryTemplates_ = {"/data/test_tdd/test_dir"};
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _))
+            .WillRepeatedly(DoAll(SetArgReferee<1>(true)));
+        EXPECT_CALL(*cloudPrefImplMock_, SetBool(_, _))
+            .Times(AnyNumber());
+
+        std::system("mkdir -p /data/test_tdd/test_dir/subdir1");
+        std::system("chown 1009:1009 /data/test_tdd/test_dir/subdir1");
+        std::system("ln -s /nonexistent_target /data/test_tdd/test_dir/broken_link");
+
+        std::string path = "/data/test_tdd/test_dir";
+        int32_t ret = periodicChownTask_->ProcessSingleDirectory(path, 0);
+        EXPECT_EQ(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ProcessSingleDirectoryTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ProcessSingleDirectoryTest006 End";
+}
+
+/*
  * @tc.name: ChownFilesTest005
  * @tc.desc: Verify that ChownFiles returns E_STOP when CheckChownCondition fails during batch processing.
  * @tc.type: FUNC
@@ -2050,6 +2107,64 @@ HWTEST_F(PeriodicChownTaskTest, ChownFilesTest006, TestSize.Level1)
         GTEST_LOG_(ERROR) << "ChownFilesTest006 FAILED";
     }
     GTEST_LOG_(INFO) << "ChownFilesTest006 End";
+}
+
+/*
+ * @tc.name: ChownFilesTest007
+ * @tc.desc: Verify that ChownFiles returns E_PATH when path is a regular file (not a directory).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChownFilesTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChownFilesTest007 Start";
+    try {
+        periodicChownTask_->directoryTemplates_ = {"/data/test_tdd/test_dir"};
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetLong(_, _))
+            .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int64_t>(0))));
+
+        std::system("mkdir -p /data/test_tdd");
+        std::system("touch /data/test_tdd/test_file_regular");
+
+        std::string path = "/data/test_tdd/test_file_regular";
+        int32_t ret = periodicChownTask_->ChownFiles(path, 0);
+        EXPECT_EQ(ret, E_PATH);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChownFilesTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChownFilesTest007 End";
+}
+
+/*
+ * @tc.name: ChownFilesTest008
+ * @tc.desc: Verify that ChownFiles skips entries where stat() fails (dangling symlink) and returns E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PeriodicChownTaskTest, ChownFilesTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChownFilesTest008 Start";
+    try {
+        periodicChownTask_->directoryTemplates_ = {"/data/test_tdd/test_dir"};
+        periodicChownTask_->periodicChownConfig_ = std::make_unique<CloudPrefImpl>(100, "", SPACE_OCCUPY_FILE_PATH);
+
+        EXPECT_CALL(*cloudPrefImplMock_, GetLong(_, _))
+            .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int64_t>(0))));
+
+        std::system("mkdir -p /data/test_tdd/test_dir");
+        std::system("touch /data/test_tdd/test_dir/normal.txt");
+        std::system("chown 1009:1009 /data/test_tdd/test_dir/normal.txt");
+        std::system("ln -s /nonexistent_target /data/test_tdd/test_dir/broken_link");
+
+        std::string path = "/data/test_tdd/test_dir";
+        int32_t ret = periodicChownTask_->ChownFiles(path, 0);
+        EXPECT_EQ(ret, E_OK);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChownFilesTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChownFilesTest008 End";
 }
 
 /*
