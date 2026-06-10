@@ -37,14 +37,8 @@ int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
 int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    NetworkStatus::NetConnStatus oldStatus = NetworkStatus::GetNetConnStatus();
     NetworkStatus::SetNetConnStatus(*netAllCap);
     NetworkStatus::NetConnStatus newStatus = NetworkStatus::GetNetConnStatus();
-    if (oldStatus == newStatus) {
-        LOGI("net status is not change, status is %{public}d", static_cast<int32_t>(newStatus));
-        return E_OK;
-    }
-
     ffrt::submit([newStatus, this]() {
         if (dataSyncManager_ == nullptr) {
             LOGE("dataSyncManager_ is nullptr");
