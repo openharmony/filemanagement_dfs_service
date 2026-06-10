@@ -28,9 +28,6 @@ namespace OHOS::FileManagement::CloudSync {
 const std::string PROGRESS = "progress";
 const std::string MULTI_PROGRESS = "batchDownload";
 
-struct BundleEntityCloudFile {
-    std::string bundleName;
-};
 class CloudFileCacheNapi final : public LibN::NExporter {
 public:
     CloudFileCacheNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
@@ -74,6 +71,7 @@ public:
 
 struct FileCacheEntity {
     std::unordered_map<std::string, std::shared_ptr<CloudFileCacheCallbackImplNapi>> registerMap;
+    std::string bundleName;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H

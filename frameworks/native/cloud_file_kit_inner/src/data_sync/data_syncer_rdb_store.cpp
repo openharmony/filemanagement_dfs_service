@@ -191,6 +191,9 @@ int32_t DataSyncerRdbStore::UpdateTotalDownloadSize(int32_t userId, const std::s
 {
     int updateRows;
     NativeRdb::ValuesBucket values;
+    if (totalDownloadSize < 0) {
+        totalDownloadSize = 0;
+    }
     values.PutLong(TOTAL_DOWNLOAD_SIZE, totalDownloadSize);
     string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
     vector<string> whereArgs = { to_string(userId), bundleName };
@@ -338,7 +341,7 @@ int32_t DataSyncerRdbStore::UpdateDownloadSize(int32_t userId, const string &bun
 {
     int64_t totalDownloadSize;
     {
-        std::lock_guard<std::mutex> lck(rdbMutex_);
+        std::lock_guard<std::mutex> lck(totalDownloadSizeMutex_);
         int32_t ret = GetTotalDownloadSize(userId, bundleName, totalDownloadSize);
         if (ret != E_OK) {
             LOGE("get totalDownloadSize: %{public}d", ret);

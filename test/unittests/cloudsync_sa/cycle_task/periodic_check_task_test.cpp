@@ -19,7 +19,6 @@
 #include "battery_status.h"
 #include "dfs_error.h"
 #include "periodic_check_task.h"
-#include "screen_status.h"
 #include "screen_status_mock.h"
 #include "system_load.h"
 
