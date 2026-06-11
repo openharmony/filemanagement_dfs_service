@@ -11,7 +11,7 @@
 | `cloud_daemon_kit_inner/` | CloudDaemon manager impl、proxy、死亡通知。 |
 | `cloud_file_kit_inner/` | CloudFileKit 默认实现、DataSyncManager、CloudDatabase、sync rule/data sync 基础实现。 |
 | `clouddiskservice_kit_inner/` | CloudDiskService manager impl、ServiceProxy、callback client/stub、common parcel。 |
-| `distributed_file_inner/` | 分布式文件 inner API 客户端，低优先级。 |
+| `distributed_file_inner/` | 分布式文件 inner API 客户端，当前知识库不深挖，默认不改动。 |
 
 ## 典型改动路线
 

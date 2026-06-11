@@ -1,6 +1,6 @@
 # adapter Agent Notes
 
-`adapter/` 放云能力适配示例。当前主要目录是 `cloud_adapter_example/`。
+`adapter/` 放云能力适配示例。当前主要目录是 `cloud_adapter_example/`；这里仅作为接口契约和构建示例参考，当前知识库不深入维护具体云厂商实现。
 
 ## 目录地图
 
@@ -10,7 +10,7 @@
 | `cloud_adapter_example/include/cloud_file_kit_impl.h` | `CloudFileKit` 示例实现入口。 |
 | `cloud_adapter_example/include/data_sync_manager_impl.h` | DataSyncManager 示例实现。 |
 | `cloud_adapter_example/include/cloud_database_impl.h` | CloudDatabase 示例实现。 |
-| `cloud_adapter_example/include/cloud_assets_downloader_impl.h` | 资产下载示例实现。 |
+| `cloud_adapter_example/include/cloud_assets_downloader_impl.h` | 文件类资产下载示例实现。 |
 | `cloud_adapter_example/include/cloud_sync_helper_impl.h` | CloudSyncHelper 示例实现。 |
 
 ## 修改约束

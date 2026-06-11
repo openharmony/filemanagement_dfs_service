@@ -1,6 +1,6 @@
 # cloudfiledaemon Agent Notes
 
-`cloudfiledaemon` 是【云盘/云图】模块，负责 CloudFile daemon 和 FUSE 相关能力；其中 `cloud_disk` 对应云盘，`fuse_manager` 对应云图。优先关注本目录；不要把 `services/distributedfiledaemon/` 的逻辑混入这里。
+`cloudfiledaemon` 是【云盘/云图】模块，负责 CloudFile daemon 与 `/dev/fuse` 驱动建链及 FUSE 相关能力；其中 `cloud_disk` 对应云盘，`fuse_manager` 对应云图。优先关注本目录；不要把 `services/distributedfiledaemon/` 的逻辑混入这里。
 
 ## 目录地图
 
@@ -8,18 +8,31 @@
 | --- | --- |
 | `BUILD.gn` | 构建 `cloudfiledaemon` shared library，依赖 cloudsync lite kit、cloudfile kit core、clouddisk_database、utils lite。 |
 | `include/ipc/`、`src/ipc/` | `CloudDaemon` SA、stub 和 `StartFuse` IPC 实现。 |
-| `include/fuse_manager/`、`src/fuse_manager/` | 【云图】：FUSE 管理、统计、LRU RDB store。 |
-| `include/cloud_disk/`、`src/cloud_disk/` | 【云盘】：FUSE 操作落地：local/cloud file operations、database manager、账号和应用状态。 |
+| `include/fuse_manager/`、`src/fuse_manager/` | 【云图】：FUSE 管理和云图 FUSE 操作，负责和 `/dev/fuse` 驱动建链、统计、LRU RDB store。 |
+| `include/cloud_disk/`、`src/cloud_disk/` | 【云盘】：云盘 FUSE 操作落地：local/cloud file operations、database manager、账号和应用状态。 |
 | `include/utils/`、`src/utils/` | 设置数据监听和同步开关辅助。 |
 
 ## 主要链路
+
+云图 `fuse_manager` 链路：
 
 ```text
 CloudDaemonManager
   -> cloud daemon proxy/stub
   -> CloudDaemon::StartFuse
-  -> FuseManager
-  -> FuseOperations
+  -> FuseManager::StartFuse
+  -> cloudMediaFuseOps
+```
+
+云盘 `cloud_disk` 链路：
+
+```text
+CloudDaemonManager
+  -> cloud daemon proxy/stub
+  -> CloudDaemon::StartFuse
+  -> FuseManager::StartFuse
+  -> cloudDiskFuseOps
+  -> CloudDisk::FuseOperations
   -> FileOperationsBase
     -> FileOperationsLocal
     -> FileOperationsCloud

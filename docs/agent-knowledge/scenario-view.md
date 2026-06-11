@@ -25,7 +25,7 @@
 | 周期任务 | `services/cloudsyncservice/src/cycle_task/` |
 | 测试 | `test/unittests/cloudsync_sa/`、`test/unittests/cloudsync_api/`、`test/unittests/data_sync_manager/` |
 
-## 资产上传、下载和跨设备传输
+## 文件类资产上传、下载和端端辅助同步
 
 典型链路：
 
@@ -34,7 +34,7 @@ CloudSyncAssetManager
   -> cloudsync service IPC
   -> download/upload callback manager
   -> CloudFileKit / CloudAssetsDownloader / CloudDatabase
-  -> optional SoftBus transport for remote file transfer
+  -> optional SoftBus-assisted endpoint sync for remote file transfer
 ```
 
 关键文件：
@@ -44,19 +44,32 @@ CloudSyncAssetManager
 | 资产 API | `interfaces/inner_api/native/cloudsync_kit_inner/cloud_sync_asset_manager.h` |
 | 下载回调 | `interfaces/inner_api/native/cloudsync_kit_inner/download_asset_callback.h`、`i_download_asset_callback.h` |
 | 回调管理 | `services/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp` |
-| 传输 | `services/cloudsyncservice/src/transport/file_transfer_manager.cpp`、`message_handler.cpp`、`transport/softbus/` |
+| 端端辅助同步 | `services/cloudsyncservice/src/transport/file_transfer_manager.cpp`、`message_handler.cpp`、`transport/softbus/` |
 | 云适配 | `interfaces/inner_api/native/cloud_file_kit_inner/cloud_assets_downloader.h`、`adapter/cloud_adapter_example/` |
+
+说明：这里仅覆盖文件类资产链路。结构化类资产（日历、联系人、备忘录等）不作为当前知识库的常态设计主线。
 
 ## CloudFile daemon 和 FUSE
 
-典型链路：
+云图 `fuse_manager` 典型链路：
 
 ```text
 CloudDaemonManager
   -> cloud daemon proxy/stub
   -> CloudDaemon::StartFuse
-  -> FuseManager
-  -> fuse_operations
+  -> FuseManager::StartFuse
+  -> cloudMediaFuseOps
+```
+
+云盘 `cloud_disk` 典型链路：
+
+```text
+CloudDaemonManager
+  -> cloud daemon proxy/stub
+  -> CloudDaemon::StartFuse
+  -> FuseManager::StartFuse
+  -> cloudDiskFuseOps
+  -> CloudDisk::FuseOperations
   -> FileOperationsLocal / FileOperationsCloud / DatabaseManager
   -> clouddisk_database and dentry/metafile utils
 ```
@@ -68,12 +81,12 @@ CloudDaemonManager
 | daemon API | `interfaces/inner_api/native/cloud_daemon_kit_inner/cloud_daemon_manager.h`、`i_cloud_daemon.h` |
 | 客户端 | `frameworks/native/cloud_daemon_kit_inner/` |
 | IPC 和 SA | `services/cloudfiledaemon/include/ipc/`、`src/ipc/` |
-| FUSE 管理 | `services/cloudfiledaemon/include/fuse_manager/fuse_manager.h`、`src/fuse_manager/fuse_manager.cpp` |
-| 文件操作 | `services/cloudfiledaemon/include/cloud_disk/`、`src/cloud_disk/` |
+| 云图 FUSE 管理和操作 | `services/cloudfiledaemon/include/fuse_manager/fuse_manager.h`、`src/fuse_manager/fuse_manager.cpp` |
+| 云盘 FUSE 文件操作 | `services/cloudfiledaemon/include/cloud_disk/`、`src/cloud_disk/` |
 | 元数据和工具 | `utils/dentry/`、`utils/cloud_disk/`、`services/clouddisk_database/` |
 | 测试 | `test/unittests/services_daemon/`、`test/unittests/cloud_disk/`、`test/unittests/cloud_daemon/` |
 
-## CloudDiskService 同步文件夹和变更日志
+## CloudDiskService 变更监听和文件同步状态
 
 典型链路：
 
@@ -81,7 +94,7 @@ CloudDaemonManager
 CloudDiskServiceManager
   -> clouddiskservice ServiceProxy
   -> CloudDiskService SA
-  -> RegisterSyncFolder / RegisterSyncFolderChanges
+  -> sync folder state / RegisterSyncFolderChanges
   -> DiskMonitor fanotify
   -> CloudDiskServiceLogFile + CloudDiskServiceMetaFile
   -> ChangesResult callback/query
@@ -94,10 +107,12 @@ CloudDiskServiceManager
 | API 和数据结构 | `interfaces/inner_api/native/clouddiskservice_kit_inner/cloud_disk_common.h`、`cloud_disk_service_manager.h` |
 | 客户端 | `frameworks/native/clouddiskservice_kit_inner/` |
 | SA 入口 | `services/clouddiskservice/ipc/include/cloud_disk_service.h`、`ipc/src/cloud_disk_service.cpp` |
-| 同步文件夹状态 | `services/clouddiskservice/ipc/include/cloud_disk_sync_folder.h` |
+| 同步文件夹相关状态 | `services/clouddiskservice/ipc/include/cloud_disk_sync_folder.h` |
 | 变更监听 | `services/clouddiskservice/monitor/` |
 | 日志和 meta 文件 | `services/clouddiskservice/sync_folder/` |
 | 测试 | `test/unittests/clouddiskservice/`、`test/unittests/clouddisk_service/` |
+
+说明：`clouddiskservice` 不对外承担同步文件夹注册/同步根管理职责，文档只把相关类型作为状态和变更监听链路的一部分。
 
 ## 云盘数据库
 
@@ -107,7 +122,7 @@ CloudDiskServiceManager
 服务层
   -> ClouddiskRdbStore / ClouddiskRdbTransaction
   -> NativeRdb
-  -> Notify / Migration / SyncHelper
+  -> Notify / SyncHelper
 ```
 
 关键文件：
@@ -117,5 +132,5 @@ CloudDiskServiceManager
 | 表结构和常量 | `services/clouddisk_database/include/file_column.h`、`clouddisk_db_const.h`、`clouddisk_type_const.h` |
 | RDB 封装 | `clouddisk_rdbstore.*`、`clouddisk_rdb_transaction.*`、`clouddisk_rdb_utils.*` |
 | 通知 | `clouddisk_notify.*`、`clouddisk_notify_utils.*` |
-| 迁移 | `migration_manager.*` |
+| 历史兼容迁移 | `migration_manager.*`，仅作为一次性兼容背景 |
 | 测试 | `test/unittests/clouddisk_database/` |

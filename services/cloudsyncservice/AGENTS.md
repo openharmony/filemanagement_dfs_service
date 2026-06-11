@@ -1,6 +1,6 @@
 # cloudsyncservice Agent Notes
 
-`cloudsyncservice` 是【云同步】模块，也是 CloudSync System Ability。它连接 CloudSync inner API、CloudFileKit、同步规则、周期任务、资产传输和回调。
+`cloudsyncservice` 是【云同步】模块，也是 CloudSync System Ability。它连接 CloudSync inner API、CloudFileKit、同步规则、周期任务、文件类资产传输和回调；SoftBus 只作为端端辅助同步能力使用。
 
 ## 目录地图
 
@@ -11,7 +11,7 @@
 | `include/ipc/`、`src/ipc/` | SA 入口、账号状态、下载资产 callback manager/proxy。 |
 | `include/sync_rule/`、`src/sync_rule/` | 电量、屏幕、用户状态监听。 |
 | `include/cycle_task/`、`src/cycle_task/` | 周期任务和 task runner。 |
-| `include/transport/`、`src/transport/` | file transfer、message handler、SoftBus session 管理。 |
+| `include/transport/`、`src/transport/` | 端端辅助 file transfer、message handler、SoftBus session 管理。 |
 
 ## 主要链路
 
@@ -39,7 +39,7 @@ CloudSyncManager / CloudSyncAssetManager
 - `cloud_file_sync_service_interface_code.h` 属于 CODEOWNERS 关注文件，改动前先读根 `CODEOWNERS`。
 - 同步规则变更必须考虑多用户、网络切换、电量/温控、屏幕和云开关组合状态。
 - 周期任务要保证幂等和可重复启动；新增任务要注册到 runner 并加入 BUILD source list。
-- SoftBus 相关逻辑受 `dfs_service_feature_enable_distributed_ability` 影响，BUILD 和代码条件要一致。
+- SoftBus 相关逻辑仅用于端端辅助同步，受 `dfs_service_feature_enable_distributed_ability` 影响，BUILD 和代码条件要一致。
 
 ## 测试路由
 

@@ -18,6 +18,8 @@
 | `distributedfile_test_module` | 聚合 distributed file 相关单元测试。 |
 | `dfs_test_moudule` | 历史拼写的 distributed file daemon 模块测试 group。 |
 
+说明：`distributedfiledaemon` 和 `dfs_utils` 当前知识库不深挖，只有任务明确要求或改动必须触及时才进入对应构建/测试目标。
+
 ## 示例命令
 
 示例命令需要按产品名替换：

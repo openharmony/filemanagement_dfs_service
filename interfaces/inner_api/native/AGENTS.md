@@ -18,7 +18,7 @@
 - 云 daemon/FUSE：`cloud_daemon_kit_inner/cloud_daemon_manager.h`、`i_cloud_daemon.h`。
 - 云适配抽象：`cloud_file_kit_inner/cloud_file_kit.h`、`cloud_database.h`、`cloud_assets_downloader.h`、`cloud_sync_helper.h`。
 - 同步状态/规则：`cloud_file_kit_inner/data_sync_manager.h`、`sync_state_manager.h`、`network_status.h`、`battery_status.h`、`system_load.h`。
-- 云盘同步文件夹：`clouddiskservice_kit_inner/cloud_disk_service_manager.h`、`cloud_disk_common.h`。
+- 三方网盘变更监听、文件同步状态和相关 common types：`clouddiskservice_kit_inner/cloud_disk_service_manager.h`、`cloud_disk_common.h`；不要把这里的接口路由扩写成同步根注册职责。
 
 ## 修改约束
 

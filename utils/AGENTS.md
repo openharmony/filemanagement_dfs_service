@@ -20,7 +20,7 @@
 
 ## 修改约束
 
-- 共享错误码和日志改动要检查所有调用方，不要只修一个服务。
+- 共享错误码和日志改动要检查所有调用方，不要只修一个服务；热路径日志必须考虑 buffer 限流和条件保护。
 - RAII guard、timer、async work 改动必须补 utils 单测。
 - dentry/metafile 逻辑涉及文件系统元数据，改动要跑 cloud_disk 和 clouddisk_service 相关测试。
 - `libdistributedfileutils_lite` 依赖更少，给 lite/daemon 场景使用；不要随意引入重外部依赖。

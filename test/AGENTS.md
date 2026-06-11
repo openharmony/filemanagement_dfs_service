@@ -16,7 +16,7 @@
 | `unittests/cloud_disk/` | FUSE file operations、database manager、meta file 等测试。 |
 | `unittests/clouddisk_database/` | 云盘 RDB/迁移/通知测试。 |
 | `unittests/clouddiskservice/` | CloudDiskService 旧测试入口。 |
-| `unittests/clouddisk_service/` | CloudDiskService 新同步文件夹相关测试。 |
+| `unittests/clouddisk_service/` | CloudDiskService 同步文件夹状态、变更日志和 meta 相关测试。 |
 | `unittests/utils/` | 公共工具测试。 |
 | `mock/` | 跨模块通用 mock。 |
 | `moduletest/` | 模块测试。 |
