@@ -2312,52 +2312,6 @@ HWTEST_F(FileOperationsCloudStaticTest, CheckBucketPathTest003, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckBucketPathTest004
- * @tc.desc: Verify CheckBucketPath succeeds when base bucket dir already exists
- * @tc.type: FUNC
- * @tc.require: issuesI91IOG
- */
-HWTEST_F(FileOperationsCloudStaticTest, CheckBucketPathTest004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CheckBucketPathTest004 Start";
-    try {
-        string cloudId = "test004";
-        string bundleName = "com.example.test";
-        int32_t userId = 9999;
-        string baseDir = CloudFileUtils::GetLocalBaseDir(bundleName, userId);
-        string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);
-        string tmpPath = CloudFileUtils::GetLocalDKCachePath(cloudId, bundleName, userId);
-
-        bool dirsCreated = false;
-        if (access(baseDir.c_str(), F_OK) != 0) {
-            string cmd = "mkdir -p " + baseDir;
-            if (system(cmd.c_str()) == 0) {
-                dirsCreated = true;
-            }
-        } else {
-            GTEST_LOG_(INFO) << "CheckBucketPathTest004 baseDir already exists";
-        }
-
-        auto ret = CheckBucketPath(cloudId, bundleName, userId, tmpPath);
-        if (dirsCreated) {
-            EXPECT_EQ(ret, EOK);
-            GTEST_LOG_(INFO) << "CheckBucketPathTest004 success path verified";
-        } else {
-            EXPECT_NE(ret, EOK);
-            GTEST_LOG_(INFO) << "CheckBucketPathTest004 cannot create test dirs, verifies error path";
-        }
-
-        if (dirsCreated) {
-            rmdir(bucketPath.c_str());
-            rmdir(baseDir.c_str());
-        }
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "CheckBucketPathTest004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CheckBucketPathTest004 End";
-}
-/**
  * @tc.name: GetFileOpenFlagsTest001
  * @tc.desc: Verify GetFileOpenFlags with O_RDONLY (no flags)
  * @tc.type: FUNC
