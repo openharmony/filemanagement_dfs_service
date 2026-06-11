@@ -106,7 +106,7 @@ std::string SystemNotifier::GetRemoteDeviceName(const std::string &networkId)
     if (ret != E_OK) {
         LOGE("GetDeviceName failed. ret = %{public}d", ret);
     }
-    LOGI("networkId is %{public}.6s, deviceName is %{public}s", networkId.c_str(), deviceName.c_str());
+    LOGI("networkId is %{public}.6s, deviceName is %{public}s", networkId.c_str(), GetAnonyString(deviceName).c_str());
     return deviceName;
 }
 
