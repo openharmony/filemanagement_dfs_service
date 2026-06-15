@@ -256,7 +256,7 @@ int32_t CloudDiskServiceLogFile::GenerateLogBlock(const struct EventInfo &eventI
     }
     WriteLogFile(logBlock);
     line = logBlock.line;
-    LOGD("Generate log line:%{public}" PRIu64 ", operationType:%{public}d", line, logBlock.operationType);
+    LOGD("Generate log line:%{public}llu, operationType:%{public}d", line, logBlock.operationType);
     return E_OK;
 }
 
@@ -297,7 +297,7 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
 
     changeData.timeStamp = eventInfo.timestamp;
     changeDatas_.push_back(changeData);
-    LOGD("Generate changedata line:%{public}" PRIu64 ", operationType:%{public}d, size:%{public}zu", line,
+    LOGD("Generate changedata line:%{public}llu, operationType:%{public}d, size:%{public}zu", line,
         static_cast<uint8_t>(changeData.operationType), changeDatas_.size());
     if (changeDatas_.size() >= MAX_CHANGEDATAS_SIZE) {
         CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
@@ -394,7 +394,7 @@ int32_t CloudDiskServiceLogFile::ProduceLog(const struct EventInfo &eventInfo)
 int32_t CloudDiskServiceLogFile::PraseLog(const uint64_t line, ChangeData &data, bool &isEof)
     __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
-    LOGD("[prase line:%{public}" PRIu64 "], [currentline:%{public}" PRIu64 "]", line, currentLine_.load());
+    LOGD("prase line:%{public}llu, currentline:%{public}llu", line, currentLine_.load());
     if (line == currentLine_.load()) {
         isEof = true;
         return E_OK;
