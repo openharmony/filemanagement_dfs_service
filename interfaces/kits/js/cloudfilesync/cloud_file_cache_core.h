@@ -43,11 +43,12 @@ public:
     ModuleFileIO::FsResult<void> DoStop(const std::string &uri, bool needClean = false);
     ModuleFileIO::FsResult<void> DoStop(int64_t downloadId, bool needClean = false);
     ModuleFileIO::FsResult<void> CleanCache(const std::string &uri);
-    ModuleFileIO::FsResult<void> CleanFileCache(const std::optional<const std::string> &uri = std::nullopt);
+    ModuleFileIO::FsResult<void> CleanFileCache(const std::string &uri);
     ModuleFileIO::FsResult<void> GetDownloadList(const std::vector<std::string> &uriVec,
             std::vector<CloudSync::DownloadProgressObj> &downloadList);
     ModuleFileIO::FsResult<int64_t> GetCachedTotalSize();
     std::shared_ptr<CloudFileCacheCallbackImplAni> GetCallbackImpl(const std::string &eventType, bool isInit);
+    ModuleFileIO::FsResult<void> CleanAllFileCache();
 
 private:
     std::string bundleName_;

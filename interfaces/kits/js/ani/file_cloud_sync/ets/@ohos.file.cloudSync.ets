@@ -690,7 +690,7 @@ export default namespace cloudSync {
             return this.GetCachedTotalSizeInner();
         }
 
-        cleanFileCache(): Promise<void> {
+        cleanAllFileCache(): Promise<void> {
             return new Promise<void>((resolve: (result: undefined) => void,
                 reject: (e: BusinessError<void>) => void): void => {
                 let promise = taskpool.execute((): void => {
