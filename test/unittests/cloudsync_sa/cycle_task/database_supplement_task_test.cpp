@@ -1163,6 +1163,54 @@ HWTEST_F(DatabaseSupplementTaskTest, ChownMigratedAppDirectoryTest005, TestSize.
 }
 
 /*
+ * @tc.name: ChownMigratedAppDirectoryTest006
+ * @tc.desc: Verify that ChownMigratedAppDirectory handles iterator constructor error when path is a regular file.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DatabaseSupplementTaskTest, ChownMigratedAppDirectoryTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChownMigratedAppDirectoryTest006 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.test.app006";
+
+        std::system("mkdir -p /data/service/el2/100/hmdfs/cloudfile_manager");
+        std::system("touch /data/service/el2/100/hmdfs/cloudfile_manager/com.test.app006");
+
+        databaseSupplementTask_->ChownMigratedAppDirectory(userId, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChownMigratedAppDirectoryTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChownMigratedAppDirectoryTest006 End";
+}
+
+/*
+ * @tc.name: ChownMigratedAppDirectoryTest007
+ * @tc.desc: Verify that ChownMigratedAppDirectory handles stat failure on dangling symlink entry.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DatabaseSupplementTaskTest, ChownMigratedAppDirectoryTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChownMigratedAppDirectoryTest007 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.test.app007";
+
+        std::system("mkdir -p /data/service/el2/100/hmdfs/cloudfile_manager/com.test.app007/rdb");
+        std::system("touch /data/service/el2/100/hmdfs/cloudfile_manager/com.test.app007/rdb/clouddisk.db");
+        std::system("ln -s /nonexistent_target"
+            " /data/service/el2/100/hmdfs/cloudfile_manager/com.test.app007/broken_link");
+
+        databaseSupplementTask_->ChownMigratedAppDirectory(userId, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(ERROR) << "ChownMigratedAppDirectoryTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChownMigratedAppDirectoryTest007 End";
+}
+
+/*
  * @tc.name: PruneAndCleanupTest001
  * @tc.desc: Verify that PruneAndCleanup handles non-existent database.
  * @tc.type: FUNC
