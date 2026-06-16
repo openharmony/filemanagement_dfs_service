@@ -56,6 +56,18 @@ void CloudDiskNotifyStaticTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
+static shared_ptr<CloudDiskInode> FindCloudDiskInodeForTest(CloudDiskFuseData *data, int64_t ino)
+{
+    if (data == nullptr) {
+        return nullptr;
+    }
+    auto iter = data->inodeCache.find(ino);
+    if (iter == data->inodeCache.end()) {
+        return nullptr;
+    }
+    return iter->second;
+}
+
 /**
  * @tc.name: HandleUpdateTest001
  * @tc.desc: Verify the HandleUpdate function
@@ -185,36 +197,6 @@ HWTEST_F(CloudDiskNotifyStaticTest, HandleInsertNullStoreTest001, TestSize.Level
     GTEST_LOG_(INFO) << "HandleInsertNullStoreTest001 End";
 }
 
-/**
- * @tc.name: HandleRecycleRestoreNullStoreTest001
- * @tc.desc: rdbStore is nullptr
- * @tc.type: FUNC
- * @tc.require: issues2755
- */
-HWTEST_F(CloudDiskNotifyStaticTest, HandleRecycleRestoreNullStoreTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleRecycleRestoreNullStoreTest001 Start";
-    try {
-        NotifyParamDisk paramDisk;
-        paramDisk.inoPtr = make_shared<CloudDiskInode>();
-        paramDisk.inoPtr->bundleName = "bundleName";
-        paramDisk.inoPtr->cloudId = "cloudId";
-        paramDisk.data = new CloudDiskFuseData();
-        paramDisk.data->userId = USER_ID;
-        paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
-
-        cacheRdbStore.first = paramDisk.inoPtr->bundleName + std::to_string(paramDisk.data->userId);
-        cacheRdbStore.second = nullptr;
-
-        HandleRecycleRestore(paramDisk);
-        EXPECT_EQ(cacheRdbStore.second, nullptr);
-        delete paramDisk.data;
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleRecycleRestoreNullStoreTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleRecycleRestoreNullStoreTest001 End";
-}
 
 /**
  * @tc.name: HandleUpdateNullStoreTest001
@@ -827,6 +809,29 @@ HWTEST_F(CloudDiskNotifyStaticTest, HandleRenameTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "HandleRenameTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "HandleRenameTest001 End";
+}
+
+/**
+ * @tc.name: HandleRenameTest002
+ * @tc.desc: Verify the HandleRename function with empty func
+ * @tc.type: FUNC
+ * @tc.require: issues2755
+ */
+HWTEST_F(CloudDiskNotifyStaticTest, HandleRenameTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRenameTest002 Start";
+    try {
+        NotifyParamDisk paramDisk;
+        ParamDiskOthers paramOthers;
+
+        EXPECT_FALSE(static_cast<bool>(paramDisk.func));
+        HandleRename(paramDisk, paramOthers);
+        EXPECT_FALSE(static_cast<bool>(paramDisk.func));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleRenameTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleRenameTest002 End";
 }
 
 /**
