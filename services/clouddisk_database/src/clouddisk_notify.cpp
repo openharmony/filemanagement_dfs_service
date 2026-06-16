@@ -128,44 +128,6 @@ static void HandleSetAttr(const NotifyParamDisk &paramDisk)
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
-static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
-{
-    NotifyData trashNotifyData;
-    if (GetTrashNotifyData(paramDisk, trashNotifyData) != E_OK) {
-        LOGE("Get trash notify data fail");
-        return;
-    }
-    shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramDisk.inoPtr->bundleName, paramDisk.data->userId);
-    if (rdbStore == nullptr) {
-        LOGE("Get rdb store fail, bundleName: %{public}s", paramDisk.inoPtr->bundleName.c_str());
-        return;
-    }
-    if (TrashUriAddRowId(rdbStore, paramDisk.inoPtr->cloudId, trashNotifyData.uri) != E_OK) {
-        return;
-    }
-
-    NotifyData originNotifyData;
-    if (GetDataInner(paramDisk, originNotifyData) != E_OK) {
-        LOGE("Get origin notify data fail");
-        return;
-    }
-
-    NotifyData notifyData;
-    notifyData.type = NotifyType::NOTIFY_RENAMED;
-    notifyData.isDir = originNotifyData.isDir;
-
-    if (paramDisk.opsType == NotifyOpsType::DAEMON_RECYCLE) {
-        notifyData.uri = trashNotifyData.uri;
-        notifyData.extraUri = originNotifyData.uri;
-    }
-    if (paramDisk.opsType == NotifyOpsType::DAEMON_RESTORE) {
-        notifyData.uri = originNotifyData.uri;
-        notifyData.extraUri = trashNotifyData.uri;
-    }
-    notifyData.isLocalOperation = true;
-    CloudDiskNotify::GetInstance().AddNotify(notifyData);
-}
-
 static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
 {
     NotifyData notifyData;
@@ -209,6 +171,11 @@ static void HandleUnlink(const NotifyParamDisk &paramDisk)
 
 static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
 {
+    if (!paramDisk.func) {
+        LOGE("invalid rename notify param");
+        return;
+    }
+
     NotifyData oldNotifyData;
     NotifyData newNotifyData;
     int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.ino,
@@ -241,7 +208,8 @@ void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDis
             break;
         case NotifyOpsType::DAEMON_RECYCLE:
         case NotifyOpsType::DAEMON_RESTORE:
-            HandleRecycleRestore(paramDisk);
+        case NotifyOpsType::DAEMON_RENAME:
+            HandleRename(paramDisk, paramOthers);
             break;
         case NotifyOpsType::DAEMON_MKDIR:
             HandleMkdir(paramDisk);
@@ -249,9 +217,6 @@ void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDis
         case NotifyOpsType::DAEMON_RMDIR:
         case NotifyOpsType::DAEMON_UNLINK:
             HandleUnlink(paramDisk);
-            break;
-        case NotifyOpsType::DAEMON_RENAME:
-            HandleRename(paramDisk, paramOthers);
             break;
         case NotifyOpsType::DAEMON_WRITE:
             HandleWrite(paramDisk, paramOthers);
