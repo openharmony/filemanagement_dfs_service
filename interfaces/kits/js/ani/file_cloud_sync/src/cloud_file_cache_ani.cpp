@@ -314,15 +314,15 @@ void CloudFileCacheAni::CloudFileCacheCleanFileCache1(ani_env *env, ani_object o
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 
-    auto data = cloudFileCache->CleanFileCache();
+    auto data = cloudFileCache->CleanAllFileCache();
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache clean file cache failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+        ErrorHandler::Throw(env, E_TRY_AGAIN);
     }
 }
 
@@ -536,7 +536,7 @@ ani_long CloudFileCacheAni::CloudFileCacheGetCachedTotalSize(ani_env *env, ani_o
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return 0;
     }
 
@@ -544,7 +544,7 @@ ani_long CloudFileCacheAni::CloudFileCacheGetCachedTotalSize(ani_env *env, ani_o
     if (!data.IsSuccess()) {
         const auto &err = data.GetError();
         LOGE("cloudFileCache get cached total size failed, ret = %{public}d", err.GetErrNo());
-        ErrorHandler::Throw(env, err);
+        ErrorHandler::Throw(env, E_TRY_AGAIN);
         return 0;
     }
 

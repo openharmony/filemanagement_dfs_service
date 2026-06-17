@@ -137,34 +137,16 @@ FsResult<void> CloudFileCacheCore::CleanCache(const string &uri)
     return FsResult<void>::Success();
 }
 
-FsResult<void> CloudFileCacheCore::CleanFileCache(const optional<const string> &uri)
+FsResult<void> CloudFileCacheCore::CleanFileCache(const string &uri)
 {
     LOGI("CleanFileCache start");
     int32_t ret;
 
-    if (uri.has_value()) {
-        const string &fileUri = *uri;
-        ret = CloudSyncManager::GetInstance().CleanFileCache(fileUri);
-        if (ret != E_OK) {
-            LOGE("Clean File Cache failed! ret = %{public}d", ret);
-            return FsResult<void>::Error(Convert2ErrNum(ret));
-        }
-    } else {
-        std::string bundleName = bundleName_;
-
-        // 如果bundleName_为空，自动获取
-        if (bundleName.empty()) {
-            ret = CloudSyncManager::GetInstance().CleanAllFileCache();
-        } else {
-            ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleName);
-        }
-    
-        if (ret != E_OK) {
-            LOGE("Clean File Cache failed! ret = %{public}d", ret);
-            return FsResult<void>::Error(Convert2ErrNum(ret));
-        }
+    ret = CloudSyncManager::GetInstance().CleanFileCache(uri);
+    if (ret != E_OK) {
+        LOGE("Clean File Cache failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
     }
-
     return FsResult<void>::Success();
 }
 
@@ -200,6 +182,27 @@ FsResult<int64_t> CloudFileCacheCore::GetCachedTotalSize()
     }
     
     return FsResult<int64_t>::Success(totalSize);
+}
+
+FsResult<void> CloudFileCacheCore::CleanAllFileCache()
+{
+    LOGI("CleanAllFileCache start");
+    int32_t ret;
+
+    std::string bundleName = bundleName_;
+
+    // 如果bundleName_为空，自动获取
+    if (bundleName.empty()) {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache();
+    } else {
+        ret = CloudSyncManager::GetInstance().CleanAllFileCache(bundleName);
+    }
+    
+    if (ret != E_OK) {
+        LOGE("Clean File Cache failed! ret = %{public}d", ret);
+        return FsResult<void>::Error(Convert2ErrNum(ret));
+    }
+    return FsResult<void>::Success();
 }
 
 } // namespace OHOS::FileManagement::CloudSync

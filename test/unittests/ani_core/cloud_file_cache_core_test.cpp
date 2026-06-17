@@ -438,7 +438,7 @@ HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest1, TestSize.Level1)
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
     EXPECT_CALL(cloudMock, CleanAllFileCache(_)).WillOnce(Return(OHOS::FileManagement::E_OK));
-    auto ret = cloudFileCache->CleanFileCache();
+    auto ret = cloudFileCache->CleanAllFileCache();
     EXPECT_TRUE(ret.IsSuccess());
 }
 
@@ -453,7 +453,7 @@ HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest2, TestSize.Level1)
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor(bundleName).GetData().value();
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
     EXPECT_CALL(cloudMock, CleanAllFileCache(_)).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
-    auto ret = cloudFileCache->CleanFileCache();
+    auto ret = cloudFileCache->CleanAllFileCache();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
@@ -470,7 +470,7 @@ HWTEST_F(CloudFileCacheCoreTest, CleanAllFileCacheTest3, TestSize.Level1)
     CloudFileCacheCore *cloudFileCache = CloudFileCacheCore::Constructor().GetData().value();
     auto &cloudMock = CloudSyncManagerImplMock::GetInstance();
     EXPECT_CALL(cloudMock, CleanAllFileCache()).WillOnce(Return(OHOS::FileManagement::E_PERMISSION));
-    auto ret = cloudFileCache->CleanFileCache();
+    auto ret = cloudFileCache->CleanAllFileCache();
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
@@ -518,7 +518,7 @@ HWTEST_F(CloudFileCacheCoreTest, CleanFileCacheWithBundleName001, TestSize.Level
             return OHOS::FileManagement::E_OK;
         });
     
-    auto ret = cloudFileCache->CleanFileCache();
+    auto ret = cloudFileCache->CleanAllFileCache();
     EXPECT_TRUE(ret.IsSuccess());
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

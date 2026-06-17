@@ -185,7 +185,36 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
     LOGI("CleanCache start");
     NFuncArg funcArg(env, info);
 
-    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        NError(EINVAL).ThrowErr(env);
+        LOGE("Number of arguments unmatched");
+        return nullptr;
+    }
+    int32_t ret;
+
+    auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("CleanFileCache get uri parameter failed!");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    ret = CloudSyncManager::GetInstance().CleanFileCache(uri.get());
+    if (ret != E_OK) {
+        int32_t err = GetCleanCacheErrPublic(ret);
+        NError(Convert2JsErrNum(err)).ThrowErr(env);
+        LOGE("CleanAllFileCache failed, ret:%{public}d", err);
+        return nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value CloudFileCacheNapi::CleanAllFileCache(napi_env env, napi_callback_info info)
+{
+    LOGI("CleanAllFileCache start");
+    NFuncArg funcArg(env, info);
+
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         NError(EINVAL).ThrowErr(env);
         LOGE("Number of arguments unmatched");
         return nullptr;
@@ -197,24 +226,15 @@ napi_value CloudFileCacheNapi::CleanFileCache(napi_env env, napi_callback_info i
         return nullptr;
     }
 
-    if (funcArg.GetArgc() == NARG_CNT::ONE) {
-        auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
-        if (!succ) {
-            LOGE("CleanFileCache get uri parameter failed!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        ret = CloudSyncManager::GetInstance().CleanFileCache(uri.get());
-    } else if (fileCacheEntity->bundleName.empty()) {
+    if (fileCacheEntity->bundleName.empty()) {
         ret = CloudSyncManager::GetInstance().CleanAllFileCache();
     } else {
         ret = CloudSyncManager::GetInstance().CleanAllFileCache(fileCacheEntity->bundleName);
     }
     if (ret != E_OK) {
-        int32_t err = GetCleanCacheErrPublic(ret);
+        int32_t err = JsErrCode::E_TRY_AGAIN;
         NError(Convert2JsErrNum(err)).ThrowErr(env);
-        LOGE("CleanFileCache failed, ret:%{public}d", err);
+        LOGE("CleanAllFileCache failed, ret:%{public}d", err);
         return nullptr;
     }
     return NVal::CreateUndefined(env).val_;
@@ -244,7 +264,7 @@ napi_value CloudFileCacheNapi::GetCachedTotalSize(napi_env env, napi_callback_in
     }
 
     if (ret != E_OK) {
-        int32_t err = GetCleanCacheErrPublic(ret);
+        int32_t err = JsErrCode::E_TRY_AGAIN;
         NError(Convert2JsErrNum(err)).ThrowErr(env);
         LOGE("CleanFileCache failed, ret:%{public}d", err);
         return nullptr;
@@ -265,6 +285,7 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
         NVal::DeclareNapiFunction("cleanFileCache", CloudFileCacheNapi::CleanFileCache),
         NVal::DeclareNapiFunction("getDownloadList", CloudFileCacheNapi::GetDownloadList),
+        NVal::DeclareNapiFunction("cleanAllFileCache", CloudFileCacheNapi::CleanAllFileCache),
         NVal::DeclareNapiFunction("getCachedTotalSize", CloudFileCacheNapi::GetCachedTotalSize),
     };
 #else

@@ -54,6 +54,7 @@ public:
     static napi_value OffForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCacheForWatch(napi_env env, napi_callback_info info);
     static napi_value CleanFileCacheForWatch(napi_env env, napi_callback_info info);
+    static napi_value CleanAllFileCache(napi_env env, napi_callback_info info);
     static napi_value GetCachedTotalSize(napi_env env, napi_callback_info info);
 
 private:
