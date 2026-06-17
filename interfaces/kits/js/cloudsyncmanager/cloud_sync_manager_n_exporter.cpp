@@ -492,7 +492,7 @@ static NVal AsyncCompleteDowngradeProgress(const napi_env &env, const vector<Dow
     napi_status status = napi_create_array(env, &results);
     if (status != napi_ok) {
         LOGE("failed to create array for DowngradeProgress");
-        return {env, NError(JsErrCode::E_IPCSS).GetNapiErr(env)};
+        return {env, NError(JsErrCode::E_TRY_AGAIN).GetNapiErr(env)};
     }
     int32_t index = 0;
     for (const auto &item : list) {
@@ -508,7 +508,7 @@ static NVal AsyncCompleteDowngradeProgress(const napi_env &env, const vector<Dow
         status = napi_set_element(env, results, index, obj.val_);
         if (status != napi_ok) {
             LOGE("Failed to set element in DowngradeProgress array");
-            return {env, NError(JsErrCode::E_IPCSS).GetNapiErr(env)};
+            return {env, NError(JsErrCode::E_TRY_AGAIN).GetNapiErr(env)};
         }
         index++;
     }

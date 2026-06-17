@@ -3042,7 +3042,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest001, TestSiz
         std::vector<DowngradeProgress> downgradeProgressList;
         int32_t res =
             CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest001 FAILED";
@@ -3064,7 +3064,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest002, TestSiz
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res =
             CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest002 FAILED";
@@ -3133,7 +3133,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskStateTest005, TestSiz
         EXPECT_CALL(*serviceProxy_, GetDowngradeDownloadTaskState(_, _)).WillOnce(Return(E_INVAL_ARG));
         int32_t res =
             CloudSyncManagerImpl::GetInstance().GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
-        EXPECT_EQ(res, E_INVAL_ARG);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskStateTest005 FAILED";
@@ -3694,5 +3694,66 @@ HWTEST_F(CloudSyncManagerImplTest, StartTransferTest008, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "StartTransferTest008 End";
 }
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskErrTest001
+ * @tc.desc: Verify the GetDowngradeDownloadTaskErr function with E_PERMISSION_DENIED in set
+ * @tc.type: FUNC
+ * @tc.require: issueTDD002
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskErrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest001 Start";
+    try {
+        int32_t result = E_PERMISSION_DENIED;
+        int32_t res = GetDowngradeDownloadTaskErr(result);
+        EXPECT_EQ(res, E_PERMISSION_DENIED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest001 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskErrTest002
+ * @tc.desc: Verify the GetDowngradeDownloadTaskErr function with E_PERMISSION_SYS in set
+ * @tc.type: FUNC
+ * @tc.require: issueTDD002
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskErrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest002 Start";
+    try {
+        int32_t result = E_PERMISSION_SYS;
+        int32_t res = GetDowngradeDownloadTaskErr(result);
+        EXPECT_EQ(res, E_PERMISSION_SYS);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest002 End";
+}
+
+/**
+ * @tc.name: GetDowngradeDownloadTaskErrTest003
+ * @tc.desc: Verify the GetDowngradeDownloadTaskErr function with error code not in set
+ * @tc.type: FUNC
+ * @tc.require: issueTDD002
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetDowngradeDownloadTaskErrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest003 Start";
+    try {
+        int32_t result = E_SA_LOAD_FAILED;
+        int32_t res = GetDowngradeDownloadTaskErr(result);
+        EXPECT_EQ(res, E_AGAIN);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetDowngradeDownloadTaskErrTest003 End";
+}
+
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

@@ -30,6 +30,7 @@
 #include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
+#include <unordered_set>
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -47,6 +48,10 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
     static CloudSyncManagerImpl instance;
     return instance;
 }
+
+static const std::unordered_set<int32_t> errForGetDownloadTaskState = {
+    E_PERMISSION_DENIED, E_PERMISSION_SYSTEM, E_INVAL_PARAM, E_AGAIN,
+    E_PERMISSION, E_PERMISSION_SYS, E_INVALID_ARGUMENT, E_TRY_AGAIN };
 
 int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
 {
@@ -1253,17 +1258,29 @@ void CloudSyncManagerImpl::SetStartSyncPending()
     startSyncPending_ = false;
 }
 
+static int32_t GetDowngradeDownloadTaskErr(int32_t result)
+{
+    LOGE("Get downgrade download task state failed, errno : %{public}d", result);
+    if (errForGetDownloadTaskState.find(result) != errForGetDownloadTaskState.end()) {
+        return result;
+    }
+    return E_AGAIN;
+}
+
 int32_t CloudSyncManagerImpl::GetDowngradeDownloadTaskState(const std::vector<std::string> &bundleNames,
     std::vector<DowngradeProgress> &downgradeProgressList)
 {
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetDowngradeDownloadTaskState");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->GetDowngradeDownloadTaskState(bundleNames, downgradeProgressList);
+    if (ret != E_OK) {
+        return GetDowngradeDownloadTaskErr(ret);
+    }
     return ret;
 }
 
