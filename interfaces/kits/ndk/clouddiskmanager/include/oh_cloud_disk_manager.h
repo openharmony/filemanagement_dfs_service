@@ -38,8 +38,9 @@
 #ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
 #define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_NDK_H
 
-#include <cstddef>
-#include <cstdint>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "cloud_disk_error_code.h"
 
