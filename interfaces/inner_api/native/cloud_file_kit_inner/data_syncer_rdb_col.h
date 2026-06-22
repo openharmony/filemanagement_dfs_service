@@ -78,11 +78,12 @@ const std::string EL1_CLOUDFILE_DIR = "/data/service/el1/public/database/CloudFi
 const std::string DATA_SYNCER_DB = "DataSyncers.db";
 const std::string DATA_SYNCER_SRC_PATH = "/data/service/el1/public/cloudfile/rdb/DataSyncers.db";
 
-const int32_t CLOUD_DISK_RDB_VERSION = 4;
+const int32_t CLOUD_DISK_RDB_VERSION = 5;
 enum {
     VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX = 2,
     VERSION_ADD_ERROR_TYPE = 3,
-    VERSION_ADD_TOTAL_DOWNLOAD_SIZE = 3,
+    // 版本4因错误设置被废弃
+    VERSION_ADD_TOTAL_DOWNLOAD_SIZE = 5,
 };
 } // namespace CloudSync
 } // namespace FileManagement
