@@ -2092,4 +2092,346 @@ HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "RenameNewTest002 End";
 }
+
+/**
+ * @tc.name: HandleCloudOpenSuccessTest001
+ * @tc.desc: Verify HandleCloudOpenSuccess when fileType is FILE_TYPE_CONTENT
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudOpenSuccessTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest001 Start";
+    try {
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "testCloudId";
+        inoPtr->bundleName = "com.example.test";
+
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_CONTENT;
+        auto metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        auto filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = HandleCloudOpenSuccess(fi, data, inoPtr, cloudOpenParams);
+
+        EXPECT_EQ(ret, EOK);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_CLOUD);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest001 End";
+}
+
+/**
+ * @tc.name: HandleCloudOpenSuccessTest002
+ * @tc.desc: Verify HandleCloudOpenSuccess when fileType is FILE_TYPE_THUMBNAIL (base dir not exist)
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudOpenSuccessTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest002 Start";
+    try {
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "testCloudId";
+        inoPtr->bundleName = "com.example.test";
+
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_THUMBNAIL;
+        auto metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        auto filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = HandleCloudOpenSuccess(fi, data, inoPtr, cloudOpenParams);
+
+        EXPECT_NE(ret, EOK);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest002 End";
+}
+
+/**
+ * @tc.name: HandleCloudOpenSuccessTest003
+ * @tc.desc: Verify HandleCloudOpenSuccess when fileType is FILE_TYPE_LCD (base dir not exist)
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudOpenSuccessTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest003 Start";
+    try {
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 100;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "testCloudId";
+        inoPtr->bundleName = "com.example.test";
+
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_LCD;
+        auto metaFile = make_shared<CloudDiskMetaFile>(0, "com.example.test", "123");
+        auto filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = HandleCloudOpenSuccess(fi, data, inoPtr, cloudOpenParams);
+
+        EXPECT_NE(ret, EOK);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_UNKNOWN);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest003 End";
+}
+
+/**
+ * @tc.name: HandleCloudOpenSuccessTest004
+ * @tc.desc: Verify HandleCloudOpenSuccess when fileType is FILE_TYPE_CONTENT with empty cloudId
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, HandleCloudOpenSuccessTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest004 Start";
+    try {
+        struct fuse_file_info *fi = new struct fuse_file_info;
+        struct CloudDiskFuseData *data = new CloudDiskFuseData;
+        data->userId = 0;
+        auto inoPtr = make_shared<CloudDiskInode>();
+        inoPtr->cloudId = "";
+        inoPtr->bundleName = "";
+
+        MetaBase metaBase;
+        metaBase.fileType = FILE_TYPE_CONTENT;
+        auto metaFile = make_shared<CloudDiskMetaFile>(0, "", "");
+        auto filePtr = make_shared<CloudDiskFile>();
+        CloudOpenParams cloudOpenParams = {metaBase, metaFile, filePtr};
+
+        auto ret = HandleCloudOpenSuccess(fi, data, inoPtr, cloudOpenParams);
+
+        EXPECT_EQ(ret, EOK);
+        EXPECT_EQ(filePtr->type, CLOUD_DISK_FILE_TYPE_CLOUD);
+        delete fi;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCloudOpenSuccessTest004 End";
+}
+/**
+ * @tc.name: CheckBucketPathTest001
+ * @tc.desc: Verify CheckBucketPath when base directory does not exist
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CheckBucketPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckBucketPathTest001 Start";
+    try {
+        string cloudId = "testCloudId";
+        string bundleName = "com.example.test";
+        int32_t userId = 100;
+        string tmpPath = CloudFileUtils::GetLocalDKCachePath(cloudId, bundleName, userId);
+
+        auto ret = CheckBucketPath(cloudId, bundleName, userId, tmpPath);
+
+        EXPECT_NE(ret, EOK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckBucketPathTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckBucketPathTest001 End";
+}
+
+/**
+ * @tc.name: CheckBucketPathTest002
+ * @tc.desc: Verify CheckBucketPath with edge case params (userId=0, empty strings)
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CheckBucketPathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckBucketPathTest002 Start";
+    try {
+        string cloudId = "";
+        string bundleName = "";
+        int32_t userId = 0;
+        string tmpPath = CloudFileUtils::GetLocalDKCachePath(cloudId, bundleName, userId);
+
+        auto ret = CheckBucketPath(cloudId, bundleName, userId, tmpPath);
+
+        EXPECT_NE(ret, EOK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckBucketPathTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckBucketPathTest002 End";
+}
+
+/**
+ * @tc.name: CheckBucketPathTest003
+ * @tc.desc: Verify CheckBucketPath with different cloudId and bundleName
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, CheckBucketPathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckBucketPathTest003 Start";
+    try {
+        string cloudId = "anotherCloudId_12345";
+        string bundleName = "com.another.test.bundle";
+        int32_t userId = 200;
+        string tmpPath = CloudFileUtils::GetLocalDKCachePath(cloudId, bundleName, userId);
+
+        auto ret = CheckBucketPath(cloudId, bundleName, userId, tmpPath);
+
+        EXPECT_NE(ret, EOK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckBucketPathTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CheckBucketPathTest003 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest001
+ * @tc.desc: Verify GetFileOpenFlags with O_RDONLY (no flags)
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest001 Start";
+    try {
+        int32_t fileFlags = 0;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDONLY));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest001 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest002
+ * @tc.desc: Verify GetFileOpenFlags converts O_WRONLY to O_RDWR
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest002 Start";
+    try {
+        int32_t fileFlags = O_WRONLY;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDWR));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest002 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest003
+ * @tc.desc: Verify GetFileOpenFlags preserves O_RDWR
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest003 Start";
+    try {
+        int32_t fileFlags = O_RDWR;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDWR));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest003 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest004
+ * @tc.desc: Verify GetFileOpenFlags strips O_APPEND flag
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest004 Start";
+    try {
+        int32_t fileFlags = O_RDWR | O_APPEND;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDWR));
+        EXPECT_FALSE(ret & O_APPEND);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest004 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest005
+ * @tc.desc: Verify GetFileOpenFlags strips O_DIRECT flag
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest005 Start";
+    try {
+        int32_t fileFlags = O_RDWR | O_DIRECT;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDWR));
+        EXPECT_FALSE(ret & O_DIRECT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest005 End";
+}
+
+/**
+ * @tc.name: GetFileOpenFlagsTest006
+ * @tc.desc: Verify GetFileOpenFlags handles combined O_WRONLY, O_APPEND, O_DIRECT
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest006 Start";
+    try {
+        int32_t fileFlags = O_WRONLY | O_APPEND | O_DIRECT;
+        auto ret = GetFileOpenFlags(fileFlags);
+        EXPECT_EQ(ret, static_cast<unsigned int>(O_RDWR));
+        EXPECT_FALSE(ret & O_APPEND);
+        EXPECT_FALSE(ret & O_DIRECT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileOpenFlagsTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileOpenFlagsTest006 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
