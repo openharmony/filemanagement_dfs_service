@@ -528,7 +528,7 @@ ani_ref CloudSyncManagerAni::GetDowngradeDownloadTaskState(ani_env *env, ani_cla
 {
     auto [ret, bundleNameInputArray] = ANIUtils::AniToStringArray(env, bundleNames);
     if (!ret) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
 
@@ -544,7 +544,7 @@ ani_ref CloudSyncManagerAni::GetDowngradeDownloadTaskState(ani_env *env, ani_cla
     ani_object result = nullptr;
     if (CreateDowngradeProgressArray(env, downgradeProgressList, result) != ANI_OK) {
         LOGE("create DowngradeProgress array failed");
-        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
 
