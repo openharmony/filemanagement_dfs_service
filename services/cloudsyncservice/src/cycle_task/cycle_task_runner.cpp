@@ -24,6 +24,7 @@
 #include "result_set.h"
 #include "tasks/database_backup_task.h"
 #include "tasks/database_supplement_task.h"
+#include "tasks/dfs_space_report_task.h"
 #include "tasks/optimize_cache_task.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
@@ -80,6 +81,7 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.emplace_back(std::make_shared<PeriodicCleanTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<OptimizeCacheTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
+    cycleTasks_.emplace_back(std::make_shared<DfsSpaceReportTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
     cycleTasks_.emplace_back(std::make_shared<DatabaseBackupTask>(dataSyncManager_));
