@@ -42,6 +42,7 @@ config("optimize-size") {
 }
 
 ohos_shared_library("clouddiskservice_kit_inner") {
+  version_script = "clouddiskservice_kit_inner.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -50,6 +51,7 @@ ohos_shared_library("clouddiskservice_kit_inner") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   include_dirs = [
@@ -96,6 +98,69 @@ ohos_shared_library("clouddiskservice_kit_inner") {
     "${services_path}/clouddiskservice:libcloud_disk_service_proxy",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+  ]
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("clouddiskservice_kit_inner_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+  include_dirs = [
+    "${distributedfile_path}/utils/clouddiskservice/include",
+  ]
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_manager.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUDDISKSERVICE_API\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE "]
+  }
+
+  configs += [ ":private_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/clouddiskservice:cloud_disk_service_public_config",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  deps = [
+    "${services_path}/clouddiskservice:libcloud_disk_service_proxy",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   part_name = "dfs_service"

@@ -15,6 +15,18 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+config("optimize-size") {
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 config("ani_config") {
   include_dirs = [
     "include",
@@ -26,6 +38,7 @@ config("ani_config") {
 ohos_shared_library("cloud_sync_ani") {
   shlib_type = "ani"
   public_configs = [ ":ani_config" ]
+  configs = [ ":optimize-size" ]
   sources = [
     "${interfaces_js_path}/ani/ani_helper/src/ani_utils.cpp",
     "${interfaces_js_path}/ani/ani_helper/src/error_handler.cpp",
@@ -56,6 +69,7 @@ ohos_shared_library("cloud_sync_ani") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   deps = [

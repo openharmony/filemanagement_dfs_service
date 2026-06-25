@@ -27,6 +27,7 @@ config("optimize-size") {
 }
 
 ohos_shared_library("cloudsync") {
+  shlib_type = "napi"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -35,6 +36,7 @@ ohos_shared_library("cloudsync") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [

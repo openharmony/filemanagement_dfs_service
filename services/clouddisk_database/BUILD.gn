@@ -41,6 +41,7 @@ config("optimize-size") {
 }
 
 ohos_shared_library("clouddisk_database") {
+  version_script = "clouddisk_database.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -49,6 +50,7 @@ ohos_shared_library("clouddisk_database") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -99,7 +101,6 @@ ohos_shared_library("clouddisk_database") {
     "relational_store:native_rdb",
   ]
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

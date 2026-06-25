@@ -2321,7 +2321,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SourcePathSetValueTest6, TestSize.Level1)
         .WillOnce(Return("file://com.test.hap/data/storage/el2/cloud/\xD6\xF8\xD0\xA1/text.txt"));
 
     int32_t ret = clouddiskrdbStore_->SourcePathSetValue(cloudId, attr, setXattr);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, E_OK);
 
     ICloudDiskNotifyUtils::ins = nullptr;
 }

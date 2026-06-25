@@ -28,8 +28,8 @@ ohos_unittest("cloud_file_kit_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

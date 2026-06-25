@@ -73,9 +73,9 @@ ohos_unittest("data_syncer_rdb_store_static_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -113,7 +113,7 @@ ohos_unittest("sync_state_manager_test") {
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
 
   external_deps = [
     "c_utils:utils",

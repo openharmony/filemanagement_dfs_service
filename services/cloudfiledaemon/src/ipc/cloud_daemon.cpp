@@ -66,17 +66,19 @@ CloudDaemon::CloudDaemon(int32_t saID, bool runOnCreate) : SystemAbility(saID, r
     accountStatusListener_ = make_shared<AccountStatusListener>();
 }
 
-void CloudDaemon::PublishSA()
+bool CloudDaemon::PublishSA()
 {
     LOGI("Begin to init");
     if (!registerToService_) {
         bool ret = SystemAbility::Publish(this);
         if (!ret) {
-            throw runtime_error("Failed to publish the daemon");
+            LOGE("Failed to publish the daemon");
+            return false;
         }
         registerToService_ = true;
     }
     LOGI("Init finished successfully");
+    return true;
 }
 
 static bool CheckDeviceInLinux()
@@ -118,16 +120,14 @@ void CloudDaemon::OnStart()
         return;
     }
 
-    try {
-        PublishSA();
-        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-        AddSystemAbilityListener(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
-        mode_t mode = 002;
-        umask(mode);
-        ModSysParam();
-    } catch (const exception &e) {
-        LOGE("%{public}s", e.what());
+    if (!PublishSA()) {
+        return;
     }
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
+    mode_t mode = 002;
+    umask(mode);
+    ModSysParam();
 
     state_ = ServiceRunningState::STATE_RUNNING;
     /* load cloud file ext plugin */

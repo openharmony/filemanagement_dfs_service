@@ -567,7 +567,7 @@ ohos_unittest("cloud_disk_service_logfile_test_new") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -615,7 +615,7 @@ ohos_unittest("cloud_disk_service_metafile_test_new") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -657,7 +657,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test_new") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -693,7 +693,7 @@ ohos_unittest("convertor_test_new") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -726,7 +726,7 @@ ohos_unittest("uuid_helper_test_new") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [

@@ -55,6 +55,7 @@ idl_gen_interface("cloud_disk_service") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -74,6 +75,7 @@ ohos_shared_library("clouddiskservice_sa") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   include_dirs = [
@@ -146,7 +148,6 @@ ohos_shared_library("clouddiskservice_sa") {
     external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
   }
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

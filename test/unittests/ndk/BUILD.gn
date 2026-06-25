@@ -28,8 +28,8 @@ ohos_unittest("cloud_disk_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [

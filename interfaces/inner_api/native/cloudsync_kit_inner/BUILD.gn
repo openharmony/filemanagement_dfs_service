@@ -42,6 +42,7 @@ config("optimize-size") {
 }
 
 ohos_shared_library("cloudsync_kit_inner") {
+  version_script = "cloudsync_kit_inner.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -50,6 +51,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -103,14 +105,15 @@ ohos_shared_library("cloudsync_kit_inner") {
   deps = [
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
   ]
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
 
 ohos_shared_library("cloudsync_asset_kit_inner") {
+  version_script = "cloudsync_asset_kit_inner.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -119,6 +122,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -157,13 +161,13 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "${utils_path}:libdistributedfileutils_lite",
   ]
 
-  use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
 
 ohos_shared_library("cloudsync_kit_inner_lite") {
+  version_script = "cloudsync_kit_inner_lite.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -207,8 +211,180 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
     "${utils_path}:libdistributedfileutils_lite",
   ]
 
-  use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("cloudsync_kit_inner_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_optimize_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_upload_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_upload_callback_client_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_upload_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/downgrade_download_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/utils/preference/src/cloud_pref_impl.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${utils_path}/system/src/account_utils.cpp",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUDSYNC_API\"",
+  ]
+
+  configs += [ ":private_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+    "preferences:native_preferences",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+  ]
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("cloudsync_asset_kit_inner_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004309",
+    "LOG_TAG=\"CLOUD_ASSET_API\"",
+  ]
+
+  configs += [ ":private_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfileutils_lite_static",
+  ]
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("cloudsync_kit_inner_lite_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/service_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  configs += [ ":private_config" ]
+  public_configs = [
+    ":public_config",
+    "${services_path}/cloudsyncservice:cloud_sync_service_public_config",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
+    "${utils_path}:libdistributedfileutils_lite_static",
+  ]
+
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

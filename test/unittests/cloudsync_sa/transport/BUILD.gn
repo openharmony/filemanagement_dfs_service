@@ -18,7 +18,6 @@ ohos_unittest("cloud_sync_service_transport_manager_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/mock/cloudsyncservice/transport/softbus_adapter_mock.cpp",
     "${distributedfile_path}/test/mock/cloudsyncservice/transport/softbus_session_mock.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
@@ -48,10 +47,10 @@ ohos_unittest("cloud_sync_service_transport_manager_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -103,7 +102,6 @@ ohos_unittest("cloud_sync_service_transport_softbus_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
@@ -131,10 +129,10 @@ ohos_unittest("cloud_sync_service_transport_softbus_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

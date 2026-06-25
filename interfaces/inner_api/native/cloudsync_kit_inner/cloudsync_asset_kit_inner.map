@@ -1,0 +1,45 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    extern "C++" {
+      # CloudSync namespace - Data classes (Marshalling/Unmarshalling)
+      *OHOS::FileManagement::CloudSync::AssetInfoObj*;
+      *OHOS::FileManagement::CloudSync::CleanFileInfoObj*;
+      *OHOS::FileManagement::CloudSync::CleanOptions*;
+      *OHOS::FileManagement::CloudSync::CloudFileInfo*;
+      *OHOS::FileManagement::CloudSync::DentryFileInfoObj*;
+      *OHOS::FileManagement::CloudSync::DowngradeProgress*;
+      *OHOS::FileManagement::CloudSync::DowngradeTfProgress*;
+      *OHOS::FileManagement::CloudSync::DownloadProgressObj*;
+      *OHOS::FileManagement::CloudSync::HistoryVersion*;
+      *OHOS::FileManagement::CloudSync::LocalFilePresentStatus*;
+      *OHOS::FileManagement::CloudSync::OptimizeSpaceOptions*;
+      *OHOS::FileManagement::CloudSync::SwitchDataObj*;
+      *OHOS::FileManagement::CloudSync::UploadProgressObj*;
+      *OHOS::FileManagement::CloudSync::XattrResult*;
+
+      # CloudSync namespace - Service classes
+      *OHOS::FileManagement::CloudSync::ServiceProxy*;
+      *OHOS::FileManagement::CloudSync::CloudSyncServiceProxy*;
+      *OHOS::FileManagement::CloudSync::CloudSyncAssetManager*;
+      *OHOS::FileManagement::CloudSync::CloudSyncAssetManagerImpl*;
+      *OHOS::FileManagement::CloudSync::CloudDownloadUriManager*;
+      *OHOS::FileManagement::CloudSync::DownloadAssetCallbackClient*;
+      *OHOS::FileManagement::CloudSync::DownloadAssetCallbackStub*;
+    };
+
+  local:
+    *;
+};

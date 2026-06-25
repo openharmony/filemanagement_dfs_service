@@ -1,0 +1,61 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    extern "C++" {
+      # CloudDisk classes
+      *OHOS::FileManagement::CloudDisk::CloudFileUtils*;
+      *OHOS::FileManagement::CloudDiskMetaFile*;
+      *OHOS::FileManagement::MetaFile*;
+
+      # CloudSync classes
+      *OHOS::FileManagement::CloudSync::CloudPrefImpl*;
+
+      # CloudFile classes
+      *OHOS::FileManagement::CloudFile::PluginLoader*;
+      *OHOS::FileManagement::CloudFile::FfrtTimer*;
+
+      # FileManagement classes
+      *OHOS::FileManagement::DfsuAccessTokenHelper*;
+      *OHOS::FileManagement::DfsuTimer*;
+      *OHOS::FileManagement::DfsuMemoryGuard*;
+      *OHOS::FileManagement::XCollieHelper*;
+
+      # CloudSync functions (SlowDown, ResetCpu)
+      *OHOS::FileManagement::CloudSync::SlowDown*;
+      *OHOS::FileManagement::CloudSync::ResetCpu*;
+
+      # Free functions (grouped by prefix)
+      *OHOS::FileManagement::Convert2ErrNum*;
+      *OHOS::FileManagement::Convert2JsErrNum*;
+      *OHOS::FileManagement::Convert2JsErrMsg*;
+      *OHOS::FileManagement::Convert2MetricsIndex*;
+      *OHOS::FileManagement::LibN::GetPromiseOrCallBackWork*;
+      *OHOS::GetAnonyString*;
+      *OHOS::GetFileNameFromFullPath*;
+      *OHOS::Storage::DistributedFile::Utils::RadarDots*;
+      *OHOS::Storage::DistributedFile::Utils::ForceCreate*;
+      *OHOS::Storage::DistributedFile::Utils::ForceRemove*;
+      *OHOS::Storage::DistributedFile::Utils::IsFile*;
+      *OHOS::Storage::DistributedFile::Utils::IsFolder*;
+      *OHOS::Storage::DistributedFile::Utils::GetFilePath*;
+      *OHOS::Storage::DistributedFile::Utils::ChangeOwnerRecursive*;
+      *OHOS::Storage::DistributedFile::Utils::IsInt32*;
+      *OHOS::Storage::DistributedFile::Utils::SysEventWrite*;
+      *OHOS::Storage::DistributedFile::Utils::SysEventFileParse*;
+    };
+
+  local:
+    *;
+};

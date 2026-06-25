@@ -21,8 +21,8 @@ ohos_unittest("dfs_error_test") {
   include_dirs = [ "${utils_path}/log/include" ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -44,8 +44,8 @@ ohos_unittest("utils_log_test") {
   include_dirs = [ "${utils_path}/log/include" ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

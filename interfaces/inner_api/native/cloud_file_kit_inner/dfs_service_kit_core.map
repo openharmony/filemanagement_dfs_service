@@ -1,0 +1,61 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    # C++ API symbols using extern "C++" block with wildcards
+    extern "C++" {
+      # CloudFileKit API
+      *OHOS::FileManagement::CloudFile::CloudFileKit*;
+      
+      # CloudAssetReadSession API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudAssetReadSession*;
+      
+      # CloudAssetsDownloader API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudAssetsDownloader*;
+      
+      # CloudDatabase API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudDatabase*;
+      
+      # CloudSyncHelper API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudSyncHelper*;
+      
+      # DataSyncManager API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::DataSyncManager*;
+      
+      # CloudUserInfo (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudUserInfo*;
+      
+      # CloudFileFaultEvent (used by clouddisk_database)
+      *OHOS::FileManagement::CloudFile::CloudFileFaultEvent*;
+      
+      # SettingsDataManager (used by clouddisk_database and cloudfiledaemon)
+      *OHOS::FileManagement::CloudSync::SettingsDataManager*;
+      
+      # DataSyncerRdbStore API (used by clouddisk_database)
+      *OHOS::FileManagement::CloudSync::DataSyncerRdbStore*;
+      
+      # CloudSync namespace classes (used by cloudsync_sa)
+      *OHOS::FileManagement::CloudSync::CloudStatus*;
+      *OHOS::FileManagement::CloudSync::ScreenStatus*;
+      *OHOS::FileManagement::CloudSync::BatteryStatus*;
+      *OHOS::FileManagement::CloudSync::CloudPrefImpl*;
+      *OHOS::FileManagement::CloudSync::NetworkStatus*;
+      *OHOS::FileManagement::CloudSync::SystemLoadStatus*;
+      *OHOS::FileManagement::CloudSync::TaskStateManager*;
+      *OHOS::FileManagement::CloudSync::BundleNameUserInfo*;
+    };
+
+  local:
+    *;
+};

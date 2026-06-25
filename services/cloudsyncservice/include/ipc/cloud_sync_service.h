@@ -147,7 +147,7 @@ private:
     void OnStart(const SystemAbilityOnDemandReason &startReason) override;
     void OnActive(const SystemAbilityOnDemandReason &startReason) override;
     void OnStop() override;
-    void PublishSA();
+    bool PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     void PreInit();
     void Init();

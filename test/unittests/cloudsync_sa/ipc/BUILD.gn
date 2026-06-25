@@ -64,6 +64,7 @@ ohos_unittest("cloud_sync_service_test") {
       [ "${services_path}/cloudsyncservice:cloud_sync_service_public_config" ]
   sources = [
     "${clouddisk_database_path}/src/file_column.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/accesstoken_kit_mock.cpp",
@@ -100,6 +101,8 @@ ohos_unittest("cloud_sync_service_test") {
   include_dirs = [
     "${clouddisk_database_path}/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner",
     "${utils_path}/dentry/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
@@ -210,10 +213,10 @@ ohos_unittest("download_asset_callback_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -251,10 +254,10 @@ ohos_unittest("download_asset_callback_proxy_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
