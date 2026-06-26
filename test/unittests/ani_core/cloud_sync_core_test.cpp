@@ -266,7 +266,9 @@ HWTEST_F(CloudSyncCoreTest, DoStopTest1, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest1, TestSize.Level1)
 {
     string filePath = "file://com.ohos.camera/test/test.txt";
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*sys, getxattr(_, _, _, _))
+        .Times(2)
+        .WillRepeatedly(Return(-1));
     auto ret = CloudSyncCore::DoGetFileSyncState(filePath);
     EXPECT_FALSE(ret.IsSuccess());
     const auto &err = ret.GetError();
@@ -297,7 +299,9 @@ HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest2, TestSize.Level1)
 HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
 {
     string filePath = "file://com.ohos.camera/test/test.txt";
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*sys, getxattr(_, _, _, _))
+        .Times(2)
+        .WillRepeatedly(Return(-1));
     auto ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
 #if CLOUD_ADAPTER_ENABLED
     EXPECT_TRUE(ret.IsSuccess());
@@ -305,7 +309,7 @@ HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
 #endif
 
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(-1));
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).Times(4).WillOnce(Return(0)).WillOnce(Return(-1)).WillOnce(Return(0)).WillOnce(Return(-1));
     ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
 #if CLOUD_ADAPTER_ENABLED
     EXPECT_TRUE(ret.IsSuccess());
