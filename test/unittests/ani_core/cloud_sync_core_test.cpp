@@ -309,7 +309,8 @@ HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
     EXPECT_FALSE(ret.IsSuccess());
 #endif
 
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).Times(4).WillOnce(Return(0)).WillOnce(Return(-1)).WillOnce(Return(0)).WillOnce(Return(-1));
+    EXPECT_CALL(*sys, getxattr(_, _, _, _)).Times(4)
+      .WillOnce(Return(0)).WillOnce(Return(-1)).WillOnce(Return(0)).WillOnce(Return(-1));
     ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
 #if CLOUD_ADAPTER_ENABLED
     EXPECT_TRUE(ret.IsSuccess());
