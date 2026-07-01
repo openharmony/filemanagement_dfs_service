@@ -150,6 +150,7 @@ ohos_shared_library("cloudsync_sa") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/utils/system/src/account_utils.cpp",
+    "src/decompress_config_manager.cpp",
     "src/ipc/account_status_listener.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
@@ -195,6 +196,7 @@ ohos_shared_library("cloudsync_sa") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libfuse:libfuse",
     "memmgr:memmgrclient",
     "netmanager_base:net_conn_manager_if",
@@ -228,6 +230,11 @@ ohos_shared_library("cloudsync_sa") {
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
+  
+  deps += [
+    "${distributedfile_path}/services:decompress_unsupported_list",
+    "${distributedfile_path}/services:decompress_system_feature",
+  ]
 }
 
 ohos_static_library("cloudsync_sa_static") {
@@ -279,6 +286,7 @@ ohos_static_library("cloudsync_sa_static") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/utils/system/src/account_utils.cpp",
+    "src/decompress_config_manager.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
@@ -324,6 +332,7 @@ ohos_static_library("cloudsync_sa_static") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libfuse:libfuse",
     "memmgr:memmgrclient",
     "netmanager_base:net_conn_manager_if",

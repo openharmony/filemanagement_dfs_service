@@ -253,6 +253,10 @@ public:
     virtual int32_t PauseUpload(const std::string &uri) = 0;
 
     virtual int32_t ResumeUpload(const std::string &uri) = 0;
+
+    virtual int32_t GetDecompressUnsupportedList(std::vector<std::string> &unsupportedList) = 0;
+
+    virtual int32_t GetDecompressSystemFeature(bool &systemFeature) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

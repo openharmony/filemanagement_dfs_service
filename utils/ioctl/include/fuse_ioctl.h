@@ -24,6 +24,9 @@ namespace CloudFile {
 static const unsigned int HMDFS_IOC = 0xf2;
 static const unsigned int HMDFS_DAEMON_IOC_MASK = 0x80;
 
+#define HMFS_IOCTL_MAGIC 0xf5
+#define HMFS_DEDUP_IOC_BASE 50
+
 #define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, 0x02, uint32_t)
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 0x06, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 0x08)
@@ -34,6 +37,8 @@ static const unsigned int HMDFS_DAEMON_IOC_MASK = 0x80;
 
 /* New daemon-specific ioctls must be defined with the HMDFS_DAEMON_IOC_MASK for proper handling */
 #define HMDFS_IOC_CLEAN_CACHE_DAEMON _IO(HMDFS_IOC, HMDFS_DAEMON_IOC_MASK + 0x01)
+
+#define HMFS_IOC_PDEDLUP_CREATE _IOW(HMFS_IOCTL_MAGIC, HMFS_DEDUP_IOC_BASE + 8, struct HmfsPdedupCreate)
 
 } // namespace CloudFile
 } // namespace FileManagement

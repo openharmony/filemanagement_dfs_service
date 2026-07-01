@@ -581,6 +581,33 @@ int32_t CloudSyncManagerImpl::ResumeUpload(const std::string &uri)
     return CloudSyncServiceProxy->ResumeUpload(uri);
 }
 
+int32_t CloudSyncManagerImpl::GetDecompressUnsupportedList(std::vector<std::string> &unsupportedList)
+{
+    LOGI("GetDecompressUnsupportedList start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetDecompressUnsupportedList");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->GetDecompressUnsupportedList(unsupportedList);
+    LOGI("GetDecompressUnsupportedList end, ret %{public}d, count %{public}zu", ret, unsupportedList.size());
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::GetDecompressSystemFeature(bool &systemFeature)
+{
+    LOGI("GetDecompressSystemFeature start");
+    auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetDecompressSystemFeature");
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->GetDecompressSystemFeature(systemFeature);
+    LOGI("GetDecompressSystemFeature end, ret %{public}d, feature %{public}s",
+        ret, systemFeature ? "true" : "false");
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::StopDownloadFile(int64_t downloadId, bool needClean)
 {
     LOGI("StopDownloadFile start");

@@ -30,6 +30,7 @@
 #include "data_sync_const.h"
 #include "data_sync_manager.h"
 #include "data_syncer_rdb_store.h"
+#include "decompress_config_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
@@ -1047,6 +1048,29 @@ int32_t CloudSyncService::ResumeUpload(const std::string &uri)
     ret = dataSyncManager_->ResumeUpload(bundleNameUserInfo, uri);
     LOGI("End ResumeUpload, ret: %{public}d", ret);
     return ret;
+}
+
+ErrCode CloudSyncService::GetDecompressUnsupportedList(std::vector<std::string> &unsupportedList)
+{
+    LOGD("Begin GetDecompressUnsupportedList");
+    unsupportedList.clear();
+    
+    auto &manager = DecompressConfigManager::GetInstance();
+    unsupportedList = manager.GetUnsupportedList();
+    
+    LOGD("End GetDecompressUnsupportedList, count: %{public}zu", unsupportedList.size());
+    return E_OK;
+}
+
+ErrCode CloudSyncService::GetDecompressSystemFeature(bool &systemFeature)
+{
+    LOGD("Begin GetDecompressSystemFeature");
+    
+    auto &manager = DecompressConfigManager::GetInstance();
+    systemFeature = manager.GetSystemFeature();
+    
+    LOGD("End GetDecompressSystemFeature, feature: %{public}s", systemFeature ? "true" : "false");
+    return E_OK;
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &uri,

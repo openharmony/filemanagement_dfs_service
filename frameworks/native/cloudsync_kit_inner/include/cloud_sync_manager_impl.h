@@ -112,6 +112,8 @@ public:
         const std::string &localPath) override;
     int32_t PauseUpload(const std::string &uri) override;
     int32_t ResumeUpload(const std::string &uri) override;
+    int32_t GetDecompressUnsupportedList(std::vector<std::string> &unsupportedList) override;
+    int32_t GetDecompressSystemFeature(bool &systemFeature) override;
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
