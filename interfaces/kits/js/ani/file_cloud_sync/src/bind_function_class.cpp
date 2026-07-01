@@ -372,6 +372,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     status = BindContextOnCloudFileCacheForWatch(env);
 #endif
     if (status != ANI_OK) {
+        LOGE("BindContextOnCloudFileCache status %{public}d", status);
         return status;
     }
     status = BindContextOnFileSync(env);
