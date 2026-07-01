@@ -163,7 +163,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     }
     napi_value jsCallback = nullptr;
     status = napi_get_reference_value(env, ref, &jsCallback);
-    if (status != napi_ok) {
+    if ((status != napi_ok) || (jsCallback == nullptr)) {
         LOGE("Get reference value failed, status: %{public}d, ref: %{public}d", status, (ref == nullptr));
         napi_close_handle_scope(env, scope);
         return;
