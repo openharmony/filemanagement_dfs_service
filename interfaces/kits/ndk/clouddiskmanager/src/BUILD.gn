@@ -14,14 +14,29 @@
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+config("optimize-size") {
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 ohos_shared_library("ohclouddiskmanager") {
+  shlib_type = "napi"
   branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 

@@ -69,13 +69,15 @@ CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbili
 {
 }
 
-void CloudSyncService::PublishSA()
+bool CloudSyncService::PublishSA()
 {
     LOGI("Begin to init");
     if (!SystemAbility::Publish(this)) {
-        throw runtime_error("Failed to publish the daemon");
+        LOGE("Failed to publish the daemon");
+        return false;
     }
     LOGI("Init finished successfully");
+    return true;
 }
 
 void CloudSyncService::PreInit()
@@ -171,17 +173,15 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
     PreInit();
-    try {
-        PublishSA();
-        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-        AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
-        AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
-        AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
-        AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
-        umask(DEFAULT_UMASK);
-    } catch (const exception &e) {
-        LOGE("%{public}s", e.what());
+    if (!PublishSA()) {
+        return;
     }
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
+    AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
+    AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
+    umask(DEFAULT_UMASK);
     LOGI("Start service successfully");
     Init();
     LOGI("init service successfully");

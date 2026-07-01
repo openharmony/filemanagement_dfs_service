@@ -38,11 +38,11 @@ ohos_unittest("clouddisk_rdb_utils_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -215,9 +215,9 @@ ohos_unittest("clouddisk_rdbstore_static_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfiledentry",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfiledentry_static",
   ]
 
   external_deps = [
@@ -299,12 +299,12 @@ ohos_unittest("clouddisk_notify_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -391,12 +391,12 @@ ohos_unittest("clouddisk_notify_static_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -466,11 +466,11 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -544,12 +544,12 @@ ohos_unittest("clouddisk_sync_helper_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -633,12 +633,12 @@ ohos_unittest("clouddisk_notify_utils_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/cloudsyncservice:cloud_sync_service_proxy",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -702,8 +702,8 @@ ohos_unittest("migration_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

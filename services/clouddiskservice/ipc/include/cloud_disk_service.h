@@ -67,7 +67,7 @@ private:
     ServiceRunningState state_{ServiceRunningState::STATE_NOT_START};
     static sptr<CloudDiskService> instance_;
     bool registerToService_{false};
-    void PublishSA();
+    bool PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     std::shared_ptr<AccountStatusListener> accountStatusListener_ = nullptr;
 };

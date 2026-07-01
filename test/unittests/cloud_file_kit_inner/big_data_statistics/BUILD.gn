@@ -29,8 +29,8 @@ ohos_unittest("gallery_download_file_stat_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -63,8 +63,8 @@ ohos_unittest("cloud_file_fault_event_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -97,7 +97,7 @@ ohos_unittest("cloud_report_cacher_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -130,8 +130,8 @@ ohos_unittest("cloud_disk_download_file_stat_test") {
   ]
  
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
  
   external_deps = [

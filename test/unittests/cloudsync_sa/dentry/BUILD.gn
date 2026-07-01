@@ -126,7 +126,7 @@ ohos_unittest("dentry_meta_file_ext_test") {
     "${utils_path}/dentry/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
 
   external_deps = [
     "c_utils:utils",

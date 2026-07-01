@@ -344,7 +344,7 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, ExtAttributeSetValueTest005, TestSize.Leve
         std::string xattrList = "{}";
 
         int32_t ret = ExtAttributeSetValue(jsonValue, key, value, xattrList);
-        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtAttributeSetValueTest005 failed";

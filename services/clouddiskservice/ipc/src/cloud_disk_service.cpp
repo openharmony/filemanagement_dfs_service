@@ -55,17 +55,19 @@ CloudDiskService::CloudDiskService(int32_t saID, bool runOnCreate) : SystemAbili
 
 CloudDiskService::CloudDiskService() {}
 
-void CloudDiskService::PublishSA()
+bool CloudDiskService::PublishSA()
 {
     LOGI("Begin to init");
     if (!registerToService_) {
         bool ret = SystemAbility::Publish(this);
         if (!ret) {
-            throw runtime_error("Failed to publish the clouddiskservice");
+            LOGE("Failed to publish the clouddiskservice");
+            return false;
         }
         registerToService_ = true;
     }
     LOGI("Init finished successfully");
+    return true;
 }
 
 void CloudDiskService::OnStart()
@@ -96,12 +98,10 @@ void CloudDiskService::OnStart()
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
     }
 
-    try {
-        PublishSA();
-        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-    } catch (const exception &e) {
-        LOGE("%{public}s", e.what());
+    if (!PublishSA()) {
+        return;
     }
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 
     if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
         DiskMonitor::GetInstance().StartMonitor(userId);

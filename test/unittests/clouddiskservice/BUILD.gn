@@ -544,7 +544,7 @@ ohos_unittest("cloud_disk_service_logfile_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -589,7 +589,7 @@ ohos_unittest("cloud_disk_service_metafile_test") {
     "${services_path}/clouddiskservice/utils/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -629,7 +629,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test") {
     "${services_path}/clouddiskservice/utils/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -663,7 +663,7 @@ ohos_unittest("convertor_test") {
     "${services_path}/clouddiskservice/utils/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite_static" ]
 
   external_deps = [
     "googletest:gmock_main",
@@ -694,7 +694,7 @@ ohos_unittest("uuid_helper_test") {
     "${services_path}/clouddiskservice/utils/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite_static" ]
 
   external_deps = [
     "e2fsprogs:libext2_uuid",
@@ -728,7 +728,7 @@ ohos_unittest("cloud_disk_service_callback_stub_test") {
     "${distributedfile_path}/test/mock",
   ]
 
-  deps = [ "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner", ]
+  deps = [ "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner_static", ]
 
   external_deps = [
     "c_utils:utils",

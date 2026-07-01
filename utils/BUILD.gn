@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -69,6 +69,7 @@ config("optimize-size") {
 
 ohos_shared_library("libdistributedfileutils") {
   branch_protector_ret = "pac_ret"
+  version_script = "libdistributedfileutils.map"
   configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
@@ -76,6 +77,7 @@ ohos_shared_library("libdistributedfileutils") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -166,6 +168,7 @@ config("dentry_public_config") {
 }
 
 ohos_shared_library("libdistributedfiledentry") {
+  version_script = "libdistributedfiledentry.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -174,6 +177,7 @@ ohos_shared_library("libdistributedfiledentry") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -232,6 +236,7 @@ config("utils_lite_public_config") {
 
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
+  version_script = "libdistributedfileutils_lite.map"
   configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
@@ -239,6 +244,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -302,5 +308,227 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   part_name = "dfs_service"
   innerapi_tags = [ "platformsdk" ]
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("libdistributedfileutils_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+  sources = [
+    "cloud_disk/src/cloud_file_utils.cpp",
+    "dfx/src/xcollie_helper.cpp",
+    "ffrt/src/ffrt_timer.cpp",
+    "load/src/plugin_loader.cpp",
+    "log/src/dfs_error.cpp",
+    "log/src/utils_log.cpp",
+    "preference/src/cloud_pref_impl.cpp",
+    "system/src/dfsu_access_token_helper.cpp",
+    "system/src/dfsu_fd_guard.cpp",
+    "system/src/dfsu_memory_guard.cpp",
+    "system/src/dfsu_timer.cpp",
+    "system/src/sys_utils.cpp",
+    "system/src/utils_directory.cpp",
+    "work/src/async_work.cpp",
+  ]
+
+  configs += [ "//build/config/compiler:exceptions" ]
+  public_configs = [ ":utils_public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"distributedfile_utils\"",
+  ]
+
+  if (use_musl) {
+    if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
+      defines += [ "CONFIG_USE_JEMALLOC_DFX_INTF" ]
+    }
+  }
+
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:uri_permission_mgr",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "e2fsprogs:libext2_uuid",
+    "ffrt:libffrt",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "json:nlohmann_json_static",
+    "napi:ace_napi",
+    "os_account:libaccountkits",
+    "os_account:os_account_innerkits",
+    "preferences:native_preferences",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "dsoftbus:softbus_client",
+    ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("libdistributedfiledentry_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+
+  sources = [
+    "dentry/src/file_utils.cpp",
+    "dentry/src/meta_file.cpp",
+    "dentry/src/meta_file_clouddisk.cpp",
+    "system/src/utils_directory.cpp",
+  ]
+
+  public_configs = [ ":dentry_public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_static_library("libdistributedfileutils_lite_static") {
+  testonly = true
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+
+  sources = [
+    "cloud_disk/src/cloud_file_utils.cpp",
+    "dentry/src/file_utils.cpp",
+    "dentry/src/meta_file.cpp",
+    "dentry/src/meta_file_clouddisk.cpp",
+    "dfx/src/xcollie_helper.cpp",
+    "ffrt/src/ffrt_timer.cpp",
+    "load/src/plugin_loader.cpp",
+    "log/src/dfs_error.cpp",
+    "log/src/utils_log.cpp",
+    "system/src/dfsu_memory_guard.cpp",
+    "system/src/utils_directory.cpp",
+  ]
+
+  configs += [ "//build/config/compiler:exceptions" ]
+  public_configs = [ ":utils_lite_public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  if (dfs_service_feature_enable_cloud_adapter) {
+    defines += [ "CLOUD_ADAPTER_ENABLED" ]
+  }
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "e2fsprogs:libext2_uuid",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "json:nlohmann_json_static",
+  ]
+
+  if (use_musl) {
+    if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
+      defines += [ "CONFIG_USE_JEMALLOC_DFX_INTF" ]
+    }
+  }
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (dfs_service_feature_enable_distributed_ability) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
+  }
+
+  part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

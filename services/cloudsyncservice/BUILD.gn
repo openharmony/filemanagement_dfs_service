@@ -43,6 +43,7 @@ ohos_source_set("cloud_sync_service_proxy") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -75,6 +76,7 @@ ohos_source_set("cloud_sync_service_stub") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
 
@@ -99,6 +101,7 @@ ohos_source_set("cloud_sync_service_stub") {
 }
 
 ohos_shared_library("cloudsync_sa") {
+  shlib_type = "sa"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   public_configs = [ ":cloud_sync_service_public_config" ]
@@ -108,6 +111,7 @@ ohos_shared_library("cloudsync_sa") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   include_dirs = [
@@ -172,6 +176,7 @@ ohos_shared_library("cloudsync_sa") {
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
@@ -221,7 +226,6 @@ ohos_shared_library("cloudsync_sa") {
     defines += [ "SUPPORT_POWER" ]
   }
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
@@ -235,6 +239,7 @@ ohos_static_library("cloudsync_sa_static") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   include_dirs = [
@@ -359,7 +364,6 @@ ohos_static_library("cloudsync_sa_static") {
     defines += [ "DFS_ENABLE_DISTRIBUTED_ABILITY" ]
   }
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

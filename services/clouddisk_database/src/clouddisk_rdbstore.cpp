@@ -1190,13 +1190,7 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
         jsonObject = nlohmann::json::object();
     }
     jsonObject[SRC_PATH_KEY] = filePath;
-    string attrStr;
-    try {
-        attrStr = jsonObject.dump();
-    } catch (nlohmann::json::type_error& err) {
-        LOGE("failed to dump json object, reason: %{public}s", err.what());
-        return E_INVAL_ARG;
-    }
+    string attrStr = jsonObject.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     setXattr.PutString(FileColumn::ATTRIBUTE, attrStr);
     return E_OK;
 }
@@ -1806,12 +1800,7 @@ static int32_t ExtAttributeSetValue(std::string &jsonValue, const std::string &k
         jsonObj[key] = value;
     }
 
-    try {
-        jsonValue = jsonObj.dump();
-    } catch (nlohmann::json::type_error& err) {
-        LOGE("failed to dump json object, reason: %{public}s", err.what());
-        return E_INVAL_ARG;
-    }
+    jsonValue = jsonObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     return E_OK;
 }
 

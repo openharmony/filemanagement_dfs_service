@@ -28,8 +28,8 @@ ohos_unittest("dfsu_fd_guard_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -67,8 +67,8 @@ ohos_unittest("dfsu_access_token_helper_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -112,8 +112,8 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
 
   deps = [
     "${distributedfile_path}/dfs_utils:libdfsutils",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

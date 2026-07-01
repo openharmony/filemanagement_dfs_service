@@ -55,7 +55,7 @@ private:
     static sptr<CloudDaemon> instance_;
     static std::mutex instanceLock_;
     bool registerToService_ { false };
-    void PublishSA();
+    bool PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     std::shared_ptr<CloudDisk::AccountStatusListener> accountStatusListener_ = nullptr;
     void ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path);

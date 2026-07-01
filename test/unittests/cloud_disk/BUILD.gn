@@ -162,8 +162,11 @@ ohos_unittest("file_operations_cloud_static_test") {
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/inner_api",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/ioctl/include",
+    "${distributedfile_path}/utils/system/include",
     "${services_path}/clouddisk_database/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/src/cloud_disk/",
@@ -202,6 +205,7 @@ ohos_unittest("file_operations_cloud_static_test") {
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = [
@@ -321,10 +325,10 @@ ohos_unittest("file_operations_base_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -386,8 +390,8 @@ ohos_unittest("fuse_operations_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -542,9 +546,9 @@ ohos_unittest("file_operations_helper_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   cflags = [ "--coverage" ]
@@ -697,10 +701,10 @@ ohos_unittest("io_message_listener_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -756,10 +760,10 @@ ohos_unittest("appstate_observer_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [

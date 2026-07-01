@@ -27,7 +27,7 @@ ohos_unittest("cloud_pref_impl_test") {
     "${distributedfile_path}/utils/log/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
 
   external_deps = [
     "googletest:gmock_main",
@@ -64,7 +64,7 @@ ohos_unittest("utils_directory_test") {
     "${utils_path}/log/include",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -98,8 +98,8 @@ ohos_unittest("cloud_file_utils_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -133,8 +133,8 @@ ohos_unittest("plugin_loader_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -164,8 +164,8 @@ ohos_unittest("async_work_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -216,7 +216,7 @@ ohos_unittest("account_utils_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -247,7 +247,7 @@ ohos_unittest("ffrt_timer_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [

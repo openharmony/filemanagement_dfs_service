@@ -161,11 +161,11 @@ ohos_unittest("cloud_daemon_statistic_static_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -229,10 +229,10 @@ ohos_unittest("cloud_daemon_statistic_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -335,10 +335,11 @@ ohos_unittest("cloud_daemon_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -422,11 +423,12 @@ ohos_unittest("cloud_daemon_nomock_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite_static",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -484,9 +486,10 @@ ohos_unittest("cloud_daemon_stub_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -547,11 +550,11 @@ ohos_unittest("fuse_manager_static_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfileutils_lite",
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [
@@ -617,7 +620,7 @@ ohos_unittest("setting_data_helper_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils_lite",
+    "${utils_path}:libdistributedfileutils_lite_static",
   ]
 
   external_deps = [

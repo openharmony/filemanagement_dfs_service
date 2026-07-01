@@ -1,0 +1,64 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    extern "C++" {
+      # CloudSync classes (specific classes in cloudsync_kit_inner)
+      *OHOS::FileManagement::CloudSync::CloudSyncManager*;
+      *OHOS::FileManagement::CloudSync::CloudSyncCallback*;
+      *OHOS::FileManagement::CloudSync::CloudSyncAssetManager*;
+      *OHOS::FileManagement::CloudSync::SvcDeathRecipient*;
+      
+      # Download/Upload callbacks
+      *OHOS::FileManagement::CloudSync::CloudDownloadCallback*;
+      *OHOS::FileManagement::CloudSync::CloudUploadCallback*;
+      *OHOS::FileManagement::CloudSync::CloudOptimizeCallback*;
+      *OHOS::FileManagement::CloudSync::DownloadAssetCallback*;
+      *OHOS::FileManagement::CloudSync::DowngradeDlCallback*;
+      *OHOS::FileManagement::CloudSync::DowngradeDownloadCallbackStub*;
+      *OHOS::FileManagement::CloudSync::DowngradeDownloadCallbackClient*;
+      
+      # Interface callbacks (IPC)
+      *OHOS::FileManagement::CloudSync::ICloudDownloadCallback*;
+      *OHOS::FileManagement::CloudSync::ICloudUploadCallback*;
+      *OHOS::FileManagement::CloudSync::ICloudSyncCallback*;
+      *OHOS::FileManagement::CloudSync::ICloudOptimizeCallback*;
+      *OHOS::FileManagement::CloudSync::IDownloadAssetCallback*;
+      *OHOS::FileManagement::CloudSync::IDowngradeDlCallback*;
+      
+      # Progress/Status classes (from cloud_sync_common.h)
+      *OHOS::FileManagement::CloudSync::DownloadProgressObj*;
+      *OHOS::FileManagement::CloudSync::UploadProgressObj*;
+      *OHOS::FileManagement::CloudSync::DowngradeProgress*;
+      *OHOS::FileManagement::CloudSync::DowngradeTfProgress*;
+      *OHOS::FileManagement::CloudSync::SwitchDataObj*;
+      *OHOS::FileManagement::CloudSync::CleanOptions*;
+      *OHOS::FileManagement::CloudSync::OptimizeSpaceOptions*;
+      *OHOS::FileManagement::CloudSync::DentryFileInfo*;
+      *OHOS::FileManagement::CloudSync::DentryFileInfoObj*;
+      *OHOS::FileManagement::CloudSync::AssetInfoObj*;
+      *OHOS::FileManagement::CloudSync::CleanFileInfo*;
+      *OHOS::FileManagement::CloudSync::CleanFileInfoObj*;
+      *OHOS::FileManagement::CloudSync::HistoryVersion*;
+      *OHOS::FileManagement::CloudSync::CloudFileInfo*;
+      *OHOS::FileManagement::CloudSync::LocalFilePresentStatus*;
+      *OHOS::FileManagement::CloudSync::XattrResult*;
+      
+      # AccountUtils
+      *OHOS::FileManagement::AccountUtils*;
+    };
+
+  local:
+    *;
+};

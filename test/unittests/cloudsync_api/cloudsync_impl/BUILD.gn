@@ -26,7 +26,7 @@ ohos_unittest("cloud_sync_callback_client_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -60,8 +60,8 @@ ohos_unittest("cloud_sync_callback_client_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   defines = [ "private=public" ]
@@ -86,7 +86,7 @@ ohos_unittest("cloud_sync_callback_stub_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -120,7 +120,7 @@ ohos_unittest("cloud_upload_callback_client_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -155,8 +155,8 @@ ohos_unittest("cloud_upload_callback_client_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   defines = [ "private=public" ]
@@ -178,7 +178,7 @@ ohos_unittest("cloud_upload_callback_stub_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -228,9 +228,9 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfiledentry",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfiledentry_static",
   ]
 
   external_deps = [
@@ -273,9 +273,9 @@ ohos_unittest("cloud_sync_manager_impl_lite_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils",
-    "${utils_path}:libdistributedfiledentry",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfiledentry_static",
   ]
 
   external_deps = [
@@ -312,7 +312,7 @@ ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
   ]
 
@@ -341,8 +341,8 @@ ohos_unittest("cloud_sync_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils"
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static"
   ]
 
   external_deps = [
@@ -373,7 +373,7 @@ ohos_unittest("cloud_download_callback_client_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -411,7 +411,7 @@ ohos_unittest("cloud_download_callback_stub_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -447,8 +447,8 @@ ohos_unittest("cloud_download_uri_manager_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils"
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static"
   ]
 
   external_deps = [
@@ -479,7 +479,7 @@ ohos_unittest("cloud_sync_common_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/file_hook",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
 
   external_deps = [
     "googletest:gmock_main",
@@ -510,7 +510,8 @@ ohos_unittest("cloud_sync_asset_manager_impl_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -541,8 +542,8 @@ ohos_unittest("cloud_sync_asset_manager_impl_unnomal_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_asset_kit_inner",
+    "${utils_path}:libdistributedfileutils_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_asset_kit_inner_static",
   ]
 
   external_deps = [
@@ -570,8 +571,8 @@ ohos_unittest("cloud_sync_asset_manager_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_asset_kit_inner",
+    "${utils_path}:libdistributedfileutils_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_asset_kit_inner_static",
   ]
 
   external_deps = [
@@ -604,8 +605,8 @@ ohos_unittest("download_asset_callback_client_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -643,8 +644,8 @@ ohos_unittest("download_asset_callback_stub_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [
@@ -679,7 +680,7 @@ ohos_unittest("downgrade_dl_callback_stub_test") {
     "${distributedfile_path}/utils/log/include",
   ]
 
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner" ]
+  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -714,7 +715,7 @@ ohos_unittest("cloud_optimize_callback_stub_test") {
     "${distributedfile_path}/utils/log/include",
   ]
 
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner" ]
+  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -737,7 +738,9 @@ ohos_unittest("cloud_optimize_callback_stub_test") {
 ohos_unittest("downgrade_dl_callback_client_test") {
   module_out_path = "dfs_service/dfs_service"
 
-  sources = [ "downgrade_dl_callback_client_test.cpp" ]
+  sources = [
+    "downgrade_dl_callback_client_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
@@ -746,7 +749,7 @@ ohos_unittest("downgrade_dl_callback_client_test") {
     "${distributedfile_path}/utils/log/include",
   ]
 
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner" ]
+  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static" ]
 
   external_deps = [
     "c_utils:utils",
@@ -781,8 +784,8 @@ ohos_unittest("service_proxy_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite_static",
   ]
 
   external_deps = [
@@ -821,7 +824,7 @@ ohos_unittest("service_proxy_static_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
   ]
 
   external_deps = [

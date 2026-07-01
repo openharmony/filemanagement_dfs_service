@@ -44,11 +44,10 @@ ohos_unittest("data_sync_manager_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
     "${services_path}/cloudsyncservice:cloud_sync_service_stub",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [

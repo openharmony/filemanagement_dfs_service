@@ -15,6 +15,7 @@
 #include "io_message_listener.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
@@ -96,21 +97,24 @@ bool IoMessageManager::ReadIoDataFromFile(const std::string &path)
         string key = line.substr(0, colon);
         string value = line.substr(colon + 1);
 
-        try {
-            if (key == "rchar") currentData.rchar = stol(value);
-            if (key == "syscr") currentData.syscr = stol(value);
-            if (key == "read_bytes") currentData.readBytes = stol(value);
-            if (key == "syscopen") currentData.syscopen = stol(value);
-            if (key == "syscstat") currentData.syscstat = stol(value);
-        } catch (const invalid_argument& e) {
-            LOGE("Invalid argument: %{public}s", e.what());
-            currentData = preData;
-            return false;
-        } catch (const out_of_range& e) {
-            LOGE("Out of range: %{public}s", e.what());
+        char *end = nullptr;
+        errno = 0;
+        long val = strtol(value.c_str(), &end, 10);
+        if (end == value.c_str() || *end != '\0') {
+            LOGE("Invalid numeric value for key: %{public}s", key.c_str());
             currentData = preData;
             return false;
         }
+        if (errno == ERANGE) {
+            LOGE("Numeric value out of range for key: %{public}s", key.c_str());
+            currentData = preData;
+            return false;
+        }
+        if (key == "rchar") currentData.rchar = val;
+        if (key == "syscr") currentData.syscr = val;
+        if (key == "read_bytes") currentData.readBytes = val;
+        if (key == "syscopen") currentData.syscopen = val;
+        if (key == "syscstat") currentData.syscstat = val;
     }
     return true;
 }

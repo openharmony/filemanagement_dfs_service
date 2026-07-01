@@ -54,9 +54,9 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfiledentry_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -198,8 +198,8 @@ ohos_unittest("periodic_chown_task_test") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${utils_path}:libdistributedfileutils_static",
   ]
 
   external_deps = [
@@ -249,6 +249,8 @@ ohos_unittest("periodic_check_task_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/cycle_task/tasks",

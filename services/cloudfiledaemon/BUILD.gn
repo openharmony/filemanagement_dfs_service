@@ -27,6 +27,7 @@ config("optimize-size") {
 }
 
 ohos_shared_library("cloudfiledaemon") {
+  shlib_type = "sa"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -35,6 +36,7 @@ ohos_shared_library("cloudfiledaemon") {
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   cloud_disk = [
@@ -59,8 +61,6 @@ ohos_shared_library("cloudfiledaemon") {
   ]
 
   sources += cloud_disk
-
-  configs += [ "${utils_path}:compiler_configs" ]
 
   defines = [
     "LOG_DOMAIN=0xD004307",
@@ -122,7 +122,6 @@ ohos_shared_library("cloudfiledaemon") {
     defines += [ "SUPPORT_WATCH_LITE" ]
   }
 
-  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
