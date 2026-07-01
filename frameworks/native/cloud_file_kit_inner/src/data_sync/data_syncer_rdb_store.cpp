@@ -448,7 +448,7 @@ static void VersionAddTotalDownloadSize(NativeRdb::RdbStore &store)
 
 int32_t DataSyncerRdbCallBack::OnUpgrade(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
-    LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
+    LOGI("OnUpgrade old:%{public}d, new:%{public}d", oldVersion, newVersion);
     if (oldVersion < VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX) {
         VersionAddDataSyncerUniqueIndex(store);
     }
