@@ -31,8 +31,6 @@ using namespace testing::ext;
 using namespace std;
 using namespace OHOS::FileManagement::CloudSync;
 
-const int32_t E_INVAL = 13900020;
-
 class CloudSyncCoreTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
