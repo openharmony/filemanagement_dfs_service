@@ -16,12 +16,18 @@
 #ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_UTILS_H
 #define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_UTILS_H
 
+#include <cstddef>
+#include <sys/types.h>
 #include <unordered_map>
 
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_error_code.h"
 
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
+CloudDisk_ErrorCode ConvertXattrErrno(int err);
+const char *GetPlaceholderXattrKey();
+size_t GetPlaceholderXattrBufferSize();
+bool ParsePlaceholderXattrValue(const char *value, ssize_t length);
 char *AllocField(const char *value, size_t length);
 bool IsValidPathInfo(const char *path, size_t length);
 

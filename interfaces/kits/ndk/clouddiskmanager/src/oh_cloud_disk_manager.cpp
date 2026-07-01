@@ -15,9 +15,12 @@
 
 #include "oh_cloud_disk_manager.h"
 
+#include <cerrno>
 #include <cstring>
 #include <functional>
 #include <new>
+#include <sys/stat.h>
+#include <sys/xattr.h>
 #include <vector>
 
 #include <securec.h>
@@ -320,6 +323,54 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
 
     LOGI("CreatePlaceholderFile branch=success");
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+}
+
+CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                   const CloudDisk_PathInfo path,
+                                                   bool *isPlaceholder)
+{
+    if (isPlaceholder == nullptr) {
+        LOGE("Invalid argument, isPlaceholder is nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
+        LOGE("Invalid argument, syncFolder path is invalid");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    if (!IsValidPathInfo(path.value, path.length)) {
+        LOGE("Invalid argument, file path is invalid");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    std::string filePath(path.value, path.length);
+    struct stat statInfo = {};
+    errno = 0;
+    int statRet = lstat(filePath.c_str(), &statInfo);
+    int statErr = errno;
+    LOGI("Xattr probe lstat ret=%{public}d errno=%{public}d mode=%{public}o", statRet, statErr, statInfo.st_mode);
+    if (statRet != 0) {
+        *isPlaceholder = false;
+        return ConvertXattrErrno(statErr);
+    }
+
+    std::vector<char> value(GetPlaceholderXattrBufferSize());
+    const char *xattrKey = GetPlaceholderXattrKey();
+    errno = 0;
+    ssize_t xattrRet = getxattr(filePath.c_str(), xattrKey, value.data(), value.size());
+    int xattrErr = errno;
+    LOGI("Xattr probe key=%{public}s ret=%{public}zd errno=%{public}d", xattrKey, xattrRet, xattrErr);
+    if (xattrRet >= 0) {
+        *isPlaceholder = ParsePlaceholderXattrValue(value.data(), xattrRet);
+        LOGI("Xattr probe success, isPlaceholder=%{public}d", *isPlaceholder);
+        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+    }
+    // Missing placeholder xattr means a valid normal file, not a syscall failure.
+    if (xattrErr == ENODATA) {
+        *isPlaceholder = false;
+        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+    }
+    *isPlaceholder = false;
+    return ConvertXattrErrno(xattrErr);
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)

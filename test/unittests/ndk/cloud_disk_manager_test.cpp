@@ -16,12 +16,78 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cerrno>
 #include <securec.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <string>
+#include <vector>
 
 #include "oh_cloud_disk_manager.h"
 #include "oh_cloud_disk_utils.h"
 #include "cloud_disk_service_manager_mock.h"
+
+// Test-local syscall replacements for OH_CloudDisk_IsPlaceholderFile xattr branches.
+namespace {
+constexpr int MOCK_STAT_RET_SUCCESS = 0;
+constexpr ssize_t MOCK_XATTR_RET_FAIL = -1;
+
+struct XattrMockState {
+    int lstatRet = MOCK_STAT_RET_SUCCESS;
+    int lstatErrno = 0;
+    ssize_t getxattrRet = MOCK_XATTR_RET_FAIL;
+    int getxattrErrno = ENODATA;
+    std::vector<char> getxattrValue;
+    bool lstatCalled = false;
+    bool getxattrCalled = false;
+    std::string lstatPath;
+    std::string getxattrPath;
+    std::string getxattrName;
+};
+
+XattrMockState g_xattrMockState;
+
+void ResetXattrMock()
+{
+    g_xattrMockState = XattrMockState();
+}
+} // namespace
+
+extern "C" int lstat(const char *path, struct stat *buf)
+{
+    g_xattrMockState.lstatCalled = true;
+    g_xattrMockState.lstatPath = path == nullptr ? "" : path;
+    if (g_xattrMockState.lstatRet != 0) {
+        errno = g_xattrMockState.lstatErrno;
+        return g_xattrMockState.lstatRet;
+    }
+    if (buf != nullptr) {
+        *buf = {};
+        buf->st_mode = S_IFREG | 0644;
+    }
+    return 0;
+}
+
+extern "C" ssize_t getxattr(const char *path, const char *name, void *value, size_t size)
+{
+    g_xattrMockState.getxattrCalled = true;
+    g_xattrMockState.getxattrPath = path == nullptr ? "" : path;
+    g_xattrMockState.getxattrName = name == nullptr ? "" : name;
+    if (g_xattrMockState.getxattrRet < 0) {
+        errno = g_xattrMockState.getxattrErrno;
+        return g_xattrMockState.getxattrRet;
+    }
+    if (value != nullptr && size > 0 && !g_xattrMockState.getxattrValue.empty()) {
+        size_t copySize = std::min(size, g_xattrMockState.getxattrValue.size());
+        errno_t ret = memcpy_s(value, size, g_xattrMockState.getxattrValue.data(), copySize);
+        if (ret != EOK) {
+            errno = EINVAL;
+            return MOCK_XATTR_RET_FAIL;
+        }
+    }
+    return g_xattrMockState.getxattrRet;
+}
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -48,6 +114,7 @@ void CloudDiskManagerTest::TearDownTestCase(void)
 
 void CloudDiskManagerTest::SetUp(void)
 {
+    ResetXattrMock();
 }
 
 void CloudDiskManagerTest::TearDown(void)
@@ -468,5 +535,158 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
 
     EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 end";
+}
+
+/**
+ * @tc.name: ConvertXattrErrnoTest001
+ * @tc.desc: Verify the ConvertXattrErrno function
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, ConvertXattrErrnoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertXattrErrnoTest001 start";
+    try {
+        EXPECT_EQ(ConvertXattrErrno(ENOENT), CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(ConvertXattrErrno(EACCES), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
+        EXPECT_EQ(ConvertXattrErrno(EPERM), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
+        EXPECT_EQ(ConvertXattrErrno(ENOTSUP), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+        EXPECT_EQ(ConvertXattrErrno(EOPNOTSUPP), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+        EXPECT_EQ(ConvertXattrErrno(EIO), CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertXattrErrnoTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertXattrErrnoTest001 end";
+}
+
+/**
+ * @tc.name: ParsePlaceholderXattrValueTest001
+ * @tc.desc: Verify placeholder xattr value parsing
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, ParsePlaceholderXattrValueTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ParsePlaceholderXattrValueTest001 start";
+    try {
+        const char zero[] = {'0'};
+        const char falseValue[] = {'f', 'a', 'l', 's', 'e'};
+        const char upperFalseValue[] = {'F', 'A', 'L', 'S', 'E'};
+        const char binaryFalse[] = {'\0'};
+        const char one[] = {'1'};
+        const char trueValue[] = {'t', 'r', 'u', 'e'};
+        const char upperTrueValue[] = {'T', 'R', 'U', 'E'};
+        const char binaryTrue[] = {'\1'};
+        EXPECT_FALSE(ParsePlaceholderXattrValue(zero, sizeof(zero)));
+        EXPECT_FALSE(ParsePlaceholderXattrValue(falseValue, sizeof(falseValue)));
+        EXPECT_FALSE(ParsePlaceholderXattrValue(upperFalseValue, sizeof(upperFalseValue)));
+        EXPECT_FALSE(ParsePlaceholderXattrValue(binaryFalse, sizeof(binaryFalse)));
+        EXPECT_TRUE(ParsePlaceholderXattrValue(nullptr, 0));
+        EXPECT_TRUE(ParsePlaceholderXattrValue(one, sizeof(one)));
+        EXPECT_TRUE(ParsePlaceholderXattrValue(trueValue, sizeof(trueValue)));
+        EXPECT_TRUE(ParsePlaceholderXattrValue(upperTrueValue, sizeof(upperTrueValue)));
+        EXPECT_TRUE(ParsePlaceholderXattrValue(binaryTrue, sizeof(binaryTrue)));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ParsePlaceholderXattrValueTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ParsePlaceholderXattrValueTest001 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileXattrTest001
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile returns true when placeholder xattr exists
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileXattrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest001 start";
+    try {
+        std::string syncFolder = "/mock/sync";
+        std::string filePath = "/mock/sync/a.txt";
+        CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.length()};
+        CloudDisk_PathInfo path = {const_cast<char *>(filePath.c_str()), filePath.length()};
+        g_xattrMockState.getxattrValue = {'1'};
+        g_xattrMockState.getxattrRet = static_cast<ssize_t>(g_xattrMockState.getxattrValue.size());
+
+        bool isPlaceholder = false;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_TRUE(isPlaceholder);
+        EXPECT_TRUE(g_xattrMockState.lstatCalled);
+        EXPECT_TRUE(g_xattrMockState.getxattrCalled);
+        EXPECT_EQ(g_xattrMockState.lstatPath, filePath);
+        EXPECT_EQ(g_xattrMockState.getxattrPath, filePath);
+        EXPECT_EQ(g_xattrMockState.getxattrName, GetPlaceholderXattrKey());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest001 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileXattrTest002
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile treats missing xattr as a normal file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileXattrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest002 start";
+    try {
+        std::string syncFolder = "/mock/sync";
+        std::string filePath = "/mock/sync/a.txt";
+        CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.length()};
+        CloudDisk_PathInfo path = {const_cast<char *>(filePath.c_str()), filePath.length()};
+        g_xattrMockState.getxattrRet = MOCK_XATTR_RET_FAIL;
+        g_xattrMockState.getxattrErrno = ENODATA;
+
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_FALSE(isPlaceholder);
+        EXPECT_TRUE(g_xattrMockState.lstatCalled);
+        EXPECT_TRUE(g_xattrMockState.getxattrCalled);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest002 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileXattrTest003
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile maps lstat errors before xattr query
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileXattrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest003 start";
+    try {
+        std::string syncFolder = "/mock/sync";
+        std::string filePath = "/mock/sync/a.txt";
+        CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.length()};
+        CloudDisk_PathInfo path = {const_cast<char *>(filePath.c_str()), filePath.length()};
+        g_xattrMockState.lstatRet = -1;
+        g_xattrMockState.lstatErrno = ENOENT;
+
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_FALSE(isPlaceholder);
+        EXPECT_TRUE(g_xattrMockState.lstatCalled);
+        EXPECT_FALSE(g_xattrMockState.getxattrCalled);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileXattrTest003 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

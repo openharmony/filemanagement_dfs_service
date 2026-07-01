@@ -15,9 +15,25 @@
 
 #include "oh_cloud_disk_utils.h"
 
+#include <cerrno>
+#include <strings.h>
+
 #include <securec.h>
 
 #include "utils_log.h"
+
+namespace {
+constexpr const char *PLACEHOLDER_XATTR_KEY = "user.hmdfs.placeholder";
+constexpr size_t PLACEHOLDER_XATTR_BUFFER_SIZE = 64;
+
+bool IsAsciiFalseValue(const char *value, ssize_t length)
+{
+    if (length == 1 && value[0] == '0') {
+        return true;
+    }
+    return length == 5 && strncasecmp(value, "false", 5) == 0;
+}
+} // namespace
 
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode)
 {
@@ -27,6 +43,47 @@ CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode)
     } else {
         return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
+}
+
+CloudDisk_ErrorCode ConvertXattrErrno(int err)
+{
+    if (err == ENOENT) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+    if (err == EACCES || err == EPERM) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED;
+    }
+    if (err == ENOTSUP || err == EOPNOTSUPP) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+    }
+    return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
+}
+
+const char *GetPlaceholderXattrKey()
+{
+    return PLACEHOLDER_XATTR_KEY;
+}
+
+size_t GetPlaceholderXattrBufferSize()
+{
+    return PLACEHOLDER_XATTR_BUFFER_SIZE;
+}
+
+bool ParsePlaceholderXattrValue(const char *value, ssize_t length)
+{
+    if (length <= 0) {
+        return true;
+    }
+    if (IsAsciiFalseValue(value, length)) {
+        return false;
+    }
+    if (length == 1 && value[0] == '1') {
+        return true;
+    }
+    if (length == 4 && strncasecmp(value, "true", 4) == 0) {
+        return true;
+    }
+    return value[0] != 0;
 }
 
 char *AllocField(const char *value, size_t length)

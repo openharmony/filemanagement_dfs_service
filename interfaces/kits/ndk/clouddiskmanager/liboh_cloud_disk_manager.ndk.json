@@ -20,6 +20,10 @@
         "name": "OH_CloudDisk_GetFileSyncStates"
     },
     {
+        "first_introduced": "26",
+        "name": "OH_CloudDisk_IsPlaceholderFile"
+    },
+    {
         "first_introduced": "21",
         "name": "OH_CloudDisk_RegisterSyncFolder"
     },
