@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,10 @@
 #include <shared_mutex>
 #include <string>
 #include <vector>
- 
+
 #include "nocopyable.h"
 #include "hisysevent.h"
- 
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
@@ -34,19 +34,19 @@ public:
     {
     }
     ~CloudDiskDownloadFileStatInfo() = default;
- 
+
     std::string bundleName;
     std::vector<uint64_t> downloadFileError;
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> fileDownloadSpeed;
 };
- 
+
 class CloudDiskDownloadFileStat : public NoCopyable {
 public:
     static CloudDiskDownloadFileStat &GetInstance();
     CloudDiskDownloadFileStat(const CloudDiskDownloadFileStat&) = delete;
     CloudDiskDownloadFileStat& operator=(const CloudDiskDownloadFileStat&) = delete;
- 
+
     void UpdateDownloadStat(uint64_t size, uint64_t duration);
     void UpdateDownloadBundleName(const std::string &bundleName);
     void OutputToFile();
@@ -62,7 +62,7 @@ private:
     void HandleBundleName(const CloudDiskDownloadFileStatInfo &info);
     std::string GetLocalPath();
     int32_t CreateDownloadFileStatData();
- 
+
     CloudDiskDownloadFileStatInfo stat_;
     std::mutex mutex_;
     std::string bundleName_;
