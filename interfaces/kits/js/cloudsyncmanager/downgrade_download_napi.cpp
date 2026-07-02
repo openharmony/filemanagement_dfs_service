@@ -426,7 +426,7 @@ napi_value DowngradeDownloadNapi::StartTransfer(napi_env env, napi_callback_info
     auto downgradeEntity = NClass::GetEntityOf<DowngradeEntity>(env, funcArg.GetThisVar());
     if (!downgradeEntity) {
         LOGE("Failed to get downgrade entity.");
-        NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
+        NError(JsErrCode::E_TRY_AGAIN).ThrowErr(env);
         return nullptr;
     }
 
@@ -434,7 +434,7 @@ napi_value DowngradeDownloadNapi::StartTransfer(napi_env env, napi_callback_info
         downgradeEntity->callbackImpl = make_shared<DowngradeDlCallbackImpl>(env);
         if (downgradeEntity->callbackImpl == nullptr) {
             LOGE("Failed to get transfer callback");
-            NError(Convert2JsErrNum(E_SERVICE_INNER_ERROR)).ThrowErr(env);
+            NError(JsErrCode::E_TRY_AGAIN).ThrowErr(env);
             return nullptr;
         }
     }

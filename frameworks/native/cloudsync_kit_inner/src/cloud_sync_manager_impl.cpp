@@ -16,6 +16,7 @@
 #include <charconv>
 #include <filesystem>
 #include <fstream>
+#include <unordered_set>
 
 #include "account_utils.h"
 #include "cloud_download_callback_client.h"
@@ -43,6 +44,12 @@ const string CLOUDSYNC_MEDIA_CALLBACK_ID = "cloudSyncMediaCallbackId";
 static const std::string GLOBAL_CONFIG_FILE_PATH = "globalConfig.xml";
 static const std::string SUM_OCCUPY_FLAG = "SumOccupyFlag";
 constexpr int32_t MAX_OCCUPY_LINE_LIMIT = 10;
+
+static const std::unordered_set<int32_t> errForStartTransfer = { E_PERMISSION_DENIED, JsErrCode::E_PERMISSION,
+    E_PERMISSION_SYSTEM, JsErrCode::E_PERMISSION_SYS, E_OPERATION_DENY, JsErrCode::E_OPERATION_NOT_PERMITTED,
+    E_URI_NOT_EXIST, JsErrCode::E_NO_FILE_OR_DIR, E_AGAIN, JsErrCode::E_TRY_AGAIN,
+    E_INVAL_PARAM, JsErrCode::E_INVALID_ARGUMENT, E_TASK_RUNNING, JsErrCode::E_OTHER_TASK_RUNNING };
+
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -673,6 +680,15 @@ static int32_t CheckTransferTargetUri(const std::string &targetUri)
     return E_OK;
 }
 
+static int32_t GetStartTransferErrPublic(int32_t result)
+{
+    LOGE("start transfer failed, errno : %{public}d", result);
+    if (errForStartTransfer.find(result) != errForStartTransfer.end()) {
+        return result;
+    }
+    return E_AGAIN;
+}
+
 int32_t CloudSyncManagerImpl::StartTransfer(const std::string &bundleName, const std::string &targetUri,
                                             const std::shared_ptr<DowngradeDlCallback> downloadCallback)
 {
@@ -680,7 +696,7 @@ int32_t CloudSyncManagerImpl::StartTransfer(const std::string &bundleName, const
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("StartTransfer");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
 
     if (bundleName.empty() || downloadCallback == nullptr) {
@@ -698,6 +714,10 @@ int32_t CloudSyncManagerImpl::StartTransfer(const std::string &bundleName, const
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     ret = CloudSyncServiceProxy->StartTransfer(bundleName, targetUri, dlCallback);
     LOGI("StartTransfer ret %{public}d", ret);
+    if (ret != E_OK) {
+        ret = GetStartTransferErrPublic(ret);
+    }
+
     return ret;
 }
 

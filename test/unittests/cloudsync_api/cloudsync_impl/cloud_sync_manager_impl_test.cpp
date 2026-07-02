@@ -3522,7 +3522,7 @@ HWTEST_F(CloudSyncManagerImplTest, StartTransferTest001, TestSize.Level1)
         std::shared_ptr<DowngradeDlCallback> callback = std::make_shared<DowngradeDlCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().StartTransfer(bundleName, targetUri, callback);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartTransferTest001 FAILED";

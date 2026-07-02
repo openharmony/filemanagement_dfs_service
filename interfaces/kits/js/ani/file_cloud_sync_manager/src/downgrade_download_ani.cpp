@@ -178,21 +178,21 @@ void DowngradeDownloadAni::DowngradeDownloadStartTransfer(ani_env *env, ani_obje
     string uri;
     ani_status ret = ANIUtils::AniString2String(env, targetUri, uri);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 
     auto downgradeDlSync = DowngradeDownloadUnwrap(env, object);
     if (downgradeDlSync == nullptr) {
         LOGE("Cannot wrap downgradeDlSync.");
-        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 
     ani_ref cbOnRef;
     ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, JsErrCode::E_INNER_FAILED);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 

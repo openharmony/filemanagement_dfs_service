@@ -115,13 +115,13 @@ enum CloudSyncServiceErrCode : ErrCode {
 
     E_AGAIN,
 
+    E_UNKNOWN_FAULT,
+
     E_OPERATION_DENY,
 
     E_URI_NOT_EXIST,
 
     E_INVAL_PARAM,
-
-    E_UNKNOWN_FAULT,
 
     E_SOURCE_BASIC = 10000,
 
