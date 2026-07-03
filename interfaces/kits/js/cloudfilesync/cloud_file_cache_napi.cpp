@@ -549,7 +549,7 @@ static NVal CreateDownloadListResultArray(napi_env env,
     napi_status status = napi_create_array(env, &resultArray);
     if (status != napi_ok) {
         LOGE("Failed to create array");
-        return {env, NError(JsErrCode::E_INNER_FAILED).GetNapiErr(env)};
+        return {env, NError(JsErrCode::E_TRY_AGAIN).GetNapiErr(env)};
     }
     
     for (size_t i = 0; i < downloadList.size(); ++i) {
@@ -557,7 +557,7 @@ static NVal CreateDownloadListResultArray(napi_env env,
         status = napi_set_element(env, resultArray, i, progressObj.val_);
         if (status != napi_ok) {
             LOGE("Failed to set array element");
-            return {env, NError(JsErrCode::E_INNER_FAILED).GetNapiErr(env)};
+            return {env, NError(JsErrCode::E_TRY_AGAIN).GetNapiErr(env)};
         }
     }
     

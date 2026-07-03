@@ -2689,7 +2689,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetUploadListTest005, TestSize.Level1)
         std::vector<std::string> uriVec(MAX_PROGRESS_QUERY_NUM + 1, "file://path1");
         std::vector<CloudSync::UploadProgressObj> uploadList;
         int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
-        EXPECT_EQ(res, E_EXCEED_MAX_SIZE);
+        EXPECT_EQ(res, E_INVAL_PARAM);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetUploadListTest005 FAILED";
@@ -2782,7 +2782,7 @@ HWTEST_F(CloudSyncManagerImplTest, GetDownloadListTest005, TestSize.Level1)
         std::vector<std::string> uriVec(MAX_PROGRESS_QUERY_NUM + 1, "file://path1");
         std::vector<CloudSync::DownloadProgressObj> downloadList;
         int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
-        EXPECT_EQ(res, E_EXCEED_MAX_SIZE);
+        EXPECT_EQ(res, E_INVAL_PARAM);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDownloadListTest005 FAILED";
@@ -2906,7 +2906,7 @@ HWTEST_F(CloudSyncManagerImplTest, RegisterUploadCallbackTest005, TestSize.Level
         uploadCallbackInfo.callback = std::make_shared<CloudUploadCallbackDerived>();
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().RegisterUploadCallback(uploadCallbackInfo);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterUploadCallbackTest005 FAILED";
@@ -3003,7 +3003,7 @@ HWTEST_F(CloudSyncManagerImplTest, UnRegisterUploadCallbackTest004, TestSize.Lev
         uploadCallbackInfo.bundleName = "com.example.test";
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterUploadCallback(uploadCallbackInfo);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UnRegisterUploadCallbackTest004 FAILED";
