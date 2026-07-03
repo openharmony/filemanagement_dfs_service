@@ -133,6 +133,8 @@ public:
     MOCK_METHOD0(CleanAllFileCacheInner, int32_t());
     MOCK_METHOD2(GetCachedTotalSizeInner, int32_t(const std::string &bundleName, int64_t &totalSize));
     MOCK_METHOD1(GetCachedTotalSizeInner, int32_t(int64_t &totalSize));
+    MOCK_METHOD1(GetDecompressUnsupportedList, int32_t(std::vector<std::string> &unsupportedList));
+    MOCK_METHOD1(GetDecompressSystemFeature, int32_t(bool &systemFeature));
  private:
     int32_t StartFileCacheWriteParcel(MessageParcel &data,
                                       const std::vector<std::string> &uriVec,

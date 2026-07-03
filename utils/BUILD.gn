@@ -532,3 +532,51 @@ ohos_static_library("libdistributedfileutils_lite_static") {
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
+
+config("decompress_public_config") {
+  include_dirs = [
+    "decompress/include",
+    "inner_api",
+    "ioctl/include",
+    "log/include",
+  ]
+}
+
+ohos_shared_library("libdecompress") {
+  branch_protector_ret = "pac_ret"
+  configs = [ ":optimize-size" ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = [
+    "decompress/src/decompress.cpp",
+  ]
+
+  public_configs = [ ":decompress_public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004311",
+    "LOG_TAG=\"DecompressUtils\"",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+  ]
+
+  deps = []
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}

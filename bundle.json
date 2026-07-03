@@ -211,6 +211,15 @@
               ],
               "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"
             }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/utils:libdecompress",
+            "header": {
+              "header_files": [
+                "decompress.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/utils/decompress/include"
+            }
           }
         ],
         "test": [

@@ -267,6 +267,47 @@ ohos_unittest("ffrt_timer_test") {
   use_exceptions = true
 }
 
+ohos_unittest("decompress_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "./decompress/decompress_test.cpp",
+    "${distributedfile_path}/test/unittests/ani_core/cloud_sync_manager_mock.cpp",
+  ]
+
+  include_dirs = [
+    "${utils_path}/decompress/include",
+    "${utils_path}/decompress/src",
+    "${utils_path}/ioctl/include",
+    "${utils_path}/log/include",
+    "${utils_path}/inner_api",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/unittests/ani_core",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
@@ -278,5 +319,6 @@ group("utils_test") {
     ":plugin_loader_test",
     ":utils_directory_test",
     ":account_utils_test",
+    ":decompress_test",
   ]
 }

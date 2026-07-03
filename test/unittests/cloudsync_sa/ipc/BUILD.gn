@@ -95,6 +95,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/decompress_config_manager.cpp",
     "cloud_sync_service_test.cpp",
   ]
 
@@ -159,6 +160,7 @@ ohos_unittest("cloud_sync_service_test") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libfuse:libfuse",
     "memmgr:memmgrclient",
     "netmanager_base:net_conn_manager_if",

@@ -72,3 +72,22 @@ ohos_prebuilt_etc("cloudsyncservice.para.dac") {
   module_install_dir = "etc/param"
   subsystem_name = "filemanagement"
 }
+
+ohos_prebuilt_etc("decompress_unsupported_list") {
+  source = "cloudsyncservice/decompress_config/unsupported_list.json"
+  part_name = "dfs_service"
+  module_install_dir = "etc/decompress_config"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("decompress_system_feature") {
+  if (target_platform == "pc" || target_platform == "2in1") {
+    source = "cloudsyncservice/decompress_config/system_feature_pc.json"
+  } else {
+    source = "cloudsyncservice/decompress_config/system_feature.json"
+  }
+  output = "system_feature.json"
+  part_name = "dfs_service"
+  module_install_dir = "etc/decompress_config"
+  subsystem_name = "filemanagement"
+}
