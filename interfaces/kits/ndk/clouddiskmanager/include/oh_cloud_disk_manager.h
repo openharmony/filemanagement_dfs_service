@@ -463,6 +463,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26
  */
+// NOLINTNEXTLINE(readability-identifier-naming)
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder);

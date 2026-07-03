@@ -21,6 +21,7 @@ ohos_unittest("cloud_disk_manager_test") {
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_manager.cpp",
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_utils.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_manager_mock.cpp",
+    "cloud_disk_xattr_mock.cpp",
     "cloud_disk_manager_test.cpp",
   ]
 

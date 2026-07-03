@@ -28,6 +28,7 @@
 #include "cloud_disk_common.h"
 #include "cloud_disk_service_callback.h"
 #include "cloud_disk_service_manager.h"
+#include "dfsu_access_token_helper.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -325,6 +326,7 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder)
@@ -342,21 +344,55 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
 
+    std::string syncFolder(syncFolderPath.value, syncFolderPath.length);
     std::string filePath(path.value, path.length);
+    CloudDisk_ErrorCode permissionRet = CheckPermissions(PERM_CLOUD_DISK_SERVICE, true);
+    if (permissionRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
+        *isPlaceholder = false;
+        return permissionRet;
+    }
+
+    std::string realSyncFolder;
+    std::string realFilePath;
+    int32_t userId = DfsuAccessTokenHelper::GetUserId();
+    CloudDisk_ErrorCode pathRet = PathToMntPathBySandboxPath(syncFolder, userId, realSyncFolder);
+    if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
+        LOGE("Convert sync folder path to HMDFS mount path failed, ret: %{public}d", pathRet);
+        *isPlaceholder = false;
+        return pathRet;
+    }
+    pathRet = PathToMntPathBySandboxPath(filePath, userId, realFilePath);
+    if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
+        LOGE("Convert file path to HMDFS mount path failed, ret: %{public}d", pathRet);
+        *isPlaceholder = false;
+        return pathRet;
+    }
+    if (!IsPathInSyncFolder(realSyncFolder, realFilePath)) {
+        LOGE("File path is outside sync folder");
+        *isPlaceholder = false;
+        return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED;
+    }
+    // Reserved for sync-folder registration and ownership validation once an NDK-readable data source is confirmed.
+
     struct stat statInfo = {};
     errno = 0;
-    int statRet = lstat(filePath.c_str(), &statInfo);
+    int statRet = lstat(realFilePath.c_str(), &statInfo);
     int statErr = errno;
     LOGI("Xattr probe lstat ret=%{public}d errno=%{public}d mode=%{public}o", statRet, statErr, statInfo.st_mode);
     if (statRet != 0) {
         *isPlaceholder = false;
         return ConvertXattrErrno(statErr);
     }
+    if (!S_ISREG(statInfo.st_mode)) {
+        LOGE("Invalid argument, file path is not a regular file");
+        *isPlaceholder = false;
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
 
     std::vector<char> value(GetPlaceholderXattrBufferSize());
     const char *xattrKey = GetPlaceholderXattrKey();
     errno = 0;
-    ssize_t xattrRet = getxattr(filePath.c_str(), xattrKey, value.data(), value.size());
+    ssize_t xattrRet = getxattr(realFilePath.c_str(), xattrKey, value.data(), value.size());
     int xattrErr = errno;
     LOGI("Xattr probe key=%{public}s ret=%{public}zd errno=%{public}d", xattrKey, xattrRet, xattrErr);
     if (xattrRet >= 0) {

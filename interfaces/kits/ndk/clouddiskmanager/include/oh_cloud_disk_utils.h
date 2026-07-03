@@ -17,6 +17,8 @@
 #define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_UTILS_H
 
 #include <cstddef>
+#include <cstdint>
+#include <string>
 #include <sys/types.h>
 #include <unordered_map>
 
@@ -25,11 +27,14 @@
 
 CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode);
 CloudDisk_ErrorCode ConvertXattrErrno(int err);
+CloudDisk_ErrorCode CheckPermissions(const std::string &permission, bool isSystemApp);
 const char *GetPlaceholderXattrKey();
 size_t GetPlaceholderXattrBufferSize();
 bool ParsePlaceholderXattrValue(const char *value, ssize_t length);
 char *AllocField(const char *value, size_t length);
 bool IsValidPathInfo(const char *path, size_t length);
+bool IsPathInSyncFolder(const std::string &syncFolderPath, const std::string &filePath);
+CloudDisk_ErrorCode PathToMntPathBySandboxPath(const std::string &path, int32_t userId, std::string &realPath);
 
 const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_OK},
