@@ -19,6 +19,7 @@
 #include "cloud_file_kit.h"
 #include "cloud_sync_common.h"
 #include "cloud_sync_service.h"
+#include "dfs_space_report_task.h"
 #include "dfsu_access_token_helper_mock.h"
 #include "i_cloud_download_callback_mock.h"
 #include "os_account_manager_mock.h"
@@ -39,6 +40,17 @@ pid_t IPCSkeleton::GetCallingUid()
     return g_uid;
 }
 namespace FileManagement::CloudSync {
+
+DfsSpaceReportTask::DfsSpaceReportTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    : CycleTask("dfs_space_report_task", {}, ONE_DAY, dataSyncManager)
+{
+}
+
+int32_t DfsSpaceReportTask::RunTaskForBundle(int32_t userId, std::string bundleName)
+{
+    return E_OK;
+}
+
 namespace Test {
 using namespace testing;
 using namespace testing::ext;

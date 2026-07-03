@@ -38,6 +38,7 @@ enum class TaskType : uint64_t {
     CLEAN_CLOUD_CACHE_TASK = 1 << 11,
     TRANSFER_TASK = 1 << 12,
     FILE_OPTIMIZE_TASK = 1 << 13,
+    DFS_SPACE_REPORT_TASK = 1 << 14,
 };
 class TaskStateManager : public NoCopyable {
 public:

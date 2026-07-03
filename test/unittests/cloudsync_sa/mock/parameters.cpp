@@ -16,6 +16,7 @@
 #include "parameters.h"
 #include "parameter.h"
 #include <map>
+#include <mutex>
 #include <string>
 
 int WaitParameter(const char *key, const char *value, int timeout)
@@ -25,7 +26,20 @@ int WaitParameter(const char *key, const char *value, int timeout)
 
 namespace OHOS {
 namespace system {
-std::map<std::string, std::string> paraMap_;
+namespace {
+std::map<std::string, std::string> &GetParaMap()
+{
+    static auto *paraMap = new std::map<std::string, std::string>();
+    return *paraMap;
+}
+
+std::mutex &GetParaMapMutex()
+{
+    static auto *paraMapMutex = new std::mutex();
+    return *paraMapMutex;
+}
+} // namespace
+
 /*
  * Returns true if the system parameter `key` has the value "1", "y", "yes", "on", or "true",
  * false for "0", "n", "no", "off", or "false", or `def` otherwise.
@@ -43,8 +57,10 @@ std::string GetParameter(const std::string &key, const std::string &def)
     if (ParameterMock::proxy_ != nullptr) {
         return ParameterMock::proxy_->GetParameter(key, def);
     } else {
-        auto it = paraMap_.find(key);
-        if (it != paraMap_.end()) {
+        std::lock_guard<std::mutex> lock(GetParaMapMutex());
+        auto &paraMap = GetParaMap();
+        auto it = paraMap.find(key);
+        if (it != paraMap.end()) {
             return it->second;
         }
     }
@@ -56,7 +72,8 @@ bool SetParameter(const std::string& key, const std::string& value)
     if (ParameterMock::proxy_ != nullptr) {
         return ParameterMock::proxy_->SetParameter(key, value);
     } else {
-        paraMap_[key] = value;
+        std::lock_guard<std::mutex> lock(GetParaMapMutex());
+        GetParaMap()[key] = value;
     }
     return true;
 }
