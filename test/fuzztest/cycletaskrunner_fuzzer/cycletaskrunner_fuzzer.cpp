@@ -38,8 +38,13 @@ using namespace OHOS::FileManagement::CloudSync;
 
 class CloudFileKitMock : public CloudFile::CloudFileKit {};
 
-__attribute__((used)) static bool g_isInit =
-    CloudFile::CloudFileKit::RegisterCloudInstance(new (std::nothrow) CloudFileKitMock());
+__attribute__((used)) static bool g_isInit = []() {
+    auto cloudFileKit = new (std::nothrow) CloudFileKitMock();
+    if (cloudFileKit == nullptr) {
+        return false;
+    }
+    return CloudFile::CloudFileKit::RegisterCloudInstance(cloudFileKit);
+}();
 
 void CycleTaskDerivedFuzzTest(const uint8_t *data, size_t size)
 {
