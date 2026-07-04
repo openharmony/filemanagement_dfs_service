@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstring>
 #include <dirent.h>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -45,6 +46,7 @@ using namespace std;
 namespace {
 constexpr uint64_t BLOCK_SIZE = 512;
 constexpr uint64_t BYTE_TO_MB = 1024 * 1024;
+constexpr int32_t MB_DECIMAL_PRECISION = 2;
 constexpr uint32_t DFS_SPACE_REPORT_TIMEOUT_MS = 10 * 60 * 1000;
 constexpr int32_t MIN_BATTERY_CAPACITY = 20;
 constexpr uid_t MEDIA_UID = 1008;
@@ -324,8 +326,7 @@ static DfsDirStat ScanDir(const string &rootPath, const atomic_bool &stopScan)
     return dirStat;
 }
 
-static MediaWrongUidStat ScanMediaWrongUidDirs(const string &parentPath, uid_t targetUid,
-    const atomic_bool &stopScan)
+static MediaWrongUidStat ScanMediaWrongUidDirs(const string &parentPath, const atomic_bool &stopScan)
 {
     MediaWrongUidStat uidStat;
     DIR *dir = opendir(parentPath.c_str());
@@ -353,7 +354,9 @@ static MediaWrongUidStat ScanMediaWrongUidDirs(const string &parentPath, uid_t t
                 GetAnonyStringStrictly(childPath).c_str(), errno);
             continue;
         }
-        if (!S_ISDIR(childStat.st_mode) || childStat.st_uid == targetUid) {
+        // Only buckets owned by the dfs uid are the real anomaly (dfs service leaking into media
+        // storage); descend into them and only them, ignoring root/system/other-uid directories.
+        if (!S_ISDIR(childStat.st_mode) || childStat.st_uid != DFS_UID) {
             continue;
         }
         uidStat.badFirstLevelDirs++;
@@ -372,9 +375,9 @@ static MediaWrongUidStat ScanMediaWrongUidDirs(const string &parentPath, uid_t t
     return uidStat;
 }
 
-static uint64_t BytesToMb(uint64_t bytes)
+static double BytesToMb(uint64_t bytes)
 {
-    return bytes / BYTE_TO_MB;
+    return static_cast<double>(bytes) / static_cast<double>(BYTE_TO_MB);
 }
 
 static vector<ScanTarget> BuildDfsSpaceScanTargets(int32_t userId)
@@ -405,10 +408,11 @@ static vector<MediaScanTarget> BuildMediaScanTargets(int32_t userId)
     return scanTargets;
 }
 
-static string BuildDfsSpaceDetail(int32_t userId, const vector<DfsDirStat> &stats, uint64_t totalMb,
+static string BuildDfsSpaceDetail(int32_t userId, const vector<DfsDirStat> &stats, double totalMb,
     uint32_t dfsSpaceErrorMask, ScanStopReason stopped)
 {
     ostringstream oss;
+    oss << std::fixed << std::setprecision(MB_DECIMAL_PRECISION);
     oss << "dfsSpace|" << userId << "|" << totalMb << "|"
         << BytesToMb(stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].blocksBytes) << ","
         << BytesToMb(stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].blocksBytes) << ","
@@ -431,6 +435,7 @@ static string BuildMediaWrongUidDetail(int32_t userId, const ReportStats &report
         mediaWrongUidStats[ToIndex(THUMBS_INDEX)].omittedBuckets +
         mediaWrongUidStats[ToIndex(EDIT_DATA_INDEX)].omittedBuckets;
     ostringstream oss;
+    oss << std::fixed << std::setprecision(MB_DECIMAL_PRECISION);
     oss << "mediaWrongUid|" << userId << "|" << BytesToMb(reportStats.mediaWrongUidTotalBytes) << "|"
         << BytesToMb(mediaWrongUidStats[ToIndex(PHOTO_INDEX)].blocksBytes) << ","
         << BytesToMb(mediaWrongUidStats[ToIndex(THUMBS_INDEX)].blocksBytes) << ","
@@ -504,7 +509,7 @@ static int32_t CollectMediaWrongUidStats(const vector<MediaScanTarget> &scanTarg
             LOGE("media wrong uid target index out of range, index:%{public}u", index);
             continue;
         }
-        reportStats.mediaWrongUidStats[index] = ScanMediaWrongUidDirs(target.path, MEDIA_UID, stopScan);
+        reportStats.mediaWrongUidStats[index] = ScanMediaWrongUidDirs(target.path, stopScan);
         AddUint64(reportStats.mediaWrongUidTotalBytes, reportStats.mediaWrongUidStats[index].blocksBytes);
         reportStats.mediaWrongUidDirs += reportStats.mediaWrongUidStats[index].badFirstLevelDirs;
         if (reportStats.mediaWrongUidStats[index].errors != 0) {
@@ -520,7 +525,7 @@ static int32_t CollectMediaWrongUidStats(const vector<MediaScanTarget> &scanTarg
 
 static int32_t ReportDfsSpaceStats(int32_t userId, const string &bundleName, const ReportStats &reportStats)
 {
-    uint64_t totalMb = BytesToMb(reportStats.dfsSpaceTotalBytes);
+    double totalMb = BytesToMb(reportStats.dfsSpaceTotalBytes);
     string detail = BuildDfsSpaceDetail(userId, reportStats.dfsStats, totalMb, reportStats.dfsSpaceErrorMask,
         reportStats.stopped);
     int32_t ret = ReportDfsSpaceDetail(bundleName, detail);
