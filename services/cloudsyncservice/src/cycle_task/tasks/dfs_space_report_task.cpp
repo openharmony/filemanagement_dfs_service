@@ -116,7 +116,8 @@ static constexpr uint32_t ErrorBit(MediaTargetIndex index)
 }
 
 struct DfsDirStat {
-    uint64_t blocksBytes{0};
+    uint64_t fileBlocksBytes{0};
+    uint64_t dirBlocksBytes{0};
     uint32_t errors{0};
     ScanStopReason stopped{ScanStopReason::NOT_STOPPED};
 };
@@ -172,17 +173,35 @@ static void AddUint64(uint64_t &value, uint64_t addValue)
     value += addValue;
 }
 
-template<typename Stat>
-static void AddDfsUidFileBlocks(const struct stat &fileStat, Stat &stat)
+static uint64_t GetPhysicalBytes(const struct stat &fileStat)
+{
+    if (fileStat.st_blocks > 0) {
+        return static_cast<uint64_t>(fileStat.st_blocks) * BLOCK_SIZE;
+    }
+    return 0;
+}
+
+static void AddDfsUidBlocks(const struct stat &fileStat, DfsDirStat &stat)
+{
+    if (fileStat.st_uid != DFS_UID) {
+        return;
+    }
+    uint64_t blocks = GetPhysicalBytes(fileStat);
+    if (S_ISREG(fileStat.st_mode)) {
+        AddUint64(stat.fileBlocksBytes, blocks);
+        return;
+    }
+    if (S_ISDIR(fileStat.st_mode)) {
+        AddUint64(stat.dirBlocksBytes, blocks);
+    }
+}
+
+static void AddDfsUidBlocks(const struct stat &fileStat, MediaWrongUidStat &stat)
 {
     if (!S_ISREG(fileStat.st_mode) || fileStat.st_uid != DFS_UID) {
         return;
     }
-    uint64_t blocks = 0;
-    if (fileStat.st_blocks > 0) {
-        blocks = static_cast<uint64_t>(fileStat.st_blocks) * BLOCK_SIZE;
-    }
-    AddUint64(stat.blocksBytes, blocks);
+    AddUint64(stat.blocksBytes, GetPhysicalBytes(fileStat));
 }
 
 static void ResetStopScan(atomic_bool &stopScan)
@@ -304,7 +323,7 @@ static void ScanDfsUidTree(const string &rootPath, Stat &stat, const atomic_bool
             LOGE("lstat failed, path:%{public}s, err:%{public}d", GetAnonyStringStrictly(childPath).c_str(), errno);
             continue;
         }
-        AddDfsUidFileBlocks(childStat, stat);
+        AddDfsUidBlocks(childStat, stat);
         if (S_ISDIR(childStat.st_mode)) {
             ScanDfsUidTree(childPath, stat, stopScan, depth + 1);
             if (IsScanStopped(stat.stopped)) {
@@ -408,22 +427,34 @@ static vector<MediaScanTarget> BuildMediaScanTargets(int32_t userId)
     return scanTargets;
 }
 
-static string BuildDfsSpaceDetail(int32_t userId, const vector<DfsDirStat> &stats, double totalMb,
-    uint32_t dfsSpaceErrorMask, ScanStopReason stopped)
+static void AppendDfsSpacePair(ostringstream &oss, const DfsDirStat &stat)
+{
+    oss << BytesToMb(stat.fileBlocksBytes) << ":" << BytesToMb(stat.dirBlocksBytes);
+}
+
+static string BuildDfsSpaceDetail(int32_t userId, const vector<DfsDirStat> &stats, uint32_t dfsSpaceErrorMask,
+    ScanStopReason stopped)
 {
     ostringstream oss;
     oss << std::fixed << std::setprecision(MB_DECIMAL_PRECISION);
-    oss << "dfsSpace|" << userId << "|" << totalMb << "|"
-        << BytesToMb(stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(CLOUD_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(CACHE_ACCOUNT_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(CACHE_CLOUD_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(CACHE_NON_ACCOUNT_INDEX)].blocksBytes) << ","
-        << BytesToMb(stats[ToIndex(CLOUD_MANAGER_INDEX)].blocksBytes)
+    oss << "dfsSpace|" << userId << "|";
+    AppendDfsSpacePair(oss, stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(CLOUD_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(CACHE_ACCOUNT_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(CACHE_CLOUD_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(CACHE_NON_ACCOUNT_INDEX)]);
+    oss << ",";
+    AppendDfsSpacePair(oss, stats[ToIndex(CLOUD_MANAGER_INDEX)]);
+    oss
         << "|" << dfsSpaceErrorMask
-        << "|" << (IsScanStopped(stopped) ? 1 : 0)
         << "|" << StopReasonToReport(stopped);
     return oss.str();
 }
@@ -482,7 +513,8 @@ static int32_t CollectDfsSpaceStats(const vector<ScanTarget> &scanTargets, Repor
             continue;
         }
         reportStats.dfsStats[index] = ScanDir(target.path, stopScan);
-        AddUint64(reportStats.dfsSpaceTotalBytes, reportStats.dfsStats[index].blocksBytes);
+        AddUint64(reportStats.dfsSpaceTotalBytes, reportStats.dfsStats[index].fileBlocksBytes);
+        AddUint64(reportStats.dfsSpaceTotalBytes, reportStats.dfsStats[index].dirBlocksBytes);
         if (reportStats.dfsStats[index].errors != 0) {
             reportStats.dfsSpaceErrorMask |= target.errorBit;
         }
@@ -525,8 +557,7 @@ static int32_t CollectMediaWrongUidStats(const vector<MediaScanTarget> &scanTarg
 
 static int32_t ReportDfsSpaceStats(int32_t userId, const string &bundleName, const ReportStats &reportStats)
 {
-    double totalMb = BytesToMb(reportStats.dfsSpaceTotalBytes);
-    string detail = BuildDfsSpaceDetail(userId, reportStats.dfsStats, totalMb, reportStats.dfsSpaceErrorMask,
+    string detail = BuildDfsSpaceDetail(userId, reportStats.dfsStats, reportStats.dfsSpaceErrorMask,
         reportStats.stopped);
     int32_t ret = ReportDfsSpaceDetail(bundleName, detail);
     if (ret != E_OK) {
