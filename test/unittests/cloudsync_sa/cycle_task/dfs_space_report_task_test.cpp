@@ -542,9 +542,9 @@ HWTEST_F(DfsSpaceReportTaskTest, BuildDfsSpaceDetailTest001, TestSize.Level1)
         stats[i].blocksBytes = static_cast<uint64_t>(i + 1) * BYTE_TO_MB;
     }
 
-    string detail = BuildDfsSpaceDetail(100, stats, 45, 7, ScanStopReason::TIMEOUT);
+    string detail = BuildDfsSpaceDetail(100, stats, 45.0, 7, ScanStopReason::TIMEOUT);
 
-    EXPECT_EQ(detail, "dfsSpace|100|45|1,2,3,4,5,6,7,8|7|1|1");
+    EXPECT_EQ(detail, "dfsSpace|100|45.00|1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00|7|1|1");
     EXPECT_EQ(detail.find("/data/"), string::npos);
     EXPECT_EQ(detail.find("="), string::npos);
     GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest001 End";
@@ -576,9 +576,104 @@ HWTEST_F(DfsSpaceReportTaskTest, BuildMediaWrongUidDetailTest001, TestSize.Level
 
     string detail = BuildMediaWrongUidDetail(100, reportStats);
 
-    EXPECT_EQ(detail, "mediaWrongUid|100|10|1,2,3|8|1,2;3;4|18|9|1|2");
+    EXPECT_EQ(detail, "mediaWrongUid|100|10.00|1.00,2.00,3.00|8|1,2;3;4|18|9|1|2");
     EXPECT_EQ(detail.find("/data/"), string::npos);
     GTEST_LOG_(INFO) << "BuildMediaWrongUidDetailTest001 End";
+}
+
+/*
+ * @tc.name: BytesToMbTest001
+ * @tc.desc: Verify that BytesToMb returns the exact double MB value and preserves sub-MB precision.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, BytesToMbTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BytesToMbTest001 Start";
+
+    // Whole-MB byte counts are converted without truncation.
+    EXPECT_DOUBLE_EQ(BytesToMb(0), 0.0);
+    EXPECT_DOUBLE_EQ(BytesToMb(BYTE_TO_MB), 1.0);
+    EXPECT_DOUBLE_EQ(BytesToMb(2 * BYTE_TO_MB), 2.0);
+    EXPECT_DOUBLE_EQ(BytesToMb(45 * BYTE_TO_MB), 45.0);
+
+    // Sub-MB precision survives the conversion: 1.5 MB should stay 1.5, not 1.
+    EXPECT_DOUBLE_EQ(BytesToMb(BYTE_TO_MB + BYTE_TO_MB / 2), 1.5);
+
+    // Right below the integer-MB boundary should yield a value strictly between 0 and 1.
+    double justUnder = BytesToMb(BYTE_TO_MB - 1);
+    EXPECT_GT(justUnder, 0.0);
+    EXPECT_LT(justUnder, 1.0);
+    GTEST_LOG_(INFO) << "BytesToMbTest001 End";
+}
+
+/*
+ * @tc.name: BuildDfsSpaceDetailTest002
+ * @tc.desc: Verify that BuildDfsSpaceDetail formats each MB field with exactly two digits after
+ *           the decimal point, including fractional values produced by sub-MB byte counts.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, BuildDfsSpaceDetailTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest002 Start";
+    vector<DfsDirStat> stats(ToIndex(DFS_TARGET_COUNT));
+    // 1.50 MB, 0.25 MB, 1.00 MB, 0.00 MB, 0.99 MB (rounded from 0.99x MB),
+    // 2.50 MB, 0.12 MB (rounded from 0.12x MB), 0.01 MB (very small).
+    stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].blocksBytes = BYTE_TO_MB + BYTE_TO_MB / 2;
+    stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].blocksBytes = BYTE_TO_MB / 4;
+    stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)].blocksBytes = 1 * BYTE_TO_MB;
+    stats[ToIndex(CLOUD_INDEX)].blocksBytes = 0;
+    stats[ToIndex(CACHE_ACCOUNT_INDEX)].blocksBytes = BYTE_TO_MB - (BYTE_TO_MB / 100);
+    stats[ToIndex(CACHE_CLOUD_INDEX)].blocksBytes = 2 * BYTE_TO_MB + BYTE_TO_MB / 2;
+    stats[ToIndex(CACHE_NON_ACCOUNT_INDEX)].blocksBytes = BYTE_TO_MB / 8;
+    stats[ToIndex(CLOUD_MANAGER_INDEX)].blocksBytes = BYTE_TO_MB / 100;
+
+    // Total = 1.5 + 0.25 + 1.0 + 0 + 0.99 + 2.5 + 0.125 + 0.01 = 6.375 (caller-supplied).
+    string detail = BuildDfsSpaceDetail(100, stats, 6.375, 7, ScanStopReason::NOT_STOPPED);
+
+    EXPECT_EQ(detail, "dfsSpace|100|6.38|1.50,0.25,1.00,0.00,0.99,2.50,0.12,0.01|7|0|0");
+    // Counting sanity: 8 per-target MB fields delimited by exactly 7 commas between the third and fourth '|'.
+    size_t firstListBar = detail.find('|', detail.find('|', detail.find('|') + 1) + 1) + 1;
+    size_t lastListBar = detail.find('|', firstListBar);
+    std::string perTargetFields = detail.substr(firstListBar, lastListBar - firstListBar);
+    EXPECT_EQ(std::count(perTargetFields.begin(), perTargetFields.end(), ','), ToIndex(DFS_TARGET_COUNT) - 1);
+    EXPECT_EQ(perTargetFields.find('e'), std::string::npos);
+    EXPECT_EQ(perTargetFields.find('E'), std::string::npos);
+    GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest002 End";
+}
+
+/*
+ * @tc.name: BuildMediaWrongUidDetailTest002
+ * @tc.desc: Verify that BuildMediaWrongUidDetail formats total and per-target MB fields with two decimals.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, BuildMediaWrongUidDetailTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BuildMediaWrongUidDetailTest002 Start";
+    ReportStats reportStats;
+    // Fractional byte counts: 0.5 MB, 1.25 MB, 0.01 MB (very small).
+    reportStats.mediaWrongUidTotalBytes = (BYTE_TO_MB / 2) + (5 * BYTE_TO_MB / 4) + (BYTE_TO_MB / 100);
+    reportStats.mediaWrongUidStats[ToIndex(PHOTO_INDEX)].blocksBytes = BYTE_TO_MB / 2;
+    reportStats.mediaWrongUidStats[ToIndex(THUMBS_INDEX)].blocksBytes = 5 * BYTE_TO_MB / 4;
+    reportStats.mediaWrongUidStats[ToIndex(EDIT_DATA_INDEX)].blocksBytes = BYTE_TO_MB / 100;
+    reportStats.mediaWrongUidStats[ToIndex(PHOTO_INDEX)].badBuckets = "100";
+    reportStats.mediaWrongUidStats[ToIndex(THUMBS_INDEX)].badBuckets = "200";
+    reportStats.mediaWrongUidStats[ToIndex(EDIT_DATA_INDEX)].badBuckets = "300";
+    reportStats.mediaWrongUidDirs = 2;
+    reportStats.mediaWrongUidErrorMask = 5;
+    reportStats.stopped = ScanStopReason::TIMEOUT;
+
+    string detail = BuildMediaWrongUidDetail(100, reportStats);
+
+    // 0.5 + 1.25 + 0.01 = 1.76 MB total (rounded to two decimals).
+    EXPECT_EQ(detail, "mediaWrongUid|100|1.76|0.50,1.25,0.01|2|100;200;300|0|5|1|1");
+    // All three per-target MB fields must use two decimals.
+    EXPECT_NE(detail.find("0.50"), string::npos);
+    EXPECT_NE(detail.find("1.25"), string::npos);
+    EXPECT_NE(detail.find("0.01"), string::npos);
+    GTEST_LOG_(INFO) << "BuildMediaWrongUidDetailTest002 End";
 }
 
 /*
@@ -736,7 +831,7 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest001, TestSize.Level1)
     g_mockReadDirFail = true;
     g_mockReadDirFailAfter = 1;
 
-    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, MEDIA_UID, g_mockStopScan);
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
 
     EXPECT_GT(stat.errors, 0U);
     GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest001 End";
@@ -754,8 +849,12 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest002, TestSize.Level1)
         GTEST_SKIP() << "Current uid equals MEDIA_UID; wrong-UID directory fixture cannot be constructed reliably.";
     }
     std::system(("mkdir -p " + TEST_ROOT + "/123").c_str());
+    // Only dfs-uid-owned buckets are descended into, so the bucket itself must be dfs-owned.
+    if (geteuid() != DFS_UID && !TryMakeDfsOwned(TEST_ROOT + "/123")) {
+        GTEST_SKIP() << "Cannot construct dfs-owned bucket fixture.";
+    }
 
-    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, MEDIA_UID, g_mockStopScan);
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
 
     EXPECT_GT(stat.badFirstLevelDirs, 0U);
     EXPECT_EQ(stat.badBuckets, "123");
@@ -774,6 +873,10 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest003, TestSize.Level1)
         GTEST_SKIP() << "Current uid equals MEDIA_UID; wrong-UID directory fixture cannot be constructed reliably.";
     }
     std::system(("mkdir -p " + TEST_ROOT + "/123").c_str());
+    // Only dfs-uid-owned buckets are descended into, so the bucket itself must be dfs-owned.
+    if (geteuid() != DFS_UID && !TryMakeDfsOwned(TEST_ROOT + "/123")) {
+        GTEST_SKIP() << "Cannot construct dfs-owned bucket fixture.";
+    }
     string nonDfsFile = TEST_ROOT + "/123/non_dfs_file";
     string dfsFile = TEST_ROOT + "/123/dfs_file";
     CreateFile(nonDfsFile);
@@ -788,7 +891,7 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest003, TestSize.Level1)
         expectedBlocks = static_cast<uint64_t>(dfsFileStat.st_blocks) * BLOCK_SIZE;
     }
 
-    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, MEDIA_UID, g_mockStopScan);
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
 
     EXPECT_EQ(stat.blocksBytes, expectedBlocks);
     GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest003 End";
@@ -888,7 +991,7 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest004 Start";
     g_mockOpenDirFailPath = TEST_ROOT;
 
-    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, MEDIA_UID, g_mockStopScan);
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
 
     EXPECT_GT(g_mockOpenDirCalls, 0);
     EXPECT_GT(stat.errors, 0U);
@@ -908,12 +1011,39 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest005, TestSize.Level1)
     std::system(("mkdir -p " + childPath).c_str());
     g_mockLstatFailPath = childPath;
 
-    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, MEDIA_UID, g_mockStopScan);
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
 
     EXPECT_GT(stat.errors, 0U);
     EXPECT_EQ(stat.badFirstLevelDirs, 0U);
     EXPECT_TRUE(stat.badBuckets.empty());
     GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest005 End";
+}
+
+/*
+ * @tc.name: ScanMediaWrongUidDirsTest006
+ * @tc.desc: Verify that a non-dfs-uid bucket is not descended into even when it contains dfs-uid files.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, ScanMediaWrongUidDirsTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest006 Start";
+    if (geteuid() == DFS_UID) {
+        GTEST_SKIP() << "Current uid equals DFS_UID; non-dfs bucket fixture cannot be constructed reliably.";
+    }
+    // Bucket "456" stays owned by the test runner (a non-dfs, non-media uid).
+    std::system(("mkdir -p " + TEST_ROOT + "/456").c_str());
+    string dfsFile = TEST_ROOT + "/456/dfs_file";
+    CreateFile(dfsFile);
+    // Best-effort: even if a dfs-uid file sits inside, a non-dfs bucket must not be scanned.
+    TryMakeDfsOwned(dfsFile);
+
+    MediaWrongUidStat stat = ScanMediaWrongUidDirs(TEST_ROOT, g_mockStopScan);
+
+    EXPECT_EQ(stat.badFirstLevelDirs, 0U);
+    EXPECT_TRUE(stat.badBuckets.empty());
+    EXPECT_EQ(stat.blocksBytes, 0U);
+    GTEST_LOG_(INFO) << "ScanMediaWrongUidDirsTest006 End";
 }
 
 /*
@@ -928,6 +1058,10 @@ HWTEST_F(DfsSpaceReportTaskTest, CollectMediaWrongUidStatsTest001, TestSize.Leve
         GTEST_SKIP() << "Current uid equals MEDIA_UID; wrong-UID fixture cannot be constructed reliably.";
     }
     std::system(("mkdir -p " + TEST_ROOT + "/123").c_str());
+    // Only dfs-uid-owned buckets are descended into, so the bucket itself must be dfs-owned.
+    if (geteuid() != DFS_UID && !TryMakeDfsOwned(TEST_ROOT + "/123")) {
+        GTEST_SKIP() << "Cannot construct dfs-owned bucket fixture.";
+    }
     for (int32_t i = 0; i < 32; ++i) {
         CreateFile(TEST_ROOT + "/123/file_" + to_string(i));
         TryMakeDfsOwned(TEST_ROOT + "/123/file_" + to_string(i));
