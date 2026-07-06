@@ -297,13 +297,14 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanDirTest003, TestSize.Level1)
 
     DfsDirStat stat = ScanDir(TEST_ROOT, g_mockStopScan);
 
-    EXPECT_EQ(stat.blocksBytes, 0U);
+    EXPECT_EQ(stat.fileBlocksBytes, 0U);
+    EXPECT_EQ(stat.dirBlocksBytes, 0U);
     GTEST_LOG_(INFO) << "ScanDirTest003 End";
 }
 
 /*
  * @tc.name: ScanDirTest004
- * @tc.desc: Verify that DFS quota scan only counts regular files owned by dfs uid.
+ * @tc.desc: Verify that DFS quota scan counts directory blocks separately from regular files.
  * @tc.type: FUNC
  */
 HWTEST_F(DfsSpaceReportTaskTest, ScanDirTest004, TestSize.Level1)
@@ -317,7 +318,8 @@ HWTEST_F(DfsSpaceReportTaskTest, ScanDirTest004, TestSize.Level1)
 
     DfsDirStat stat = ScanDir(TEST_ROOT, g_mockStopScan);
 
-    EXPECT_EQ(stat.blocksBytes, 0U);
+    EXPECT_EQ(stat.fileBlocksBytes, 0U);
+    EXPECT_GT(stat.dirBlocksBytes, 0U);
     GTEST_LOG_(INFO) << "ScanDirTest004 End";
 }
 
@@ -357,27 +359,172 @@ HWTEST_F(DfsSpaceReportTaskTest, AddUint64Test001, TestSize.Level1)
 }
 
 /*
- * @tc.name: AddDfsUidFileBlocksTest001
- * @tc.desc: Verify that DFS-owned regular file blocks are accumulated.
+ * @tc.name: AddDfsUidBlocksTest001
+ * @tc.desc: Verify that DFS-owned regular file and directory blocks are accumulated separately.
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(DfsSpaceReportTaskTest, AddDfsUidFileBlocksTest001, TestSize.Level1)
+HWTEST_F(DfsSpaceReportTaskTest, AddDfsUidBlocksTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "AddDfsUidFileBlocksTest001 Start";
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest001 Start";
     struct stat fileStat {};
     fileStat.st_mode = S_IFREG;
     fileStat.st_uid = DFS_UID;
     fileStat.st_blocks = 3;
+    struct stat dirEntryStat {};
+    dirEntryStat.st_mode = S_IFDIR;
+    dirEntryStat.st_uid = DFS_UID;
+    dirEntryStat.st_blocks = 5;
     DfsDirStat dirStat;
     MediaWrongUidStat uidStat;
 
-    AddDfsUidFileBlocks(fileStat, dirStat);
-    AddDfsUidFileBlocks(fileStat, uidStat);
+    AddDfsUidBlocks(fileStat, dirStat);
+    AddDfsUidBlocks(fileStat, uidStat);
+    AddDfsUidBlocks(dirEntryStat, dirStat);
+    AddDfsUidBlocks(dirEntryStat, uidStat);
 
-    EXPECT_EQ(dirStat.blocksBytes, 3U * BLOCK_SIZE);
+    EXPECT_EQ(dirStat.fileBlocksBytes, 3U * BLOCK_SIZE);
+    EXPECT_EQ(dirStat.dirBlocksBytes, 5U * BLOCK_SIZE);
     EXPECT_EQ(uidStat.blocksBytes, 3U * BLOCK_SIZE);
-    GTEST_LOG_(INFO) << "AddDfsUidFileBlocksTest001 End";
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest001 End";
+}
+
+/*
+ * @tc.name: GetPhysicalBytesTest001
+ * @tc.desc: Verify that GetPhysicalBytes returns st_blocks*BLOCK_SIZE when positive and 0 when non-positive.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, GetPhysicalBytesTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetPhysicalBytesTest001 Start";
+    struct stat positiveStat {};
+    positiveStat.st_blocks = 8;
+
+    EXPECT_EQ(GetPhysicalBytes(positiveStat), 8U * BLOCK_SIZE);
+
+    struct stat zeroBlockStat {};
+    zeroBlockStat.st_blocks = 0;
+
+    EXPECT_EQ(GetPhysicalBytes(zeroBlockStat), 0U);
+
+    // Sparse files report negative st_blocks on some filesystems; the helper must clamp to 0.
+    struct stat negativeBlockStat {};
+    negativeBlockStat.st_blocks = -4;
+
+    EXPECT_EQ(GetPhysicalBytes(negativeBlockStat), 0U);
+    GTEST_LOG_(INFO) << "GetPhysicalBytesTest001 End";
+}
+
+/*
+ * @tc.name: AddDfsUidBlocksTest002
+ * @tc.desc: Verify that AddDfsUidBlocks ignores non-dfs-uid entries for both regular files and directories.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, AddDfsUidBlocksTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest002 Start";
+    struct stat foreignFileStat {};
+    foreignFileStat.st_mode = S_IFREG;
+    foreignFileStat.st_uid = DFS_UID + 1;
+    foreignFileStat.st_blocks = 9;
+    struct stat foreignDirStat {};
+    foreignDirStat.st_mode = S_IFDIR;
+    foreignDirStat.st_uid = DFS_UID + 2;
+    foreignDirStat.st_blocks = 11;
+    DfsDirStat dirStat;
+    MediaWrongUidStat uidStat;
+
+    AddDfsUidBlocks(foreignFileStat, dirStat);
+    AddDfsUidBlocks(foreignDirStat, dirStat);
+    AddDfsUidBlocks(foreignFileStat, uidStat);
+    AddDfsUidBlocks(foreignDirStat, uidStat);
+
+    EXPECT_EQ(dirStat.fileBlocksBytes, 0U);
+    EXPECT_EQ(dirStat.dirBlocksBytes, 0U);
+    EXPECT_EQ(uidStat.blocksBytes, 0U);
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest002 End";
+}
+
+/*
+ * @tc.name: AddDfsUidBlocksTest003
+ * @tc.desc: Verify that AddDfsUidBlocks ignores dfs-uid entries that are neither regular files nor directories.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, AddDfsUidBlocksTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest003 Start";
+    struct stat symlinkStat {};
+    symlinkStat.st_mode = S_IFLNK;
+    symlinkStat.st_uid = DFS_UID;
+    symlinkStat.st_blocks = 7;
+    struct stat fifoStat {};
+    fifoStat.st_mode = S_IFIFO;
+    fifoStat.st_uid = DFS_UID;
+    fifoStat.st_blocks = 13;
+    DfsDirStat dirStat;
+    MediaWrongUidStat uidStat;
+
+    AddDfsUidBlocks(symlinkStat, dirStat);
+    AddDfsUidBlocks(fifoStat, dirStat);
+    AddDfsUidBlocks(symlinkStat, uidStat);
+    AddDfsUidBlocks(fifoStat, uidStat);
+
+    EXPECT_EQ(dirStat.fileBlocksBytes, 0U);
+    EXPECT_EQ(dirStat.dirBlocksBytes, 0U);
+    EXPECT_EQ(uidStat.blocksBytes, 0U);
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest003 End";
+}
+
+/*
+ * @tc.name: AddDfsUidBlocksTest004
+ * @tc.desc: Verify that the MediaWrongUidStat overload drops a non-dfs-uid regular file (uid short-circuit).
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, AddDfsUidBlocksTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest004 Start";
+    struct stat foreignRegStat {};
+    foreignRegStat.st_mode = S_IFREG;
+    foreignRegStat.st_uid = DFS_UID - 1;
+    foreignRegStat.st_blocks = 17;
+    MediaWrongUidStat uidStat;
+
+    AddDfsUidBlocks(foreignRegStat, uidStat);
+
+    EXPECT_EQ(uidStat.blocksBytes, 0U);
+    GTEST_LOG_(INFO) << "AddDfsUidBlocksTest004 End";
+}
+
+/*
+ * @tc.name: CollectDfsSpaceStatsTest007
+ * @tc.desc: Verify that dfsSpaceTotalBytes aggregates both file and directory block contributions.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(DfsSpaceReportTaskTest, CollectDfsSpaceStatsTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CollectDfsSpaceStatsTest007 Start";
+    string dfsDir = TEST_ROOT + "/dfs_dir_total";
+    std::system(("mkdir -p " + dfsDir).c_str());
+    if (geteuid() != DFS_UID && !TryMakeDfsOwned(dfsDir)) {
+        GTEST_SKIP() << "Cannot construct dfs-owned directory fixture.";
+    }
+    vector<ScanTarget> targets = {ScanTarget {TEST_ROOT, CACHE_ACCOUNT_INDEX, ErrorBit(CACHE_ACCOUNT_INDEX)}};
+    ReportStats reportStats;
+
+    int32_t ret = CollectDfsSpaceStats(targets, reportStats, g_mockStopScan);
+
+    EXPECT_EQ(ret, E_OK);
+    if (geteuid() == DFS_UID) {
+        const DfsDirStat &agg = reportStats.dfsStats[ToIndex(CACHE_ACCOUNT_INDEX)];
+        EXPECT_EQ(reportStats.dfsSpaceTotalBytes, agg.fileBlocksBytes + agg.dirBlocksBytes);
+        EXPECT_GT(agg.dirBlocksBytes, 0U);
+    }
+    GTEST_LOG_(INFO) << "CollectDfsSpaceStatsTest007 End";
 }
 
 /*
@@ -539,12 +686,14 @@ HWTEST_F(DfsSpaceReportTaskTest, BuildDfsSpaceDetailTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest001 Start";
     vector<DfsDirStat> stats(ToIndex(DFS_TARGET_COUNT));
     for (uint32_t i = 0; i < ToIndex(DFS_TARGET_COUNT); ++i) {
-        stats[i].blocksBytes = static_cast<uint64_t>(i + 1) * BYTE_TO_MB;
+        stats[i].fileBlocksBytes = static_cast<uint64_t>(i + 1) * BYTE_TO_MB;
+        stats[i].dirBlocksBytes = static_cast<uint64_t>(i) * BYTE_TO_MB / 2;
     }
 
-    string detail = BuildDfsSpaceDetail(100, stats, 45.0, 7, ScanStopReason::TIMEOUT);
+    string detail = BuildDfsSpaceDetail(100, stats, 7, ScanStopReason::TIMEOUT);
 
-    EXPECT_EQ(detail, "dfsSpace|100|45.00|1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00|7|1|1");
+    EXPECT_EQ(detail, "dfsSpace|100|1.00:0.00,2.00:0.50,3.00:1.00,4.00:1.50,"
+        "5.00:2.00,6.00:2.50,7.00:3.00,8.00:3.50|7|1");
     EXPECT_EQ(detail.find("/data/"), string::npos);
     EXPECT_EQ(detail.find("="), string::npos);
     GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest001 End";
@@ -609,8 +758,7 @@ HWTEST_F(DfsSpaceReportTaskTest, BytesToMbTest001, TestSize.Level1)
 
 /*
  * @tc.name: BuildDfsSpaceDetailTest002
- * @tc.desc: Verify that BuildDfsSpaceDetail formats each MB field with exactly two digits after
- *           the decimal point, including fractional values produced by sub-MB byte counts.
+ * @tc.desc: Verify that BuildDfsSpaceDetail formats file/directory MB pairs with two decimals.
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -618,26 +766,27 @@ HWTEST_F(DfsSpaceReportTaskTest, BuildDfsSpaceDetailTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest002 Start";
     vector<DfsDirStat> stats(ToIndex(DFS_TARGET_COUNT));
-    // 1.50 MB, 0.25 MB, 1.00 MB, 0.00 MB, 0.99 MB (rounded from 0.99x MB),
-    // 2.50 MB, 0.12 MB (rounded from 0.12x MB), 0.01 MB (very small).
-    stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].blocksBytes = BYTE_TO_MB + BYTE_TO_MB / 2;
-    stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].blocksBytes = BYTE_TO_MB / 4;
-    stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)].blocksBytes = 1 * BYTE_TO_MB;
-    stats[ToIndex(CLOUD_INDEX)].blocksBytes = 0;
-    stats[ToIndex(CACHE_ACCOUNT_INDEX)].blocksBytes = BYTE_TO_MB - (BYTE_TO_MB / 100);
-    stats[ToIndex(CACHE_CLOUD_INDEX)].blocksBytes = 2 * BYTE_TO_MB + BYTE_TO_MB / 2;
-    stats[ToIndex(CACHE_NON_ACCOUNT_INDEX)].blocksBytes = BYTE_TO_MB / 8;
-    stats[ToIndex(CLOUD_MANAGER_INDEX)].blocksBytes = BYTE_TO_MB / 100;
+    stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].fileBlocksBytes = BYTE_TO_MB + BYTE_TO_MB / 2;
+    stats[ToIndex(PUBLIC_CLOUDFILE_INDEX)].dirBlocksBytes = BYTE_TO_MB / 100;
+    stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].fileBlocksBytes = BYTE_TO_MB / 4;
+    stats[ToIndex(PUBLIC_CLOUDKIT_INDEX)].dirBlocksBytes = 0;
+    stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)].fileBlocksBytes = 1 * BYTE_TO_MB;
+    stats[ToIndex(PUBLIC_CLOUD_FILE_SYNC_DB_INDEX)].dirBlocksBytes = BYTE_TO_MB / 2;
+    stats[ToIndex(CACHE_ACCOUNT_INDEX)].fileBlocksBytes = BYTE_TO_MB - (BYTE_TO_MB / 100);
+    stats[ToIndex(CACHE_ACCOUNT_INDEX)].dirBlocksBytes = 2 * BYTE_TO_MB + BYTE_TO_MB / 2;
+    stats[ToIndex(CACHE_CLOUD_INDEX)].fileBlocksBytes = BYTE_TO_MB / 8;
+    stats[ToIndex(CACHE_CLOUD_INDEX)].dirBlocksBytes = BYTE_TO_MB / 100;
 
-    // Total = 1.5 + 0.25 + 1.0 + 0 + 0.99 + 2.5 + 0.125 + 0.01 = 6.375 (caller-supplied).
-    string detail = BuildDfsSpaceDetail(100, stats, 6.375, 7, ScanStopReason::NOT_STOPPED);
+    string detail = BuildDfsSpaceDetail(100, stats, 7, ScanStopReason::NOT_STOPPED);
 
-    EXPECT_EQ(detail, "dfsSpace|100|6.38|1.50,0.25,1.00,0.00,0.99,2.50,0.12,0.01|7|0|0");
-    // Counting sanity: 8 per-target MB fields delimited by exactly 7 commas between the third and fourth '|'.
-    size_t firstListBar = detail.find('|', detail.find('|', detail.find('|') + 1) + 1) + 1;
+    EXPECT_EQ(detail, "dfsSpace|100|1.50:0.01,0.25:0.00,1.00:0.50,0.00:0.00,"
+        "0.99:2.50,0.12:0.01,0.00:0.00,0.00:0.00|7|0");
+    // Counting sanity: 8 per-target file:dir pairs delimited by exactly 7 commas between the second and third '|'.
+    size_t firstListBar = detail.find('|', detail.find('|') + 1) + 1;
     size_t lastListBar = detail.find('|', firstListBar);
     std::string perTargetFields = detail.substr(firstListBar, lastListBar - firstListBar);
     EXPECT_EQ(std::count(perTargetFields.begin(), perTargetFields.end(), ','), ToIndex(DFS_TARGET_COUNT) - 1);
+    EXPECT_EQ(std::count(perTargetFields.begin(), perTargetFields.end(), ':'), ToIndex(DFS_TARGET_COUNT));
     EXPECT_EQ(perTargetFields.find('e'), std::string::npos);
     EXPECT_EQ(perTargetFields.find('E'), std::string::npos);
     GTEST_LOG_(INFO) << "BuildDfsSpaceDetailTest002 End";
@@ -703,7 +852,7 @@ HWTEST_F(DfsSpaceReportTaskTest, CollectDfsSpaceStatsTest001, TestSize.Level1)
     EXPECT_EQ(reportStats.stopped, ScanStopReason::TIMEOUT);
     if (geteuid() == DFS_UID || TryMakeDfsOwned(TEST_ROOT)) {
         EXPECT_GT(reportStats.dfsSpaceTotalBytes, 0U);
-        EXPECT_GT(reportStats.dfsStats[ToIndex(CACHE_ACCOUNT_INDEX)].blocksBytes, 0U);
+        EXPECT_GT(reportStats.dfsStats[ToIndex(CACHE_ACCOUNT_INDEX)].fileBlocksBytes, 0U);
     }
     GTEST_LOG_(INFO) << "CollectDfsSpaceStatsTest001 End";
 }
@@ -814,9 +963,8 @@ HWTEST_F(DfsSpaceReportTaskTest, CollectDfsSpaceStatsTest006, TestSize.Level1)
 
     EXPECT_EQ(ret, E_STOP);
     EXPECT_EQ(reportStats.stopped, ScanStopReason::DEPTH_LIMIT);
-    string detail = BuildDfsSpaceDetail(100, reportStats.dfsStats, BytesToMb(reportStats.dfsSpaceTotalBytes),
-        reportStats.dfsSpaceErrorMask, reportStats.stopped);
-    EXPECT_NE(detail.find("|1|3"), string::npos);
+    string detail = BuildDfsSpaceDetail(100, reportStats.dfsStats, reportStats.dfsSpaceErrorMask, reportStats.stopped);
+    EXPECT_NE(detail.find("|3"), string::npos);
     GTEST_LOG_(INFO) << "CollectDfsSpaceStatsTest006 End";
 }
 
