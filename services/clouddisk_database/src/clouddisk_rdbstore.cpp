@@ -1597,7 +1597,8 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
     }
     AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
-    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::FILE_STATUS });
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates,
+        { FileColumn::FILE_STATUS, FileColumn::DIRTY_TYPE, FileColumn::POSITION });
     if (resultSet == nullptr) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
             CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
@@ -1617,6 +1618,19 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
     if (ret != E_OK) {
         LOGE("get file status failed");
         return ret;
+    }
+    int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
+    if (ret != E_OK) {
+        LOGE("get dirty type failed");
+    } else if (fileStatus == FileStatus::TO_BE_UPLOADED &&
+        (dirtyType == static_cast<int32_t>(DirtyType::TYPE_SYNCED) ||
+            dirtyType == static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD))) {
+        int32_t position = 0;
+        int32_t positionRet = CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
+        LOGE("file status and dirty type mismatch, fileStatus: %{public}d, dirtyType: %{public}d, "
+            "position: %{public}d, positionRet: %{public}d, cloudId: %{public}s",
+            fileStatus, dirtyType, position, positionRet, cloudId.c_str());
     }
     value = to_string(fileStatus);
     return E_OK;

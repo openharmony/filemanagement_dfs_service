@@ -3437,10 +3437,93 @@ HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest7, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(FileStatus::UPLOAD_SUCCESS)), Return(E_OK)))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(DirtyType::TYPE_NEW)), Return(E_OK)));
 
     int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
     EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(value, to_string(static_cast<int32_t>(FileStatus::UPLOAD_SUCCESS)));
+}
+
+/**
+ * @tc.name: FileStatusGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FileStatusGetXattr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest8, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string key = IS_FILE_STATUS_XATTR;
+    std::string value = "";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(FileStatus::UPLOAD_SUCCESS)), Return(E_OK)))
+        .WillOnce(Return(E_RDB));
+
+    int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(value, to_string(static_cast<int32_t>(FileStatus::UPLOAD_SUCCESS)));
+}
+
+/**
+ * @tc.name: FileStatusGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FileStatusGetXattr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest9, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string key = IS_FILE_STATUS_XATTR;
+    std::string value = "";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(FileStatus::TO_BE_UPLOADED)), Return(E_OK)))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(DirtyType::TYPE_SYNCED)), Return(E_OK)))
+        .WillOnce(DoAll(SetArgReferee<1>(LOCAL), Return(E_OK)));
+
+    int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(value, to_string(static_cast<int32_t>(FileStatus::TO_BE_UPLOADED)));
+}
+
+/**
+ * @tc.name: FileStatusGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FileStatusGetXattr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest10, TestSize.Level1)
+{
+    const std::string cloudId = "100";
+    const std::string key = IS_FILE_STATUS_XATTR;
+    std::string value = "";
+    bool preCount = true;
+    auto rdb = make_shared<RdbStoreMock>();
+    clouddiskrdbStore_->rdbStore_ = rdb;
+    std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
+    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
+    EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rset, GetInt(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(FileStatus::TO_BE_UPLOADED)), Return(E_OK)))
+        .WillOnce(DoAll(SetArgReferee<1>(static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD)), Return(E_OK)))
+        .WillOnce(DoAll(SetArgReferee<1>(LOCAL), Return(E_OK)));
+
+    int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(value, to_string(static_cast<int32_t>(FileStatus::TO_BE_UPLOADED)));
 }
 
 /**
