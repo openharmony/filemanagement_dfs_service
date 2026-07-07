@@ -19,16 +19,12 @@
 #include <cstring>
 #include <functional>
 #include <new>
-#include <sys/stat.h>
-#include <sys/xattr.h>
-#include <vector>
 
 #include <securec.h>
 
 #include "cloud_disk_common.h"
 #include "cloud_disk_service_callback.h"
 #include "cloud_disk_service_manager.h"
-#include "dfsu_access_token_helper.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -299,7 +295,6 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
     }
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
-
 CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo relativePathInfo,
                                                    const CloudDisk_PlaceholderInfo placeholderInfo)
@@ -331,10 +326,12 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder)
 {
+    // 1. 基础入参校验：出参为空时不能写默认值，其他错误场景统一保持 false。
     if (isPlaceholder == nullptr) {
         LOGE("Invalid argument, isPlaceholder is nullptr");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
+    *isPlaceholder = false;
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -346,67 +343,37 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
 
     std::string syncFolder(syncFolderPath.value, syncFolderPath.length);
     std::string filePath(path.value, path.length);
-    CloudDisk_ErrorCode permissionRet = CheckPermissions(PERM_CLOUD_DISK_SERVICE, true);
+
+    // 2. 权限校验：与现有批量同步状态查询保持一致，先校验权限再触碰文件系统。
+    CloudDisk_ErrorCode permissionRet = CheckCloudDiskPermission();
     if (permissionRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
-        *isPlaceholder = false;
+        LOGE("Check placeholder permission failed, ret: %{public}d", permissionRet);
         return permissionRet;
     }
 
+    // 3. 路径校验：沙箱路径转换为 HMDFS mount 真实路径，再确认目标位于同步根内。
     std::string realSyncFolder;
     std::string realFilePath;
-    int32_t userId = DfsuAccessTokenHelper::GetUserId();
-    CloudDisk_ErrorCode pathRet = PathToMntPathBySandboxPath(syncFolder, userId, realSyncFolder);
+    CloudDisk_ErrorCode pathRet = PathToMntPathBySandboxPath(syncFolder, realSyncFolder);
     if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
         LOGE("Convert sync folder path to HMDFS mount path failed, ret: %{public}d", pathRet);
-        *isPlaceholder = false;
         return pathRet;
     }
-    pathRet = PathToMntPathBySandboxPath(filePath, userId, realFilePath);
+    pathRet = PathToMntPathBySandboxPath(filePath, realFilePath);
     if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
         LOGE("Convert file path to HMDFS mount path failed, ret: %{public}d", pathRet);
-        *isPlaceholder = false;
         return pathRet;
     }
     if (!IsPathInSyncFolder(realSyncFolder, realFilePath)) {
         LOGE("File path is outside sync folder");
-        *isPlaceholder = false;
         return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED;
     }
-    // Reserved for sync-folder registration and ownership validation once an NDK-readable data source is confirmed.
+    // 同步根注册和归属校验待 NDK 可读数据源明确后在此处补齐。
 
-    struct stat statInfo = {};
-    errno = 0;
-    int statRet = lstat(realFilePath.c_str(), &statInfo);
-    int statErr = errno;
-    LOGI("Xattr probe lstat ret=%{public}d errno=%{public}d mode=%{public}o", statRet, statErr, statInfo.st_mode);
-    if (statRet != 0) {
-        *isPlaceholder = false;
-        return ConvertXattrErrno(statErr);
-    }
-    if (!S_ISREG(statInfo.st_mode)) {
-        LOGE("Invalid argument, file path is not a regular file");
-        *isPlaceholder = false;
-        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
-    }
-
-    std::vector<char> value(GetPlaceholderXattrBufferSize());
-    const char *xattrKey = GetPlaceholderXattrKey();
-    errno = 0;
-    ssize_t xattrRet = getxattr(realFilePath.c_str(), xattrKey, value.data(), value.size());
-    int xattrErr = errno;
-    LOGI("Xattr probe key=%{public}s ret=%{public}zd errno=%{public}d", xattrKey, xattrRet, xattrErr);
-    if (xattrRet >= 0) {
-        *isPlaceholder = ParsePlaceholderXattrValue(value.data(), xattrRet);
-        LOGI("Xattr probe success, isPlaceholder=%{public}d", *isPlaceholder);
-        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
-    }
-    // Missing placeholder xattr means a valid normal file, not a syscall failure.
-    if (xattrErr == ENODATA) {
-        *isPlaceholder = false;
-        return CloudDisk_ErrorCode::CLOUD_DISK_OK;
-    }
-    *isPlaceholder = false;
-    return ConvertXattrErrno(xattrErr);
+    // 4. 文件类型和 xattr 查询：仅当读取到长度为 1 的 placeholder xattr 时返回 true。
+    CloudDisk_ErrorCode queryRet = QueryPlaceholderByXattr(realFilePath, *isPlaceholder);
+    LOGI("Query placeholder by xattr finished, ret=%{public}d, isPlaceholder=%{public}d", queryRet, *isPlaceholder);
+    return queryRet;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)

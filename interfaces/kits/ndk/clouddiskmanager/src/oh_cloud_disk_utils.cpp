@@ -19,7 +19,9 @@
 #include <cstdlib>
 #include <limits.h>
 #include <string>
-#include <strings.h>
+#include <sys/stat.h>
+#include <sys/xattr.h>
+#include <vector>
 
 #include <securec.h>
 
@@ -27,33 +29,10 @@
 #include "utils_log.h"
 
 namespace {
-constexpr const char *PLACEHOLDER_XATTR_KEY = "user.hmdfs.placeholder";
-constexpr size_t PLACEHOLDER_XATTR_BUFFER_SIZE = 64;
 constexpr const char *SANDBOX_PATH_PREFIX = "/storage/Users/currentUser";
 constexpr const char *HMDFS_MNT_PATH_PREFIX = "/mnt/hmdfs/";
 constexpr const char *HMDFS_MNT_PATH_SUFFIX = "/account/device_view/local/files/Docs";
-constexpr ssize_t ASCII_TRUE_LENGTH = 4;
-constexpr ssize_t ASCII_FALSE_LENGTH = 5;
-
-bool IsAsciiFalseValue(const char *value, ssize_t length)
-{
-    if (length == 1 && value[0] == '0') {
-        return true;
-    }
-    return length == ASCII_FALSE_LENGTH && strncasecmp(value, "false", ASCII_FALSE_LENGTH) == 0;
-}
-
-std::string TrimTrailingSlashes(const std::string &path)
-{
-    if (path.empty()) {
-        return path;
-    }
-    size_t end = path.size();
-    while (end > 1 && path[end - 1] == '/') {
-        --end;
-    }
-    return path.substr(0, end);
-}
+constexpr const char *PLACEHOLDER_XATTR_KEY = "user.clouddisk.placeholder";
 
 CloudDisk_ErrorCode ReplacePathPrefix(const std::string &oldPrefix, const std::string &newPrefix,
                                       const std::string &inputPath, std::string &outputPath)
@@ -120,31 +99,9 @@ CloudDisk_ErrorCode CheckPermissions(const std::string &permission, bool isSyste
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
-const char *GetPlaceholderXattrKey()
+CloudDisk_ErrorCode CheckCloudDiskPermission()
 {
-    return PLACEHOLDER_XATTR_KEY;
-}
-
-size_t GetPlaceholderXattrBufferSize()
-{
-    return PLACEHOLDER_XATTR_BUFFER_SIZE;
-}
-
-bool ParsePlaceholderXattrValue(const char *value, ssize_t length)
-{
-    if (length <= 0) {
-        return true;
-    }
-    if (IsAsciiFalseValue(value, length)) {
-        return false;
-    }
-    if (length == 1 && value[0] == '1') {
-        return true;
-    }
-    if (length == ASCII_TRUE_LENGTH && strncasecmp(value, "true", ASCII_TRUE_LENGTH) == 0) {
-        return true;
-    }
-    return value[0] != 0;
+    return CheckPermissions(OHOS::FileManagement::PERM_CLOUD_DISK_SERVICE, true);
 }
 
 char *AllocField(const char *value, size_t length)
@@ -188,21 +145,61 @@ bool IsPathInSyncFolder(const std::string &syncFolderPath, const std::string &fi
         return false;
     }
 
-    std::string normalizedSyncFolder = TrimTrailingSlashes(syncFolderPath);
-    if (filePath == normalizedSyncFolder) {
+    // 同步根本身允许通过；子路径必须以同步根为前缀，并且边界字符必须是 '/'。
+    // 这样可以允许 "/sync/a.txt"，同时拒绝 "/sync2/a.txt" 这类同名前缀目录。
+    if (filePath == syncFolderPath) {
         return true;
     }
-    if (filePath.size() <= normalizedSyncFolder.size()) {
+    if (filePath.size() <= syncFolderPath.size() ||
+        filePath.compare(0, syncFolderPath.size(), syncFolderPath) != 0) {
         return false;
     }
-    if (filePath.compare(0, normalizedSyncFolder.size(), normalizedSyncFolder) != 0) {
-        return false;
-    }
-    return normalizedSyncFolder.back() == '/' || filePath[normalizedSyncFolder.size()] == '/';
+    return syncFolderPath.back() == '/' || filePath[syncFolderPath.size()] == '/';
 }
 
-CloudDisk_ErrorCode PathToMntPathBySandboxPath(const std::string &path, int32_t userId, std::string &realPath)
+CloudDisk_ErrorCode PathToMntPathBySandboxPath(const std::string &path, std::string &realPath)
 {
+    int32_t userId = OHOS::FileManagement::DfsuAccessTokenHelper::GetUserId();
     std::string replacementPath = std::string(HMDFS_MNT_PATH_PREFIX) + std::to_string(userId) + HMDFS_MNT_PATH_SUFFIX;
     return ReplacePathPrefix(SANDBOX_PATH_PREFIX, replacementPath, path, realPath);
+}
+
+CloudDisk_ErrorCode QueryPlaceholderByXattr(const std::string &realFilePath, bool &isPlaceholder)
+{
+    struct stat statInfo = {};
+    errno = 0;
+    int statRet = lstat(realFilePath.c_str(), &statInfo);
+    int statErr = errno;
+    LOGI("Placeholder xattr lstat ret=%{public}d errno=%{public}d mode=%{public}o",
+         statRet, statErr, statInfo.st_mode);
+    if (statRet != 0) {
+        return ConvertXattrErrno(statErr);
+    }
+    if (!S_ISREG(statInfo.st_mode)) {
+        LOGE("Placeholder xattr query rejected non-regular file");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    errno = 0;
+    ssize_t xattrRet = getxattr(realFilePath.c_str(), PLACEHOLDER_XATTR_KEY, nullptr, 0);
+    int xattrErr = errno;
+    LOGI("Placeholder xattr size key=%{public}s ret=%{public}zd errno=%{public}d",
+         PLACEHOLDER_XATTR_KEY, xattrRet, xattrErr);
+    if (xattrRet <= 0) {
+        return ConvertXattrErrno(xattrErr);
+    }
+
+    std::vector<char> value(static_cast<size_t>(xattrRet));
+    errno = 0;
+    xattrRet = getxattr(realFilePath.c_str(), PLACEHOLDER_XATTR_KEY, value.data(), value.size());
+    xattrErr = errno;
+    LOGI("Placeholder xattr read key=%{public}s ret=%{public}zd errno=%{public}d",
+         PLACEHOLDER_XATTR_KEY, xattrRet, xattrErr);
+    if (xattrRet <= 0) {
+        return ConvertXattrErrno(xattrErr);
+    }
+
+    isPlaceholder = (xattrRet == 1);
+    LOGI("Placeholder xattr query success, isPlaceholder=%{public}d", isPlaceholder);
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }

@@ -34,8 +34,10 @@ struct XattrMockState {
     int lstatErrno = 0;
     int userId = DEFAULT_TEST_USER_ID;
     mode_t lstatMode = MOCK_REGULAR_FILE_MODE;
-    ssize_t getxattrRet = MOCK_XATTR_RET_FAIL;
-    int getxattrErrno = ENODATA;
+    ssize_t getxattrSizeRet = MOCK_XATTR_RET_FAIL;
+    int getxattrSizeErrno = ENODATA;
+    ssize_t getxattrValueRet = MOCK_XATTR_RET_FAIL;
+    int getxattrValueErrno = ENODATA;
     std::vector<char> getxattrValue;
     bool permissionGranted = true;
     bool systemApp = true;
@@ -48,6 +50,7 @@ struct XattrMockState {
     std::string lstatPath;
     std::string getxattrPath;
     std::string getxattrName;
+    std::vector<size_t> getxattrSizes;
     std::string permissionName;
     std::string realpathFailPath;
     std::vector<std::string> realpathPaths;

@@ -458,12 +458,12 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
  *
  * @param syncFolderPath Indicates the registered sync folder path information.
  * @param path Indicates the file path information to check.
- * @param isPlaceholder Output parameter. Returns true if the file is a placeholder file; false otherwise.
+ * @param isPlaceholder Output parameter. The value is valid only when the return value is {@link CLOUD_DISK_OK}.
+ * <br>Returns true if the file is a placeholder file; returns false otherwise. The value is set to false on error.
  * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26
  */
-// NOLINTNEXTLINE(readability-identifier-naming)
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder);

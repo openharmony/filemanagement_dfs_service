@@ -33,6 +33,22 @@ XattrMockState &GetXattrMockState()
     return g_xattrMockState;
 }
 
+int MockLstat(const char *path, struct stat *buf)
+{
+    auto &mockState = GetXattrMockState();
+    mockState.lstatCalled = true;
+    mockState.lstatPath = path == nullptr ? "" : path;
+    if (mockState.lstatRet != 0) {
+        errno = mockState.lstatErrno;
+        return mockState.lstatRet;
+    }
+    if (buf != nullptr) {
+        *buf = {};
+        buf->st_mode = mockState.lstatMode;
+    }
+    return 0;
+}
+
 void ResetXattrMock()
 {
     g_xattrMockState = XattrMockState();
@@ -64,18 +80,13 @@ int32_t DfsuAccessTokenHelper::GetUserId()
 extern "C" int Lstat(const char *path, struct stat *buf) __asm__("lstat");
 extern "C" int Lstat(const char *path, struct stat *buf)
 {
-    auto &mockState = OHOS::FileManagement::CloudDiskService::Test::GetXattrMockState();
-    mockState.lstatCalled = true;
-    mockState.lstatPath = path == nullptr ? "" : path;
-    if (mockState.lstatRet != 0) {
-        errno = mockState.lstatErrno;
-        return mockState.lstatRet;
-    }
-    if (buf != nullptr) {
-        *buf = {};
-        buf->st_mode = mockState.lstatMode;
-    }
-    return 0;
+    return OHOS::FileManagement::CloudDiskService::Test::MockLstat(path, buf);
+}
+
+extern "C" int LstatTime64(const char *path, struct stat *buf) __asm__("__lstat_time64");
+extern "C" int LstatTime64(const char *path, struct stat *buf)
+{
+    return OHOS::FileManagement::CloudDiskService::Test::MockLstat(path, buf);
 }
 
 extern "C" char *Realpath(const char *path, char *resolvedPath) __asm__("realpath");
@@ -109,9 +120,16 @@ extern "C" ssize_t Getxattr(const char *path, const char *name, void *value, siz
     mockState.getxattrCalled = true;
     mockState.getxattrPath = path == nullptr ? "" : path;
     mockState.getxattrName = name == nullptr ? "" : name;
-    if (mockState.getxattrRet < 0) {
-        errno = mockState.getxattrErrno;
-        return mockState.getxattrRet;
+    mockState.getxattrSizes.push_back(size);
+    if (value == nullptr && size == 0) {
+        if (mockState.getxattrSizeRet < 0) {
+            errno = mockState.getxattrSizeErrno;
+        }
+        return mockState.getxattrSizeRet;
+    }
+    if (mockState.getxattrValueRet < 0) {
+        errno = mockState.getxattrValueErrno;
+        return mockState.getxattrValueRet;
     }
     if (value != nullptr && size > 0 && !mockState.getxattrValue.empty()) {
         size_t copySize = std::min(size, mockState.getxattrValue.size());
@@ -121,5 +139,5 @@ extern "C" ssize_t Getxattr(const char *path, const char *name, void *value, siz
             return OHOS::FileManagement::CloudDiskService::Test::MOCK_XATTR_RET_FAIL;
         }
     }
-    return mockState.getxattrRet;
+    return mockState.getxattrValueRet;
 }
