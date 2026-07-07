@@ -43,7 +43,6 @@ ohos_shared_library("ohclouddiskmanager") {
   include_dirs = [
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
     "${utils_path}/clouddiskservice/include",
-    "${utils_path}/system/include",
   ]
 
   sources = [
