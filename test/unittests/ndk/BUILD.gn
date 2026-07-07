@@ -28,6 +28,7 @@ ohos_unittest("cloud_disk_manager_test") {
   include_dirs = [
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${utils_path}/system/include",
   ]
 
   deps = [

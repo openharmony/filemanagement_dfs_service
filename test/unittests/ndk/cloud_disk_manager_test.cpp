@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 
 #include "cloud_disk_xattr_mock.h"
-#include "dfsu_access_token_helper.h"
 #include "oh_cloud_disk_manager.h"
 #include "oh_cloud_disk_utils.h"
 #include "cloud_disk_service_manager_mock.h"
@@ -42,6 +41,7 @@ const string SANDBOX_FILE_PATH = "/storage/Users/currentUser/sync/a.txt";
 const string MNT_SYNC_FOLDER = "/mnt/hmdfs/100/account/device_view/local/files/Docs/sync";
 const string MNT_FILE_PATH = "/mnt/hmdfs/100/account/device_view/local/files/Docs/sync/a.txt";
 const string PLACEHOLDER_XATTR_KEY = "user.clouddisk.placeholder";
+const string PERM_CLOUD_DISK_SERVICE = "ohos.permission.ACCESS_CLOUD_DISK_INFO";
 
 CloudDisk_PathInfo ToPathInfo(const string &path)
 {
