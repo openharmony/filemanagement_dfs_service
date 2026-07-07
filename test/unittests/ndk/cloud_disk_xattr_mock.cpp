@@ -17,7 +17,7 @@
 
 #include <algorithm>
 #include <cerrno>
-#include <limits.h>
+#include <climits>
 #include <securec.h>
 #include <sys/stat.h>
 

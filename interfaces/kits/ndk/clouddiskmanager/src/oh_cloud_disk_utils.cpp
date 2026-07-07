@@ -17,7 +17,7 @@
 
 #include <cerrno>
 #include <cstdlib>
-#include <limits.h>
+#include <climits>
 #include <string>
 #include <sys/stat.h>
 #include <sys/xattr.h>

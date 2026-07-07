@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <cerrno>
-#include <limits.h>
+#include <climits>
 #include <securec.h>
 #include <string>
 #include <sys/stat.h>
