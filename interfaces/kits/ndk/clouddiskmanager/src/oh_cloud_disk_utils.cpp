@@ -16,8 +16,8 @@
 #include "oh_cloud_disk_utils.h"
 
 #include <cerrno>
-#include <cstdlib>
 #include <climits>
+#include <cstdlib>
 #include <string>
 #include <sys/stat.h>
 #include <sys/xattr.h>
@@ -28,11 +28,29 @@
 #include "dfsu_access_token_helper.h"
 #include "utils_log.h"
 
+CloudDisk_ErrorCode ConvertXattrErrno(int err)
+{
+    if (err == ENOENT) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+    if (err == EACCES || err == EPERM) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED;
+    }
+    if (err == EOPNOTSUPP) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+    }
+    if (err == EINVAL || err == ENAMETOOLONG) {
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
+}
+
 namespace {
 constexpr const char *SANDBOX_PATH_PREFIX = "/storage/Users/currentUser";
 constexpr const char *HMDFS_MNT_PATH_PREFIX = "/mnt/hmdfs/";
 constexpr const char *HMDFS_MNT_PATH_SUFFIX = "/account/device_view/local/files/Docs";
 constexpr const char *PLACEHOLDER_XATTR_KEY = "user.clouddisk.placeholder";
+constexpr ssize_t PLACEHOLDER_XATTR_LENGTH = 1;
 
 CloudDisk_ErrorCode ReplacePathPrefix(const std::string &oldPrefix, const std::string &newPrefix,
                                       const std::string &inputPath, std::string &outputPath)
@@ -47,8 +65,7 @@ CloudDisk_ErrorCode ReplacePathPrefix(const std::string &oldPrefix, const std::s
     errno = 0;
     if (realpath(newPath.c_str(), realPathBuffer) == nullptr) {
         LOGE("Realpath error: %{public}d", errno);
-        return (errno == ENOENT) ? CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST
-                                 : CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+        return ConvertXattrErrno(errno);
     }
 
     std::string newRealPath(realPathBuffer);
@@ -70,20 +87,6 @@ CloudDisk_ErrorCode ConvertToErrorCode(int32_t innerErrorCode)
     } else {
         return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
     }
-}
-
-CloudDisk_ErrorCode ConvertXattrErrno(int err)
-{
-    if (err == ENOENT) {
-        return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST;
-    }
-    if (err == EACCES || err == EPERM) {
-        return CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED;
-    }
-    if (err == EOPNOTSUPP) {
-        return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
-    }
-    return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
 }
 
 CloudDisk_ErrorCode CheckPermissions(const std::string &permission, bool isSystemApp)
@@ -199,7 +202,7 @@ CloudDisk_ErrorCode QueryPlaceholderByXattr(const std::string &realFilePath, boo
         return ConvertXattrErrno(xattrErr);
     }
 
-    isPlaceholder = (xattrRet == 1);
+    isPlaceholder = (xattrRet == PLACEHOLDER_XATTR_LENGTH);
     LOGI("Placeholder xattr query success, isPlaceholder=%{public}d", isPlaceholder);
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }

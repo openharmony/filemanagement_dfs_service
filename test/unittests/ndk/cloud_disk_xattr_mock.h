@@ -47,6 +47,7 @@ struct XattrMockState {
     bool permissionChecked = false;
     bool systemAppChecked = false;
     bool realpathFail = false;
+    int realpathErrno = ENOENT;
     std::string lstatPath;
     std::string getxattrPath;
     std::string getxattrName;

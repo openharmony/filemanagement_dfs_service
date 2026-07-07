@@ -98,14 +98,22 @@ extern "C" char *Realpath(const char *path, char *resolvedPath)
     mockState.realpathPaths.push_back(inputPath);
     bool shouldFail = mockState.realpathFail &&
         (mockState.realpathFailPath.empty() || mockState.realpathFailPath == inputPath);
-    if (shouldFail || path == nullptr || resolvedPath == nullptr) {
-        errno = ENOENT;
+    if (path == nullptr || resolvedPath == nullptr) {
+        errno = EFAULT;
+        return nullptr;
+    }
+    if (shouldFail) {
+        errno = mockState.realpathErrno;
         return nullptr;
     }
 
     auto item = mockState.realpathResults.find(inputPath);
     const std::string &resolved = item == mockState.realpathResults.end() ? inputPath : item->second;
-    errno_t ret = strcpy_s(resolvedPath, PATH_MAX, resolved.c_str());
+    if (resolved.size() > PATH_MAX) {
+        errno = ENAMETOOLONG;
+        return nullptr;
+    }
+    errno_t ret = strcpy_s(resolvedPath, PATH_MAX + 1, resolved.c_str());
     if (ret != EOK) {
         errno = EINVAL;
         return nullptr;
@@ -121,6 +129,10 @@ extern "C" ssize_t Getxattr(const char *path, const char *name, void *value, siz
     mockState.getxattrPath = path == nullptr ? "" : path;
     mockState.getxattrName = name == nullptr ? "" : name;
     mockState.getxattrSizes.push_back(size);
+    if (path == nullptr || name == nullptr || (value == nullptr && size > 0)) {
+        errno = EFAULT;
+        return OHOS::FileManagement::CloudDiskService::Test::MOCK_XATTR_RET_FAIL;
+    }
     if (value == nullptr && size == 0) {
         if (mockState.getxattrSizeRet < 0) {
             errno = mockState.getxattrSizeErrno;

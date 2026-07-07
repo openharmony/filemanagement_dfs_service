@@ -21,6 +21,7 @@
 #include <securec.h>
 #include <string>
 #include <sys/stat.h>
+#include <sys/xattr.h>
 
 #include "cloud_disk_xattr_mock.h"
 #include "oh_cloud_disk_manager.h"
@@ -651,6 +652,20 @@ HWTEST_F(CloudDiskManagerTest, PathToMntPathBySandboxPathTest001, TestSize.Level
         EXPECT_TRUE(realPath.empty());
         EXPECT_TRUE(missingPathMockState.realpathCalled);
         EXPECT_THAT(missingPathMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
+
+        ResetXattrMock();
+        auto &permissionDeniedMockState = GetXattrMockState();
+        permissionDeniedMockState.userId = TEST_USER_ID;
+        permissionDeniedMockState.realpathFail = true;
+        permissionDeniedMockState.realpathFailPath = MNT_FILE_PATH;
+        permissionDeniedMockState.realpathErrno = EACCES;
+        realPath.clear();
+        ret = PathToMntPathBySandboxPath(SANDBOX_FILE_PATH, realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
+        EXPECT_TRUE(realPath.empty());
+        EXPECT_TRUE(permissionDeniedMockState.realpathCalled);
+        EXPECT_THAT(permissionDeniedMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 failed";
@@ -811,6 +826,15 @@ HWTEST_F(CloudDiskManagerTest, QueryPlaceholderByXattrTest003, TestSize.Level1)
         EXPECT_TRUE(readErrorMockState.lstatCalled);
         EXPECT_TRUE(readErrorMockState.getxattrCalled);
         EXPECT_THAT(readErrorMockState.getxattrSizes, ElementsAre(0, 1));
+
+        ResetXattrMock();
+        errno = 0;
+        ssize_t xattrRet = getxattr(MNT_FILE_PATH.c_str(), PLACEHOLDER_XATTR_KEY.c_str(), nullptr, 1);
+        auto &invalidBufferMockState = GetXattrMockState();
+        EXPECT_EQ(xattrRet, MOCK_XATTR_RET_FAIL);
+        EXPECT_EQ(errno, EFAULT);
+        EXPECT_TRUE(invalidBufferMockState.getxattrCalled);
+        EXPECT_THAT(invalidBufferMockState.getxattrSizes, ElementsAre(1));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 failed";
