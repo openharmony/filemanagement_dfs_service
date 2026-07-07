@@ -30,7 +30,6 @@ ohos_shared_library("ohclouddiskmanager") {
   shlib_type = "napi"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
-  configs += [ "${utils_path}:utils_public_config" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
