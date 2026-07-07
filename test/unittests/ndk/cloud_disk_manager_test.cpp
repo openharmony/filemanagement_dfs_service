@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <cerrno>
+#include <limits.h>
 #include <securec.h>
 #include <string>
 #include <sys/stat.h>
@@ -608,6 +609,214 @@ HWTEST_F(CloudDiskManagerTest, CheckPermissionsTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "CheckPermissionsTest001 failed";
     }
     GTEST_LOG_(INFO) << "CheckPermissionsTest001 end";
+}
+
+/**
+ * @tc.name: PathToMntPathBySandboxPathTest001
+ * @tc.desc: Verify PathToMntPathBySandboxPath converts and validates sandbox paths
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, PathToMntPathBySandboxPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 start";
+    try {
+        auto &successMockState = GetXattrMockState();
+        successMockState.userId = TEST_USER_ID;
+        string realPath;
+        CloudDisk_ErrorCode ret = PathToMntPathBySandboxPath(SANDBOX_FILE_PATH, realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_EQ(realPath, MNT_FILE_PATH);
+        EXPECT_TRUE(successMockState.realpathCalled);
+        EXPECT_THAT(successMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
+
+        ResetXattrMock();
+        auto &invalidPrefixMockState = GetXattrMockState();
+        realPath.clear();
+        ret = PathToMntPathBySandboxPath("/invalid/currentUser/sync/a.txt", realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_TRUE(realPath.empty());
+        EXPECT_FALSE(invalidPrefixMockState.realpathCalled);
+
+        ResetXattrMock();
+        auto &missingPathMockState = GetXattrMockState();
+        missingPathMockState.userId = TEST_USER_ID;
+        missingPathMockState.realpathFail = true;
+        missingPathMockState.realpathFailPath = MNT_FILE_PATH;
+        realPath.clear();
+        ret = PathToMntPathBySandboxPath(SANDBOX_FILE_PATH, realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_TRUE(realPath.empty());
+        EXPECT_TRUE(missingPathMockState.realpathCalled);
+        EXPECT_THAT(missingPathMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest001 end";
+}
+
+/**
+ * @tc.name: PathToMntPathBySandboxPathTest002
+ * @tc.desc: Verify PathToMntPathBySandboxPath rejects unsafe or invalid realpath results
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, PathToMntPathBySandboxPathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 start";
+    try {
+        auto &traversalMockState = GetXattrMockState();
+        traversalMockState.userId = TEST_USER_ID;
+        traversalMockState.realpathResults[MNT_FILE_PATH] = "/tmp/outside.txt";
+        string realPath;
+        CloudDisk_ErrorCode ret = PathToMntPathBySandboxPath(SANDBOX_FILE_PATH, realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_TRUE(realPath.empty());
+        EXPECT_TRUE(traversalMockState.realpathCalled);
+        EXPECT_THAT(traversalMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
+
+        ResetXattrMock();
+        auto &tooLongMockState = GetXattrMockState();
+        tooLongMockState.userId = TEST_USER_ID;
+        tooLongMockState.realpathResults[MNT_FILE_PATH] = string(PATH_MAX + 1, 'a');
+        realPath.clear();
+        ret = PathToMntPathBySandboxPath(SANDBOX_FILE_PATH, realPath);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_TRUE(realPath.empty());
+        EXPECT_TRUE(tooLongMockState.realpathCalled);
+        EXPECT_THAT(tooLongMockState.realpathPaths, ElementsAre(MNT_FILE_PATH));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "PathToMntPathBySandboxPathTest002 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest001
+ * @tc.desc: Verify QueryPlaceholderByXattr maps file and xattr probe outcomes
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, QueryPlaceholderByXattrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 start";
+    try {
+        auto &placeholderMockState = GetXattrMockState();
+        placeholderMockState.getxattrValue = {'1'};
+        placeholderMockState.getxattrSizeRet = static_cast<ssize_t>(placeholderMockState.getxattrValue.size());
+        placeholderMockState.getxattrValueRet = static_cast<ssize_t>(placeholderMockState.getxattrValue.size());
+        bool isPlaceholder = false;
+        CloudDisk_ErrorCode ret = QueryPlaceholderByXattr(MNT_FILE_PATH, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_TRUE(isPlaceholder);
+        EXPECT_TRUE(placeholderMockState.lstatCalled);
+        EXPECT_TRUE(placeholderMockState.getxattrCalled);
+        EXPECT_EQ(placeholderMockState.lstatPath, MNT_FILE_PATH);
+        EXPECT_EQ(placeholderMockState.getxattrPath, MNT_FILE_PATH);
+        EXPECT_THAT(placeholderMockState.getxattrSizes, ElementsAre(0, 1));
+
+        ResetXattrMock();
+        auto &normalFileMockState = GetXattrMockState();
+        normalFileMockState.getxattrValue = {'1', '1'};
+        normalFileMockState.getxattrSizeRet = static_cast<ssize_t>(normalFileMockState.getxattrValue.size());
+        normalFileMockState.getxattrValueRet = static_cast<ssize_t>(normalFileMockState.getxattrValue.size());
+        isPlaceholder = true;
+        ret = QueryPlaceholderByXattr(MNT_FILE_PATH, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_FALSE(isPlaceholder);
+        EXPECT_TRUE(normalFileMockState.lstatCalled);
+        EXPECT_TRUE(normalFileMockState.getxattrCalled);
+        EXPECT_THAT(normalFileMockState.getxattrSizes, ElementsAre(0, 2));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest002
+ * @tc.desc: Verify QueryPlaceholderByXattr stops before xattr on invalid file states
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, QueryPlaceholderByXattrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 start";
+    try {
+        auto &missingFileMockState = GetXattrMockState();
+        missingFileMockState.lstatRet = -1;
+        missingFileMockState.lstatErrno = ENOENT;
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = QueryPlaceholderByXattr(MNT_FILE_PATH, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_TRUE(isPlaceholder);
+        EXPECT_TRUE(missingFileMockState.lstatCalled);
+        EXPECT_FALSE(missingFileMockState.getxattrCalled);
+
+        ResetXattrMock();
+        auto &directoryMockState = GetXattrMockState();
+        directoryMockState.lstatMode = TEST_DIRECTORY_MODE;
+        ret = QueryPlaceholderByXattr(MNT_SYNC_FOLDER, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_TRUE(directoryMockState.lstatCalled);
+        EXPECT_FALSE(directoryMockState.getxattrCalled);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest003
+ * @tc.desc: Verify QueryPlaceholderByXattr maps getxattr size and read failures
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, QueryPlaceholderByXattrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 start";
+    try {
+        auto &sizeErrorMockState = GetXattrMockState();
+        sizeErrorMockState.getxattrSizeRet = MOCK_XATTR_RET_FAIL;
+        sizeErrorMockState.getxattrSizeErrno = ENOTSUP;
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = QueryPlaceholderByXattr(MNT_FILE_PATH, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+        EXPECT_TRUE(isPlaceholder);
+        EXPECT_TRUE(sizeErrorMockState.lstatCalled);
+        EXPECT_TRUE(sizeErrorMockState.getxattrCalled);
+        EXPECT_THAT(sizeErrorMockState.getxattrSizes, ElementsAre(0));
+
+        ResetXattrMock();
+        auto &readErrorMockState = GetXattrMockState();
+        readErrorMockState.getxattrSizeRet = 1;
+        readErrorMockState.getxattrValueRet = MOCK_XATTR_RET_FAIL;
+        readErrorMockState.getxattrValueErrno = EIO;
+        ret = QueryPlaceholderByXattr(MNT_FILE_PATH, isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN);
+        EXPECT_TRUE(readErrorMockState.lstatCalled);
+        EXPECT_TRUE(readErrorMockState.getxattrCalled);
+        EXPECT_THAT(readErrorMockState.getxattrSizes, ElementsAre(0, 1));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 end";
 }
 
 /**
