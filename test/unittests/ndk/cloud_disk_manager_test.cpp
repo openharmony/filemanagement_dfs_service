@@ -531,7 +531,6 @@ HWTEST_F(CloudDiskManagerTest, ConvertXattrErrnoTest001, TestSize.Level1)
         EXPECT_EQ(ConvertXattrErrno(ENOENT), CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST);
         EXPECT_EQ(ConvertXattrErrno(EACCES), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
         EXPECT_EQ(ConvertXattrErrno(EPERM), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
-        EXPECT_EQ(ConvertXattrErrno(ENOTSUP), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
         EXPECT_EQ(ConvertXattrErrno(EOPNOTSUPP), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
         EXPECT_EQ(ConvertXattrErrno(EIO), CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN);
     } catch (...) {

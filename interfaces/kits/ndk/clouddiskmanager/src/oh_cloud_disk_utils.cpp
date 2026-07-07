@@ -80,7 +80,7 @@ CloudDisk_ErrorCode ConvertXattrErrno(int err)
     if (err == EACCES || err == EPERM) {
         return CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED;
     }
-    if (err == ENOTSUP || err == EOPNOTSUPP) {
+    if (err == EOPNOTSUPP) {
         return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
     }
     return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
