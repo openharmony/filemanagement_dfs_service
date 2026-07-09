@@ -597,7 +597,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest007, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest008
- * @tc.desc: Verify first getxattr unexpected errno is converted to try again
+ * @tc.desc: Verify first getxattr ENODATA is converted to invalid argument
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -606,11 +606,11 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest008, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 start";
     try {
         bool isPlaceholder = false;
-        ExpectPlaceholderXattrFailed(insMock_, EIO);
+        ExpectPlaceholderXattrFailed(insMock_, ENODATA);
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_TRY_AGAIN);
+        EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -621,7 +621,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest008, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest009
- * @tc.desc: Verify second getxattr EOPNOTSUPP is converted to not supported
+ * @tc.desc: Verify first getxattr unexpected errno is converted to try again
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -630,11 +630,11 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest009, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 start";
     try {
         bool isPlaceholder = false;
-        ExpectPlaceholderXattrSecondFailed(insMock_, EOPNOTSUPP);
+        ExpectPlaceholderXattrFailed(insMock_, EIO);
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_NOT_SUPPORTED);
+        EXPECT_EQ(res, E_TRY_AGAIN);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -645,7 +645,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest009, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest010
- * @tc.desc: Verify second getxattr ENAMETOOLONG is converted to invalid argument
+ * @tc.desc: Verify second getxattr EOPNOTSUPP is converted to not supported
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -654,11 +654,11 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest010, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 start";
     try {
         bool isPlaceholder = false;
-        ExpectPlaceholderXattrSecondFailed(insMock_, ENAMETOOLONG);
+        ExpectPlaceholderXattrSecondFailed(insMock_, EOPNOTSUPP);
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -669,13 +669,61 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest010, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest011
- * @tc.desc: Verify second getxattr unexpected errno is converted to try again
+ * @tc.desc: Verify second getxattr ENAMETOOLONG is converted to invalid argument
  * @tc.type: FUNC
  * @tc.require: NA
  */
 HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest011, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrSecondFailed(insMock_, ENAMETOOLONG);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest012
+ * @tc.desc: Verify second getxattr ERANGE is converted to invalid argument
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest012 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrSecondFailed(insMock_, ERANGE);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest012 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest012 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest013
+ * @tc.desc: Verify second getxattr unexpected errno is converted to try again
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest013 start";
     try {
         bool isPlaceholder = false;
         ExpectPlaceholderXattrSecondFailed(insMock_, EIO);
@@ -686,9 +734,9 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest011, TestSize.Le
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 failed";
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest013 failed";
     }
-    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 end";
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest013 end";
 }
 
 /**

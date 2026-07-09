@@ -403,6 +403,8 @@ static int32_t ConvertXattrErrnoToServiceErrCode(int32_t error)
             return E_PERMISSION_DENIED;
         case EOPNOTSUPP:
             return E_NOT_SUPPORTED;
+        case ENODATA:
+        case ERANGE:
         case EINVAL:
         case ENAMETOOLONG:
             return E_INVALID_ARG;
