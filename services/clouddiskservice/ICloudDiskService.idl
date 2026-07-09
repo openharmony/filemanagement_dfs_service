@@ -27,6 +27,7 @@ interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
     List<FailedList> SetFileSyncStatesInner([in] String syncFolder, [in] List<FileSyncState> fileSyncStates);
     List<ResultList> GetFileSyncStatesInner([in] String syncFolder, [in] List<String> pathArray);
     void CreatePlaceholderFileInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo info);
+    boolean IsPlaceholderFileInner([in] String syncFolder, [in] String path);
     void RegisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterForSaInner([in] String path);

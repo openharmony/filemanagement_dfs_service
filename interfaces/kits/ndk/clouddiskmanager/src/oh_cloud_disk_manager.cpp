@@ -326,7 +326,6 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder)
 {
-    // 1. 基础入参校验：出参为空时不能写默认值，其他错误场景统一保持 false。
     if (isPlaceholder == nullptr) {
         LOGE("Invalid argument, isPlaceholder is nullptr");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -344,36 +343,9 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
     std::string syncFolder(syncFolderPath.value, syncFolderPath.length);
     std::string filePath(path.value, path.length);
 
-    // 2. 权限校验：与现有批量同步状态查询保持一致，先校验权限再触碰文件系统。
-    CloudDisk_ErrorCode permissionRet = CheckCloudDiskPermission();
-    if (permissionRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
-        LOGE("Check placeholder permission failed, ret: %{public}d", permissionRet);
-        return permissionRet;
-    }
-
-    // 3. 路径校验：沙箱路径转换为 HMDFS mount 真实路径，再确认目标位于同步根内。
-    std::string realSyncFolder;
-    std::string realFilePath;
-    CloudDisk_ErrorCode pathRet = PathToMntPathBySandboxPath(syncFolder, realSyncFolder);
-    if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
-        LOGE("Convert sync folder path to HMDFS mount path failed, ret: %{public}d", pathRet);
-        return pathRet;
-    }
-    pathRet = PathToMntPathBySandboxPath(filePath, realFilePath);
-    if (pathRet != CloudDisk_ErrorCode::CLOUD_DISK_OK) {
-        LOGE("Convert file path to HMDFS mount path failed, ret: %{public}d", pathRet);
-        return pathRet;
-    }
-    if (!IsPathInSyncFolder(realSyncFolder, realFilePath)) {
-        LOGE("File path is outside sync folder");
-        return CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED;
-    }
-    // 同步根注册和归属校验待 NDK 可读数据源明确后在此处补齐。
-
-    // 4. 文件类型和 xattr 查询：仅当读取到长度为 1 的 placeholder xattr 时返回 true。
-    CloudDisk_ErrorCode queryRet = QueryPlaceholderByXattr(realFilePath, *isPlaceholder);
-    LOGI("Query placeholder by xattr finished, ret=%{public}d, isPlaceholder=%{public}d", queryRet, *isPlaceholder);
-    return queryRet;
+    int32_t ret = CloudDiskServiceManager::GetInstance().IsPlaceholderFile(syncFolder, filePath, *isPlaceholder);
+    LOGI("Is placeholder file finished, ret=%{public}d, isPlaceholder=%{public}d", ret, *isPlaceholder);
+    return ConvertToErrorCode(ret);
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)

@@ -46,11 +46,16 @@ struct XattrMockState {
     bool realpathCalled = false;
     bool permissionChecked = false;
     bool systemAppChecked = false;
+    bool managerCalled = false;
     bool realpathFail = false;
     int realpathErrno = ENOENT;
+    int32_t managerRet = 0;
+    bool managerIsPlaceholder = false;
     std::string lstatPath;
     std::string getxattrPath;
     std::string getxattrName;
+    std::string managerSyncFolder;
+    std::string managerPath;
     std::vector<size_t> getxattrSizes;
     std::string permissionName;
     std::string realpathFailPath;

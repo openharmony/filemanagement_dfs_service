@@ -184,6 +184,11 @@ int ioctl(int fd, int request, ...)
     }
     return realIoctl(fd, request, arg);
 }
+
+ssize_t getxattr(const char *path, const char *name, void *value, size_t size)
+{
+    return Assistant::ins->getxattr(path, name, value, size);
+}
 }
 
 int fstat(int fd, struct stat *buf)
