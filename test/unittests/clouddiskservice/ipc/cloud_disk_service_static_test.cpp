@@ -69,6 +69,16 @@ void ExpectPlaceholderXattrFailed(const shared_ptr<AssistantMock> &mock, int32_t
             return static_cast<ssize_t>(-1);
         }));
 }
+
+void ExpectPlaceholderXattrSecondFailed(const shared_ptr<AssistantMock> &mock, int32_t error)
+{
+    EXPECT_CALL(*mock, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), nullptr, 0)).WillOnce(Return(1));
+    EXPECT_CALL(*mock, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), _, 1))
+        .WillOnce(Invoke([error](const char *, const char *, void *, size_t) {
+            errno = error;
+            return static_cast<ssize_t>(-1);
+        }));
+}
 } // namespace
 
 class CloudDiskServiceStaticTest : public testing::Test {
@@ -524,12 +534,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest005, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest005 start";
     try {
         bool isPlaceholder = false;
-        EXPECT_CALL(*insMock_, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), nullptr, 0)).WillOnce(Return(1));
-        EXPECT_CALL(*insMock_, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), _, 1))
-            .WillOnce(Invoke([](const char *, const char *, void *, size_t) {
-                errno = EACCES;
-                return static_cast<ssize_t>(-1);
-            }));
+        ExpectPlaceholderXattrSecondFailed(insMock_, EACCES);
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
@@ -540,6 +545,150 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest005, TestSize.Le
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest005 failed";
     }
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest005 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest006
+ * @tc.desc: Verify first getxattr EOPNOTSUPP is converted to not supported
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest006 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrFailed(insMock_, EOPNOTSUPP);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest006 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest007
+ * @tc.desc: Verify first getxattr EINVAL is converted to invalid argument
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest007 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrFailed(insMock_, EINVAL);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest007 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest008
+ * @tc.desc: Verify first getxattr unexpected errno is converted to try again
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrFailed(insMock_, EIO);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_TRY_AGAIN);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest009
+ * @tc.desc: Verify second getxattr EOPNOTSUPP is converted to not supported
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrSecondFailed(insMock_, EOPNOTSUPP);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest010
+ * @tc.desc: Verify second getxattr ENAMETOOLONG is converted to invalid argument
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrSecondFailed(insMock_, ENAMETOOLONG);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 end";
+}
+
+/**
+ * @tc.name: QueryPlaceholderByXattrTest011
+ * @tc.desc: Verify second getxattr unexpected errno is converted to try again
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 start";
+    try {
+        bool isPlaceholder = false;
+        ExpectPlaceholderXattrSecondFailed(insMock_, EIO);
+
+        auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
+
+        EXPECT_EQ(res, E_TRY_AGAIN);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 end";
 }
 
 /**

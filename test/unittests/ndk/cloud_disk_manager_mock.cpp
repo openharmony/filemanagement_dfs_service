@@ -22,17 +22,17 @@
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 namespace {
-XattrMockState g_xattrMockState;
+CloudDiskManagerMockState g_cloudDiskManagerMockState;
 }
 
-XattrMockState &GetXattrMockState()
+CloudDiskManagerMockState &GetCloudDiskManagerMockState()
 {
-    return g_xattrMockState;
+    return g_cloudDiskManagerMockState;
 }
 
-void ResetXattrMock()
+void ResetCloudDiskManagerMock()
 {
-    g_xattrMockState = XattrMockState();
+    g_cloudDiskManagerMockState = CloudDiskManagerMockState();
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test
 
@@ -42,30 +42,30 @@ public:
     int32_t RegisterSyncFolderChanges(const std::string &syncFolder,
                                       const std::shared_ptr<CloudDiskServiceCallback> callback) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t UnregisterSyncFolderChanges(const std::string &syncFolder) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t GetSyncFolderChanges(const std::string &syncFolder, uint64_t count, uint64_t startUsn,
                                  ChangesResult &changesResult) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t SetFileSyncStates(const std::string &syncFolder, const std::vector<FileSyncState> &fileSyncStates,
                               std::vector<FailedList> &failedList) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t GetFileSyncStates(const std::string &syncFolder, const std::vector<std::string> &pathArray,
                               std::vector<ResultList> &resultList) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t CreatePlaceholderFile(const std::string &syncFolder, const std::string &relativePath,
@@ -83,7 +83,7 @@ public:
 
     int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path, bool &isPlaceholder) override
     {
-        auto &mockState = CloudDiskService::Test::GetXattrMockState();
+        auto &mockState = CloudDiskService::Test::GetCloudDiskManagerMockState();
         mockState.managerCalled = true;
         mockState.managerSyncFolder = syncFolder;
         mockState.managerPath = path;
@@ -93,17 +93,17 @@ public:
 
     int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 
     int32_t UnregisterForSa(const std::string &path) override
     {
-        return CloudDiskService::Test::GetXattrMockState().managerRet;
+        return CloudDiskService::Test::GetCloudDiskManagerMockState().managerRet;
     }
 };
 

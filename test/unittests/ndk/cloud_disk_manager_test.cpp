@@ -58,7 +58,7 @@ void CloudDiskManagerTest::TearDownTestCase(void)
 
 void CloudDiskManagerTest::SetUp(void)
 {
-    ResetXattrMock();
+    ResetCloudDiskManagerMock();
 }
 
 void CloudDiskManagerTest::TearDown(void)
@@ -492,7 +492,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest001, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
         CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
-        auto &mockState = GetXattrMockState();
+        auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 0;
         mockState.managerIsPlaceholder = true;
 
@@ -523,7 +523,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest002, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
         CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
-        auto &mockState = GetXattrMockState();
+        auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 0;
         mockState.managerIsPlaceholder = false;
 
@@ -552,7 +552,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest003, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
         CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
-        auto &mockState = GetXattrMockState();
+        auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 34400002;
         mockState.managerIsPlaceholder = true;
 
@@ -582,7 +582,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest004, TestSize.Level1)
         CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, nullptr);
-        auto &mockState = GetXattrMockState();
+        auto &mockState = GetCloudDiskManagerMockState();
 
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
         EXPECT_FALSE(mockState.managerCalled);
@@ -609,7 +609,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest005, TestSize.Level1)
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(invalidSyncFolderPath, path, &isPlaceholder);
 
-        auto &invalidMockState = GetXattrMockState();
+        auto &invalidMockState = GetCloudDiskManagerMockState();
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
         EXPECT_FALSE(invalidMockState.managerCalled);
@@ -618,5 +618,32 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 failed";
     }
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest006
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile rejects invalid file path before IPC
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo invalidPath = {nullptr, 1};
+        bool isPlaceholder = true;
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, invalidPath, &isPlaceholder);
+
+        auto &mockState = GetCloudDiskManagerMockState();
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+        EXPECT_FALSE(mockState.managerCalled);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

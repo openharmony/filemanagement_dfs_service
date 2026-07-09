@@ -20,7 +20,7 @@
 #include <string>
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
-struct XattrMockState {
+struct CloudDiskManagerMockState {
     bool managerCalled = false;
     bool managerCreateCalled = false;
     int32_t managerRet = 0;
@@ -33,8 +33,8 @@ struct XattrMockState {
     uint64_t managerMtimeMs = 0;
 };
 
-XattrMockState &GetXattrMockState();
-void ResetXattrMock();
+CloudDiskManagerMockState &GetCloudDiskManagerMockState();
+void ResetCloudDiskManagerMock();
 } // namespace OHOS::FileManagement::CloudDiskService::Test
 
 #endif // OHOS_FILEMGMT_CLOUD_DISK_MANAGER_MOCK_H
