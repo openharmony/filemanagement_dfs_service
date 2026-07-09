@@ -4887,11 +4887,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetHasChildTest5, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkSyncedTest1, TestSize.Level1)
 {
     const std::string cloudId = "100";
+    const int64_t visitTime = 1234567890;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_RDB));
     
-    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId);
+    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId, visitTime);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -4903,11 +4904,12 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkSyncedTest1, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkSyncedTest2, TestSize.Level1)
 {
     const std::string cloudId = "100";
+    const int64_t visitTime = 1234567890;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_OK));
     
-    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId);
+    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId, visitTime);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -4919,10 +4921,11 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkSyncedTest2, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkSyncedTest3, TestSize.Level1)
 {
     const std::string cloudId = "";
+    const int64_t visitTime = 1234567890;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
-    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId);
+    int32_t ret = clouddiskrdbStore_->UnlinkSynced(cloudId, visitTime);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -4983,10 +4986,11 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
 {
     std::string cloudId = "";
     const int32_t noUpload = 0;
+    const int64_t visitTime = 1234567890;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
 
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -4998,11 +5002,12 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest2, TestSize.Level1)
 {
     const int32_t noUpload = 1;
+    const int64_t visitTime = 1234567890;
     std::string cloudId = "rootId";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -5014,12 +5019,13 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest2, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest3, TestSize.Level1)
 {
     const int32_t noUpload = 1;
+    const int64_t visitTime = 1234567890;
     std::string cloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Delete(_, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_OK));
     
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -5031,12 +5037,13 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest3, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest4, TestSize.Level1)
 {
     const int32_t noUpload = 0;
+    const int64_t visitTime = 1234567890;
     std::string cloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_OK));
     
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -5048,12 +5055,13 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest4, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest5, TestSize.Level1)
 {
     const int32_t noUpload = 1;
+    const int64_t visitTime = 1234567890;
     std::string cloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Delete(_, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -5065,12 +5073,13 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest5, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest6, TestSize.Level1)
 {
     const int32_t noUpload = 0;
+    const int64_t visitTime = 1234567890;
     std::string cloudId = "100";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<std::string> &>())).WillOnce(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload);
+    int32_t ret = clouddiskrdbStore_->Unlink(cloudId, noUpload, visitTime);
     EXPECT_EQ(ret, E_RDB);
 }
 

@@ -62,7 +62,8 @@ public:
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName, bool newFileNoNeedUpload,
         bool needSyncAndNotify);
-    int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
+    // visitTime: deletion timestamp in microseconds since epoch, used for ordering deleted records during sync
+    int32_t Unlink(const std::string &cloudId, const int32_t &noUpload, const int64_t &visitTime);
     int32_t RecycleSetXattr(std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
@@ -124,7 +125,8 @@ public:
 
 private:
     void Stop();
-    int32_t UnlinkSynced(const std::string &cloudId);
+    // visitTime: deletion timestamp in microseconds since epoch, used for ordering deleted records during sync
+    int32_t UnlinkSynced(const std::string &cloudId, const int64_t &visitTime);
     int32_t UnlinkLocal(const std::string &cloudId);
     int32_t ReBuildDatabase(const std::string &databasePath);
     bool TryOpenRdbStore(const std::string &customDir, const std::string &databasePath, int32_t &errCode);

@@ -216,7 +216,7 @@ int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChil
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
+int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId, const int64_t &visitTime)
 {
     return E_OK;
 }
@@ -226,7 +226,7 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position, const int64_t &visitTime)
 {
     return E_OK;
 }

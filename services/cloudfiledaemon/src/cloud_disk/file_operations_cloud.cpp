@@ -15,6 +15,7 @@
 #include "file_operations_cloud.h"
 
 #include <cerrno>
+#include <chrono>
 #include <sstream>
 #include <sys/types.h>
 #include <sys/xattr.h>
@@ -1582,8 +1583,14 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
 
 void RDBUnlinkAsync(shared_ptr<CloudDiskRdbStore> rdbStore, const string& cloudId, int32_t noUpload)
 {
-    function<void()> rdbUnlink = [rdbStore, cloudId, noUpload] {
-        if (rdbStore->Unlink(cloudId, noUpload) != 0) {
+    // Record deletion time in microseconds for precise ordering during deletion sync.
+    // Once a record is marked as TYPE_DELETED, its FILE_TIME_VISIT (overwritten by this value)
+    // will only be used for deletion sync ordering, and will never revert to non-deleted state,
+    // so microsecond precision here does not conflict with millisecond atime values in non-deleted records.
+    int64_t visitTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    function<void()> rdbUnlink = [rdbStore, cloudId, noUpload, visitTime] {
+        if (rdbStore->Unlink(cloudId, noUpload, visitTime) != 0) {
             CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"",
                 CloudFile::FaultOperation::UNLINK, CloudFile::FaultType::DATABASE, EINVAL,
                 "Failed to unlink DB cloudId: " + cloudId});
