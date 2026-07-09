@@ -15,9 +15,6 @@
 
 #include "oh_cloud_disk_utils.h"
 
-#include <cstring>
-#include <new>
-
 #include <securec.h>
 
 #include "utils_log.h"
