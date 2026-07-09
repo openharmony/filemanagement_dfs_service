@@ -215,27 +215,6 @@ int setxattr(const char *path, const char *name, const void *value, size_t size,
     return realSetxattr(path, name, value, size, flags);
 }
 
-ssize_t getxattr(const char *path, const char *name, void *value, size_t size)
-{
-    if (AssistantMock::IsMockable()) {
-        return Assistant::ins->getxattr(path, name, value, size);
-    }
-
-    static ssize_t (*realGetxattr)(const char *, const char *, void *, size_t) = []() {
-        auto func = (ssize_t (*)(const char *, const char *, void *, size_t))dlsym(RTLD_NEXT, "getxattr");
-        if (!func) {
-            GTEST_LOG_(ERROR) << "Failed to resolve real getxattr: " << dlerror();
-        }
-        return func;
-    }();
-
-    if (!realGetxattr) {
-        return -1;
-    }
-
-    return realGetxattr(path, name, value, size);
-}
-
 int fstat(int fd, struct stat *buf)
 {
     if (AssistantMock::IsMockable()) {

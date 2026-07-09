@@ -53,8 +53,8 @@ const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
-constexpr uint8_t PLACEHOLDER_VALUE_LOCAL = 1;
-constexpr uint8_t PLACEHOLDER_VALUE_CLOUD = 2;
+constexpr uint8_t PLACEHOLDER_STATE_PLACEHOLDER = 1;
+constexpr uint8_t PLACEHOLDER_STATE_HYDRATING = 2;
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
@@ -393,7 +393,7 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static int32_t ConvertXattrErrno(int32_t error)
+static int32_t ConvertXattrErrnoToServiceErrCode(int32_t error)
 {
     switch (error) {
         case ENOENT:
@@ -570,7 +570,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         int32_t error = errno;
         LOGE("getxattr failed, errno : %{public}d", error);
-        return ConvertXattrErrno(error);
+        return ConvertXattrErrnoToServiceErrCode(error);
     }
 
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize);
@@ -583,11 +583,12 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         int32_t error = errno;
         LOGE("getxattr failed, errno : %{public}d", error);
-        return ConvertXattrErrno(error);
+        return ConvertXattrErrnoToServiceErrCode(error);
     }
 
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
-    isPlaceholder = placeholderValue == PLACEHOLDER_VALUE_LOCAL || placeholderValue == PLACEHOLDER_VALUE_CLOUD;
+    isPlaceholder = placeholderValue == PLACEHOLDER_STATE_PLACEHOLDER ||
+        placeholderValue == PLACEHOLDER_STATE_HYDRATING;
     return E_OK;
 }
 
