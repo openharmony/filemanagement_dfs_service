@@ -15,7 +15,6 @@
 
 #include "oh_cloud_disk_manager.h"
 
-#include <cerrno>
 #include <cstring>
 #include <functional>
 #include <new>

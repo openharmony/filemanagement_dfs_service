@@ -566,9 +566,10 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
 
 static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &isPlaceholder)
 {
+    int32_t error = E_OK;
     auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
     if (xattrValueSize <= 0) {
-        int32_t error = errno;
+        error = errno;
         LOGE("getxattr failed, errno : %{public}d", error);
         return ConvertXattrErrnoToServiceErrCode(error);
     }
@@ -581,14 +582,17 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
 
     xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
-        int32_t error = errno;
+        error = errno;
         LOGE("getxattr failed, errno : %{public}d", error);
         return ConvertXattrErrnoToServiceErrCode(error);
     }
 
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
-    isPlaceholder = placeholderValue == PLACEHOLDER_STATE_PLACEHOLDER ||
-        placeholderValue == PLACEHOLDER_STATE_HYDRATING;
+    if (placeholderValue == PLACEHOLDER_STATE_PLACEHOLDER || placeholderValue == PLACEHOLDER_STATE_HYDRATING) {
+        isPlaceholder = true;
+    } else {
+        isPlaceholder = false;
+    }
     return E_OK;
 }
 
@@ -701,6 +705,9 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     isPlaceholder = false;
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(userId);
+    }
     std::string physicalSyncFolder;
 
     int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
