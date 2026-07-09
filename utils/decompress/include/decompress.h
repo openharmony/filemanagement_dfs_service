@@ -32,6 +32,10 @@ API_EXPORT bool CreateInnerFile(const std::string &sourcePath,
 
 API_EXPORT bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive);
 
+API_EXPORT bool CheckModuleApiVersionSupported(const std::string &moduleName,
+                                               const uint32_t targetVersion,
+                                               const uint32_t minVersion);
+
 API_EXPORT bool GetSystemFeature();
 
 } // namespace Decompress

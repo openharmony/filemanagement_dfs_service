@@ -61,8 +61,10 @@ namespace {
     constexpr const char* PDEDUP_FEATURE_NODE_PATH = "/sys/fs/hmfs/userdata/support_pdedup";
     constexpr size_t MAX_PATH_LENGTH = PATH_MAX;
     constexpr const char* CLOUD_SYNC_LIB_PATH = "libcloudsync_kit_inner.z.so";
-    constexpr int MAX_RETRY = 1;
+    constexpr int MAX_RETRY = 2;
     constexpr int RETRY_DELAY_US = 100000;
+    constexpr uint32_t MAX_UNCOMPATIBLE_TARGET_VERSION = 20;
+    constexpr uint32_t API_VERSION_MOD = 1000;
 }
 
 using GetUnsupportedListFunc = int32_t(*)(std::vector<std::string>*);
@@ -266,6 +268,7 @@ bool CreateInnerFile(const std::string &sourcePath, const std::string &targetPat
     return success;
 }
 
+
 bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive)
 {
     if (isKeepAlive) {
@@ -302,6 +305,19 @@ bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive)
     bool supported = unsupportedCache.find(bundleName) == unsupportedCache.end();
     LOGD("Bundle %{public}s is %{public}s", bundleName.c_str(), supported ? "supported" : "not supported");
     return supported;
+}
+
+bool CheckModuleApiVersionSupported(const std::string &moduleName,
+                                    const uint32_t targetVersion,
+                                    const uint32_t minVersion)
+{
+    uint32_t apiVersion = targetVersion % API_VERSION_MOD;
+    LOGD("Module %{public}s apiVersion %{public}u, targetVersion: %{public}u, minVersion: %{public}u",
+        moduleName.c_str(), apiVersion, targetVersion, minVersion);
+    if (apiVersion <= MAX_UNCOMPATIBLE_TARGET_VERSION) {
+        return false;
+    }
+    return true;
 }
 
 static bool ReadPdedupFeatureNode()
