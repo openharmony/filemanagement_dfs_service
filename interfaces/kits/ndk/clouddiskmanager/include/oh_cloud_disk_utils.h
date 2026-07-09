@@ -16,8 +16,6 @@
 #ifndef FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_UTILS_H
 #define FILEMANAGEMENT_KIT_OH_CLOUD_DISK_MANAGER_UTILS_H
 
-#include <cstddef>
-#include <cstdint>
 #include <unordered_map>
 
 #include "cloud_disk_service_error.h"
