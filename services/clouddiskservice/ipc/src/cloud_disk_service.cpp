@@ -537,7 +537,7 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
         return getResult;
     }
 
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize);
+    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
     if (xattrValue == nullptr) {
         LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         getResult.error = ErrorReason::NO_SPACE_LEFT;
@@ -573,7 +573,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
         return ConvertXattrErrnoToServiceErrCode(error);
     }
 
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize);
+    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
     if (xattrValue == nullptr) {
         LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
         return E_TRY_AGAIN;
