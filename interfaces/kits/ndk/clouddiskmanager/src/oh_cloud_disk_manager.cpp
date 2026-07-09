@@ -19,6 +19,7 @@
 #include <cstring>
 #include <functional>
 #include <new>
+#include <vector>
 
 #include <securec.h>
 
