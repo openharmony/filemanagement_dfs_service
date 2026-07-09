@@ -42,8 +42,6 @@ ohos_shared_library("ohclouddiskmanager") {
 
   include_dirs = [
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
-    "${utils_path}/clouddiskservice/include",
-    "${utils_path}/system/include",
   ]
 
   sources = [
@@ -53,7 +51,7 @@ ohos_shared_library("ohclouddiskmanager") {
 
   deps = [
     "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
   ]
 
   external_deps = [
