@@ -79,6 +79,11 @@ void ExpectPlaceholderXattrSecondFailed(const shared_ptr<AssistantMock> &mock, i
             return static_cast<ssize_t>(-1);
         }));
 }
+
+void ClearPlaceholderXattrExpectations(const shared_ptr<AssistantMock> &mock)
+{
+    Mock::VerifyAndClearExpectations(mock.get());
+}
 } // namespace
 
 class CloudDiskServiceStaticTest : public testing::Test {
@@ -448,6 +453,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest001, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 end";
 }
 
@@ -472,6 +478,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest002, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 end";
 }
 
@@ -496,6 +503,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest003, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 end";
 }
 
@@ -520,6 +528,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest004, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest004 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest004 end";
 }
 
@@ -544,6 +553,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest005, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest005 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest005 end";
 }
 
@@ -568,6 +578,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest006, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest006 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest006 end";
 }
 
@@ -592,6 +603,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest007, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest007 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest007 end";
 }
 
@@ -616,6 +628,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest008, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest008 end";
 }
 
@@ -640,6 +653,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest009, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest009 end";
 }
 
@@ -664,6 +678,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest010, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest010 end";
 }
 
@@ -688,6 +703,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest011, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest011 end";
 }
 
@@ -712,6 +728,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest012, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest012 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest012 end";
 }
 
@@ -736,6 +753,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest013, TestSize.Le
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest013 failed";
     }
+    ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest013 end";
 }
 
