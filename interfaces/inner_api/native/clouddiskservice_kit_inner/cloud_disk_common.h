@@ -102,6 +102,15 @@ struct ResultList : public FailedList {
     static ResultList *Unmarshalling(Parcel &parcel);
 };
 
+struct PlaceholderInfo : public Parcelable {
+    uint64_t logicalSize{0};
+    uint64_t atimeMs{0};
+    uint64_t mtimeMs{0};
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static PlaceholderInfo *Unmarshalling(Parcel &parcel);
+};
+
 #define RETURN_ON_ERR(ret)   \
     do {                     \
         int32_t res = ret;   \

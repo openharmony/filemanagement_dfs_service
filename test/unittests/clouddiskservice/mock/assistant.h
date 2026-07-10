@@ -16,14 +16,17 @@
 #define TEST_UNITTEST_CLOUD_DISK_SERVICE_ASSISTANT_H
 
 #include <dirent.h>
-#include <unistd.h>
 #include <gmock/gmock.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace OHOS::FileManagement::CloudDiskService {
 class Assistant {
 public:
     static inline std::shared_ptr<Assistant> ins = nullptr;
     static inline int32_t mockErrno = 0;
+    static inline bool mockFdApi = false;
 
     virtual ~Assistant() = default;
     virtual ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) = 0;
@@ -36,6 +39,11 @@ public:
     virtual int fstat(int fd, struct stat *buf) = 0;
     virtual int ftruncate(int fd, off_t length) = 0;
     virtual int removexattr(const char *path, const char *name) = 0;
+    virtual int Open(const char *path, int flags, mode_t mode) = 0;
+    virtual int OpenAt(int dirfd, const char *path, int flags, mode_t mode) = 0;
+    virtual int Unlink(const char *path) = 0;
+    virtual int UnlinkAt(int dirfd, const char *path, int flags) = 0;
+    virtual int Ioctl(int fd, int request, void *arg) = 0;
 
     // file_utils
     virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
@@ -57,6 +65,11 @@ public:
     MOCK_METHOD2(fstat, int(int, struct stat *));
     MOCK_METHOD2(ftruncate, int(int, off_t));
     MOCK_METHOD2(removexattr, int(const char *, const char *));
+    MOCK_METHOD3(Open, int(const char *, int, mode_t));
+    MOCK_METHOD4(OpenAt, int(int, const char *, int, mode_t));
+    MOCK_METHOD1(Unlink, int(const char *));
+    MOCK_METHOD3(UnlinkAt, int(int, const char *, int));
+    MOCK_METHOD3(Ioctl, int(int, int, void *));
 
     // file_utils
     MOCK_METHOD4(ReadFile, int64_t(int, off_t, size_t, void *));

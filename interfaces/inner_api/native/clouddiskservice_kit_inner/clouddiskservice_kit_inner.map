@@ -22,6 +22,7 @@
       *OHOS::FileManagement::CloudDiskService::ChangeData*;
       *OHOS::FileManagement::CloudDiskService::ChangesResult*;
       *OHOS::FileManagement::CloudDiskService::FailedList*;
+      *OHOS::FileManagement::CloudDiskService::PlaceholderInfo*;
       *OHOS::FileManagement::CloudDiskService::ResultList*;
 
       # Utility functions

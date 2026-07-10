@@ -355,6 +355,25 @@ typedef struct CloudDisk_SyncFolder {
 } CloudDisk_SyncFolder;
 
 /**
+ * @brief Defines metadata used to create a placeholder file.
+ * @since 26.1.0
+ */
+typedef struct CloudDisk_PlaceholderInfo {
+    /**
+     * Indicates the logical size of the cloud file.
+     */
+    uint64_t logicalSize;
+    /**
+     * Indicates the access time view of the placeholder, in milliseconds.
+     */
+    uint64_t atimeMs;
+    /**
+     * Indicates the cloud file modification time view, in milliseconds.
+     */
+    uint64_t mtimeMs;
+} CloudDisk_PlaceholderInfo;
+
+/**
  * @brief Registers a callback function to notify the application of sync folder changes.
  *
  * @param syncFolderPath Indicates the sync folder path information.
@@ -496,6 +515,20 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFolders(CloudDisk_SyncFolder **syncFolde
  */
 CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(
     const CloudDisk_SyncFolderPath syncFolderPath, const char *customAlias, size_t customAliasLength);
+
+/**
+ * @brief Creates a placeholder in a registered sync folder.
+ *
+ * @param syncFolderPath Indicates the registered sync folder path.
+ * @param relativePathInfo Indicates the relative path in the sync folder.
+ * @param placeholderInfo Indicates the placeholder metadata.
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                   const CloudDisk_PathInfo relativePathInfo,
+                                                   const CloudDisk_PlaceholderInfo placeholderInfo);
 #ifdef __cplusplus
 };
 #endif

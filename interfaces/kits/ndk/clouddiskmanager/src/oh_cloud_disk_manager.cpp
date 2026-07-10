@@ -280,6 +280,32 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
+CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                   const CloudDisk_PathInfo relativePathInfo,
+                                                   const CloudDisk_PlaceholderInfo placeholderInfo)
+{
+    if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length) ||
+        !IsValidPathInfo(relativePathInfo.value, relativePathInfo.length)) {
+        LOGE("CreatePlaceholderFile branch=invalid_arg");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    PlaceholderInfo innerInfo;
+    innerInfo.logicalSize = placeholderInfo.logicalSize;
+    innerInfo.atimeMs = placeholderInfo.atimeMs;
+    innerInfo.mtimeMs = placeholderInfo.mtimeMs;
+    int32_t ret = CloudDiskServiceManager::GetInstance().CreatePlaceholderFile(
+        string(syncFolderPath.value, syncFolderPath.length), string(relativePathInfo.value, relativePathInfo.length),
+        innerInfo);
+    if (ret != CloudDiskServiceErrCode::E_OK) {
+        LOGE("CreatePlaceholderFile branch=service_failed ret=%{public}d", ret);
+        return ConvertToErrorCode(ret);
+    }
+
+    LOGI("CreatePlaceholderFile branch=success");
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+}
+
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE

@@ -40,10 +40,11 @@ public:
         const std::vector<FileSyncState> &, std::vector<FailedList> &));
     MOCK_METHOD3(GetFileSyncStates, int32_t(const std::string &, const std::vector<std::string> &,
         std::vector<ResultList> &));
+    MOCK_METHOD3(CreatePlaceholderFile, int32_t(const std::string &, const std::string &, const PlaceholderInfo &));
     MOCK_METHOD3(RegisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
     MOCK_METHOD3(UnregisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
-    MOCK_METHOD1(UnregisterForSa, int32_t(const string&));
+    MOCK_METHOD1(UnregisterForSa, int32_t(const std::string &));
 };
 }
 
-#endif
+#endif // TEST_UNITTEST_CLOUD_DISK_SERVICE_MANAGER_MOCK_H

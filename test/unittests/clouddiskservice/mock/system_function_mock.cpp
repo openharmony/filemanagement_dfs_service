@@ -14,7 +14,12 @@
  */
 #include "assistant.h"
 
+#include <cerrno>
+#include <cstdarg>
+#include <dlfcn.h>
+#include <fcntl.h>
 #include <sys/fanotify.h>
+#include <sys/ioctl.h>
 
 #include "file_utils.h"
 
@@ -54,6 +59,131 @@ int setxattr(const char *path, const char *name, const void *value, size_t size,
 {
     return Assistant::ins->setxattr(path, name, value, size, flags);
 }
+
+int open(const char *path, int flags, ...)
+{
+    mode_t mode = 0;
+    if ((flags & O_CREAT) != 0) {
+        va_list args;
+        va_start(args, flags);
+        mode = static_cast<mode_t>(va_arg(args, int));
+        va_end(args);
+    }
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        errno = Assistant::mockErrno;
+        return Assistant::ins->Open(path, flags, mode);
+    }
+
+    static int (*realOpen)(const char *, int, ...) = []() {
+        return reinterpret_cast<int (*)(const char *, int, ...)>(dlsym(RTLD_NEXT, "open"));
+    }();
+    if (realOpen == nullptr) {
+        return -1;
+    }
+    if ((flags & O_CREAT) != 0) {
+        return realOpen(path, flags, mode);
+    }
+    return realOpen(path, flags);
+}
+
+int openat(int dirfd, const char *path, int flags, ...)
+{
+    mode_t mode = 0;
+    if ((flags & O_CREAT) != 0) {
+        va_list args;
+        va_start(args, flags);
+        mode = static_cast<mode_t>(va_arg(args, int));
+        va_end(args);
+    }
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        errno = Assistant::mockErrno;
+        return Assistant::ins->OpenAt(dirfd, path, flags, mode);
+    }
+
+    static int (*realOpenAt)(int, const char *, int, ...) = []() {
+        return reinterpret_cast<int (*)(int, const char *, int, ...)>(dlsym(RTLD_NEXT, "openat"));
+    }();
+    if (realOpenAt == nullptr) {
+        return -1;
+    }
+    if ((flags & O_CREAT) != 0) {
+        return realOpenAt(dirfd, path, flags, mode);
+    }
+    return realOpenAt(dirfd, path, flags);
+}
+
+int unlink(const char *path)
+{
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        errno = Assistant::mockErrno;
+        return Assistant::ins->Unlink(path);
+    }
+
+    static int (*realUnlink)(const char *) = []() {
+        return reinterpret_cast<int (*)(const char *)>(dlsym(RTLD_NEXT, "unlink"));
+    }();
+    if (realUnlink == nullptr) {
+        return -1;
+    }
+    return realUnlink(path);
+}
+
+int unlinkat(int dirfd, const char *path, int flags)
+{
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        errno = Assistant::mockErrno;
+        return Assistant::ins->UnlinkAt(dirfd, path, flags);
+    }
+
+    static int (*realUnlinkAt)(int, const char *, int) = []() {
+        return reinterpret_cast<int (*)(int, const char *, int)>(dlsym(RTLD_NEXT, "unlinkat"));
+    }();
+    if (realUnlinkAt == nullptr) {
+        return -1;
+    }
+    return realUnlinkAt(dirfd, path, flags);
+}
+
+int ioctl(int fd, int request, ...)
+{
+    va_list args;
+    va_start(args, request);
+    void *arg = va_arg(args, void *);
+    va_end(args);
+
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        errno = Assistant::mockErrno;
+        return Assistant::ins->Ioctl(fd, request, arg);
+    }
+
+    static int (*realIoctl)(int, int, ...) = []() {
+        return reinterpret_cast<int (*)(int, int, ...)>(dlsym(RTLD_NEXT, "ioctl"));
+    }();
+    if (realIoctl == nullptr) {
+        return -1;
+    }
+    return realIoctl(fd, request, arg);
+}
 }
 
 int fstat(int fd, struct stat *buf)
@@ -82,4 +212,3 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
     return Assistant::ins->WriteFile(fd, data, offset, size);
 }
 } // namespace OHOS::FileManagement
-

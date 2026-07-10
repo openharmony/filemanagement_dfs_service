@@ -56,6 +56,9 @@ public:
     ErrCode GetFileSyncStatesInner(const std::string &syncFolder,
                                    const std::vector<std::string> &pathArray,
                                    std::vector<ResultList> &resultList) override;
+    ErrCode CreatePlaceholderFileInner(const std::string &syncFolder,
+                                       const std::string &relativePath,
+                                       const PlaceholderInfo &info) override;
     ErrCode RegisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path) override;
     ErrCode UnregisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path) override;
 
