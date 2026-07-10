@@ -70,35 +70,56 @@ namespace {
 using GetUnsupportedListFunc = int32_t(*)(std::vector<std::string>*);
 using GetSystemFeatureFunc = int32_t(*)(bool*);
 
-static void* LoadCloudSyncLibrary()
-{
-    void* handle = dlopen(CLOUD_SYNC_LIB_PATH, RTLD_LAZY);
-    if (handle == nullptr) {
-        LOGE("dlopen failed for %{public}s: %{public}s", CLOUD_SYNC_LIB_PATH, dlerror());
-        return nullptr;
+class CloudSyncLibraryManager {
+public:
+    static CloudSyncLibraryManager& GetInstance()
+    {
+        static CloudSyncLibraryManager instance;
+        return instance;
     }
-    return handle;
-}
 
-static GetUnsupportedListFunc GetUnsupportedListSymbol(void* handle)
-{
-    auto func = reinterpret_cast<GetUnsupportedListFunc>(
-        dlsym(handle, "CloudSync_GetDecompressUnsupportedList"));
-    if (func == nullptr) {
-        LOGE("dlsym CloudSync_GetDecompressUnsupportedList failed: %{public}s", dlerror());
-    }
-    return func;
-}
+    void* GetHandle() const { return handle_; }
+    bool IsLoaded() const { return handle_ != nullptr; }
 
-static GetSystemFeatureFunc GetSystemFeatureSymbol(void* handle)
-{
-    auto func = reinterpret_cast<GetSystemFeatureFunc>(
-        dlsym(handle, "CloudSync_GetDecompressSystemFeature"));
-    if (func == nullptr) {
-        LOGE("dlsym CloudSync_GetDecompressSystemFeature failed: %{public}s", dlerror());
+    GetUnsupportedListFunc GetUnsupportedListSymbol()
+    {
+        return GetSymbolFunc<GetUnsupportedListFunc>("CloudSync_GetDecompressUnsupportedList");
     }
-    return func;
-}
+
+    GetSystemFeatureFunc GetSystemFeatureSymbol()
+    {
+        return GetSymbolFunc<GetSystemFeatureFunc>("CloudSync_GetDecompressSystemFeature");
+    }
+
+private:
+    CloudSyncLibraryManager()
+    {
+        handle_ = dlopen(CLOUD_SYNC_LIB_PATH, RTLD_LAZY | RTLD_LOCAL | RTLD_NODELETE);
+        if (handle_ == nullptr) {
+            LOGE("dlopen failed for %{public}s: %{public}s", CLOUD_SYNC_LIB_PATH, dlerror());
+        }
+    }
+
+    ~CloudSyncLibraryManager()
+    {
+        // No dlclose: RTLD_NODELETE ensures library stays loaded, system auto-cleanup.
+    }
+
+    template<typename FuncType>
+    FuncType GetSymbolFunc(const char* symbol)
+    {
+        if (handle_ == nullptr) {
+            return nullptr;
+        }
+        auto func = reinterpret_cast<FuncType>(dlsym(handle_, symbol));
+        if (func == nullptr) {
+            LOGE("dlsym %{public}s failed: %{public}s", symbol, dlerror());
+        }
+        return func;
+    }
+
+    void* handle_ = nullptr;
+};
 
 static bool SplitTargetPath(const std::string &targetPath, std::string &dirPath, std::string &fileName)
 {
@@ -279,13 +300,13 @@ bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive)
     static std::once_flag initFlag;
 
     std::call_once(initFlag, []() {
-        void* handle = LoadCloudSyncLibrary();
-        if (handle == nullptr) {
+        auto& manager = CloudSyncLibraryManager::GetInstance();
+        if (!manager.IsLoaded()) {
             LOGE("Failed to load cloud sync library");
             return;
         }
 
-        auto func = GetUnsupportedListSymbol(handle);
+        auto func = manager.GetUnsupportedListSymbol();
         if (func != nullptr) {
             std::vector<std::string> unsupportedList;
             int32_t ret = func(&unsupportedList);
@@ -298,8 +319,6 @@ bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive)
                 LOGE("Get unsupported list failed, ret: %{public}d", ret);
             }
         }
-
-        dlclose(handle);
     });
 
     bool supported = unsupportedCache.find(bundleName) == unsupportedCache.end();
@@ -358,13 +377,13 @@ bool GetSystemFeature()
             return;
         }
 
-        void* handle = LoadCloudSyncLibrary();
-        if (handle == nullptr) {
+        auto& manager = CloudSyncLibraryManager::GetInstance();
+        if (!manager.IsLoaded()) {
             LOGE("Failed to load cloud sync library");
             return;
         }
 
-        auto func = GetSystemFeatureSymbol(handle);
+        auto func = manager.GetSystemFeatureSymbol();
         if (func != nullptr) {
             bool systemFeature = false;
             int32_t ret = func(&systemFeature);
@@ -375,8 +394,6 @@ bool GetSystemFeature()
                 LOGE("Get system feature via IPC failed, ret: %{public}d", ret);
             }
         }
-
-        dlclose(handle);
     });
 
     return cachedFeature;
