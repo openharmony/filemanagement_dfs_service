@@ -53,8 +53,11 @@ const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
-constexpr uint8_t PLACEHOLDER_STATE_PLACEHOLDER = 1;
-constexpr uint8_t PLACEHOLDER_STATE_HYDRATING = 2;
+
+enum PlaceholderState : uint8_t {
+    PLACEHOLDER_STATE_PLACEHOLDER = 1,
+    PLACEHOLDER_STATE_HYDRATING = 2,
+};
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
@@ -592,8 +595,6 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
     if (placeholderValue == PLACEHOLDER_STATE_PLACEHOLDER || placeholderValue == PLACEHOLDER_STATE_HYDRATING) {
         isPlaceholder = true;
-    } else {
-        isPlaceholder = false;
     }
     return E_OK;
 }
