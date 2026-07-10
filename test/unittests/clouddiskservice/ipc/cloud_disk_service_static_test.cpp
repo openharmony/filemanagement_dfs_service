@@ -51,7 +51,7 @@ namespace {
 const string PLACEHOLDER_TEST_PATH = "/mnt/hmdfs/1/account/device_view/local/files/Docs/testfile.txt";
 const char *PLACEHOLDER_TEST_XATTR = "user.clouddisk.placeholder";
 
-void ExpectPlaceholderXattrValue(const shared_ptr<AssistantMock> &mock, uint8_t placeholderValue)
+void ExpectPlaceholderXattrValue(const shared_ptr<AssistantMock> &mock, char placeholderValue)
 {
     EXPECT_CALL(*mock, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), nullptr, 0)).WillOnce(Return(1));
     EXPECT_CALL(*mock, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), _, 1))
@@ -434,7 +434,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest006, TestSize.Level1)
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest001
- * @tc.desc: Verify placeholder xattr value 1 is treated as placeholder
+ * @tc.desc: Verify placeholder xattr value '1' is treated as placeholder
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -443,7 +443,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest001, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest001 start";
     try {
         bool isPlaceholder = false;
-        ExpectPlaceholderXattrValue(insMock_, 1);
+        ExpectPlaceholderXattrValue(insMock_, '1');
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
@@ -459,7 +459,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest001, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest002
- * @tc.desc: Verify placeholder xattr value 2 is treated as placeholder
+ * @tc.desc: Verify placeholder xattr value '2' is treated as placeholder
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -468,7 +468,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest002, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest002 start";
     try {
         bool isPlaceholder = false;
-        ExpectPlaceholderXattrValue(insMock_, 2);
+        ExpectPlaceholderXattrValue(insMock_, '2');
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
@@ -484,7 +484,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest002, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest003
- * @tc.desc: Verify placeholder xattr values other than 1 and 2 are not placeholder
+ * @tc.desc: Verify placeholder xattr values other than '1' and '2' are not placeholder
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -493,7 +493,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest003, TestSize.Le
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 start";
     try {
         bool isPlaceholder = true;
-        ExpectPlaceholderXattrValue(insMock_, 3);
+        ExpectPlaceholderXattrValue(insMock_, '3');
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 

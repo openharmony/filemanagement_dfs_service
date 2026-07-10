@@ -55,8 +55,8 @@ constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
 
 enum PlaceholderState : uint8_t {
-    PLACEHOLDER_STATE_PLACEHOLDER = 1,
-    PLACEHOLDER_STATE_HYDRATING = 2,
+    PLACEHOLDER_STATE_PLACEHOLDER = '1',
+    PLACEHOLDER_STATE_HYDRATING = '2',
 };
 
 namespace {
