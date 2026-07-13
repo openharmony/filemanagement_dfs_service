@@ -85,11 +85,14 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
 {
     const std::string sandboxPath = "/storage/Users/currentUser";
     const std::string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-    if (path.empty() || path == "/test/mockFailed" || path.find("mockPhysicalFailed") != std::string::npos) {
+    if (path.empty() || path.find("mockPhysicalFailed") != std::string::npos) {
         return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
     if (path == "/storage/Users/currentUser/Download/test_success") {
         realpath = "/data/test/path";
+        return E_OK;
+    }
+    if (path == "/test/mockFailed") {
         return E_OK;
     }
     if (path.find(sandboxPath) == 0) {
