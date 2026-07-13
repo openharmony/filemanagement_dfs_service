@@ -492,7 +492,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest003, TestSize.Le
 {
     GTEST_LOG_(INFO) << "QueryPlaceholderByXattrTest003 start";
     try {
-        bool isPlaceholder = true;
+        bool isPlaceholder = false;
         ExpectPlaceholderXattrValue(insMock_, '3');
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
