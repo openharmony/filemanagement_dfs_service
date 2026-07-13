@@ -575,7 +575,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
     if (xattrValueSize <= 0) {
         error = errno;
-        LOGE("getxattr failed, errno : %{public}d", error);
+        LOGE("getxattr size failed, errno : %{public}d", error);
         return ConvertXattrErrnoToServiceErrCode(error);
     }
 
@@ -588,7 +588,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
         error = errno;
-        LOGE("getxattr failed, errno : %{public}d", error);
+        LOGE("getxattr value failed, errno : %{public}d", error);
         return ConvertXattrErrnoToServiceErrCode(error);
     }
 
@@ -707,7 +707,7 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     LOGI("Begin IsPlaceholderFileInner");
     isPlaceholder = false;
     if (!CloudDisk::CloudFileUtils::IsValidRelativePath(path)) {
-        LOGE("Invalid relative path");
+        LOGE("Invalid relative path, path size = %{public}zu", path.size());
         return E_INVALID_ARG;
     }
 
