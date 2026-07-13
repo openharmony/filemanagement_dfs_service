@@ -179,6 +179,21 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_DentryHash_012, TestSize.Level
     }
 }
 
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_IsValidRelativePath_013, TestSize.Level0)
+{
+    EXPECT_TRUE(CloudFileUtils::IsValidRelativePath("dir/file.txt"));
+    EXPECT_TRUE(CloudFileUtils::IsValidRelativePath("./dir/file.txt"));
+    EXPECT_FALSE(CloudFileUtils::IsValidRelativePath(""));
+    EXPECT_FALSE(CloudFileUtils::IsValidRelativePath("/dir/file.txt"));
+    EXPECT_FALSE(CloudFileUtils::IsValidRelativePath("dir/../file.txt"));
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_JoinPath_014, TestSize.Level0)
+{
+    EXPECT_EQ(CloudFileUtils::JoinPath("/mnt/hmdfs/100", "dir/file.txt"), "/mnt/hmdfs/100/dir/file.txt");
+    EXPECT_EQ(CloudFileUtils::JoinPath("/mnt/hmdfs/100/", "dir/file.txt"), "/mnt/hmdfs/100/dir/file.txt");
+}
+
 HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_013, TestSize.Level0)
 {
     string dfsPath = "./";

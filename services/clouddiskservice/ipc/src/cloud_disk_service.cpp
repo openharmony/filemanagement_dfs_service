@@ -706,6 +706,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin IsPlaceholderFileInner");
     isPlaceholder = false;
+    if (!CloudDisk::CloudFileUtils::IsValidRelativePath(path)) {
+        LOGE("Invalid relative path");
+        return E_INVALID_ARG;
+    }
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
@@ -735,22 +739,14 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
         return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
-    std::string actualSyncFolder = syncFolder;
-    if (!syncFolder.empty() && syncFolder.back() != '/') {
-        actualSyncFolder += "/";
-    }
-    if (path.compare(0, actualSyncFolder.size(), actualSyncFolder) != 0) {
-        LOGE("path does not match the syncFolder");
-        return E_SYNC_FOLDER_PATH_UNAUTHORIZED;
+    std::string mntSyncFolder;
+    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(physicalSyncFolder, std::to_string(userId),
+        mntSyncFolder)) {
+        LOGE("Get mnt sync folder path failed");
+        return E_INVALID_ARG;
     }
 
-    std::string getXattrPath;
-    ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId), getXattrPath);
-    if (ret != E_OK) {
-        LOGE("Get xattr path failed, ret = %{public}d", ret);
-        return ret;
-    }
-
+    std::string getXattrPath = CloudDisk::CloudFileUtils::JoinPath(mntSyncFolder, path);
     ret = QueryPlaceholderByXattr(getXattrPath, isPlaceholder);
     LOGI("End IsPlaceholderFileInner, ret=%{public}d, isPlaceholder=%{public}d", ret, isPlaceholder);
     return ret;

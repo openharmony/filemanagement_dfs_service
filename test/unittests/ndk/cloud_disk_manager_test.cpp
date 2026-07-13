@@ -30,7 +30,7 @@ using namespace std;
 
 namespace {
 const string SANDBOX_SYNC_FOLDER = "/storage/Users/currentUser/sync";
-const string SANDBOX_FILE_PATH = "/storage/Users/currentUser/sync/a.txt";
+const string RELATIVE_FILE_PATH = "a.txt";
 
 CloudDisk_PathInfo ToPathInfo(const string &path)
 {
@@ -491,7 +491,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest001 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
-        CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
         auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 0;
         mockState.managerIsPlaceholder = true;
@@ -503,7 +503,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest001, TestSize.Level1)
         EXPECT_TRUE(isPlaceholder);
         EXPECT_TRUE(mockState.managerCalled);
         EXPECT_EQ(mockState.managerSyncFolder, SANDBOX_SYNC_FOLDER);
-        EXPECT_EQ(mockState.managerPath, SANDBOX_FILE_PATH);
+        EXPECT_EQ(mockState.managerPath, RELATIVE_FILE_PATH);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest001 failed";
@@ -522,7 +522,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest002 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
-        CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
         auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 0;
         mockState.managerIsPlaceholder = false;
@@ -551,7 +551,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest003 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
-        CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
         auto &mockState = GetCloudDiskManagerMockState();
         mockState.managerRet = 34400002;
         mockState.managerIsPlaceholder = true;
@@ -579,7 +579,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest004 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
-        CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, nullptr);
         auto &mockState = GetCloudDiskManagerMockState();
@@ -603,7 +603,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 start";
     try {
-        CloudDisk_PathInfo path = ToPathInfo(SANDBOX_FILE_PATH);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
         CloudDisk_SyncFolderPath invalidSyncFolderPath = {nullptr, 1};
         bool isPlaceholder = true;
 
