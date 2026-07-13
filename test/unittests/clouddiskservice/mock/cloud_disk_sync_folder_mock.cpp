@@ -50,11 +50,11 @@ bool CloudDiskSyncFolder::CheckSyncFolder(const uint32_t &syncFolderIndex)
 bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, std::string &path)
 {
     auto iter = syncFolderMap.find(syncFolderIndex);
-    if (iter != syncFolderMap.end()) {
-        path = iter->second.path;
-        return true;
+    if (iter == syncFolderMap.end()) {
+        return false;
     }
-    return false;
+    path = iter->second.path;
+    return true;
 }
 
 bool CloudDiskSyncFolder::GetSyncFolderValueByIndex(const uint32_t syncFolderIndex, SyncFolderValue &syncFolderValue)
@@ -84,12 +84,16 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
                                                 const std::string &userId, std::string &realpath)
 {
     const std::string sandboxPath = "/storage/Users/currentUser";
-    const std::string physicalPrefix = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-    if (path == "" || path == "/test/mockFailed" || path.find("mockPhysicalFailed") != std::string::npos) {
+    const std::string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    if (path.empty() || path == "/test/mockFailed" || path.find("mockPhysicalFailed") != std::string::npos) {
         return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
+    if (path == "/storage/Users/currentUser/Download/test_success") {
+        realpath = "/data/test/path";
+        return E_OK;
+    }
     if (path.find(sandboxPath) == 0) {
-        realpath = physicalPrefix + path.substr(sandboxPath.length());
+        realpath = replacementPath + path.substr(sandboxPath.length());
         return E_OK;
     }
     realpath = path;
@@ -100,12 +104,12 @@ int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
                                                         const std::string &userId, std::string &realpath)
 {
     const std::string sandboxPath = "/storage/Users/currentUser";
-    const std::string mntPrefix = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
+    const std::string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
     if (path == "/test/mockFailed" || path.find("mockMntFailed") != std::string::npos) {
         return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
     if (path.find(sandboxPath) == 0) {
-        realpath = mntPrefix + path.substr(sandboxPath.length());
+        realpath = replacementPath + path.substr(sandboxPath.length());
         return E_OK;
     }
     realpath = path;
