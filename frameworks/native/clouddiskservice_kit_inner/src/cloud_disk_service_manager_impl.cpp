@@ -232,6 +232,26 @@ int32_t CloudDiskServiceManagerImpl::UnregisterForSa(const std::string &path)
 #endif
 }
 
+int32_t CloudDiskServiceManagerImpl::ConvertPlaceholderToFile(const std::string &syncFolder,
+    const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start ConvertPlaceholderToFile in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    auto ret = serviceProxy->ConvertPlaceholderToFileInner(syncFolder, relativePath);
+    SetDeathRecipient(serviceProxy->AsObject());
+    LOGI("ConvertPlaceholderToFile, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 void CloudDiskServiceManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     if (!isFirstCall_.test_and_set()) {

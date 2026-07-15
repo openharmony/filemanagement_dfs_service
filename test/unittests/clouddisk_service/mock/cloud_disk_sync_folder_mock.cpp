@@ -14,6 +14,7 @@
  */
 
 #include "cloud_disk_sync_folder.h"
+#include "cloud_disk_service_error.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 #define E_OK 0
@@ -55,6 +56,10 @@ bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, s
 
 bool CloudDiskSyncFolder::GetSyncFolderValueByIndex(const uint32_t syncFolderIndex, SyncFolderValue &syncFolderValue)
 {
+    /* DentryHash计算/test/mockFailed/GetSyncFolderValueByIndex值为628519229返回失败 */
+    if (syncFolderIndex == 628519229) {
+        return false;
+    }
     return true;
 }
 
@@ -70,10 +75,18 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
 int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId,
     std::string &realpath)
 {
+    if (path == "/test/mockFailed/PathToPhysicalPath") {
+        return OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+    if (path == "/test/mockFailed/GetSyncFolderValueByIndex") {
+        realpath = "/test/mockFailed/GetSyncFolderValueByIndex";
+        return E_OK;
+    }
     // 实际实现：只有以 "/storage/Users/currentUser" 开头的路径才能转换成功
     const std::string sandboxPath = "/storage/Users/currentUser";
     if (path.empty() || path.find(sandboxPath) != 0) {
-        return 0;
+        realpath = path;
+        return E_OK;
     }
     // 模拟路径转换：将 sandboxPath 替换为物理路径
     std::string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
@@ -84,6 +97,13 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const s
 int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path, const std::string &userId,
     std::string &realpath)
 {
+    if (path == "/test/mockFailed/PathToMntPathBySandboxPath") {
+        return OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_SYNC_FOLDER_PATH_NOT_EXIST;
+    } else if (path == "/test/mockSuccess/PathToMntPathBySandboxPath") {
+        realpath = "/hmdfs/" + path;
+        return E_OK;
+    }
+    realpath = "/hmdfs/" + path;
     return 1;
 }
 

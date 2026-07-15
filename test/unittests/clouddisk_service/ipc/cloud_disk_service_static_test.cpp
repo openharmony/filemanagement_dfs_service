@@ -425,4 +425,493 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetFileSyncStateTest004 end";
 }
 
+/**
+ * @tc.name: CheckSyncFolderBundleName_PathConvertFail_001
+ * @tc.desc: Verify CheckSyncFolderBundleName when PathToPhysicalPath fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CheckSyncFolderBundleName_PathConvertFail_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_PathConvertFail_001 start";
+    try {
+        std::string syncFolder = "/test/mockFailed/PathToPhysicalPath";
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.test";
+
+        int32_t ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_PathConvertFail_001 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_PathConvertFail_001 end";
+}
+
+/**
+ * @tc.name: CheckSyncFolderBundleName_NotRegistered_002
+ * @tc.desc: Verify CheckSyncFolderBundleName when sync folder not registered
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CheckSyncFolderBundleName_NotRegistered_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_NotRegistered_002 start";
+    try {
+        std::string syncFolder = "/test/mockFailed/GetSyncFolderValueByIndex";
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.test";
+
+        int32_t ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+        EXPECT_EQ(ret, E_SYNC_FOLDER_NOT_REGISTERED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_NotRegistered_002 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_NotRegistered_002 end";
+}
+
+/**
+ * @tc.name: CheckSyncFolderBundleName_BundleNameMismatch_003
+ * @tc.desc: Verify CheckSyncFolderBundleName when bundleName mismatch
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CheckSyncFolderBundleName_BundleNameMismatch_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_BundleNameMismatch_003 start";
+    try {
+        std::string syncFolder = "/test/";
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.test";
+
+        int32_t ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_UNAUTHORIZED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_BundleNameMismatch_003 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_BundleNameMismatch_003 end";
+}
+
+/**
+ * @tc.name: CheckSyncFolderBundleName_Success_004
+ * @tc.desc: Verify CheckSyncFolderBundleName with successful check
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CheckSyncFolderBundleName_Success_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_Success_004 start";
+    try {
+        std::string syncFolder = "/test/";
+        int32_t userId = 100;
+        std::string bundleName = "";
+
+        int32_t ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_Success_004 failed";
+    }
+    GTEST_LOG_(INFO) << "CheckSyncFolderBundleName_Success_004 end";
+}
+
+/**
+ * @tc.name: GetHmdfsPath_PathConvertFail_001
+ * @tc.desc: Verify GetHmdfsPath when PathToMntPathBySandboxPath fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_PathConvertFail_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 start";
+    try {
+        std::string syncFolder = "/test/mockFailed";
+        std::string path = "/test/mockFailed/PathToMntPathBySandboxPath";
+        int32_t userId = 100;
+        std::string hmdfsPath;
+
+        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
+        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 end";
+}
+
+/**
+ * @tc.name: GetHmdfsPath_AccessFailed_002
+ * @tc.desc: Verify GetHmdfsPath with successful path conversion
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_AccessFailed_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPath_AccessFailed_002 start";
+    try {
+        std::string syncFolder = "/test/mockSuccess";
+        std::string path = "PathToMntPathBySandboxPath";
+        int32_t userId = 100;
+        std::string hmdfsPath;
+
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+
+        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
+        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPath_AccessFailed_002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPath_AccessFailed_002 end";
+}
+
+/**
+ * @tc.name: GetHmdfsPath_Success_003
+ * @tc.desc: Verify GetHmdfsPath with successful path conversion
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_Success_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPath_Success_003 start";
+    try {
+        std::string syncFolder = "/test/mockSuccess";
+        std::string path = "PathToMntPathBySandboxPath";
+        int32_t userId = 100;
+        std::string hmdfsPath;
+
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(0));
+
+        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPath_Success_003 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPath_Success_003 end";
+}
+
+/**
+ * @tc.name: GetHmdfsPath_RelativePathStartWithSlash_004
+ * @tc.desc: Verify GetHmdfsPath when relative path starts with '/'
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_RelativePathStartWithSlash_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_004 start";
+    try {
+        std::string syncFolder = "/test/mockSuccess";
+        std::string path = "/file.txt";
+        int32_t userId = 100;
+        std::string hmdfsPath;
+
+        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_004 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_004 end";
+}
+
+/**
+ * @tc.name: GetHmdfsPath_RelativePathStartWithSlash_005
+ * @tc.desc: Verify GetHmdfsPath when relative path ends with '/'
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_RelativePathStartWithSlash_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_005 start";
+    try {
+        std::string syncFolder = "/test/mockSuccess";
+        std::string path = "file.txt/";
+        int32_t userId = 100;
+        std::string hmdfsPath;
+
+        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
+        EXPECT_EQ(ret, E_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_005 failed";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPath_RelativePathStartWithSlash_005 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_OpenFail_001
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile with nonexistent file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_OpenFail_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_OpenFail_001 start";
+    try {
+        string invalidPath = "/tmp/nonexistent_placeholder_file_12345";
+        int32_t ret = ConvertPlaceholderToEmptyFile(invalidPath);
+        EXPECT_NE(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_OpenFail_001 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_OpenFail_001 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_NotPlaceholder_003
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile with non-placeholder file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_NotPlaceholder_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_NotPlaceholder_003 start";
+    try {
+        string testFilePath = "/data/test_non_placeholder_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_EQ(ret, ENODATA);
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_NotPlaceholder_003 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_NotPlaceholder_003 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_Success_006
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile with valid placeholder file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_Success_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 start";
+    insMock_->DisableMock();
+    try {
+        string testFilePath = "/data/test_placeholder_success_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd < 0) {
+            GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
+            return;
+        }
+        char placeholderValue = '1';
+        if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue, sizeof(placeholderValue), 0) != 0) {
+            close(fd);
+            unlink(testFilePath.c_str());
+            GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
+            return;
+        }
+        close(fd);
+
+        int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+        EXPECT_EQ(ret, 0);
+
+        struct stat st;
+        if (stat(testFilePath.c_str(), &st) == 0) {
+            EXPECT_EQ(st.st_size, 0);
+        }
+
+        char newValue = '0';
+        fd = open(testFilePath.c_str(), O_RDONLY);
+        if (fd >= 0) {
+            fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue));
+            close(fd);
+        }
+
+        unlink(testFilePath.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
+    }
+    Assistant::ins = insMock_;
+    insMock_->EnableMock();
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_GetXattrFail_002
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when fgetxattr fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_GetXattrFail_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 start";
+    try {
+        string testFilePath = "/data/test_getxattr_fail_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR | O_NOFOLLOW, 0644);
+        if (fd < 0) {
+            GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 failed";
+            return;
+        }
+        close(fd);
+
+        fd = open(testFilePath.c_str(), O_RDWR | O_NOFOLLOW);
+        if (fd < 0) {
+            unlink(testFilePath.c_str());
+            GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 failed";
+            return;
+        }
+        ssize_t xattrRet = fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
+        close(fd);
+        if (xattrRet < 0) {
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_NE(ret, 0);
+        }
+        unlink(testFilePath.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_TruncateFail_004
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when ftruncate fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_TruncateFail_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_TruncateFail_004 start";
+    try {
+        string testFilePath = "/data/test_truncate_fail_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            char placeholderValue = '1';
+            insMock_->DisableMock();
+            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+                      sizeof(placeholderValue), 0);
+            Assistant::ins = insMock_;
+            insMock_->EnableMock();
+            close(fd);
+
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillOnce(Return(-1));
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_NE(ret, 0);
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_TruncateFail_004 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_TruncateFail_004 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_SetXattrFail_005
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when fsetxattr fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_005 start";
+    try {
+        string testFilePath = "/data/test_setxattr_fail_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            char placeholderValue = '1';
+            insMock_->DisableMock();
+            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+                      sizeof(placeholderValue), 0);
+            Assistant::ins = insMock_;
+            insMock_->EnableMock();
+            close(fd);
+
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillOnce(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillOnce(Return(-1));
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_EQ(ret, 0);
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_005 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_005 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_XattrValueZero_008
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when xattr value is already 0
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueZero_008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueZero_008 start";
+    try {
+        string testFilePath = "/data/test_xattr_zero_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            char xattrValue = '0';
+            insMock_->DisableMock();
+            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue,
+                      sizeof(xattrValue), 0);
+            Assistant::ins = insMock_;
+            insMock_->EnableMock();
+            close(fd);
+
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_EQ(ret, EINVAL);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueZero_008 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueZero_008 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_SetXattrFail_009
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when xattr value is already 0
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_009 start";
+    try {
+        string testFilePath = "/data/test_fsetxattr_fail" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            char placeholderValue = '1';
+            insMock_->DisableMock();
+            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+                      sizeof(placeholderValue), 0);
+            Assistant::ins = insMock_;
+            insMock_->EnableMock();
+            close(fd);
+
+            chmod(testFilePath.c_str(), 0444);
+
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillOnce(Return(-1));
+
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_NE(ret, 0);
+
+            chmod(testFilePath.c_str(), 0644);
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_009 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_009 end";
+}
+
 } // namespace OHOS::FileManagement::CloudDiskService::Test

@@ -123,6 +123,10 @@ typedef enum CloudDisk_ErrorCode {
      */
     CLOUD_DISK_FILE_ALREADY_EXISTS = 34400016,
     /**
+     * @error File is not a placeholder.
+     */
+    CLOUD_DISK_NOT_A_PLACEHOLDER = 34400017,
+    /**
      * @error No space left on device.
      */
     CLOUD_DISK_NO_SPACE_LEFT = 34400020,

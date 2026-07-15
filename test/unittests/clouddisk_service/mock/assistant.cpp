@@ -278,6 +278,28 @@ int removexattr(const char *path, const char *name)
     return realRemovexattr(path, name);
 }
 
+int fsetxattr(int fd, const char* name, const void* value, size_t size, int flags)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->fsetxattr(fd, name, value, size, flags);
+    }
+
+    static int (*realFsetxattr)(int, const char*, const void*, size_t, int) = []() {
+        auto func = (int (*)(int, const char*, const void*, size_t, int))dlsym(RTLD_NEXT, "fsetxattr");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real fsetxattr: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realFsetxattr) {
+        return -1;
+    }
+
+    return realFsetxattr(fd, name, value, size, flags);
+}
+
+
 struct dirent* readdir(DIR* d)
 {
     if (AssistantMock::IsMockable()) {
@@ -328,7 +350,7 @@ namespace OHOS::FileManagement {
     {
         return Assistant::ins->ReadFile(fd, offset, size, data);
     }
-    
+
     int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size)
     {
         return Assistant::ins->WriteFile(fd, data, offset, size);

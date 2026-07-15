@@ -44,6 +44,8 @@ public:
     virtual int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) = 0;
     virtual int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) = 0;
 
+    virtual int32_t ConvertPlaceholderToFile(const std::string &syncFolder, const std::string &relativePath) = 0;
+
     virtual int32_t UnregisterForSa(const std::string &path) = 0;
 };
 } // namespace OHOS::FileManagement::CloudDiskService

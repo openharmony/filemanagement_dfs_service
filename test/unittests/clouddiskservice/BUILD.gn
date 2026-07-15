@@ -649,9 +649,17 @@ ohos_unittest("cloud_disk_service_metafile_static_test") {
 
   defines = [
     "private=public",
-    "LOG_DOMAIN=0xD004308",
+    "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskService\"",
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
+    external_deps += [
+      "samgr:samgr_proxy",
+      "safwk:system_ability_fwk",
+    ]
+  }
 
   use_exceptions = true
 }
@@ -793,6 +801,11 @@ ohos_unittest("oh_cloud_disk_manager_test") {
     "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskManagerNDK\"",
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
