@@ -549,6 +549,14 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
     return getResult;
 }
 
+static int32_t ConvertPlaceholderXattrErrno(int32_t error)
+{
+    if (error == ENODATA || error == ERANGE || error == ENAMETOOLONG) {
+        return E_INVALID_ARG;
+    }
+    return ConvertErrnoToCloudDiskError(error);
+}
+
 static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &isPlaceholder)
 {
     int32_t error = E_OK;
@@ -556,7 +564,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         LOGE("getxattr size failed, errno : %{public}d", error);
-        return ConvertErrnoToCloudDiskError(error);
+        return ConvertPlaceholderXattrErrno(error);
     }
 
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
@@ -569,7 +577,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         LOGE("getxattr value failed, errno : %{public}d", error);
-        return ConvertErrnoToCloudDiskError(error);
+        return ConvertPlaceholderXattrErrno(error);
     }
 
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
@@ -727,6 +735,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     }
 
     std::string getXattrPath = JoinSyncFolderAndRelativePath(mntSyncFolder, path);
+    if (!IsPathInSyncFolder(mntSyncFolder, getXattrPath)) {
+        LOGE("Get xattr path is not in sync folder");
+        return E_INVALID_ARG;
+    }
     ret = QueryPlaceholderByXattr(getXattrPath, isPlaceholder);
     LOGI("End IsPlaceholderFileInner, ret=%{public}d, isPlaceholder=%{public}d", ret, isPlaceholder);
     return ret;

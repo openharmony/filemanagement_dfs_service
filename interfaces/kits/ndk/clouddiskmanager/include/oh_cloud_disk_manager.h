@@ -462,7 +462,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
  * <br>Returns true if the file is a placeholder file; returns false otherwise. The value is set to false on error.
  * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
- * @since 26
+ * @since 26.1.0
  */
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,

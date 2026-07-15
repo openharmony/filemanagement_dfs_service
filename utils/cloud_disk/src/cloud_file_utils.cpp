@@ -56,35 +56,6 @@ bool CloudFileUtils::IsDotDotdot(const std::string &name)
     return name == "." || name == "..";
 }
 
-bool CloudFileUtils::IsValidRelativePath(const std::string &path)
-{
-    if (path.empty() || path.front() == '/') {
-        return false;
-    }
-
-    size_t start = 0;
-    while (start < path.size()) {
-        size_t end = path.find('/', start);
-        std::string segment = path.substr(start, end - start);
-        if (segment == "..") {
-            return false;
-        }
-        if (end == std::string::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-    return true;
-}
-
-std::string CloudFileUtils::JoinPath(const std::string &parentPath, const std::string &relativePath)
-{
-    if (!parentPath.empty() && parentPath.back() == '/') {
-        return parentPath + relativePath;
-    }
-    return parentPath + "/" + relativePath;
-}
-
 void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num, bool caseSense)
 {
     const int32_t shift8 = 8;
