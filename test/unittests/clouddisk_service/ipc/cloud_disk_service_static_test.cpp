@@ -20,6 +20,7 @@
 
 #include "assistant.h"
 #include "cloud_disk_service_access_token_mock.h"
+#include "clouddiskservice_ioctl.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -676,7 +677,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_NotPlaceholde
         if (fd >= 0) {
             close(fd);
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
-            EXPECT_EQ(ret, ENODATA);
+            EXPECT_EQ(ret, E_NOT_A_PLACEHOLDER);
             unlink(testFilePath.c_str());
         }
     } catch (...) {
@@ -864,7 +865,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueZer
             close(fd);
 
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
-            EXPECT_EQ(ret, EINVAL);
+            EXPECT_EQ(ret, E_NOT_A_PLACEHOLDER);
 
             unlink(testFilePath.c_str());
         }
@@ -912,6 +913,328 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_
         GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_009 failed";
     }
     GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_SetXattrFail_009 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_OpenFail_001
+ * @tc.desc: Verify UpdatePlaceholderAttr with nonexistent file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_OpenFail_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_OpenFail_001 start";
+    try {
+        string invalidPath = "/tmp/nonexistent_update_file_12345";
+        uint64_t size = 1024;
+        uint64_t atime = 1234567890;
+        uint64_t mtime = 1234567890;
+        int32_t ret = UpdatePlaceholderAttr(invalidPath, size, atime, mtime);
+        EXPECT_NE(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_OpenFail_001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_OpenFail_001 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_Success_002
+ * @tc.desc: Verify UpdatePlaceholderAttr with valid file
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_Success_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_Success_002 start";
+    try {
+        string testFilePath = "/data/test_update_success_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = 2048;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_EQ(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_Success_002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_Success_002 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_LargeSize_003
+ * @tc.desc: Verify UpdatePlaceholderAttr with large size value
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_LargeSize_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_LargeSize_003 start";
+    try {
+        string testFilePath = "/data/test_large_size_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = 10 * 1024 * 1024;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_EQ(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_LargeSize_003 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_LargeSize_003 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_ZeroSize_004
+ * @tc.desc: Verify UpdatePlaceholderAttr with zero size
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_ZeroSize_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_ZeroSize_004 start";
+    try {
+        string testFilePath = "/data/test_zero_size_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = 0;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_EQ(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_ZeroSize_004 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_ZeroSize_004 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_FutimensFail_005
+ * @tc.desc: Verify UpdatePlaceholderAttr when futimens fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_FutimensFail_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_FutimensFail_005 start";
+    try {
+        string testFilePath = "/data/test_futimens_fail_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDONLY, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = 1024;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_NE(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_FutimensFail_005 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_FutimensFail_005 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_TruncateFail_006
+ * @tc.desc: Verify UpdatePlaceholderAttr when ftruncate fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_TruncateFail_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_TruncateFail_006 start";
+    try {
+        string testFilePath = "/data/test_truncate_fail_update_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDONLY, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = UINT64_MAX;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_NE(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_TruncateFail_006 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_TruncateFail_006 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_CloseFd_007
+ * @tc.desc: Verify UpdatePlaceholderAttr closes fd properly
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_CloseFd_007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CloseFd_007 start";
+    try {
+        string testFilePath = "/data/test_close_fd_update_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            uint64_t size = 1024;
+            uint64_t atime = 1234567890000;
+            uint64_t mtime = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            EXPECT_EQ(ret, 0);
+
+            fd = open(testFilePath.c_str(), O_RDONLY);
+            EXPECT_GE(fd, 0);
+            if (fd >= 0) {
+                close(fd);
+            }
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CloseFd_007 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CloseFd_007 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_CheckFdIsDir_008
+ * @tc.desc: Verify UpdatePlaceholderAttr when fd is a directory
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_CheckFdIsDir_008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CheckFdIsDir_008 start";
+    insMock_->DisableMock();
+    try {
+        string testDirPath = "/data/test_dir" + to_string(time(nullptr));
+        mkdir(testDirPath.c_str(), 0755);
+
+        uint64_t size = 1024;
+        uint64_t atime = 1234567890;
+        uint64_t mtime = 1234567890;
+        int32_t ret = UpdatePlaceholderAttr(testDirPath, size, atime, mtime);
+        EXPECT_EQ(ret, 0);
+
+        rmdir(testDirPath.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CheckFdIsDir_008 failed";
+    }
+    Assistant::ins = insMock_;
+    insMock_->EnableMock();
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CheckFdIsDir_008 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_CheckFdIsDir_010
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when stat fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_CheckFdIsDir_010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_CheckFdIsDir_010 start";
+    try {
+        string testFilePath = "/data/test_fstat_fail" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Return(-1));
+            errno = EBADF;
+
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_EQ(ret, ConvertErrnoToCloudDiskError(EBADF));
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_CheckFdIsDir_010 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_CheckFdIsDir_010 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToEmptyFile_XattrValueTwo_011
+ * @tc.desc: Verify ConvertPlaceholderToEmptyFile when stat fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueTwo_011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueTwo_011 start";
+    try {
+        string testFilePath = "/data/test_xattr_two_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            char xattrValue = '2';
+            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(xattrValue), 0);
+            close(fd);
+
+            int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
+            EXPECT_EQ(ret, E_HYDRATE_IN_PROGRESS);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueTwo_011 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_XattrValueTwo_011 end";
 }
 
 } // namespace OHOS::FileManagement::CloudDiskService::Test

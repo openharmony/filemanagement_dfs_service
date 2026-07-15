@@ -54,6 +54,8 @@ const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_TRY_AGAIN, CLOUD_DISK_TRY_AGAIN},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_A_PLACEHOLDER,
         CLOUD_DISK_NOT_A_PLACEHOLDER},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_HYDRATE_IN_PROGRESS,
+        CLOUD_DISK_HYDRATE_IN_PROGRESS},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_ALLOWED, CLOUD_DISK_NOT_ALLOWED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_FILE_ALREADY_EXISTS,
         CLOUD_DISK_FILE_ALREADY_EXISTS},

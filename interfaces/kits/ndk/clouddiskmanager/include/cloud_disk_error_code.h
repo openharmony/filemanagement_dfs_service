@@ -127,6 +127,10 @@ typedef enum CloudDisk_ErrorCode {
      */
     CLOUD_DISK_NOT_A_PLACEHOLDER = 34400017,
     /**
+     * @error File hydrate in progress.
+     */
+    CLOUD_DISK_HYDRATE_IN_PROGRESS = 34400019,
+    /**
      * @error No space left on device.
      */
     CLOUD_DISK_NO_SPACE_LEFT = 34400020,

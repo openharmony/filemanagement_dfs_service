@@ -18,6 +18,7 @@ sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FileSyncSta
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FailedList;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderInfo;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.ResultList;
+sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderInfo;
 
 interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
 {
@@ -32,4 +33,5 @@ interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
     void UnregisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterForSaInner([in] String path);
     void ConvertPlaceholderToFileInner([in] String syncFolder, [in] String relativePath);
+    void UpdatePlaceholderInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo metaData);
 }

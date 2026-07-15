@@ -14,6 +14,7 @@
  */
 
 #include "assistant.h"
+#include <cstdarg>
 #include <dlfcn.h>
 #include <sys/fanotify.h>
 
@@ -299,6 +300,26 @@ int fsetxattr(int fd, const char* name, const void* value, size_t size, int flag
     return realFsetxattr(fd, name, value, size, flags);
 }
 
+int close(int fd)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->close(fd);
+    }
+
+    static int (*realClose)(int) = []() {
+        auto func = (int (*)(int))dlsym(RTLD_NEXT, "close");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real readdir: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realClose) {
+        return -1;
+    }
+
+    return realClose(fd);
+}
 
 struct dirent* readdir(DIR* d)
 {
@@ -340,6 +361,39 @@ int lstat(const char *path, struct stat *buf)
     }
 
     return realLstat(path, buf);
+}
+
+int ioctl(int fd, unsigned long request, ...)
+{
+    if (AssistantMock::IsMockable()) {
+        void *arg = nullptr;
+        va_list ap;
+        va_start(ap, request);
+        arg = va_arg(ap, void *);
+        va_end(ap);
+        return Assistant::ins->ioctl(fd, request, arg);
+    }
+
+    static int (*realIoctl)(int, unsigned long, ...) = []() {
+        auto func = (int (*)(int, unsigned long, ...))dlsym(RTLD_NEXT, "ioctl");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real readdir: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realIoctl) {
+        return -1;
+    }
+
+    va_list ap;
+    va_start(ap, request);
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    int result = realIoctl(fd, request, ap);
+    va_end(ap_copy);
+    va_end(ap);
+    return result;
 }
 
 } // extern "C"

@@ -39,6 +39,9 @@ public:
     virtual int ftruncate(int fd, off_t length) = 0;
     virtual int removexattr(const char *path, const char *name) = 0;
 
+    // system
+    virtual int close(int fd) = 0;
+
     // file_utils
     virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
     virtual int64_t WriteFile(int fd, const void *data, off_t offset, size_t size) = 0;
@@ -48,6 +51,7 @@ public:
     virtual int stat(const char* path, struct stat* buf);
     virtual int lstat(const char* path, struct stat* buf);
     virtual int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags);
+    virtual int ioctl(int fd, unsigned long request, void *arg) = 0;
 };
 
 class AssistantMock : public Assistant {
@@ -63,6 +67,9 @@ public:
     MOCK_METHOD2(ftruncate, int(int, off_t));
     MOCK_METHOD2(removexattr, int(const char *, const char *));
 
+    // system
+    MOCK_METHOD1(close, int(int fd));
+
     // file_utils
     MOCK_METHOD4(ReadFile, int64_t(int, off_t, size_t, void *));
     MOCK_METHOD4(WriteFile, int64_t(int, const void *, off_t, size_t));
@@ -72,6 +79,7 @@ public:
     MOCK_METHOD2(stat, int(const char*, struct stat*));
     MOCK_METHOD2(lstat, int(const char*, struct stat*));
     MOCK_METHOD5(fsetxattr, int(int, const char *, const void *, size_t, int));
+    MOCK_METHOD3(ioctl, int(int fd, unsigned long request, void *arg));
 
 public:
     static void EnableMock();

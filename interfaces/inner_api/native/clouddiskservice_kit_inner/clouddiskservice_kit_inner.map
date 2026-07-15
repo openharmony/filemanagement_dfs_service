@@ -24,6 +24,7 @@
       *OHOS::FileManagement::CloudDiskService::FailedList*;
       *OHOS::FileManagement::CloudDiskService::PlaceholderInfo*;
       *OHOS::FileManagement::CloudDiskService::ResultList*;
+      *OHOS::FileManagement::CloudDiskService::PlaceholderInfo*;
 
       # Utility functions
       *OHOS::GetAnonyInt32*;

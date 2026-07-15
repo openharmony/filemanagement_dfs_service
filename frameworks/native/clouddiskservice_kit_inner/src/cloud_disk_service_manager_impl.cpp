@@ -268,9 +268,29 @@ int32_t CloudDiskServiceManagerImpl::ConvertPlaceholderToFile(const std::string 
         return E_IPC_FAILED;
     }
 
-    auto ret = serviceProxy->ConvertPlaceholderToFileInner(syncFolder, relativePath);
     SetDeathRecipient(serviceProxy->AsObject());
+    auto ret = serviceProxy->ConvertPlaceholderToFileInner(syncFolder, relativePath);
     LOGI("ConvertPlaceholderToFile, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
+    const PlaceholderInfo &metaData)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start UpdatePlaceholder in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    SetDeathRecipient(serviceProxy->AsObject());
+    auto ret = serviceProxy->UpdatePlaceholderInner(syncFolder, relativePath, metaData);
+    LOGI("UpdatePlaceholder, ret %{public}d", ret);
     return ret;
 #else
     return E_NOT_SUPPORTED;

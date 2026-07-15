@@ -90,6 +90,16 @@ public:
     void TearDown();
     static inline sptr<CloudDiskService> cloudDiskService_;
     static inline shared_ptr<CloudDiskServiceAccessTokenMock> dfsuAccessToken_ = nullptr;
+
+    static PlaceholderInfo CreatePlaceholderInfo(uint64_t logicalSize = 1024, uint64_t mtimeMs = 1234567890,
+        uint64_t atimeMs = 1234567890)
+    {
+        PlaceholderInfo metaData;
+        metaData.logicalSize = logicalSize;
+        metaData.mtimeMs = mtimeMs;
+        metaData.atimeMs = atimeMs;
+        return metaData;
+    }
 };
 
 void CloudDiskServiceTest::SetUpTestCase(void)
@@ -2270,6 +2280,224 @@ HWTEST_F(CloudDiskServiceTest, ConvertPlaceholderToFileInner_GetBundleNameFail_0
     GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_GetBundleNameFail_002 end";
 }
 
+/**
+ * @tc.name: UpdatePlaceholderInner_EmptyParam_001
+ * @tc.desc: Verify UpdatePlaceholderInner with empty parameters
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_EmptyParam_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_EmptyParam_001 start";
+    try {
+        PlaceholderInfo metaData = CreatePlaceholderInfo();
+
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        uint32_t ret = cloudDiskService_->UpdatePlaceholderInner("", "/data/test", metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+
+        ret = cloudDiskService_->UpdatePlaceholderInner("/data/test", "", metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_EmptyParam_001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_EmptyParam_001 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderInner_GetBundleNameFail_002
+ * @tc.desc: Verify UpdatePlaceholderInner when GetCallerBundleName fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_GetBundleNameFail_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetBundleNameFail_002 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string path = "/storage/Users/currentUser/testdir/file.txt";
+        PlaceholderInfo metaData =  CreatePlaceholderInfo();
+
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+        uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_TRY_AGAIN);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetBundleNameFail_002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetBundleNameFail_002 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderInner_CheckAccessFail_003
+ * @tc.desc: Verify UpdatePlaceholderInner when CheckSyncFolderAccess fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_CheckAccessFail_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_CheckAccessFail_003 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string path = "/storage/Users/currentUser/testdir/file.txt";
+        PlaceholderInfo metaData = CreatePlaceholderInfo();
+
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+        uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_SYNC_FOLDER_NOT_REGISTERED);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_CheckAccessFail_003 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_CheckAccessFail_003 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderInner_GetHmdfsPathFail_004
+ * @tc.desc: Verify UpdatePlaceholderInner when GetHmdfsPath fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_GetHmdfsPathFail_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetHmdfsPathFail_004 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string path = "/storage/Users/currentUser/testdir/file.txt";
+        PlaceholderInfo metaData =  CreatePlaceholderInfo();
+
+        std::string sandboxPath = "/storage/Users/currentUser";
+        std::string replacementPath = "/data/service/el2/100/hmdfs/account/files/Docs";
+        std::string realpath = replacementPath + syncFolder.substr(sandboxPath.length());
+        auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
+        struct SyncFolderValue syncFolderValue = {"com.ohos.test", "path"};
+        CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+            .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+        uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
+        CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetHmdfsPathFail_004 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_GetHmdfsPathFail_004 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderInner_Success_005
+ * @tc.desc: Verify UpdatePlaceholderInner with successful update
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_Success_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_Success_005 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string testFile = "/tmp/test_update_success_" + to_string(time(nullptr));
+        int fd = open(testFile.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            PlaceholderInfo metaData = CreatePlaceholderInfo(2048);
+
+            std::string sandboxPath = "/storage/Users/currentUser";
+            std::string replacementPath = "/data/service/el2/100/hmdfs/account/files/Docs";
+            std::string realpath = replacementPath + syncFolder.substr(sandboxPath.length());
+            auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
+            struct SyncFolderValue syncFolderValue = {"com.ohos.test", testFile};
+            CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+
+            EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+            EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+                .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+            uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, testFile, metaData);
+            CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+            EXPECT_EQ(ret, E_OK);
+#else
+            EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+            unlink(testFile.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_Success_005 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_Success_005 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderInner_UpdateFail_006
+ * @tc.desc: Verify UpdatePlaceholderInner when UpdatePlaceholderAttr fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_UpdateFail_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_UpdateFail_006 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string testFile = "/tmp/test_update_fail_" + to_string(time(nullptr));
+        int fd = open(testFile.c_str(), O_CREAT | O_RDONLY, 0444);
+        if (fd >= 0) {
+            close(fd);
+
+            PlaceholderInfo metaData = CreatePlaceholderInfo(UINT64_MAX);
+
+            std::string sandboxPath = "/storage/Users/currentUser";
+            std::string replacementPath = "/data/service/el2/100/hmdfs/account/files/Docs";
+            std::string realpath = replacementPath + syncFolder.substr(sandboxPath.length());
+            auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
+            struct SyncFolderValue syncFolderValue = {"com.ohos.test", testFile};
+            CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+
+            EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+            EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+                .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+            uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, testFile, metaData);
+            CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+            EXPECT_NE(ret, E_OK);
+#else
+            EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+            unlink(testFile.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderInner_UpdateFail_006 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderInner_UpdateFail_006 end";
+}
 
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
