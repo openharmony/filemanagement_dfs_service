@@ -396,26 +396,6 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static int32_t ConvertXattrErrnoToServiceErrCode(int32_t error)
-{
-    switch (error) {
-        case ENOENT:
-            return E_SYNC_FOLDER_PATH_NOT_EXIST;
-        case EACCES:
-        case EPERM:
-            return E_PERMISSION_DENIED;
-        case EOPNOTSUPP:
-            return E_NOT_SUPPORTED;
-        case ENODATA:
-        case ERANGE:
-        case EINVAL:
-        case ENAMETOOLONG:
-            return E_INVALID_ARG;
-        default:
-            return E_TRY_AGAIN;
-    }
-}
-
 static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed,
     const string &syncFolder)
 {
@@ -576,7 +556,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         LOGE("getxattr size failed, errno : %{public}d", error);
-        return ConvertXattrErrnoToServiceErrCode(error);
+        return ConvertErrnoToCloudDiskError(error);
     }
 
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
@@ -589,7 +569,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         LOGE("getxattr value failed, errno : %{public}d", error);
-        return ConvertXattrErrnoToServiceErrCode(error);
+        return ConvertErrnoToCloudDiskError(error);
     }
 
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
@@ -706,7 +686,7 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin IsPlaceholderFileInner");
     isPlaceholder = false;
-    if (!CloudDisk::CloudFileUtils::IsValidRelativePath(path)) {
+    if (HasInvalidRelativePathSegment(path) || path.front() == '/') {
         LOGE("Invalid relative path, path size = %{public}zu", path.size());
         return E_INVALID_ARG;
     }
@@ -746,7 +726,7 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
         return E_INVALID_ARG;
     }
 
-    std::string getXattrPath = CloudDisk::CloudFileUtils::JoinPath(mntSyncFolder, path);
+    std::string getXattrPath = JoinSyncFolderAndRelativePath(mntSyncFolder, path);
     ret = QueryPlaceholderByXattr(getXattrPath, isPlaceholder);
     LOGI("End IsPlaceholderFileInner, ret=%{public}d, isPlaceholder=%{public}d", ret, isPlaceholder);
     return ret;

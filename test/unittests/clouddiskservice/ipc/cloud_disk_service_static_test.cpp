@@ -1282,6 +1282,9 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest009, TestSize.Le
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EINVAL), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EISDIR), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ELOOP), E_INVALID_ARG);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(ENODATA), E_INVALID_ARG);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(ERANGE), E_INVALID_ARG);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(ENAMETOOLONG), E_INVALID_ARG);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError missing sync folder errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError permission denied errno";

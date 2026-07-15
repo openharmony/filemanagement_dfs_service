@@ -76,6 +76,9 @@ int32_t ConvertErrnoToCloudDiskError(int32_t err)
         case EINVAL:
         case EISDIR:
         case ELOOP:
+        case ENODATA:
+        case ERANGE:
+        case ENAMETOOLONG:
             return E_INVALID_ARG;
         case ENOENT:
             return E_SYNC_FOLDER_PATH_NOT_EXIST;
