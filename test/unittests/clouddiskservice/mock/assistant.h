@@ -16,10 +16,10 @@
 #define TEST_UNITTEST_CLOUD_DISK_SERVICE_ASSISTANT_H
 
 #include <dirent.h>
+#include <unistd.h>
 #include <gmock/gmock.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 namespace OHOS::FileManagement::CloudDiskService {
 class Assistant {
