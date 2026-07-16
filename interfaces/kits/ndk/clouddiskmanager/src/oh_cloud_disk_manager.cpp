@@ -321,7 +321,6 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
-// NOLINTNEXTLINE(readability-identifier-naming)
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder)
