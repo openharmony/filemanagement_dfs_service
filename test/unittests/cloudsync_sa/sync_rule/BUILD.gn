@@ -491,6 +491,7 @@ ohos_unittest("user_status_listener_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include/sync_rule",

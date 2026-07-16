@@ -285,6 +285,52 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest006, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnReceiveEventTest007
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY);
+        EventFwk::CommonEventData eventData(want);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(), nullptr);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest007 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest008
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest008 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
+        EventFwk::CommonEventData eventData(want);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(), nullptr);
+        subscriber->OnReceiveEvent(eventData);
+        ffrt::wait();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest008 End";
+}
+
+/**
  * @tc.name: OnPowerConnectedTest001
  * @tc.desc: Verify the OnPowerConnected function
  * @tc.type: FUNC

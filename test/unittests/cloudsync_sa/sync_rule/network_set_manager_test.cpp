@@ -246,12 +246,14 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest006, TestSize.Level1)
  * @tc.name: UnregisterObserverTest001
  * @tc.desc: Verify the UnregisterObserver function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
  */
 HWTEST_F(NetworkSetManagerTest, UnregisterObserverTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnregisterObserverTest Start";
     try {
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
         int32_t type = NetworkSetManager::CELLULARCONNECT;
@@ -268,12 +270,37 @@ HWTEST_F(NetworkSetManagerTest, UnregisterObserverTest001, TestSize.Level1)
  * @tc.name: UnregisterObserverTest002
  * @tc.desc: Verify the UnregisterObserver function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
  */
 HWTEST_F(NetworkSetManagerTest, UnregisterObserverTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnregisterObserverTest Start";
     try {
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        int32_t type = NetworkSetManager::NETCONNECT;
+
+        networkSetManager_->UnregisterObserver(bundleName, userId, type);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterObserverTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnregisterObserverTest End";
+}
+
+/**
+ * @tc.name: UnregisterObserverTest003
+ * @tc.desc: Verify the UnregisterObserver function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetworkSetManagerTest, UnregisterObserverTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterObserverTest Start";
+    try {
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
         int32_t type = NetworkSetManager::NETCONNECT;
@@ -290,12 +317,61 @@ HWTEST_F(NetworkSetManagerTest, UnregisterObserverTest002, TestSize.Level1)
  * @tc.name: RegisterObserverTest001
  * @tc.desc: Verify the RegisterObserver function
  * @tc.type: FUNC
- * @tc.require: I6JPKG
  */
 HWTEST_F(NetworkSetManagerTest, RegisterObserverTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterObserverTest Start";
     try {
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        int32_t type = NetworkSetManager::CELLULARCONNECT;
+
+        networkSetManager_->RegisterObserver(bundleName, userId, type);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterObserverTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterObserverTest End";
+}
+
+/**
+ * @tc.name: RegisterObserverTest002
+ * @tc.desc: Verify the RegisterObserver function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetworkSetManagerTest, RegisterObserverTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterObserverTest Start";
+    try {
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        int32_t type = NetworkSetManager::NETCONNECT;
+
+        networkSetManager_->RegisterObserver(bundleName, userId, type);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterObserverTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterObserverTest End";
+}
+
+/**
+ * @tc.name: RegisterObserverTest003
+ * @tc.desc: Verify the RegisterObserver function
+ * @tc.type: FUNC
+ */
+HWTEST_F(NetworkSetManagerTest, RegisterObserverTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterObserverTest Start";
+    try {
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
+
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
         int32_t type = NetworkSetManager::CELLULARCONNECT;
@@ -509,6 +585,33 @@ HWTEST_F(NetworkSetManagerTest, GetConfigParams005, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetConfigParams005 FAILED";
     }
     GTEST_LOG_(INFO) << "GetConfigParams005 End";
+}
+
+/**
+ * @tc.name: GetConfigParams006
+ * @tc.desc: Verify the GetConfigParams function
+ * @tc.require: ICEGLJ
+ */
+HWTEST_F(NetworkSetManagerTest, GetConfigParams006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConfigParams006 Start";
+    try {
+        int32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        auto driveKit = new (std::nothrow) CloudFilekitImplMock();
+        CloudFile::CloudFileKit::instance_ = driveKit;
+        std::map<std::string, std::string> param;
+        param.insert({"useMobileNetworkData", "xxx"});
+        EXPECT_CALL(*driveKit, GetAppConfigParams(_, _, _)).WillOnce(DoAll(SetArgReferee<2>(param), Return(E_OK)));
+        bool ret = networkSetManager_->GetConfigParams(bundleName, userId);
+        EXPECT_EQ(ret, false);
+        delete driveKit;
+        driveKit = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetConfigParams006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetConfigParams006 End";
 }
 
 /**

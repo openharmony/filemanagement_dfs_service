@@ -155,6 +155,10 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
         return "";
     }
     bundleName = uri.substr(uriPrefixPos, bundleNameEndPos - uriPrefixPos);
+    if (bundleName.empty() || bundleName == ".") {
+        LOGE("bundleName is invalid");
+        return "";
+    }
 
     std::string relativePath;
     size_t fileDirPos = uri.find(FILE_DIR);
@@ -220,6 +224,18 @@ void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 void CloudSyncService::OnStop()
 {
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 0, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
+    if (batteryStatusListener_ != nullptr) {
+        batteryStatusListener_->Stop();
+        batteryStatusListener_ = nullptr;
+    }
+    if (screenStatusListener_ != nullptr) {
+        screenStatusListener_->Stop();
+        screenStatusListener_ = nullptr;
+    }
+    if (userStatusListener_ != nullptr) {
+        userStatusListener_->Stop();
+        userStatusListener_ = nullptr;
+    }
     LOGI("Stop finished successfully");
 }
 
@@ -1022,7 +1038,7 @@ int32_t CloudSyncService::GetUploadList(const std::vector<std::string> &uriVec,
 
 int32_t CloudSyncService::PauseUpload(const std::string &uri)
 {
-    LOGI("Begin PauseUpload, uri: %{public}s", uri.c_str());
+    LOGI("Begin PauseUpload, uri: %{private}s", uri.c_str());
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
     BundleNameUserInfo bundleNameUserInfo;
     int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -1037,7 +1053,7 @@ int32_t CloudSyncService::PauseUpload(const std::string &uri)
 
 int32_t CloudSyncService::ResumeUpload(const std::string &uri)
 {
-    LOGI("Begin ResumeUpload, uri: %{public}s", uri.c_str());
+    LOGI("Begin ResumeUpload, uri: %{private}s", uri.c_str());
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_SYNC, true));
     BundleNameUserInfo bundleNameUserInfo;
     int32_t ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -1487,8 +1503,8 @@ static std::vector<uint8_t> GetXattrValue(const std::string &path, const std::st
 {
     // realpath
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    const string mediaPrefix = "/storage/media/local";
-    const string hmfsPrefix = "/data/service/el2/" + to_string(callerUserId) + "/hmdfs/account";
+    const string mediaPrefix = "/storage/media/local/";
+    const string hmfsPrefix = "/data/service/el2/" + to_string(callerUserId) + "/hmdfs/account/";
 
     if (path.find(mediaPrefix) != 0) {
         LOGE("path is invalid: %{public}s", GetAnonyString(path).c_str());

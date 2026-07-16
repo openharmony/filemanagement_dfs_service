@@ -32,6 +32,11 @@ constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 static std::string GetCallerBundleName()
 {
     std::ifstream cmdlineFile("/proc/self/cmdline");
+    if (!cmdlineFile.is_open()) {
+        LOGE("file open failed");
+        return "-";
+    }
+
     std::string name;
     std::getline(cmdlineFile, name, '\0');
     size_t lastSlash = name.find_last_of('/');

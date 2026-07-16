@@ -103,6 +103,12 @@ void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const 
     }
 }
 
+static bool ConvertToInt(const std::string &str, int32_t &val)
+{
+    auto [ptr, ec] = std::from_chars(str.c_str(), str.c_str() + str.size(), val);
+    return ec == std::errc() && ptr == str.c_str() + str.size();
+}
+
 bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t userId)
 {
     auto driveKit = CloudFile::CloudFileKit::GetInstance();
@@ -117,12 +123,12 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
         return false;
     }
     std::string networkDataStr = param["useMobileNetworkData"];
-    bool isValid = std::all_of(networkDataStr.begin(), networkDataStr.end(), ::isdigit);
-    if (networkDataStr.empty() || !isValid) {
+    int32_t networkData = 0;
+    bool isValid = ConvertToInt(networkDataStr, networkData);
+    if (!isValid) {
         LOGE("invalid param: %{public}s", networkDataStr.c_str());
         return false;
     }
-    int32_t networkData = std::stoi(networkDataStr);
     if (networkData == 0) {
         return false;
     }
@@ -138,8 +144,11 @@ void NetworkSetManager::UnregisterObserver(const std::string &bundleName, const 
         LOGE("dataShareHelper = nullptr");
         return;
     }
-    sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver(bundleName,
-    userId, type));
+    sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver(bundleName, userId, type));
+    if (dataObserver == nullptr) {
+        LOGE("dataObserver is nullptr");
+        return;
+    }
     if (type == CELLULARCONNECT) {
         Uri observerUri(commonQueryUri);
         dataShareHelper->UnregisterObserver(observerUri, dataObserver);
@@ -157,6 +166,10 @@ void NetworkSetManager::RegisterObserver(const std::string &bundleName, const in
         return;
     }
     sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver(bundleName, userId, type));
+    if (dataObserver == nullptr) {
+        LOGE("dataObserver is nullptr");
+        return;
+    }
     if (type == CELLULARCONNECT) {
         Uri observerUri(commonQueryUri);
         dataShareHelper->RegisterObserver(observerUri, dataObserver);
@@ -218,12 +231,6 @@ void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, con
 void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
-}
-
-static bool ConvertToInt(const std::string &str, int32_t &value)
-{
-    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
-    return ec == std::errc{} && ptr == str.data() + str.size();
 }
 
 void NetworkSetManager::NetWorkChangeStopUploadTask()

@@ -501,12 +501,13 @@ void VersionDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &p
         return;
     }
     auto task = [msg]() {
-        if (msg->downloadCallback_.expired()) {
-            LOGE("downloadCallback_ is expired");
+        auto downloadcCallback = msg->downloadCallback_.lock();
+        if (downloadcCallback == nullptr) {
+            LOGE("downloadcCallback is nullptr");
             delete msg;
             return;
         }
-        msg->downloadCallback_.lock()->OnComplete(msg);
+        downloadcCallback->OnComplete(msg);
         delete msg;
     };
     napi_status ret = napi_send_event(env_, task, napi_event_priority::napi_eprio_immediate, taskName_.c_str());

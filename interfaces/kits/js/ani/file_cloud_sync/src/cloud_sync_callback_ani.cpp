@@ -96,15 +96,13 @@ CloudSyncCallbackAniImpl::CloudSyncCallbackAniImpl(ani_env *env, ani_ref fun) : 
     }
 }
 
-void CloudSyncCallbackAniImpl::GetSyncProgress(CloudSyncState state,
-                                               ErrorType error,
-                                               const ani_class &cls,
-                                               ani_object &pg)
+ani_status CloudSyncCallbackAniImpl::GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls,
+    ani_object &pg)
 {
     ani_env *env = nullptr;
     if (vm_ == nullptr || vm_->GetEnv(ANI_VERSION_1, &env)) {
         LOGE("CloudSyncCallbackAniImpl get env failed.");
-        return;
+        return ANI_INVALID_ARGS;
     }
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
@@ -115,33 +113,54 @@ void CloudSyncCallbackAniImpl::GetSyncProgress(CloudSyncState state,
     ani_status ret = env->Class_FindMethod(cls, ct.c_str(), argSign.c_str(), &ctor);
     if (ret != ANI_OK) {
         LOGE("find ctor method failed. ret = %{public}d", ret);
-        return;
+        return ret;
     }
 
     ani_enum stateEnum;
     Type stateSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.SyncState");
-    env->FindEnum(stateSign.Descriptor().c_str(), &stateEnum);
+    ret = env->FindEnum(stateSign.Descriptor().c_str(), &stateEnum);
+    if (ret != ANI_OK) {
+        LOGE("FindEnum stateSign failed. ret = %{public}d", ret);
+        return ret;
+    }
     ani_enum errorEnum;
     Type errorSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.ErrorType");
-    env->FindEnum(errorSign.Descriptor().c_str(), &errorEnum);
+    ret = env->FindEnum(errorSign.Descriptor().c_str(), &errorEnum);
+    if (ret != ANI_OK) {
+        LOGE("FindEnum errorSign failed. ret = %{public}d", ret);
+        return ret;
+    }
 
     ani_enum_item stateEnumItem;
-    env->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
+    ret = env->Enum_GetEnumItemByIndex(stateEnum, state, &stateEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("Enum_GetEnumItemByIndex stateEnum failed. ret = %{public}d", ret);
+        return ret;
+    }
     ani_enum_item errorEnumItem;
-    env->Enum_GetEnumItemByIndex(errorEnum, error, &errorEnumItem);
+    ret = env->Enum_GetEnumItemByIndex(errorEnum, error, &errorEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("Enum_GetEnumItemByIndex errorSign failed. ret = %{public}d", ret);
+        return ret;
+    }
 
     ret = env->Object_New(cls, ctor, &pg, stateEnumItem, errorEnumItem);
     if (ret != ANI_OK) {
         LOGE("create new object failed. ret = %{public}d", ret);
+        return ret;
     }
+
+    return ANI_OK;
 }
 
 void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
-    auto task = [this, state, error]() {
+    std::shared_ptr<CloudSyncCallbackAniImpl> callbackImpl = shared_from_this();
+    auto task = [callbackImpl, state, error]() {
         LOGI("OnSyncStateChanged state is %{public}d, error is %{public}d", state, error);
         ani_env *tmpEnv = nullptr;
-        if (vm_ == nullptr || vm_->GetEnv(ANI_VERSION_1, &tmpEnv)) {
+        if (callbackImpl == nullptr || callbackImpl->cbOnRef_ == nullptr || callbackImpl->vm_ == nullptr ||
+                callbackImpl->vm_->GetEnv(ANI_VERSION_1, &tmpEnv)) {
             LOGE("CloudSyncCallbackAniImpl get env failed.");
             return;
         }
@@ -156,16 +175,23 @@ void CloudSyncCallbackAniImpl::OnSyncStateChanged(CloudSyncState state, ErrorTyp
         ret = tmpEnv->FindClass(clsName.Descriptor().c_str(), &cls);
         if (ret != ANI_OK) {
             LOGE("find class failed. ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ani_object pg;
-        GetSyncProgress(state, error, cls, pg);
+        ret = callbackImpl->GetSyncProgress(state, error, cls, pg);
+        if (ret != ANI_OK) {
+            LOGE("GetSyncProgress function failed. ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
+            return;
+        }
         ani_ref ref_;
-        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(cbOnRef_);
+        ani_fn_object etsCb = reinterpret_cast<ani_fn_object>(callbackImpl->cbOnRef_);
         std::vector<ani_ref> vec = { pg };
         ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
         if (ret != ANI_OK) {
             LOGE("ani call function failed. ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ret = tmpEnv->DestroyLocalScope();
@@ -354,9 +380,17 @@ ani_status ChangeListenerAni::GetChangeDataObject(
 
     ani_enum notifyTypeEnum;
     Type notifyTypeSign = Builder::BuildEnum("@ohos.file.cloudSync.cloudSync.NotifyType");
-    env->FindEnum(notifyTypeSign.Descriptor().c_str(), &notifyTypeEnum);
+    ret = env->FindEnum(notifyTypeSign.Descriptor().c_str(), &notifyTypeEnum);
+    if (ret != ANI_OK) {
+        LOGE("FindEnum failed. ret = %{public}d", ret);
+        return ret;
+    }
     ani_enum_item notifyTypeEnumItem;
-    env->Enum_GetEnumItemByIndex(notifyTypeEnum, listener.changeInfo.changeType_, &notifyTypeEnumItem);
+    ret = env->Enum_GetEnumItemByIndex(notifyTypeEnum, listener.changeInfo.changeType_, &notifyTypeEnumItem);
+    if (ret != ANI_OK) {
+        LOGE("Enum_GetEnumItemByIndex failed. ret = %{public}d", ret);
+        return ret;
+    }
     ani_method ctor;
     std::string ct = Builder::BuildConstructorName();
     std::string ctSign = Builder::BuildSignatureDescriptor({notifyTypeSign,
@@ -376,9 +410,14 @@ ani_status ChangeListenerAni::GetChangeDataObject(
 
 void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cbRef)
 {
-    auto task = [this, listener, cbRef]() {
+    std::shared_ptr<ChangeListenerAni> callbackImpl = shared_from_this();
+    auto task = [callbackImpl, listener, cbRef]() {
         LOGI("ChangeListenerAni OnChange");
-        ani_env *tmpEnv = env_;
+        if (callbackImpl == nullptr || callbackImpl->env_ == nullptr) {
+            LOGE("callbackImpl is nullptr.");
+            return;
+        }
+        ani_env *tmpEnv = callbackImpl->env_;
         ani_size nr_refs = ANI_SCOPE_SIZE;
         ani_status ret = tmpEnv->CreateLocalScope(nr_refs);
         if (ret != ANI_OK) {
@@ -397,7 +436,7 @@ void ChangeListenerAni::OnChange(CloudChangeListener &listener, const ani_ref cb
             return;
         }
         ani_object changeData;
-        ret = GetChangeDataObject(tmpEnv, tmpListener, cls, changeData);
+        ret = callbackImpl->GetChangeDataObject(tmpEnv, tmpListener, cls, changeData);
         if (ret != ANI_OK) {
             LOGE("failed to GetChangeDataObject. ret = %{public}d", ret);
             return;
@@ -469,8 +508,8 @@ void CloudOptimizeCallbackAniImpl::OnOptimizeProcess(const OptimizeState state, 
 {
     std::shared_ptr<CloudOptimizeCallbackAniImpl> callbackImpl = shared_from_this();
     auto task = [callbackImpl, state, progress]() {
-        if (callbackImpl == nullptr || callbackImpl->cbOnRef_ == nullptr) {
-            LOGE("cbOnRef_ is nullptr");
+        if (callbackImpl == nullptr || callbackImpl->cbOnRef_ == nullptr || callbackImpl->env_ == nullptr) {
+            LOGE("cbOnRef_ or env_ is nullptr");
             return;
         }
         ani_env *tmpEnv = callbackImpl->env_;

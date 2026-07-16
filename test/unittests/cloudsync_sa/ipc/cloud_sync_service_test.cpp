@@ -1201,22 +1201,237 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest004, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnStopTest
- * @tc.desc: Verify the OnStop function.
- * @tc.type: FUNC
+ * @tc.name:GetHmdfsPathTest005
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnStop start";
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest005 start";
     try {
-        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
-        servicePtr_->OnStop();
+        std::string uri = "file://./data/storage/el2/distributedfiles/dir/1.txt";
+        int32_t userId = 100;
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
+        EXPECT_EQ(ret, "");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnStop FAILED";
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest005 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnStop end";
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest005 end";
+}
+
+/**
+ * @tc.name:GetHmdfsPathTest006
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest006 start";
+    try {
+        std::string uri = "file:///data/storage/el2/distributedfiles/dir/1.txt";
+        int32_t userId = 100;
+        std::string ret = servicePtr_->GetHmdfsPath(uri, userId);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest006 end";
+}
+
+/**
+ * @tc.name: OnStopTest001
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest001 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = nullptr;
+        servicePtr_->screenStatusListener_ = nullptr;
+        servicePtr_->userStatusListener_ = nullptr;
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest001 end";
+}
+
+/**
+ * @tc.name: OnStopTest002
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest002 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = make_shared<BatteryStatusListener>(nullptr);
+        servicePtr_->screenStatusListener_ = make_shared<ScreenStatusListener>(nullptr);
+        servicePtr_->userStatusListener_ = make_shared<UserStatusListener>(nullptr);
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest002 end";
+}
+
+/**
+ * @tc.name: OnStopTest003
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest003 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = nullptr;
+        servicePtr_->screenStatusListener_ = make_shared<ScreenStatusListener>(nullptr);
+        servicePtr_->userStatusListener_ = make_shared<UserStatusListener>(nullptr);
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest003 end";
+}
+
+/**
+ * @tc.name: OnStopTest004
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest004 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = make_shared<BatteryStatusListener>(nullptr);
+        servicePtr_->screenStatusListener_ = nullptr;
+        servicePtr_->userStatusListener_ = make_shared<UserStatusListener>(nullptr);
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest004 end";
+}
+
+/**
+ * @tc.name: OnStopTest005
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest005 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = make_shared<BatteryStatusListener>(nullptr);
+        servicePtr_->screenStatusListener_ = make_shared<ScreenStatusListener>(nullptr);
+        servicePtr_->userStatusListener_ = nullptr;
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest005 end";
+}
+
+/**
+ * @tc.name: OnStopTest006
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest006 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = make_shared<BatteryStatusListener>(nullptr);
+        servicePtr_->screenStatusListener_ = nullptr;
+        servicePtr_->userStatusListener_ = nullptr;
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest006 end";
+}
+
+/**
+ * @tc.name: OnStopTest007
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest007 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = nullptr;
+        servicePtr_->screenStatusListener_ = make_shared<ScreenStatusListener>(nullptr);
+        servicePtr_->userStatusListener_ = nullptr;
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest007 end";
+}
+
+/**
+ * @tc.name: OnStopTest008
+ * @tc.desc: Verify the OnStop function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudSyncServiceTest, OnStopTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStopTest008 start";
+    try {
+        EXPECT_CALL(*saMgrClient_, GetSystemAbilityManager()).WillRepeatedly(Return(nullptr));
+        servicePtr_->batteryStatusListener_ = nullptr;
+        servicePtr_->screenStatusListener_ = nullptr;
+        servicePtr_->userStatusListener_ = make_shared<UserStatusListener>(nullptr);
+        servicePtr_->OnStop();
+        EXPECT_EQ(servicePtr_->batteryStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->screenStatusListener_, nullptr);
+        EXPECT_EQ(servicePtr_->userStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStopTest008 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnStopTest008 end";
 }
 
 /**

@@ -68,7 +68,9 @@ void UserStatusListener::NotifyUserUnlocked()
 {
     std::lock_guard<std::mutex> lck(obsVecMutex_);
     for (auto &observer : observers_) {
-        observer->OnUserUnlocked();
+        if (observer) {
+            observer->OnUserUnlocked();
+        }
     }
 }
 
@@ -91,6 +93,10 @@ void UserStatusListener::Stop()
     if (commonEventSubscriber_ != nullptr) {
         EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventSubscriber_);
         commonEventSubscriber_ = nullptr;
+    }
+    if (accountStatusListener_ != nullptr) {
+        accountStatusListener_->Stop();
+        accountStatusListener_ = nullptr;
     }
 }
 
