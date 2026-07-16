@@ -16,19 +16,17 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("cloud_disk_manager_test") {
   module_out_path = "dfs_service/dfs_service"
-  configs = [ "${utils_path}:utils_lite_public_config" ]
 
   sources = [
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_manager.cpp",
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_utils.cpp",
-    "cloud_disk_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_manager_mock.cpp",
     "cloud_disk_manager_test.cpp",
   ]
 
   include_dirs = [
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
-    "${utils_path}/system/include",
   ]
 
   deps = [

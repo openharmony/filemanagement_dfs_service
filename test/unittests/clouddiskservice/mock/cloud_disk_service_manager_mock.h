@@ -49,4 +49,4 @@ public:
 };
 }
 
-#endif
+#endif // TEST_UNITTEST_CLOUD_DISK_SERVICE_MANAGER_MOCK_H
