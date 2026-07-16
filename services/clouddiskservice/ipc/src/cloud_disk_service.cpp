@@ -15,17 +15,24 @@
 
 #include "cloud_disk_service.h"
 
+#include <cerrno>
 #include <cstdlib>
 #include <exception>
+#include <fcntl.h>
 #include <stdexcept>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/xattr.h>
 #include <thread>
+#include <unistd.h>
 
 #include "cloud_disk_service_access_token.h"
 #include "cloud_disk_service_callback_manager.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
+#include "cloud_disk_service_utils.h"
+#include "clouddiskservice_ioctl.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -33,19 +40,111 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "unique_fd.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 using namespace std;
+using namespace CloudFile;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 
 namespace {
+constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+
+struct CreatePlaceholderPath {
+    std::string parentMntPath;
+    std::string fileName;
+};
+
+static int32_t BuildCreatePlaceholderPath(const std::string &syncFolder,
+                                          const std::string &relativePath,
+                                          int32_t userId,
+                                          CreatePlaceholderPath &path)
+{
+    if (HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' || relativePath.back() == '/') {
+        LOGE("CreatePlaceholderFile branch=invalid_relative_path");
+        return E_INVALID_ARG;
+    }
+    std::string parentRelativePath;
+    auto pos = relativePath.find_last_of('/');
+    if (pos == std::string::npos) {
+        path.fileName = relativePath;
+    } else {
+        parentRelativePath = relativePath.substr(0, pos);
+        path.fileName = relativePath.substr(pos + 1);
+    }
+
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(syncFolder, std::to_string(userId),
+                                                                                path.parentMntPath);
+    if (ret != E_OK) {
+        LOGE("CreatePlaceholderFile branch=sync_folder_mnt_path_failed ret=%{public}d", ret);
+        return ret;
+    }
+    if (!parentRelativePath.empty()) {
+        path.parentMntPath = JoinSyncFolderAndRelativePath(path.parentMntPath, parentRelativePath);
+    }
+    LOGI("CreatePlaceholderFile branch=build_path_success");
+    return E_OK;
 }
+
+static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
+{
+    UniqueFd parentFd(open(path.parentMntPath.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    if (parentFd < 0) {
+        LOGE("CreatePlaceholderFile branch=open_parent_failed errno=%{public}d", errno);
+        return ConvertErrnoToCloudDiskError(errno);
+    }
+
+    UniqueFd fileFd(openat(parentFd, path.fileName.c_str(), O_CREAT | O_EXCL | O_RDWR | O_NOFOLLOW | O_CLOEXEC,
+                           PLACEHOLDER_FILE_MODE));
+    if (fileFd < 0) {
+        LOGE("CreatePlaceholderFile branch=openat_file_failed errno=%{public}d", errno);
+        return ConvertErrnoToCloudDiskError(errno);
+    }
+
+    HmdfsPlaceholderAttr create = {
+        .logicalSize = info.logicalSize,
+        .atimeMs = info.atimeMs,
+        .mtimeMs = info.mtimeMs,
+    };
+    if (ioctl(fileFd, HMDFS_IOC_CREATE_PLACEHOLDER, &create) < 0) {
+        int32_t err = errno;
+        LOGE("CreatePlaceholderFile branch=ioctl_create_placeholder_failed errno=%{public}d", err);
+        if (unlinkat(parentFd, path.fileName.c_str(), 0) != 0) {
+            LOGE("CreatePlaceholderFile branch=rollback_unlink_failed errno=%{public}d", errno);
+        }
+        return ConvertErrnoToCloudDiskError(err);
+    }
+
+    LOGI("CreatePlaceholderFile branch=create_file_success");
+    return E_OK;
+}
+
+static int32_t NormalizeCreatePlaceholderError(int32_t ret)
+{
+    switch (ret) {
+        case E_OK:
+        case E_INVALID_ARG:
+        case E_PERMISSION_DENIED:
+        case E_SYNC_FOLDER_NOT_REGISTERED:
+        case E_SYNC_FOLDER_PATH_NOT_EXIST:
+        case E_NOT_SUPPORTED:
+        case E_TRY_AGAIN:
+        case E_IPC_FAILED:
+        case E_FILE_ALREADY_EXISTS:
+        case E_NO_SPACE_LEFT:
+        case E_NOT_A_DIRECTORY:
+            return ret;
+        default:
+            return ConvertErrnoToCloudDiskError(ret);
+    }
+}
+} // namespace
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDiskService, FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID, true);
 
 CloudDiskService::CloudDiskService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -487,6 +586,58 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
     }
 
     LOGI("End GetXattrInner");
+    return E_OK;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFolder,
+                                                     const std::string &relativePath,
+                                                     const PlaceholderInfo &info)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("CreatePlaceholderFileInner route=service_entry");
+
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    std::string syncFolderPhysicalPath;
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
+                                                              syncFolderPhysicalPath);
+    if (ret != E_OK) {
+        LOGE("CreatePlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
+        return NormalizeCreatePlaceholderError(ret);
+    }
+
+    std::string bundleName;
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("CreatePlaceholderFileInner branch=get_bundle_failed ret=%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
+    auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(syncFolderPhysicalPath);
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
+        LOGE("CreatePlaceholderFileInner branch=sync_folder_not_registered_or_bundle_mismatch");
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+
+    CreatePlaceholderPath createPath;
+    ret = BuildCreatePlaceholderPath(syncFolder, relativePath, userId, createPath);
+    if (ret != E_OK) {
+        LOGE("CreatePlaceholderFileInner branch=build_create_path_failed ret=%{public}d", ret);
+        return NormalizeCreatePlaceholderError(ret);
+    }
+
+    ret = CreatePlaceholderFileAt(createPath, info);
+    if (ret != E_OK) {
+        LOGE("CreatePlaceholderFileInner branch=create_file_at_failed ret=%{public}d", ret);
+        return NormalizeCreatePlaceholderError(ret);
+    }
+
+    LOGI("CreatePlaceholderFileInner branch=success");
     return E_OK;
 #else
     return E_NOT_SUPPORTED;

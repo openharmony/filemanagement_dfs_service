@@ -118,6 +118,18 @@ typedef enum CloudDisk_ErrorCode {
      * @error Cloud disk is not allowed on this device.
      */
     CLOUD_DISK_NOT_ALLOWED = 34400015,
+    /**
+     * @error The target path already has a file with the same name.
+     */
+    CLOUD_DISK_FILE_ALREADY_EXISTS = 34400016,
+    /**
+     * @error No space left on device.
+     */
+    CLOUD_DISK_NO_SPACE_LEFT = 34400020,
+    /**
+     * @error The parent path of the target path is not a directory.
+     */
+    CLOUD_DISK_NOT_A_DIRECTORY = 34400023,
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

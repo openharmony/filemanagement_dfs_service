@@ -16,6 +16,7 @@ sequenceable OHOS.IRemoteObject;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.ChangesResult;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FileSyncState;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FailedList;
+sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderInfo;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.ResultList;
 
 interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
@@ -25,6 +26,7 @@ interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
     ChangesResult GetSyncFolderChangesInner([in] String syncFolder, [in] unsigned long count, [in] unsigned long startUSN);
     List<FailedList> SetFileSyncStatesInner([in] String syncFolder, [in] List<FileSyncState> fileSyncStates);
     List<ResultList> GetFileSyncStatesInner([in] String syncFolder, [in] List<String> pathArray);
+    void CreatePlaceholderFileInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo info);
     void RegisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterForSaInner([in] String path);

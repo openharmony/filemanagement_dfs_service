@@ -19,12 +19,16 @@ ohos_unittest("cloud_disk_service_static_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_static_dependency_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
     "ipc/cloud_disk_service_static_test.cpp",
@@ -39,6 +43,7 @@ ohos_unittest("cloud_disk_service_static_test") {
     "${distributedfile_path}/utils/log/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
+    "${distributedfile_path}/test/mock",
     "${distributedfile_path}/utils/inner_api",
     "${distributedfile_path}/utils/system/include",
     "${distributedfile_path}/utils/ioctl/include",
@@ -70,6 +75,7 @@ ohos_unittest("cloud_disk_service_static_test") {
 
   if (dfs_service_feature_enable_cloud_disk) {
     external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
   }
 
   use_exceptions = true
@@ -359,6 +365,7 @@ ohos_unittest("cloud_disk_service_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service.cpp",

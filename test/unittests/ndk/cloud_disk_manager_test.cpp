@@ -19,7 +19,9 @@
 #include <securec.h>
 #include <string>
 
+#include "oh_cloud_disk_manager.h"
 #include "oh_cloud_disk_utils.h"
+#include "cloud_disk_service_manager_mock.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -50,6 +52,7 @@ void CloudDiskManagerTest::SetUp(void)
 
 void CloudDiskManagerTest::TearDown(void)
 {
+    Mock::VerifyAndClearExpectations(&CloudDiskServiceManagerMock::GetInstance());
 }
 
 /**
@@ -291,10 +294,179 @@ HWTEST_F(CloudDiskManagerTest, ConvertToErrorCodeTest003, TestSize.Level1)
         int32_t innerErrorCode = 34400001;
         CloudDisk_ErrorCode ret = ConvertToErrorCode(innerErrorCode);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_EQ(ConvertToErrorCode(E_FILE_ALREADY_EXISTS), CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
+        EXPECT_EQ(ConvertToErrorCode(E_NO_SPACE_LEFT), CloudDisk_ErrorCode::CLOUD_DISK_NO_SPACE_LEFT);
+        EXPECT_EQ(ConvertToErrorCode(E_NOT_A_DIRECTORY), CloudDisk_ErrorCode::CLOUD_DISK_NOT_A_DIRECTORY);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ConvertToErrorCodeTest003 failed";
     }
     GTEST_LOG_(INFO) << "ConvertToErrorCodeTest003 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileTest001
+ * @tc.desc: Verify create placeholder rejects invalid relative path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest001 start";
+    GTEST_LOG_(INFO) << "[BRANCH] OH_CloudDisk_CreatePlaceholder invalid relative path";
+    std::string syncFolder = "/storage/Users/currentUser/Docs";
+    CloudDisk_SyncFolderPath syncFolderPath = {
+        .value = const_cast<char *>(syncFolder.c_str()),
+        .length = syncFolder.length(),
+    };
+    CloudDisk_PathInfo relativePathInfo = {
+        .value = nullptr,
+        .length = 0,
+    };
+    CloudDisk_PlaceholderInfo info = {
+        .logicalSize = 1024,
+        .atimeMs = 1,
+        .mtimeMs = 2,
+    };
+    auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest001 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileTest002
+ * @tc.desc: Verify create placeholder file rejects invalid sync folder path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest002 start";
+    GTEST_LOG_(INFO) << "[BRANCH] OH_CloudDisk_CreatePlaceholder invalid sync folder path";
+    std::string relativePath = "test.txt";
+    CloudDisk_SyncFolderPath syncFolderPath = {
+        .value = nullptr,
+        .length = 0,
+    };
+    CloudDisk_PathInfo relativePathInfo = {
+        .value = const_cast<char *>(relativePath.c_str()),
+        .length = relativePath.length(),
+    };
+    CloudDisk_PlaceholderInfo info = {
+        .logicalSize = 1024,
+        .atimeMs = 1,
+        .mtimeMs = 2,
+    };
+    auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest002 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileTest003
+ * @tc.desc: Verify create placeholder rejects invalid relative path length
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest003 start";
+    GTEST_LOG_(INFO) << "[BRANCH] OH_CloudDisk_CreatePlaceholder invalid relative path length";
+    std::string syncFolder = "/storage/Users/currentUser/Docs";
+    std::string relativePath = "test.txt";
+    CloudDisk_SyncFolderPath syncFolderPath = {
+        .value = const_cast<char *>(syncFolder.c_str()),
+        .length = syncFolder.length(),
+    };
+    CloudDisk_PathInfo relativePathInfo = {
+        .value = const_cast<char *>(relativePath.c_str()),
+        .length = relativePath.length() + 1,
+    };
+    CloudDisk_PlaceholderInfo info = {
+        .logicalSize = 1024,
+        .atimeMs = 1,
+        .mtimeMs = 2,
+    };
+    auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest003 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileTest004
+ * @tc.desc: Verify create placeholder file returns success when manager succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest004 start";
+    GTEST_LOG_(INFO) << "[BRANCH] OH_CloudDisk_CreatePlaceholder manager success";
+    std::string syncFolder = "/storage/Users/currentUser/Docs";
+    std::string relativePath = "test.txt";
+    CloudDisk_SyncFolderPath syncFolderPath = {
+        .value = const_cast<char *>(syncFolder.c_str()),
+        .length = syncFolder.length(),
+    };
+    CloudDisk_PathInfo relativePathInfo = {
+        .value = const_cast<char *>(relativePath.c_str()),
+        .length = relativePath.length(),
+    };
+    CloudDisk_PlaceholderInfo info = {
+        .logicalSize = 1024,
+        .atimeMs = 1,
+        .mtimeMs = 2,
+    };
+    auto &mock = CloudDiskServiceManagerMock::GetInstance();
+    EXPECT_CALL(mock, CreatePlaceholderFile(syncFolder, relativePath, _))
+        .WillOnce(Invoke([](const std::string &, const std::string &, const PlaceholderInfo &innerInfo) {
+            EXPECT_EQ(innerInfo.logicalSize, 1024);
+            EXPECT_EQ(innerInfo.atimeMs, 1);
+            EXPECT_EQ(innerInfo.mtimeMs, 2);
+            return E_OK;
+        }));
+
+    auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest004 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileTest005
+ * @tc.desc: Verify create placeholder file maps manager errors
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 start";
+    GTEST_LOG_(INFO) << "[BRANCH] OH_CloudDisk_CreatePlaceholder manager failure";
+    std::string syncFolder = "/storage/Users/currentUser/Docs";
+    std::string relativePath = "test.txt";
+    CloudDisk_SyncFolderPath syncFolderPath = {
+        .value = const_cast<char *>(syncFolder.c_str()),
+        .length = syncFolder.length(),
+    };
+    CloudDisk_PathInfo relativePathInfo = {
+        .value = const_cast<char *>(relativePath.c_str()),
+        .length = relativePath.length(),
+    };
+    CloudDisk_PlaceholderInfo info = {
+        .logicalSize = 1024,
+        .atimeMs = 1,
+        .mtimeMs = 2,
+    };
+    auto &mock = CloudDiskServiceManagerMock::GetInstance();
+    EXPECT_CALL(mock, CreatePlaceholderFile(syncFolder, relativePath, _))
+        .WillOnce(Return(E_FILE_ALREADY_EXISTS));
+
+    auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

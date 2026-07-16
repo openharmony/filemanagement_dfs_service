@@ -42,5 +42,9 @@
     {
         "first_introduced": "21",
         "name": "OH_CloudDisk_UpdateCustomAlias"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_CreatePlaceholder"
     }
 ]

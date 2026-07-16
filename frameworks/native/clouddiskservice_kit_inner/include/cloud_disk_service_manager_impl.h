@@ -42,6 +42,9 @@ public:
     int32_t GetFileSyncStates(const std::string &syncFolder,
                               const std::vector<std::string> &pathArray,
                               std::vector<ResultList> &resultList) override;
+    int32_t CreatePlaceholderFile(const std::string &syncFolder,
+                                  const std::string &relativePath,
+                                  const PlaceholderInfo &info) override;
     int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
     int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
 

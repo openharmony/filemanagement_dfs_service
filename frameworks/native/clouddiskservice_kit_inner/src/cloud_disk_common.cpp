@@ -342,4 +342,49 @@ bool ResultList::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
+bool PlaceholderInfo::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteUint64(logicalSize)) {
+        LOGE("failed to write logicalSize");
+        return false;
+    }
+    if (!parcel.WriteUint64(atimeMs)) {
+        LOGE("failed to write atimeMs");
+        return false;
+    }
+    if (!parcel.WriteUint64(mtimeMs)) {
+        LOGE("failed to write mtimeMs");
+        return false;
+    }
+    return true;
+}
+
+PlaceholderInfo *PlaceholderInfo::Unmarshalling(Parcel &parcel)
+{
+    PlaceholderInfo *info = new (std::nothrow) PlaceholderInfo();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool PlaceholderInfo::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadUint64(logicalSize)) {
+        LOGE("failed to read logicalSize");
+        return false;
+    }
+    if (!parcel.ReadUint64(atimeMs)) {
+        LOGE("failed to read atimeMs");
+        return false;
+    }
+    if (!parcel.ReadUint64(mtimeMs)) {
+        LOGE("failed to read mtimeMs");
+        return false;
+    }
+    return true;
+}
+
 } // namespace OHOS::FileManagement::CloudDiskService

@@ -81,6 +81,7 @@ ohos_shared_library("clouddiskservice_sa") {
   include_dirs = [
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/ioctl/include",
     "ipc/include",
     "monitor/include",
     "sync_folder/include",
@@ -88,6 +89,7 @@ ohos_shared_library("clouddiskservice_sa") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
     "ipc/src/account_status_listener.cpp",
