@@ -694,7 +694,7 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin IsPlaceholderFileInner");
     isPlaceholder = false;
-    if (HasInvalidRelativePathSegment(path) || path.front() == '/') {
+    if (HasInvalidRelativePathSegment(path) || path.front() == '/' || path.back() == '/') {
         LOGE("Invalid relative path, path size = %{public}zu", path.size());
         return E_INVALID_ARG;
     }
