@@ -855,7 +855,8 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest002, TestSize.Lev
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         AddPlaceholderSyncFolder();
         ExpectPlaceholderCaller(dfsuAccessToken_);
-        ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + path, PLACEHOLDER_TEST_VALUE_LOCAL);
+        ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + path,
+                                          PLACEHOLDER_TEST_VALUE_LOCAL);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
@@ -1027,7 +1028,8 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest007, TestSize.Lev
             .WillOnce(DoAll(SetArgReferee<0>(TEST_USER_ID), Return(E_OK)));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
-        ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + path, PLACEHOLDER_TEST_VALUE_HYDRATING);
+        ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + path,
+                                          PLACEHOLDER_TEST_VALUE_HYDRATING);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
