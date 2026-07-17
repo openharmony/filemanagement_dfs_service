@@ -119,7 +119,7 @@ void AddPlaceholderSyncFolder(const std::string &physicalSyncFolder,
 
 void ExpectPlaceholderCaller(const shared_ptr<CloudDiskServiceAccessTokenMock> &mock)
 {
-    EXPECT_CALL(*mock, GetUserId()).WillOnce(Return(100));
+    EXPECT_CALL(*mock, GetUserId()).WillOnce(Return(TEST_USER_ID));
     EXPECT_CALL(*mock, GetCallerBundleName(_))
         .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
 }
@@ -807,17 +807,17 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest001, TestSize.Lev
     GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest001 start";
     try {
         CloudDiskService cloudDiskService(5207, true);
-        string syncFolder = "invalid_sync_folder";
+        string syncFolder = "/test/mockFailed";
         string path = "a.txt";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(syncFolder, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_EQ(res, E_SYNC_FOLDER_PATH_NOT_EXIST);
         EXPECT_FALSE(isPlaceholder);
 #else
         EXPECT_EQ(res, E_NOT_SUPPORTED);
@@ -1014,7 +1014,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest007, TestSize.Lev
         AddPlaceholderSyncFolder();
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
         EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_))
-            .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
+            .WillOnce(DoAll(SetArgReferee<0>(TEST_USER_ID), Return(E_OK)));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
         ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + path, '2');
@@ -1051,7 +1051,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest008, TestSize.Lev
         string path = "dir/a.txt";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_TRY_AGAIN));
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
@@ -1122,7 +1122,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest010, TestSize.Lev
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         AddPlaceholderSyncFolder();
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("com.test.other"), Return(E_OK)));
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
