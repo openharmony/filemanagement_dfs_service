@@ -36,25 +36,12 @@ constexpr int32_t TEST_USER_ID = 100;
 constexpr int32_t TEST_CLOUD_DISK_SERVICE_SA_ID = 5207;
 constexpr bool TEST_RUN_ON_CREATE = true;
 constexpr size_t PLACEHOLDER_XATTR_VALUE_SIZE = 1;
-constexpr int32_t INVALID_SYNC_STATE_VALUE = 6;
 constexpr int32_t MOCK_SYSCALL_FAILED = -1;
-constexpr int32_t MOCK_SETXATTR_FAILED = 1;
-constexpr int32_t MOCK_PARENT_DIR_FD = 10;
-constexpr int32_t MOCK_PLACEHOLDER_FD = 11;
-constexpr uint64_t TEST_PLACEHOLDER_LOGICAL_SIZE = 4096;
-constexpr uint64_t TEST_PLACEHOLDER_ATIME_MS = 100;
-constexpr uint64_t TEST_PLACEHOLDER_MTIME_MS = 200;
 const std::string TEST_BUNDLE = "ohos.clouddiskservice.test";
 const std::string TEST_SYNC_FOLDER = "/storage/Users/currentUser/testdir";
 const std::string TEST_SYNC_FOLDER_PHYSICAL = "/data/service/el2/100/hmdfs/account/files/Docs/testdir";
 const std::string TEST_SYNC_FOLDER_MNT = "/mnt/hmdfs/100/account/device_view/local/files/Docs/testdir";
 const std::string TEST_RELATIVE_PATH = "placeholder.txt";
-const std::string TEST_RELATIVE_DIR = "dir";
-const std::string TEST_RELATIVE_PATH_IN_DIR = TEST_RELATIVE_DIR + "/" + TEST_RELATIVE_PATH;
-const std::string TEST_RELATIVE_PATH_WITH_EMPTY_SEGMENT = TEST_RELATIVE_DIR + "//" + TEST_RELATIVE_PATH;
-const std::string TEST_SYNC_FOLDER_MNT_DIR = TEST_SYNC_FOLDER_MNT + "/" + TEST_RELATIVE_DIR;
-const std::string TEST_SYNC_FOLDER_MNT_DIR_WITH_SLASH = TEST_SYNC_FOLDER_MNT_DIR + "/";
-const SyncState TEST_INVALID_SYNC_STATE = static_cast<SyncState>(INVALID_SYNC_STATE_VALUE);
 
 void RegisterPlaceholderSyncFolder(const std::string &bundleName = TEST_BUNDLE)
 {
@@ -405,7 +392,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest003, TestSize.Level1)
         FileSyncState fileSyncStates;
         fileSyncStates.path = "/storage/Users/currentUser/testfile.txt";
         string syncFolder = "/storage/Users/currentUser";
-        fileSyncStates.state = TEST_INVALID_SYNC_STATE;
+        fileSyncStates.state = static_cast<SyncState>(6);
         int32_t userId = 1;
         FailedList failed;
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
@@ -433,7 +420,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(MOCK_SETXATTR_FAILED));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -459,7 +446,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(MOCK_SETXATTR_FAILED));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -1435,22 +1422,22 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest003, TestSize.Le
     EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, TEST_USER_ID, path),
               E_OK);
     EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT);
-    EXPECT_EQ(path.fileName, TEST_RELATIVE_PATH);
+    EXPECT_EQ(path.fileName, "placeholder.txt");
 
-    EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH_IN_DIR, TEST_USER_ID, path),
+    EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER, "dir/placeholder.txt", TEST_USER_ID, path),
               E_OK);
-    EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT_DIR);
-    EXPECT_EQ(path.fileName, TEST_RELATIVE_PATH);
+    EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT + "/dir");
+    EXPECT_EQ(path.fileName, "placeholder.txt");
 
-    EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH_WITH_EMPTY_SEGMENT, TEST_USER_ID, path),
+    EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER, "dir//placeholder.txt", TEST_USER_ID, path),
               E_OK);
-    EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT_DIR_WITH_SLASH);
-    EXPECT_EQ(path.fileName, TEST_RELATIVE_PATH);
+    EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT + "/dir/");
+    EXPECT_EQ(path.fileName, "placeholder.txt");
 
     EXPECT_EQ(BuildCreatePlaceholderPath(TEST_SYNC_FOLDER + "/", TEST_RELATIVE_PATH, TEST_USER_ID, path),
               E_OK);
     EXPECT_EQ(path.parentMntPath, TEST_SYNC_FOLDER_MNT + "/");
-    EXPECT_EQ(path.fileName, TEST_RELATIVE_PATH);
+    EXPECT_EQ(path.fileName, "placeholder.txt");
 
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest003 end";
 }
@@ -1487,11 +1474,11 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest005, TestSize.Le
     GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt open parent denied";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
-    path.fileName = TEST_RELATIVE_PATH;
+    path.fileName = "placeholder.txt";
     PlaceholderInfo info;
 
     Assistant::mockErrno = EACCES;
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(-1));
     EXPECT_CALL(*insMock_, OpenAt(_, _, _, _)).Times(0);
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest005 end";
@@ -1509,12 +1496,12 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest006, TestSize.Le
     GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt openat existing file";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
-    path.fileName = TEST_RELATIVE_PATH;
+    path.fileName = "placeholder.txt";
     PlaceholderInfo info;
 
     Assistant::mockErrno = EEXIST;
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_FILE_ALREADY_EXISTS);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest006 end";
 }
@@ -1531,20 +1518,20 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest007, TestSize.Le
     GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt success with ioctl enabled";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
-    path.fileName = TEST_RELATIVE_PATH;
+    path.fileName = "placeholder.txt";
     PlaceholderInfo info;
-    info.logicalSize = TEST_PLACEHOLDER_LOGICAL_SIZE;
-    info.atimeMs = TEST_PLACEHOLDER_ATIME_MS;
-    info.mtimeMs = TEST_PLACEHOLDER_MTIME_MS;
+    info.logicalSize = 4096;
+    info.atimeMs = 100;
+    info.mtimeMs = 200;
     bool ioctlPayloadChecked = false;
 
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_PLACEHOLDER_FD));
-    EXPECT_CALL(*insMock_, Ioctl(MOCK_PLACEHOLDER_FD, HMDFS_IOC_CREATE_PLACEHOLDER, _))
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _))
         .WillOnce(Invoke([&ioctlPayloadChecked](int, int, void *arg) {
             auto *create = reinterpret_cast<HmdfsPlaceholderAttr*>(arg);
-            ioctlPayloadChecked = create != nullptr && create->logicalSize == TEST_PLACEHOLDER_LOGICAL_SIZE &&
-                create->atimeMs == TEST_PLACEHOLDER_ATIME_MS && create->mtimeMs == TEST_PLACEHOLDER_MTIME_MS;
+            ioctlPayloadChecked = create != nullptr && create->logicalSize == 4096 &&
+                create->atimeMs == 100 && create->mtimeMs == 200;
             return 0;
         }));
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_OK);
@@ -1564,25 +1551,25 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest008, TestSize.Le
     GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt ioctl not supported rollback";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
-    path.fileName = TEST_RELATIVE_PATH;
+    path.fileName = "placeholder.txt";
     PlaceholderInfo info;
 
     Assistant::mockErrno = ENOTTY;
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_PLACEHOLDER_FD));
-    EXPECT_CALL(*insMock_, Ioctl(MOCK_PLACEHOLDER_FD, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
-    EXPECT_CALL(*insMock_, UnlinkAt(MOCK_PARENT_DIR_FD, StrEq(TEST_RELATIVE_PATH), 0)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0)).WillOnce(Return(0));
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_NOT_SUPPORTED);
     Mock::VerifyAndClearExpectations(insMock_.get());
 
     Assistant::mockErrno = ENOTTY;
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_PLACEHOLDER_FD));
-    EXPECT_CALL(*insMock_, Ioctl(MOCK_PLACEHOLDER_FD, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
-    EXPECT_CALL(*insMock_, UnlinkAt(MOCK_PARENT_DIR_FD, StrEq(TEST_RELATIVE_PATH), 0))
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0))
         .WillOnce(Invoke([](int, const char *, int) {
             errno = EACCES;
-            return MOCK_SYSCALL_FAILED;
+            return -1;
         }));
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_NOT_SUPPORTED);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest008 end";
@@ -1764,8 +1751,8 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest006, Te
     EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
     EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
         .WillOnce(DoAll(SetArgReferee<0>(TEST_BUNDLE), Return(E_OK)));
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_FILE_ALREADY_EXISTS);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest006 end";
 }
@@ -1787,9 +1774,9 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest007, Te
     EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
     EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
         .WillOnce(DoAll(SetArgReferee<0>(TEST_BUNDLE), Return(E_OK)));
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(MOCK_PARENT_DIR_FD));
-    EXPECT_CALL(*insMock_, OpenAt(MOCK_PARENT_DIR_FD, _, _, _)).WillOnce(Return(MOCK_PLACEHOLDER_FD));
-    EXPECT_CALL(*insMock_, Ioctl(MOCK_PLACEHOLDER_FD, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(0));
     EXPECT_CALL(*insMock_, Unlink(_)).Times(0);
     EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_OK);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest007 end";
