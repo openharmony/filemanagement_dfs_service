@@ -31,6 +31,8 @@ using namespace std;
 namespace {
 const string SANDBOX_SYNC_FOLDER = "/storage/Users/currentUser/sync";
 const string RELATIVE_FILE_PATH = "a.txt";
+constexpr size_t INVALID_PATH_INFO_LENGTH = 1;
+constexpr int32_t SERVICE_SYNC_FOLDER_PATH_UNAUTHORIZED = E_SYNC_FOLDER_PATH_UNAUTHORIZED;
 
 CloudDisk_PathInfo ToPathInfo(const string &path)
 {
@@ -550,7 +552,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest003, TestSize.Level1)
         CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
         auto &mock = CloudDiskServiceManagerMock::GetInstance();
         EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
-            .WillOnce(Return(34400002));
+            .WillOnce(Return(SERVICE_SYNC_FOLDER_PATH_UNAUTHORIZED));
 
         bool isPlaceholder = false;
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
@@ -596,7 +598,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest005, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 start";
     try {
         CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
-        CloudDisk_SyncFolderPath invalidSyncFolderPath = {nullptr, 1};
+        CloudDisk_SyncFolderPath invalidSyncFolderPath = {nullptr, INVALID_PATH_INFO_LENGTH};
         bool isPlaceholder = true;
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(invalidSyncFolderPath, path, &isPlaceholder);
@@ -621,7 +623,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest006, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
-        CloudDisk_PathInfo invalidPath = {nullptr, 1};
+        CloudDisk_PathInfo invalidPath = {nullptr, INVALID_PATH_INFO_LENGTH};
         bool isPlaceholder = true;
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, invalidPath, &isPlaceholder);
