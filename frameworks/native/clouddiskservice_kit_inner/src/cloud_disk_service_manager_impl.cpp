@@ -152,7 +152,6 @@ int32_t CloudDiskServiceManagerImpl::CreatePlaceholderFile(const std::string &sy
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("CreatePlaceholderFile route=manager_to_proxy");
-
     auto serviceProxy = ServiceProxy::GetInstance();
     if (!serviceProxy) {
         LOGE("proxy is null");
