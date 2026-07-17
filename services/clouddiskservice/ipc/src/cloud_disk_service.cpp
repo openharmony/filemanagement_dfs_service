@@ -563,20 +563,20 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
     if (xattrValueSize <= 0) {
         error = errno;
-        LOGE("getxattr size failed, errno : %{public}d", error);
+        LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
         return ConvertPlaceholderXattrErrno(error);
     }
 
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
     if (xattrValue == nullptr) {
-        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
+        LOGE("QueryPlaceholderByXattr branch=alloc_xattr_value_failed errno=%{public}d", errno);
         return E_TRY_AGAIN;
     }
 
     xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
         error = errno;
-        LOGE("getxattr value failed, errno : %{public}d", error);
+        LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
         return ConvertPlaceholderXattrErrno(error);
     }
 
@@ -692,10 +692,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
                                                  bool &isPlaceholder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-    LOGI("Begin IsPlaceholderFileInner");
+    LOGI("IsPlaceholderFileInner route=service_entry");
     isPlaceholder = false;
     if (HasInvalidRelativePathSegment(path) || path.front() == '/' || path.back() == '/') {
-        LOGE("Invalid relative path, path size = %{public}zu", path.size());
+        LOGE("IsPlaceholderFileInner branch=invalid_relative_path path_size=%{public}zu", path.size());
         return E_INVALID_ARG;
     }
 
@@ -708,14 +708,14 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
                                                                         physicalSyncFolder);
     if (ret != E_OK) {
-        LOGE("Get sync folder path failed, ret = %{public}d", ret);
+        LOGE("IsPlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
         return ret;
     }
 
     std::string bundleName = "";
     ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
     if (ret != E_OK) {
-        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        LOGE("IsPlaceholderFileInner branch=get_bundle_failed ret=%{public}d", ret);
         return E_TRY_AGAIN;
     }
 
@@ -723,24 +723,28 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     SyncFolderValue syncFolderValue;
     if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
         syncFolderValue.bundleName != bundleName) {
-        LOGE("SyncFolder is not exist");
+        LOGE("IsPlaceholderFileInner branch=sync_folder_not_registered_or_bundle_mismatch");
         return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     std::string mntSyncFolder;
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(physicalSyncFolder, std::to_string(userId),
         mntSyncFolder)) {
-        LOGE("Get mnt sync folder path failed");
+        LOGE("IsPlaceholderFileInner branch=mnt_sync_folder_path_failed");
         return E_INVALID_ARG;
     }
 
     std::string getXattrPath = JoinSyncFolderAndRelativePath(mntSyncFolder, path);
     if (!IsPathInSyncFolder(mntSyncFolder, getXattrPath)) {
-        LOGE("Get xattr path is not in sync folder");
+        LOGE("IsPlaceholderFileInner branch=xattr_path_out_of_sync_folder");
         return E_INVALID_ARG;
     }
     ret = QueryPlaceholderByXattr(getXattrPath, isPlaceholder);
-    LOGI("End IsPlaceholderFileInner, ret=%{public}d, isPlaceholder=%{public}d", ret, isPlaceholder);
+    if (ret != E_OK) {
+        LOGE("IsPlaceholderFileInner branch=query_xattr_failed ret=%{public}d", ret);
+    } else {
+        LOGI("IsPlaceholderFileInner branch=success isPlaceholder=%{public}d", isPlaceholder);
+    }
     return ret;
 #else
     return E_NOT_SUPPORTED;

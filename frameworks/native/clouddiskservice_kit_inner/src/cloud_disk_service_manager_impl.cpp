@@ -175,17 +175,21 @@ int32_t CloudDiskServiceManagerImpl::IsPlaceholderFile(const std::string &syncFo
                                                        bool &isPlaceholder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-    LOGI("start IsPlaceholderFile in impl");
+    LOGI("IsPlaceholderFile route=manager_to_proxy");
 
     auto serviceProxy = ServiceProxy::GetInstance();
     if (!serviceProxy) {
-        LOGE("proxy is null");
+        LOGE("IsPlaceholderFile branch=proxy_null");
         return E_IPC_FAILED;
     }
 
     auto ret = serviceProxy->IsPlaceholderFileInner(syncFolder, path, isPlaceholder);
     SetDeathRecipient(serviceProxy->AsObject());
-    LOGI("IsPlaceholderFile, ret %{public}d", ret);
+    if (ret != E_OK) {
+        LOGE("IsPlaceholderFile branch=proxy_failed ret=%{public}d", ret);
+    } else {
+        LOGI("IsPlaceholderFile branch=proxy_success isPlaceholder=%{public}d", isPlaceholder);
+    }
     return ret;
 #else
     return E_NOT_SUPPORTED;

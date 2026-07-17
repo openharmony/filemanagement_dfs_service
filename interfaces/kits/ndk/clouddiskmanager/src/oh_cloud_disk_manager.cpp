@@ -327,16 +327,16 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
                                                    bool *isPlaceholder)
 {
     if (isPlaceholder == nullptr) {
-        LOGE("Invalid argument, isPlaceholder is nullptr");
+        LOGE("IsPlaceholderFile branch=invalid_arg_result_null");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     *isPlaceholder = false;
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
-        LOGE("Invalid argument, syncFolder path is invalid");
+        LOGE("IsPlaceholderFile branch=invalid_arg_sync_folder");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     if (!IsValidPathInfo(path.value, path.length)) {
-        LOGE("Invalid argument, file path is invalid");
+        LOGE("IsPlaceholderFile branch=invalid_arg_path");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
 
@@ -344,8 +344,13 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
     std::string filePath(path.value, path.length);
 
     int32_t ret = CloudDiskServiceManager::GetInstance().IsPlaceholderFile(syncFolder, filePath, *isPlaceholder);
-    LOGI("Is placeholder file finished, ret=%{public}d, isPlaceholder=%{public}d", ret, *isPlaceholder);
-    return ConvertToErrorCode(ret);
+    if (ret != CloudDiskServiceErrCode::E_OK) {
+        LOGE("IsPlaceholderFile branch=service_failed ret=%{public}d", ret);
+        return ConvertToErrorCode(ret);
+    }
+
+    LOGI("IsPlaceholderFile branch=success isPlaceholder=%{public}d", *isPlaceholder);
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)
