@@ -108,6 +108,15 @@ void AddPlaceholderSyncFolder()
     CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
 }
 
+void AddPlaceholderSyncFolder(const std::string &physicalSyncFolder,
+                              const std::string &bundleName = PLACEHOLDER_TEST_BUNDLE_NAME)
+{
+    CloudDiskSyncFolder::GetInstance().ClearMap();
+    auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
+    SyncFolderValue syncFolderValue = {bundleName, physicalSyncFolder};
+    CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+}
+
 void ExpectPlaceholderCaller(const shared_ptr<CloudDiskServiceAccessTokenMock> &mock)
 {
     EXPECT_CALL(*mock, GetUserId()).WillOnce(Return(100));
@@ -1170,6 +1179,81 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest011, TestSize.Lev
     }
     ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest011 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileInnerTest012
+ * @tc.desc: Verify IsPlaceholderFileInner returns invalid arg when mnt sync folder conversion fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest012 start";
+    try {
+        CloudDiskService cloudDiskService(5207, true);
+        string syncFolder = "/storage/Users/currentUser/mockMntPhysicalPathFailed";
+        string physicalSyncFolder = "/data/service/el2/100/hmdfs/account/files/Docs/mockMntPhysicalPathFailed";
+        string path = "dir/a.txt";
+        bool isPlaceholder = true;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder(physicalSyncFolder);
+        ExpectPlaceholderCaller(dfsuAccessToken_);
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
+#endif
+
+        auto res = cloudDiskService.IsPlaceholderFileInner(syncFolder, path, isPlaceholder);
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+#else
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest012 failed";
+    }
+    ClearPlaceholderXattrExpectations(insMock_);
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest012 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileInnerTest013
+ * @tc.desc: Verify IsPlaceholderFileInner rejects an xattr path outside the sync folder
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest013 start";
+    try {
+        CloudDiskService cloudDiskService(5207, true);
+        string syncFolder = "raw_sync_folder";
+        string path = "dir/a.txt";
+        bool isPlaceholder = true;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder(syncFolder);
+        ExpectPlaceholderCaller(dfsuAccessToken_);
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
+#endif
+
+        auto res = cloudDiskService.IsPlaceholderFileInner(syncFolder, path, isPlaceholder);
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+#else
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest013 failed";
+    }
+    ClearPlaceholderXattrExpectations(insMock_);
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest013 end";
 }
 
 /**

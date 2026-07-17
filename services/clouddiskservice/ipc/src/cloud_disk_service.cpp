@@ -587,6 +587,39 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     return E_OK;
 }
 
+static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t userId, std::string &mntSyncFolder)
+{
+    std::string physicalSyncFolder;
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
+                                                                        physicalSyncFolder);
+    if (ret != E_OK) {
+        LOGE("IsPlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
+        return ret;
+    }
+
+    std::string bundleName = "";
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("IsPlaceholderFileInner branch=get_bundle_failed ret=%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
+    auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
+        syncFolderValue.bundleName != bundleName) {
+        LOGE("IsPlaceholderFileInner branch=sync_folder_not_registered_or_bundle_mismatch");
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+
+    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(physicalSyncFolder, std::to_string(userId),
+        mntSyncFolder)) {
+        LOGE("IsPlaceholderFileInner branch=mnt_sync_folder_path_failed");
+        return E_INVALID_ARG;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
                                                  const std::vector<std::string> &pathArray,
                                                  std::vector<ResultList> &resultList)
@@ -703,35 +736,11 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     if (userId == 0) {
         CloudDiskServiceAccessToken::GetAccountId(userId);
     }
-    std::string physicalSyncFolder;
-
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
-                                                                        physicalSyncFolder);
-    if (ret != E_OK) {
-        LOGE("IsPlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
-        return ret;
-    }
-
-    std::string bundleName = "";
-    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
-    if (ret != E_OK) {
-        LOGE("IsPlaceholderFileInner branch=get_bundle_failed ret=%{public}d", ret);
-        return E_TRY_AGAIN;
-    }
-
-    auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
-    SyncFolderValue syncFolderValue;
-    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue) ||
-        syncFolderValue.bundleName != bundleName) {
-        LOGE("IsPlaceholderFileInner branch=sync_folder_not_registered_or_bundle_mismatch");
-        return E_SYNC_FOLDER_NOT_REGISTERED;
-    }
 
     std::string mntSyncFolder;
-    if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(physicalSyncFolder, std::to_string(userId),
-        mntSyncFolder)) {
-        LOGE("IsPlaceholderFileInner branch=mnt_sync_folder_path_failed");
-        return E_INVALID_ARG;
+    int32_t ret = GetRegisteredMntSyncFolder(syncFolder, userId, mntSyncFolder);
+    if (ret != E_OK) {
+        return ret;
     }
 
     std::string getXattrPath = JoinSyncFolderAndRelativePath(mntSyncFolder, path);
