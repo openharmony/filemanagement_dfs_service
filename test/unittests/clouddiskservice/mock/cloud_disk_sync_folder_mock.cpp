@@ -91,6 +91,10 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
     return E_OK;
 }
 
+void CloudDiskSyncFolder::RemovePlaceholderFilesBatch(const std::string &path)
+{
+}
+
 int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
                                                         const std::string &userId, std::string &realpath)
 {

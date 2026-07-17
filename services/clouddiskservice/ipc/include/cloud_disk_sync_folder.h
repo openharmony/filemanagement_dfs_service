@@ -39,6 +39,8 @@ public:
     bool GetSyncFolderValueByIndex(const uint32_t syncFolderIndex, SyncFolderValue &syncFolderValue);
     bool GetIndexBySyncFolder(uint32_t &syncFolderIndex, const std::string &path);
     void RemoveXattr(std::string &path, const std::string &attrName);
+    void RemovePlaceholderFilesSingle(const std::string &path);
+    void RemovePlaceholderFilesBatch(const std::string &path);
     int32_t PathToPhysicalPath(const std::string &path, const std::string &userId, std::string &physicalPath);
     int32_t PathToMntPathBySandboxPath(const std::string &path, const std::string &userId, std::string &realPath);
     bool PathToMntPathByPhysicalPath(const std::string &path, const std::string &userId, std::string &realPath);
