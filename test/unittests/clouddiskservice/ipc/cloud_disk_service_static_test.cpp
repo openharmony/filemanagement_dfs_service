@@ -1052,7 +1052,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest008, TestSize.Lev
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
-        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_RDB));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_TRY_AGAIN));
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
