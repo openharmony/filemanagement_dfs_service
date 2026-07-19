@@ -176,7 +176,7 @@ HWTEST_F(CloudDiskServiceTest, OnStopTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnStopTest001 start";
     cloudDiskService_->state_ = ServiceRunningState::STATE_RUNNING;
-    cloudDiskService_->OnStart();
+    cloudDiskService_->OnStart(SystemAbilityOnDemandReason());
     cloudDiskService_->OnStop();
     EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
     EXPECT_EQ(cloudDiskService_->registerToService_, false);

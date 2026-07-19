@@ -14,11 +14,18 @@
  */
 #include "cloud_disk_sync_folder_manager_mock.h"
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+namespace OHOS::FileManagement {
+CloudDiskSyncFolderManager &CloudDiskSyncFolderManager::GetInstance()
+{
+    return CloudDiskService::Test::CloudDiskSyncFolderManagerMock::GetInstance();
+}
+} // namespace OHOS::FileManagement
+#else
 namespace OHOS::FileManagement::CloudDiskService::Test {
-
 CloudDiskSyncFolderManager &CloudDiskSyncFolderManager::GetInstance()
 {
     return CloudDiskSyncFolderManagerMock::GetInstance();
 }
-
-} // OHOS::FileManagement
+} // namespace OHOS::FileManagement::CloudDiskService::Test
+#endif

@@ -16,15 +16,13 @@
 #include "cloud_disk_service.h"
 
 #include <cerrno>
+#include <charconv>
 #include <cstdlib>
-#include <exception>
 #include <fcntl.h>
-#include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/xattr.h>
-#include <thread>
 #include <unistd.h>
 
 #include "cloud_disk_service_access_token.h"
@@ -51,6 +49,7 @@ using namespace CloudFile;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
+constexpr const char *USER_UNLOCKED_REASON = "usual.event.USER_UNLOCKED";
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
 
 namespace {
@@ -91,6 +90,54 @@ static int32_t BuildCreatePlaceholderPath(const std::string &syncFolder,
     LOGI("CreatePlaceholderFile branch=build_path_success");
     return E_OK;
 }
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+bool ParseUserIdFromReasonValue(const string &reasonValue, int32_t &userId)
+{
+    if (reasonValue.empty()) {
+        LOGE("Parse userId from start reason failed, reasonValue: %{public}s", reasonValue.c_str());
+        return false;
+    }
+
+    auto result = std::from_chars(reasonValue.data(), reasonValue.data() + reasonValue.size(), userId);
+    if (result.ec != std::errc{} || result.ptr != reasonValue.data() + reasonValue.size() || userId < 0) {
+        LOGE("Parse userId from start reason failed, reasonValue: %{public}s", reasonValue.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool ParseAndVerifyUserIdFromReasonValue(const SystemAbilityOnDemandReason &startReason, int32_t &userId)
+{
+    string reasonValue = startReason.GetValue();
+    if (!ParseUserIdFromReasonValue(reasonValue, userId)) {
+        return false;
+    }
+    LOGI("Parse userId from start reason success, userId: %{public}d", userId);
+
+    if (CloudDiskServiceAccessToken::IsUserVerifyed(userId)) {
+        LOGI("UserId is verified, userId: %{public}d", userId);
+        return true;
+    }
+    LOGE("userId is invalid, userId: %{public}d, reasonValue: %{public}s", userId, reasonValue.c_str());
+    return false;
+}
+
+bool GetUserIdByStartReason(const SystemAbilityOnDemandReason &startReason, int32_t &userId)
+{
+    string reason = startReason.GetName();
+    LOGI("Get userId by start reason, reason: %{public}s", reason.c_str());
+    if (reason == USER_UNLOCKED_REASON) {
+        return ParseAndVerifyUserIdFromReasonValue(startReason, userId);
+    }
+
+    userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(userId);
+    }
+    return true;
+}
+#endif
 
 static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
 {
@@ -169,7 +216,7 @@ bool CloudDiskService::PublishSA()
     return true;
 }
 
-void CloudDiskService::OnStart()
+void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin to start service");
@@ -178,11 +225,17 @@ void CloudDiskService::OnStart()
         return;
     }
 
+    int32_t userId = 0;
+    if (!GetUserIdByStartReason(startReason, userId)) {
+        return;
+    }
+
     std::vector<FileManagement::SyncFolderExt> syncFolders;
-    OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
-    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
-    if (userId == 0) {
-        CloudDiskServiceAccessToken::GetAccountId(userId);
+    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
+    if (ret != E_OK) {
+        LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu",
+            ret, syncFolders.size());
+        return;
     }
     for (const auto &item : syncFolders) {
         std::string path;

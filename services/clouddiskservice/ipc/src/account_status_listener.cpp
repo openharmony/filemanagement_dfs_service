@@ -51,7 +51,14 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
         CloudDiskSyncFolder::GetInstance().ClearMap();
 
         std::vector<FileManagement::SyncFolderExt> syncFolders;
-        OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
+        int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
+            .GetAllSyncFoldersForSa(syncFolders);
+        if (ret != 0) {
+            LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu",
+                ret, syncFolders.size());
+            UnloadSa();
+            return;
+        }
         for (auto item : syncFolders) {
             std::string path;
             if (CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path) != 0) {
@@ -64,7 +71,12 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
             uint32_t syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
             CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
         }
-        if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
+        int32_t syncFolderSize = CloudDiskSyncFolder::GetInstance().GetSyncFolderSize();
+        if (syncFolderSize == 0) {
+            LOGI("No sync folder, unload sa");
+            UnloadSa();
+            return;
+        } else if (syncFolderSize > 0) {
             DiskMonitor::GetInstance().StartMonitor(userId);
         }
     }

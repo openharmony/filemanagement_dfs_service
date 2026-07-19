@@ -19,11 +19,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_sync_folder_manager.h"
+#endif
+
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+#ifndef SUPPORT_CLOUD_DISK_SERVICE
 enum class State {
     INACTIVE,
     ACTIVE,
@@ -33,7 +38,7 @@ enum class State {
 struct SyncFolder {
     std::string path_;
     State state_ { State::INACTIVE };
-    uint32_t displayNameResId_ { 0 }; // 0: default resId value
+    uint32_t displayNameResId_ { 0 };
     std::string displayName_;
 
     SyncFolder() = default;
@@ -59,10 +64,15 @@ public:
     virtual int32_t Deactive(const std::string path) = 0;
     virtual int32_t GetSyncFolders(std::vector<SyncFolder> &syncFolders) = 0;
     virtual int32_t UpdateDisplayName(const std::string path, const std::string displayName) = 0;
-    // function for sa
     virtual int32_t UnregisterForSa(const std::string path) = 0;
     virtual int32_t GetAllSyncFoldersForSa(std::vector<SyncFolderExt> &syncFolderExts) = 0;
 };
+#else
+using OHOS::FileManagement::CloudDiskSyncFolderManager;
+using OHOS::FileManagement::State;
+using OHOS::FileManagement::SyncFolder;
+using OHOS::FileManagement::SyncFolderExt;
+#endif
 
 class CloudDiskSyncFolderManagerMock : public CloudDiskSyncFolderManager {
 public:
@@ -80,5 +90,5 @@ public:
     MOCK_METHOD1(UnregisterForSa, int32_t(const string));
     MOCK_METHOD1(GetAllSyncFoldersForSa, int32_t(std::vector<SyncFolderExt> &));
 };
-} // OHOS::FileManagement::Test
-#endif
+} // namespace OHOS::FileManagement::CloudDiskService::Test
+#endif // TEST_UNITTEST_CLOUD_DISK_SYNC_FOLDER_MANAGER_MOCK_H
