@@ -2447,4 +2447,253 @@ HWTEST_F(FileOperationsCloudStaticTest, GetFileOpenFlagsTest006, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "GetFileOpenFlagsTest006 End";
 }
+/**
+ * @tc.name: InitInodeAttrTest001
+ * @tc.desc: parent inode not found, childInode should remain unchanged
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest001 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 999;
+        CloudDiskInode *childInode = new CloudDiskInode;
+        childInode->stat.st_ino = 123;
+        MetaBase metaBase("test.txt");
+        metaBase.mtime = 5000;
+        int64_t inodeId = 200;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->stat.st_ino, static_cast<uint64_t>(123));
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest001 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest002
+ * @tc.desc: parent found, metaBase is directory, verify dir attributes set correctly
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest002 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 1;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.test";
+        parentInode->cloudId = "parentCloudId";
+        parentInode->layer = 0;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        MetaBase metaBase("testDir");
+        metaBase.mode = S_IFDIR;
+        int64_t inodeId = 100;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->stat.st_ino, static_cast<uint64_t>(inodeId));
+        EXPECT_EQ(childInode->stat.st_mode, S_IFDIR | 0771u);
+        EXPECT_EQ(childInode->stat.st_nlink, static_cast<uint64_t>(2));
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest002 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest003
+ * @tc.desc: parent found, metaBase is regular file, verify file attributes set correctly
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest003 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 1;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.test";
+        parentInode->cloudId = "parentCloudId";
+        parentInode->layer = 1;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        MetaBase metaBase("testFile.txt");
+        metaBase.mode = S_IFREG;
+        metaBase.size = 1024;
+        int64_t inodeId = 200;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->stat.st_ino, static_cast<uint64_t>(inodeId));
+        EXPECT_EQ(childInode->stat.st_mode, S_IFREG | 0660u);
+        EXPECT_EQ(childInode->stat.st_nlink, static_cast<uint64_t>(1));
+        EXPECT_EQ(childInode->stat.st_size, static_cast<uint64_t>(1024));
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest003 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest004
+ * @tc.desc: verify mtime and atime are converted from milliseconds to seconds
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest004 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 1;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.test";
+        parentInode->cloudId = "parentCloudId";
+        parentInode->layer = 0;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        MetaBase metaBase("testFile.txt");
+        metaBase.mode = S_IFREG;
+        metaBase.mtime = 123456789;
+        metaBase.atime = 987654321;
+        int64_t inodeId = 300;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->stat.st_mtime, static_cast<time_t>(123456789 / 1000));
+        EXPECT_EQ(childInode->stat.st_atime, static_cast<time_t>(987654321 / 1000));
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest004 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest005
+ * @tc.desc: verify bundleName, fileName, parent, cloudId, layer, ops copied correctly
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest005 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 1;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.cloud";
+        parentInode->cloudId = "parentCloudId123";
+        parentInode->layer = 1;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        MetaBase metaBase("child.txt");
+        metaBase.mode = S_IFREG;
+        int64_t inodeId = 400;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->bundleName, "com.example.cloud");
+        EXPECT_EQ(childInode->fileName, "child.txt");
+        EXPECT_EQ(childInode->parent, parent);
+        EXPECT_EQ(childInode->cloudId, metaBase.cloudId);
+        EXPECT_NE(childInode->ops, nullptr);
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest005 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest006
+ * @tc.desc: parent is FUSE_ROOT_ID, child layer should be CLOUD_DISK_INODE_ZERO_LAYER
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest006 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = FUSE_ROOT_ID;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.test";
+        parentInode->cloudId = "rootId";
+        parentInode->layer = 0;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        childInode->layer = 5;
+        MetaBase metaBase("rootChild");
+        metaBase.mode = S_IFDIR;
+        int64_t inodeId = 500;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->layer, 0);
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest006 End";
+}
+
+/**
+ * @tc.name: InitInodeAttrTest007
+ * @tc.desc: metaBase mtime and atime are zero
+ * @tc.type: FUNC
+ */
+HWTEST_F(FileOperationsCloudStaticTest, InitInodeAttrTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitInodeAttrTest007 Start";
+    try {
+        CloudDiskFuseData *data = new CloudDiskFuseData;
+        fuse_ino_t parent = 1;
+        auto parentInode = make_shared<CloudDiskInode>();
+        parentInode->bundleName = "com.example.test";
+        parentInode->cloudId = "parentCloudId";
+        parentInode->layer = 0;
+        data->inodeCache[parent] = parentInode;
+
+        CloudDiskInode *childInode = new CloudDiskInode;
+        MetaBase metaBase("zeroTime.txt");
+        metaBase.mode = S_IFREG;
+        metaBase.mtime = 0;
+        metaBase.atime = 0;
+        int64_t inodeId = 700;
+
+        InitInodeAttr(data, parent, childInode, metaBase, inodeId);
+
+        EXPECT_EQ(childInode->stat.st_mtime, static_cast<time_t>(0));
+        EXPECT_EQ(childInode->stat.st_atime, static_cast<time_t>(0));
+        delete childInode;
+        delete data;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitInodeAttrTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InitInodeAttrTest007 End";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
