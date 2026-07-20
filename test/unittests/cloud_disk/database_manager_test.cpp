@@ -35,23 +35,23 @@ public:
 void DatabaseManagerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    databaseManager_ = make_shared<DatabaseManager>();
 }
 
 void DatabaseManagerTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    databaseManager_ = nullptr;
 }
 
 void DatabaseManagerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    databaseManager_ = make_shared<DatabaseManager>();
 }
 
 void DatabaseManagerTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    databaseManager_ = nullptr;
 }
 
 /**
