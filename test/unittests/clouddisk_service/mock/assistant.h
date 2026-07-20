@@ -46,6 +46,7 @@ public:
     virtual struct dirent* readdir(DIR* d) = 0;
     virtual int stat(const char* path, struct stat* buf);
     virtual int lstat(const char* path, struct stat* buf);
+    virtual int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags);
 };
 
 class AssistantMock : public Assistant {
@@ -68,6 +69,7 @@ public:
     MOCK_METHOD1(readdir, struct dirent*(DIR*));
     MOCK_METHOD2(stat, int(const char*, struct stat*));
     MOCK_METHOD2(lstat, int(const char*, struct stat*));
+    MOCK_METHOD5(fsetxattr, int(int, const char *, const void *, size_t, int));
 
 public:
     static void EnableMock();

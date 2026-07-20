@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 
 #include "oh_cloud_disk_manager.h"
+#include "oh_cloud_disk_utils.h"
+#include "cloud_disk_service_manager_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudDiskService {
@@ -32,7 +34,6 @@ public:
     void TearDown();
 
     static CloudDisk_SyncFolderPath CreateValidSyncFolderPath();
-    
     static constexpr const char* testSyncFolderPath = "/data/test_sync";
     static constexpr size_t testSyncFolderLength = 15;
 };
@@ -347,6 +348,113 @@ HWTEST_F(OhCloudDiskManagerTest, GetFileSyncStatesTest004, TestSize.Level1)
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "GetFileSyncStatesTest004 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToFile_InvalidPath_001
+ * @tc.desc: Verify OH_CloudDisk_ConvertPlaceholderToFile with invalid path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_InvalidPath_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_InvalidPath_001 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = nullptr;
+        syncFolderPath.length = 10;
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = 0;
+        ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_InvalidPath_001 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_InvalidPath_001 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToFile_Success_002
+ * @tc.desc: Verify OH_CloudDisk_ConvertPlaceholderToFile with valid parameters
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_Success_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_Success_002 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = strlen(syncFolderPath.value);
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(),
+            ConvertPlaceholderToFile(_, _)).WillOnce(Return(
+                OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
+        CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_Success_002 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_Success_002 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToFile_ErrorCode_003
+ * @tc.desc: Verify OH_CloudDisk_ConvertPlaceholderToFile error code conversion
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_ErrorCode_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_ErrorCode_003 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = strlen(syncFolderPath.value);
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(),
+            ConvertPlaceholderToFile(_, _)).WillOnce(Return(
+                OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_A_PLACEHOLDER));
+        CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_A_PLACEHOLDER);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_ErrorCode_003 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_ErrorCode_003 end";
 }
 
 } // namespace Test

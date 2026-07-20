@@ -530,6 +530,18 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(
 CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo relativePathInfo,
                                                    const CloudDisk_PlaceholderInfo placeholderInfo);
+
+/**
+ * @brief Converts a placeholder file to a 0-byte normal file.
+ *
+ * @param syncFolderPath Sync folder path information.
+ * @param relativePathInfo File path information.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns {@link CLOUD_DISK_NOT_A_PLACEHOLDER} if file is not a placeholder.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(const CloudDisk_SyncFolderPath syncFolderPath,
+    const CloudDisk_PathInfo relativePathInfo);
 #ifdef __cplusplus
 };
 #endif

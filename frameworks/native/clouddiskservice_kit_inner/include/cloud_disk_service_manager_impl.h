@@ -48,6 +48,8 @@ public:
     int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
     int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
 
+    int32_t ConvertPlaceholderToFile(const std::string &syncFolder, const std::string &relativePath) override;
+
     int32_t UnregisterForSa(const std::string &path) override;
 
 private:

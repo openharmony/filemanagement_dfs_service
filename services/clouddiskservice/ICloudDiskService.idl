@@ -30,4 +30,5 @@ interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
     void RegisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterForSaInner([in] String path);
+    void ConvertPlaceholderToFileInner([in] String syncFolder, [in] String relativePath);
 }

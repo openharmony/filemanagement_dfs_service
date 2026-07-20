@@ -42,6 +42,8 @@ enum class ICloudDiskServiceIpcCode {
     COMMAND_REGISTER_SYNC_FOLDER_INNER,
     COMMAND_UNREGISTER_SYNC_FOLDER_INNER,
     COMMAND_UNREGISTER_FOR_SA_INNER,
+    COMMAND_CONVERT_PLACEHOLDER_TO_FILE_INNER,
+    COMMAND_UPDATE_PLACEHOLDER_TO_FILE_INNER,
 };
 
 class ICloudDiskService : public IRemoteBroker {
@@ -51,7 +53,7 @@ public:
     virtual ErrCode RegisterSyncFolderChangesInner(
         const std::string& syncFolder,
         const sptr<IRemoteObject>& remoteobject) = 0;
-    
+
     virtual ErrCode UnregisterSyncFolderChangesInner(
         const std::string& syncFolder) = 0;
 
@@ -88,6 +90,9 @@ public:
 
     virtual ErrCode UnregisterForSaInner(
         const std::string& path) = 0;
+
+    virtual ErrCode ConvertPlaceholderToFileInner(const std::string& syncFolder, const std::string& path) = 0;
+
 protected:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0xD003900, "CloudDiskService"};
     const int VECTOR_MAX_SIZE = 102400;
