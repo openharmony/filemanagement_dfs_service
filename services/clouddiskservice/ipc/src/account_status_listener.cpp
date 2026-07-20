@@ -42,7 +42,7 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto state = data.state;
     auto userId = data.toId;
-    LOGI("OnStateChanged state:%{public}d", state);
+    LOGI("OnStateChanged state:%{public}d, userId: %{public}d", state, userId);
     if (state == OsAccountState::SWITCHED) {
         LOGI("Switched user");
         DiskMonitor::GetInstance().StopMonitor();
