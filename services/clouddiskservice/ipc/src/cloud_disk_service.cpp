@@ -576,9 +576,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         int32_t ret = ConvertPlaceholderXattrErrno(error);
-        if (ret != E_OK) {
-            LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
-        }
+        LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
         return ret;
     }
 
@@ -592,9 +590,7 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     if (xattrValueSize <= 0) {
         error = errno;
         int32_t ret = ConvertPlaceholderXattrErrno(error);
-        if (ret != E_OK) {
-            LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
-        }
+        LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
         return ret;
     }
 
