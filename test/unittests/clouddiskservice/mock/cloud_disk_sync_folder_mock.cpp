@@ -50,10 +50,9 @@ bool CloudDiskSyncFolder::CheckSyncFolder(const uint32_t &syncFolderIndex)
 bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, std::string &path)
 {
     auto iter = syncFolderMap.find(syncFolderIndex);
-    if (iter == syncFolderMap.end()) {
-        return false;
+    if (iter != syncFolderMap.end()) {
+        path = iter->second.path;
     }
-    path = iter->second.path;
     return true;
 }
 
