@@ -21,15 +21,31 @@ namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
 const int32_t userIdIndex = 15;
 
+namespace {
+int32_t g_getSyncFolderSizeCallCount = 0;
+}
+
+namespace Test {
+void ResetCloudDiskSyncFolderSizeCallCount()
+{
+    g_getSyncFolderSizeCallCount = 0;
+}
+
+int32_t GetCloudDiskSyncFolderSizeCallCount()
+{
+    return g_getSyncFolderSizeCallCount;
+}
+} // namespace Test
+
 CloudDiskSyncFolder &CloudDiskSyncFolder::GetInstance()
 {
     static CloudDiskSyncFolder instance;
     return instance;
 }
 
-void CloudDiskSyncFolder::AddSyncFolder(const uint32_t &syncFolderIndex, const SyncFolderValue &syncFolderValu)
+void CloudDiskSyncFolder::AddSyncFolder(const uint32_t &syncFolderIndex, const SyncFolderValue &syncFolderValue)
 {
-    syncFolderMap[syncFolderIndex] = syncFolderValu;
+    syncFolderMap[syncFolderIndex] = syncFolderValue;
 }
 
 void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
@@ -39,6 +55,7 @@ void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
 
 int32_t CloudDiskSyncFolder::GetSyncFolderSize()
 {
+    ++g_getSyncFolderSizeCallCount;
     return static_cast<int32_t>(syncFolderMap.size());
 }
 
@@ -65,6 +82,7 @@ bool CloudDiskSyncFolder::GetSyncFolderValueByIndex(const uint32_t syncFolderInd
     syncFolderValue = iter->second;
     return true;
 }
+
 
 bool CloudDiskSyncFolder::GetIndexBySyncFolder(uint32_t &syncFolderIndex, const std::string &path)
 {
@@ -138,4 +156,5 @@ void CloudDiskSyncFolder::ClearMap()
 {
     syncFolderMap.clear();
 }
+
 }

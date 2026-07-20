@@ -33,6 +33,12 @@ using namespace std;
 using Want = OHOS::AAFwk::Want;
 using namespace AccountSA;
 
+constexpr int32_t CLOUD_DISK_SERVICE_SA_ID = 5207;
+constexpr int32_t EXPECTED_SYNC_FOLDER_SIZE_CALL_COUNT = 1;
+
+void ResetCloudDiskSyncFolderSizeCallCount();
+int32_t GetCloudDiskSyncFolderSizeCallCount();
+
 class AccountStatusSubscriberTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -87,7 +93,9 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
         std::vector<SyncFolderExt> syncFolders;
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        ResetCloudDiskSyncFolderSizeCallCount();
         subscriber_->OnStateChanged(osAccountStateData);
+        EXPECT_EQ(GetCloudDiskSyncFolderSizeCallCount(), EXPECTED_SYNC_FOLDER_SIZE_CALL_COUNT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest001 failed";
@@ -114,7 +122,9 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest002, TestSize.Level1)
         syncFolders.push_back(ext1);
         CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(0)));
+        ResetCloudDiskSyncFolderSizeCallCount();
         subscriber_->OnStateChanged(osAccountStateData);
+        EXPECT_EQ(GetCloudDiskSyncFolderSizeCallCount(), EXPECTED_SYNC_FOLDER_SIZE_CALL_COUNT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest002 failed";
@@ -274,6 +284,33 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest008, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnStateChangedTest008 failed";
     }
     GTEST_LOG_(INFO) << "OnStateChangedTest008 end";
+}
+
+/**
+ * @tc.name: OnStateChangedTest009
+ * @tc.desc: Verify the OnStateChanged function unloads sa when sync folder query fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest009 start";
+    try {
+        OsAccountStateData osAccountStateData;
+        osAccountStateData.state = SWITCHED;
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(-1)));
+        auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillRepeatedly(Return(sysAbilityManager));
+        EXPECT_CALL(*sysAbilityManager, UnloadSystemAbility(CLOUD_DISK_SERVICE_SA_ID)).WillOnce(Return(ERR_OK));
+        subscriber_->OnStateChanged(osAccountStateData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest009 end";
 }
 
 /**

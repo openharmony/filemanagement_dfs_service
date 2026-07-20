@@ -29,6 +29,9 @@
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_sync_folder.h"
 #include "cloud_disk_service_access_token_mock.h"
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_sync_folder_manager_mock.h"
+#endif
 #include "utils_log.h"
 
 namespace {
@@ -58,6 +61,27 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+constexpr int32_t TEST_USER_ID = 100;
+constexpr const char *TEST_USER_ID_STR = "100";
+constexpr const char *TEST_USER_UNLOCKED_REASON = "usual.event.USER_UNLOCKED";
+constexpr const char *TEST_WIFI_REASON = "usual.event.wifi.CONN_STATE";
+constexpr const char *TEST_EMPTY_USER_ID_STR = "";
+constexpr const char *TEST_INVALID_USER_ID_STR = "100abc";
+constexpr const char *TEST_OVERFLOW_USER_ID_STR = "2147483648";
+constexpr const char *TEST_NEGATIVE_USER_ID_STR = "-1";
+constexpr const char *TEST_SYNC_FOLDER_PATH = "/storage/Users/currentUser/Download/test_success";
+constexpr const char *TEST_EMPTY_SYNC_FOLDER_PATH = "";
+constexpr const char *TEST_BUNDLE_NAME = "com.example.test";
+
+SystemAbilityOnDemandReason CreateStartReason(const std::string &reasonValue = TEST_USER_ID_STR,
+    const std::string &reasonName = TEST_USER_UNLOCKED_REASON)
+{
+    SystemAbilityOnDemandReason reason;
+    reason.SetName(reasonName);
+    reason.SetValue(reasonValue);
+    return reason;
+}
+
 class CloudDiskServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -76,11 +100,13 @@ void CloudDiskServiceTest::SetUpTestCase(void)
     cloudDiskService_ = new (std::nothrow) CloudDiskService(saID, runOnCreate);
     ASSERT_TRUE(cloudDiskService_ != nullptr) << "cloudDiskService_ assert failed!";
     dfsuAccessToken_ = make_shared<CloudDiskServiceAccessTokenMock>();
+    CloudDiskServiceAccessTokenVirtual::dfsuAccessToken = dfsuAccessToken_;
 }
 
 void CloudDiskServiceTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    CloudDiskServiceAccessTokenVirtual::dfsuAccessToken = nullptr;
     cloudDiskService_ = nullptr;
     dfsuAccessToken_ = nullptr;
 }
@@ -104,15 +130,11 @@ void CloudDiskServiceTest::TearDown(void)
 HWTEST_F(CloudDiskServiceTest, PublishSATest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PublishSATest001 start";
-    try {
-        g_publish = true;
-        cloudDiskService_->registerToService_ = true;
-        cloudDiskService_->PublishSA();
-        EXPECT_TRUE(cloudDiskService_->registerToService_);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PublishSATest001 failed";
-    }
+    g_publish = true;
+    cloudDiskService_->registerToService_ = true;
+    bool ret = cloudDiskService_->PublishSA();
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(cloudDiskService_->registerToService_);
     GTEST_LOG_(INFO) << "PublishSATest001 end";
 }
 
@@ -125,15 +147,11 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest001, TestSize.Level1)
 HWTEST_F(CloudDiskServiceTest, PublishSATest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PublishSATest002 start";
-    try {
-        g_publish = true;
-        cloudDiskService_->registerToService_ = false;
-        cloudDiskService_->PublishSA();
-        EXPECT_TRUE(cloudDiskService_->registerToService_);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PublishSATest002 failed";
-    }
+    g_publish = true;
+    cloudDiskService_->registerToService_ = false;
+    bool ret = cloudDiskService_->PublishSA();
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(cloudDiskService_->registerToService_);
     GTEST_LOG_(INFO) << "PublishSATest002 end";
 }
 
@@ -146,15 +164,11 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest002, TestSize.Level1)
 HWTEST_F(CloudDiskServiceTest, PublishSATest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PublishSATest003 start";
-    try {
-        g_publish = false;
-        cloudDiskService_->registerToService_ = false;
-        cloudDiskService_->PublishSA();
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PublishSATest003 failed";
-    } catch (...) {
-        EXPECT_TRUE(true);
-    }
+    g_publish = false;
+    cloudDiskService_->registerToService_ = false;
+    bool ret = cloudDiskService_->PublishSA();
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(cloudDiskService_->registerToService_);
     GTEST_LOG_(INFO) << "PublishSATest003 end";
 }
 
@@ -169,7 +183,7 @@ HWTEST_F(CloudDiskServiceTest, OnStartTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStartTest001 start";
     try {
         cloudDiskService_->state_ = ServiceRunningState::STATE_RUNNING;
-        cloudDiskService_->OnStart();
+        cloudDiskService_->OnStart(CreateStartReason());
     } catch (...) {
         EXPECT_TRUE(true);
         GTEST_LOG_(INFO) << "OnStartTest001 failed";
@@ -1144,7 +1158,7 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest006, TestSize.Level1)
 
 /**
  * @tc.name: OnStartTest002
- * @tc.desc: Verify the OnStart function with userId == 0
+ * @tc.desc: Verify the OnStart function when GetAllSyncFoldersForSa fails
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -1153,14 +1167,307 @@ HWTEST_F(CloudDiskServiceTest, OnStartTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStartTest002 start";
     try {
         cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
-        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
-        EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_)).WillOnce(Return(E_OK));
-        cloudDiskService_->OnStart();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_INVALID_ARG)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason());
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
     } catch (...) {
-        EXPECT_TRUE(true);
+        EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStartTest002 failed";
     }
     GTEST_LOG_(INFO) << "OnStartTest002 end";
+}
+
+/**
+ * @tc.name: OnStartTest003
+ * @tc.desc: Verify the OnStart function with non-numeric userId in start reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest003 start";
+    try {
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_INVALID_USER_ID_STR));
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest003 end";
+}
+
+/**
+ * @tc.name: OnStartTest004
+ * @tc.desc: Verify the OnStart function with out-of-range userId in start reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest004 start";
+    try {
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_OVERFLOW_USER_ID_STR));
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest004 end";
+}
+
+/**
+ * @tc.name: OnStartTest005
+ * @tc.desc: Verify the OnStart function when user is not verified
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest005 start";
+    try {
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(false));
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_)).Times(0);
+#endif
+        cloudDiskService_->OnStart(CreateStartReason());
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest005 end";
+}
+
+/**
+ * @tc.name: OnStartTest006
+ * @tc.desc: Verify the OnStart function when user is verified and sync folders are loaded
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest006 start";
+    try {
+        g_publish = true;
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDiskService_->registerToService_ = false;
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt syncFolder;
+        syncFolder.path_ = TEST_SYNC_FOLDER_PATH;
+        syncFolder.bundleName_ = TEST_BUNDLE_NAME;
+        syncFolders.push_back(syncFolder);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_OK)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_RUNNING);
+        EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 1);
+        cloudDiskService_->OnStop();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#else
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest006 end";
+}
+
+/**
+ * @tc.name: OnStartTest007
+ * @tc.desc: Verify the OnStart function with empty userId in start reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest007 start";
+    try {
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_EMPTY_USER_ID_STR));
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest007 end";
+}
+
+/**
+ * @tc.name: OnStartTest008
+ * @tc.desc: Verify the OnStart function with negative userId in start reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest008 start";
+    try {
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_NEGATIVE_USER_ID_STR));
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest008 end";
+}
+
+/**
+ * @tc.name: OnStartTest009
+ * @tc.desc: Verify the OnStart function when sync folder path conversion fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest009 start";
+    try {
+        g_publish = true;
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDiskService_->registerToService_ = false;
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt syncFolder;
+        syncFolder.path_ = TEST_EMPTY_SYNC_FOLDER_PATH;
+        syncFolder.bundleName_ = TEST_BUNDLE_NAME;
+        syncFolders.push_back(syncFolder);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_OK)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_RUNNING);
+        EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 0);
+        cloudDiskService_->OnStop();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#else
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest009 end";
+}
+
+/**
+ * @tc.name: OnStartTest010
+ * @tc.desc: Verify the OnStart function uses access token userId for non-user-unlocked reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest010 start";
+    try {
+        g_publish = true;
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDiskService_->registerToService_ = false;
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt syncFolder;
+        syncFolder.path_ = TEST_SYNC_FOLDER_PATH;
+        syncFolder.bundleName_ = TEST_BUNDLE_NAME;
+        syncFolders.push_back(syncFolder);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
+        EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_)).Times(0);
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_OK)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_INVALID_USER_ID_STR, TEST_WIFI_REASON));
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_RUNNING);
+        EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 1);
+        cloudDiskService_->OnStop();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#else
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest010 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest010 end";
+}
+
+/**
+ * @tc.name: OnStartTest011
+ * @tc.desc: Verify the OnStart function falls back to accountId for non-user-unlocked reason
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest011 start";
+    try {
+        g_publish = true;
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDiskService_->registerToService_ = false;
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt syncFolder;
+        syncFolder.path_ = TEST_SYNC_FOLDER_PATH;
+        syncFolder.bundleName_ = TEST_BUNDLE_NAME;
+        syncFolders.push_back(syncFolder);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_))
+            .WillOnce(DoAll(SetArgReferee<0>(TEST_USER_ID), Return(E_OK)));
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(_)).Times(0);
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_OK)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason(TEST_INVALID_USER_ID_STR, TEST_WIFI_REASON));
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_RUNNING);
+        EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 1);
+        cloudDiskService_->OnStop();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#else
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest011 end";
 }
 
 /**

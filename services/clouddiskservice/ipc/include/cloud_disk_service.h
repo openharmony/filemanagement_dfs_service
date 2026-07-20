@@ -41,7 +41,7 @@ public:
     explicit CloudDiskService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudDiskService() = default;
 
-    void OnStart() override;
+    void OnStart(const SystemAbilityOnDemandReason &startReason) override;
     void OnStop() override;
     ErrCode RegisterSyncFolderChangesInner(const std::string &syncFolder,
                                            const sptr<IRemoteObject> &remoteObject) override;
