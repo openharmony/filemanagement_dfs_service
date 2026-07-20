@@ -57,7 +57,21 @@ int dirfd(DIR *d)
 extern "C" {
 int stat(const char *path, struct stat *buf)
 {
-    return Assistant::ins->MockStat(path, buf);
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        return Assistant::ins->MockStat(path, buf);
+    }
+
+    static int (*realStat)(const char *, struct stat *) = []() {
+        return reinterpret_cast<int (*)(const char *, struct stat *)>(dlsym(RTLD_NEXT, "stat"));
+    }();
+    if (realStat == nullptr) {
+        return -1;
+    }
+    return realStat(path, buf);
 }
 
 int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
