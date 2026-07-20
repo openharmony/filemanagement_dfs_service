@@ -1904,6 +1904,66 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest007, TestSize
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest007 end";
 }
 
+/**
+ * @tc.name: ConvertPlaceholderToFileInner_EmptyParam_001
+ * @tc.desc: Verify ConvertPlaceholderToFileInner with empty parameters
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, ConvertPlaceholderToFileInner_EmptyParam_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_EmptyParam_001 start";
+    try {
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+        uint32_t ret = cloudDiskService_->ConvertPlaceholderToFileInner("", "/data/test");
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+
+        ret = cloudDiskService_->ConvertPlaceholderToFileInner("/data/test", "");
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_EmptyParam_001 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_EmptyParam_001 end";
+}
+
+/**
+ * @tc.name: ConvertPlaceholderToFileInner_GetBundleNameFail_002
+ * @tc.desc: Verify ConvertPlaceholderToFileInner when GetCallerBundleName fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, ConvertPlaceholderToFileInner_GetBundleNameFail_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_GetBundleNameFail_002 start";
+    try {
+        std::string syncFolder = "/storage/Users/currentUser/testdir";
+        std::string path = "/storage/Users/currentUser/testdir/file.txt";
+        EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+        uint32_t ret = cloudDiskService_->ConvertPlaceholderToFileInner(syncFolder, path);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, E_TRY_AGAIN);
+#else
+        EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_GetBundleNameFail_002 failed";
+    }
+    GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_GetBundleNameFail_002 end";
+}
+
+
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
 } // namespace OHOS

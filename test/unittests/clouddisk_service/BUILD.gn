@@ -97,6 +97,7 @@ ohos_unittest("service_account_status_listener_test_new") {
     "${distributedfile_path}/test/unittests/clouddisk_service/mock",
     "${services_path}/clouddiskservice/monitor/include",
     "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${distributedfile_path}/utils/inner_api",

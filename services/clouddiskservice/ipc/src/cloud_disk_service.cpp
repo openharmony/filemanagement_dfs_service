@@ -52,6 +52,7 @@ using namespace CloudFile;
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
+constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
@@ -790,6 +791,166 @@ void CloudDiskService::UnloadSa()
         }
     }
 }
+
+static int32_t CheckSyncFolderBundleName(const std::string &syncFolder, int32_t userId, const std::string &bundleName)
+{
+    std::string physicalSyncFolder;
+    uint32_t syncFolderIndex;
+
+    // 步骤1：转换同步根sandbox路径到物理路径
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(
+        syncFolder, std::to_string(userId), physicalSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get physical path failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    // 步骤2：计算同步根索引并查询注册信息
+    syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(
+        syncFolderIndex, syncFolderValue)) {
+        LOGE("SyncFolder not registered, path:%{public}s", GetAnonyStringStrictly(physicalSyncFolder).c_str());
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+
+    // 步骤3：bundleName一致性校验
+    if (syncFolderValue.bundleName != bundleName) {
+        LOGE("Permission denied, caller:%{public}s, registered:%{public}s",
+             bundleName.c_str(), syncFolderValue.bundleName.c_str());
+        return E_SYNC_FOLDER_PATH_UNAUTHORIZED;
+    }
+
+    return E_OK;
+}
+
+static int32_t GetHmdfsPath(const std::string &syncFolder, const std::string &relativePath, int32_t userId,
+    std::string &hmdfsPath)
+{
+    // 校验相对路径合法性
+    if (HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' || relativePath.back() == '/') {
+        LOGE("GetHmdfsPath branch=invalid_relative_path");
+        return E_INVALID_ARG;
+    }
+
+    // 拼接实际路径
+    std::string path = syncFolder + "/" + relativePath;
+
+    // hmdfs路径：hmdfs文件系统的挂载路径，用于实际文件操作
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(
+        path, std::to_string(userId), hmdfsPath);
+    if (ret != E_OK) {
+        LOGE("Get hmdfs path failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    // 在hmdfs路径上检查文件实际存在性
+    if (access(hmdfsPath.c_str(), F_OK) != 0) {
+        LOGE("File not exist, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+        return E_SYNC_FOLDER_PATH_NOT_EXIST;
+    }
+
+    return E_OK;
+}
+
+static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath)
+{
+    int32_t ret = 0;
+    char xattrValue = '0';
+    int fd = -1;
+
+    do {
+        fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+        if (fd < 0) {
+            ret = errno;
+            LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            break;
+        }
+
+        if (fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(uint8_t)) < 0) {
+            ret = errno;
+            LOGE("fgetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            break;
+        }
+
+        if (xattrValue == '0') {
+            LOGE("not a placeholder, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+            ret = EINVAL;
+            break;
+        }
+
+        if (ftruncate(fd, 0) < 0) {
+            ret = errno;
+            LOGE("ftruncate failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            break;
+        }
+
+        const char newValue = '0';
+        if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue), 0) < 0) {
+            ret = errno;
+            LOGE("fsetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            break;
+        }
+    } while (0);
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    return ret;
+}
+
+int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncFolder, const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("Begin ConvertPlaceholderToFileInner");
+
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("Invalid parameter");
+        return E_INVALID_ARG;
+    }
+
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(userId);
+    }
+    std::string bundleName;
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
+    // 步骤1：权限校验
+    ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("CheckSyncFolderAccess failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    // 步骤2：获取hmdfs路径
+    std::string hmdfsPath;
+    ret = GetHmdfsPath(syncFolder, relativePath, userId, hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    ret = ConvertPlaceholderToEmptyFile(hmdfsPath);
+    if (ret != 0) {
+        LOGE("Convert failed, ret:%{public}d", ret);
+        if (ret == EINVAL) {
+            return E_NOT_A_PLACEHOLDER;
+        }
+        return GetErrorNum(ret);
+    }
+
+    LOGI("Convert success");
+    return E_OK;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 } // namespace CloudDiskService
 } // namespace FileManagement
 } // namespace OHOS
