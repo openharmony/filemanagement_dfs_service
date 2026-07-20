@@ -19,12 +19,15 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/fanotify.h>
+#include <sys/stat.h>
+#include <unordered_set>
 
 #include "disk_types.h"
 #include "ffrt_inner.h"
 #include "nocopyable.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+
 class DiskMonitor : public NoCopyable {
 public:
     static DiskMonitor &GetInstance();
@@ -44,8 +47,10 @@ private:
     void HandleDelete(const std::string &filePath);
     void HandleMoveFrom(const std::string &filePath);
     void HandleMoveTo(const std::string &filePath);
+    void HandleModify(const std::string &filePath);
     void HandleCloseWrite(const std::string &filePath);
     void PostEvent(const EventInfo &eventInfo);
+    ino_t GetFileInode(const std::string &filePath);
     // events filter
     std::pair<uint32_t, bool> GetSyncFolderIndex(const std::string &filePath);
     bool IsInBlockList(const std::string &path);
@@ -64,6 +69,7 @@ private:
     // events filter
     std::string syncFolderPrefix_;
     std::vector<std::string> blockList_;
+    std::unordered_set<ino_t> modifiedFiles_;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 #endif

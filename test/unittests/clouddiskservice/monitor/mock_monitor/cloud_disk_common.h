@@ -27,6 +27,7 @@ enum class OperationType : uint8_t {
     MOVE_FROM,
     MOVE_TO,
     CLOSE_WRITE,
+    CLOSE_MODIFY,
     SYNC_FOLDER_INVALID,
     OPERATION_MAX,
 };

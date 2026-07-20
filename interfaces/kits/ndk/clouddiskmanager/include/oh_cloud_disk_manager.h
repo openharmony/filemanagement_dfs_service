@@ -112,6 +112,10 @@ typedef enum CloudDisk_OperationType {
      * The sync folder path is invalid.
      */
     SYNC_FOLDER_INVALID = 5,
+    /**
+     * Close a file after modifying content.
+     */
+    CLOSE_MODIFY = 6,
 } CloudDisk_OperationType;
 
 /**

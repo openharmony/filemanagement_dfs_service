@@ -101,6 +101,8 @@ private:
                                 const std::string &name, struct LogGenerateCtx &ctx);
     int32_t ProduceCloseAndWriteLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
                                     const std::string &path, const std::string &name, struct LogGenerateCtx &ctx);
+    int32_t ProduceCloseModifyLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                                  const std::string &path, const std::string &name, struct LogGenerateCtx &ctx);
 
     int32_t WriteLogFile(const struct LogBlock &logBlock);
     int32_t ReadLogFile(const uint64_t line, struct LogBlock &logBlock);
@@ -114,6 +116,7 @@ private:
     int32_t userId_;
     uint32_t syncFolderIndex_;
     bool needCallback_;
+    bool hasUnpairedCloseModify_ = false;
     std::string syncFolderPath_;
     std::string logFilePath_;
     std::string renameRecordId_;

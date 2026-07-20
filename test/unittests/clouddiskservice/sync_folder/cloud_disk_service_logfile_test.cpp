@@ -1223,6 +1223,146 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseAndWriteLogTest003, TestSize.L
     GTEST_LOG_(INFO) << "ProduceCloseAndWriteLogTest003 end";
 }
 
+/**
+ * @tc.name: ProduceCloseModifyLogTest001
+ * @tc.desc: Verify the ProduceCloseModifyLog function with stat failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseModifyLogTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest001 start";
+    try {
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
+        string name = "name";
+        string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce([&]() {
+            errno = ENOENT;
+            return 1;
+        });
+        auto res = logFile_->ProduceCloseModifyLog(parentMetaFile, path, name, ctx);
+        EXPECT_EQ(res, ENOENT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest001 end";
+}
+
+/**
+ * @tc.name: ProduceCloseModifyLogTest002
+ * @tc.desc: Verify the ProduceCloseModifyLog function with DoUpdate failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseModifyLogTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest002 start";
+    try {
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
+        string name = "name";
+        string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        auto res = logFile_->ProduceCloseModifyLog(parentMetaFile, path, name, ctx);
+        EXPECT_EQ(res, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest002 end";
+}
+
+/**
+ * @tc.name: ProduceCloseModifyLogTest003
+ * @tc.desc: Verify the ProduceCloseModifyLog function with empty recordId
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseModifyLogTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest003 start";
+    try {
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
+        string name = "name";
+        string childRecordId = "";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        auto res = logFile_->ProduceCloseModifyLog(parentMetaFile, path, name, ctx);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "ProduceCloseModifyLogTest003 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest005
+ * @tc.desc: Verify the GenerateChangeData function with CLOSE_MODIFY operation type
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest005 start";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        uint64_t line = 1;
+        string childRecordId = "child";
+        string parentRecordId = "parent";
+        
+        logFile_->changeDatas_.clear();
+        logFile_->syncFolderPath_ = "/data/test";
+        for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE; i++) {
+            logFile_->changeDatas_.push_back(ChangeData());
+        }
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        EXPECT_FALSE(logFile_->changeDatas_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest005 end";
+}
+
+/**
+ * @tc.name: ProductLogForOperateTest008
+ * @tc.desc: Verify the ProductLogForOperate function with CLOSE_MODIFY operation type
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ProductLogForOperateTest008 start";
+    try {
+        shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
+        string name = "name";
+        string childRecordId = "childRecordId";
+        struct LogGenerateCtx ctx;
+        ctx.recordId = childRecordId;
+        OperationType operator1 = OperationType::CLOSE_MODIFY;
+        struct stat statInfo;
+        statInfo.st_mode = S_IFREG;
+        statInfo.st_atime = 100;
+        statInfo.st_mtime = 200;
+        statInfo.st_size = 1024;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
+        logFile_->ProductLogForOperate(parentMetaFile, path, name, ctx, operator1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ProductLogForOperateTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "ProductLogForOperateTest008 end";
+}
+
 class LogFileMgrTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -1642,4 +1782,390 @@ HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CheckLineIsValidTest003 end";
 }
+
+/**
+ * @tc.name: GenerateChangeDataTest006
+ * @tc.desc: Verify CLOSE_MODIFY at 20th position triggers callback with 19 elements and sets unpaired flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest006 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        
+        for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
+            ChangeData data;
+            data.operationType = OperationType::CREATE;
+            logFile_->changeDatas_.push_back(data);
+        }
+        EXPECT_EQ(logFile_->changeDatas_.size(), MAX_CHANGEDATAS_SIZE - 1);
+        
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
+        
+        EXPECT_EQ(logFile_->changeDatas_.size(), 1);
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::CLOSE_MODIFY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest006 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest007
+ * @tc.desc: Verify CLOSE_WRITE pairs with CLOSE_MODIFY and clears unpaired flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest007 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        
+        for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
+            ChangeData data;
+            data.operationType = OperationType::CREATE;
+            logFile_->changeDatas_.push_back(data);
+        }
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
+        
+        EventInfo modifyEventInfo;
+        modifyEventInfo.operateType = OperationType::CLOSE_MODIFY;
+        modifyEventInfo.path = "/data/test";
+        modifyEventInfo.name = "file";
+        logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
+        EXPECT_EQ(logFile_->changeDatas_.size(), 1);
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+        
+        EventInfo writeEventInfo;
+        writeEventInfo.operateType = OperationType::CLOSE_WRITE;
+        writeEventInfo.path = "/data/test";
+        writeEventInfo.name = "file";
+        logFile_->GenerateChangeData(writeEventInfo, 2, "child", "parent");
+        EXPECT_EQ(logFile_->changeDatas_.size(), 2);
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+        EXPECT_EQ(logFile_->changeDatas_[0].operationType, OperationType::CLOSE_MODIFY);
+        EXPECT_EQ(logFile_->changeDatas_[1].operationType, OperationType::CLOSE_WRITE);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest007 end";
+}
+
+/**
+ * @tc.name: OnDataChangeTest003
+ * @tc.desc: Verify OnDataChange skips callback when has unpaired CLOSE_MODIFY
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDataChangeTest003 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+        EXPECT_EQ(logFile_->changeDatas_.size(), 1);
+        
+        auto res = logFile_->OnDataChange();
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(logFile_->changeDatas_.size(), 1);
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnDataChangeTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "OnDataChangeTest003 end";
+}
+
+/**
+ * @tc.name: OnDataChangeTest004
+ * @tc.desc: Verify OnDataChange triggers callback after CLOSE_WRITE pairs with CLOSE_MODIFY
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDataChangeTest004 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
+        
+        EventInfo modifyEventInfo;
+        modifyEventInfo.operateType = OperationType::CLOSE_MODIFY;
+        modifyEventInfo.path = "/data/test";
+        modifyEventInfo.name = "file";
+        logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+        
+        EventInfo writeEventInfo;
+        writeEventInfo.operateType = OperationType::CLOSE_WRITE;
+        writeEventInfo.path = "/data/test";
+        writeEventInfo.name = "file";
+        logFile_->GenerateChangeData(writeEventInfo, 2, "child", "parent");
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+        EXPECT_EQ(logFile_->changeDatas_.size(), 2);
+        
+        auto res = logFile_->OnDataChange();
+        EXPECT_EQ(res, E_OK);
+        EXPECT_TRUE(logFile_->changeDatas_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnDataChangeTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "OnDataChangeTest004 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest008
+ * @tc.desc: Verify normal operation at 20th position (not CLOSE_MODIFY)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest008 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        
+        for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
+            ChangeData data;
+            data.operationType = OperationType::CREATE;
+            logFile_->changeDatas_.push_back(data);
+        }
+        
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::DELETE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
+        EXPECT_TRUE(logFile_->changeDatas_.empty());
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest008 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest009
+ * @tc.desc: Verify CLOSE_MODIFY not at 20th position (normal batch)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest009 start";
+    try {
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        
+        for (unsigned int i = 0; i < 10; i++) {
+            ChangeData data;
+            data.operationType = OperationType::CREATE;
+            logFile_->changeDatas_.push_back(data);
+        }
+        
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
+        EXPECT_EQ(logFile_->changeDatas_.size(), 11);
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::CLOSE_MODIFY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest009 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest009 end";
+}
+
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest010 begin";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_WRITE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+
+        for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
+            EventInfo modifyInfo;
+            modifyInfo.operateType = OperationType::CLOSE_MODIFY;
+            modifyInfo.path = "/data/test";
+            modifyInfo.name = "file";
+            EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+            logFile_->GenerateChangeData(modifyInfo, 1, "child", "parent");
+        }
+        EXPECT_EQ(logFile_->changeDatas_.size(), static_cast<size_t>(MAX_CHANGEDATAS_SIZE - 1));
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
+        EXPECT_EQ(logFile_->changeDatas_.size(), static_cast<size_t>(0));
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest010 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest010 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest011
+ * @tc.desc: Verify CLOSE_WRITE with hasUnpairedCloseModify_ = true, should enter if block
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest011 start";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_WRITE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        uint64_t line = 1;
+        string childRecordId = "child";
+        string parentRecordId = "parent";
+        
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = true;
+        logFile_->syncFolderPath_ = "/data/test";
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest011 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest011 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest012
+ * @tc.desc: Verify CLOSE_WRITE with hasUnpairedCloseModify_ = false, should not enter if block
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest012 start";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CLOSE_WRITE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        uint64_t line = 1;
+        string childRecordId = "child";
+        string parentRecordId = "parent";
+        
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest012 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest012 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest013
+ * @tc.desc: Verify non-CLOSE_WRITE with hasUnpairedCloseModify_ = true, should not enter if block
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest013 start";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CREATE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        uint64_t line = 1;
+        string childRecordId = "child";
+        string parentRecordId = "parent";
+        
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = true;
+        logFile_->syncFolderPath_ = "/data/test";
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest013 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest013 end";
+}
+
+/**
+ * @tc.name: GenerateChangeDataTest014
+ * @tc.desc: Verify non-CLOSE_WRITE with hasUnpairedCloseModify_ = true, should not enter if block
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest014 start";
+    try {
+        EventInfo eventInfo;
+        eventInfo.operateType = OperationType::CREATE;
+        eventInfo.path = "/data/test";
+        eventInfo.name = "file";
+        uint64_t line = 1;
+        string childRecordId = "child";
+        string parentRecordId = "parent";
+        
+        logFile_->changeDatas_.clear();
+        logFile_->hasUnpairedCloseModify_ = false;
+        logFile_->syncFolderPath_ = "/data/test";
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
+        int32_t res = logFile_->GenerateChangeData(eventInfo, line, childRecordId, parentRecordId);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GenerateChangeDataTest014 failed";
+    }
+    GTEST_LOG_(INFO) << "GenerateChangeDataTest014 end";
+}
+
 } // namespace OHOS::FileManagement::CloudDiskService::Test
