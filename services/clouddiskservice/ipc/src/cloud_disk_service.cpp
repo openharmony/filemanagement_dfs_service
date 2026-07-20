@@ -551,10 +551,19 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
 
 static int32_t ConvertPlaceholderXattrErrno(int32_t error)
 {
-    if (error == ENODATA || error == ERANGE || error == ENAMETOOLONG) {
+    if (error == ERANGE || error == ENAMETOOLONG) {
         return E_INVALID_ARG;
     }
     return ConvertErrnoToCloudDiskError(error);
+}
+
+static bool IsDirectoryPath(const std::string &path)
+{
+    struct stat statInfo;
+    if (stat(path.c_str(), &statInfo) != 0) {
+        return false;
+    }
+    return S_ISDIR(statInfo.st_mode);
 }
 
 static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &isPlaceholder)
@@ -563,6 +572,9 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
     if (xattrValueSize <= 0) {
         error = errno;
+        if (error == ENODATA) {
+            return E_OK;
+        }
         LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
         return ConvertPlaceholderXattrErrno(error);
     }
@@ -576,6 +588,9 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
         error = errno;
+        if (error == ENODATA) {
+            return E_OK;
+        }
         LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
         return ConvertPlaceholderXattrErrno(error);
     }
@@ -746,6 +761,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
     std::string getXattrPath = JoinSyncFolderAndRelativePath(mntSyncFolder, path);
     if (!IsPathInSyncFolder(mntSyncFolder, getXattrPath)) {
         LOGE("IsPlaceholderFileInner branch=xattr_path_out_of_sync_folder");
+        return E_INVALID_ARG;
+    }
+    if (IsDirectoryPath(getXattrPath)) {
+        LOGE("IsPlaceholderFileInner branch=directory_path");
         return E_INVALID_ARG;
     }
     ret = QueryPlaceholderByXattr(getXattrPath, isPlaceholder);

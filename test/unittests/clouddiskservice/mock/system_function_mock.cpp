@@ -55,6 +55,11 @@ int dirfd(DIR *d)
 }
 
 extern "C" {
+int stat(const char *path, struct stat *buf)
+{
+    return Assistant::ins->MockStat(path, buf);
+}
+
 int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 {
     return Assistant::ins->setxattr(path, name, value, size, flags);
