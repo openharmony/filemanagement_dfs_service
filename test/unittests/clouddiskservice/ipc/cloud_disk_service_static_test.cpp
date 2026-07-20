@@ -840,6 +840,21 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest014, TestSize.Le
 }
 
 /**
+ * @tc.name: ConvertPlaceholderXattrErrnoTest001
+ * @tc.desc: Verify placeholder xattr errno conversion handles ENODATA as non-placeholder
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderXattrErrnoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertPlaceholderXattrErrnoTest001 start";
+    EXPECT_EQ(ConvertPlaceholderXattrErrno(ENODATA), E_OK);
+    EXPECT_EQ(ConvertPlaceholderXattrErrno(ERANGE), E_INVALID_ARG);
+    EXPECT_EQ(ConvertPlaceholderXattrErrno(EIO), E_TRY_AGAIN);
+    GTEST_LOG_(INFO) << "ConvertPlaceholderXattrErrnoTest001 end";
+}
+
+/**
  * @tc.name: IsPlaceholderFileInnerTest001
  * @tc.desc: Verify IsPlaceholderFileInner returns sync folder path conversion error
  * @tc.type: FUNC

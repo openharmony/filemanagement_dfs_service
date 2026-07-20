@@ -551,6 +551,9 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
 
 static int32_t ConvertPlaceholderXattrErrno(int32_t error)
 {
+    if (error == ENODATA) {
+        return E_OK;
+    }
     if (error == ERANGE || error == ENAMETOOLONG) {
         return E_INVALID_ARG;
     }
@@ -572,11 +575,11 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
     if (xattrValueSize <= 0) {
         error = errno;
-        if (error == ENODATA) {
-            return E_OK;
+        int32_t ret = ConvertPlaceholderXattrErrno(error);
+        if (ret != E_OK) {
+            LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
         }
-        LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
-        return ConvertPlaceholderXattrErrno(error);
+        return ret;
     }
 
     std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
@@ -588,11 +591,11 @@ static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &is
     xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
     if (xattrValueSize <= 0) {
         error = errno;
-        if (error == ENODATA) {
-            return E_OK;
+        int32_t ret = ConvertPlaceholderXattrErrno(error);
+        if (ret != E_OK) {
+            LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
         }
-        LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
-        return ConvertPlaceholderXattrErrno(error);
+        return ret;
     }
 
     uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
