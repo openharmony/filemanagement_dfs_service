@@ -67,6 +67,10 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
 {
 }
 
+void CloudDiskSyncFolder::RemovePlaceholderFilesBatch(const std::string &path)
+{
+}
+
 int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path, const std::string &userId,
     std::string &realpath)
 {

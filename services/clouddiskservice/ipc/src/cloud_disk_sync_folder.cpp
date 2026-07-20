@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/xattr.h>
+#include <unistd.h>
 
 #include "disk_monitor.h"
 #include "utils_log.h"
@@ -27,6 +28,8 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 using namespace std;
+
+constexpr const char *PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
 
 CloudDiskSyncFolder &CloudDiskSyncFolder::GetInstance()
 {
@@ -138,6 +141,61 @@ void CloudDiskSyncFolder::RemoveXattr(string &path, const string &attrName)
         }
         if (S_ISDIR(st.st_mode)) {
             RemoveXattr(pathToRemove, attrName);
+        }
+    }
+    closedir(dir);
+}
+
+void CloudDiskSyncFolder::RemovePlaceholderFilesSingle(const string &path)
+{
+    char realPath[PATH_MAX] = {'\0'};
+    if (realpath(path.c_str(), realPath) == nullptr) {
+        LOGE("get realPath failed, errno: %{public}d", errno);
+        return;
+    }
+
+    char xattrValue = '0';
+    if (getxattr(realPath, PLACEHOLDER_XATTR, &xattrValue, sizeof(char)) < 0) {
+        if (errno != ENODATA) {
+            LOGE("getxattr failed for path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(realPath).c_str(), errno);
+        }
+    } else if (xattrValue == '1' || xattrValue == '2') {
+        if (unlink(realPath) < 0) {
+            LOGE("unlink failed for path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(realPath).c_str(), errno);
+        }
+    }
+
+    return;
+}
+
+void CloudDiskSyncFolder::RemovePlaceholderFilesBatch(const string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (!dir) {
+        LOGE("Open failed, err:%{public}d", errno);
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        std::string childPath = path + "/" + entry->d_name;
+
+        struct stat st;
+        if (lstat(childPath.c_str(), &st) == -1) {
+            LOGE("lstat failed for path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(childPath).c_str(), errno);
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            RemovePlaceholderFilesBatch(childPath);
+        } else if (S_ISREG(st.st_mode)) {
+            RemovePlaceholderFilesSingle(childPath);
         }
     }
     closedir(dir);

@@ -714,6 +714,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
         return ret;
     }
 
+    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(unregisterSyncFolder);
     CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolder, FILE_SYNC_STATE);
     UnloadSa();
     LOGI("End UnregisterSyncFolderInner");
@@ -748,6 +749,7 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         LOGE("Get path failed");
         return E_INVALID_ARG;
     }
+    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(pathRemove);
     CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, FILE_SYNC_STATE);
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);

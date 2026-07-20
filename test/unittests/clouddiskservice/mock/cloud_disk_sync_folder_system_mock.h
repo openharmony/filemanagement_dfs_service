@@ -16,6 +16,7 @@
 #define TEST_UNITTEST_CLOUD_DISK_SERVICE_SYNC_FOLDER_ASSISTANT_H
 
 #include <dirent.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <gmock/gmock.h>
 
@@ -26,11 +27,17 @@ public:
 
     virtual ~SyncFolderAssistant() = default;
     virtual char *realpath(const char *path, char *resolvedPath) = 0;
+    virtual ssize_t getxattr(const char *path, const char *name, void *value, size_t size) = 0;
+    virtual int unlink(const char *pathname) = 0;
+    virtual int lstat(const char *path, struct stat *buf) = 0;
 };
 
 class SyncFolderAssistantMock : public SyncFolderAssistant {
 public:
     MOCK_METHOD2(realpath, char *(const char *, char *));
+    MOCK_METHOD4(getxattr, ssize_t(const char *, const char *, void *, size_t));
+    MOCK_METHOD1(unlink, int(const char *));
+    MOCK_METHOD2(lstat, int(const char *, struct stat *));
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 
