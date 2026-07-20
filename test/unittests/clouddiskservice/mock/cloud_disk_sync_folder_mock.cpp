@@ -27,9 +27,9 @@ CloudDiskSyncFolder &CloudDiskSyncFolder::GetInstance()
     return instance;
 }
 
-void CloudDiskSyncFolder::AddSyncFolder(const uint32_t &syncFolderIndex, const SyncFolderValue &syncFolderValu)
+void CloudDiskSyncFolder::AddSyncFolder(const uint32_t &syncFolderIndex, const SyncFolderValue &syncFolderValue)
 {
-    syncFolderMap[syncFolderIndex] = syncFolderValu;
+    syncFolderMap[syncFolderIndex] = syncFolderValue;
 }
 
 void CloudDiskSyncFolder::DeleteSyncFolder(const uint32_t &syncFolderIndex)
@@ -50,9 +50,10 @@ bool CloudDiskSyncFolder::CheckSyncFolder(const uint32_t &syncFolderIndex)
 bool CloudDiskSyncFolder::GetSyncFolderByIndex(const uint32_t syncFolderIndex, std::string &path)
 {
     auto iter = syncFolderMap.find(syncFolderIndex);
-    if (iter != syncFolderMap.end()) {
-        path = iter->second.path;
+    if (iter == syncFolderMap.end()) {
+        return false;
     }
+    path = iter->second.path;
     return true;
 }
 
@@ -75,12 +76,16 @@ void CloudDiskSyncFolder::RemoveXattr(std::string &path, const std::string &attr
 {
 }
 
+void CloudDiskSyncFolder::RemovePlaceholderFilesBatch(const std::string &path)
+{
+}
+
 int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
                                                 const std::string &userId, std::string &realpath)
 {
     const std::string sandboxPath = "/storage/Users/currentUser";
     const std::string physicalPrefix = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
-    if (path == "" || path == "/test/mockFailed" || path.find("mockPhysicalFailed") != std::string::npos) {
+    if (path.empty() || path == "/test/mockFailed" || path.find("mockPhysicalFailed") != std::string::npos) {
         return E_SYNC_FOLDER_PATH_NOT_EXIST;
     }
     if (path.find(sandboxPath) == 0) {
@@ -89,10 +94,6 @@ int32_t CloudDiskSyncFolder::PathToPhysicalPath(const std::string &path,
     }
     realpath = path;
     return E_OK;
-}
-
-void CloudDiskSyncFolder::RemovePlaceholderFilesBatch(const std::string &path)
-{
 }
 
 int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
@@ -116,6 +117,11 @@ bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,
 {
     if (path == "/test/mockFailed" || path.find("mockMntPhysicalPathFailed") != std::string::npos) {
         return false;
+    }
+    const std::string physicalPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    const std::string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
+    if (path.substr(0, physicalPath.length()) == physicalPath) {
+        realpath = replacementPath + path.substr(physicalPath.length());
     }
     return true;
 }
