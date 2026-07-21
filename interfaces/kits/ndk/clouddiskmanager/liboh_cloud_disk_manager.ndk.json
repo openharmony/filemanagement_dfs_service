@@ -50,5 +50,9 @@
     {
         "first_introduced": "26.1.0",
         "name": "OH_CloudDisk_ConvertPlaceholderToFile"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_IsPlaceholderFile"
     }
 ]

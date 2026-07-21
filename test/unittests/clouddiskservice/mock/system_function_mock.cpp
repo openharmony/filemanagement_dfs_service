@@ -55,6 +55,25 @@ int dirfd(DIR *d)
 }
 
 extern "C" {
+int stat(const char *path, struct stat *buf)
+{
+    if (Assistant::mockFdApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        return Assistant::ins->MockStat(path, buf);
+    }
+
+    static int (*realStat)(const char *, struct stat *) = []() {
+        return reinterpret_cast<int (*)(const char *, struct stat *)>(dlsym(RTLD_NEXT, "stat"));
+    }();
+    if (realStat == nullptr) {
+        return -1;
+    }
+    return realStat(path, buf);
+}
+
 int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 {
     return Assistant::ins->setxattr(path, name, value, size, flags);
@@ -183,6 +202,11 @@ int ioctl(int fd, int request, ...)
         return -1;
     }
     return realIoctl(fd, request, arg);
+}
+
+ssize_t getxattr(const char *path, const char *name, void *value, size_t size)
+{
+    return Assistant::ins->getxattr(path, name, value, size);
 }
 }
 

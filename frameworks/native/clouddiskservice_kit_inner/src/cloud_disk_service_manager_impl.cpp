@@ -171,6 +171,31 @@ int32_t CloudDiskServiceManagerImpl::CreatePlaceholderFile(const std::string &sy
 #endif
 }
 
+int32_t CloudDiskServiceManagerImpl::IsPlaceholderFile(const std::string &syncFolder, const std::string &path,
+                                                       bool &isPlaceholder)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("IsPlaceholderFile route=manager_to_proxy");
+
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("IsPlaceholderFile branch=proxy_null");
+        return E_IPC_FAILED;
+    }
+
+    auto ret = serviceProxy->IsPlaceholderFileInner(syncFolder, path, isPlaceholder);
+    SetDeathRecipient(serviceProxy->AsObject());
+    if (ret != E_OK) {
+        LOGE("IsPlaceholderFile branch=proxy_failed ret=%{public}d", ret);
+    } else {
+        LOGI("IsPlaceholderFile branch=proxy_success isPlaceholder=%{public}d", isPlaceholder);
+    }
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 int32_t CloudDiskServiceManagerImpl::RegisterSyncFolder(int32_t userId,
                                                         const std::string &bundleName,
                                                         const std::string &path)

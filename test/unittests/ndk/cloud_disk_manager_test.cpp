@@ -28,6 +28,18 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+namespace {
+const string SANDBOX_SYNC_FOLDER = "/storage/Users/currentUser/sync";
+const string RELATIVE_FILE_PATH = "a.txt";
+constexpr size_t INVALID_PATH_INFO_LENGTH = 1;
+constexpr int32_t SERVICE_SYNC_FOLDER_PATH_UNAUTHORIZED = E_SYNC_FOLDER_PATH_UNAUTHORIZED;
+
+CloudDisk_PathInfo ToPathInfo(const string &path)
+{
+    return {const_cast<char *>(path.c_str()), path.length()};
+}
+} // namespace
+
 class CloudDiskManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -468,5 +480,160 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
 
     EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest001
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile delegates to cloud disk service
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest001 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        auto &mock = CloudDiskServiceManagerMock::GetInstance();
+        EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
+            .WillOnce(DoAll(SetArgReferee<2>(true), Return(E_OK)));
+
+        bool isPlaceholder = false;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_TRUE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest001 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest002
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile returns non-placeholder result
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest002 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        auto &mock = CloudDiskServiceManagerMock::GetInstance();
+        EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
+            .WillOnce(DoAll(SetArgReferee<2>(false), Return(E_OK)));
+
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest002 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest003
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile maps service errors
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest003 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        auto &mock = CloudDiskServiceManagerMock::GetInstance();
+        EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
+            .WillOnce(Return(SERVICE_SYNC_FOLDER_PATH_UNAUTHORIZED));
+
+        bool isPlaceholder = false;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest003 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest004
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile rejects null result pointer before IPC
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest004 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, nullptr);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest004 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest005
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile rejects invalid path before IPC
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 start";
+    try {
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        CloudDisk_SyncFolderPath invalidSyncFolderPath = {nullptr, INVALID_PATH_INFO_LENGTH};
+        bool isPlaceholder = true;
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(invalidSyncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest005 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest006
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile rejects invalid file path before IPC
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo invalidPath = {nullptr, INVALID_PATH_INFO_LENGTH};
+        bool isPlaceholder = true;
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, invalidPath, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

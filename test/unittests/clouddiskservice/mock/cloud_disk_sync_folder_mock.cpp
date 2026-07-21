@@ -132,8 +132,13 @@ int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
 bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,
                                                       const std::string &userId, std::string &realpath)
 {
-    if (path == "/test/mockFailed") {
+    if (path == "/test/mockFailed" || path.find("mockMntPhysicalPathFailed") != std::string::npos) {
         return false;
+    }
+    const std::string physicalPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    const std::string replacementPath = "/mnt/hmdfs/" + userId + "/account/device_view/local/files/Docs";
+    if (path.substr(0, physicalPath.length()) == physicalPath) {
+        realpath = replacementPath + path.substr(physicalPath.length());
     }
     return true;
 }

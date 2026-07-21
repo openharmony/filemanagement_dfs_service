@@ -39,6 +39,7 @@ enum class ICloudDiskServiceIpcCode {
     COMMAND_SET_FILE_SYNC_STATES_INNER,
     COMMAND_GET_FILE_SYNC_STATES_INNER,
     COMMAND_CREATE_PLACEHOLDER_FILE_INNER,
+    COMMAND_IS_PLACEHOLDER_FILE_INNER,
     COMMAND_REGISTER_SYNC_FOLDER_INNER,
     COMMAND_UNREGISTER_SYNC_FOLDER_INNER,
     COMMAND_UNREGISTER_FOR_SA_INNER,
@@ -77,6 +78,10 @@ public:
         const std::string& syncFolder,
         const std::string& filePath,
         const PlaceholderInfo& info) = 0;
+    virtual ErrCode IsPlaceholderFileInner(
+        const std::string& syncFolder,
+        const std::string& path,
+        bool& funcResult) = 0;
 
     virtual ErrCode RegisterSyncFolderInner(
         int32_t userId,

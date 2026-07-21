@@ -41,6 +41,7 @@ public:
     MOCK_METHOD3(GetFileSyncStates, int32_t(const std::string &, const std::vector<std::string> &,
         std::vector<ResultList> &));
     MOCK_METHOD3(CreatePlaceholderFile, int32_t(const std::string &, const std::string &, const PlaceholderInfo &));
+    MOCK_METHOD3(IsPlaceholderFile, int32_t(const std::string &, const std::string &, bool &));
     MOCK_METHOD3(RegisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
     MOCK_METHOD3(UnregisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
     MOCK_METHOD2(ConvertPlaceholderToFile, int32_t(const std::string &, const std::string &));
