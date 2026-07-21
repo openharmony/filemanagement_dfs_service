@@ -175,7 +175,6 @@ HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_001, TestSize.Level1)
         auto &allConnectManager = AllConnectManager::GetInstance();
 
         allConnectManager.dllHandle_ = nullptr;
-        EXPECT_CALL(*libraryFuncMock_, dlclose(_)).WillOnce(Return(0));
         int32_t ret = allConnectManager.UnInitAllConnectManager();
         EXPECT_EQ(ret, FileManagement::ERR_OK);
 
@@ -194,6 +193,52 @@ HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_001, TestSize.Level1)
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "UnInitAllConnectManager_001 end";
+}
+
+/**
+ * @tc.name: AllConnectManagerTest_UnInitAllConnectManager_NullptrDlHandle
+ * @tc.desc: verify UnInitAllConnectManager skips dlclose when dllHandle_ is nullptr (FALSE branch).
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_NullptrDlHandle, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_NullptrDlHandle start";
+    try {
+        auto &allConnectManager = AllConnectManager::GetInstance();
+        allConnectManager.dllHandle_ = nullptr;
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr;
+        int32_t ret = allConnectManager.UnInitAllConnectManager();
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+        EXPECT_EQ(allConnectManager.dllHandle_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_NullptrDlHandle end";
+}
+
+/**
+ * @tc.name: AllConnectManagerTest_UnInitAllConnectManager_NonNullDlHandle
+ * @tc.desc: verify UnInitAllConnectManager calls dlclose when dllHandle_ is non-null (TRUE branch).
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(AllConnectManagerTest, UnInitAllConnectManager_NonNullDlHandle, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_NonNullDlHandle start";
+    try {
+        auto &allConnectManager = AllConnectManager::GetInstance();
+        int test = 0;
+        EXPECT_CALL(*libraryFuncMock_, dlclose(_)).WillOnce(Return(0));
+        allConnectManager.dllHandle_ = &test;
+        allConnectManager.allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr;
+        int32_t ret = allConnectManager.UnInitAllConnectManager();
+        EXPECT_EQ(ret, FileManagement::ERR_OK);
+        EXPECT_EQ(allConnectManager.dllHandle_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "UnInitAllConnectManager_NonNullDlHandle end";
 }
 
 /**

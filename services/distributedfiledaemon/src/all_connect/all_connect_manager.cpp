@@ -83,7 +83,9 @@ int32_t AllConnectManager::UnInitAllConnectManager()
     }
 
     std::lock_guard<std::mutex> lock(allConnectLock_);
-    dlclose(dllHandle_);
+    if (dllHandle_ != nullptr) {
+        dlclose(dllHandle_);
+    }
     dllHandle_ = nullptr;
     return FileManagement::ERR_OK;
 }

@@ -471,6 +471,39 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, Te
 }
 
 /**
+ * @tc.name: SoftBusHandlerAssetTest_AssetSendFile_0200
+ * @tc.desc: Verify AssetSendFile rejects path traversal in file parameter.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AssetSendFile_0200 start";
+#ifdef SUPPORT_SAME_ACCOUNT
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    assetObj->dstNetworkId_ = "testNetWork";
+    assetObj->srcBundleName_ = "demoA";
+    assetObj->dstBundleName_ = "demoB";
+    assetObj->sessionId_ = "0";
+    softBusHandlerAsset.AddAssetObj(0, assetObj);
+
+    std::vector<DmDeviceInfo> deviceList;
+    deviceInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+
+    string file = "../../../etc/passwd";
+    auto ret = softBusHandlerAsset.AssetSendFile(0, file, true);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    softBusHandlerAsset.RemoveAssetObj(0);
+#endif
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AssetSendFile_0200 end";
+}
+
+/**
  * @tc.name: SoftBusHandlerAssetTest_GetLocalNetworkId_0100
  * @tc.desc: Verify the GetLocalNetworkId function.
  * @tc.type: FUNC
@@ -531,6 +564,23 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateAssetObjInfo_0
     EXPECT_EQ(assetObj->srcBundleName_, "demoA");
     EXPECT_EQ(assetObj->dstNetworkId_, "100");
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GenerateAssetObjInfo_0200
+ * @tc.desc: Verify GenerateAssetObjInfo rejects path traversal in fileName.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateAssetObjInfo_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0200 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    string fileName = "/account/../etc/data/test/dstBundleName=app&sessionId=sid&srcBundleName=app";
+    auto ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0200 end";
 }
 
 /**

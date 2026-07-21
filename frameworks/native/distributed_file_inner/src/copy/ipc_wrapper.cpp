@@ -91,11 +91,12 @@ bool IpcWrapper::GetData(void *&buffer, size_t size, const void *data)
 
 bool IpcWrapper::ReadBatchUriByRawData(MessageParcel &data, std::vector<std::string> &uriVec)
 {
-    size_t dataSize = static_cast<size_t>(data.ReadInt32());
-    if (dataSize == 0) {
-        LOGE("parcel no data");
+    int32_t rawSize = data.ReadInt32();
+    if (rawSize <= 0) {
+        LOGE("parcel data size invalid: %{public}d", rawSize);
         return false;
     }
+    size_t dataSize = static_cast<size_t>(rawSize);
 
     void *buffer = nullptr;
     if (!GetData(buffer, dataSize, data.ReadRawData(dataSize))) {

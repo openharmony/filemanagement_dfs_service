@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <dirent.h>
+#include <memory>
 #include <sys/types.h>
 #include <system_error>
 #include <unistd.h>
@@ -312,10 +313,10 @@ std::vector<std::string> GetFilePath(const std::string &name)
         path.emplace_back(name);
         return path;
     }
-    auto dir = opendir(name.data());
-    struct dirent *ent = nullptr;
+    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(name.data()), &closedir);
     if (dir) {
-        while ((ent = readdir(dir)) != nullptr) {
+        struct dirent *ent = nullptr;
+        while ((ent = readdir(dir.get())) != nullptr) {
             auto tmpPath = std::string(name).append("/").append(ent->d_name);
             if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0) {
                 continue;
@@ -326,7 +327,6 @@ std::vector<std::string> GetFilePath(const std::string &name)
                 path.emplace_back(tmpPath);
             }
         }
-        closedir(dir);
     }
     return path;
 }

@@ -237,6 +237,10 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
         LOGE("GetFileName failed or file is empty");
         return ERR_BAD_VALUE;
     }
+    if (!FileSizeUtils::IsFilePathValid(dstFile) || !FileSizeUtils::IsFilePathValid(sendFile)) {
+        LOGE("path traversal detected, dstFile or sendFile is invalid");
+        return ERR_BAD_VALUE;
+    }
     const char *dst[MAX_SIZE] = {};
     dst[0] = dstFile.c_str();
 
@@ -373,6 +377,10 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
 {
     if (assetObj == nullptr) {
         LOGE("assetObj is nullptr!");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    if (!FileSizeUtils::IsFilePathValid(fileName)) {
+        LOGE("fileName contains path traversal");
         return FileManagement::ERR_BAD_VALUE;
     }
 

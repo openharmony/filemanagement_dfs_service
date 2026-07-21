@@ -2397,11 +2397,48 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_003, TestSize.Level1)
     std::string instanceId = "test_instance";
     sptr<IFileDfsListener> nullListener = nullptr;
 
-    // Test null listener
     int32_t result = daemon_->RegisterFileDfsListener(instanceId, nullListener);
     EXPECT_EQ(result, E_INVAL_ARG_NAPI);
 
     GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_003 end";
+}
+
+/**
+ * @tc.name: DaemonTest_RegisterFileDfsListener_004
+ * @tc.desc: verify RegisterFileDfsListener with instanceId exceeding max length.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_004 begin";
+
+    std::string longInstanceId(300, 'a');
+    sptr<IFileDfsListener> listener = new FileDfsListenerMock();
+
+    int32_t result = daemon_->RegisterFileDfsListener(longInstanceId, listener);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_004 end";
+}
+
+/**
+ * @tc.name: DaemonTest_RegisterFileDfsListener_005
+ * @tc.desc: verify RegisterFileDfsListener with path traversal instanceId.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_RegisterFileDfsListener_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_005 begin";
+
+    std::string pathTraversalId = "../../../etc/passwd";
+    sptr<IFileDfsListener> listener = new FileDfsListenerMock();
+
+    int32_t result = daemon_->RegisterFileDfsListener(pathTraversalId, listener);
+    EXPECT_EQ(result, E_INVAL_ARG_NAPI);
+
+    GTEST_LOG_(INFO) << "DaemonTest_RegisterFileDfsListener_005 end";
 }
 
 /**

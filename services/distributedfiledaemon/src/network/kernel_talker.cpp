@@ -151,7 +151,7 @@ void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
         .devsl = devsl,
     };
 
-    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), CID_MAX_LEN)) {
+    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), cid.size())) {
         return;
     }
     SetCmd(cmd);
