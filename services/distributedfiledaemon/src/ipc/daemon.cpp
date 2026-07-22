@@ -94,6 +94,7 @@ constexpr const char* HMDFS_FATH = "/storage/hmdfs/";
 constexpr DfsVersion FILEMANAGER_VERSION = {6, 0, 1};
 constexpr int32_t MIN_NETWORKID_LENGTH = 16;
 constexpr int32_t MAX_IPC_THREAD_NUM = 32;
+constexpr size_t MAX_INSTANCE_ID_LEN = 256;
 } // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -1392,8 +1393,13 @@ int32_t Daemon::RegisterFileDfsListener(const std::string &instanceId, const spt
 {
     HiAudit::GetInstance().WriteStart("RegisterFileDfsListener");
     LOGI("RegisterFileDfsListener enter, instanceId: %{public}s", instanceId.c_str());
-    if (instanceId.empty()) {
-        LOGE("InstanceId length is invalid.");
+    if (instanceId.empty() || instanceId.length() > MAX_INSTANCE_ID_LEN) {
+        LOGE("InstanceId length is invalid, len: %{public}zu", instanceId.length());
+        HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
+        return E_INVAL_ARG_NAPI;
+    }
+    if (!FileSizeUtils::IsFilePathValid(instanceId)) {
+        LOGE("InstanceId contains invalid characters.");
         HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }

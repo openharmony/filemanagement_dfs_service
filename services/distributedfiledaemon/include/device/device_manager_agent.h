@@ -15,6 +15,7 @@
 #ifndef DEVICE_MANAGER_AGENT_H
 #define DEVICE_MANAGER_AGENT_H
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -129,7 +130,7 @@ private:
     std::mutex mountDfsCountMutex_;
     std::unordered_map<std::string, MountCountInfo> mountDfsCount_;
 
-    int32_t currentUserId_ = -1;
+    std::atomic<int32_t> currentUserId_ {-1};
 };
 } // namespace DistributedFile
 } // namespace Storage

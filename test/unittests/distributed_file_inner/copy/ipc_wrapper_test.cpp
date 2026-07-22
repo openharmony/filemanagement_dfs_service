@@ -186,19 +186,24 @@ HWTEST_F(IpcWrapperTest, ReadBatchUriByRawData, TestSize.Level0)
     MessageParcel data;
     std::vector<std::string> uriVec;
 
-    // Test case 1: ReadInt32 returns zero data size
-    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
+    // Test case 1: ReadInt32 returns negative size (integer wraparound protection)
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(-1));
     bool result = IpcWrapper::ReadBatchUriByRawData(data, uriVec);
     EXPECT_FALSE(result);
 
-    // Test case 2: GetData fails (null raw data)
+    // Test case 2: ReadInt32 returns zero data size
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
+    result = IpcWrapper::ReadBatchUriByRawData(data, uriVec);
+    EXPECT_FALSE(result);
+
+    // Test case 3: GetData fails (null raw data)
     size_t dataSize = 5; // 5: test size
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(dataSize));
     EXPECT_CALL(*messageParcelMock_, ReadRawData(_)).WillOnce(Return(nullptr));
     result = IpcWrapper::ReadBatchUriByRawData(data, uriVec);
     EXPECT_FALSE(result);
 
-    // Test case 3: Successful
+    // Test case 4: Successful
     const char* validData = "test";
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(dataSize));
     EXPECT_CALL(*messageParcelMock_, ReadRawData(_)).WillOnce(Return(validData));

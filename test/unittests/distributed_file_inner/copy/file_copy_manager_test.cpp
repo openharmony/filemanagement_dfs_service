@@ -1230,11 +1230,57 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_MakeDir_0001, TestSize.Level1)
 }
 
 /**
- * @tc.name: FileCopyManager_ExecCopy_0001
- * @tc.desc: ExecCopy with srcUriIsFile false and dstPath is a directory
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
+* @tc.name: FileCopyManager_ExecCopy_EmptySrcPath
+* @tc.desc: ExecCopy with empty srcPath reaches !srcPath.empty() FALSE branch inside ExecCopy
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+*/
+HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecCopy_EmptySrcPath, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_EmptySrcPath Start";
+    string dstPath = "/storage/media/100/local/files/Docs/test_dest_dir_empty_src";
+    std::error_code errCode;
+    if (!std::filesystem::exists(dstPath, errCode) && errCode.value() == E_OK) {
+        Storage::DistributedFile::FileCopyManager::GetInstance().MakeDir(dstPath);
+    }
+
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUriIsFile = false;
+    infos->srcPath = "";
+    infos->destPath = dstPath;
+    infos->localListener = std::make_shared<FileCopyLocalListener>("", false, nullptr);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecCopy(infos);
+    EXPECT_NE(ret, E_OK);
+
+    ForceRemoveDirectory(dstPath.c_str());
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_EmptySrcPath End";
+}
+
+/**
+* @tc.name: FileCopyManager_ExecCopy_EmptyDestPath
+* @tc.desc: ExecCopy with empty destPath returns EINVAL (IsDirectory("") blocks entry to inner guard)
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+*/
+HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecCopy_EmptyDestPath, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_EmptyDestPath Start";
+    auto infos = std::make_shared<FileInfos>();
+    infos->srcUriIsFile = false;
+    infos->srcPath = "/storage/media/100/local/files/Docs/test_src_dir_empty_dst";
+    infos->destPath = "";
+    infos->localListener = std::make_shared<FileCopyLocalListener>("", false, nullptr);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecCopy(infos);
+    EXPECT_EQ(ret, EINVAL);
+    GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_EmptyDestPath End";
+}
+
+/**
+* @tc.name: FileCopyManager_ExecCopy_0001
+* @tc.desc: ExecCopy with srcUriIsFile false and dstPath is a directory
+* @tc.type: FUNC
+* @tc.require: I7TDJK
+*/
 HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecCopy_0001, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "FileCopyManager_ExecCopy_0001 Start";

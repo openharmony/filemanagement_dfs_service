@@ -405,10 +405,10 @@ int32_t FileCopyManager::ExecCopy(std::shared_ptr<FileInfos> infos)
         return CopyFile(infos->srcPath, infos->destPath, infos);
     }
     if (!infos->srcUriIsFile && IsDirectory(infos->destPath)) {
-        if (infos->srcPath.back() != '/') {
+        if (!infos->srcPath.empty() && infos->srcPath.back() != '/') {
             infos->srcPath += '/';
         }
-        if (infos->destPath.back() != '/') {
+        if (!infos->destPath.empty() && infos->destPath.back() != '/') {
             infos->destPath += '/';
         }
         // copyDir

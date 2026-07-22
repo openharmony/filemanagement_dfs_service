@@ -258,13 +258,11 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
         return ERR_CHECK_PERMISSION_FAILED;
     }
 
-    {
-        std::shared_lock<std::shared_mutex> readLock(clientMutex_);
-        auto channelIt = clientNetworkSocketMap_.find(networkId);
-        if (channelIt != clientNetworkSocketMap_.end()) {
-            LOGW("has connect to this network");
-            return ERR_OK;
-        }
+    std::lock_guard<std::shared_mutex> writeLock(clientMutex_);
+    auto channelIt = clientNetworkSocketMap_.find(networkId);
+    if (channelIt != clientNetworkSocketMap_.end()) {
+        LOGW("has connect to this network");
+        return ERR_OK;
     }
 
     int32_t socketId = CreateClientSocket(networkId);
@@ -292,9 +290,7 @@ int32_t ChannelManager::CreateClientChannel(const std::string &networkId)
         return ERR_BIND_SOCKET_FAILED;
     }
 
-    std::lock_guard<std::shared_mutex> writeLock(clientMutex_);
     clientNetworkSocketMap_[networkId] = socketId;
-
     LOGI("CreateClientChannel end");
     return ERR_OK;
 }
