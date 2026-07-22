@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_SETTINGS_DATA_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_SETTINGS_DATA_MANAGER_H
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -42,7 +43,7 @@ private:
 class SettingsDataManager {
 public:
     static void InitSettingsDataManager();
-    static void UpdateIsSupportUserSettingsData(bool isDemon = false);
+    static void UpdateIsSupportUserSettingsData();
 
     static void OnUserSwitched(int32_t userId);
     static bool UpdateCurrentUserId();
@@ -76,13 +77,15 @@ private:
     static void ReregisterAllObservers(int32_t userId);
     static void UnregisterObserver(const std::string &key);
 
+    static void PreInit();
     static int32_t InitUserSettings();
     static int32_t InitAndQuerySettingsData(const std::string &key, std::string &value, bool isFirst = false);
 
-    static inline bool supportUserSettingsData_ = false;
+    static inline bool supportUserSettingsData_ = true;
     static inline int32_t currentUserId_ = 100;
     static inline SafeMap<const std::string, std::string> settingsDataMap_;
     static inline SafeMap<const std::string, sptr<AAFwk::DataAbilityObserverStub>> observerMap_;
+    static inline std::once_flag initFlag_;
 };
 } // OHOS
 

@@ -19,21 +19,18 @@
 #include "battery_status.h"
 #include "cloud_pref_impl_mock.h"
 #include "cycle_task_runner.h"
-#include "datashare_helper_mock.h"
-#include "datashare_result_set_mock.h"
 #include "dfs_error.h"
 #include "parameters.h"
 #include "periodic_clean_task.h"
 #include "screen_status.h"
 #include "screen_status_mock.h"
-#include "settings_data_manager.h"
+#include "settings_data_manager_mock.h"
 #include "system_func_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
-using namespace OHOS::DataShare;
 using namespace OHOS::system;
 
 static const std::string PHOTOS_KEY = "persist.kernel.bundle_name.photos";
@@ -47,12 +44,11 @@ public:
     void TearDown();
     static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManagerPtr_ = nullptr;
     static inline std::shared_ptr<PeriodicCleanTask> periodicCleanTask_ = nullptr;
-    static inline std::shared_ptr<DataShareHelperMock> dataShareHelperMock_ = nullptr;
-    static inline std::shared_ptr<DataShareResultSetMock> resultSetMock_ = nullptr;
     static inline std::shared_ptr<CloudPrefImplMock> cloudPrefImplMock_ = nullptr;
     static inline std::shared_ptr<ParameterMock> parameterMock_ = nullptr;
     static inline std::shared_ptr<SystemFuncMock> systemFuncMock_ = nullptr;
     static inline std::shared_ptr<ScreenStatusMock> screenStatusMock_ = nullptr;
+    static inline std::shared_ptr<SettingsDataManagerMock> settingsDataManagerMock_ = nullptr;
 };
 
 void PeriodicCleanTaskTest::SetUpTestCase(void)
@@ -60,10 +56,6 @@ void PeriodicCleanTaskTest::SetUpTestCase(void)
     GTEST_LOG_(INFO) << "SetUpTestCase";
     dataSyncManagerPtr_ = std::make_shared<CloudFile::DataSyncManager>();
     periodicCleanTask_ = std::make_shared<PeriodicCleanTask>(dataSyncManagerPtr_);
-    dataShareHelperMock_ = std::make_shared<DataShareHelperMock>();
-    DataShareHelperMock::proxy_ = dataShareHelperMock_;
-    resultSetMock_ = std::make_shared<DataShareResultSetMock>();
-    DataShareResultSetMock::proxy_ = resultSetMock_;
     cloudPrefImplMock_ = std::make_shared<CloudPrefImplMock>();
     CloudPrefImplMock::proxy_ = cloudPrefImplMock_;
     parameterMock_ = std::make_shared<ParameterMock>();
@@ -72,6 +64,8 @@ void PeriodicCleanTaskTest::SetUpTestCase(void)
     SystemFuncMock::proxy_ = systemFuncMock_;
     screenStatusMock_ = std::make_shared<ScreenStatusMock>();
     ScreenStatusMock::proxy_ = screenStatusMock_;
+    settingsDataManagerMock_ = std::make_shared<SettingsDataManagerMock>();
+    SettingsDataManagerMock::proxy_ = settingsDataManagerMock_;
 }
 
 void PeriodicCleanTaskTest::TearDownTestCase(void)
@@ -79,10 +73,6 @@ void PeriodicCleanTaskTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
     dataSyncManagerPtr_ = nullptr;
     periodicCleanTask_ = nullptr;
-    dataShareHelperMock_ = nullptr;
-    DataShareHelperMock::proxy_ = nullptr;
-    resultSetMock_ = nullptr;
-    DataShareResultSetMock::proxy_ = nullptr;
     cloudPrefImplMock_ = nullptr;
     CloudPrefImplMock::proxy_ = nullptr;
     parameterMock_ = nullptr;
@@ -91,6 +81,8 @@ void PeriodicCleanTaskTest::TearDownTestCase(void)
     SystemFuncMock::proxy_ = nullptr;
     screenStatusMock_ = nullptr;
     ScreenStatusMock::proxy_ = nullptr;
+    settingsDataManagerMock_ = nullptr;
+    SettingsDataManagerMock::proxy_ = nullptr;
 }
 
 void PeriodicCleanTaskTest::SetUp(void)
@@ -273,14 +265,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest004, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillRepeatedly(Return(""));
 
@@ -312,14 +297,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest005, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("")).WillOnce(Return(""));
 
@@ -352,14 +330,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest006, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("")).WillOnce(Return(""));
 
@@ -392,14 +363,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest007, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("")).WillOnce(Return("com.xxx"));
 
@@ -432,14 +396,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest008, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("com.xxx")).WillOnce(Return(""));
 
@@ -472,14 +429,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest009, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("0"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::NONE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).WillOnce(DoAll(SetArgReferee<1>(false)));
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("com.xxx")).WillOnce(Return("com.xxx"));
 
@@ -512,14 +462,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest010, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::CLOUD_SPACE));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).Times(0);
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return(""));
 
@@ -549,14 +492,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest011, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("2"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::AI_FAMILY));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).Times(0);
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return(""));
 
@@ -586,14 +522,7 @@ HWTEST_F(PeriodicCleanTaskTest, RunTaskForBundleTest012, TestSize.Level1)
     try {
         EXPECT_CALL(*screenStatusMock_, IsScreenOn()).WillOnce(Return(false));
         BatteryStatus::SetChargingStatus(true);
-
-        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
-        std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>();
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
-        EXPECT_CALL(*dataShareHelperMock_, Query(_, _, _, _)).WillOnce(Return(resultSet));
-        EXPECT_CALL(*resultSetMock_, GoToFirstRow()).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*resultSetMock_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("2"), Return(E_OK)));
+        EXPECT_CALL(*settingsDataManagerMock_, GetSwitchStatus()).WillOnce(Return(SwitchStatus::AI_FAMILY));
         EXPECT_CALL(*cloudPrefImplMock_, GetBool(_, _)).Times(0);
         EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillOnce(Return("com.xxx"));
 

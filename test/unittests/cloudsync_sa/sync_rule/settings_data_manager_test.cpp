@@ -83,6 +83,26 @@ void SettingsDataManagerTest::SetUp(void)
 
 void SettingsDataManagerTest::TearDown(void) {}
 
+HWTEST_F(SettingsDataManagerTest, InitSettingsDataManagerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Start";
+    try {
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
+            .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
+        EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
+        SettingsDataManager::currentUserId_ = 10;
+        SettingsDataManager::supportUserSettingsData_ = true;
+        SettingsDataManager::InitSettingsDataManager();
+        EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Failed";
+    }
+
+    GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, GetQueryKeyTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetQueryKeyTest001 Start";
@@ -915,24 +935,6 @@ HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest003, TestSi
     }
 
     GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest003 End";
-}
-
-HWTEST_F(SettingsDataManagerTest, UpdateIsSupportUserSettingsDataTest004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest004 Start";
-    try {
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(nullptr));
-
-        std::string key = "";
-        std::string value;
-        SettingsDataManager::UpdateIsSupportUserSettingsData(true);
-        EXPECT_EQ(SettingsDataManager::supportUserSettingsData_, false);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest004 Failed";
-    }
-
-    GTEST_LOG_(INFO) << "UpdateIsSupportUserSettingsDataTest004 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, GetSwitchStatusByCacheTest001, TestSize.Level1)
@@ -1845,25 +1847,5 @@ HWTEST_F(SettingsDataManagerTest, OnUserSwitchedTest002, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "OnUserSwitchedTest002 End";
-}
-
-HWTEST_F(SettingsDataManagerTest, InitSettingsDataManagerTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Start";
-    try {
-        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
-        EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
-            .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
-        EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
-        SettingsDataManager::currentUserId_ = 10;
-        SettingsDataManager::supportUserSettingsData_ = true;
-        SettingsDataManager::InitSettingsDataManager();
-        EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Failed";
-    }
-
-    GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 End";
 }
 }
