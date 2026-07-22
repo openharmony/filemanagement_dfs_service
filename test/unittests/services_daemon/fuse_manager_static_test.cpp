@@ -16,6 +16,8 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <cstdlib>
 #include <memory>
 
 #include "assistant.h"
@@ -36,6 +38,42 @@ using namespace CloudDisk;
 using namespace testing;
 using namespace testing::ext;
 constexpr int32_t USER_ID = 100;
+constexpr mode_t KEEP_CACHE_DIR_MODE = 0755;
+constexpr int MAX_EMPTY_PARENTS = 4;
+
+/* Best-effort mkdir of every parent component of `path` (ignores EEXIST). */
+static void MakeParentDirs(const string &path)
+{
+    for (size_t i = 1; i < path.size(); ++i) {
+        if (path[i] == '/') {
+            string cur(path, 0, i);
+            mkdir(cur.c_str(), KEEP_CACHE_DIR_MODE);
+        }
+    }
+}
+
+/* Remove now-empty ancestor dirs of `path`, stopping at the first non-empty one. */
+static void RemoveEmptyParents(const string &path)
+{
+    string cur = path;
+    for (int i = 0; i < MAX_EMPTY_PARENTS; ++i) {
+        size_t pos = cur.rfind('/');
+        if (pos == string::npos || pos == 0) {
+            break;
+        }
+        cur.resize(pos);
+        if (rmdir(cur.c_str()) != 0) {
+            break;
+        }
+    }
+}
+
+/* shared_ptr<char> byte buffer backed by a make_shared'd vector (no bare `new`). */
+static shared_ptr<char> MakeCharBuffer(size_t n)
+{
+    auto vec = std::make_shared<std::vector<char>>(n);
+    return std::shared_ptr<char>(vec, vec->data());
+}
 class FuseManagerStaticTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -334,6 +372,295 @@ HWTEST_F(FuseManagerStaticTest, SaveAppIdTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "SaveAppIdTest003 failed";
     }
     GTEST_LOG_(INFO) << "SaveAppIdTest003 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheTest001
+ * @tc.desc: cloud inode is null, reply ENOMEM
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheTest001 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        struct fuse_file_info *fi = nullptr;
+        const void *inBuf = nullptr;
+        FuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        SetKeepCache(req, ino, fi, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "SetKeepCacheTest001 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheTest002
+ * @tc.desc: cloud inode has no mBase, reply ENOMEM
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheTest002 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        struct fuse_file_info *fi = nullptr;
+        const void *inBuf = nullptr;
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        SetKeepCache(req, ino, fi, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "SetKeepCacheTest002 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheTest003
+ * @tc.desc: inBuf is null, reply EINVAL
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheTest003 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        struct fuse_file_info *fi = nullptr;
+        const void *inBuf = nullptr;
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        SetKeepCache(req, ino, fi, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "SetKeepCacheTest003 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheTest004
+ * @tc.desc: valid inode + mBase + readSession + int32_t payload out of range (5) -> reply EINVAL
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheTest004 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        struct fuse_file_info *fi = nullptr;
+        int32_t payload = 5; /* out of range: only 0..4 supported */
+        const void *inBuf = &payload;
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        SetKeepCache(req, ino, fi, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "SetKeepCacheTest004 end";
+}
+
+/**
+ * @tc.name: KeepCacheXattrRoundTrip001
+ * @tc.desc: real lower-layer xattr round-trip for the read-path persistence (SetKeepCacheXattr)
+ *           on a real temp file: keep>0 writes/refreshes user.cloud.keepcache; keepCache=0 is a
+ *           no-op that never wipes an existing xattr.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, KeepCacheXattrRoundTrip001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KeepCacheXattrRoundTrip001 start";
+    /* Create a real file on the hmdfs lower layer where cloud photo/cache files live
+       (/mnt/hmdfs/<userId>/account/device_view/local/files/Photo), not a /data temp dir, so the
+       setxattr/getxattr round-trip runs on the same fs the feature operates on. Create -> test ->
+       unlink at the end. Skip if the device path is unavailable (e.g. off-device CI). */
+    char tmpl[] = "/mnt/hmdfs/100/account/device_view/local/files/Photo/.keepcache_roundtrip_XXXXXX";
+    int fd = mkstemp(tmpl);
+    if (fd < 0) {
+        GTEST_SKIP() << "hmdfs Photo path unavailable, skip real xattr round-trip, errno: " << errno;
+    }
+    close(fd);
+    string cachePath(tmpl);
+
+    try {
+        /* no keep-cache xattr initially -> not retain */
+        EXPECT_FALSE(NeedKeepCacheOnPath(cachePath));
+
+        /* SetKeepCacheXattr(1) writes the xattr -> reads back true */
+        SetKeepCacheXattr(cachePath, 1);
+        EXPECT_TRUE(NeedKeepCacheOnPath(cachePath));
+
+        /* SetKeepCacheXattr(2) refreshes the value (upgrade) -> still retained, value=2 */
+        SetKeepCacheXattr(cachePath, 2);
+        EXPECT_TRUE(NeedKeepCacheOnPath(cachePath));
+        int32_t val = 0;
+        ssize_t ret = getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val));
+        ASSERT_GT(ret, 0);
+        EXPECT_EQ(val, 2);
+
+        /* keepCache=0 is a no-op: never wipes an xattr that was set */
+        SetKeepCacheXattr(cachePath, 0);
+        EXPECT_TRUE(NeedKeepCacheOnPath(cachePath));
+        val = 0;
+        ret = getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val));
+        ASSERT_GT(ret, 0);
+        EXPECT_EQ(val, 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "KeepCacheXattrRoundTrip001 failed";
+    }
+    unlink(tmpl);
+    GTEST_LOG_(INFO) << "KeepCacheXattrRoundTrip001 end";
+}
+
+/**
+ * @tc.name: NeedKeepCacheTest001
+ * @tc.desc: null inode / non-VID_ file (no keep-cache xattr) returns false
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, NeedKeepCacheTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NeedKeepCacheTest001 start";
+    try {
+        FuseData data;
+        EXPECT_FALSE(NeedKeepCache(nullptr, &data));
+
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        /* non-VID_ file -> not retain regardless of xattr */
+        EXPECT_FALSE(NeedKeepCache(cloudInode, &data));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NeedKeepCacheTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "NeedKeepCacheTest001 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheTest005
+ * @tc.desc: non-VID_ name with a valid payload -> reply ioctl ok, untouched.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheTest005 start";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        struct fuse_file_info *fi = nullptr;
+        int32_t payload = 1;
+        const void *inBuf = &payload;
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test.jpg");
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_ioctl(_, _, _, _)).WillOnce(Return(E_OK));
+        SetKeepCache(req, ino, fi, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "SetKeepCacheTest005 end";
+}
+
+/**
+ * @tc.name: SetKeepCacheRoundTrip001
+ * @tc.desc: SetKeepCache decision tree on a real cache file: 0->0 no-op, 0->>0 write,
+ *           >0 immutable; plus NeedKeepCache VID_+xattr>0 true / null-data false.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, SetKeepCacheRoundTrip001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetKeepCacheRoundTrip001 start";
+    FuseData data;
+    data.userId = USER_ID;
+    data.photoBundleName = "keepcache_rt_test";
+    shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+    cloudInode->mBase = make_shared<MetaBase>("VID_roundtrip.mp4");
+    cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(USER_ID, "", "", "", "");
+    cloudInode->path = "/VID_roundtrip.mp4";
+    data.inodeCache.insert({100, cloudInode});
+
+    /* Stage a real file at VideoCachePath (fopen, not the mocked open) so xattr round-trips. */
+    string cachePath = VideoCachePath(cloudInode->path, &data);
+    MakeParentDirs(cachePath);
+    std::FILE *fp = fopen(cachePath.c_str(), "w");
+    if (fp == nullptr) {
+        GTEST_SKIP() << "hmdfs cache path unavailable, skip SetKeepCache round-trip, errno: " << errno;
+    }
+    fclose(fp);
+
+    fuse_req_t req = nullptr;
+    fuse_ino_t ino = 100;
+    struct fuse_file_info *fi = nullptr;
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void *>(&data)));
+    EXPECT_CALL(*insMock, fuse_reply_ioctl(_, _, _, _)).WillRepeatedly(Return(E_OK));
+
+    try {
+        int32_t p0 = 0; /* 0->0: no-op, no xattr */
+        SetKeepCache(req, ino, fi, &p0);
+        EXPECT_FALSE(NeedKeepCacheOnPath(cachePath));
+
+        int32_t p2 = 2; /* 0->>0: write */
+        SetKeepCache(req, ino, fi, &p2);
+        EXPECT_TRUE(NeedKeepCacheOnPath(cachePath));
+        int32_t val = 0;
+        ssize_t ret = getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val));
+        ASSERT_GT(ret, 0);
+        EXPECT_EQ(val, 2);
+
+        int32_t p4 = 4; /* immutable: value stays 2 */
+        SetKeepCache(req, ino, fi, &p4);
+        val = 0;
+        ret = getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val));
+        ASSERT_GT(ret, 0);
+        EXPECT_EQ(val, 2);
+
+        EXPECT_TRUE(NeedKeepCache(cloudInode, &data));
+        EXPECT_FALSE(NeedKeepCache(cloudInode, nullptr));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetKeepCacheRoundTrip001 failed";
+    }
+    unlink(cachePath.c_str());
+    RemoveEmptyParents(cachePath);
+    GTEST_LOG_(INFO) << "SetKeepCacheRoundTrip001 end";
 }
 
 /**
@@ -1191,6 +1518,168 @@ HWTEST_F(FuseManagerStaticTest, DoCloudReadForWatchTest001, TestSize.Level1) {
 }
 
 /**
+ * @tc.name: DoCloudReadForWatchTest002
+ * @tc.desc: cacheFileIndex non-null -> DoCloudReadForWatch picks VideoCachePath.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoCloudReadForWatchTest002, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = 3 * MAX_READ_SIZE;
+    cInode->path = "/./DoCloudReadForWatchTest002";
+    size_t newSize = 10;
+    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+    for (size_t i = 0; i < newSize; ++i) {
+        cInode->cacheFileIndex[i] = NOT_CACHE;
+    }
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgs->offset = 0;
+    size_t bufferSize = 128;
+    readArgs->buf = MakeCharBuffer(bufferSize);
+    readArgs->readResult = std::make_shared<int64_t>(0);
+    readArgs->readStatus = std::make_shared<CLOUD_READ_STATUS>(READING);
+
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    bool result = DoCloudReadForWatch(req, cInode, readArgs, readSessionMock);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name: DoReadSliceTest003
+ * @tc.desc: cacheFileIndex null -> DoReadSlice skips local hit, picks GetAssetPath.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoReadSliceTest003, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("1761897125_003.mp4");
+    cInode->mBase->size = 3 * MAX_READ_SIZE;
+    cInode->path = "/./DoReadSliceTest003";
+    /* cacheFileIndex null: non-keep session */
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgs->offset = 0;
+    size_t bufferSize = 128;
+    readArgs->buf = MakeCharBuffer(bufferSize);
+    readArgs->readResult = std::make_shared<int64_t>(0);
+    readArgs->readStatus = std::make_shared<CLOUD_READ_STATUS>(READING);
+    bool needCheck = false;
+
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    bool result = DoReadSlice(req, cInode, readSessionMock, readArgs, needCheck);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+
+    cInode->readCacheMap.clear();
+    EXPECT_TRUE(cInode->readCacheMap.empty());
+}
+
+/**
+ * @tc.name: DoReadSliceTest004
+ * @tc.desc: cacheFileIndex[0]==HAS_CACHED -> DoReadSlice local-cache-hit branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoReadSliceTest004, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = 3 * MAX_READ_SIZE;
+    cInode->path = "/./DoReadSliceTest004";
+    size_t newSize = 10;
+    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+    for (size_t i = 0; i < newSize; ++i) {
+        cInode->cacheFileIndex[i] = NOT_CACHE;
+    }
+    cInode->cacheFileIndex[0] = HAS_CACHED;
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgs->offset = 0;
+    size_t bufferSize = 128;
+    readArgs->buf = MakeCharBuffer(bufferSize);
+    readArgs->readResult = std::make_shared<int64_t>(0);
+    readArgs->readStatus = std::make_shared<CLOUD_READ_STATUS>(READING);
+    bool needCheck = false;
+
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+    bool result = DoReadSlice(req, cInode, readSessionMock, readArgs, needCheck);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+
+    cInode->readCacheMap.clear();
+    EXPECT_TRUE(cInode->readCacheMap.empty());
+}
+
+/**
+ * @tc.name: DoCloudReadTest001
+ * @tc.desc: cacheFileIndex null -> DoCloudRead prefetch gate returns early, no prefetch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoCloudReadTest001, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("1761897125_003.mp4");
+    cInode->mBase->size = 3 * MAX_READ_SIZE;
+    cInode->path = "/./DoCloudReadTest001";
+    /* cacheFileIndex null: non-keep session */
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    shared_ptr<ReadArguments> readArgsHead = make_shared<ReadArguments>(0, "", 0, 0);
+    readArgsHead->offset = 0;
+    size_t bufferSize = 128;
+    readArgsHead->buf = MakeCharBuffer(bufferSize);
+    readArgsHead->readResult = std::make_shared<int64_t>(0);
+    readArgsHead->readStatus = std::make_shared<CLOUD_READ_STATUS>(READING);
+
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+
+    DoCloudReadParams params{cInode, readSessionMock, readArgsHead, nullptr};
+    bool result = DoCloudRead(req, 0, params);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+
+    cInode->readCacheMap.clear();
+    cInode->readCtlMap.clear();
+}
+
+/**
  * @tc.name: CloudReadOnCacheFileTest001
  * @tc.desc: 当缓存索引不存在且读取成功时,函数应进入后续操作
  * @tc.type: FUNC
@@ -1320,6 +1809,8 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
 
     EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
     EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*readSessionMock, CancelSession()).Times(AnyNumber());
+    EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
     EXPECT_CALL(*readSessionMock, Close(_)).WillOnce(Return(false));
     CloudRelease(req, ino, &fi);
     EXPECT_EQ(cloudInode->sessionRefCount, 0);
@@ -1368,8 +1859,13 @@ HWTEST_F(FuseManagerStaticTest, CloudReadForWatchTest001, TestSize.Level1) {
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*insMock, MyOpen).WillOnce(Return(0));
+        EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*insMock, MyPread(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
         CloudReadForWatch(req, ino, newSize, off, &fi);
         ffrt::wait();
+        /* data is raw-new'd and never deleted; drop its inodeCache ref to cloudInode so cloudInode
+           (and readSessionMock) destruct at scope end instead of surviving until program exit. */
+        data->inodeCache.clear();
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

@@ -37,6 +37,7 @@ static const unsigned int HMDFS_DAEMON_IOC_MASK = 0x80;
 
 /* New daemon-specific ioctls must be defined with the HMDFS_DAEMON_IOC_MASK for proper handling */
 #define HMDFS_IOC_CLEAN_CACHE_DAEMON _IO(HMDFS_IOC, HMDFS_DAEMON_IOC_MASK + 0x01)
+#define HMDFS_IOC_SET_KEEP_CACHE _IOW(HMDFS_IOC, HMDFS_DAEMON_IOC_MASK + 0x02, int32_t)
 
 #define HMFS_IOC_PDEDLUP_CREATE _IOW(HMFS_IOCTL_MAGIC, HMFS_DEDUP_IOC_BASE + 8, struct HmfsPdedupCreate)
 

@@ -79,6 +79,7 @@ static const string DEVICE_VIEW_PHOTOS_PATH = "/account/device_view/local/data/"
 static const string CLOUD_CACHE_DIR = "/.video_cache";
 static const string PHOTOS_KEY = "persist.kernel.bundle_name.photos";
 static const string CLOUD_CACHE_XATTR_NAME = "user.cloud.cacheMap";
+static const string CLOUD_KEEP_CACHE_XATTR_NAME = "user.cloud.keepcache";
 static const string VIDEO_TYPE_PREFIX = "VID_";
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
@@ -839,6 +840,38 @@ static string VideoCachePath(const string &path, struct FuseData *data)
     return cachePath;
 }
 
+/* Write the keep-cache level to the cache-file xattr; best-effort, no-op when keepCache <= 0. */
+static void SetKeepCacheXattr(const string &cachePath, int32_t keepCache)
+{
+    if (cachePath.empty() || keepCache <= 0) {
+        return;
+    }
+    int32_t val = keepCache;
+    if (setxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val), 0) < 0) {
+        LOGE("setxattr keepcache fail, err: %{public}d", errno);
+    }
+}
+
+static bool NeedKeepCacheOnPath(const string &cachePath)
+{
+    if (cachePath.empty()) {
+        return false;
+    }
+    int32_t val = 0;
+    ssize_t ret = getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &val, sizeof(val));
+    return ret > 0 && val > 0;
+}
+
+/* Retain a VID_ file's cache iff its keep-cache xattr is > 0. Non-VID_ files are unaffected
+   (IsVideoType false). Used at release to decide retain vs clean. */
+static bool NeedKeepCache(shared_ptr<CloudInode> cInode, struct FuseData *data)
+{
+    if (!cInode || !data) {
+        return false;
+    }
+    return IsVideoType(cInode->mBase->name) && NeedKeepCacheOnPath(VideoCachePath(cInode->path, data));
+}
+
 static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, struct FuseData *data)
 {
     int filePageSize = static_cast<int32_t>(cInode->mBase->size / MAX_READ_SIZE + 1);
@@ -1136,8 +1169,13 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         return;
     }
     std::unique_lock<ffrt::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d, fileType: %{public}d", pid,
-         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load(), cInode->mBase->fileType);
+    bool needKeep = false;
+#ifndef SUPPORT_WATCH_LITE
+    needKeep = (cInode->mBase->fileType == FILE_TYPE_CONTENT) && NeedKeepCache(cInode, data);
+#endif
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d, fileType: %{public}d, needKeep: %{public}d",
+         pid, GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load(),
+         cInode->mBase->fileType, static_cast<int>(needKeep));
     wSesLock.lock();
     cInode->sessionRefCount--;
     auto cloudFdInfo = FindKeyInCloudFdCache(data, fi->fh);
@@ -1146,10 +1184,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     if (cInode->sessionRefCount == 0) {
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
             cInode->readSession->CancelSession();
-            bool needClose = false;
-#ifndef SUPPORT_WATCH_LITE
-            needClose = IsVideoType(cInode->mBase->name);
-#endif
+            bool needClose = needKeep;
 
             bool closeResult = cInode->readSession->Close(needClose);
             if (!closeResult) {
@@ -1199,7 +1234,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
 static bool IsPageCached(shared_ptr<CloudInode> cInode, uint64_t pageIndex)
 {
 #ifndef SUPPORT_WATCH_LITE
-    if (!IsVideoType(cInode->mBase->name)) {
+    if (!cInode->cacheFileIndex) {
         return false;
     }
     return cInode->cacheFileIndex.get()[pageIndex] == HAS_CACHED;
@@ -1343,6 +1378,66 @@ static void SaveAppId(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
     fuse_reply_ioctl(req, 0, NULL, 0);
 }
 
+/* Keep-cache levels (ioctl payload). >0 retains the VID_ cache at release; the specific level is
+   a tier label for future TTL policy. Only 0 -> >0 writes the xattr; once set (>0) the value is
+   immutable (later ioctls return ok without changing it). */
+enum KeepCacheLevel {
+    KEEP_CACHE_NONE = 0,
+    KEEP_CACHE_READ = 1,       /* READ_CACHE */
+    KEEP_CACHE_VIDEO_10 = 2,  /* VIDEO_CACHE_10 */
+    KEEP_CACHE_VIDEO_50 = 3,  /* VIDEO_CACHE_50 */
+    KEEP_CACHE_VIDEO_100 = 4, /* VIDEO_CACHE_100 */
+};
+
+/* HMDFS_IOC_SET_KEEP_CACHE: persist the keep-cache level to the cache-file xattr (user.cloud
+   .keepcache). Only the first set (0 -> >0) writes; afterwards the xattr is immutable. Only VID_
+   files are handled — the cache file itself is created at open by LoadCacheFileIndex, never here. */
+static void SetKeepCache(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, const void *inBuf)
+{
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode || !cInode->readSession || !cInode->mBase) {
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
+        return;
+    }
+
+    const int32_t *val = reinterpret_cast<const int32_t *>(inBuf);
+    if (!val || *val < KEEP_CACHE_NONE || *val > KEEP_CACHE_VIDEO_100) {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    int32_t value = *val;
+
+    /* only VID_ files keep a persistent cache; others return ok untouched (no file, no xattr) */
+    if (!IsVideoType(cInode->mBase->name)) {
+        fuse_reply_ioctl(req, 0, NULL, 0);
+        return;
+    }
+
+    string cachePath = VideoCachePath(cInode->path, data);
+    if (cachePath.empty()) {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+
+    int32_t current = KEEP_CACHE_NONE;
+    getxattr(cachePath.c_str(), CLOUD_KEEP_CACHE_XATTR_NAME.c_str(), &current, sizeof(current));
+    /* once set (>0), the xattr is immutable: any further ioctl returns ok without changing it */
+    if (current > 0) {
+        fuse_reply_ioctl(req, 0, NULL, 0);
+        return;
+    }
+    /* current == 0: only 0 -> >0 actually writes; 0 -> 0 is a no-op */
+    if (value == KEEP_CACHE_NONE) {
+        fuse_reply_ioctl(req, 0, NULL, 0);
+        return;
+    }
+    SetKeepCacheXattr(cachePath, value);
+    fuse_reply_ioctl(req, 0, NULL, 0);
+}
+
 static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
                        unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
 {
@@ -1358,6 +1453,9 @@ static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struc
             break;
         case HMDFS_IOC_SAVE_APPID:
             SaveAppId(req, ino, fi, inBuf);
+            break;
+        case HMDFS_IOC_SET_KEEP_CACHE:
+            SetKeepCache(req, ino, fi, inBuf);
             break;
         default:
             fuse_reply_err(req, ENOTTY);
@@ -1482,7 +1580,7 @@ static void CloudReadOnCloudFile(pid_t pid,
             LOGI("Read cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
                 static_cast<long>(cacheIndex));
         }
-        if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
+        if (cInode->cacheFileIndex && *readArgs->readResult > 0) {
             cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
         }
         wSesLock.unlock();
@@ -1550,7 +1648,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
         LOGI("Preread cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
             static_cast<long>(cacheIndex));
     }
-    if (IsVideoType(cInode->mBase->name) && *readArgs->readResult == 0) {
+    if (cInode->cacheFileIndex && *readArgs->readResult == 0) {
             cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
     wSesLock.unlock();
@@ -1725,7 +1823,7 @@ static bool DoReadSlice(fuse_req_t req,
     }
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    if (IsVideoType(cInode->mBase->name) && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+    if (cInode->cacheFileIndex && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
         CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
         readStat.UpdateReadInfo(CACHE_SUM);
         LOGI("DoReadSlice from local: %{public}ld", static_cast<long>(cacheIndex));
@@ -1746,7 +1844,7 @@ static bool DoReadSlice(fuse_req_t req,
     }
 
     std::string cachePath;
-    if (IsVideoType(cInode->mBase->name)) {
+    if (cInode->cacheFileIndex) {
         cachePath = VideoCachePath(cInode->path, data);
     } else {
         cachePath = GetAssetPath(cInode, data);
@@ -1769,7 +1867,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
     }
     // no prefetch when contains O_NOFOLLOW
     unsigned int unflags = static_cast<unsigned int>(flags);
-    if ((unflags & O_NOFOLLOW) || !IsVideoType(params.cInode->mBase->name)) {
+    if ((unflags & O_NOFOLLOW) || !params.cInode->cacheFileIndex) {
         return true;
     }
 
@@ -1821,9 +1919,9 @@ static bool DoCloudReadForWatch(fuse_req_t req, shared_ptr<CloudInode> cInode,
     }
 
     std::string cachePath;
-    if (IsVideoType(cInode->mBase->name)) {
+    if (cInode->cacheFileIndex) {
         cachePath = VideoCachePath(cInode->path, data);
-        LOGI("IsVideoType cachePath: %{public}s", cachePath.c_str());
+        LOGI("keep-cache cachePath: %{public}s", cachePath.c_str());
     } else {
         cachePath = GetAssetPath(cInode, data);
     }
