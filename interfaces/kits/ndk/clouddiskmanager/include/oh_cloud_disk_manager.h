@@ -557,6 +557,19 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
  */
 CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(const CloudDisk_SyncFolderPath syncFolderPath,
     const CloudDisk_PathInfo relativePathInfo);
+
+/**
+ * @brief Updates file metadata (supports placeholder and normal files).
+ *
+ * @param syncFolderPath Sync folder path information.
+ * @param relativePathInfo File path information.
+ * @param placeholderInfo Metadata information.
+ * @return Returns {@link CLOUD_DISK_OK} if successful.
+ * @since 21
+ */
+CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
+    const CloudDisk_PathInfo relativePathInfo, const CloudDisk_PlaceholderInfo placeholderInfo);
+
 #ifdef __cplusplus
 };
 #endif

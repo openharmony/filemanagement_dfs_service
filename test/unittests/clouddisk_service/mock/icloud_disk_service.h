@@ -97,6 +97,8 @@ public:
         const std::string& path) = 0;
 
     virtual ErrCode ConvertPlaceholderToFileInner(const std::string& syncFolder, const std::string& path) = 0;
+    virtual ErrCode UpdatePlaceholderInner(const std::string& syncFolder, const std::string& relativePath,
+        const PlaceholderInfo& metaData) = 0;
 
 protected:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0xD003900, "CloudDiskService"};

@@ -457,6 +457,120 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_ErrorCode_003, TestSiz
     GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_ErrorCode_003 end";
 }
 
+/**
+ * @tc.name: UpdatePlaceholder_InvalidPath_001
+ * @tc.desc: Verify OH_CloudDisk_UpdatePlaceholder with invalid path
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_InvalidPath_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_InvalidPath_001 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = nullptr;
+        syncFolderPath.length = 10;
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        CloudDisk_PlaceholderInfo metaData;
+        metaData.logicalSize = 1024;
+        metaData.mtimeMs = 1234567890;
+        metaData.atimeMs = 1234567890;
+
+        CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = 0;
+        ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholder_InvalidPath_001 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_InvalidPath_001 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholder_Test_002
+ * @tc.desc: Verify OH_CloudDisk_UpdatePlaceholder success scenario
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_002 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = strlen(syncFolderPath.value);
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        CloudDisk_PlaceholderInfo metaData;
+        metaData.logicalSize = 1024;
+        metaData.mtimeMs = 1234567890;
+        metaData.atimeMs = 1234567890;
+
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _)).WillOnce(
+            Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
+        CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_002 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_002 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholder_Test_003
+ * @tc.desc: Verify OH_CloudDisk_UpdatePlaceholder permission denied scenario
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_003 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath;
+        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.length = strlen(syncFolderPath.value);
+
+        CloudDisk_PathInfo pathInfo;
+        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.length = strlen(pathInfo.value);
+
+        CloudDisk_PlaceholderInfo metaData;
+        metaData.logicalSize = 1024;
+        metaData.mtimeMs = 1234567890;
+        metaData.atimeMs = 1234567890;
+
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _)).WillOnce(
+            Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED));
+        CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_003 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_003 end";
+}
+
+
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
 } // namespace OHOS

@@ -40,6 +40,7 @@
 #include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "utils_log.h"
+#include "clouddiskservice_ioctl.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -1039,35 +1040,72 @@ static int32_t GetHmdfsPath(const std::string &syncFolder, const std::string &re
     return E_OK;
 }
 
+static int32_t CheckPathNotDir(const std::string &hmdfsPath)
+{
+    struct stat st;
+    int32_t ret = E_OK;
+    if (stat(hmdfsPath.c_str(), &st) < 0) {
+        ret = errno;
+        LOGE("stat failed, errno:%{public}d", ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        ret = E_INVALID_ARG;
+        LOGE("Not support dir, errno:%{public}d", ret);
+    }
+    return ret;
+}
+
+static int32_t CheckPlaceHolderXattr(int32_t fd, const std::string &hmdfsPath)
+{
+    int32_t ret;
+    char xattrValue = '0';
+    if (fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(char)) < 0) {
+        ret = errno;
+        LOGE("fgetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        return (ret == ENODATA) ? E_NOT_A_PLACEHOLDER : ConvertErrnoToCloudDiskError(ret);
+    }
+
+    if (xattrValue == '0') {
+        LOGE("not a placeholder, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+        return E_NOT_A_PLACEHOLDER;
+    }
+
+    if (xattrValue == '2') {
+        LOGE("file hydrate in progress, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+        return E_HYDRATE_IN_PROGRESS;
+    }
+    return E_OK;
+}
+
 static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath)
 {
     int32_t ret = 0;
-    char xattrValue = '0';
     int fd = -1;
+
+    if ((ret = CheckPathNotDir(hmdfsPath)) != E_OK) {
+        LOGE("check dir failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        return ret;
+    }
 
     do {
         fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
         if (fd < 0) {
             ret = errno;
             LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
             break;
         }
 
-        if (fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(uint8_t)) < 0) {
-            ret = errno;
-            LOGE("fgetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-            break;
-        }
-
-        if (xattrValue == '0') {
-            LOGE("not a placeholder, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
-            ret = EINVAL;
+        if ((ret = CheckPlaceHolderXattr(fd, hmdfsPath)) != E_OK) {
             break;
         }
 
         if (ftruncate(fd, 0) < 0) {
             ret = errno;
             LOGE("ftruncate failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
             break;
         }
 
@@ -1075,6 +1113,7 @@ static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath)
         if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue), 0) < 0) {
             ret = errno;
             LOGE("fsetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
             break;
         }
     } while (0);
@@ -1124,13 +1163,86 @@ int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncF
     ret = ConvertPlaceholderToEmptyFile(hmdfsPath);
     if (ret != 0) {
         LOGE("Convert failed, ret:%{public}d", ret);
-        if (ret == EINVAL) {
-            return E_NOT_A_PLACEHOLDER;
-        }
-        return GetErrorNum(ret);
+        return ret;
     }
 
     LOGI("Convert success");
+    return E_OK;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, uint64_t logicalSize, uint64_t atimeMs,
+    uint64_t mtimeMs)
+{
+    int32_t ret = E_OK;
+
+    if ((ret = CheckPathNotDir(hmdfsPath)) != E_OK) {
+        LOGE("check dir failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        return ret;
+    }
+
+    int32_t fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+    if (fd < 0) {
+        ret = errno;
+        LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    struct HmdfsPlaceholderAttr attr = {logicalSize, atimeMs, mtimeMs};
+    if (ioctl(fd, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, &attr) < 0) {
+        ret = errno;
+        LOGE("ioctl updata attr failed, path:%{public}s, errno:%{public}d",
+            GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        ret = ConvertErrnoToCloudDiskError(ret);
+    }
+    close(fd);
+    return ret;
+}
+
+int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, const std::string &relativePath,
+    const PlaceholderInfo &metaData)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("Begin UpdatePlaceholderInner");
+
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("Invalid parameter");
+        return E_INVALID_ARG;
+    }
+
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(userId);
+    }
+    std::string bundleName;
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
+     // 步骤1：权限校验
+    ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("CheckSyncFolderAccess failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    // 步骤2：获取hmdfs路径
+    std::string hmdfsPath;
+    ret = GetHmdfsPath(syncFolder, relativePath, userId, hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    ret = UpdatePlaceholderAttr(hmdfsPath, metaData.logicalSize, metaData.atimeMs, metaData.mtimeMs);
+    if (ret != 0) {
+        LOGE("Update failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    LOGI("Update success");
     return E_OK;
 #else
     return E_NOT_SUPPORTED;

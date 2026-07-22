@@ -31,7 +31,7 @@ struct HmdfsPlaceholderAttr {
 };
 
 #define HMDFS_IOC_CREATE_PLACEHOLDER _IOW(HMDFS_CLOUD_DISK_SERVICE_IOC, 0x0d, struct HmdfsPlaceholderAttr)
-
+#define HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR _IOW(HMDFS_CLOUD_DISK_SERVICE_IOC, 0x0f, struct HmdfsPlaceholderAttr)
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS

@@ -66,6 +66,8 @@ public:
 
     int32_t UnregisterForSaInner(const std::string &path) override;
     ErrCode ConvertPlaceholderToFileInner(const std::string &syncFolder, const std::string &relativePath) override;
+    ErrCode UpdatePlaceholderInner(const std::string &syncFolder, const std::string &relativePath,
+        const PlaceholderInfo &metaData) override;
     void UnloadSa();
 
 private:

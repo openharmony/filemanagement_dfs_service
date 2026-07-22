@@ -550,3 +550,38 @@ CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(
     return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
 #endif
 }
+
+CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(
+    const CloudDisk_SyncFolderPath syncFolderPath,
+    const CloudDisk_PathInfo relativePathInfo,
+    const CloudDisk_PlaceholderInfo placeholderInfo)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
+        LOGE("Invalid argument, syncFolder path is invalid");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    if (!IsValidPathInfo(relativePathInfo.value, relativePathInfo.length)) {
+        LOGE("Invalid argument, relativePathInfo is invalid");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    string syncFolder(syncFolderPath.value, syncFolderPath.length);
+    string relativePath(relativePathInfo.value, relativePathInfo.length);
+    OHOS::FileManagement::CloudDiskService::PlaceholderInfo metaData;
+    metaData.logicalSize = placeholderInfo.logicalSize;
+    metaData.mtimeMs = placeholderInfo.mtimeMs;
+    metaData.atimeMs = placeholderInfo.atimeMs;
+
+    int32_t ret = OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager::GetInstance()
+        .UpdatePlaceholder(syncFolder, relativePath, metaData);
+    if (ret != OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK) {
+        LOGE("Update placeholder to file failed, ret: %{public}d", ret);
+        return ConvertToErrorCode(ret);
+    }
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
+}
