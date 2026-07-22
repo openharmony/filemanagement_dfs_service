@@ -151,6 +151,11 @@ void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
         .devsl = devsl,
     };
 
+    if (cid.size() > CID_MAX_LEN) {
+        LOGE("cid too long, cid:%{public}s, length:%{public}zu", Utils::GetAnonyString(cid).c_str(), cid.size());
+        return;
+    }
+
     if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), cid.size())) {
         return;
     }
