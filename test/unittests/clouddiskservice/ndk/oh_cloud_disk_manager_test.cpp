@@ -481,12 +481,20 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_InvalidPath_001, TestSize.Lev
         metaData.atimeMs = 1234567890;
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
 
         syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = 0;
         ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
+#else
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UpdatePlaceholder_InvalidPath_001 failed";
