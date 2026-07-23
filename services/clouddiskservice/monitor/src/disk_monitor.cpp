@@ -30,7 +30,8 @@ namespace {
 constexpr uint32_t INIT_FLAGS = FAN_CLASS_NOTIF | FAN_REPORT_DFID_NAME | FAN_UNLIMITED_QUEUE;
 constexpr uint32_t INIT_EVENT_FLAGS = O_RDONLY | O_LARGEFILE;
 constexpr uint32_t MARK_FLAGS = FAN_MARK_ADD | FAN_MARK_FILESYSTEM;
-constexpr uint64_t MARK_MASK = FAN_CREATE | FAN_DELETE | FAN_MOVED_FROM | FAN_MOVED_TO | FAN_ONDIR | FAN_CLOSE_WRITE;
+constexpr uint64_t MARK_MASK = FAN_CREATE | FAN_DELETE | FAN_MOVED_FROM | FAN_MOVED_TO | FAN_ONDIR | FAN_CLOSE_WRITE
+    | FAN_MODIFY;
 constexpr int32_t INVALID_SYNC_FOLDER = 0;
 constexpr uint32_t EVENTS_BUF_SIZE = 4096;
 const string MOUNT_PATH = "/data/service";
@@ -71,6 +72,7 @@ void DiskMonitor::StopMonitor()
     isRunning_ = false;
     syncFolderPrefix_.clear();
     blockList_.clear();
+    modifiedFiles_.clear();
     // clean fd
     DiskUtils::CloseFd(fanotifyFd_);
     DiskUtils::CloseDir(mountFp_);
@@ -179,6 +181,8 @@ void DiskMonitor::EventProcess(struct fanotify_event_metadata *metaData, const s
         HandleMoveTo(filePath);
     } else if (metaData->mask & FAN_CLOSE_WRITE) {
         HandleCloseWrite(filePath);
+    } else if (metaData->mask & FAN_MODIFY) {
+        HandleModify(filePath);
     }
 }
 
@@ -273,12 +277,47 @@ void DiskMonitor::HandleMoveTo(const string &filePath)
     }
 }
 
+ino_t DiskMonitor::GetFileInode(const string &filePath)
+{
+    struct stat st;
+    if (stat(filePath.c_str(), &st) != 0) {
+        LOGE("stat failed for %{public}d, path: %{public}s", errno, filePath.c_str());
+        return 0;
+    }
+    return st.st_ino;
+}
+
+void DiskMonitor::HandleModify(const string &filePath)
+{
+    auto [syncFolderIndex, _] = GetSyncFolderIndex(filePath);
+    if (syncFolderIndex == INVALID_SYNC_FOLDER) {
+        return;
+    }
+    ino_t inode = GetFileInode(filePath);
+    if (inode == 0) {
+        return;
+    }
+    modifiedFiles_.insert(inode);
+}
+
 void DiskMonitor::HandleCloseWrite(const string &filePath)
 {
     auto [syncFolderIndex, _] = GetSyncFolderIndex(filePath);
     if (syncFolderIndex == INVALID_SYNC_FOLDER) {
         return;
     }
+    ino_t inode = GetFileInode(filePath);
+    if (inode == 0) {
+        return;
+    }
+    
+    bool isModified = modifiedFiles_.find(inode) != modifiedFiles_.end();
+    if (isModified) {
+        modifiedFiles_.erase(inode);
+        auto modifyEventInfo = EventInfo(userId_, syncFolderIndex, OperationType::CLOSE_MODIFY, filePath);
+        PostEvent(modifyEventInfo);
+    }
+    
     auto eventInfo = EventInfo(userId_, syncFolderIndex, OperationType::CLOSE_WRITE, filePath);
     PostEvent(eventInfo);
 }

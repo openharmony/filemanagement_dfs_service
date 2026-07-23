@@ -297,7 +297,6 @@ ohos_unittest("disk_monitor_test") {
   sources = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/monitor/mock_monitor/disk_utils_mock.cpp",
-    "${services_path}/clouddiskservice/monitor/src/disk_monitor.cpp",
     "${utils_path}/log/src/utils_log.cpp",
     "monitor/disk_monitor_test.cpp",
   ]
@@ -307,6 +306,7 @@ ohos_unittest("disk_monitor_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/monitor/mock_monitor",
     "${distributedfile_path}/utils/dentry/include",
     "${services_path}/clouddiskservice/monitor/include",
+    "${services_path}/clouddiskservice/monitor/src",
     "${utils_path}/log/include",
   ]
 

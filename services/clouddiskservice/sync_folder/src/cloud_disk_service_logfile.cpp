@@ -210,6 +210,10 @@ int32_t CloudDiskServiceLogFile::OnDataChange()
         if (changeDatas_.empty()) {
             return E_OK;
         }
+        if (hasUnpairedCloseModify_) {
+            LOGD("Has unpaired CLOSE_MODIFY, skip this callback to wait for CLOSE_WRITE");
+            return E_OK;
+        }
         changeDatas_.swap(tmpDatas);
     }
     syncFolderIndex = syncFolderIndex_;
@@ -300,9 +304,24 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
     }
 
     changeData.timeStamp = eventInfo.timestamp;
-    changeDatas_.push_back(changeData);
     LOGD("Generate changedata line:%{public}llu, operationType:%{public}d, size:%{public}zu", line,
         static_cast<uint8_t>(changeData.operationType), changeDatas_.size());
+    
+    if (eventInfo.operateType == OperationType::CLOSE_MODIFY) {
+        if (changeDatas_.size() == MAX_CHANGEDATAS_SIZE - 1) {
+            CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
+            changeDatas_.clear();
+        }
+        changeDatas_.push_back(changeData);
+        hasUnpairedCloseModify_ = true;
+        return E_OK;
+    }
+    
+    if (eventInfo.operateType == OperationType::CLOSE_WRITE && hasUnpairedCloseModify_) {
+        hasUnpairedCloseModify_ = false;
+    }
+
+    changeDatas_.push_back(changeData);
     if (changeDatas_.size() >= MAX_CHANGEDATAS_SIZE) {
         CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
         changeDatas_.clear();
@@ -453,6 +472,8 @@ int32_t CloudDiskServiceLogFile::ProductLogForOperate(const std::shared_ptr<Clou
             return ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         case OperationType::CLOSE_WRITE:
             return ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
+        case OperationType::CLOSE_MODIFY:
+            return ProduceCloseModifyLog(parentMetaFile, path, name, ctx);
         case OperationType::SYNC_FOLDER_INVALID:
         case OperationType::OPERATION_MAX:
             return EINVAL;
@@ -558,6 +579,29 @@ int32_t CloudDiskServiceLogFile::ProduceCloseAndWriteLog(const std::shared_ptr<C
                                                          struct LogGenerateCtx &ctx)
 {
     LOGD("Begin ProduceCloseAndWriteLog");
+    MetaBase mBase(name);
+    struct stat childStat;
+    if (stat((path + "/" + name).c_str(), &childStat) != 0) {
+        LOGE("stat child failed for %{public}d", errno);
+        return errno;
+    }
+    mBase.mode = childStat.st_mode;
+    mBase.atime = static_cast<uint64_t>(childStat.st_atime);
+    mBase.mtime = static_cast<uint64_t>(childStat.st_mtime);
+    mBase.size = static_cast<uint64_t>(childStat.st_size);
+    auto ret = parentMetaFile->DoUpdate(mBase, ctx.recordId, ctx.bidx, ctx.bitPos);
+    if (ret != 0) {
+        LOGE("update failed");
+        return -1;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskServiceLogFile::ProduceCloseModifyLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                                                       const std::string &path, const std::string &name,
+                                                       struct LogGenerateCtx &ctx)
+{
+    LOGD("Begin ProduceCloseModifyLog");
     MetaBase mBase(name);
     struct stat childStat;
     if (stat((path + "/" + name).c_str(), &childStat) != 0) {

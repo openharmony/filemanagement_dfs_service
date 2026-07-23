@@ -20,6 +20,10 @@
 #include "assistant.h"
 #include "cloud_disk_sync_folder.h"
 
+#define stat(path, buf) OHOS::FileManagement::CloudDiskService::Assistant::ins->MockStat(path, buf)
+#include "disk_monitor.cpp"
+#undef stat
+
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -128,18 +132,23 @@ HWTEST_F(DiskMonitorTest, StartMonitorTest002, TestSize.Level1)
 
 /**
  * @tc.name: StopMonitorTest001
- * @tc.desc: Verify StopMonitor function
+ * @tc.desc: Verify StopMonitor function clears all state including modifiedFiles_
  * @tc.type: FUNC
  */
 HWTEST_F(DiskMonitorTest, StopMonitorTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopMonitorTest001 Begin";
     try {
+        DiskMonitor::GetInstance().modifiedFiles_.insert(123);
+        DiskMonitor::GetInstance().modifiedFiles_.insert(456);
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 2);
+        
         DiskMonitor::GetInstance().StopMonitor();
         EXPECT_EQ(DiskMonitor::GetInstance().userId_, -1);
         EXPECT_EQ(DiskMonitor::GetInstance().isRunning_, false);
         EXPECT_TRUE(DiskMonitor::GetInstance().syncFolderPrefix_.empty());
         EXPECT_TRUE(DiskMonitor::GetInstance().blockList_.empty());
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopMonitorTest001 Error";
@@ -454,6 +463,9 @@ HWTEST_F(DiskMonitorTest, HandleCreateTest002, TestSize.Level1)
         DiskMonitor::GetInstance().blockList_ = {"b", "c"};
         CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
         CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        struct stat st {};
+        st.st_ino = 456;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         DiskMonitor::GetInstance().HandleCreate(path);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -655,16 +667,18 @@ HWTEST_F(DiskMonitorTest, HandleMoveToTest005, TestSize.Level1)
 
 /**
  * @tc.name: HandleCloseWriteTest001
- * @tc.desc: Verify HandleCloseWrite function
+ * @tc.desc: Verify HandleCloseWrite function does nothing when path is not in sync folder
  * @tc.type: FUNC
  */
 HWTEST_F(DiskMonitorTest, HandleCloseWriteTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleCloseWriteTest001 Begin";
     try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
         DiskMonitor::GetInstance().syncFolderPrefix_ = "b";
         string path = "abc";
         DiskMonitor::GetInstance().HandleCloseWrite(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleCloseWriteTest001 Error";
@@ -674,24 +688,134 @@ HWTEST_F(DiskMonitorTest, HandleCloseWriteTest001, TestSize.Level1)
 
 /**
  * @tc.name: HandleCloseWriteTest002
- * @tc.desc: Verify HandleCloseWrite function
+ * @tc.desc: Verify HandleCloseWrite function sends CLOSE_WRITE event when file is not modified
  * @tc.type: FUNC
  */
 HWTEST_F(DiskMonitorTest, HandleCloseWriteTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleCloseWriteTest002 Begin";
     try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
         DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
         string path = "abc";
         DiskMonitor::GetInstance().blockList_ = {"b", "c"};
         CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
         CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st {};
+        st.st_ino = 999;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        
         DiskMonitor::GetInstance().HandleCloseWrite(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleCloseWriteTest002 Error";
     }
     GTEST_LOG_(INFO) << "HandleCloseWriteTest002 End";
+}
+
+/**
+ * @tc.name: HandleCloseWriteTest003
+ * @tc.desc: Verify HandleCloseWrite sends CLOSE_MODIFY and CLOSE_WRITE events when file is modified
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleCloseWriteTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest003 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        string path = "abc";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st {};
+        st.st_ino = 888;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).Times(2).WillRepeatedly(DoAll(SetArgPointee<1>(st), Return(0)));
+        
+        DiskMonitor::GetInstance().HandleModify(path);
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 1);
+        
+        DiskMonitor::GetInstance().HandleCloseWrite(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloseWriteTest003 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest003 End";
+}
+
+/**
+ * @tc.name: HandleCloseWriteTest004
+ * @tc.desc: Verify HandleCloseWrite function does nothing when stat fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleCloseWriteTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest004 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        string path = "abc";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(-1));
+        
+        DiskMonitor::GetInstance().HandleCloseWrite(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloseWriteTest004 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest004 End";
+}
+
+/**
+ * @tc.name: HandleCloseWriteTest005
+ * @tc.desc: Verify HandleCloseWrite function only removes specific inode from modifiedFiles_
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleCloseWriteTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest005 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st1 {};
+        st1.st_ino = 111;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st1), Return(0)));
+        DiskMonitor::GetInstance().HandleModify("abc");
+        
+        struct stat st2 {};
+        st2.st_ino = 222;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st2), Return(0)));
+        DiskMonitor::GetInstance().HandleModify("abc");
+        
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 2);
+        
+        struct stat st3 {};
+        st3.st_ino = 111;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st3), Return(0)));
+        DiskMonitor::GetInstance().HandleCloseWrite("abc");
+        
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 1);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(222) !=
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(111) ==
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCloseWriteTest005 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleCloseWriteTest005 End";
 }
 
 /**
@@ -952,4 +1076,218 @@ HWTEST_F(DiskMonitorTest, CollectEventsTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CollectEventsTest002 End";
 }
+
+/**
+ * @tc.name: HandleModifyTest001
+ * @tc.desc: Verify HandleModify function does not add file when path is not in sync folder
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleModifyTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleModifyTest001 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "b";
+        string path = "abc";
+        DiskMonitor::GetInstance().HandleModify(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleModifyTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleModifyTest001 End";
+}
+
+/**
+ * @tc.name: HandleModifyTest002
+ * @tc.desc: Verify HandleModify function adds inode to modifiedFiles_ when file is in sync folder
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleModifyTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleModifyTest002 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        string path = "abc";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st {};
+        st.st_ino = 789;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        
+        DiskMonitor::GetInstance().HandleModify(path);
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 1);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(789) !=
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleModifyTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleModifyTest002 End";
+}
+
+/**
+ * @tc.name: HandleModifyTest003
+ * @tc.desc: Verify HandleModify function does not add inode when stat fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleModifyTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleModifyTest003 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        string path = "abc";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(-1));
+        
+        DiskMonitor::GetInstance().HandleModify(path);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleModifyTest003 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleModifyTest003 End";
+}
+
+/**
+ * @tc.name: HandleModifyTest004
+ * @tc.desc: Verify HandleModify function can add multiple files to modifiedFiles_
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleModifyTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleModifyTest004 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st1 {};
+        st1.st_ino = 100;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st1), Return(0)));
+        DiskMonitor::GetInstance().HandleModify("abc");
+        
+        struct stat st2 {};
+        st2.st_ino = 200;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st2), Return(0)));
+        DiskMonitor::GetInstance().HandleModify("abc");
+        
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 2);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(100) !=
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(200) !=
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleModifyTest004 Error";
+    }
+GTEST_LOG_(INFO) << "HandleModifyTest004 End";
+}
+
+/**
+ * @tc.name: HandleModifyTest005
+ * @tc.desc: Verify HandleModify handles duplicate inode insertion (unordered_set deduplication)
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, HandleModifyTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleModifyTest005 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        DiskMonitor::GetInstance().syncFolderPrefix_ = "a";
+        DiskMonitor::GetInstance().blockList_ = {"b", "c"};
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.clear();
+        CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
+        
+        struct stat st {};
+        st.st_ino = 100;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).Times(3).WillRepeatedly(DoAll(SetArgPointee<1>(st), Return(0)));
+        
+        DiskMonitor::GetInstance().HandleModify("abc");
+        DiskMonitor::GetInstance().HandleModify("abc");
+        DiskMonitor::GetInstance().HandleModify("abc");
+        
+        EXPECT_EQ(DiskMonitor::GetInstance().modifiedFiles_.size(), 1);
+        EXPECT_TRUE(DiskMonitor::GetInstance().modifiedFiles_.find(100) !=
+            DiskMonitor::GetInstance().modifiedFiles_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleModifyTest005 Error";
+    }
+    GTEST_LOG_(INFO) << "HandleModifyTest005 End";
+}
+
+/**
+ * @tc.name: GetFileInodeTest001
+ * @tc.desc: Verify GetFileInode returns 0 when stat fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, GetFileInodeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileInodeTest001 Begin";
+    try {
+        string path = "/tmp/test_inode";
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(-1));
+        ino_t inode = DiskMonitor::GetInstance().GetFileInode(path);
+        EXPECT_EQ(inode, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileInodeTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "GetFileInodeTest001 End";
+}
+
+/**
+ * @tc.name: GetFileInodeTest002
+ * @tc.desc: Verify GetFileInode returns st_ino when stat succeeds
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, GetFileInodeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileInodeTest002 Begin";
+    try {
+        string path = "/tmp/test_inode";
+        struct stat st {};
+        st.st_ino = 123;
+        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
+        ino_t inode = DiskMonitor::GetInstance().GetFileInode(path);
+        EXPECT_EQ(inode, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetFileInodeTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "GetFileInodeTest002 End";
+}
+
+/**
+ * @tc.name: EventProcessTest008
+ * @tc.desc: Verify EventProcess function with FAN_MODIFY event
+ * @tc.type: FUNC
+ */
+HWTEST_F(DiskMonitorTest, EventProcessTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "EventProcessTest008 Begin";
+    try {
+        DiskMonitor::GetInstance().modifiedFiles_.clear();
+        fanotify_event_metadata metaData;
+        metaData.mask = FAN_MODIFY;
+        string filePath = "filePath";
+        DiskMonitor::GetInstance().EventProcess(&metaData, filePath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "EventProcessTest008 Error";
+    }
+    GTEST_LOG_(INFO) << "EventProcessTest008 End";
+}
+
+
 } // namespace OHOS::FileManagement::CloudDiskService::Test
