@@ -11,31 +11,110 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-module_output_path = "filemanagement/dfs_service"
+decompress_common_include_dirs = [
+  "${services_path}/cloudsyncservice/include",
+  "${innerkits_native_path}/decompress_kit_inner",
+  "${distributedfile_path}/frameworks/native/decompress_kit_inner/include",
+  "${distributedfile_path}/utils/decompress/include",
+  "${distributedfile_path}/utils/inner_api",
+  "${distributedfile_path}/utils/log/include",
+]
 
-ohos_unittest("DecompressConfigManagerTest") {
-  module_out_path = module_output_path
-  
+decompress_common_sources = [
+  "${services_path}/cloudsyncservice/src/decompress_config_manager.cpp",
+  "${services_path}/cloudsyncservice/src/decompress_update.cpp",
+  "${distributedfile_path}/frameworks/native/decompress_kit_inner/src/decompress_kit.cpp",
+]
+
+decompress_common_external_deps = [
+  "c_utils:utils",
+  "hilog:libhilog",
+]
+
+# Exposes DecompressConfigManager private members (e.g. sysConfigDir_) to the
+# test so the dual-path fallback can be driven deterministically against a
+# controlled directory, without adding a public setter to the production class.
+config("decompress_test_private_access") {
+  defines = [ "private=public" ]
+}
+
+ohos_unittest("decompress_config_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
   sources = [
     "decompress_config_manager_test.cpp",
-  ]
-  
-  configs = [
-    "//foundation/filemanagement/dfs_service:test_config",
-  ]
-  
+  ] + decompress_common_sources
+
+  include_dirs = decompress_common_include_dirs
+
+  configs = [ ":decompress_test_private_access" ]
+
   deps = [
-    "//foundation/filemanagement/dfs_service/services/cloudsyncservice:cloudsync_sa",
-    "//third_party/googletest:gtest_main",
-    "//third_party/json:nlohmann_json_static",
+    "${utils_path}:libdecompress",
   ]
-  
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
+
+  external_deps = decompress_common_external_deps + [
+    "googletest:gtest_main",
+    "json:nlohmann_json_static",
   ]
-  
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("decompress_kit_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "decompress_kit_test.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/decompress_kit_impl.cpp",
+    "${distributedfile_path}/frameworks/native/decompress_kit_inner/src/decompress_kit.cpp",
+  ]
+
+  include_dirs = [
+    "${innerkits_native_path}/decompress_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/frameworks/native/decompress_kit_inner/include",
+    "${distributedfile_path}/utils/decompress/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/log/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdecompress",
+  ]
+
+  external_deps = decompress_common_external_deps + [
+    "googletest:gtest_main",
+  ]
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("decompress_update_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "decompress_update_test.cpp",
+  ] + decompress_common_sources
+
+  include_dirs = decompress_common_include_dirs + [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+  ]
+
+  deps = [
+    "${utils_path}:libdecompress",
+  ]
+
+  external_deps = decompress_common_external_deps + [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "json:nlohmann_json_static",
+  ]
+
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
@@ -43,6 +122,8 @@ ohos_unittest("DecompressConfigManagerTest") {
 group("unittest") {
   testonly = true
   deps = [
-    ":DecompressConfigManagerTest",
+    ":decompress_config_manager_test",
+    ":decompress_kit_test",
+    ":decompress_update_manager_test",
   ]
 }

@@ -152,6 +152,7 @@ ohos_shared_library("cloudsync_sa") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/utils/system/src/account_utils.cpp",
     "src/decompress_config_manager.cpp",
+    "src/decompress_update.cpp",
     "src/ipc/account_status_listener.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
@@ -176,6 +177,7 @@ ohos_shared_library("cloudsync_sa") {
     ":cloud_sync_service_interface",
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
@@ -231,11 +233,6 @@ ohos_shared_library("cloudsync_sa") {
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
-  
-  deps += [
-    "${distributedfile_path}/services:decompress_unsupported_list",
-    "${distributedfile_path}/services:decompress_system_feature",
-  ]
 }
 
 ohos_static_library("cloudsync_sa_static") {
@@ -289,6 +286,7 @@ ohos_static_library("cloudsync_sa_static") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/utils/system/src/account_utils.cpp",
     "src/decompress_config_manager.cpp",
+    "src/decompress_update.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
@@ -312,6 +310,7 @@ ohos_static_library("cloudsync_sa_static") {
     ":cloud_sync_service_interface",
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]

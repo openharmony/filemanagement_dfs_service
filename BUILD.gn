@@ -63,6 +63,10 @@ group("clouddiskservice_kit_inner_target") {
     [ "interfaces/inner_api/native/clouddiskservice_kit_inner:clouddiskservice_kit_inner" ]
 }
 
+group("decompress_kit_inner_target") {
+  deps = [ "interfaces/inner_api/native/decompress_kit_inner:decompress_kit" ]
+}
+
 group("cloudsync_asset_kit_inner_target") {
   deps = [
     "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",

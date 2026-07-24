@@ -94,6 +94,7 @@
             "//foundation/filemanagement/dfs_service:cloud_file_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
             "//foundation/filemanagement/dfs_service:distributed_file_daemon_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:decompress_kit_inner_target",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/ani:ani_package",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync",
@@ -163,6 +164,15 @@
             "header": {
               "header_files": [],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/decompress_kit_inner:decompress_kit",
+            "header": {
+              "header_files": [
+                "decompress_kit.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/decompress_kit_inner"
             }
           },
           {
