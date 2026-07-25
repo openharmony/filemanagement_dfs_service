@@ -16,6 +16,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <cstdint>
+#include <future>
+#include <thread>
 #include <unistd.h>
 
 #include "dfs_error.h"
@@ -98,8 +100,10 @@ HWTEST_F(NetworkStatusTest, GetDefaultNetTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDefaultNetTest001 Start";
     EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_GET_NETWORK_MANAGER_FAILED));
     NetworkStatus netStatus;
-    int32_t ret = netStatus.GetDefaultNet();
+    NetworkStatus::NetConnStatus status = NetworkStatus::WIFI_CONNECT;
+    int32_t ret = netStatus.GetDefaultNet(status);
     EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
+    EXPECT_EQ(status, NetworkStatus::WIFI_CONNECT);
     GTEST_LOG_(INFO) << "GetDefaultNetTest001 End";
 }
 
@@ -114,8 +118,10 @@ HWTEST_F(NetworkStatusTest, GetDefaultNetTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDefaultNetTest002 Start";
     EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(NetManagerStandard::NETMANAGER_SUCCESS));
     NetworkStatus netStatus;
-    int32_t ret = netStatus.GetDefaultNet();
+    NetworkStatus::NetConnStatus status = NetworkStatus::WIFI_CONNECT;
+    int32_t ret = netStatus.GetDefaultNet(status);
     EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(status, NetworkStatus::NO_NETWORK);
     GTEST_LOG_(INFO) << "GetDefaultNetTest002 End";
 }
 
@@ -236,7 +242,6 @@ HWTEST_F(NetworkStatusTest, GetAndRegisterNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetAndRegisterNetworkTest Start";
     try {
-        EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_OK));
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         int32_t ret = NetworkStatus::GetAndRegisterNetwork(dataSyncManager);
         EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
@@ -257,7 +262,6 @@ HWTEST_F(NetworkStatusTest, InitNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkTest Start";
     try {
-        EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_OK)).WillRepeatedly(Return(E_OK));
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         NetworkStatus::InitNetwork(dataSyncManager);
         EXPECT_TRUE(true);
@@ -676,5 +680,140 @@ HWTEST_F(NetworkStatusTest, CheckWifiOrEthernetTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest FAILED";
     }
     GTEST_LOG_(INFO) << "CheckWifiOrEthernetTest End";
+}
+
+// Reset netStatus_ so each case below exercises DoInitialFetch afresh.
+static void ResetNetStatusForTest()
+{
+    NetworkStatus::netStatus_ = NetworkStatus::NETWORK_NOT_INIT;
+}
+
+/**
+ * @tc.name: DoInitialFetchFailTest
+ * @tc.desc: DoInitialFetch leaves netStatus_ NETWORK_NOT_INIT when GetDefaultNet fails
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, DoInitialFetchFailTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoInitialFetchFailTest Start";
+    ResetNetStatusForTest();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::NETWORK_NOT_INIT);
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_GET_NETWORK_MANAGER_FAILED));
+    NetworkStatus::DoInitialFetch();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::NETWORK_NOT_INIT);    // fetch failed, untouched
+    EXPECT_EQ(NetworkStatus::GetNetConnStatus(), NetworkStatus::NO_NETWORK);  // NOT_INIT maps to NO_NETWORK
+    GTEST_LOG_(INFO) << "DoInitialFetchFailTest End";
+}
+
+/**
+ * @tc.name: DoInitialFetchSuccessTest
+ * @tc.desc: DoInitialFetch goes through the fetch-success path
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, DoInitialFetchSuccessTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoInitialFetchSuccessTest Start";
+    ResetNetStatusForTest();
+    // Mock returns success but leaves netHandle default (netId 0 < MIN_VALID_NETID),
+    // so GetDefaultNet() records NO_NETWORK and returns E_OK -> initial log path.
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(NetManagerStandard::NETMANAGER_SUCCESS));
+    NetworkStatus::DoInitialFetch();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::NO_NETWORK);
+    GTEST_LOG_(INFO) << "DoInitialFetchSuccessTest End";
+}
+
+/**
+ * @tc.name: DoInitialFetchTimeoutTest
+ * @tc.desc: DoInitialFetch leaves netStatus_ NETWORK_NOT_INIT when the bounded wait times out
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, DoInitialFetchTimeoutTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoInitialFetchTimeoutTest Start";
+    ResetNetStatusForTest();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::NETWORK_NOT_INIT);
+    auto blocker = std::make_shared<std::promise<void>>();
+    std::shared_future<void> gate = blocker->get_future().share();
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_))
+        .WillOnce(InvokeWithoutArgs([gate]() { gate.wait(); return E_GET_NETWORK_MANAGER_FAILED; }));
+    NetworkStatus::DoInitialFetch();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::NETWORK_NOT_INIT);    // timed out, untouched
+    EXPECT_EQ(NetworkStatus::GetNetConnStatus(), NetworkStatus::NO_NETWORK);
+    blocker->set_value();
+    GTEST_LOG_(INFO) << "DoInitialFetchTimeoutTest End";
+}
+
+/**
+ * @tc.name: CallbackRecoversAfterFetchFailTest
+ * @tc.desc: A later wifi callback recovers the status after the fetch failed (issue scenario)
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CallbackRecoversAfterFetchFailTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CallbackRecoversAfterFetchFailTest Start";
+    ResetNetStatusForTest();
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_GET_NETWORK_MANAGER_FAILED));
+    NetworkStatus::DoInitialFetch();                                       // startup: SA not ready
+    NetManagerStandard::NetAllCapabilities netAllCap;
+    netAllCap.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+    netAllCap.bearerTypes_.insert(NetManagerStandard::BEARER_WIFI);
+    NetworkStatus::SetNetConnStatus(netAllCap);                            // wifi callback arrives
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::WIFI_CONNECT);     // recovered
+    EXPECT_EQ(NetworkStatus::GetNetConnStatus(), NetworkStatus::WIFI_CONNECT);
+    GTEST_LOG_(INFO) << "CallbackRecoversAfterFetchFailTest End";
+}
+
+/**
+ * @tc.name: DoInitialFetchSkippedWhenCallbackFirstTest
+ * @tc.desc: DoInitialFetch skips fetching when a callback already set netStatus_
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, DoInitialFetchSkippedWhenCallbackFirstTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoInitialFetchSkippedWhenCallbackFirstTest Start";
+    ResetNetStatusForTest();
+    NetworkStatus::SetNetConnStatus(NetworkStatus::WIFI_CONNECT);  // callback arrived first
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).Times(0);    // must not fetch
+    NetworkStatus::DoInitialFetch();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::WIFI_CONNECT);  // unchanged
+    GTEST_LOG_(INFO) << "DoInitialFetchSkippedWhenCallbackFirstTest End";
+}
+
+/**
+ * @tc.name: DoInitialFetchDoesNotOverwriteCallbackTest
+ * @tc.desc: A fetch result must not overwrite a callback value that arrived during the fetch
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, DoInitialFetchDoesNotOverwriteCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoInitialFetchDoesNotOverwriteCallbackTest Start";
+    ResetNetStatusForTest();
+    auto blocker = std::make_shared<std::promise<void>>();
+    std::shared_future<void> gate = blocker->get_future().share();
+    auto entered = std::make_shared<std::promise<void>>();
+    auto enteredFut = entered->get_future();
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_))
+        .WillOnce(InvokeWithoutArgs([gate, entered]() {
+            entered->set_value();
+            gate.wait();
+            return NetManagerStandard::NETMANAGER_SUCCESS;
+        }));
+    auto fetchDone = std::make_shared<std::promise<void>>();
+    std::thread([fetchDone]() {
+        NetworkStatus::DoInitialFetch();
+        fetchDone->set_value();
+    }).detach();
+    enteredFut.get();  // fetch is in flight: first check passed, callback can now win
+    NetworkStatus::SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+    blocker->set_value();
+    fetchDone->get_future().get();
+    EXPECT_EQ(NetworkStatus::netStatus_, NetworkStatus::WIFI_CONNECT);
+    GTEST_LOG_(INFO) << "DoInitialFetchDoesNotOverwriteCallbackTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

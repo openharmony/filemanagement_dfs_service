@@ -47,13 +47,6 @@ public:
         CELLULARCONNECT,
         NETCONNECT,
     };
-    enum NetConnStatus {
-        NO_NETWORK,
-        ETHERNET_CONNECT,
-        WIFI_CONNECT,
-        CELLULAR_CONNECT,
-        NETWORK_AVAIL,
-    };
     static void InitNetworkSetManager(const std::string &bundleName, const int32_t userId);
     static int32_t QueryCellularConnect(int32_t userId, const std::string &bundleName);
     static void RegisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type);
@@ -64,11 +57,9 @@ public:
     static bool GetConfigParams(const std::string &bundleName, const int32_t userId);
     static void InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void NetWorkChangeStopUploadTask();
-    static void SetNetConnStatus(NetConnStatus netStatus);
     static inline SafeMap<const std::string, bool> cellularNetMap_;
 private:
     static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
-    static inline NetConnStatus netStatus_{NO_NETWORK};
 };
 } // OHOS
 

@@ -83,6 +83,8 @@ HWTEST_F(NetConnCallbackObserverTest, NetAvailable, TestSize.Level1)
 HWTEST_F(NetConnCallbackObserverTest, NetCapabilitiesChangeTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NetCapabilitiesChangeTest001 Start";
+    // Pre-set status so first GetNetConnStatus skips lazy fetch (no real IPC), like 002-006.
+    NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::ETHERNET_CONNECT);
     sptr<NetManagerStandard::NetHandle> netHandle = sptr(new NetManagerStandard::NetHandle());
     sptr<NetManagerStandard::NetAllCapabilities> netAllCap = sptr(new NetManagerStandard::NetAllCapabilities());
     int32_t res = oberverPtr_->NetCapabilitiesChange(netHandle, netAllCap);
