@@ -145,6 +145,7 @@ ohos_unittest("cloud_disk_service_callback_manager_test_new") {
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/disk_monitor_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock/ffrt_timer_api_mock.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_syncfolder.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_logfile.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
@@ -306,13 +307,13 @@ ohos_unittest("disk_monitor_test_new") {
 
   external_deps = [
     "c_utils:utils",
-    "ffrt:libffrt",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
   defines = [
+    "read=MockRead",
     "private=public",
     "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskService\"",
@@ -544,17 +545,19 @@ ohos_unittest("cloud_disk_service_logfile_test_new") {
   sources = [
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/uuid_helper.cpp",
-    "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_service_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_service_metafile_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_service_access_token_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_sync_folder_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock/ffrt_timer_api_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
     "sync_folder/cloud_disk_service_logfile_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/sync_folder/src",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
@@ -579,7 +582,6 @@ ohos_unittest("cloud_disk_service_logfile_test_new") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "c_utils:utils",
-    "ffrt:libffrt",
     "json:nlohmann_json_static",
     "ipc:ipc_core",
   ]

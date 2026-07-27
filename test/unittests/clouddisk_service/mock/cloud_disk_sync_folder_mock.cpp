@@ -19,7 +19,6 @@
 namespace OHOS::FileManagement::CloudDiskService {
 #define E_OK 0
 using namespace std;
-const int32_t userIdIndex = 15;
 
 CloudDiskSyncFolder &CloudDiskSyncFolder::GetInstance()
 {

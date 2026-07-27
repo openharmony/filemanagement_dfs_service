@@ -24,8 +24,6 @@
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
 
-constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
-
 CloudDiskServiceCallbackManager &CloudDiskServiceCallbackManager::GetInstance()
 {
     static CloudDiskServiceCallbackManager instance;

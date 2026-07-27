@@ -465,7 +465,6 @@ HWTEST_F(DiskMonitorTest, HandleCreateTest002, TestSize.Level1)
         CloudDiskSyncFolder::GetInstance().syncFolderMap.insert({1, {"bundleName", "abc"}});
         struct stat st {};
         st.st_ino = 456;
-        EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(DoAll(SetArgPointee<1>(st), Return(0)));
         DiskMonitor::GetInstance().HandleCreate(path);
     } catch (...) {
         EXPECT_TRUE(false);

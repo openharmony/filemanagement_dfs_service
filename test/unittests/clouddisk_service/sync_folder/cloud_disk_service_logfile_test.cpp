@@ -1588,7 +1588,7 @@ HWTEST_F(LogFileMgrTest, GetInstanceTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest001 start";
     try {
-        LogFileMgr &instance1 = LogFileMgr::GetInstance();
+        LogFileMgr::GetInstance();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetInstanceTest001 failed";
@@ -1844,7 +1844,7 @@ HWTEST_F(LogFileMgrTest, PraseRequestTest002, TestSize.Level1)
                 group->nsl[0].parentInode = 1;
                 return static_cast<int64_t>(size);
             }));
-        int32_t ret = logFileMgr_->PraseRequest(userId, syncFolderIndex, start, count, changeResult);
+        logFileMgr_->PraseRequest(userId, syncFolderIndex, start, count, changeResult);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PraseRequestTest002 failed";
