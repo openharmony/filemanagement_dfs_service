@@ -80,15 +80,10 @@ std::string SettingsDataManager::GetUserSettingsDataUri(const std::string &key)
         key + USER_SUFFIX;
 }
 
-void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
+void SettingsDataManager::UpdateIsSupportUserSettingsData()
 {
     std::string value;
-    int32_t ret = E_OK;
-    if (isDemon) {
-        ret = QueryParamInUserSettingsData(SYNC_SWITCH_KEY, value);
-    } else {
-        ret = InitAndQuerySettingsData(SYNC_SWITCH_KEY, value, true);
-    }
+    int32_t ret = InitAndQuerySettingsData(SYNC_SWITCH_KEY, value, true);
     supportUserSettingsData_ = ret == E_OK;
     LOGI("supportUserSettingsData_: %{public}d", supportUserSettingsData_);
 }
@@ -140,11 +135,19 @@ void SettingsDataManager::ReregisterAllObservers(int32_t userId)
     RegisterObserver(LOCAL_SPACE_DAYS_KEY);
 }
 
+void SettingsDataManager::PreInit()
+{
+    std::call_once(initFlag_, []() {
+        LOGI("PreInit start");
+        UpdateCurrentUserId();
+        UpdateIsSupportUserSettingsData();
+    });
+}
+
 void SettingsDataManager::InitSettingsDataManager()
 {
     LOGI("InitSettingsDataManager");
-    UpdateCurrentUserId();
-    UpdateIsSupportUserSettingsData();
+    PreInit();
 
     RegisterObserver(SYNC_SWITCH_KEY);
     RegisterObserver(NETWORK_CONNECTION_KEY);
@@ -431,6 +434,8 @@ int32_t SettingsDataManager::QueryParamInUserSettingsData(const std::string &key
 
 int32_t SettingsDataManager::QueryParamInSettingsData(const std::string &key, std::string &value)
 {
+    PreInit();
+
     std::string queryKey = GetQueryKey(key);
     LOGI("Query key: %{public}s, currentUserId: %{public}d, supportUserSettingsData_: %{public}d",
         queryKey.c_str(), currentUserId_, supportUserSettingsData_);

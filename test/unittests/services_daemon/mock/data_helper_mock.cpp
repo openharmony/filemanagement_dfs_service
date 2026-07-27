@@ -43,7 +43,7 @@ std::string SettingsDataManager::GetSettingsDataCommonUri()
     return "";
 }
 
-void SettingsDataManager::UpdateIsSupportUserSettingsData(bool isDemon)
+void SettingsDataManager::UpdateIsSupportUserSettingsData()
 {
     return;
 }
