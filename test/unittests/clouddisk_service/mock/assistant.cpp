@@ -48,6 +48,11 @@ bool AssistantMock::IsMockable()
 extern "C" {
 using namespace OHOS::FileManagement::CloudDiskService;
 
+ssize_t MockRead(int fd, void *buf, size_t count)
+{
+    return 0;
+}
+
 int access(const char* path, int mode)
 {
     if (AssistantMock::IsMockable()) {
