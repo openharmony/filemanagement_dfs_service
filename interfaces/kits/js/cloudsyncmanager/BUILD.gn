@@ -55,7 +55,9 @@ ohos_shared_library("cloudsyncmanager") {
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
 
   defines = [

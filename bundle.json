@@ -64,6 +64,7 @@
           "json",
           "libuv",
           "napi",
+          "node",
           "preferences",
           "memmgr",
           "netmanager_base",
