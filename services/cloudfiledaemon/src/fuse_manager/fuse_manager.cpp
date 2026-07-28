@@ -228,6 +228,14 @@ struct CloudInode {
     }
 };
 
+static bool IsValidCacheIndex(shared_ptr<CloudInode> cInode, int64_t cacheIndex)
+{
+    if (!cInode || !cInode->mBase || cacheIndex < 0) {
+        return false;
+    }
+    return static_cast<uint64_t>(cacheIndex) <= cInode->mBase->size / MAX_READ_SIZE;
+}
+
 struct DoCloudReadParams {
     shared_ptr<CloudInode> cInode{nullptr};
     shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
@@ -1147,6 +1155,7 @@ static void SetCacheFileIndex(shared_ptr<CloudInode> cInode, struct FuseData *da
         string cachePath = VideoCachePath(cInode->path, data);
         if (cachePath == "") {
             LOGE("cloud release cache path failed");
+            return;
         }
         if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
             sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
@@ -1182,7 +1191,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     DeleteFdsan(cloudFdInfo);
     EraseCloudFdCache(data, fi->fh);
     if (cInode->sessionRefCount == 0) {
-        if (cInode->mBase->fileType == FILE_TYPE_CONTENT) {
+        if (cInode->mBase->fileType == FILE_TYPE_CONTENT && cInode->readSession) {
             cInode->readSession->CancelSession();
             bool needClose = needKeep;
 
@@ -1246,7 +1255,7 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    if (!cInode || !cInode->readSession) {
+    if (!cInode || !cInode->mBase || !cInode->readSession) {
         fuse_reply_err(req, ENOMEM);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
@@ -1580,7 +1589,7 @@ static void CloudReadOnCloudFile(pid_t pid,
             LOGI("Read cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
                 static_cast<long>(cacheIndex));
         }
-        if (cInode->cacheFileIndex && *readArgs->readResult > 0) {
+        if (cInode->cacheFileIndex && *readArgs->readResult > 0 && IsValidCacheIndex(cInode, cacheIndex)) {
             cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
         }
         wSesLock.unlock();
@@ -1599,7 +1608,9 @@ static void CloudReadOnCloudFileForWatch(pid_t pid,
     ExecuteCloudRead(readSession, readArgs, data);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
-    UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
+    if (cInode && cInode->mBase) {
+        UpdateReadStatInfo(readArgs->size, cInode->mBase->name, readTime, data->activeBundle);
+    }
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readStatus = READ_FINISHED;
@@ -1823,7 +1834,8 @@ static bool DoReadSlice(fuse_req_t req,
     }
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    if (cInode->cacheFileIndex && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+    if (cInode->cacheFileIndex && IsValidCacheIndex(cInode, cacheIndex) &&
+        cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
         CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
         readStat.UpdateReadInfo(CACHE_SUM);
         LOGI("DoReadSlice from local: %{public}ld", static_cast<long>(cacheIndex));
