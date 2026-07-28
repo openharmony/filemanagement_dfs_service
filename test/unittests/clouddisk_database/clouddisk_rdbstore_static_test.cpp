@@ -64,6 +64,7 @@ void CloudDiskRdbStoreStaticTest::TearDownTestCase(void)
 void CloudDiskRdbStoreStaticTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
+    Assistant::mockable = false;
     insMock = make_shared<AssistantMock>();
     Assistant::ins = insMock;
 }
@@ -71,6 +72,7 @@ void CloudDiskRdbStoreStaticTest::SetUp(void)
 void CloudDiskRdbStoreStaticTest::TearDown(void)
 {
     Assistant::ins = nullptr;
+    Assistant::mockable = false;
     insMock = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
@@ -3893,6 +3895,75 @@ HWTEST_F(CloudDiskRdbStoreStaticTest, GetMetaBaseDataTest015, TestSize.Level1)
         GTEST_LOG_(INFO) << "ExecuteSqlTest002 failed";
     }
     GTEST_LOG_(INFO) << "ExecuteSqlTest002 end";
+}
+
+/**
+ * @tc.name: RepairAclAndOwnershipTest001
+ * @tc.desc: Verify RepairAclAndOwnership with non-existent directory (iterator fails, ec != 0)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RepairAclAndOwnershipTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest001 start";
+    string nonExistentDir = "/data/test_repair_acl_nonexistent_001";
+    std::filesystem::remove_all(nonExistentDir);
+
+    insMock->EnableMock();
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(1);
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(2);
+
+    RepairAclAndOwnership(nonExistentDir);
+
+    insMock->DisableMock();
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest001 end";
+}
+
+/**
+ * @tc.name: RepairAclAndOwnershipTest002
+ * @tc.desc: Verify RepairAclAndOwnership with empty directory (iterator succeeds, loop empty)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RepairAclAndOwnershipTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest002 start";
+    string emptyDir = "/data/test_repair_acl_empty_002";
+    std::filesystem::remove_all(emptyDir);
+    std::filesystem::create_directories(emptyDir);
+
+    insMock->EnableMock();
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(1);
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(2);
+
+    RepairAclAndOwnership(emptyDir);
+
+    insMock->DisableMock();
+    std::filesystem::remove_all(emptyDir);
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest002 end";
+}
+
+/**
+ * @tc.name: RepairAclAndOwnershipTest003
+ * @tc.desc: Verify RepairAclAndOwnership with directory containing files (loop executes)
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreStaticTest, RepairAclAndOwnershipTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest003 start";
+    string testDir = "/data/test_repair_acl_files_003";
+    std::filesystem::remove_all(testDir);
+    std::filesystem::create_directories(testDir);
+    std::ofstream(testDir + "/file1.txt").put('a');
+    std::ofstream(testDir + "/file2.txt").put('b');
+
+    insMock->EnableMock();
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(3);
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(6);
+
+    RepairAclAndOwnership(testDir);
+
+    insMock->DisableMock();
+    std::filesystem::remove_all(testDir);
+    GTEST_LOG_(INFO) << "RepairAclAndOwnershipTest003 end";
 }
 
 } // namespace OHOS::FileManagement::CloudDisk::Test

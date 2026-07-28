@@ -17,8 +17,11 @@
 
 #include <cinttypes>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <sys/stat.h>
+#include <sys/xattr.h>
+#include <unistd.h>
 #include <sstream>
 #include <functional>
 
@@ -50,6 +53,12 @@ namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
 using namespace OHOS::NativeRdb;
 using namespace CloudSync;
+
+namespace {
+constexpr const char *ACL_XATTR_ACCESS = "system.posix_acl_access";
+constexpr const char *ACL_XATTR_DEFAULT = "system.posix_acl_default";
+constexpr uid_t OID_DFS = 1009;
+} // namespace
 
 enum XATTR_CODE {
     ERROR_CODE = -1,
@@ -130,6 +139,57 @@ int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
     return E_OK;
 }
 
+static void RepairAclAndOwnership(const string &dir)
+{
+    chown(dir.c_str(), OID_DFS, OID_DFS);
+    removexattr(dir.c_str(), ACL_XATTR_ACCESS);
+    removexattr(dir.c_str(), ACL_XATTR_DEFAULT);
+
+    error_code ec;
+    auto it = filesystem::recursive_directory_iterator(
+        dir, filesystem::directory_options::skip_permission_denied, ec);
+    if (ec) {
+        LOGE("RepairAclAndOwnership iterator failed, ec=%{public}d", ec.value());
+        return;
+    }
+    for (auto end = filesystem::recursive_directory_iterator(); it != end; it.increment(ec)) {
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+        string path = it->path().string();
+        chown(path.c_str(), OID_DFS, OID_DFS);
+        removexattr(path.c_str(), ACL_XATTR_ACCESS);
+        removexattr(path.c_str(), ACL_XATTR_DEFAULT);
+    }
+}
+
+bool CloudDiskRdbStore::TryOpenRdbStore(const string &customDir, const string &databasePath, int32_t &errCode)
+{
+    CloudDiskDataCallBack rdbDataCallBack;
+    rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
+    if (rdbStore_ != nullptr) {
+        return true;
+    }
+    LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
+         userId_, bundleName_.c_str(), errCode);
+    if (errCode == NativeRdb::E_SQLITE_CANTOPEN || errCode == NativeRdb::E_SQLITE_PERM) {
+        RepairAclAndOwnership(customDir);
+        LOGI("ACL repair done, retry GetRdbStore, userId_ = %{public}d, bundleName_ = %{public}s",
+             userId_, bundleName_.c_str());
+        rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
+    }
+    if (rdbStore_ != nullptr) {
+        return true;
+    }
+    if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+        if (ReBuildDatabase(databasePath)) {
+            LOGE("clouddisk db image is malformed, ReBuild failed");
+        }
+    }
+    return false;
+}
+
 int32_t CloudDiskRdbStore::RdbInit()
 {
     if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
@@ -163,16 +223,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
     config_.SetWalLimitSize(RDB_WAL_LIMIT_SIZE);
     errCode = 0;
-    CloudDiskDataCallBack rdbDataCallBack;
-    rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
-    if (rdbStore_ == nullptr) {
-        LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
-             userId_, bundleName_.c_str(), errCode);
-        if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
-            if (ReBuildDatabase(databasePath)) {
-                LOGE("clouddisk db image is malformed, ReBuild failed");
-            }
-        }
+    if (!TryOpenRdbStore(customDir, databasePath, errCode)) {
         return errCode;
     }
     

@@ -224,6 +224,8 @@ public:
     virtual std::string GetDefaultDatabasePath(const std::string &, const std::string &, int &) = 0;
     virtual int stat(const char* path, struct stat* buf) = 0;
     virtual int access(const char* path, int mode) = 0;
+    virtual int chown(const char* path, uid_t owner, gid_t group) = 0;
+    virtual int removexattr(const char* path, const char* name) = 0;
     static inline bool mockable = false;
 };
 
@@ -234,6 +236,8 @@ public:
     MOCK_METHOD3(GetDefaultDatabasePath, std::string(const std::string &, const std::string &, int &));
     MOCK_METHOD2(stat, int(const char*, struct stat*));
     MOCK_METHOD2(access, int(const char*, int));
+    MOCK_METHOD3(chown, int(const char*, uid_t, gid_t));
+    MOCK_METHOD2(removexattr, int(const char*, const char*));
 
 public:
     static void EnableMock();
