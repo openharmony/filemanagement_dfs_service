@@ -216,6 +216,33 @@ HWTEST_F(FuseManagerStaticTest, IsValidCachePathTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsValidCacheIndexTest001
+ * @tc.desc: Verify the IsValidCacheIndex function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, IsValidCacheIndexTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsValidCacheIndexTest001 Begin";
+    try {
+        EXPECT_FALSE(IsValidCacheIndex(nullptr, 0));
+
+        auto cInode = make_shared<CloudInode>();
+        EXPECT_FALSE(IsValidCacheIndex(cInode, 0));
+
+        cInode->mBase = make_shared<MetaBase>("test");
+        cInode->mBase->size = MAX_READ_SIZE;
+        EXPECT_FALSE(IsValidCacheIndex(cInode, -1));
+        EXPECT_TRUE(IsValidCacheIndex(cInode, 1));
+        EXPECT_FALSE(IsValidCacheIndex(cInode, 2));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsValidCacheIndexTest001 Error";
+    }
+    GTEST_LOG_(INFO) << "IsValidCacheIndexTest001 End";
+}
+
+/**
  * @tc.name: DoSessionInitTest001
  * @tc.desc: Verify the DoSessionInit function
  * @tc.type: FUNC
@@ -913,6 +940,8 @@ HWTEST_F(FuseManagerStaticTest, HasCache002, TestSize.Level1)
 
         FuseData data;
         shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 10;
         data.inodeCache.insert({100, cloudInode});
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
@@ -924,6 +953,35 @@ HWTEST_F(FuseManagerStaticTest, HasCache002, TestSize.Level1)
         GTEST_LOG_(INFO) << "HasCache002 Error";
     }
     GTEST_LOG_(INFO) << "HasCache002 End";
+}
+
+/**
+ * @tc.name: HasCache0012
+ * @tc.desc: cInode->mBase is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, HasCache0012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HasCache0012 Begin";
+    try {
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 100;
+        const void* inBuf = nullptr;
+
+        FuseData data;
+        shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
+        data.inodeCache.insert({100, cloudInode});
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        HasCache(req, ino, inBuf);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HasCache0012 Error";
+    }
+    GTEST_LOG_(INFO) << "HasCache0012 End";
 }
 
 /**
@@ -941,6 +999,8 @@ HWTEST_F(FuseManagerStaticTest, HasCache003, TestSize.Level1)
 
         FuseData data;
         shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 10;
         cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
         data.inodeCache.insert({100, cloudInode});
 
@@ -970,6 +1030,8 @@ HWTEST_F(FuseManagerStaticTest, HasCache004, TestSize.Level1)
 
         FuseData data;
         shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+        cloudInode->mBase = make_shared<MetaBase>("test");
+        cloudInode->mBase->size = 10;
         cloudInode->readSession = make_shared<CloudFile::CloudAssetReadSession>(100, "", "", "", "");
         data.inodeCache.insert({100, cloudInode});
 
@@ -1640,6 +1702,42 @@ HWTEST_F(FuseManagerStaticTest, DoReadSliceTest004, TestSize.Level1) {
 }
 
 /**
+ * @tc.name: DoReadSliceTest005
+ * @tc.desc: invalid cacheIndex -> DoReadSlice skips local cache read.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, DoReadSliceTest005, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 100;
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = MAX_READ_SIZE;
+    cInode->path = "/./DoReadSliceTest005";
+    size_t newSize = 3;
+    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+    for (size_t i = 0; i < newSize; ++i) {
+        cInode->cacheFileIndex[i] = NOT_CACHE;
+    }
+    cInode->cacheFileIndex[2] = HAS_CACHED;
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(128, "", 2 * MAX_READ_SIZE, 0);
+    bool needCheck = false;
+
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(1024));
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    bool result = DoReadSlice(req, cInode, readSessionMock, readArgs, needCheck);
+    ffrt::wait();
+    EXPECT_TRUE(result);
+    EXPECT_EQ(*readArgs->readResult, 1024);
+}
+
+/**
  * @tc.name: DoCloudReadTest001
  * @tc.desc: cacheFileIndex null -> DoCloudRead prefetch gate returns early, no prefetch.
  * @tc.type: FUNC
@@ -1714,6 +1812,28 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCacheFileTest001, TestSize.Level1) {
 }
 
 /**
+ * @tc.name: SetCacheFileIndexTest001
+ * @tc.desc: empty cachePath -> SetCacheFileIndex returns early.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, SetCacheFileIndexTest001, TestSize.Level1) {
+    FuseData data;
+    data.photoBundleName = "example_bundle_name";
+    data.userId = 1;
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = MAX_READ_SIZE;
+    cInode->path = "/./SetCacheFileIndexTest001";
+    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(2);
+    cInode->cacheFileIndex[0] = NOT_CACHE;
+    cInode->cacheFileIndex[1] = NOT_CACHE;
+
+    SetCacheFileIndex(cInode, &data);
+    EXPECT_EQ(cInode->cacheFileIndex[0], NOT_CACHE);
+}
+
+/**
  * @tc.name: CloudReadOnCloudFileTest001
  * @tc.desc: 落盘成功，设置标志位
  * @tc.type: FUNC
@@ -1743,9 +1863,37 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest001, TestSize.Level1) {
 
     // 验证函数进入后续操作
     EXPECT_EQ(*readArgs->readResult, 1024);
+    EXPECT_EQ(cInode->cacheFileIndex[0], HAS_CACHED);
 
     cInode->readCacheMap.clear();
     EXPECT_TRUE(cInode->readCacheMap.empty());
+}
+
+/**
+ * @tc.name: CloudReadOnCloudFileTest002
+ * @tc.desc: invalid cacheIndex -> skip cacheFileIndex write.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileTest002, TestSize.Level1) {
+    shared_ptr<FFRTParamData> data = make_shared<FFRTParamData>("", "");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(128, "", 2 * MAX_READ_SIZE, 0);
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    pid_t pid = 1;
+    cInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cInode->mBase->size = MAX_READ_SIZE;
+    size_t newSize = 3;
+    cInode->cacheFileIndex = std::make_unique<CLOUD_CACHE_STATUS[]>(newSize);
+    for (size_t i = 0; i < newSize; ++i) {
+        cInode->cacheFileIndex[i] = NOT_CACHE;
+    }
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(1024));
+    CloudReadOnCloudFile(pid, data, readArgs, cInode, readSessionMock);
+
+    EXPECT_EQ(*readArgs->readResult, 1024);
+    EXPECT_EQ(cInode->cacheFileIndex[2], NOT_CACHE);
 }
 
 /**
@@ -1769,6 +1917,26 @@ HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileForWatchTest001, TestSize.Le
     CloudReadOnCloudFileForWatch(pid, data, readArgs, cInode, readSessionMock);
 
     EXPECT_EQ(*readArgs->readResult, 1024);
+}
+
+/**
+ * @tc.name: CloudReadOnCloudFileForWatchTest002
+ * @tc.desc: cInode->mBase is nullptr -> skip read statistic update.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReadOnCloudFileForWatchTest002, TestSize.Level1) {
+    shared_ptr<FFRTParamData> data = make_shared<FFRTParamData>("", "");
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(128, "", 0, 0);
+
+    shared_ptr<CloudInode> cInode = make_shared<CloudInode>();
+    pid_t pid = 1;
+
+    auto readSessionMock = make_shared<CloudAssetReadSessionMock>(100, "test", "test", "test", "test");
+    EXPECT_CALL(*readSessionMock, PRead(_, _, _, _)).WillOnce(Return(1024));
+    CloudReadOnCloudFileForWatch(pid, data, readArgs, cInode, readSessionMock);
+
+    EXPECT_EQ(*readArgs->readResult, 1024);
+    EXPECT_EQ(*readArgs->readStatus, READ_FINISHED);
 }
 
 /**
@@ -1814,6 +1982,42 @@ HWTEST_F(FuseManagerStaticTest, CloudReleaseTest001, TestSize.Level1) {
     EXPECT_CALL(*readSessionMock, Close(_)).WillOnce(Return(false));
     CloudRelease(req, ino, &fi);
     EXPECT_EQ(cloudInode->sessionRefCount, 0);
+    ffrt::wait();
+}
+
+/**
+ * @tc.name: CloudReleaseTest002
+ * @tc.desc: content file with null readSession should release safely.
+ * @tc.type: FUNC
+ */
+HWTEST_F(FuseManagerStaticTest, CloudReleaseTest002, TestSize.Level1) {
+    fuse_req_t req = new struct fuse_req;
+    req->ctx.pid = 1;
+    fuse_ino_t ino = 10;
+    struct fuse_file_info fi;
+    fi.fh = 101;
+
+    shared_ptr<CloudInode> cloudInode = make_shared<CloudInode>();
+    cloudInode->sessionRefCount = 1;
+    cloudInode->mBase = make_shared<MetaBase>("VID_1761897125_003.mp4");
+    cloudInode->mBase->size = 100;
+    cloudInode->mBase->fileType = FILE_TYPE_CONTENT;
+    cloudInode->path = "/./CloudReleaseTest002";
+
+    FuseData* data = new FuseData();
+    data->photoBundleName = "example_bundle_name";
+    data->userId = 1;
+    data->inodeCache.insert({10, cloudInode});
+    uint64_t key = 101;
+    auto newCloudFdInfo = std::make_shared<struct CloudFdInfo>();
+    data->cloudFdCache[key] = newCloudFdInfo;
+
+    EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(data)));
+    EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*insMock, fuse_lowlevel_notify_inval_entry(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
+    CloudRelease(req, ino, &fi);
+    EXPECT_EQ(cloudInode->sessionRefCount, 0);
+    EXPECT_EQ(cloudInode->readSession, nullptr);
     ffrt::wait();
 }
 
