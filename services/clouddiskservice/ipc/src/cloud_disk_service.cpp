@@ -193,6 +193,7 @@ static int32_t NormalizeCreatePlaceholderError(int32_t ret)
         case E_FILE_ALREADY_EXISTS:
         case E_NO_SPACE_LEFT:
         case E_NOT_A_DIRECTORY:
+        case E_NAME_TOO_LONG:
             return ret;
         default:
             return ConvertErrnoToCloudDiskError(ret);
@@ -608,8 +609,11 @@ static int32_t ConvertPlaceholderXattrErrno(int32_t error)
     if (error == ENODATA) {
         return E_OK;
     }
-    if (error == ERANGE || error == ENAMETOOLONG) {
+    if (error == ERANGE) {
         return E_INVALID_ARG;
+    }
+    if (error == ENOENT) {
+        return E_FILE_NOT_EXIST;
     }
     return ConvertErrnoToCloudDiskError(error);
 }

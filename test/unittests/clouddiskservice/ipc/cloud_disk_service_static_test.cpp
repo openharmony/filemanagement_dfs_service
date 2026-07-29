@@ -566,7 +566,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest003, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest004
- * @tc.desc: Verify first getxattr failure is converted to service error code
+ * @tc.desc: Verify first getxattr missing file failure is converted to file not exist
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -579,7 +579,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest004, TestSize.Le
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(res, E_FILE_NOT_EXIST);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -741,7 +741,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest010, TestSize.Le
 
 /**
  * @tc.name: QueryPlaceholderByXattrTest011
- * @tc.desc: Verify second getxattr ENAMETOOLONG is converted to invalid argument
+ * @tc.desc: Verify second getxattr ENAMETOOLONG is converted to name too long
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -754,7 +754,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest011, TestSize.Le
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_INVALID_ARG);
+        EXPECT_EQ(res, E_NAME_TOO_LONG);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -850,6 +850,8 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderXattrErrnoTest001, TestSi
     GTEST_LOG_(INFO) << "ConvertPlaceholderXattrErrnoTest001 start";
     EXPECT_EQ(ConvertPlaceholderXattrErrno(ENODATA), E_OK);
     EXPECT_EQ(ConvertPlaceholderXattrErrno(ERANGE), E_INVALID_ARG);
+    EXPECT_EQ(ConvertPlaceholderXattrErrno(ENAMETOOLONG), E_NAME_TOO_LONG);
+    EXPECT_EQ(ConvertPlaceholderXattrErrno(ENOENT), E_FILE_NOT_EXIST);
     EXPECT_EQ(ConvertPlaceholderXattrErrno(EIO), E_TRY_AGAIN);
     GTEST_LOG_(INFO) << "ConvertPlaceholderXattrErrnoTest001 end";
 }
@@ -1231,7 +1233,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest011, TestSize.Lev
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         CloudDiskSyncFolder::GetInstance().ClearMap();
-        EXPECT_EQ(res, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(res, E_FILE_NOT_EXIST);
         EXPECT_FALSE(isPlaceholder);
 #else
         EXPECT_EQ(res, E_NOT_SUPPORTED);
@@ -1720,6 +1722,8 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest009, TestSize.Le
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EINVAL), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EISDIR), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ELOOP), E_INVALID_ARG);
+    GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError name too long errno";
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(ENAMETOOLONG), E_NAME_TOO_LONG);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError missing sync folder errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError permission denied errno";
@@ -1748,6 +1752,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest010, TestSize.Le
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_FILE_ALREADY_EXISTS), E_FILE_ALREADY_EXISTS);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NO_SPACE_LEFT), E_NO_SPACE_LEFT);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NOT_A_DIRECTORY), E_NOT_A_DIRECTORY);
+    EXPECT_EQ(NormalizeCreatePlaceholderError(E_NAME_TOO_LONG), E_NAME_TOO_LONG);
     GTEST_LOG_(INFO) << "[BRANCH] NormalizeCreatePlaceholderError errno fallback";
     EXPECT_EQ(NormalizeCreatePlaceholderError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest010 end";
@@ -1882,6 +1887,30 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest006, Te
     EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_FILE_ALREADY_EXISTS);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest006 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileInnerBranchTest008
+ * @tc.desc: Verify CreatePlaceholderFileInner keeps file name too long errors
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest008 start";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileInner file name too long";
+    RegisterPlaceholderSyncFolder();
+    CloudDiskService service;
+    PlaceholderInfo info;
+
+    Assistant::mockErrno = ENAMETOOLONG;
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
+    EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_BUNDLE), Return(E_OK)));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(-1));
+    EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_NAME_TOO_LONG);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest008 end";
 }
 
 /**
