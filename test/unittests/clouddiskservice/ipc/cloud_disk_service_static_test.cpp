@@ -37,6 +37,7 @@ constexpr int32_t TEST_CLOUD_DISK_SERVICE_SA_ID = 5207;
 constexpr bool TEST_RUN_ON_CREATE = true;
 constexpr size_t PLACEHOLDER_XATTR_VALUE_SIZE = 1;
 constexpr int32_t MOCK_SYSCALL_FAILED = -1;
+constexpr int32_t TEST_PARENT_FD = 10;
 const std::string TEST_BUNDLE = "ohos.clouddiskservice.test";
 const std::string TEST_SYNC_FOLDER = "/storage/Users/currentUser/testdir";
 const std::string TEST_SYNC_FOLDER_PHYSICAL = "/data/service/el2/100/hmdfs/account/files/Docs/testdir";
@@ -1907,8 +1908,8 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest008, Te
     EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
     EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
         .WillOnce(DoAll(SetArgReferee<0>(TEST_BUNDLE), Return(E_OK)));
-    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
-    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(TEST_PARENT_FD));
+    EXPECT_CALL(*insMock_, OpenAt(TEST_PARENT_FD, _, _, _)).WillOnce(Return(MOCK_SYSCALL_FAILED));
     EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_NAME_TOO_LONG);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest008 end";
 }
