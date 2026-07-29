@@ -44,6 +44,7 @@ const string CLOUDSYNC_MEDIA_CALLBACK_ID = "cloudSyncMediaCallbackId";
 static const std::string GLOBAL_CONFIG_FILE_PATH = "globalConfig.xml";
 static const std::string SUM_OCCUPY_FLAG = "SumOccupyFlag";
 constexpr int32_t MAX_OCCUPY_LINE_LIMIT = 10;
+constexpr size_t MAX_BUNDLE_NAME_LEN = 1024;
 
 static const std::unordered_set<int32_t> errForStartTransfer = { E_PERMISSION_DENIED, JsErrCode::E_PERMISSION,
     E_PERMISSION_SYSTEM, JsErrCode::E_PERMISSION_SYS, E_OPERATION_DENY, JsErrCode::E_OPERATION_NOT_PERMITTED,
@@ -290,7 +291,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
         return E_INVAL_ARG;
     }
 
-    if (bundleName.empty() || userId < MIN_USER_ID) {
+    if (bundleName.empty() || bundleName.length() > MAX_BUNDLE_NAME_LEN || userId < MIN_USER_ID) {
         LOGE("Trigger Sync parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -347,6 +348,10 @@ int32_t CloudSyncManagerImpl::ResetCursor(bool flag, const std::string &bundleNa
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
+    if (accoutId.empty() || bundleName.empty()) {
+        LOGE("Invalid argument");
+        return E_INVAL_ARG;
+    }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("ChangeAppSwitch");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
@@ -1343,7 +1348,7 @@ int32_t CloudSyncManagerImpl::SetMediaPreShared(const std::string &albumId, cons
     int32_t ret = CloudSyncServiceProxy->SetMediaPreShared(albumId, albumName, localPath);
     if (ret != E_OK) {
         LOGE("ret is %{public}d id: %{public}s name: %{public}s",
-            ret, albumId.c_str(), GetAnonyString(albumName).c_str());
+            ret, GetAnonyString(albumId).c_str(), GetAnonyString(albumName).c_str());
     }
     return ret;
 }

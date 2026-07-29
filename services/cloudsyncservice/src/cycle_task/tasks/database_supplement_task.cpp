@@ -228,10 +228,10 @@ bool DatabaseSupplementTask::CheckNeedPrune(int32_t userId, const string& bundle
         return false;
     }
     
-    string sql = "SELECT COUNT(*) FROM " + FileColumn::FILES_TABLE +
-                 " WHERE " + FileColumn::ROOT_DIRECTORY + " != '" + bundleName + "'";
+    NativeRdb::AbsRdbPredicates predicates(FileColumn::FILES_TABLE);
+    predicates.NotEqualTo(FileColumn::ROOT_DIRECTORY, bundleName);
     
-    auto resultSet = rdbStore->QuerySql(sql);
+    auto resultSet = rdbStore->Query(predicates, {"COUNT(*)"});
     if (resultSet == nullptr) {
         return false;
     }

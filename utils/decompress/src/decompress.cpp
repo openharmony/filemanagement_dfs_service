@@ -354,6 +354,9 @@ static bool ReadPdedupFeatureNode()
     }
     if (read == -1) {
         LOGD("Failed to read pdedup feature node file");
+        if (line != nullptr) {
+            free(line);
+        }
         return false;
     }
     bool supported = (line != nullptr && line[0] == '1');
