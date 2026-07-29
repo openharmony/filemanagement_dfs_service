@@ -254,6 +254,26 @@ HWTEST_F(CloudDiskManagerTest, IsValidPathInfoTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsValidPathInfoTest005
+ * @tc.desc: Verify IsValidPathInfo rejects paths with embedded NUL bytes
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsValidPathInfoTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsValidPathInfoTest005 start";
+    try {
+        char value[] = {'1', '2', '\0', '4'};
+        bool ret = IsValidPathInfo(value, sizeof(value));
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsValidPathInfoTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "IsValidPathInfoTest005 end";
+}
+
+/**
  * @tc.name: ConvertToErrorCodeTest001
  * @tc.desc: Verify the ConvertToErrorCode function
  * @tc.type: FUNC
