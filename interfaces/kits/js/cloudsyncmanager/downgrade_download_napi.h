@@ -63,6 +63,7 @@ public:
     static inline std::string taskName_ = "cloudSyncManager.DownloadProgress";
 
 private:
+    std::mutex dlCbMtx_;
     void UpdateDownloadProgress(const DowngradeProgress &progress);
     void UpdateTransferProgress(const DowngradeTfProgress &progress);
 
