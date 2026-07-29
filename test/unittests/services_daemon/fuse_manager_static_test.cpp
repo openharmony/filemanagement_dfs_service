@@ -243,6 +243,29 @@ HWTEST_F(FuseManagerStaticTest, IsValidCacheIndexTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsValidCacheIndexTest002
+ * @tc.desc: Verify the IsValidCacheIndex function with a sub-page file size
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(FuseManagerStaticTest, IsValidCacheIndexTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsValidCacheIndexTest002 Begin";
+    try {
+        auto cInode = make_shared<CloudInode>();
+        cInode->mBase = make_shared<MetaBase>("test");
+        cInode->mBase->size = MAX_READ_SIZE - 1;
+
+        EXPECT_TRUE(IsValidCacheIndex(cInode, 0));
+        EXPECT_FALSE(IsValidCacheIndex(cInode, 1));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsValidCacheIndexTest002 Error";
+    }
+    GTEST_LOG_(INFO) << "IsValidCacheIndexTest002 End";
+}
+
+/**
  * @tc.name: DoSessionInitTest001
  * @tc.desc: Verify the DoSessionInit function
  * @tc.type: FUNC
