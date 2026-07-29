@@ -20,6 +20,8 @@
 #include "dfsu_memory_guard.h"
 #include "utils_log.h"
 
+#include <unistd.h>
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
@@ -64,10 +66,12 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     std::string path;
     if (!data.ReadString(path)) {
         LOGE("read path failed");
+        close(fd);
         return E_INVAL_ARG;
     }
 #ifdef SUPPORT_WATCH_LITE
     if (path.find("cloud_fuse") != std::string::npos) {
+        close(fd);
         reply.WriteInt32(-EINVAL);
         return -EINVAL;
     }
