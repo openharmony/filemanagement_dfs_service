@@ -138,6 +138,14 @@ typedef enum CloudDisk_ErrorCode {
      * @error The parent path of the target path is not a directory.
      */
     CLOUD_DISK_NOT_A_DIRECTORY = 34400023,
+    /**
+     * @error The target path does not exist.
+     */
+    CLOUD_DISK_FILE_NOT_EXIST = 34400024,
+    /**
+     * @error The target file name is too long.
+     */
+    CLOUD_DISK_NAME_TOO_LONG = 34400025,
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

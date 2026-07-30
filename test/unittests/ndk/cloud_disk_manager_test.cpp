@@ -254,6 +254,26 @@ HWTEST_F(CloudDiskManagerTest, IsValidPathInfoTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsValidPathInfoTest005
+ * @tc.desc: Verify IsValidPathInfo rejects paths with embedded NUL bytes
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsValidPathInfoTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsValidPathInfoTest005 start";
+    try {
+        char value[] = {'1', '2', '\0', '4'};
+        bool ret = IsValidPathInfo(value, sizeof(value));
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsValidPathInfoTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "IsValidPathInfoTest005 end";
+}
+
+/**
  * @tc.name: ConvertToErrorCodeTest001
  * @tc.desc: Verify the ConvertToErrorCode function
  * @tc.type: FUNC
@@ -309,6 +329,8 @@ HWTEST_F(CloudDiskManagerTest, ConvertToErrorCodeTest003, TestSize.Level1)
         EXPECT_EQ(ConvertToErrorCode(E_FILE_ALREADY_EXISTS), CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
         EXPECT_EQ(ConvertToErrorCode(E_NO_SPACE_LEFT), CloudDisk_ErrorCode::CLOUD_DISK_NO_SPACE_LEFT);
         EXPECT_EQ(ConvertToErrorCode(E_NOT_A_DIRECTORY), CloudDisk_ErrorCode::CLOUD_DISK_NOT_A_DIRECTORY);
+        EXPECT_EQ(ConvertToErrorCode(E_FILE_NOT_EXIST), CloudDisk_ErrorCode::CLOUD_DISK_FILE_NOT_EXIST);
+        EXPECT_EQ(ConvertToErrorCode(E_NAME_TOO_LONG), CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ConvertToErrorCodeTest003 failed";
@@ -479,6 +501,14 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
     auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
 
     EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
+    Mock::VerifyAndClearExpectations(&mock);
+
+    EXPECT_CALL(mock, CreatePlaceholderFile(syncFolder, relativePath, _))
+        .WillOnce(Return(E_NAME_TOO_LONG));
+
+    ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
+
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 end";
 }
 
@@ -635,5 +665,61 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest006, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 failed";
     }
     GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest006 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest007
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile maps target file missing errors
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest007 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        auto &mock = CloudDiskServiceManagerMock::GetInstance();
+        EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
+            .WillOnce(Return(E_FILE_NOT_EXIST));
+
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_NOT_EXIST);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest007 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileIpcTest008
+ * @tc.desc: Verify OH_CloudDisk_IsPlaceholderFile maps name too long errors
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest008 start";
+    try {
+        CloudDisk_SyncFolderPath syncFolderPath = ToPathInfo(SANDBOX_SYNC_FOLDER);
+        CloudDisk_PathInfo path = ToPathInfo(RELATIVE_FILE_PATH);
+        auto &mock = CloudDiskServiceManagerMock::GetInstance();
+        EXPECT_CALL(mock, IsPlaceholderFile(SANDBOX_SYNC_FOLDER, RELATIVE_FILE_PATH, _))
+            .WillOnce(Return(E_NAME_TOO_LONG));
+
+        bool isPlaceholder = true;
+        CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
+
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
+        EXPECT_FALSE(isPlaceholder);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest008 failed";
+    }
+    GTEST_LOG_(INFO) << "IsPlaceholderFileIpcTest008 end";
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

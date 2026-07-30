@@ -15,6 +15,8 @@
 
 #include "oh_cloud_disk_utils.h"
 
+#include <cstring>
+
 #include <securec.h>
 
 #include "utils_log.h"
@@ -54,6 +56,10 @@ bool IsValidPathInfo(const char *path, size_t length)
     }
     if (length == 0) {
         LOGE("length is invalid: %{public}zu", length);
+        return false;
+    }
+    if (std::memchr(path, '\0', length) != nullptr) {
+        LOGE("path contains embedded NUL byte");
         return false;
     }
     size_t actualLen = strnlen(path, length + 1);
