@@ -148,7 +148,7 @@ bool GetUserIdByStartReason(const SystemAbilityOnDemandReason &startReason, int3
 
 static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
 {
-    UniqueFd parentFd(open(path.parentMntPath.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    UniqueFd parentFd(open(path.parentMntPath.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
     if (parentFd < 0) {
         LOGE("CreatePlaceholderFile branch=open_parent_failed errno=%{public}d", errno);
         return ConvertErrnoToCloudDiskError(errno);
@@ -881,11 +881,19 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path,
         std::to_string(userId), unregisterSyncFolder);
     if (ret != E_OK) {
-        LOGE("Get unregisterSyncFolder failed, ret = %{public}d", ret);
+        LOGE("Get unregister physical path failed, ret = %{public}d", ret);
         return ret;
     }
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
+    std::string unregisterSyncFolderMnt;
+    ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
+        unregisterSyncFolderMnt);
+    if (ret != E_OK) {
+        LOGE("Get unregister mnt path failed, ret = %{public}d", ret);
+        return ret;
+    }
+
     ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
     if (ret != E_OK) {
         LOGE("UnRegisterSyncFolder failed");
@@ -895,15 +903,8 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(bundleName, syncFolderIndex);
 
-    ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
-        unregisterSyncFolder);
-    if (ret != E_OK) {
-        LOGE("Get unregisterSyncFolder failed, ret = %{public}d", ret);
-        return ret;
-    }
-
-    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(unregisterSyncFolder);
-    CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolder, FILE_SYNC_STATE);
+    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(unregisterSyncFolderMnt);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, FILE_SYNC_STATE);
     UnloadSa();
     LOGI("End UnregisterSyncFolderInner");
     return E_OK;

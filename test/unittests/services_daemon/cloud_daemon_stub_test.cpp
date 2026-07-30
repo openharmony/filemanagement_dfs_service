@@ -19,6 +19,10 @@
 #include "message_parcel_mock.h"
 #include "utils_log.h"
 
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -195,14 +199,23 @@ HWTEST_F(CloudDaemonStubTest, HandleStartFuseInnerTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleStartFuseInnerTest004 start";
     try {
+        int fd = dup(STDOUT_FILENO);
+        ASSERT_GE(fd, 0);
         EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(0), Return(true)));
-        EXPECT_CALL(*messageParcelMock_, ReadFileDescriptor()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock_, ReadFileDescriptor()).WillOnce(Return(fd));
         EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
         
         MessageParcel data;
         MessageParcel reply;
         int ret = cloudDaemonStub_->HandleStartFuseInner(data, reply);
         EXPECT_EQ(ret, E_INVAL_ARG);
+        errno = 0;
+        int fdStatus = fcntl(fd, F_GETFD);
+        EXPECT_EQ(fdStatus, -1);
+        EXPECT_EQ(errno, EBADF);
+        if (fdStatus != -1) {
+            close(fd);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleStartFuseInnerTest004 failed";

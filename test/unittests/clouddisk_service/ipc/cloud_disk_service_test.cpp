@@ -942,6 +942,33 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest004, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest004 end";
 }
+
+/**
+ * @tc.name: UnregisterSyncFolderInnerTest005
+ * @tc.desc: Verify the UnregisterSyncFolderInner function when mnt path conversion fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest005 start";
+    try {
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        int32_t userId = 100;
+        std::string bundleName = "ohos.clouddiskservice.test";
+        std::string testPath = "/test/mockFailed/PathToMntPathBySandboxPath";
+        uint32_t result = cloudDiskService_->UnregisterSyncFolderInner(userId, bundleName, testPath);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(result, E_SYNC_FOLDER_PATH_NOT_EXIST);
+#else
+        EXPECT_EQ(result, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest005 failed";
+    }
+    GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest005 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
 } // namespace OHOS
