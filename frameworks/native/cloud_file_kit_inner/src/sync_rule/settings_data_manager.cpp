@@ -15,6 +15,9 @@
 #include "settings_data_manager.h"
 
 #include <charconv>
+#include <chrono>
+#include <future>
+#include <thread>
 
 #include "datashare_helper.h"
 #include "datashare_errno.h"
@@ -42,6 +45,7 @@ static const std::string OPEN_STATUS = "on";
 static const std::string ALLOW_STATUS = "1";
 static const std::string LSF_ALLOW_STATUS = "0";
 static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
+static constexpr int32_t WAIT_PRE_INIT_TIMEOUT_S = 4;
 
 std::string SettingsDataManager::GetQueryKey(const std::string &key)
 {
@@ -135,13 +139,32 @@ void SettingsDataManager::ReregisterAllObservers(int32_t userId)
     RegisterObserver(LOCAL_SPACE_DAYS_KEY);
 }
 
+static bool PreInitWithTimeout()
+{
+    std::packaged_task<void()> task([] {
+        SettingsDataManager::UpdateCurrentUserId();
+        SettingsDataManager::UpdateIsSupportUserSettingsData();
+    });
+    auto fut = task.get_future();
+    std::thread(std::move(task)).detach();
+    if (fut.wait_for(std::chrono::seconds(WAIT_PRE_INIT_TIMEOUT_S)) != std::future_status::ready) {
+        LOGE("PreInit timed out");
+        return false;
+    }
+    fut.get();
+    return true;
+}
+
 void SettingsDataManager::PreInit()
 {
-    std::call_once(initFlag_, []() {
-        LOGI("PreInit start");
-        UpdateCurrentUserId();
-        UpdateIsSupportUserSettingsData();
-    });
+    std::lock_guard<std::mutex> lock(preInitMutex_);
+    if (preInitDone_) {
+        return;
+    }
+    LOGI("PreInit start");
+    if (PreInitWithTimeout()) {
+        preInitDone_ = true;
+    }
 }
 
 void SettingsDataManager::InitSettingsDataManager()

@@ -85,7 +85,8 @@ private:
     static inline int32_t currentUserId_ = 100;
     static inline SafeMap<const std::string, std::string> settingsDataMap_;
     static inline SafeMap<const std::string, sptr<AAFwk::DataAbilityObserverStub>> observerMap_;
-    static inline std::once_flag initFlag_;
+    static inline std::mutex preInitMutex_;
+    static inline bool preInitDone_ = false;
 };
 } // OHOS
 
