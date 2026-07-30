@@ -49,6 +49,7 @@ ohos_shared_library("cloud_sync_manager_ani") {
     "src/downgrade_download_ani.cpp",
     "src/downgrade_callback_ani.cpp",
   ]
+  branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     ubsan = true

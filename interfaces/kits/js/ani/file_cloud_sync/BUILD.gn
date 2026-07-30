@@ -63,6 +63,7 @@ ohos_shared_library("cloud_sync_ani") {
     "src/multi_download_progress_ani.cpp",
     "src/register_callback_manager_ani.cpp",
   ]
+  branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     ubsan = true

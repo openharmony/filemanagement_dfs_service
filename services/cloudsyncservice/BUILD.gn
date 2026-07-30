@@ -37,6 +37,7 @@ idl_gen_interface("cloud_sync_service_interface") {
 ohos_source_set("cloud_sync_service_proxy") {
   configs = [ ":optimize-size" ]
   public_configs = [ ":cloud_sync_service_public_config" ]
+  branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -70,6 +71,7 @@ ohos_source_set("cloud_sync_service_proxy") {
 ohos_source_set("cloud_sync_service_stub") {
   configs = [ ":optimize-size" ]
   public_configs = [ ":cloud_sync_service_public_config" ]
+  branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     ubsan = true
