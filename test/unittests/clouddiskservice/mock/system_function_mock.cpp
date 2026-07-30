@@ -196,6 +196,16 @@ int ftruncate(int fd, off_t length)
     return Assistant::ins->ftruncate(fd, length);
 }
 
+int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags)
+{
+    return Assistant::ins->fsetxattr(fd, name, value, size, flags);
+}
+
+int futimens(int fd, const struct timespec times[2])
+{
+    return Assistant::ins->futimens(fd, times);
+}
+
 struct dirent* readdir(DIR* d)
 {
     return Assistant::ins->readdir(d);
