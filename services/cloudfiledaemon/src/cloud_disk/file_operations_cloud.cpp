@@ -1821,22 +1821,30 @@ void RenameForTrash(fuse_req_t req, fuse_ino_t parent, const char *name,
         fuse_reply_err(req, ret);
         return;
     }
+    int32_t val = 0;
     string nName = newName;
-    int32_t val;
+    NotifyOpsType opsType = NotifyOpsType::OPS_NONE;
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    ret = -1;
     if (parent == RECYCLE_LOCAL_ID && newParent != RECYCLE_LOCAL_ID) {
         ret = rdbStore->HandleRestore(inoPtr->fileName, newParentCloudId, inoPtr->cloudId, nName, val);
+        opsType = NotifyOpsType::DAEMON_RESTORE;
     } else if (parent != RECYCLE_LOCAL_ID && newParent == RECYCLE_LOCAL_ID) {
         ret = rdbStore->HandleRecycle(inoPtr->fileName, parentCloudId, inoPtr->cloudId, val);
+        opsType = NotifyOpsType::DAEMON_RECYCLE;
     }
     if (ret != 0) {
         LOGE("set cloud recycle xattr fail, ret = %{public}d", ret);
         fuse_reply_err(req, EINVAL);
         return;
     }
+    string oldName = name;
+    inoPtr->fileName = nName;
+    inoPtr->parent = newParent;
+    bool isDir = S_ISDIR(inoPtr->stat.st_mode);
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-        val == 0 ? NotifyOpsType::DAEMON_RESTORE : NotifyOpsType::DAEMON_RECYCLE, inoPtr});
+        opsType, inoPtr, parent, oldName, newParent, nName}, {FileStatus::UNKNOW, isDir});
     fuse_reply_err(req, 0);
 }
 

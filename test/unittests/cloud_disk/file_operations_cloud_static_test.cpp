@@ -1983,24 +1983,37 @@ HWTEST_F(FileOperationsCloudStaticTest, RenameForTrashTest002, TestSize.Level1)
 
         data.userId = 100;
         parent = 4;
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        newName = "restoreName";
+        inoPtrTrash->cloudId = "restoreCloudId";
+        inoPtrTrash->fileName = "trashFile";
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(AtLeast(1))
+            .WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
-        EXPECT_TRUE(true);
+        EXPECT_EQ(inoPtrTrash->fileName, newName);
+        EXPECT_EQ(inoPtrTrash->parent, newParent);
+        Mock::VerifyAndClearExpectations(insMock.get());
 
         parent = 1;
         newParent = 4;
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        const std::string recycleName = "recycleName";
+        inoPtrOld->fileName = recycleName;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(AtLeast(1))
+            .WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
-        EXPECT_TRUE(true);
+        EXPECT_EQ(inoPtrOld->fileName, newName);
+        EXPECT_EQ(inoPtrOld->parent, newParent);
+        Mock::VerifyAndClearExpectations(insMock.get());
 
         parent = 1;
         newParent = 2;
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(2).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).Times(AtLeast(1))
+            .WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         RenameForTrash(req, parent, name.c_str(), newParent, newName.c_str());
         EXPECT_TRUE(true);
+        Mock::VerifyAndClearExpectations(insMock.get());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RenameForTrashTest002 ERROR";
