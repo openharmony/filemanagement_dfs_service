@@ -77,24 +77,57 @@ void SettingsDataManagerTest::TearDownTestCase(void)
 
 void SettingsDataManagerTest::SetUp(void)
 {
+    SettingsDataManager::preInitDone_ = true;
     DataShareHelperMock::proxy_ = dataShareHelperMock_;
     DataShareResultSetMock::proxy_ = resultSetMock_;
 }
 
 void SettingsDataManagerTest::TearDown(void) {}
 
+HWTEST_F(SettingsDataManagerTest, PreInitTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PreInitTest001 Start";
+    try {
+        SettingsDataManager::preInitDone_ = true;
+        SettingsDataManager::PreInit();
+        EXPECT_TRUE(SettingsDataManager::preInitDone_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PreInitTest001 Failed";
+    }
+
+    GTEST_LOG_(INFO) << "PreInitTest001 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, PreInitTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PreInitTest002 Start";
+    try {
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
+            .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
+        SettingsDataManager::preInitDone_ = false;
+        SettingsDataManager::PreInit();
+        EXPECT_TRUE(SettingsDataManager::preInitDone_);
+        EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PreInitTest002 Failed";
+    }
+
+    GTEST_LOG_(INFO) << "PreInitTest002 End";
+}
+
 HWTEST_F(SettingsDataManagerTest, InitSettingsDataManagerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Start";
     try {
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillRepeatedly(Return(nullptr));
-        EXPECT_CALL(*OsAccountMethodMock_, GetForegroundOsAccountLocalId(_))
-            .WillOnce(DoAll(SetArgReferee<0>(100), Return(E_OK)));
         EXPECT_CALL(*serviceRegistryMock_, GetSystemAbilityManager()).WillOnce(Return(nullptr));
         SettingsDataManager::currentUserId_ = 10;
         SettingsDataManager::supportUserSettingsData_ = true;
         SettingsDataManager::InitSettingsDataManager();
-        EXPECT_EQ(SettingsDataManager::currentUserId_, 100);
+        EXPECT_EQ(SettingsDataManager::currentUserId_, 10);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "InitSettingsDataManagerTest001 Failed";
