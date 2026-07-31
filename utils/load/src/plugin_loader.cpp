@@ -43,7 +43,7 @@ PluginLoader::~PluginLoader()
 
 string GetPluginPath(const string &pluginFileName)
 {
-    const string searchDirs[] = {"/system/lib64/", "system/lib/"};
+    const string searchDirs[] = {"/system/lib64/", "/system/lib/"};
     string pluginFilePath = "";
     for (auto &searchDir : searchDirs) {
         std::string tmpPath = searchDir + pluginFileName;
@@ -73,7 +73,7 @@ void PluginLoader::LoadCloudKitPlugin(bool isSupportCloudSync)
                 return;
             }
             auto dlopenStartTime = std::chrono::high_resolution_clock::now();
-            cloudKitPulginHandle_ = dlopen(pluginFilePath.c_str(), RTLD_LAZY);
+            cloudKitPulginHandle_ = dlopen(resolvedPath, RTLD_LAZY);
             auto dlopenFinishTime = std::chrono::high_resolution_clock::now();
             auto dlopenDurationTime =
                 std::chrono::duration_cast<std::chrono::milliseconds>(dlopenFinishTime - dlopenStartTime).count();
