@@ -79,12 +79,12 @@ public:
     void DeleteReference() override;
 
 private:
-    void GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg);
+    ani_status GetSyncProgress(CloudSyncState state, ErrorType error, const ani_class &cls, ani_object &pg);
     ani_vm *vm_ = nullptr;
     ani_ref cbOnRef_ = nullptr;
 };
 
-class ChangeListenerAni {
+class ChangeListenerAni : public std::enable_shared_from_this<ChangeListenerAni> {
 public:
     explicit ChangeListenerAni(ani_env *env)
     {

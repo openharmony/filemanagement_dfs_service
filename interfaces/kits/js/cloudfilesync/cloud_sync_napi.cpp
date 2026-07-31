@@ -271,8 +271,9 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
 {
     LOGD("OnOptimizeProcess state: %{public}d, progress: %{public}d", static_cast<int32_t>(state), progress);
     napi_env env = env_;
-    auto task = [this, env, state, progress] () {
-        if (!cbOnRef_) {
+    auto callbackImpl = shared_from_this();
+    auto task = [callbackImpl, env, state, progress] () {
+        if (!callbackImpl->cbOnRef_) {
             LOGE("cbOnRef_ is nullptr");
             return;
         }
@@ -284,7 +285,7 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
             return;
         }
 
-        napi_value jsCallback = cbOnRef_.Deref(env).val_;
+        napi_value jsCallback = callbackImpl->cbOnRef_.Deref(env).val_;
         NVal obj = NVal::CreateObject(env);
         obj.AddProp("state", NVal::CreateInt32(env, (int32_t)state).val_);
         obj.AddProp("progress", NVal::CreateInt32(env, (int32_t)progress).val_);
@@ -294,7 +295,7 @@ void CloudOptimizeCallbackImpl::OnOptimizeProcess(const OptimizeState state, con
             LOGE("napi call function failed, status: %{public}d", status);
         }
         if (state != OptimizeState::OPTIMIZE_RUNNING) {
-            cbOnRef_.DeleteJsEnv();
+            callbackImpl->cbOnRef_.DeleteJsEnv();
         }
         napi_close_handle_scope(env, scope);
     };

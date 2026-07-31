@@ -488,6 +488,10 @@ void SettingsDataManager::RegisterObserver(const std::string &key)
     }
 
     sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
+    if (dataObserver == nullptr) {
+        LOGE("dataObserver == nullptr");
+        return;
+    }
     std::string uri = GetSettingsDataUri(key);
     Uri observerUri(uri);
     dataShareHelper->RegisterObserver(observerUri, dataObserver);

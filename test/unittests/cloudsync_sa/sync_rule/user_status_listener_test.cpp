@@ -23,6 +23,7 @@
 #include "session_manager.h"
 #include "user_status_listener.h"
 #include "utils_log.h"
+#include "user_status_observer_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -62,7 +63,6 @@ void UserStatusListenerTest::TearDown(void)
  * @tc.name: StopTest001
  * @tc.desc: Verify the Stop function
  * @tc.type: FUNC
- * @tc.require: IB3T5H
  */
 HWTEST_F(UserStatusListenerTest, StopTest001, TestSize.Level1)
 {
@@ -74,11 +74,79 @@ HWTEST_F(UserStatusListenerTest, StopTest001, TestSize.Level1)
         EXPECT_NE(userStatusListener->commonEventSubscriber_, nullptr);
         userStatusListener->Stop();
         EXPECT_EQ(userStatusListener->commonEventSubscriber_, nullptr);
+        EXPECT_EQ(userStatusListener->accountStatusListener_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopTest001 failed";
     }
     GTEST_LOG_(INFO) << "StopTest001 end";
+}
+
+/**
+ * @tc.name: StopTest002
+ * @tc.desc: Verify the Stop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, StopTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopTest002 start";
+    try {
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        userStatusListener->Start();
+        EXPECT_NE(userStatusListener->commonEventSubscriber_, nullptr);
+        userStatusListener->accountStatusListener_ = nullptr;
+        userStatusListener->Stop();
+        EXPECT_EQ(userStatusListener->commonEventSubscriber_, nullptr);
+        EXPECT_EQ(userStatusListener->accountStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "StopTest002 end";
+}
+
+/**
+ * @tc.name: StopTest003
+ * @tc.desc: Verify the Stop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, StopTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopTest003 start";
+    try {
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        userStatusListener->Stop();
+        EXPECT_EQ(userStatusListener->commonEventSubscriber_, nullptr);
+        EXPECT_EQ(userStatusListener->accountStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopTest003 failed";
+    }
+    GTEST_LOG_(INFO) << "StopTest003 end";
+}
+
+/**
+ * @tc.name: StopTest004
+ * @tc.desc: Verify the Stop function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, StopTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopTest004 start";
+    try {
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        userStatusListener->accountStatusListener_ = nullptr;
+        userStatusListener->Stop();
+        EXPECT_EQ(userStatusListener->commonEventSubscriber_, nullptr);
+        EXPECT_EQ(userStatusListener->accountStatusListener_, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StopTest004 failed";
+    }
+    GTEST_LOG_(INFO) << "StopTest004 end";
 }
 
 /**
@@ -123,6 +191,29 @@ HWTEST_F(UserStatusListenerTest, NotifyUserUnlockedTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "NotifyUserUnlockedTest001 failed";
     }
     GTEST_LOG_(INFO) << "NotifyUserUnlockedTest001 end";
+}
+
+/**
+ * @tc.name: NotifyUserUnlockedTest002
+ * @tc.desc: Verify the NotifyUserUnlocked function
+ * @tc.type: FUNC
+ */
+HWTEST_F(UserStatusListenerTest, NotifyUserUnlockedTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyUserUnlockedTest002 start";
+    try {
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto userStatusListener = std::make_shared<UserStatusListener>(dataSyncManager);
+        auto ob = std::make_shared<UserStatusObserverMock>();
+        userStatusListener->AddObserver(nullptr);
+        userStatusListener->AddObserver(ob);
+        userStatusListener->NotifyUserUnlocked();
+        EXPECT_EQ(userStatusListener->observers_.size(), 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NotifyUserUnlockedTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "NotifyUserUnlockedTest002 end";
 }
 
 /**

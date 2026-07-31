@@ -35,7 +35,9 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY) {
         LOGI("Battery status changed: BATTERY_STATUS_OKAY");
         ffrt::submit([listener = listener_]() {
-            listener->OnStatusNormal();
+            if (listener) {
+                listener->OnStatusNormal();
+            }
         });
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
         LOGI("Charging status changed: discharging");
@@ -43,8 +45,10 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         LOGI("Charging status changed: charging");
         BatteryStatus::SetChargingStatus(true);
-        ffrt::submit([this]() {
-            listener_->OnPowerConnected();
+        ffrt::submit([listener = listener_]() {
+            if (listener) {
+                listener->OnPowerConnected();
+            }
         });
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
 #ifdef SUPPORT_POWER
