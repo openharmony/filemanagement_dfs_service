@@ -107,16 +107,23 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
             return E_MEMORY;
         }
     }
-
+    int32_t ret = E_OK;
     if (!isCallbackRegistered_.test_and_set()) {
         LOGI("register callback");
-        CloudSyncServiceProxy->RegisterDownloadAssetCallback(downloadAssetCallback_);
+        ret = CloudSyncServiceProxy->RegisterDownloadAssetCallback(downloadAssetCallback_);
+        if (ret != E_OK) {
+            isCallbackRegistered_.clear();
+            return ret;
+        }
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     auto taskId = downloadAssetCallback_->GetTaskId();
     downloadAssetCallback_->AddDownloadTaskCallback(taskId, resultCallback);
     AssetInfoObj assetInfoObj(assetInfo);
-    int32_t ret = CloudSyncServiceProxy->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+    ret = CloudSyncServiceProxy->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+    if (ret != E_OK) {
+        downloadAssetCallback_->RemoveDownloadTaskCallback(taskId);
+    }
     LOGI("DownloadFile ret %{public}d, taskId:%{public}" PRIu64 "", ret, taskId);
     return ret;
 }

@@ -209,5 +209,108 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DeleteAssetTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "DeleteAssetTest End";
 }
 
+/*
+ * @tc.name: DownloadFile_RegisterCallbackFailed_001
+ * @tc.desc: Verify DownloadFile returns error when RegisterDownloadAssetCallback fails
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFile_RegisterCallbackFailed_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFile_RegisterCallbackFailed_001 Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string networkId = "networkId";
+        AssetInfo assetInfo;
+        auto resultCallback = [](const std::string &uri, int32_t result) {};
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterDownloadAssetCallback(_)).WillOnce(Return(E_IPC_READ_FAILED));
+ 
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(
+            userId, bundleName, networkId, assetInfo, resultCallback);
+        EXPECT_EQ(res, E_IPC_READ_FAILED);
+ 
+        // Verify isCallbackRegistered_ is cleared so next call can retry registration
+        EXPECT_FALSE(CloudSyncAssetManagerImpl::GetInstance().isCallbackRegistered_.test_and_set());
+        CloudSyncAssetManagerImpl::GetInstance().isCallbackRegistered_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFile_RegisterCallbackFailed_001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFile_RegisterCallbackFailed_001 End";
+}
+ 
+/*
+ * @tc.name: DownloadFile_DownloadAssetFailed_001
+ * @tc.desc: Verify DownloadFile removes callback when DownloadAsset fails
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFile_DownloadAssetFailed_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFile_DownloadAssetFailed_001 Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string networkId = "networkId";
+        AssetInfo assetInfo;
+        auto resultCallback = [](const std::string &uri, int32_t result) {};
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterDownloadAssetCallback(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, DownloadAsset(_, _, _, _, _)).WillOnce(Return(E_IPC_READ_FAILED));
+ 
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(
+            userId, bundleName, networkId, assetInfo, resultCallback);
+        EXPECT_EQ(res, E_IPC_READ_FAILED);
+ 
+        // After DownloadAsset fails, RemoveDownloadTaskCallback should have been called,
+        // so the callback map should not contain the task
+        auto &manager = CloudSyncAssetManagerImpl::GetInstance();
+        DownloadAssetCallback::TaskId taskId = manager.downloadAssetCallback_->GetTaskId() - 1;
+        auto retrievedCallback = manager.downloadAssetCallback_->GetDownloadTaskCallback(taskId);
+        EXPECT_FALSE(retrievedCallback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFile_DownloadAssetFailed_001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFile_DownloadAssetFailed_001 End";
+}
+ 
+/*
+ * @tc.name: DownloadFile_SuccessWithCallback_001
+ * @tc.desc: Verify DownloadFile succeeds when both RegisterDownloadAssetCallback and DownloadAsset succeed
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFile_SuccessWithCallback_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFile_SuccessWithCallback_001 Start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string networkId = "networkId";
+        AssetInfo assetInfo;
+        auto resultCallback = [](const std::string &uri, int32_t result) {};
+        EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(serviceProxy_));
+        EXPECT_CALL(*serviceProxy_, RegisterDownloadAssetCallback(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*serviceProxy_, DownloadAsset(_, _, _, _, _)).WillOnce(Return(E_OK));
+ 
+        int32_t res = CloudSyncAssetManagerImpl::GetInstance().DownloadFile(
+            userId, bundleName, networkId, assetInfo, resultCallback);
+        EXPECT_EQ(res, E_OK);
+ 
+        // On success, callback remains registered in the map (not removed)
+        auto &manager = CloudSyncAssetManagerImpl::GetInstance();
+        DownloadAssetCallback::TaskId taskId = manager.downloadAssetCallback_->GetTaskId() - 1;
+        auto retrievedCallback = manager.downloadAssetCallback_->GetDownloadTaskCallback(taskId);
+        EXPECT_TRUE(retrievedCallback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFile_SuccessWithCallback_001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFile_SuccessWithCallback_001 End";
+}
+
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

@@ -60,13 +60,20 @@ int32_t CloudSyncManagerImplLite::RemovedClean(const std::string &bundleName, in
 
 void CloudSyncManagerImplLite::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
+    if (remoteObject == nullptr) {
+        LOGW("remoteObject is nullptr");
+        return;
+    }
     if (!isFirstCall_.test_and_set()) {
         auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
             LOGE("service dead");
             isFirstCall_.clear();
         };
         deathRecipient_ = sptr(new SvcDeathRecipientLite(deathCallback));
-        remoteObject->AddDeathRecipient(deathRecipient_);
+        if (!remoteObject->AddDeathRecipient(deathRecipient_)) {
+            LOGE("add death recipient failed");
+            isFirstCall_.clear();
+        }
     }
 }
 } // namespace OHOS::FileManagement::CloudSync
