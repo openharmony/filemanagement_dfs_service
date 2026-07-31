@@ -67,6 +67,7 @@ ohos_shared_library("cloudsync") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "node:node_header_notice",
+    "libuv:uv",
   ]
 
   defines = [
