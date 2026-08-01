@@ -37,24 +37,28 @@ int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
 int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    NetworkStatus::SetNetConnStatus(*netAllCap);
+    NetworkStatus::NetConnStatus oldStatus = NetworkStatus::SetNetConnStatus(*netAllCap);
     NetworkStatus::NetConnStatus newStatus = NetworkStatus::GetNetConnStatus();
+    // Keep the old/new compare: signal/bandwidth changes also fire this callback with network status unchanged.
+    if (oldStatus == newStatus || newStatus == NetworkStatus::NO_NETWORK) {
+        LOGI("newStatus is %{public}d", static_cast<int32_t>(newStatus));
+        return E_OK;
+    }
+    LOGI("net status changed: %{public}d -> %{public}d", static_cast<int32_t>(oldStatus),
+         static_cast<int32_t>(newStatus));
+
     ffrt::submit([newStatus, this]() {
         if (dataSyncManager_ == nullptr) {
             LOGE("dataSyncManager_ is nullptr");
             return;
         }
         if (newStatus == NetworkStatus::WIFI_CONNECT) {
-            LOGI("NetCapabilitiesChanged wifi connected");
             dataSyncManager_->TriggerRecoverySync(triggerType_);
             dataSyncManager_->DownloadThumb();
             dataSyncManager_->CacheVideo();
         } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
-            LOGI("NetCapabilitiesChanged cellular connected");
             dataSyncManager_->TriggerRecoverySync(triggerType_);
             NetworkStatus::NetWorkChangeStopUploadTask();
-        } else {
-            LOGI("NetCapabilitiesChanged newStatus:%{public}d", newStatus);
         }
     });
 

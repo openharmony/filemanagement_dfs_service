@@ -23,6 +23,7 @@
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "network_status.h"
 #include "parameters.h"
 #include "settings_data_manager.h"
 #include "system_ability_definition.h"
@@ -98,7 +99,8 @@ void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const 
 
     bool endCheckSwitch = false;
     getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, endCheckSwitch);
-    if (netStatus_ != WIFI_CONNECT && preCheckSwitch && !endCheckSwitch && dataSyncManager_ != nullptr) {
+    if (NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT && preCheckSwitch &&
+        !endCheckSwitch && dataSyncManager_ != nullptr) {
         dataSyncManager_->StopUploadTask(bundleName, userId);
     }
 }
@@ -274,9 +276,4 @@ void NetworkSetManager::NetWorkChangeStopUploadTask()
     }
 }
 
-void NetworkSetManager::SetNetConnStatus(NetworkSetManager::NetConnStatus netStatus)
-{
-    netStatus_ = netStatus;
-    LOGI("netStatus type:%{public}d", netStatus);
-}
 }

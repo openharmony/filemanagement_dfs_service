@@ -15,7 +15,10 @@
 
 #include "network_status.h"
 
+#include <chrono>
 #include <cstdint>
+#include <future>
+#include <thread>
 #include <unistd.h>
 
 #include "dfs_error.h"
@@ -31,7 +34,25 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::FileManagement::CloudSync {
 static constexpr const int32_t MIN_VALID_NETID = 100;
 static constexpr const int32_t WAIT_NET_SERVICE_TIME = 4;
+static constexpr const int32_t WAIT_GET_DEFAULT_NET_TIMEOUT_S = 4;
 static const char *NET_MANAGER_ON_STATUS = "2";
+
+static bool FetchDefaultNetWithTimeout(NetworkStatus::NetConnStatus &out)
+{
+    std::packaged_task<NetworkStatus::NetConnStatus()> task([] {
+        NetworkStatus::NetConnStatus status = NetworkStatus::NO_NETWORK;
+        return NetworkStatus::GetDefaultNet(status) == E_OK ? status : NetworkStatus::NETWORK_NOT_INIT;
+    });
+    auto fut = task.get_future();
+    std::thread(std::move(task)).detach();
+    if (fut.wait_for(std::chrono::seconds(WAIT_GET_DEFAULT_NET_TIMEOUT_S)) != std::future_status::ready) {
+        LOGE("GetDefaultNet timed out after %{public}ds, rely on callback to recover",
+             WAIT_GET_DEFAULT_NET_TIMEOUT_S);
+        return false;
+    }
+    out = fut.get();
+    return true;
+}
 
 int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
@@ -48,7 +69,22 @@ int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<CloudFile::DataSy
     return E_OK;
 }
 
-int32_t NetworkStatus::GetDefaultNet()
+NetworkStatus::NetConnStatus NetworkStatus::MapCapabilities(NetManagerStandard::NetAllCapabilities &netAllCap)
+{
+    NetConnStatus newStatus = NetConnStatus::NO_NETWORK;
+    if (netAllCap.netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
+        if (netAllCap.bearerTypes_.count(BEARER_ETHERNET)) {
+            newStatus = NetConnStatus::ETHERNET_CONNECT;
+        } else if (netAllCap.bearerTypes_.count(BEARER_WIFI)) {
+            newStatus = NetConnStatus::WIFI_CONNECT;
+        } else if (netAllCap.bearerTypes_.count(BEARER_CELLULAR)) {
+            newStatus = NetConnStatus::CELLULAR_CONNECT;
+        }
+    }
+    return newStatus;
+}
+
+int32_t NetworkStatus::GetDefaultNet(NetConnStatus &status)
 {
     NetHandle netHandle;
     int ret = NetConnClient::GetInstance().GetDefaultNet(netHandle);
@@ -57,7 +93,7 @@ int32_t NetworkStatus::GetDefaultNet()
         return E_GET_NETWORK_MANAGER_FAILED;
     }
     if (netHandle.GetNetId() < MIN_VALID_NETID) {
-        SetNetConnStatus(NetConnStatus::NO_NETWORK);
+        status = NetConnStatus::NO_NETWORK;
         return E_OK;
     }
     NetAllCapabilities netAllCap;
@@ -66,32 +102,17 @@ int32_t NetworkStatus::GetDefaultNet()
         LOGE("GetNetCapbilities failed, ret = %{public}d", ret);
         return E_GET_NETWORK_MANAGER_FAILED;
     }
-    SetNetConnStatus(netAllCap);
+    status = MapCapabilities(netAllCap);
     return E_OK;
 }
 
-void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap)
+NetworkStatus::NetConnStatus NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap)
 {
-    if (netAllCap.netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
-        if (netAllCap.bearerTypes_.count(BEARER_ETHERNET)) {
-            SetNetConnStatus(NetConnStatus::ETHERNET_CONNECT);
-        } else if (netAllCap.bearerTypes_.count(BEARER_WIFI)) {
-            SetNetConnStatus(NetConnStatus::WIFI_CONNECT);
-        } else if (netAllCap.bearerTypes_.count(BEARER_CELLULAR)) {
-            SetNetConnStatus(NetConnStatus::CELLULAR_CONNECT);
-        }
-    } else {
-        SetNetConnStatus(NetConnStatus::NO_NETWORK);
-    }
+    return SetNetConnStatus(MapCapabilities(netAllCap));
 }
 
 int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
-    int32_t res = GetDefaultNet();
-    if (res != E_OK) {
-        return res;
-    }
-
     NetworkSetManager::InitDataSyncManager(dataSyncManager);
     return RegisterNetConnCallback(dataSyncManager);
 }
@@ -121,18 +142,39 @@ void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> data
     } while (retryCount < RETRY_MAX_TIMES);
 }
 
-void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
+NetworkStatus::NetConnStatus NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
     std::lock_guard<std::mutex> lock(netStatusMutex_);
+    NetConnStatus oldStatus = netStatus_;
     netStatus_ = netStatus;
-    NetworkSetManager::SetNetConnStatus(static_cast<NetworkSetManager::NetConnStatus>(netStatus));
-    return;
+    return oldStatus;
+}
+
+void NetworkStatus::DoInitialFetch()
+{
+    {
+        std::lock_guard<std::mutex> lock(netStatusMutex_);
+        if (netStatus_ != NETWORK_NOT_INIT) {
+            return;
+        }
+    }
+    NetConnStatus fetched = NETWORK_NOT_INIT;
+    if (FetchDefaultNetWithTimeout(fetched)) {
+        std::lock_guard<std::mutex> lock(netStatusMutex_);
+        if (netStatus_ == NETWORK_NOT_INIT && fetched != NETWORK_NOT_INIT) {
+            netStatus_ = fetched;
+            LOGI("net status initial: %{public}d", static_cast<int32_t>(netStatus_));
+        }
+    }
 }
 
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
+    // Lazy fetch on first read via call_once; skip if a callback already set it.
+    // Default NETWORK_NOT_INIT (not NO_NETWORK) to avoid wrong read at startup.
+    std::call_once(initNetStatusOnceFlag_, DoInitialFetch);
     std::lock_guard<std::mutex> lock(netStatusMutex_);
-    return netStatus_;
+    return netStatus_ == NETWORK_NOT_INIT ? NO_NETWORK : netStatus_;
 }
 
 bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
@@ -169,11 +211,12 @@ bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t us
 
 bool NetworkStatus::CheckWifiOrEthernet()
 {
-    if (netStatus_ == WIFI_CONNECT) {
+    NetConnStatus status = GetNetConnStatus();
+    if (status == WIFI_CONNECT) {
         LOGI("datashare status close, network_status:wifi");
         return true;
     }
-    if (netStatus_ == ETHERNET_CONNECT) {
+    if (status == ETHERNET_CONNECT) {
         LOGI("datashare status close, network_status:ethernet");
         return true;
     }

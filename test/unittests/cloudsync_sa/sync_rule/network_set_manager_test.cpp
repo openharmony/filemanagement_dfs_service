@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "network_set_manager.h"
+#include "network_status.h"
 #include "data_ability_observer_stub.h"
 #include "accesstoken_kit.h"
 #include "cloud_file_kit_mock.h"
@@ -397,10 +398,12 @@ HWTEST_F(NetworkSetManagerTest, GetCellularConnectTest, TestSize.Level1)
         int32_t userId = 100;
         string bundleName = "com.ohos.photos";
 
+        // Pre-set status so first GetNetConnStatus skips lazy fetch (no real IPC).
+        NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus::NO_NETWORK);
         (networkSetManager_->cellularNetMap_).Insert(std::to_string(userId) + "/" + bundleName, true);
         networkSetManager_->dataSyncManager_ = std::make_shared<CloudFile::DataSyncManager>();
         networkSetManager_->GetCellularConnect(bundleName, userId);
-        EXPECT_NE(networkSetManager_->netStatus_, NetworkSetManager::NetConnStatus::WIFI_CONNECT);
+        EXPECT_NE(NetworkStatus::GetNetConnStatus(), NetworkStatus::NetConnStatus::WIFI_CONNECT);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetCellularConnectTest FAILED";

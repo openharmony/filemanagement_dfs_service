@@ -24,18 +24,21 @@ int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> 
     return E_OK;
 }
 
-int32_t NetworkStatus::GetDefaultNet()
+int32_t NetworkStatus::GetDefaultNet(NetConnStatus &status)
 {
+    status = NetConnStatus::WIFI_CONNECT;
     return E_OK;
 }
 
-void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap)
+NetworkStatus::NetConnStatus NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap)
 {
+    return NetworkStatus::NetConnStatus::NO_NETWORK;
 }
 
 int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
-    int32_t res = GetDefaultNet();
+    NetConnStatus status;
+    int32_t res = GetDefaultNet(status);
     if (res != E_OK) {
         return res;
     }
@@ -47,9 +50,9 @@ void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager
 {
 }
 
-void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
+NetworkStatus::NetConnStatus NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
-    return;
+    return NetworkStatus::NetConnStatus::NO_NETWORK;
 }
 
 bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)

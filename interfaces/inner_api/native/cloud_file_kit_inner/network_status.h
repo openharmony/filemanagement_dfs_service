@@ -30,13 +30,14 @@ public:
         WIFI_CONNECT,
         CELLULAR_CONNECT,
         NETWORK_AVAIL,
+        NETWORK_NOT_INIT,  // internal only; GetNetConnStatus never returns it
     };
     static int32_t RegisterNetConnCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
-    static int32_t GetDefaultNet();
+    static int32_t GetDefaultNet(NetConnStatus &status);
     static int32_t GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
-    static void SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap);
-    static void SetNetConnStatus(NetConnStatus netStatus);
+    static NetConnStatus SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap);
+    static NetConnStatus SetNetConnStatus(NetConnStatus netStatus);
     static NetConnStatus GetNetConnStatus();
     static void OnNetworkAvail();
     static bool CheckMobileNetwork(const std::string &bundleName, const int32_t userId);
@@ -45,8 +46,11 @@ public:
     static bool CheckWifiOrEthernet();
 
 private:
+    static void DoInitialFetch();
+    static NetConnStatus MapCapabilities(NetManagerStandard::NetAllCapabilities &netAllCap);
     static inline std::mutex netStatusMutex_;
-    static inline NetConnStatus netStatus_{NO_NETWORK};
+    static inline NetConnStatus netStatus_{NETWORK_NOT_INIT};
+    static inline std::once_flag initNetStatusOnceFlag_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
