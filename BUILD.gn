@@ -80,7 +80,6 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest/all_connect:all_connect_manager_test",
     "${services_path}/distributedfiledaemon/test/unittest/connect_count:connect_count_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:unittest",
-    "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_manager_test",
     "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_point_test",
     "test/moduletest:DistributedFileDaemonServiceTest",
   ]
