@@ -16,6 +16,7 @@
 #include "database_supplement_task.h"
 
 #include <sys/stat.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 
 #include <filesystem>
@@ -46,6 +47,11 @@ namespace CloudSync {
 using namespace std;
 using namespace OHOS::NativeRdb;
 using namespace CloudDisk;
+
+namespace {
+constexpr const char *ACL_XATTR_ACCESS = "system.posix_acl_access";
+constexpr const char *ACL_XATTR_DEFAULT = "system.posix_acl_default";
+} // namespace
 
 class SupplementDbCallBack : public RdbOpenCallback {
 public:
@@ -422,6 +428,8 @@ void DatabaseSupplementTask::ChownMigratedAppDirectory(int32_t userId, const str
         }
         
         uint32_t mode = S_ISDIR(st.st_mode) ? STAT_MODE_DIR : STAT_MODE_REG;
+        removexattr(path.c_str(), ACL_XATTR_ACCESS);
+        removexattr(path.c_str(), ACL_XATTR_DEFAULT);
         CloudFileUtils::ChangeUid(userId, bundleName, mode, path);
     }
     

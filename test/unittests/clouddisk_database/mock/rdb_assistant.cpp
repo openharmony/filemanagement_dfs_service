@@ -16,6 +16,7 @@
 #include "rdb_assistant.h"
 
 #include <dlfcn.h>
+#include <sys/types.h>
 
 namespace OHOS {
 namespace FileManagement {
@@ -85,6 +86,48 @@ int stat(const char* path, struct stat* buf)
     }
 
     return realStat(path, buf);
+}
+
+int chown(const char* path, uid_t owner, gid_t group)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->chown(path, owner, group);
+    }
+
+    static int (*realChown)(const char* path, uid_t owner, gid_t group) = []() {
+        auto func = (int (*)(const char* path, uid_t owner, gid_t group))dlsym(RTLD_NEXT, "chown");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real chown: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realChown) {
+        return -1;
+    }
+
+    return realChown(path, owner, group);
+}
+
+int removexattr(const char* path, const char* name)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->removexattr(path, name);
+    }
+
+    static int (*realRemovexattr)(const char* path, const char* name) = []() {
+        auto func = (int (*)(const char* path, const char* name))dlsym(RTLD_NEXT, "removexattr");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real removexattr: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realRemovexattr) {
+        return -1;
+    }
+
+    return realRemovexattr(path, name);
 }
 
 } // extern "C"

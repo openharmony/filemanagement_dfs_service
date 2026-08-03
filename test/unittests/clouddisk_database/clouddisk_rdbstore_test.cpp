@@ -26,12 +26,14 @@
 #include "transaction_mock.h"
 #include "clouddisk_rdbstore.cpp"
 #include "data_syncer_rdb_store.h"
+#include "parameters.h"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace NativeRdb;
+using OHOS::system::ParameterMock;
 
 static const string BUNDLE_NAME = "com.ohos.photos";
 static const int32_t USER_ID = 100;
@@ -43,6 +45,7 @@ public:
     void TearDown();
     shared_ptr<CloudDiskRdbStore> clouddiskrdbStore_ = nullptr;
     shared_ptr<AssistantMock> insMock = nullptr;
+    shared_ptr<ParameterMock> parameterMock_ = nullptr;
 };
 
 void CloudDiskRdbStoreTest::SetUpTestCase(void)
@@ -62,6 +65,8 @@ void CloudDiskRdbStoreTest::SetUp(void)
     AssistantMock::ins = insMock;
     clouddiskrdbStore_ = make_shared<CloudDiskRdbStore>(BUNDLE_NAME, USER_ID);
     insMock->EnableMock();
+    parameterMock_ = make_shared<ParameterMock>();
+    ParameterMock::proxy_ = parameterMock_;
 }
 
 void CloudDiskRdbStoreTest::TearDown(void)
@@ -70,6 +75,8 @@ void CloudDiskRdbStoreTest::TearDown(void)
     insMock = nullptr;
     clouddiskrdbStore_ = nullptr;
     DataSyncerRdbStoreMock::proxy_ = nullptr;
+    ParameterMock::proxy_ = nullptr;
+    parameterMock_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -124,29 +131,17 @@ HWTEST_F(CloudDiskRdbStoreTest, ReBuildDatabaseTest3, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbInit
- * @tc.desc: Verify the CloudDiskRdbStore::RdbInit function
+ * @tc.name: RdbInitTest1
+ * @tc.desc: Verify RdbInit with TryOpenRdbStore success
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest1, TestSize.Level1)
 {
     auto rdb = make_shared<RdbStoreMock>();
-    clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _)).WillOnce(Return(nullptr));
-
-    int32_t ret = clouddiskrdbStore_->RdbInit();
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
- * @tc.name: RdbInit
- * @tc.desc: Verify the CloudDiskRdbStore::RdbInit function
- * @tc.type: FUNC
- */
-HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest2, TestSize.Level1)
-{
-    auto rdb = make_shared<RdbStoreMock>();
-    clouddiskrdbStore_->rdbStore_ = rdb;
+    string databasePath = "/test/clouddisk.db";
+    EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillRepeatedly(Return(BUNDLE_NAME));
+    EXPECT_CALL(*insMock, GetDefaultDatabasePath(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(E_OK), Return(databasePath)));
     EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _)).WillOnce(Return(rdb));
 
     int32_t ret = clouddiskrdbStore_->RdbInit();
@@ -154,12 +149,13 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest2, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbInit
- * @tc.desc: Verify the CloudDiskRdbStore::RdbInit function
+ * @tc.name: RdbInitTest2
+ * @tc.desc: Verify RdbInit with path creation failure
  * @tc.type: FUNC
  */
-HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest3, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest2, TestSize.Level1)
 {
+    EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillRepeatedly(Return(BUNDLE_NAME));
     EXPECT_CALL(*insMock, GetDefaultDatabasePath(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(E_RDB), Return("")));
 
@@ -168,22 +164,177 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest3, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbInit
- * @tc.desc: Verify the CloudDiskRdbStore::RdbInit function
+ * @tc.name: RdbInitTest3
+ * @tc.desc: Verify RdbInit with TryOpenRdbStore failure
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest3, TestSize.Level1)
+{
+    string databasePath = "/test/clouddisk.db";
+    EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillRepeatedly(Return(BUNDLE_NAME));
+    EXPECT_CALL(*insMock, GetDefaultDatabasePath(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(E_OK), Return(databasePath)));
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(E_RDB), Return(nullptr)));
+
+    int32_t ret = clouddiskrdbStore_->RdbInit();
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: RdbInitTest4
+ * @tc.desc: Verify RdbInit with TryOpen success + CORRUPT → DatabaseRestore
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest4, TestSize.Level1)
 {
+    auto rdb = make_shared<RdbStoreMock>();
     string databasePath = "/test/clouddisk.db";
-
+    EXPECT_CALL(*parameterMock_, GetParameter(_, _)).WillRepeatedly(Return(BUNDLE_NAME));
     EXPECT_CALL(*insMock, GetDefaultDatabasePath(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(E_OK), Return(databasePath)));
     EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
-        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CORRUPT), Return(nullptr)));
-    EXPECT_CALL(*insMock, DeleteRdbStore(_)).WillOnce(Return(E_RDB));
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CORRUPT), Return(rdb)));
 
     int32_t ret = clouddiskrdbStore_->RdbInit();
-    EXPECT_EQ(ret, NativeRdb::E_SQLITE_CORRUPT);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest001
+ * @tc.desc: Verify TryOpenRdbStore first GetRdbStore success → true
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest001, TestSize.Level1)
+{
+    auto rdb = make_shared<RdbStoreMock>();
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _)).WillOnce(Return(rdb));
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest002
+ * @tc.desc: Verify TryOpenRdbStore CANTOPEN → repair → retry success → true
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest002, TestSize.Level1)
+{
+    auto rdb = make_shared<RdbStoreMock>();
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CANTOPEN), Return(nullptr)))
+        .WillOnce(Return(rdb));
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(AnyNumber());
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest003
+ * @tc.desc: Verify TryOpenRdbStore PERM → repair → retry success → true
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest003, TestSize.Level1)
+{
+    auto rdb = make_shared<RdbStoreMock>();
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_PERM), Return(nullptr)))
+        .WillOnce(Return(rdb));
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(AnyNumber());
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest004
+ * @tc.desc: Verify TryOpenRdbStore CANTOPEN → repair → retry fail CORRUPT → ReBuild fail → false
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest004, TestSize.Level1)
+{
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CANTOPEN), Return(nullptr)))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CORRUPT), Return(nullptr)));
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(AnyNumber());
+    EXPECT_CALL(*insMock, DeleteRdbStore(_)).WillOnce(Return(E_RDB));
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest005
+ * @tc.desc: Verify TryOpenRdbStore CORRUPT (no CANTOPEN/PERM) → ReBuild success → false
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest005, TestSize.Level1)
+{
+    auto rdb = make_shared<RdbStoreMock>();
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CORRUPT), Return(nullptr)))
+        .WillOnce(Return(rdb));
+    EXPECT_CALL(*insMock, DeleteRdbStore(_)).WillOnce(Return(E_OK));
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest006
+ * @tc.desc: Verify TryOpenRdbStore CANTOPEN → repair → retry fail non-CORRUPT → false
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest006, TestSize.Level1)
+{
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_SQLITE_CANTOPEN), Return(nullptr)))
+        .WillOnce(DoAll(SetArgReferee<3>(E_RDB), Return(nullptr)));
+    EXPECT_CALL(*insMock, chown(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*insMock, removexattr(_, _)).Times(AnyNumber());
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: TryOpenRdbStoreTest007
+ * @tc.desc: Verify TryOpenRdbStore other error (no CANTOPEN/PERM/CORRUPT) → false
+ * @tc.type: FUNC
+ */
+HWTEST_F(CloudDiskRdbStoreTest, TryOpenRdbStoreTest007, TestSize.Level1)
+{
+    EXPECT_CALL(*insMock, GetRdbStore(_, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<3>(E_RDB), Return(nullptr)));
+
+    int32_t errCode = 0;
+    string customDir = "/test/custom";
+    string databasePath = "/test/db";
+    bool ret = clouddiskrdbStore_->TryOpenRdbStore(customDir, databasePath, errCode);
+    EXPECT_FALSE(ret);
 }
 
 /**

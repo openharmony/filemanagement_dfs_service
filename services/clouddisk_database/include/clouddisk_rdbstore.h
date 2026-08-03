@@ -127,6 +127,7 @@ private:
     int32_t UnlinkSynced(const std::string &cloudId);
     int32_t UnlinkLocal(const std::string &cloudId);
     int32_t ReBuildDatabase(const std::string &databasePath);
+    bool TryOpenRdbStore(const std::string &customDir, const std::string &databasePath, int32_t &errCode);
     int32_t CheckIsConflict(const std::string &name, const std::string &parentCloudId, std::string &newName);
     int32_t RestoreUpdateRdb(const std::string &cloudId, const struct RestoreInfo &restoreInfo,
         const NativeRdb::ValuesBucket &setXattr);
