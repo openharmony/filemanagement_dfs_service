@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_DECOMPRESS_KIT_CONSTANT_H
 
 namespace OHOS::FileManagement::Decompress {
-inline const std::string CFG_DIR = "/etc/dfsParam/fakeDecompress";
+inline const std::string CFG_DIR = "etc/dfsParam/fakeDecompress";
 inline const std::string LOCAL_CFG_DIR = "/data/service/el1/public/cloudfile/decompress_config";
 inline const std::string VERSION_FILE = "version.txt";
 inline const std::string DECOMPRESS_CONFIG_FILE = "fake_decompress.json";
