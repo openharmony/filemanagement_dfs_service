@@ -2072,7 +2072,7 @@ int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChil
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
+int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId, const int64_t &visitTime)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
@@ -2080,6 +2080,12 @@ int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
     ValuesBucket updateValue;
     vector<string> whereArgs = {cloudId};
     updateValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+    // visitTime is in microseconds (us), recorded at the moment unlink is triggered,
+    // used for ordering deleted records during cloud deletion sync.
+    // This overwrites the original millisecond-level atime, which is safe because
+    // deleted records are never restored and their FILE_TIME_VISIT is only used
+    // for deletion sync ordering, never mixed with non-deleted records.
+    updateValue.PutLong(FileColumn::FILE_TIME_VISIT, visitTime);
     int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, updateValue, FileColumn::CLOUD_ID + " = ?",
         whereArgs);
     if (ret != E_OK) {
@@ -2103,7 +2109,7 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noUpload)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noUpload, const int64_t &visitTime)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
@@ -2115,7 +2121,7 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noU
     if (noUpload == NO_UPLOAD) {
         RETURN_ON_ERR(UnlinkLocal(cloudId));
     } else {
-        RETURN_ON_ERR(UnlinkSynced(cloudId));
+        RETURN_ON_ERR(UnlinkSynced(cloudId, visitTime));
         CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     }
     return E_OK;
