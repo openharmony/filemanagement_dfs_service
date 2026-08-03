@@ -59,7 +59,7 @@
       *OHOS::FileManagement::AccountUtils*;
     };
 
-    # C export functions for fecompress
+    # C export functions for decompress
     CloudSync_GetDecompressUnsupportedList;
     CloudSync_GetDecompressSystemFeature;
 
