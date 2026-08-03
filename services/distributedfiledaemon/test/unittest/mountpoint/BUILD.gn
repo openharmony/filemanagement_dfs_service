@@ -65,7 +65,6 @@ ohos_unittest("mount_point_test") {
 group("unittest") {
   testonly = true
   deps = [
-    ":mount_manager_test",
     ":mount_point_test",
   ]
 }

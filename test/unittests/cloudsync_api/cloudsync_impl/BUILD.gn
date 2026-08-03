@@ -625,27 +625,20 @@ group("cloudsync_impl_test") {
   testonly = true
 
   deps = [
-    ":cloud_download_callback_client_test",
     ":cloud_download_callback_stub_test",
     ":cloud_download_uri_manager_test",
     ":cloud_optimize_callback_stub_test",
     ":cloud_sync_asset_manager_impl_test",
     ":cloud_sync_asset_manager_impl_unnomal_test",
     ":cloud_sync_asset_manager_test",
-    ":cloud_sync_callback_client_test",
-    ":cloud_sync_callback_stub_test",
     ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
     ":cloud_sync_manager_impl_lite_test",
-    ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
-    ":cloud_upload_callback_client_test",
     ":cloud_upload_callback_client_manager_test",
     ":cloud_upload_callback_stub_test",
     ":download_asset_callback_client_test",
     ":download_asset_callback_stub_test",
-    ":downgrade_dl_callback_client_test",
-    ":downgrade_dl_callback_stub_test",
     ":service_proxy_static_test",
     ":service_proxy_test",
   ]

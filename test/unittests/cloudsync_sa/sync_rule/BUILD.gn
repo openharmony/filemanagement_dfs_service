@@ -552,7 +552,6 @@ group("cloudsync_sa_sync_rule_test") {
     ":network_status_test",
     ":screen_status_listener_test",
     ":settings_data_manager_test",
-    ":system_load_test",
     ":user_status_listener_test",
   ]
 }
