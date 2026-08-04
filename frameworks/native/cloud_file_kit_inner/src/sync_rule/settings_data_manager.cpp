@@ -157,14 +157,10 @@ static bool PreInitWithTimeout()
 
 void SettingsDataManager::PreInit()
 {
-    std::lock_guard<std::mutex> lock(preInitMutex_);
-    if (preInitDone_) {
-        return;
-    }
-    LOGI("PreInit start");
-    if (PreInitWithTimeout()) {
-        preInitDone_ = true;
-    }
+    std::call_once(initFlag_, []() {
+        LOGI("PreInit start");
+        PreInitWithTimeout();
+    });
 }
 
 void SettingsDataManager::InitSettingsDataManager()
