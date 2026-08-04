@@ -75,6 +75,9 @@ bool SettingDataHelper::IsDataShareReady()
     if (ret.first == DataShare::E_DATA_SHARE_NOT_READY) {
         LOGE("create datashare helper faild");
         isDataShareReady_ = false;
+        if (ret.second != nullptr) {
+            ret.second->Release();
+        }
         return false;
     }
     if (ret.first == DataShare::E_OK) {
@@ -85,6 +88,9 @@ bool SettingDataHelper::IsDataShareReady()
         }
         isDataShareReady_ = true;
         return true;
+    }
+    if (ret.second != nullptr) {
+        ret.second->Release();
     }
     return false;
 }
