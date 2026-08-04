@@ -73,8 +73,8 @@ public:
     std::pair<int32_t, int32_t> UpdateEx(
         Uri &uri, const DataSharePredicates &predicates, const DataShareValuesBucket &value);
 
-    static void RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);
-    static void UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);
+    static int32_t RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);
+    static int32_t UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver);
     static bool Release();
 
 private:

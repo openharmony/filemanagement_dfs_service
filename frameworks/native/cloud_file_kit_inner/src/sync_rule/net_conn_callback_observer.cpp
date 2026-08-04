@@ -47,17 +47,19 @@ int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandl
     LOGI("net status changed: %{public}d -> %{public}d", static_cast<int32_t>(oldStatus),
          static_cast<int32_t>(newStatus));
 
-    ffrt::submit([newStatus, this]() {
-        if (dataSyncManager_ == nullptr) {
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager = dataSyncManager_;
+    SyncTriggerType triggerType = triggerType_;
+    ffrt::submit([newStatus, dataSyncManager, triggerType]() {
+        if (dataSyncManager == nullptr) {
             LOGE("dataSyncManager_ is nullptr");
             return;
         }
         if (newStatus == NetworkStatus::WIFI_CONNECT) {
-            dataSyncManager_->TriggerRecoverySync(triggerType_);
-            dataSyncManager_->DownloadThumb();
-            dataSyncManager_->CacheVideo();
+            dataSyncManager->TriggerRecoverySync(triggerType);
+            dataSyncManager->DownloadThumb();
+            dataSyncManager->CacheVideo();
         } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
-            dataSyncManager_->TriggerRecoverySync(triggerType_);
+            dataSyncManager->TriggerRecoverySync(triggerType);
             NetworkStatus::NetWorkChangeStopUploadTask();
         }
     });

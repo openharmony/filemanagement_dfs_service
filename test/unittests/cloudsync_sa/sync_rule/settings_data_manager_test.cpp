@@ -1539,6 +1539,7 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest002, TestSize.Level1)
     try {
         std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, RegisterObserver(_, _)).WillOnce(Return(E_OK));
         SettingsDataManager::observerMap_.Clear();
         SettingsDataManager::RegisterObserver("");
         EXPECT_TRUE(!SettingsDataManager::observerMap_.IsEmpty());
@@ -1585,6 +1586,7 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest005, TestSize.Level1)
     try {
         std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
         EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, RegisterObserver(_, _)).WillOnce(Return(E_OK));
         sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver("key"));
         SettingsDataManager::RegisterObserver("", dataObserver);
     } catch (...) {
@@ -1593,6 +1595,24 @@ HWTEST_F(SettingsDataManagerTest, RegisterObserverTest005, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "RegisterObserverTest005 End";
+}
+
+HWTEST_F(SettingsDataManagerTest, RegisterObserverTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterObserverTest006 Start";
+    try {
+        std::shared_ptr<DataShareHelper> dataShareHelper = std::make_shared<DataShareHelper>();
+        EXPECT_CALL(*dataShareHelperMock_, Creator(_, _, _)).WillOnce(Return(dataShareHelper));
+        EXPECT_CALL(*dataShareHelperMock_, RegisterObserver(_, _)).WillOnce(Return(-1));
+        SettingsDataManager::observerMap_.Clear();
+        SettingsDataManager::RegisterObserver("");
+        EXPECT_TRUE(SettingsDataManager::observerMap_.IsEmpty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterObserverTest006 Failed";
+    }
+
+    GTEST_LOG_(INFO) << "RegisterObserverTest006 End";
 }
 
 HWTEST_F(SettingsDataManagerTest, UnregisterDemonObserverTest001, TestSize.Level1)

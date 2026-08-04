@@ -172,12 +172,13 @@ void NetworkSetManager::RegisterObserver(const std::string &bundleName, const in
         LOGE("dataObserver is nullptr");
         return;
     }
+    int32_t ret = E_OK;
     if (type == CELLULARCONNECT) {
         Uri observerUri(commonQueryUri);
-        dataShareHelper->RegisterObserver(observerUri, dataObserver);
+        ret = dataShareHelper->RegisterObserver(observerUri, dataObserver);
     }
     ReleaseDataShareHelper(dataShareHelper);
-    LOGI("RegisterObserver type:%{public}d, finish", type);
+    LOGI("RegisterObserver type: %{public}d finish, ret: %{public}d", type, ret);
 }
 
 void NetworkSetManager::ReleaseDataShareHelper(std::shared_ptr<DataShare::DataShareHelper> &helper)
