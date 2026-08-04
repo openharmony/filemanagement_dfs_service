@@ -1964,7 +1964,6 @@ static void FileMoveAndRename(ValuesBucket &values, const int32_t &position, con
 {
     values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
     values.PutString(FileColumn::FILE_NAME, newFileName);
-    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     FillFileType(newFileName, values);
     if (position != LOCAL) {
         if (dirtyType != static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
