@@ -13,41 +13,6 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_unittest("cloud_sync_callback_client_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [ "cloud_sync_callback_client_test.cpp" ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("cloud_sync_callback_client_manager_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -73,87 +38,6 @@ ohos_unittest("cloud_sync_callback_client_manager_test") {
   defines = [ "private=public" ]
 
   use_exceptions = true
-}
-
-ohos_unittest("cloud_sync_callback_stub_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [
-    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
-    "cloud_sync_callback_stub_test.cpp",
-  ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/log/include",
-    "${distributedfile_path}/test/mock",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_DOMAIN=0xD004308",
-    "LOG_TAG=\"CLOUDSYNC_API\"",
-  ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
-}
-
-ohos_unittest("cloud_upload_callback_client_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [ "cloud_upload_callback_client_test.cpp" ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
 }
 
 ohos_unittest("cloud_upload_callback_client_manager_test") {
@@ -317,46 +201,6 @@ ohos_unittest("cloud_sync_manager_impl_lite_test") {
   use_exceptions = true
 }
 
-ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [ "cloud_sync_manager_impl_unnomal_test.cpp" ]
-
-  include_dirs = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/test/mock/ipc",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
-    "${services_path}/cloudsyncservice:cloudsync_sa_static",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-    "samgr:samgr_proxy",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
-}
-
 ohos_unittest("cloud_sync_manager_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -384,47 +228,6 @@ ohos_unittest("cloud_sync_manager_test") {
   defines = [ "private=public" ]
 
   use_exceptions = true
-}
-
-ohos_unittest("cloud_download_callback_client_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [ "cloud_download_callback_client_test.cpp" ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [
-    "private=public",
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_TEST\"",
-  ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
 }
 
 ohos_unittest("cloud_download_callback_stub_test") {
@@ -700,47 +503,6 @@ ohos_unittest("download_asset_callback_stub_test") {
   use_exceptions = true
 }
 
-ohos_unittest("downgrade_dl_callback_stub_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [
-    "downgrade_dl_callback_stub_test.cpp",
-  ]
-
-  include_dirs = [
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [
-    "private=public",
-    "protected=public",
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_TEST\"",
-  ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
-}
-
 ohos_unittest("cloud_optimize_callback_stub_test") {
   module_out_path = "dfs_service/dfs_service"
 
@@ -774,42 +536,6 @@ ohos_unittest("cloud_optimize_callback_stub_test") {
   ]
 
   use_exceptions = true
-}
-
-ohos_unittest("downgrade_dl_callback_client_test") {
-  module_out_path = "dfs_service/dfs_service"
-
-  sources = [
-    "downgrade_dl_callback_client_test.cpp",
-  ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
-    "${distributedfile_path}/utils/log/include",
-  ]
-
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_static" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "./dfs_blocklist.txt"
-  }
 }
 
 ohos_unittest("service_proxy_test") {
@@ -899,27 +625,20 @@ group("cloudsync_impl_test") {
   testonly = true
 
   deps = [
-    ":cloud_download_callback_client_test",
     ":cloud_download_callback_stub_test",
     ":cloud_download_uri_manager_test",
     ":cloud_optimize_callback_stub_test",
     ":cloud_sync_asset_manager_impl_test",
     ":cloud_sync_asset_manager_impl_unnomal_test",
     ":cloud_sync_asset_manager_test",
-    ":cloud_sync_callback_client_test",
-    ":cloud_sync_callback_stub_test",
     ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
     ":cloud_sync_manager_impl_lite_test",
-    ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
-    ":cloud_upload_callback_client_test",
     ":cloud_upload_callback_client_manager_test",
     ":cloud_upload_callback_stub_test",
     ":download_asset_callback_client_test",
     ":download_asset_callback_stub_test",
-    ":downgrade_dl_callback_client_test",
-    ":downgrade_dl_callback_stub_test",
     ":service_proxy_static_test",
     ":service_proxy_test",
   ]

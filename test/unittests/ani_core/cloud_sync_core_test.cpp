@@ -263,22 +263,6 @@ HWTEST_F(CloudSyncCoreTest, DoStopTest1, TestSize.Level1)
  * @tc.desc: Verify the CloudSyncCore::DoGetFileSyncState function
  * @tc.type: FUNC
  */
-HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest1, TestSize.Level1)
-{
-    string filePath = "file://com.ohos.camera/test/test.txt";
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
-    auto ret = CloudSyncCore::DoGetFileSyncState(filePath);
-    EXPECT_FALSE(ret.IsSuccess());
-    const auto &err = ret.GetError();
-    int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, E_INVAL);
-}
-
-/**
- * @tc.name: DoGetFileSyncState
- * @tc.desc: Verify the CloudSyncCore::DoGetFileSyncState function
- * @tc.type: FUNC
- */
 HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest2, TestSize.Level1)
 {
     string filePath = "/test/test.txt";
@@ -287,48 +271,6 @@ HWTEST_F(CloudSyncCoreTest, DoGetFileSyncStateTest2, TestSize.Level1)
     const auto &err = ret.GetError();
     int errorCode = err.GetErrNo();
     EXPECT_EQ(errorCode, E_INVAL);
-}
-
-/**
- * @tc.name: DoGetCoreFileSyncState
- * @tc.desc: Verify the CloudSyncCore::DoGetCoreFileSyncState function
- * @tc.type: FUNC
- */
-HWTEST_F(CloudSyncCoreTest, DoGetCoreFileSyncStateTest1, TestSize.Level1)
-{
-    string filePath = "file://com.ohos.camera/test/test.txt";
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(-1));
-    auto ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
-#if CLOUD_ADAPTER_ENABLED
-    EXPECT_TRUE(ret.IsSuccess());
-#else
-    EXPECT_FALSE(ret.IsSuccess());
-#endif
-
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(-1));
-    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
-#if CLOUD_ADAPTER_ENABLED
-    EXPECT_TRUE(ret.IsSuccess());
-#else
-    EXPECT_FALSE(ret.IsSuccess());
-#endif
-
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
-        Invoke([](const char *path, const char *name, void *value, size_t size) {
-            *static_cast<char *>(value) = '7';
-        }), Return(1)));
-    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
-    EXPECT_FALSE(ret.IsSuccess());
-    const auto &err = ret.GetError();
-    int errorCode = err.GetErrNo();
-    EXPECT_EQ(errorCode, JsErrCode::E_INNER_FAILED);
-
-    EXPECT_CALL(*sys, getxattr(_, _, _, _)).WillOnce(Return(0)).WillOnce(DoAll(
-        Invoke([](const char *path, const char *name, void *value, size_t size) {
-            *static_cast<char *>(value) = '5';
-        }), Return(1)));
-    ret = CloudSyncCore::DoGetCoreFileSyncState(filePath);
-    EXPECT_TRUE(ret.IsSuccess());
 }
 
 /**

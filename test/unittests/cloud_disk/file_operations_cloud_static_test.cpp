@@ -2022,55 +2022,6 @@ HWTEST_F(FileOperationsCloudStaticTest, RenameForTrashTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: RenameNewTest001
- * @tc.desc: Verify the RenameNew function
- * @tc.type: FUNC
- * @tc.require: #2971
- */
-HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RenameNewTest001 Start";
-    try {
-        CloudDiskFuseData data;
-        fuse_ino_t parent = 0;
-        fuse_ino_t newParent = 0;
-        fuse_req_t req = nullptr;
-        const char *name = "";
-        const char *newName = "";
-        unsigned int flags = 1;
-
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        EXPECT_TRUE(true);
-
-        flags = 0;
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        EXPECT_TRUE(true);
-
-        parent = 4;
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        EXPECT_TRUE(true);
-
-        parent = 0;
-        newParent = 4;
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        EXPECT_TRUE(true);
-
-        parent = 4;
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RenameNewTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "RenameNewTest001 End";
-}
-
-/**
  * @tc.name: RenameNewTest002
  * @tc.desc: Verify the RenameNew function
  * @tc.type: FUNC

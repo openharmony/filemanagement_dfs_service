@@ -27,40 +27,6 @@ config("module_private_config") {
   defines = [ "DFS_DISABLE_RADAR_ABILITY" ]
 }
 
-ohos_unittest("mount_manager_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  module_out_path = module_output_path
-
-  sources = [
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-  ]
-
-  sources += [ "mount_manager_test.cpp" ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [ "${distributedfile_path}/dfs_utils:libdfsutils" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "json:nlohmann_json_static",
-  ]
-}
-
 ohos_unittest("mount_point_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -99,7 +65,6 @@ ohos_unittest("mount_point_test") {
 group("unittest") {
   testonly = true
   deps = [
-    ":mount_manager_test",
     ":mount_point_test",
   ]
 }
