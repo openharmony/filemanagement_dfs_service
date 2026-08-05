@@ -509,15 +509,18 @@ void SettingsDataManager::RegisterObserver(const std::string &key)
     sptr<SettingsDataObserver> dataObserver(new (std::nothrow) SettingsDataObserver(key));
     if (dataObserver == nullptr) {
         LOGE("dataObserver == nullptr");
+        dataShareHelper->Release();
         return;
     }
     std::string uri = GetSettingsDataUri(key);
     Uri observerUri(uri);
-    dataShareHelper->RegisterObserver(observerUri, dataObserver);
+    int32_t ret = dataShareHelper->RegisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
 
-    observerMap_.EnsureInsert(key, dataObserver);
-    LOGI("Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
+    if (ret == E_OK) {
+        observerMap_.EnsureInsert(key, dataObserver);
+    }
+    LOGI("Register SettingsDataObserver uri: %{public}s ret: %{public}d", uri.c_str(), ret);
 }
 
 void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver)
@@ -538,9 +541,9 @@ void SettingsDataManager::RegisterObserver(const std::string &key, sptr<AAFwk::D
 
     std::string uri = GetUserSettingsDataUri(key);
     Uri observerUri(uri);
-    dataShareHelper->RegisterObserver(observerUri, dataObserver);
+    int32_t ret = dataShareHelper->RegisterObserver(observerUri, dataObserver);
     dataShareHelper->Release();
-    LOGI("demon Register SettingsDataObserver uri: %{public}s finish", uri.c_str());
+    LOGI("demon Register SettingsDataObserver uri: %{public}s ret: %{public}d", uri.c_str(), ret);
 }
 
 void SettingsDataManager::UnregisterDemonObserver(const std::string &key,

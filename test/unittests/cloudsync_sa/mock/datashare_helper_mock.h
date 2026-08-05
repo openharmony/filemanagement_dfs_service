@@ -33,8 +33,8 @@ public:
         std::vector<std::string> &, DatashareBusinessError *));
     MOCK_METHOD3(UpdateEx, std::pair<int32_t, int32_t>(Uri &, const DataSharePredicates &,
         const DataShareValuesBucket &));
-    MOCK_METHOD2(RegisterObserver, void(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
-    MOCK_METHOD2(UnregisterObserver, void(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
+    MOCK_METHOD2(RegisterObserver, int32_t(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
+    MOCK_METHOD2(UnregisterObserver, int32_t(const Uri &, const sptr<AAFwk::IDataAbilityObserver> &));
     MOCK_METHOD0(Release, bool());
     static inline std::shared_ptr<DataShareHelperMock> proxy_ = nullptr;
 };

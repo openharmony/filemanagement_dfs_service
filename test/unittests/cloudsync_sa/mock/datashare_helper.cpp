@@ -69,14 +69,17 @@ std::pair<int32_t, int32_t> DataShareHelper::UpdateEx(
     return std::make_pair(0, 0);
 }
 
-void DataShareHelper::RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver)
+int32_t DataShareHelper::RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver)
 {
-    return;
+    if (DataShareHelperMock::proxy_ != nullptr) {
+        return DataShareHelperMock::proxy_->RegisterObserver(uri, dataObserver);
+    }
+    return 0;
 }
 
-void DataShareHelper::UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver)
+int32_t DataShareHelper::UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbilityObserver> &dataObserver)
 {
-    return;
+    return 0;
 }
 
 bool DataShareHelper::Release()

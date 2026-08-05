@@ -196,6 +196,7 @@ void DowngradeCallbackAniImpl::OnDownloadProcess(const DowngradeProgress &progre
         ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
         if (ret != ANI_OK) {
             LOGE("ani call function failed, ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ret = tmpEnv->DestroyLocalScope();
@@ -235,6 +236,7 @@ void DowngradeCallbackAniImpl::OnTransferProcess(const DowngradeTfProgress &prog
         ret = tmpEnv->FunctionalObject_Call(etsCb, 1, vec.data(), &ref_);
         if (ret != ANI_OK) {
             LOGE("ani call function failed, ret = %{public}d", ret);
+            tmpEnv->DestroyLocalScope();
             return;
         }
         ret = tmpEnv->DestroyLocalScope();
