@@ -63,7 +63,7 @@ void ScreenStatusListener::ScreenOff()
 
 void ScreenStatusListener::Start()
 {
-    /* subscribe Battery Okay Status and Charging status */
+    /* subscribe Screen Status Okay */
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
