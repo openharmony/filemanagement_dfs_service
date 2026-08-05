@@ -195,7 +195,7 @@ HWTEST_F(CloudDiskCommonTest, ChangesResultReadFromParcelTest005, TestSize.Level
 
 /**
  * @tc.name: ChangesResultReadFromParcelTest006
- * @tc.desc: Verify ChangesResult ReadFromParcel fails when ChangeData read fails
+ * @tc.desc: Verify ChangesResult ReadFromParcel skips failed ChangeData and continues
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -203,6 +203,8 @@ HWTEST_F(CloudDiskCommonTest, ChangesResultReadFromParcelTest006, TestSize.Level
 {
     MessageParcel parcel;
     ChangesResult result;
+    constexpr int32_t changeDataSize = 2;
+    constexpr uint8_t operationType = static_cast<uint8_t>(OperationType::CLOSE_WRITE);
 
     InSequence sequence;
     EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
@@ -210,12 +212,30 @@ HWTEST_F(CloudDiskCommonTest, ChangesResultReadFromParcelTest006, TestSize.Level
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
         .WillOnce(DoAll(SetArgReferee<0>(TEST_IS_EOF), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
-        .WillOnce(DoAll(SetArgReferee<0>(TEST_CHANGE_DATA_SIZE), Return(true)));
+        .WillOnce(DoAll(SetArgReferee<0>(changeDataSize), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
         .WillOnce(DoAll(SetArgReferee<0>(TEST_UPDATE_SEQUENCE_NUMBER), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_UPDATE_SEQUENCE_NUMBER), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_FILE_ID), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_PARENT_FILE_ID), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_RELATIVE_PATH), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUint8(_))
+        .WillOnce(DoAll(SetArgReferee<0>(operationType), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_FILE_SIZE), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_MTIME), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUint64(_))
+        .WillOnce(DoAll(SetArgReferee<0>(TEST_TIME_STAMP), Return(true)));
 
-    EXPECT_FALSE(result.ReadFromParcel(parcel));
-    EXPECT_TRUE(result.changesData.empty());
+    EXPECT_TRUE(result.ReadFromParcel(parcel));
+    ASSERT_EQ(result.changesData.size(), TEST_CHANGE_DATA_SIZE);
+    EXPECT_EQ(result.changesData[0].fileId, TEST_FILE_ID);
+    EXPECT_EQ(result.changesData[0].operationType, OperationType::CLOSE_WRITE);
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

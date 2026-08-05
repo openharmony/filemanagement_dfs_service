@@ -227,7 +227,7 @@ bool ChangesResult::ReadFromParcel(Parcel &parcel)
         ChangeData changeData;
         if (!changeData.ReadFromParcel(parcel)) {
             LOGE("failed to read changeData");
-            return false;
+            continue;
         }
         changesData.push_back(changeData);
     }
