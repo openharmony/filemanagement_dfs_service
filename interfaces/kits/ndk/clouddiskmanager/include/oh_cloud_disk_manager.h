@@ -409,7 +409,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterSyncFolderChanges(const CloudDisk_Syn
  * @param startUsn Indicates the start update sequence number.
  * @param count Indicates the number of files.
  * @param changesResult Indicates the result of querying file changes. For details, see {@link CloudDisk_ChangesResult}.
- * @return Returns {@link CLOUD_DISK_OK} if the callback function is unregistered successfully;
+ * @return Returns {@link CLOUD_DISK_OK} if the function GetSyncFolderChanges executes successfully;
  * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
