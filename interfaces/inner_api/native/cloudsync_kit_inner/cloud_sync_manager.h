@@ -114,7 +114,7 @@ public:
     /**
      * @brief 云账号退出选择保留或清除云数据
      *
-     * @param accoutId 账号ID
+     * @param accountId 账号ID
      * @param cleanOptions 说明云文件如何处理的方式
      * @return int32_t 同步返回执行结果
      */
