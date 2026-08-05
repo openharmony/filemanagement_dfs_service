@@ -198,6 +198,24 @@ bool Parcel::ReadUint32(uint32_t &value)
     return DfsMessageParcel::messageParcel->ReadUint32(value);
 }
 
+bool Parcel::WriteUint8(uint8_t value)
+{
+    if (DfsMessageParcel::messageParcel == nullptr) {
+        std::cout << "WriteUint8 mock failed, messageParcel is nullptr" << std::endl;
+        return false;
+    }
+    return DfsMessageParcel::messageParcel->WriteUint8(value);
+}
+
+bool Parcel::ReadUint8(uint8_t &value)
+{
+    if (DfsMessageParcel::messageParcel == nullptr) {
+        std::cout << "ReadUint8 mock failed, messageParcel is nullptr" << std::endl;
+        return false;
+    }
+    return DfsMessageParcel::messageParcel->ReadUint8(value);
+}
+
 bool Parcel::WriteUint64(uint64_t value)
 {
     if (DfsMessageParcel::messageParcel == nullptr) {
