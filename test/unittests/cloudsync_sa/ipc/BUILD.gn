@@ -96,6 +96,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/decompress_config_manager.cpp",
+    "${services_path}/cloudsyncservice/src/decompress_update.cpp",
     "cloud_sync_service_test.cpp",
   ]
 
@@ -119,6 +120,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${innerkits_native_path}/decompress_kit_inner",
   ]
 
   transport = [
@@ -135,6 +137,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
     "${services_path}/cloudsyncservice:cloud_sync_service_stub",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",

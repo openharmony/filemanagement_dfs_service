@@ -60,12 +60,14 @@ ohos_shared_library("cloud_adapter") {
     "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_file_kit_impl.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_sync_helper_impl.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/data_sync_manager_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/decompress_kit_impl.cpp",
   ]
 
   public_configs = [ ":public_config" ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
     "${utils_path}:libdistributedfileutils",
   ]
 

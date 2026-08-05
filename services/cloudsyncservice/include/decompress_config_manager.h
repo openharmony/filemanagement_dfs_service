@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_DECOMPRESS_CONFIG_MANAGER_H
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace OHOS::FileManagement::CloudSync {
@@ -33,12 +34,16 @@ public:
 private:
     DecompressConfigManager() = default;
     ~DecompressConfigManager() = default;
+
+    std::pair<bool, std::vector<std::string>> ParseUnsupportedList(const std::string &filePath);
+    std::pair<bool, bool> ParseSystemFeature(const std::string &filePath);
     
-    static constexpr const char* DEFAULT_CONFIG_DIR = "/system/etc/decompress_config";
-    static constexpr const char* UNSUPPORTED_LIST_FILE = "unsupported_list.json";
-    static constexpr const char* SYSTEM_FEATURE_FILE = "system_feature.json";
-    
+    static constexpr const char* SYSTEM_CONFIG_DIR = "/system/etc/decompress_config";
+    static constexpr const char* DEFAULT_CONFIG_DIR = "/data/service/el1/public/cloudfile/decompress_config";
+    static constexpr const char* FAKE_DECOMPRESSION_FILE = "fake_decompress.json";
+
     std::string configDir_ = DEFAULT_CONFIG_DIR;
+    std::string sysConfigDir_ = SYSTEM_CONFIG_DIR;
 };
 
 } // namespace OHOS::FileManagement::CloudSync
