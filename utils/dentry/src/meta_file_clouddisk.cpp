@@ -166,7 +166,7 @@ int32_t CloudDiskMetaFile::DoLookupAndCreate(const std::string &name, CloudDiskM
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
     MetaBase m(name);
-    /* lookup and create in parent */
+    /* lookup, create or update in parent */
     int32_t ret = DoLookup(m);
     if (ret != E_OK) {
         callback(m);
