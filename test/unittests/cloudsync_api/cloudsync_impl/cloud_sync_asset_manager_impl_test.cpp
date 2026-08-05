@@ -270,6 +270,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFile_DownloadAssetFailed_001, Te
         DownloadAssetCallback::TaskId taskId = manager.downloadAssetCallback_->GetTaskId() - 1;
         auto retrievedCallback = manager.downloadAssetCallback_->GetDownloadTaskCallback(taskId);
         EXPECT_FALSE(retrievedCallback);
+        CloudSyncAssetManagerImpl::GetInstance().isCallbackRegistered_.clear();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DownloadFile_DownloadAssetFailed_001 FAILED";
@@ -305,6 +306,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFile_SuccessWithCallback_001, Te
         DownloadAssetCallback::TaskId taskId = manager.downloadAssetCallback_->GetTaskId() - 1;
         auto retrievedCallback = manager.downloadAssetCallback_->GetDownloadTaskCallback(taskId);
         EXPECT_TRUE(retrievedCallback);
+        CloudSyncAssetManagerImpl::GetInstance().isCallbackRegistered_.clear();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DownloadFile_SuccessWithCallback_001 FAILED";
