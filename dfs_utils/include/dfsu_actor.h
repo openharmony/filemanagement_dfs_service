@@ -48,7 +48,7 @@ public:
 
     void StopActor()
     {
-        // Always insert cmds b4 starting an actor
+        // Stop the actor
         StopCtx();
         pendingCmds_.Halt();
 
