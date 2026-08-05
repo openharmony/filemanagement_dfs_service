@@ -81,12 +81,11 @@ private:
     static int32_t InitUserSettings();
     static int32_t InitAndQuerySettingsData(const std::string &key, std::string &value, bool isFirst = false);
 
-    static inline bool supportUserSettingsData_ = true;
+    static inline bool supportUserSettingsData_ = false;
     static inline int32_t currentUserId_ = 100;
     static inline SafeMap<const std::string, std::string> settingsDataMap_;
     static inline SafeMap<const std::string, sptr<AAFwk::DataAbilityObserverStub>> observerMap_;
-    static inline std::mutex preInitMutex_;
-    static inline bool preInitDone_ = false;
+    static inline std::once_flag initFlag_;
 };
 } // OHOS
 
