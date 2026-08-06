@@ -19,7 +19,6 @@
 #include <charconv>
 #include <cstdlib>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/xattr.h>
@@ -30,7 +29,6 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
-#include "clouddiskservice_ioctl.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -45,7 +43,6 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 using namespace std;
-using namespace CloudFile;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
@@ -55,7 +52,7 @@ constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-constexpr uint8_t PLACEHOLDER_XATTR_VALUE = 1;
+constexpr uint8_t PLACEHOLDER_XATTR_VALUE = '1';
 constexpr uint64_t MILLISECONDS_PER_SECOND = 1000;
 constexpr uint64_t NANOSECONDS_PER_MILLISECOND = 1000000;
 
@@ -192,22 +189,6 @@ static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const 
         LOGE("CreatePlaceholderFile branch=openat_file_failed errno=%{public}d", errno);
         return ConvertErrnoToCloudDiskError(errno);
     }
-
-    /*
-    HmdfsPlaceholderAttr create = {
-        .logicalSize = info.logicalSize,
-        .atimeMs = info.atimeMs,
-        .mtimeMs = info.mtimeMs,
-    };
-    if (ioctl(fileFd, HMDFS_IOC_CREATE_PLACEHOLDER, &create) < 0) {
-        int32_t err = errno;
-        LOGE("CreatePlaceholderFile branch=ioctl_create_placeholder_failed errno=%{public}d", err);
-        if (unlinkat(parentFd, path.fileName.c_str(), 0) != 0) {
-            LOGE("CreatePlaceholderFile branch=rollback_unlink_failed errno=%{public}d", errno);
-        }
-        return ConvertErrnoToCloudDiskError(err);
-    }
-    */
 
     int32_t err = SetPlaceholderFileAttributes(fileFd, info);
     if (err != E_OK) {

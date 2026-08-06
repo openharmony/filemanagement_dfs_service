@@ -21,14 +21,12 @@
 #include "assistant.h"
 #include "cloud_disk_service_access_token_mock.h"
 #include "cloud_disk_service_utils.h"
-#include "clouddiskservice_ioctl.h"
 #include "message_parcel_mock.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
-using namespace OHOS::FileManagement::CloudFile;
 using namespace OHOS::Storage::DistributedFile;
 
 namespace {
@@ -658,7 +656,8 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest007, TestSize.Le
     EXPECT_CALL(*insMock_, ftruncate(11, 4096)).WillOnce(Return(0));
     EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
         .WillOnce(Invoke([&xattrChecked](int, const char *, const void *value, size_t, int) {
-            xattrChecked = value != nullptr && *static_cast<const uint8_t *>(value) == 1;
+            xattrChecked = value != nullptr &&
+                *static_cast<const uint8_t *>(value) == PLACEHOLDER_XATTR_VALUE;
             return 0;
         }));
     EXPECT_CALL(*insMock_, futimens(11, _))
