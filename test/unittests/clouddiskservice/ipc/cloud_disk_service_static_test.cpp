@@ -793,6 +793,99 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderAttributeTest003, TestSize
 }
 
 /**
+ * @tc.name: SetPlaceholderFileAttributesBranchTest001
+ * @tc.desc: Verify SetPlaceholderFileAttributes returns success when futimens succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetPlaceholderFileAttributesBranchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest001 start";
+    PlaceholderInfo info;
+    info.logicalSize = 4096;
+    info.atimeMs = 1234;
+    info.mtimeMs = 5678;
+
+    EXPECT_CALL(*insMock_, ftruncate(11, 4096)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Return(0));
+    EXPECT_EQ(SetPlaceholderFileAttributes(11, info), E_OK);
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest001 end";
+}
+
+/**
+ * @tc.name: SetPlaceholderFileAttributesBranchTest002
+ * @tc.desc: Verify SetPlaceholderFileAttributes returns errno when futimens fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetPlaceholderFileAttributesBranchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest002 start";
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Invoke([](int, const struct timespec *) {
+        errno = EACCES;
+        return -1;
+    }));
+    EXPECT_EQ(SetPlaceholderFileAttributes(11, info), EACCES);
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest002 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileAtAttributesBranchTest001
+ * @tc.desc: Verify CreatePlaceholderFileAt succeeds when setting attributes succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileAtAttributesBranchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest001 start";
+    CreatePlaceholderPath path = {TEST_SYNC_FOLDER_MNT, TEST_RELATIVE_PATH};
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, UnlinkAt(_, _, _)).Times(0);
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_OK);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest001 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileAtAttributesBranchTest002
+ * @tc.desc: Verify CreatePlaceholderFileAt rolls back when setting attributes fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileAtAttributesBranchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest002 start";
+    CreatePlaceholderPath path = {TEST_SYNC_FOLDER_MNT, TEST_RELATIVE_PATH};
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Invoke([](int, const struct timespec *) {
+        errno = EACCES;
+        return -1;
+    }));
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq(TEST_RELATIVE_PATH), 0)).WillOnce(Return(0));
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest002 end";
+}
+
+/**
  * @tc.name: CreatePlaceholderBranchTest009
  * @tc.desc: Verify ConvertErrnoToCloudDiskError maps errno branches through the public utility
  * @tc.type: FUNC

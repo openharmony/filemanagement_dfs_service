@@ -60,6 +60,11 @@ int setxattr(const char *path, const char *name, const void *value, size_t size,
     return Assistant::ins->setxattr(path, name, value, size, flags);
 }
 
+int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags)
+{
+    return Assistant::ins->fsetxattr(fd, name, value, size, flags);
+}
+
 int open(const char *path, int flags, ...)
 {
     mode_t mode = 0;
@@ -194,11 +199,6 @@ int fstat(int fd, struct stat *buf)
 int ftruncate(int fd, off_t length)
 {
     return Assistant::ins->ftruncate(fd, length);
-}
-
-int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags)
-{
-    return Assistant::ins->fsetxattr(fd, name, value, size, flags);
 }
 
 int futimens(int fd, const struct timespec times[2])
