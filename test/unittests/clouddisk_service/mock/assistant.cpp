@@ -263,6 +263,27 @@ int ftruncate(int fd, off_t length)
     return realFtruncate(fd, length);
 }
 
+int futimens(int fd, const struct timespec *times)
+{
+    if (AssistantMock::IsMockable()) {
+        return Assistant::ins->futimens(fd, times);
+    }
+
+    static int (*realFutimens)(int, const struct timespec *) = []() {
+        auto func = (int (*)(int, const struct timespec *))dlsym(RTLD_NEXT, "futimens");
+        if (!func) {
+            GTEST_LOG_(ERROR) << "Failed to resolve real futimens: " << dlerror();
+        }
+        return func;
+    }();
+
+    if (!realFutimens) {
+        return -1;
+    }
+
+    return realFutimens(fd, times);
+}
+
 int removexattr(const char *path, const char *name)
 {
     if (AssistantMock::IsMockable()) {

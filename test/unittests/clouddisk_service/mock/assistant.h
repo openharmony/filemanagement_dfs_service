@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <gmock/gmock.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -37,6 +38,7 @@ public:
     virtual ssize_t getxattr(const char *path, const char *name, void *value, size_t size) = 0;
     virtual int fstat(int fd, struct stat *buf) = 0;
     virtual int ftruncate(int fd, off_t length) = 0;
+    virtual int futimens(int fd, const struct timespec *times) = 0;
     virtual int removexattr(const char *path, const char *name) = 0;
 
     // system
@@ -65,6 +67,7 @@ public:
     MOCK_METHOD4(getxattr, ssize_t(const char *, const char *, void *, size_t));
     MOCK_METHOD2(fstat, int(int, struct stat *));
     MOCK_METHOD2(ftruncate, int(int, off_t));
+    MOCK_METHOD2(futimens, int(int, const struct timespec *));
     MOCK_METHOD2(removexattr, int(const char *, const char *));
 
     // system

@@ -21,7 +21,6 @@
 #include "assistant.h"
 #include "cloud_disk_service_access_token_mock.h"
 #include "cloud_disk_service_utils.h"
-#include "clouddiskservice_ioctl.h"
 #include "message_parcel_mock.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
