@@ -19,6 +19,7 @@
 #include <charconv>
 #include <cstdlib>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/xattr.h>
@@ -29,6 +30,7 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
+#include "clouddiskservice_ioctl.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -43,6 +45,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 using namespace std;
+using namespace CloudFile;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
