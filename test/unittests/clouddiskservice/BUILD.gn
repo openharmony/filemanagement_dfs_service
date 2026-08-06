@@ -31,6 +31,7 @@ ohos_unittest("cloud_disk_service_static_test") {
     "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
+    "ipc/cloud_disk_common_test.cpp",
     "ipc/cloud_disk_service_static_test.cpp",
   ]
 

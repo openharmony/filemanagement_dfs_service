@@ -47,6 +47,8 @@ public:
     virtual int ReadFileDescriptor() = 0;
     virtual bool ReadStringVector(std::vector<std::string> *value) = 0;
     virtual bool ReadUint32(uint32_t &value) = 0;
+    virtual bool WriteUint8(uint8_t value) = 0;
+    virtual bool ReadUint8(uint8_t &value) = 0;
     virtual bool WriteUint64(uint64_t value) = 0;
     virtual bool WriteUint16(uint16_t value) = 0;
     virtual bool ReadUint64(uint64_t &value) = 0;
@@ -83,6 +85,8 @@ public:
     MOCK_METHOD0(ReadFileDescriptor, int());
     MOCK_METHOD1(ReadStringVector, bool(std::vector<std::string> *value));
     MOCK_METHOD1(ReadUint32, bool(uint32_t &value));
+    MOCK_METHOD1(WriteUint8, bool(uint8_t value));
+    MOCK_METHOD1(ReadUint8, bool(uint8_t &value));
     MOCK_METHOD1(WriteUint64, bool(uint64_t value));
     MOCK_METHOD1(WriteUint16, bool(uint16_t value));
     MOCK_METHOD1(ReadUint64, bool(uint64_t &value));

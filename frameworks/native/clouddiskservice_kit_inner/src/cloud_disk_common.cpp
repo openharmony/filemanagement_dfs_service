@@ -225,7 +225,10 @@ bool ChangesResult::ReadFromParcel(Parcel &parcel)
     }
     for (int32_t i = 0; i < size; ++i) {
         ChangeData changeData;
-        changeData.ReadFromParcel(parcel);
+        if (!changeData.ReadFromParcel(parcel)) {
+            LOGE("failed to read changeData");
+            continue;
+        }
         changesData.push_back(changeData);
     }
 
