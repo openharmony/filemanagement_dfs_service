@@ -308,7 +308,7 @@ HWTEST_F(CloudSyncManagerTest, GetUploadListTest004, TestSize.Level1)
         std::vector<CloudSync::UploadProgressObj> uploadList;
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetUploadList(uriVec, uploadList);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetUploadListTest004 FAILED";
@@ -330,7 +330,7 @@ HWTEST_F(CloudSyncManagerTest, GetDownloadListTest004, TestSize.Level1)
         std::vector<CloudSync::DownloadProgressObj> downloadList;
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = CloudSyncManagerImpl::GetInstance().GetDownloadList(uriVec, downloadList);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetDownloadListTest004 FAILED";
@@ -398,7 +398,7 @@ HWTEST_F(CloudSyncManagerTest, PauseUploadTest003, TestSize.Level1)
         
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = managePtr_->PauseUpload(uri);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PauseUploadTest003 FAILED";
@@ -466,7 +466,7 @@ HWTEST_F(CloudSyncManagerTest, ResumeUploadTest003, TestSize.Level1)
         
         EXPECT_CALL(*proxy_, GetInstance(_)).WillOnce(Return(nullptr));
         int32_t res = managePtr_->ResumeUpload(uri);
-        EXPECT_EQ(res, E_SA_LOAD_FAILED);
+        EXPECT_EQ(res, E_AGAIN);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ResumeUploadTest003 FAILED";

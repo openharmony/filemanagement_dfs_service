@@ -498,12 +498,12 @@ ani_array CloudFileCacheAni::CloudFileCacheGetDownloadList(ani_env *env, ani_obj
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
     if (cloudFileCache == nullptr) {
         LOGE("Cannot wrap cloudFileCache.");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
     auto [ret, uris] = ANIUtils::AniToStringArray(env, uriVec);
     if (!ret) {
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
     struct DownloadListArg {

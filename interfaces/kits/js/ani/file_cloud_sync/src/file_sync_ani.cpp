@@ -247,14 +247,14 @@ void FileSyncAni::FileSyncRegisterUploadProgress(ani_env *env, ani_object object
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 
     ani_ref cbOnRef;
     ani_status ret = env->GlobalReference_Create(reinterpret_cast<ani_ref>(fun), &cbOnRef);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
     auto callback = std::make_shared<CloudUploadCallbackImplAni>(env, cbOnRef);
@@ -272,7 +272,7 @@ void FileSyncAni::FileSyncUnRegisterUploadProgress(ani_env *env, ani_object obje
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
 
@@ -415,12 +415,12 @@ ani_array FileSyncAni::FileSyncGetUploadList(ani_env *env, ani_object object, an
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
     auto [ret, uris] = ANIUtils::AniToStringArray(env, uriVec);
     if (!ret) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return nullptr;
     }
     struct UploadListArg {
@@ -453,13 +453,13 @@ void FileSyncAni::FileSyncPauseUpload(ani_env *env, ani_object object, ani_strin
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
     std::string uriStr;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriStr);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
     auto data = fileSync->DoPauseUpload(uriStr);
@@ -475,13 +475,13 @@ void FileSyncAni::FileSyncResumeUpload(ani_env *env, ani_object object, ani_stri
     auto fileSync = FileSyncUnwrap(env, object);
     if (fileSync == nullptr) {
         LOGE("Cannot wrap fileSync.");
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
     std::string uriStr;
     ani_status ret = ANIUtils::AniString2String(env, uri, uriStr);
     if (ret != ANI_OK) {
-        ErrorHandler::Throw(env, E_IPCSS);
+        ErrorHandler::Throw(env, JsErrCode::E_TRY_AGAIN);
         return;
     }
     auto data = fileSync->DoResumeUpload(uriStr);

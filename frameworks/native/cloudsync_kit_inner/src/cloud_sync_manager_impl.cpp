@@ -61,6 +61,29 @@ static const std::unordered_set<int32_t> errForGetDownloadTaskState = {
     E_PERMISSION_DENIED, E_PERMISSION_SYSTEM, E_INVAL_PARAM, E_AGAIN,
     E_PERMISSION, E_PERMISSION_SYS, E_INVALID_ARGUMENT, E_TRY_AGAIN };
 
+static const std::unordered_map<int32_t, int32_t> outerErrorCodeMap {
+    { E_PERMISSION_DENIED, E_PERMISSION_DENIED },
+    { E_PERMISSION_SYSTEM, E_PERMISSION_SYSTEM },
+    { E_PERMISSION, E_PERMISSION },
+    { E_PERMISSION_SYS, E_PERMISSION_SYS },
+    { E_INVAL_ARG, E_PARAMS_ },
+    { E_EXCEED_MAX_SIZE, E_INVAL_PARAM },
+    { E_INVALID_ARGUMENT, E_INVAL_PARAM },
+    { E_INVAL_PARAM, E_INVAL_PARAM},
+    { E_ILLEGAL_URI, E_INVALID_URI }
+};
+
+static int32_t ConverInnerErrorCode2OuterErrorCode(int32_t ret)
+{
+    if (ret == E_OK) {
+        return ret;
+    }
+    if (outerErrorCodeMap.find(ret) != outerErrorCodeMap.end()) {
+        return outerErrorCodeMap.at(ret);
+    }
+    return E_AGAIN;
+}
+
 int32_t CloudSyncManagerImpl::RegisterCallback(const CallbackInfo &callbackInfo)
 {
     LOGI("Start RegisterCallback");
@@ -480,16 +503,16 @@ int32_t CloudSyncManagerImpl::GetDownloadList(const std::vector<std::string> &ur
     }
     if (uriVec.size() > MAX_PROGRESS_QUERY_NUM) {
         LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
-        return E_EXCEED_MAX_SIZE;
+        return E_INVAL_PARAM;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetDownloadList");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->GetDownloadList(uriVec, downloadList);
-    return ret;
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::GetUploadList(const std::vector<std::string> &uriVec,
@@ -501,16 +524,16 @@ int32_t CloudSyncManagerImpl::GetUploadList(const std::vector<std::string> &uriV
     }
     if (uriVec.size() > MAX_PROGRESS_QUERY_NUM) {
         LOGE("The size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
-        return E_EXCEED_MAX_SIZE;
+        return E_INVAL_PARAM;
     }
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("GetUploadList");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->GetUploadList(uriVec, uploadList);
-    return ret;
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::RegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo)
@@ -525,7 +548,7 @@ int32_t CloudSyncManagerImpl::RegisterUploadCallback(const UploadCallbackInfo &u
         "RegisterUploadCallback");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
 
     auto ret = CloudSyncServiceProxy->RegisterUploadCallbackInner(
@@ -542,7 +565,7 @@ int32_t CloudSyncManagerImpl::RegisterUploadCallback(const UploadCallbackInfo &u
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterUploadCallback ret %{public}d", ret);
-    return ret;
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::UnRegisterUploadCallback(const UploadCallbackInfo &uploadCallbackInfo)
@@ -557,7 +580,7 @@ int32_t CloudSyncManagerImpl::UnRegisterUploadCallback(const UploadCallbackInfo 
         "UnRegisterUploadCallback");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
 
     auto ret = CloudSyncServiceProxy->UnRegisterUploadCallbackInner(uploadCallbackInfo.callbackId,
@@ -568,7 +591,7 @@ int32_t CloudSyncManagerImpl::UnRegisterUploadCallback(const UploadCallbackInfo 
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("UnRegisterUploadCallback ret %{public}d", ret);
-    return ret;
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::PauseUpload(const std::string &uri)
@@ -576,10 +599,11 @@ int32_t CloudSyncManagerImpl::PauseUpload(const std::string &uri)
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("PauseUpload");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return  CloudSyncServiceProxy->PauseUpload(uri);
+    int ret =  CloudSyncServiceProxy->PauseUpload(uri);
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::ResumeUpload(const std::string &uri)
@@ -587,10 +611,11 @@ int32_t CloudSyncManagerImpl::ResumeUpload(const std::string &uri)
     auto CloudSyncServiceProxy = ServiceProxy::GetInstance("ResumeUpload");
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
+        return E_AGAIN;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->ResumeUpload(uri);
+    int ret = CloudSyncServiceProxy->ResumeUpload(uri);
+    return ConverInnerErrorCode2OuterErrorCode(ret);
 }
 
 int32_t CloudSyncManagerImpl::GetDecompressUnsupportedList(std::vector<std::string> &unsupportedList)
