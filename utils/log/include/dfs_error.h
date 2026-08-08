@@ -148,6 +148,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_DK_FIELD_BASIC = E_FIELD_BASIC + 2000,
     E_DK_NO_ATTRIBUTES = E_DK_FIELD_BASIC + 1,
     E_DK_LOCK_FAIL = E_DK_NO_ATTRIBUTES + 1,
+    E_DK_REMOTE_FAIL = E_DK_LOCK_FAIL + 1,
 };
 
 enum DFSErrCode {
