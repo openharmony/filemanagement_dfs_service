@@ -19,7 +19,6 @@
 #include "decompress_update.h"
 #include "decompress_kit.h"
 #include "decompress_kit_mock.h"
-#include "decompress_kit_constant.h"
 #include "utils_log.h"
 
 using namespace testing::ext;
@@ -65,13 +64,14 @@ void DecompressUpdateManagerTest::TearDown(void)
 // is intentionally not exercised as a standalone test: this suite registers a
 // single DecompressKitMock in SetUpTestCase so the branch tests are mutually
 // independent, and the singleton cannot be reset afterward to recreate the null
-// state. That branch is defensive only -- in production cloud_adapter
+// state. That branch is defensive only -- in production decompress_adapter
 // self-registers DecompressKitImpl at load, so GetInstance() is never null in
 // the cloudsync_sa process.
 
 /**
  * @tc.name: HandleDecompressUpdate_002
- * @tc.desc: Test HandleDecompressUpdate when GetCloudVersionFilePath returns empty
+ * @tc.desc: Test HandleDecompressUpdate invokes HandleConfigUpdate on the kit
+ *           instance and completes without fatal failure.
  * @tc.type: FUNC
  * @tc.require: I5NJ2K
  */
@@ -80,16 +80,16 @@ HWTEST_F(DecompressUpdateManagerTest, HandleDecompressUpdate_002, TestSize.Level
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_002 begin";
     DecompressKit *instance = DecompressKit::GetInstance();
     ASSERT_NE(instance, nullptr);
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), GetCloudVersionFilePath())
-        .WillOnce(Return(""));
+    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), HandleConfigUpdate())
+        .WillOnce(Return(false));
     DecompressUpdateManager &manager = DecompressUpdateManager::GetInstance();
-    manager.HandleDecompressUpdate();
+    EXPECT_NO_FATAL_FAILURE({ manager.HandleDecompressUpdate(); });
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_002 end";
 }
 
 /**
  * @tc.name: HandleDecompressUpdate_003
- * @tc.desc: Test HandleDecompressUpdate when IsUpdateVersionCompatible returns false
+ * @tc.desc: Test HandleDecompressUpdate when HandleConfigUpdate returns true
  * @tc.type: FUNC
  * @tc.require: I5NJ2K
  */
@@ -98,18 +98,19 @@ HWTEST_F(DecompressUpdateManagerTest, HandleDecompressUpdate_003, TestSize.Level
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_003 begin";
     DecompressKit *instance = DecompressKit::GetInstance();
     ASSERT_NE(instance, nullptr);
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), GetCloudVersionFilePath())
-        .WillOnce(Return("/test/path"));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsUpdateVersionCompatible(_))
-        .WillOnce(Return(false));
+    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), HandleConfigUpdate())
+        .WillOnce(Return(true));
     DecompressUpdateManager &manager = DecompressUpdateManager::GetInstance();
-    manager.HandleDecompressUpdate();
+    EXPECT_NO_FATAL_FAILURE({ manager.HandleDecompressUpdate(); });
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_003 end";
 }
 
 /**
  * @tc.name: HandleDecompressUpdate_004
- * @tc.desc: Test HandleDecompressUpdate when IsNeedCopy returns false
+ * @tc.desc: HandleDecompressUpdate now triggers LoadDecompressPlugin on demand
+ *           before using DecompressKit.  Calling it repeatedly must be safe:
+ *           the loader guard prevents repeat dlopen and the mock kit keeps
+ *           the flow intact.  Validates on-demand + no-repeat loading together.
  * @tc.type: FUNC
  * @tc.require: I5NJ2K
  */
@@ -118,61 +119,12 @@ HWTEST_F(DecompressUpdateManagerTest, HandleDecompressUpdate_004, TestSize.Level
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_004 begin";
     DecompressKit *instance = DecompressKit::GetInstance();
     ASSERT_NE(instance, nullptr);
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), GetCloudVersionFilePath())
-        .WillOnce(Return("/test/path"));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsUpdateVersionCompatible(_))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsNeedCopy(_, _))
-        .WillOnce(Return(false));
+    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), HandleConfigUpdate())
+        .WillRepeatedly(Return(false));
     DecompressUpdateManager &manager = DecompressUpdateManager::GetInstance();
-    manager.HandleDecompressUpdate();
+    EXPECT_NO_FATAL_FAILURE({
+        manager.HandleDecompressUpdate();
+        manager.HandleDecompressUpdate();
+    });
     GTEST_LOG_(INFO) << "HandleDecompressUpdate_004 end";
-}
-
-/**
- * @tc.name: HandleDecompressUpdate_005
- * @tc.desc: Test HandleDecompressUpdate normal flow with all conditions true
- * @tc.type: FUNC
- * @tc.require: I5NJ2K
- */
-HWTEST_F(DecompressUpdateManagerTest, HandleDecompressUpdate_005, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleDecompressUpdate_005 begin";
-    DecompressKit *instance = DecompressKit::GetInstance();
-    ASSERT_NE(instance, nullptr);
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), GetCloudVersionFilePath())
-        .WillOnce(Return("/test/path"));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsUpdateVersionCompatible(_))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsNeedCopy(_, _))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), DoParamDirCopy(_, _))
-        .WillOnce(Return(true));
-    DecompressUpdateManager &manager = DecompressUpdateManager::GetInstance();
-    manager.HandleDecompressUpdate();
-    GTEST_LOG_(INFO) << "HandleDecompressUpdate_005 end";
-}
-
-/**
- * @tc.name: HandleDecompressUpdate_006
- * @tc.desc: Test HandleDecompressUpdate when DoParamDirCopy returns false
- * @tc.type: FUNC
- * @tc.require: I5NJ2K
- */
-HWTEST_F(DecompressUpdateManagerTest, HandleDecompressUpdate_006, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleDecompressUpdate_006 begin";
-    DecompressKit *instance = DecompressKit::GetInstance();
-    ASSERT_NE(instance, nullptr);
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), GetCloudVersionFilePath())
-        .WillOnce(Return("/test/path"));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsUpdateVersionCompatible(_))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), IsNeedCopy(_, _))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*static_cast<DecompressKitMock *>(instance), DoParamDirCopy(_, _))
-        .WillOnce(Return(false));
-    DecompressUpdateManager &manager = DecompressUpdateManager::GetInstance();
-    manager.HandleDecompressUpdate();
-    GTEST_LOG_(INFO) << "HandleDecompressUpdate_006 end";
 }

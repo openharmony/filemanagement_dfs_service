@@ -13,14 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_DECOMPRESS_KIT_CONSTANT_H
-#define OHOS_FILEMGMT_DECOMPRESS_KIT_CONSTANT_H
+#ifndef OHOS_FILEMGMT_DECOMPRESS_KIT_IMPL_H
+#define OHOS_FILEMGMT_DECOMPRESS_KIT_IMPL_H
+
+#include "decompress_kit.h"
 
 namespace OHOS::FileManagement::Decompress {
-inline const std::string CFG_DIR = "etc/dfsParam/fakeDecompress";
-inline const std::string LOCAL_CFG_DIR = "/data/service/el1/public/cloudfile/decompress_config";
-inline const std::string VERSION_FILE = "version.txt";
-inline const std::string DECOMPRESS_CONFIG_FILE = "fake_decompress.json";
+class DecompressKitImpl final : public DecompressKit {
+public:
+    bool HandleConfigUpdate() override;
+};
 } // namespace OHOS::FileManagement::Decompress
 
-#endif // OHOS_FILEMGMT_DECOMPRESS_KIT_CONSTANT_H
+#endif // OHOS_FILEMGMT_DECOMPRESS_KIT_IMPL_H

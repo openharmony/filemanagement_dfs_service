@@ -13,26 +13,16 @@
  * limitations under the License.
  */
 
-#include "decompress_kit.h"
+#include "decompress_kit_impl.h"
 
 namespace OHOS::FileManagement::Decompress {
-DecompressKit *DecompressKit::GetInstance()
-{
-    return instance_;
-}
 
-bool DecompressKit::RegisterDecompressInstance(DecompressKit *instance)
+__attribute__((used)) static bool g_isInit =
+    DecompressKit::RegisterDecompressInstance(new (std::nothrow) DecompressKitImpl());
+
+bool DecompressKitImpl::HandleConfigUpdate()
 {
-    if (instance_ != nullptr) {
-        return false;
-    }
-    instance_ = instance;
     return true;
-}
-
-bool DecompressKit::HandleConfigUpdate()
-{
-    return false;
 }
 
 } // namespace OHOS::FileManagement::Decompress

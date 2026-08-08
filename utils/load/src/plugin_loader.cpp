@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <dlfcn.h>
+#include <mutex>
 #include <unistd.h>
 #include <vector>
 
@@ -33,12 +34,13 @@ PluginLoader &PluginLoader::GetInstance()
 
 PluginLoader::~PluginLoader()
 {
-    if (cloudKitPulginHandle_ == nullptr) {
-        return;
+    if (cloudKitPulginHandle_ != nullptr) {
+        dlclose(cloudKitPulginHandle_);
+        LOGI("succ to unload plugin");
+        cloudKitPulginHandle_ = nullptr;
     }
-    dlclose(cloudKitPulginHandle_);
-    LOGI("succ to unload plugin");
-    cloudKitPulginHandle_ = nullptr;
+    // decompressPluginHandle_ is opened with RTLD_NODELETE and intentionally
+    // not dlclosed; the so stays resident for the process lifetime.
 }
 
 string GetPluginPath(const string &pluginFileName)
@@ -88,5 +90,44 @@ void PluginLoader::LoadCloudKitPlugin(bool isSupportCloudSync)
         }
     }
     LOGE("Load CloudKit Plugin failed");
+}
+
+void PluginLoader::LoadDecompressPlugin()
+{
+    static std::once_flag decompressOnceFlag;
+    std::call_once(decompressOnceFlag, [this]() {
+        std::vector<std::string> pluginFileNames;
+#ifdef CLOUD_ADAPTER_ENABLED
+        pluginFileNames.emplace_back("libdecompress_ext.z.so");
+#else
+        LOGE("cloud adapter not enable");
+#endif
+        pluginFileNames.emplace_back("libdecompress_adapter.z.so");
+        for (auto &pluginFileName : pluginFileNames) {
+            auto pluginFilePath = GetPluginPath(pluginFileName);
+            if (pluginFilePath.empty()) {
+                continue;
+            }
+            char resolvedPath[PATH_MAX] = {'\0'};
+            if (realpath(pluginFilePath.c_str(), resolvedPath) == nullptr) {
+                LOGE("realpath failed in line path: %s", pluginFilePath.c_str());
+                return;
+            }
+            auto dlopenStartTime = std::chrono::high_resolution_clock::now();
+            decompressPluginHandle_ = dlopen(resolvedPath, RTLD_LAZY | RTLD_NODELETE);
+            auto dlopenFinishTime = std::chrono::high_resolution_clock::now();
+            auto dlopenDurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(dlopenFinishTime - dlopenStartTime).count();
+            if (decompressPluginHandle_ == nullptr) {
+                LOGE("dlopen decompress failed, path:%{public}s, cost:%{public}lld",
+                    pluginFilePath.c_str(), dlopenDurationTime);
+            } else {
+                LOGI("succ to load decompress, path:%{public}s, cost:%{public}lld",
+                    pluginFilePath.c_str(), dlopenDurationTime);
+            }
+            return;
+        }
+        LOGE("Load decompress plugin failed");
+    });
 }
 } // namespace OHOS::FileManagement::CloudFile

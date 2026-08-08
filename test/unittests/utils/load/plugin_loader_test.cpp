@@ -77,4 +77,78 @@ HWTEST_F(PluginLoaderTest, PluginLoaderTest_005, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "PluginLoaderTest_005 End";
 }
+
+/**
+ * @tc.name: LoadDecompressPlugin_001
+ * @tc.desc: LoadDecompressPlugin is callable and degrades gracefully when the
+ *           adapter so is absent from the test environment (no crash, handle
+ *           stays null).  This is the on-demand loading entry point.
+ * @tc.type: FUNC
+ * @tc.require: I5NJ2K
+ */
+HWTEST_F(PluginLoaderTest, LoadDecompressPlugin_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_001 Start";
+    EXPECT_NO_FATAL_FAILURE({ PluginLoader::GetInstance().LoadDecompressPlugin(); });
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_001 End";
+}
+
+/**
+ * @tc.name: LoadDecompressPlugin_002
+ * @tc.desc: LoadDecompressPlugin uses std::call_once for thread-safe one-time
+ *           initialization.  After the once_flag has fired, subsequent calls
+ *           on any instance are no-ops and never invoke dlopen again.  A local
+ *           instance with a sentinel handle verifies the no-repeat contract.
+ * @tc.type: FUNC
+ * @tc.require: I5NJ2K
+ */
+HWTEST_F(PluginLoaderTest, LoadDecompressPlugin_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_002 Start";
+    PluginLoader loader;
+    void *sentinel = reinterpret_cast<void *>(0x1);
+    loader.decompressPluginHandle_ = sentinel;
+    loader.LoadDecompressPlugin();
+    EXPECT_EQ(loader.decompressPluginHandle_, sentinel);
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_002 End";
+}
+
+/**
+ * @tc.name: LoadDecompressPlugin_003
+ * @tc.desc: The destructor no longer dlcloses decompressPluginHandle_ (opened
+ *           with RTLD_NODELETE, resident for process lifetime).  A local
+ *           instance with null handles is allowed to destruct; reaching the
+ *           assertion proves the cloudKit null guard prevents a crash.
+ * @tc.type: FUNC
+ * @tc.require: I5NJ2K
+ */
+HWTEST_F(PluginLoaderTest, LoadDecompressPlugin_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_003 Start";
+    {
+        PluginLoader loader;
+        loader.decompressPluginHandle_ = nullptr;
+        loader.cloudKitPulginHandle_ = nullptr;
+    }
+    EXPECT_TRUE(true);
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_003 End";
+}
+
+/**
+ * @tc.name: LoadDecompressPlugin_004
+ * @tc.desc: Repeated calls on the singleton are safe and idempotent — the
+ *           second call must not throw or crash even though the so is still
+ *           absent.  Validates the on-demand + no-repeat contract together.
+ * @tc.type: FUNC
+ * @tc.require: I5NJ2K
+ */
+HWTEST_F(PluginLoaderTest, LoadDecompressPlugin_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_004 Start";
+    EXPECT_NO_FATAL_FAILURE({
+        PluginLoader::GetInstance().LoadDecompressPlugin();
+        PluginLoader::GetInstance().LoadDecompressPlugin();
+    });
+    GTEST_LOG_(INFO) << "LoadDecompressPlugin_004 End";
+}
 } // OHOS

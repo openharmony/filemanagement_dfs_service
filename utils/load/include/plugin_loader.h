@@ -24,9 +24,11 @@ public:
     ~PluginLoader();
     static PluginLoader &GetInstance();
     void LoadCloudKitPlugin(bool isSupportCloudSync = false);
+    void LoadDecompressPlugin();
 private:
     PluginLoader() = default;
     void *cloudKitPulginHandle_ = nullptr;
+    void *decompressPluginHandle_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudFile
 

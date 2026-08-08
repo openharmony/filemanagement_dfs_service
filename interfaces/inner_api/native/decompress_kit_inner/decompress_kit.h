@@ -30,17 +30,7 @@ public:
 
     virtual ~DecompressKit() = default;
 
-    virtual std::string GetCloudVersionFilePath();
-    virtual bool GetParamConfigProperty(std::string &line, std::string &key, std::string &value);
-    virtual std::string GetVersionConfigValue(const std::string &path, const std::string &configKey);
-    virtual bool IsUpdateVersionCompatible(const std::string &path);
-    virtual bool IsNeedCopy(const std::string &srcDir, const std::string &destDir);
-    virtual bool CompareVersion(const std::string &srcVersion, const std::string &destVersion);
-    virtual bool DoParamDirCopy(const std::string &srcDir, const std::string &destDir);
-    virtual bool DoConfigFileCopy(const std::string &srcDir, const std::string &destDir);
-    virtual bool DoMkDir(const std::string &dirPath);
-    virtual bool DoRmDir(const std::string &path);
-    virtual bool DoCopy(const std::string &srcPath, const std::string &destPath);
+    virtual bool HandleConfigUpdate();
 
 private:
     static inline DecompressKit *instance_;
