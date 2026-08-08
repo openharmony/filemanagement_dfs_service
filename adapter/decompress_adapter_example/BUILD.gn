@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,18 +14,19 @@
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-group("cloud_adapter_example_target") {
+group("decompress_adapter_example_target") {
   deps = []
   if (!dfs_service_feature_enable_cloud_adapter) {
     deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+      "${distributedfile_path}/adapter/decompress_adapter_example:decompress_adapter",
     ]
   }
 }
 
 config("public_config") {
-  include_dirs =
-      [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
+  include_dirs = [
+    "${distributedfile_path}/adapter/decompress_adapter_example/include",
+  ]
 }
 
 config("optimize-size") {
@@ -40,8 +41,8 @@ config("optimize-size") {
   ]
 }
 
-ohos_shared_library("cloud_adapter") {
-  version_script = "cloud_adapter.map"
+ohos_shared_library("decompress_adapter") {
+  version_script = "decompress_adapter.map"
   branch_protector_ret = "pac_ret"
   configs = [ ":optimize-size" ]
   sanitize = {
@@ -54,24 +55,17 @@ ohos_shared_library("cloud_adapter") {
     debug = false
   }
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_asset_read_session_impl.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_assets_downloader_impl.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_database_impl.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_file_kit_impl.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_sync_helper_impl.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/data_sync_manager_impl.cpp",
+    "${distributedfile_path}/adapter/decompress_adapter_example/src/decompress_kit_impl.cpp",
   ]
 
   public_configs = [ ":public_config" ]
 
   deps = [
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
   ]
 
   external_deps = [
     "c_utils:utils",
-    "ipc:ipc_core",
   ]
 
   part_name = "dfs_service"

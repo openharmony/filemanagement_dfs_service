@@ -17,24 +17,13 @@
 #define OHOS_FILEMGMT_DECOMPRESS_KIT_MOCK_H
 
 #include <gmock/gmock.h>
-#include <string>
 
 #include "decompress_kit.h"
 
 namespace OHOS::FileManagement::Decompress {
 class DecompressKitMock : public DecompressKit {
 public:
-    MOCK_METHOD0(GetCloudVersionFilePath, std::string());
-    MOCK_METHOD3(GetParamConfigProperty, bool(std::string &line, std::string &key, std::string &value));
-    MOCK_METHOD2(GetVersionConfigValue, std::string(const std::string &path, const std::string &configKey));
-    MOCK_METHOD1(IsUpdateVersionCompatible, bool(const std::string &path));
-    MOCK_METHOD2(IsNeedCopy, bool(const std::string &srcDir, const std::string &destDir));
-    MOCK_METHOD2(CompareVersion, bool(const std::string &srcVersion, const std::string &destVersion));
-    MOCK_METHOD2(DoParamDirCopy, bool(const std::string &srcDir, const std::string &destDir));
-    MOCK_METHOD2(DoConfigFileCopy, bool(const std::string &srcDir, const std::string &destDir));
-    MOCK_METHOD1(DoMkDir, bool(const std::string &dirPath));
-    MOCK_METHOD1(DoRmDir, bool(const std::string &path));
-    MOCK_METHOD2(DoCopy, bool(const std::string &srcPath, const std::string &destPath));
+    MOCK_METHOD0(HandleConfigUpdate, bool());
 };
 } // namespace OHOS::FileManagement::Decompress
 

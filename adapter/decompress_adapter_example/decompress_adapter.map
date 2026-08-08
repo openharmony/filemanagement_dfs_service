@@ -14,13 +14,7 @@
 1.0 {
   global:
     extern "C++" {
-      # CloudFile adapter implementation classes
-      *OHOS::FileManagement::CloudFile::CloudAssetReadSessionImpl*;
-      *OHOS::FileManagement::CloudFile::CloudAssetsDownloaderImpl*;
-      *OHOS::FileManagement::CloudFile::CloudDatabaseImpl*;
-      *OHOS::FileManagement::CloudFile::CloudFileKitImpl*;
-      *OHOS::FileManagement::CloudFile::CloudSyncHelperImpl*;
-      *OHOS::FileManagement::CloudFile::DataSyncManagerImpl*;
+      *OHOS::FileManagement::Decompress::DecompressKitImpl*;
     };
 
   local:

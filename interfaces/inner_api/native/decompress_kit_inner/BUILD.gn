@@ -15,7 +15,10 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("public_config") {
-  include_dirs = [ "." ]
+  include_dirs = [
+    ".",
+    "${distributedfile_path}/utils/inner_api",
+  ]
 }
 
 config("private_config") {

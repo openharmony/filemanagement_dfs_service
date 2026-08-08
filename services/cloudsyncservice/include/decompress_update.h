@@ -16,9 +16,6 @@
 #ifndef OHOS_FILEMGMT_DECOMPRESS_UPDATE_H
 #define OHOS_FILEMGMT_DECOMPRESS_UPDATE_H
 
-#include <mutex>
-#include <string>
-
 namespace OHOS {
 namespace FileManagement {
 namespace Decompress {
@@ -32,8 +29,6 @@ private:
     DecompressUpdateManager() = default;
     DecompressUpdateManager(const DecompressUpdateManager&) = delete;
     DecompressUpdateManager& operator=(const DecompressUpdateManager&) = delete;
-
-    std::mutex copyMutex_;
 };
 
 

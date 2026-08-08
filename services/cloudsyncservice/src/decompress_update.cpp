@@ -16,7 +16,7 @@
 #include "decompress_update.h"
 
 #include "decompress_kit.h"
-#include "decompress_kit_constant.h"
+#include "plugin_loader.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -32,34 +32,17 @@ DecompressUpdateManager &DecompressUpdateManager::GetInstance()
 void DecompressUpdateManager::HandleDecompressUpdate()
 {
     LOGI("Update enter");
+    CloudFile::PluginLoader::GetInstance().LoadDecompressPlugin();
     auto kitInstance = DecompressKit::GetInstance();
     if (kitInstance == nullptr) {
         LOGE("Get decompress kitInstance instance failed");
         return;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(copyMutex_);
-        std::string dataPath = kitInstance->GetCloudVersionFilePath();
-        if (dataPath.empty()) {
-            LOGE("Get cloud version file failed");
-            return;
-        }
-    
-        if (!kitInstance->IsUpdateVersionCompatible(dataPath)) {
-            LOGE("UpdateVersion not compatible");
-            return;
-        }
-        
-        if (!kitInstance->IsNeedCopy(dataPath, LOCAL_CFG_DIR)) {
-            LOGI("No need to copy param data.");
-            return;
-        }
-
-        if (!kitInstance->DoParamDirCopy(dataPath, LOCAL_CFG_DIR)) {
-            LOGE("Copy param dir failed.");
-        }
+    if (!kitInstance->HandleConfigUpdate()) {
+        LOGE("HandleConfigUpdate failed");
+        return;
     }
+    LOGI("HandleConfigUpdate succ");
 }
 
 } // namespace Decompress

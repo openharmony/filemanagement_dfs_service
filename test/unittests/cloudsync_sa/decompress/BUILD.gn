@@ -19,6 +19,7 @@ decompress_common_include_dirs = [
   "${distributedfile_path}/frameworks/native/decompress_kit_inner/include",
   "${distributedfile_path}/utils/decompress/include",
   "${distributedfile_path}/utils/inner_api",
+  "${distributedfile_path}/utils/load/include",
   "${distributedfile_path}/utils/log/include",
 ]
 
@@ -53,6 +54,7 @@ ohos_unittest("decompress_config_manager_test") {
 
   deps = [
     "${utils_path}:libdecompress",
+    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = decompress_common_external_deps + [
@@ -69,13 +71,13 @@ ohos_unittest("decompress_kit_test") {
 
   sources = [
     "decompress_kit_test.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/decompress_kit_impl.cpp",
+    "${distributedfile_path}/adapter/decompress_adapter_example/src/decompress_kit_impl.cpp",
     "${distributedfile_path}/frameworks/native/decompress_kit_inner/src/decompress_kit.cpp",
   ]
 
   include_dirs = [
     "${innerkits_native_path}/decompress_kit_inner",
-    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/adapter/decompress_adapter_example/include",
     "${distributedfile_path}/frameworks/native/decompress_kit_inner/include",
     "${distributedfile_path}/utils/decompress/include",
     "${distributedfile_path}/utils/inner_api",
@@ -107,6 +109,7 @@ ohos_unittest("decompress_update_manager_test") {
 
   deps = [
     "${utils_path}:libdecompress",
+    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = decompress_common_external_deps + [
