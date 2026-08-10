@@ -298,7 +298,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetFileSyncStates(const CloudDisk_SyncFolderPat
 
 CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo relativePathInfo,
-                                                   const CloudDisk_PlaceholderInfo placeholderInfo)
+                                                   const OH_CloudDisk_PlaceholderInfo placeholderInfo)
 {
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length) ||
         !IsValidPathInfo(relativePathInfo.value, relativePathInfo.length)) {
@@ -554,7 +554,7 @@ CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(
 CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(
     const CloudDisk_SyncFolderPath syncFolderPath,
     const CloudDisk_PathInfo relativePathInfo,
-    const CloudDisk_PlaceholderInfo placeholderInfo)
+    const OH_CloudDisk_PlaceholderInfo placeholderInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {

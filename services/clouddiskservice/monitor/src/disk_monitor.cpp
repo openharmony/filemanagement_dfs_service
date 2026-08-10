@@ -314,7 +314,7 @@ void DiskMonitor::HandleCloseWrite(const string &filePath)
     bool isModified = modifiedFiles_.find(inode) != modifiedFiles_.end();
     if (isModified) {
         modifiedFiles_.erase(inode);
-        auto modifyEventInfo = EventInfo(userId_, syncFolderIndex, OperationType::CLOSE_MODIFY, filePath);
+        auto modifyEventInfo = EventInfo(userId_, syncFolderIndex, OperationType::OH_CLOUD_DISK_CLOSE_MODIFY, filePath);
         PostEvent(modifyEventInfo);
     }
     
