@@ -193,6 +193,7 @@ config("private_config") {
 
 ohos_shared_library("distributed_file_daemon_kit_inner") {
   branch_protector_ret = "pac_ret"
+  branch_protector_frt = "bti"
   sanitize = {
     integer_overflow = true
     ubsan = true
