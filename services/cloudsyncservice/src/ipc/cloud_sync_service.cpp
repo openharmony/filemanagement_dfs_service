@@ -177,19 +177,33 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
+    auto startTime = std::chrono::high_resolution_clock::now();
     PreInit();
+    auto preInitEndTime = std::chrono::high_resolution_clock::now();
     if (!PublishSA()) {
         return;
     }
+    auto publishSAEndTime = std::chrono::high_resolution_clock::now();
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
     AddSystemAbilityListener(COMM_NET_CONN_MANAGER_SYS_ABILITY_ID);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     umask(DEFAULT_UMASK);
-    LOGI("Start service successfully");
+    auto initStartTime = std::chrono::high_resolution_clock::now();
     Init();
-    LOGI("init service successfully");
+    auto initEndTime = std::chrono::high_resolution_clock::now();
+    auto preInitDurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(preInitEndTime - startTime).count();
+    auto publishSADurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(publishSAEndTime - preInitEndTime).count();
+    auto addListenerDurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(initStartTime - publishSAEndTime).count();
+    auto initDurationTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(initEndTime - initStartTime).count();
+    LOGI("init service successfully, preInit cost:%{public}lld, publishSA cost:%{public}lld, "
+         "addListener cost:%{public}lld, init cost:%{public}lld",
+         preInitDurationTime, publishSADurationTime, addListenerDurationTime, initDurationTime);
     system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ReportServiceStart(startReason);
