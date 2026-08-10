@@ -446,7 +446,7 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_ErrorCode_003, TestSiz
                 OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_A_PLACEHOLDER));
         CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_A_PLACEHOLDER);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_NOT_A_PLACEHOLDER);
 #else
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
@@ -475,7 +475,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_InvalidPath_001, TestSize.Lev
         pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
-        CloudDisk_PlaceholderInfo metaData;
+        OH_CloudDisk_PlaceholderInfo metaData;
         metaData.logicalSize = 1024;
         metaData.mtimeMs = 1234567890;
         metaData.atimeMs = 1234567890;
@@ -520,7 +520,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_002, TestSize.Level1)
         pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
-        CloudDisk_PlaceholderInfo metaData;
+        OH_CloudDisk_PlaceholderInfo metaData;
         metaData.logicalSize = 1024;
         metaData.mtimeMs = 1234567890;
         metaData.atimeMs = 1234567890;
@@ -558,7 +558,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_003, TestSize.Level1)
         pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
-        CloudDisk_PlaceholderInfo metaData;
+        OH_CloudDisk_PlaceholderInfo metaData;
         metaData.logicalSize = 1024;
         metaData.mtimeMs = 1234567890;
         metaData.atimeMs = 1234567890;

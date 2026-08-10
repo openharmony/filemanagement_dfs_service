@@ -326,11 +326,11 @@ HWTEST_F(CloudDiskManagerTest, ConvertToErrorCodeTest003, TestSize.Level1)
         int32_t innerErrorCode = 34400001;
         CloudDisk_ErrorCode ret = ConvertToErrorCode(innerErrorCode);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
-        EXPECT_EQ(ConvertToErrorCode(E_FILE_ALREADY_EXISTS), CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
-        EXPECT_EQ(ConvertToErrorCode(E_NO_SPACE_LEFT), CloudDisk_ErrorCode::CLOUD_DISK_NO_SPACE_LEFT);
-        EXPECT_EQ(ConvertToErrorCode(E_NOT_A_DIRECTORY), CloudDisk_ErrorCode::CLOUD_DISK_NOT_A_DIRECTORY);
-        EXPECT_EQ(ConvertToErrorCode(E_FILE_NOT_EXIST), CloudDisk_ErrorCode::CLOUD_DISK_FILE_NOT_EXIST);
-        EXPECT_EQ(ConvertToErrorCode(E_NAME_TOO_LONG), CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
+        EXPECT_EQ(ConvertToErrorCode(E_FILE_ALREADY_EXISTS), CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_ALREADY_EXISTS);
+        EXPECT_EQ(ConvertToErrorCode(E_NO_SPACE_LEFT), CloudDisk_ErrorCode::OH_CLOUD_DISK_NO_SPACE_LEFT);
+        EXPECT_EQ(ConvertToErrorCode(E_NOT_A_DIRECTORY), CloudDisk_ErrorCode::OH_CLOUD_DISK_NOT_A_DIRECTORY);
+        EXPECT_EQ(ConvertToErrorCode(E_FILE_NOT_EXIST), CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_NOT_EXIST);
+        EXPECT_EQ(ConvertToErrorCode(E_NAME_TOO_LONG), CloudDisk_ErrorCode::OH_CLOUD_DISK_NAME_TOO_LONG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ConvertToErrorCodeTest003 failed";
@@ -357,7 +357,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest001, TestSize.Level1)
         .value = nullptr,
         .length = 0,
     };
-    CloudDisk_PlaceholderInfo info = {
+    OH_CloudDisk_PlaceholderInfo info = {
         .logicalSize = 1024,
         .atimeMs = 1,
         .mtimeMs = 2,
@@ -387,7 +387,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest002, TestSize.Level1)
         .value = const_cast<char *>(relativePath.c_str()),
         .length = relativePath.length(),
     };
-    CloudDisk_PlaceholderInfo info = {
+    OH_CloudDisk_PlaceholderInfo info = {
         .logicalSize = 1024,
         .atimeMs = 1,
         .mtimeMs = 2,
@@ -418,7 +418,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest003, TestSize.Level1)
         .value = const_cast<char *>(relativePath.c_str()),
         .length = relativePath.length() + 1,
     };
-    CloudDisk_PlaceholderInfo info = {
+    OH_CloudDisk_PlaceholderInfo info = {
         .logicalSize = 1024,
         .atimeMs = 1,
         .mtimeMs = 2,
@@ -449,7 +449,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest004, TestSize.Level1)
         .value = const_cast<char *>(relativePath.c_str()),
         .length = relativePath.length(),
     };
-    CloudDisk_PlaceholderInfo info = {
+    OH_CloudDisk_PlaceholderInfo info = {
         .logicalSize = 1024,
         .atimeMs = 1,
         .mtimeMs = 2,
@@ -489,7 +489,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
         .value = const_cast<char *>(relativePath.c_str()),
         .length = relativePath.length(),
     };
-    CloudDisk_PlaceholderInfo info = {
+    OH_CloudDisk_PlaceholderInfo info = {
         .logicalSize = 1024,
         .atimeMs = 1,
         .mtimeMs = 2,
@@ -500,7 +500,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
 
     auto ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
 
-    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_ALREADY_EXISTS);
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_ALREADY_EXISTS);
     Mock::VerifyAndClearExpectations(&mock);
 
     EXPECT_CALL(mock, CreatePlaceholderFile(syncFolder, relativePath, _))
@@ -508,7 +508,7 @@ HWTEST_F(CloudDiskManagerTest, CreatePlaceholderFileTest005, TestSize.Level1)
 
     ret = OH_CloudDisk_CreatePlaceholder(syncFolderPath, relativePathInfo, info);
 
-    EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
+    EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_NAME_TOO_LONG);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileTest005 end";
 }
 
@@ -686,7 +686,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest007, TestSize.Level1)
         bool isPlaceholder = true;
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
 
-        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_FILE_NOT_EXIST);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_NOT_EXIST);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -714,7 +714,7 @@ HWTEST_F(CloudDiskManagerTest, IsPlaceholderFileIpcTest008, TestSize.Level1)
         bool isPlaceholder = true;
         CloudDisk_ErrorCode ret = OH_CloudDisk_IsPlaceholderFile(syncFolderPath, path, &isPlaceholder);
 
-        EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NAME_TOO_LONG);
+        EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_NAME_TOO_LONG);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);

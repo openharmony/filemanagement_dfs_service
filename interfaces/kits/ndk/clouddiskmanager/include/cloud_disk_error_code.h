@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * @addtogroup CloudDisk
  * @{
@@ -21,11 +20,10 @@
  * @since 21
  * @version 1.0
  */
-
 /**
  * @file cloud_disk_error_code.h
  *
- * @brief Provides the definitions of cloud disk manager error codes.
+ * @brief This file defines the error codes for the cloud disk management module.
  *
  * @library libohclouddiskmanager.so
  * @kit CoreFileKit
@@ -42,110 +40,179 @@ extern "C" {
 #endif
 
 /**
- * @brief Defines error codes for the cloud disk synchronization manager feature.
+ * @brief Enumerates the error codes of the cloud disk management module.
+ *
  * @since 21
  */
 typedef enum CloudDisk_ErrorCode {
     /**
-     * @error Operation completed successfully.
+     * @brief The API is called successfully.
+     *
+     * @since 21
      */
     CLOUD_DISK_OK = 0,
     /**
-     * @error Permission verification failed.
+     * @brief The permission verification fails.
+     *
+     * @since 21
      */
     CLOUD_DISK_PERMISSION_DENIED = 201,
     /**
-     * @error Device not supported.
+     * @brief This feature is not supported on the device.
+     *
+     * @since 21
      */
     CLOUD_DISK_NOT_SUPPORTED = 801,
     /**
-     * @error Invalid input parameter.
+     * @brief The input parameter is invalid.
+     *
+     * @since 21
      */
     CLOUD_DISK_INVALID_ARG = 34400001,
     /**
-     * @error Sync folder path unauthorized.
+     * @brief The sync root path is not authorized.
+     *
+     * @since 21
      */
     CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED = 34400002,
     /**
-     * @error Inter-process communication (IPC) failure.
+     * @brief IPC connection fails.
+     *
+     * @since 21
      */
     CLOUD_DISK_IPC_FAILED = 34400003,
     /**
-     * @error Sync folder exceeds the allowed limit.
+     * @brief The number of sync root paths exceeds the upper limit.
+     *
+     * @since 21
      */
     CLOUD_DISK_SYNC_FOLDER_LIMIT_EXCEEDED = 34400004,
     /**
-     * @error Sync folder conflicts with an existing sync folder of this application.
+     * @brief The sync root path conflicts with the existing sync root path of the application.
+     *
+     * @since 21
      */
     CLOUD_DISK_CONFLICT_THIS_APP = 34400005,
     /**
-     * @error Sync folder conflicts with an existing sync folder of another application.
+     * @brief The sync root path conflicts with the existing sync root path of another application.
+     *
+     * @since 21
      */
     CLOUD_DISK_CONFLICT_OTHER_APP = 34400006,
     /**
-     * @error Failed to register sync folder.
+     * @brief The sync root path fails to be registered.
+     *
+     * @since 21
      */
     CLOUD_DISK_REGISTER_SYNC_FOLDER_FAILED = 34400007,
     /**
-     * @error Sync folder is not registered.
+     * @brief The sync root path is not registered.
+     *
+     * @since 21
      */
     CLOUD_DISK_SYNC_FOLDER_NOT_REGISTERED = 34400008,
     /**
-     * @error Failed to unregister sync folder.
+     * @brief The sync root path fails to be unregistered.
+     *
+     * @since 21
      */
     CLOUD_DISK_UNREGISTER_SYNC_FOLDER_FAILED = 34400009,
     /**
-     * @error Sync folder path does not exist.
+     * @brief The sync root path does not exist.
+     *
+     * @since 21
      */
     CLOUD_DISK_SYNC_FOLDER_PATH_NOT_EXIST = 34400010,
     /**
-     * @error Change listener is not registered.
+     * @brief The change listener is not registered.
+     *
+     * @since 21
      */
     CLOUD_DISK_LISTENER_NOT_REGISTERED = 34400011,
     /**
-     * @error Change listener is already registered.
+     * @brief The change listener has been registered.
+     *
+     * @since 21
      */
     CLOUD_DISK_LISTENER_ALREADY_REGISTERED = 34400012,
     /**
-     * @error Invalid change sequence. Full query is recommended.
+     * @brief The change sequence is invalid. You are advised to query all change sequences.
+     *
+     * @since 21
      */
     CLOUD_DISK_INVALID_CHANGE_SEQUENCE = 34400013,
     /**
-     * @error Temporary failure. Retry is recommended (e.g., network issues).
+     * @brief Temporary failure (for example, due to high underlying I/O load or insufficient memory). Please try again.
+     *
+     * @since 21
      */
     CLOUD_DISK_TRY_AGAIN = 34400014,
     /**
-     * @error Cloud disk is not allowed on this device.
+     * @brief This feature is not allowed on the current device.
+     *
+     * @since 21
      */
     CLOUD_DISK_NOT_ALLOWED = 34400015,
     /**
-     * @error The target path already has a file with the same name.
+     * @brief A file with the same name already exists in the target path.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_FILE_ALREADY_EXISTS = 34400016,
+    OH_CLOUD_DISK_FILE_ALREADY_EXISTS = 34400016,
     /**
-     * @error File is not a placeholder.
+     * @brief The target path is not a placeholder file.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_NOT_A_PLACEHOLDER = 34400017,
+    OH_CLOUD_DISK_NOT_A_PLACEHOLDER = 34400017,
     /**
-     * @error File hydrate in progress.
+     * @brief The target path is already a placeholder file.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_HYDRATE_IN_PROGRESS = 34400019,
+    OH_CLOUD_DISK_IS_A_PLACEHOLDER = 34400018,
     /**
-     * @error No space left on device.
+     * @brief Hydration in progress.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_NO_SPACE_LEFT = 34400020,
+    OH_CLOUD_DISK_HYDRATE_IN_PROGRESS = 34400019,
     /**
-     * @error The parent path of the target path is not a directory.
+     * @brief The available disk space is insufficient.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_NOT_A_DIRECTORY = 34400023,
+    OH_CLOUD_DISK_NO_SPACE_LEFT = 34400020,
     /**
-     * @error The target path does not exist.
+     * @brief The callback table is not registered.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_FILE_NOT_EXIST = 34400024,
+    OH_CLOUD_DISK_CALLBACK_NOT_REGISTERED = 34400021,
     /**
-     * @error The target file name is too long.
+     * @brief The callback table has been registered.
+     *
+     * @since 26.1.0
      */
-    CLOUD_DISK_NAME_TOO_LONG = 34400025,
+    OH_CLOUD_DISK_CALLBACK_ALREADY_REGISTERED = 34400022,
+    /**
+     * @brief The parent directory of the target path is not a directory.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_NOT_A_DIRECTORY = 34400023,
+    /**
+     * @brief The target path does not exist.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_FILE_NOT_EXIST = 34400024,
+    /**
+     * @brief The file name or path is too long.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_NAME_TOO_LONG = 34400025
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

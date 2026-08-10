@@ -211,7 +211,7 @@ int32_t CloudDiskServiceLogFile::OnDataChange()
             return E_OK;
         }
         if (hasUnpairedCloseModify_) {
-            LOGD("Has unpaired CLOSE_MODIFY, skip this callback to wait for CLOSE_WRITE");
+            LOGD("Has unpaired OH_CLOUD_DISK_CLOSE_MODIFY, skip this callback to wait for CLOSE_WRITE");
             return E_OK;
         }
         changeDatas_.swap(tmpDatas);
@@ -307,7 +307,7 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
     LOGD("Generate changedata line:%{public}llu, operationType:%{public}d, size:%{public}zu", line,
         static_cast<uint8_t>(changeData.operationType), changeDatas_.size());
     
-    if (eventInfo.operateType == OperationType::CLOSE_MODIFY) {
+    if (eventInfo.operateType == OperationType::OH_CLOUD_DISK_CLOSE_MODIFY) {
         if (changeDatas_.size() == MAX_CHANGEDATAS_SIZE - 1) {
             CloudDiskServiceCallbackManager::GetInstance().OnChangeData(syncFolderIndex_, changeDatas_);
             changeDatas_.clear();
@@ -472,7 +472,7 @@ int32_t CloudDiskServiceLogFile::ProductLogForOperate(const std::shared_ptr<Clou
             return ProduceRenameNewLog(parentMetaFile, path, name, ctx);
         case OperationType::CLOSE_WRITE:
             return ProduceCloseAndWriteLog(parentMetaFile, path, name, ctx);
-        case OperationType::CLOSE_MODIFY:
+        case OperationType::OH_CLOUD_DISK_CLOSE_MODIFY:
             return ProduceCloseModifyLog(parentMetaFile, path, name, ctx);
         case OperationType::SYNC_FOLDER_INVALID:
         case OperationType::OPERATION_MAX:

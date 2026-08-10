@@ -716,7 +716,7 @@ HWTEST_F(DiskMonitorTest, HandleCloseWriteTest002, TestSize.Level1)
 
 /**
  * @tc.name: HandleCloseWriteTest003
- * @tc.desc: Verify HandleCloseWrite sends CLOSE_MODIFY and CLOSE_WRITE events when file is modified
+ * @tc.desc: Verify HandleCloseWrite sends OH_CLOUD_DISK_CLOSE_MODIFY and CLOSE_WRITE events when file is modified
  * @tc.type: FUNC
  */
 HWTEST_F(DiskMonitorTest, HandleCloseWriteTest003, TestSize.Level1)

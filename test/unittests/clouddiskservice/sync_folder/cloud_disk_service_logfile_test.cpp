@@ -1303,7 +1303,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCloseModifyLogTest003, TestSize.Lev
 
 /**
  * @tc.name: GenerateChangeDataTest005
- * @tc.desc: Verify the GenerateChangeData function with CLOSE_MODIFY operation type
+ * @tc.desc: Verify the GenerateChangeData function with OH_CLOUD_DISK_CLOSE_MODIFY operation type
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest005, TestSize.Level1)
@@ -1311,7 +1311,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest005, TestSize.Level1
     GTEST_LOG_(INFO) << "GenerateChangeDataTest005 start";
     try {
         EventInfo eventInfo;
-        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
         uint64_t line = 1;
@@ -1335,7 +1335,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest005, TestSize.Level1
 
 /**
  * @tc.name: ProductLogForOperateTest008
- * @tc.desc: Verify the ProductLogForOperate function with CLOSE_MODIFY operation type
+ * @tc.desc: Verify the ProductLogForOperate function with OH_CLOUD_DISK_CLOSE_MODIFY operation type
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest008, TestSize.Level1)
@@ -1348,7 +1348,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProductLogForOperateTest008, TestSize.Leve
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        OperationType operator1 = OperationType::CLOSE_MODIFY;
+        OperationType operator1 = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         struct stat statInfo;
         statInfo.st_mode = S_IFREG;
         statInfo.st_atime = 100;
@@ -1785,7 +1785,8 @@ HWTEST_F(CloudDiskServiceLogFileTest, CheckLineIsValidTest003, TestSize.Level1)
 
 /**
  * @tc.name: GenerateChangeDataTest006
- * @tc.desc: Verify CLOSE_MODIFY at 20th position triggers callback with 19 elements and sets unpaired flag
+ * @tc.desc: Verify OH_CLOUD_DISK_CLOSE_MODIFY at 20th position triggers callback with 19 elements
+ * and sets unpaired flag
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1)
@@ -1804,7 +1805,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1
         EXPECT_EQ(logFile_->changeDatas_.size(), MAX_CHANGEDATAS_SIZE - 1);
         
         EventInfo eventInfo;
-        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
         
@@ -1813,7 +1814,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1
         
         EXPECT_EQ(logFile_->changeDatas_.size(), 1);
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
-        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::CLOSE_MODIFY);
+        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::OH_CLOUD_DISK_CLOSE_MODIFY);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GenerateChangeDataTest006 failed";
@@ -1823,7 +1824,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1
 
 /**
  * @tc.name: GenerateChangeDataTest007
- * @tc.desc: Verify CLOSE_WRITE pairs with CLOSE_MODIFY and clears unpaired flag
+ * @tc.desc: Verify CLOSE_WRITE pairs with OH_CLOUD_DISK_CLOSE_MODIFY and clears unpaired flag
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1)
@@ -1843,7 +1844,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1
         EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
         
         EventInfo modifyEventInfo;
-        modifyEventInfo.operateType = OperationType::CLOSE_MODIFY;
+        modifyEventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         modifyEventInfo.path = "/data/test";
         modifyEventInfo.name = "file";
         logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
@@ -1857,7 +1858,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1
         logFile_->GenerateChangeData(writeEventInfo, 2, "child", "parent");
         EXPECT_EQ(logFile_->changeDatas_.size(), 2);
         EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
-        EXPECT_EQ(logFile_->changeDatas_[0].operationType, OperationType::CLOSE_MODIFY);
+        EXPECT_EQ(logFile_->changeDatas_[0].operationType, OperationType::OH_CLOUD_DISK_CLOSE_MODIFY);
         EXPECT_EQ(logFile_->changeDatas_[1].operationType, OperationType::CLOSE_WRITE);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1868,7 +1869,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1
 
 /**
  * @tc.name: OnDataChangeTest003
- * @tc.desc: Verify OnDataChange skips callback when has unpaired CLOSE_MODIFY
+ * @tc.desc: Verify OnDataChange skips callback when has unpaired OH_CLOUD_DISK_CLOSE_MODIFY
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest003, TestSize.Level1)
@@ -1879,7 +1880,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest003, TestSize.Level1)
         logFile_->hasUnpairedCloseModify_ = false;
         
         EventInfo eventInfo;
-        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
         
@@ -1901,7 +1902,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest003, TestSize.Level1)
 
 /**
  * @tc.name: OnDataChangeTest004
- * @tc.desc: Verify OnDataChange triggers callback after CLOSE_WRITE pairs with CLOSE_MODIFY
+ * @tc.desc: Verify OnDataChange triggers callback after CLOSE_WRITE pairs with OH_CLOUD_DISK_CLOSE_MODIFY
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
@@ -1914,7 +1915,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
         EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
         
         EventInfo modifyEventInfo;
-        modifyEventInfo.operateType = OperationType::CLOSE_MODIFY;
+        modifyEventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         modifyEventInfo.path = "/data/test";
         modifyEventInfo.name = "file";
         logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
@@ -1940,7 +1941,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
 
 /**
  * @tc.name: GenerateChangeDataTest008
- * @tc.desc: Verify normal operation at 20th position (not CLOSE_MODIFY)
+ * @tc.desc: Verify normal operation at 20th position (not OH_CLOUD_DISK_CLOSE_MODIFY)
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest008, TestSize.Level1)
@@ -1975,7 +1976,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest008, TestSize.Level1
 
 /**
  * @tc.name: GenerateChangeDataTest009
- * @tc.desc: Verify CLOSE_MODIFY not at 20th position (normal batch)
+ * @tc.desc: Verify OH_CLOUD_DISK_CLOSE_MODIFY not at 20th position (normal batch)
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest009, TestSize.Level1)
@@ -1993,7 +1994,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest009, TestSize.Level1
         }
         
         EventInfo eventInfo;
-        eventInfo.operateType = OperationType::CLOSE_MODIFY;
+        eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
         
@@ -2001,7 +2002,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest009, TestSize.Level1
         logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
         EXPECT_EQ(logFile_->changeDatas_.size(), 11);
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
-        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::CLOSE_MODIFY);
+        EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::OH_CLOUD_DISK_CLOSE_MODIFY);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GenerateChangeDataTest009 failed";
@@ -2024,7 +2025,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest010, TestSize.Level1
 
         for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
             EventInfo modifyInfo;
-            modifyInfo.operateType = OperationType::CLOSE_MODIFY;
+            modifyInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
             modifyInfo.path = "/data/test";
             modifyInfo.name = "file";
             EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
