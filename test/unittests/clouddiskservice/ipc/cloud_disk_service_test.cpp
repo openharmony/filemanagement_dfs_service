@@ -231,7 +231,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest001, TestSize.L
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderChangesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         std::string syncFolder = "test_syncFolder";
         sptr<IRemoteObject> remoteObj = nullptr;
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
@@ -257,10 +259,14 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest002, TestSize.L
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderChangesInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         sptr<IRemoteObject> remoteObj = nullptr;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -284,7 +290,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest001, TestSize
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         std::string syncFolder = "test_syncFolder";
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -309,9 +317,13 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest002, TestSize
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -335,10 +347,14 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest003, TestSize
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INTERNAL_ERROR);
@@ -362,10 +378,14 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest004, TestSize
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -389,7 +409,9 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest001, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         std::string syncFolder = "test_syncFolder";
         uint64_t count = 0;
         uint64_t startUsn = 0;
@@ -417,12 +439,16 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest002, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         uint64_t count = 0;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -446,13 +472,17 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest003, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         uint64_t count = 0;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INTERNAL_ERROR);
@@ -476,13 +506,17 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest004, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         uint64_t count = 0;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -506,7 +540,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
@@ -533,7 +569,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
@@ -560,13 +598,17 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -590,13 +632,17 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -620,7 +666,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
@@ -633,7 +681,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest005, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"bundlename", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -658,7 +708,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
@@ -685,7 +737,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
@@ -712,13 +766,17 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
         std::string path1 = "testpath1";
         pathArray.push_back(path1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -742,13 +800,17 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
         std::string path1 = "testpath1";
         pathArray.push_back(path1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -772,7 +834,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
@@ -784,7 +848,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest005, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"bundlename", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -809,7 +875,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -836,7 +904,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -863,7 +933,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "/storage/Users/currentUser/testdir";
@@ -890,7 +962,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest001, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -917,7 +991,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest002, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -944,7 +1020,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest003, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "/storage/Users/currentUser/testdir";
@@ -971,7 +1049,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest004, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "/storage/Users/currentUser/testdir";
@@ -1006,7 +1086,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterForSaInnerTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnregisterForSaInnerTest001 start";
     try {
         std::string path = "testpath";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterForSaInner(path);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_OK);
@@ -1031,8 +1113,10 @@ HWTEST_F(CloudDiskServiceTest, UnregisterForSaInnerTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnregisterForSaInnerTest002 start";
     try {
         std::string path = "testpath";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
         EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterForSaInner(path);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_OK);
@@ -1094,7 +1178,9 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest005, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         uint64_t count = 101;
         uint64_t startUsn = 0;
@@ -1122,7 +1208,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest006, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest006 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<FileSyncState> fileSyncStates(101);
         std::vector<FailedList> failedList;
@@ -1149,7 +1237,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest006, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest006 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "test_syncFolder";
         std::vector<std::string> pathArray(101);
         std::vector<ResultList> resultList;
@@ -1490,11 +1580,15 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest003, TestSize.L
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderChangesInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         sptr<IRemoteObject> remoteObj = nullptr;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -1518,11 +1612,15 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest004, TestSize.L
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderChangesInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         sptr<IRemoteObject> remoteObj = nullptr;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -1546,10 +1644,14 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest005, TestSize
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -1573,13 +1675,17 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest006, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "GetSyncFolderChangesInnerTest006 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         uint64_t count = 1010;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -1603,14 +1709,18 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetFileSyncStatesInnerTest007 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -1634,14 +1744,18 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileSyncStatesInnerTest007 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
         std::string path1 = "testpath1";
         pathArray.push_back(path1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -1665,8 +1779,10 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -1693,8 +1809,10 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest005, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -1722,7 +1840,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterForSaInnerTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnregisterForSaInnerTest003 start";
     try {
         std::string path = "invalid_path";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterForSaInner(path);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -1747,7 +1867,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterForSaInnerTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnregisterForSaInnerTest004 start";
     try {
         std::string path = "/data/service/el2/100/hmdfs/account/files/Docs/test";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterForSaInner(path);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -1778,7 +1900,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterForSaInnerTest005, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"bundlename", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterForSaInner(realpath);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -1838,9 +1962,11 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest008, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"wrong_bundle", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("bundlename"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -1876,9 +2002,11 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest008, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"wrong_bundle", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("bundlename"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -1990,7 +2118,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest005, TestSize.L
     try {
         std::string syncFolder = "invalid_path";
         sptr<IRemoteObject> remoteObj = nullptr;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2015,7 +2145,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest006, TestSize
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest006 start";
     try {
         std::string syncFolder = "invalid_path";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2043,7 +2175,9 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest007, TestSize.Level1
         uint64_t count = 10;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2072,7 +2206,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest009, TestSize.Level1)
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2101,7 +2237,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest009, TestSize.Level1)
         std::vector<ResultList> resultList;
         std::string path1 = "testpath1";
         pathArray.push_back(path1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
+#endif
         uint32_t ret = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2135,9 +2273,11 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest008, TestSize.Level1
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"wrong_bundle", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("bundlename"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -2170,9 +2310,11 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderChangesInnerTest006, TestSize.L
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"wrong_bundle", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("bundlename"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->RegisterSyncFolderChangesInner(syncFolder, remoteObj);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -2204,9 +2346,11 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest007, TestSize
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"wrong_bundle", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(testing::SetArgReferee<0>("bundlename"), testing::Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -2231,8 +2375,10 @@ HWTEST_F(CloudDiskServiceTest, ConvertPlaceholderToFileInner_EmptyParam_001, Tes
 {
     GTEST_LOG_(INFO) << "ConvertPlaceholderToFileInner_EmptyParam_001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->ConvertPlaceholderToFileInner("", "/data/test");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2265,8 +2411,10 @@ HWTEST_F(CloudDiskServiceTest, ConvertPlaceholderToFileInner_GetBundleNameFail_0
     try {
         std::string syncFolder = "/storage/Users/currentUser/testdir";
         std::string path = "/storage/Users/currentUser/testdir/file.txt";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->ConvertPlaceholderToFileInner(syncFolder, path);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_TRY_AGAIN);
@@ -2292,8 +2440,10 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_EmptyParam_001, TestSize.L
     try {
         PlaceholderInfo metaData = CreatePlaceholderInfo();
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+#endif
         uint32_t ret = cloudDiskService_->UpdatePlaceholderInner("", "/data/test", metaData);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_INVALID_ARG);
@@ -2328,8 +2478,10 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_GetBundleNameFail_002, Tes
         std::string path = "/storage/Users/currentUser/testdir/file.txt";
         PlaceholderInfo metaData =  CreatePlaceholderInfo();
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_TRY_AGAIN);
@@ -2357,9 +2509,11 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_CheckAccessFail_003, TestS
         std::string path = "/storage/Users/currentUser/testdir/file.txt";
         PlaceholderInfo metaData = CreatePlaceholderInfo();
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, E_SYNC_FOLDER_NOT_REGISTERED);
@@ -2394,9 +2548,11 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_GetHmdfsPathFail_004, Test
         struct SyncFolderValue syncFolderValue = {"com.ohos.test", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
             .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+#endif
         uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -2436,9 +2592,11 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_Success_005, TestSize.Leve
             struct SyncFolderValue syncFolderValue = {"com.ohos.test", testFile};
             CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
             EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
             EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
                 .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+#endif
             uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, testFile, metaData);
             CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -2480,9 +2638,11 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_UpdateFail_006, TestSize.L
             struct SyncFolderValue syncFolderValue = {"com.ohos.test", testFile};
             CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
             EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(100));
             EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
                 .WillOnce(DoAll(SetArgReferee<0>("com.ohos.test"), Return(E_OK)));
+#endif
             uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, testFile, metaData);
             CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE

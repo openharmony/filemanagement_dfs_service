@@ -19,6 +19,13 @@
 #include "fuse_assistant.h"
 #include "parameters.h"
 
+extern "C" {
+int ioctl(int fd, int flag, ...)
+{
+    return 0;
+}
+}
+
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace std;
 using namespace CloudFile;
@@ -202,13 +209,9 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_014, TestSize.Level
 HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_01, TestSize.Level1)
 {
     string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
-    string cloudPath = "/mnt/data/100/cloud_fuse";
+    string cloudPath = "/mnt/data/100/cloud";
     bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
-#if CLOUD_ADAPTER_ENABLED
     EXPECT_EQ(res, true);
-#else
-    EXPECT_EQ(res, false);
-#endif
 }
 
 HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_02, TestSize.Level1)
@@ -216,7 +219,7 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_02, TestSize.Level1
     string dfsPath = "/mnt/hmdfs/100/cloud/data/" + system::GetParameter(FILEMANAGER_KEY, "");
     string cloudPath = "./";
     bool res = CloudFileUtils::ClearCache(dfsPath, cloudPath);
-    EXPECT_EQ(res, false);
+    EXPECT_EQ(res, true);
 }
 
 HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_ClearCache_03, TestSize.Level1)

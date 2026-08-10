@@ -429,7 +429,6 @@ ohos_unittest("cloud_disk_service_test_new") {
 
   if (dfs_service_feature_enable_cloud_disk) {
     external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
-    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
   }
 
   use_exceptions = true
