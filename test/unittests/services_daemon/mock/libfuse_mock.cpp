@@ -32,8 +32,3 @@ void fuse_session_destroy(struct fuse_session *se)
 {
     FuseAssistant::ins->fuse_session_destroy(se);
 }
-
-void HandleStartMove(int32_t userId)
-{
-    FuseAssistant::ins->HandleStartMove(userId);
-}

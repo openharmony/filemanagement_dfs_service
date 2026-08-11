@@ -43,7 +43,6 @@
 #include "ffrt_inner.h"
 #include "migration_manager.h"
 #include "nlohmann/json.hpp"
-#include "parameter.h"
 #include "parameters.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -192,11 +191,6 @@ bool CloudDiskRdbStore::TryOpenRdbStore(const string &customDir, const string &d
 
 int32_t CloudDiskRdbStore::RdbInit()
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return EBUSY;
-    }
-    
     string filemanager = system::GetParameter(FILEMANAGER_KEY, "");
     
     string customDir;

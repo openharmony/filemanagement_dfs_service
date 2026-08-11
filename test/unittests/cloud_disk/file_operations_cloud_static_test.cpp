@@ -2075,38 +2075,6 @@ HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RenameNewTest002
- * @tc.desc: Verify the RenameNew function
- * @tc.type: FUNC
- * @tc.require: #2971
- */
-HWTEST_F(FileOperationsCloudStaticTest, RenameNewTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RenameNewTest002 Start";
-    try {
-        CloudDiskFuseData data;
-        fuse_ino_t parent = 0;
-        fuse_ino_t newParent = 0;
-        fuse_req_t req = nullptr;
-        const char *name = "";
-        const char *newName = "";
-        unsigned int flags = 1;
-        size_t size = 0;
-
-        system::SetParameter("persist.kernel.move.finish", "false");
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).Times(2).WillRepeatedly(Return(E_OK));
-        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
-        fileOperationsCloud_->GetXattr(req, parent, name, size);
-        system::SetParameter("persist.kernel.move.finish", "true");
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "RenameNewTest002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "RenameNewTest002 End";
-}
-
-/**
  * @tc.name: HandleCloudOpenSuccessTest001
  * @tc.desc: Verify HandleCloudOpenSuccess when fileType is FILE_TYPE_CONTENT
  * @tc.type: FUNC

@@ -32,7 +32,6 @@
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "ffrt_inner.h"
-#include "parameter.h"
 #include "parameters.h"
 #include "file_operations_helper.h"
 #include "fuse_ioctl.h"
@@ -719,10 +718,6 @@ static void CloudOpen(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr,
 
 void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     std::unique_lock<std::shared_mutex> wLock(data->fileIdLock, std::defer_lock);
@@ -912,10 +907,6 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
 void FileOperationsCloud::MkNod(fuse_req_t req, fuse_ino_t parent, const char *name,
                                 mode_t mode, dev_t rdev)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct fuse_entry_param e;
     int32_t err = DoCreatFile(req, parent, name, mode, e);
@@ -930,10 +921,6 @@ void FileOperationsCloud::MkNod(fuse_req_t req, fuse_ino_t parent, const char *n
 void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *name,
                                  mode_t mode, struct fuse_file_info *fi)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     struct fuse_entry_param e;
@@ -1092,10 +1079,6 @@ static void ReadDirForRecycle(fuse_req_t req, fuse_ino_t ino, size_t size, off_t
 void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                                   struct fuse_file_info *fi)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (ino == RECYCLE_LOCAL_ID) {
         ReadDirForRecycle(req, ino, size, off, fi);
@@ -1295,10 +1278,6 @@ void HandleExtAttribute(fuse_req_t req, fuse_ino_t ino, const char *name, const 
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGD("Setxattr begin name:%{public}s", name);
     int32_t checknum = CheckXattr(name);
@@ -1494,10 +1473,6 @@ string GetXattrBuffer(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const c
 
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name, size_t size)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
@@ -1529,10 +1504,6 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
 
 void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
@@ -1675,10 +1646,6 @@ std::shared_ptr<CloudDiskMetaFile> LoadMetaFileChildren(const CloudDiskFuseData*
 
 void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
 
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
@@ -1722,10 +1689,6 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
 
 void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     int32_t err = DoCloudUnlink(req, parent, name);
@@ -1858,10 +1821,6 @@ void RenameForTrash(fuse_req_t req, fuse_ino_t parent, const char *name,
 void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
                                  fuse_ino_t newParent, const char *newName, unsigned int flags)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (parent == RECYCLE_LOCAL_ID || newParent == RECYCLE_LOCAL_ID) {
         RenameForTrash(req, parent, name, newParent, newName);
@@ -2310,10 +2269,6 @@ int32_t HandleMtime(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskFuse
 void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                                   int valid, struct fuse_file_info *fi)
 {
-    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
-        LOGE("wait move error");
-        return (void) fuse_reply_err(req, EBUSY);
-    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGD("SetAttr begin valid:%{public}d", valid);
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));

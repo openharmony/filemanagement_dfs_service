@@ -19,7 +19,6 @@
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
 #include "os_account_manager.h"
-#include "parameter.h"
 #include "parameters.h"
 #include "result_set.h"
 #include "tasks/database_backup_task.h"
@@ -64,12 +63,6 @@ void CycleTaskRunner::StartTask()
     return;
 #endif
 
-    constexpr int32_t MOVE_FILE_TIME_SERVICE = 5;
-    int status = WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_SERVICE);
-    if (status != 0) {
-        LOGE("wait move error, return value %{public}d.", status);
-        return;
-    }
     for (const auto &task_data : cycleTasks_) {
         task_data->RunTask(userId_);
     }
