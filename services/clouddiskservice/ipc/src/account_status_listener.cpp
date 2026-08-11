@@ -37,14 +37,21 @@ namespace CloudDiskService {
 
 using namespace AccountSA;
 
+void AccountStatusSubscriber::SetCurrentUserId(int32_t userId)
+{
+    currentUserId_ = userId;
+}
+
 void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto state = data.state;
     auto userId = data.toId;
-    LOGI("OnStateChanged state:%{public}d, userId: %{public}d", state, userId);
+    LOGI("OnStateChanged state:%{public}d, userId: %{public}d, currentUserId: %{public}d",
+        state, userId, currentUserId_);
     if (state == OsAccountState::SWITCHED) {
         LOGI("Switched user");
+        SetCurrentUserId(userId);
         DiskMonitor::GetInstance().StopMonitor();
         CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
         CloudDiskServiceCallbackManager::GetInstance().ClearMap();
@@ -81,6 +88,10 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
         }
     }
     if (state == OsAccountState::STOPPED) {
+        if (userId != currentUserId_) {
+            LOGI("Ignore stopped userId: %{public}d, current userId: %{public}d", userId, currentUserId_);
+            return;
+        }
         LOGI("Stopped user");
         UnloadSa();
     }
@@ -107,11 +118,11 @@ AccountStatusListener::~AccountStatusListener()
     Stop();
 }
 
-void AccountStatusListener::Start()
+void AccountStatusListener::Start(int32_t currentUserId)
 {
     std::set<OsAccountState> states = {OsAccountState::STOPPED, OsAccountState::SWITCHED};
     OsAccountSubscribeInfo subscribeInfo(states);
-    osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo);
+    osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo, currentUserId);
     ErrCode errCode = OsAccountManager::SubscribeOsAccount(osAccountSubscriber_);
     LOGI("account subscribe errCode:%{public}d", errCode);
 }
@@ -123,6 +134,7 @@ void AccountStatusListener::Stop()
         osAccountSubscriber_ = nullptr;
     }
 }
+
 } // namespace CloudDiskService
 } // namespace FileManagement
 } // namespace OHOS

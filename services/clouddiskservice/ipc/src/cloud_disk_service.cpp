@@ -144,6 +144,27 @@ bool GetUserIdByStartReason(const SystemAbilityOnDemandReason &startReason, int3
     }
     return true;
 }
+
+constexpr int32_t GET_SYNC_FOLDERS_RETRY_ERR_CODE = 34400001;
+constexpr int32_t GET_SYNC_FOLDERS_MAX_RETRY_TIMES = 2;
+constexpr int32_t GET_SYNC_FOLDERS_RETRY_INTERVAL_US = 200 * 1000;
+
+int32_t GetAllSyncFoldersForSaWithRetry(std::vector<FileManagement::SyncFolderExt> &syncFolders)
+{
+    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
+        .GetAllSyncFoldersForSa(syncFolders);
+    int32_t retryCount = 0;
+    while (ret == GET_SYNC_FOLDERS_RETRY_ERR_CODE && retryCount < GET_SYNC_FOLDERS_MAX_RETRY_TIMES) {
+        ++retryCount;
+        LOGE("Get all sync folders for sa failed, retry: %{public}d/%{public}d, ret: %{public}d",
+            retryCount, GET_SYNC_FOLDERS_MAX_RETRY_TIMES, ret);
+        usleep(GET_SYNC_FOLDERS_RETRY_INTERVAL_US);
+        syncFolders.clear();
+        ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
+            .GetAllSyncFoldersForSa(syncFolders);
+    }
+    return ret;
+}
 #endif
 
 static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
@@ -237,9 +258,10 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
     if (!GetUserIdByStartReason(startReason, userId)) {
         return;
     }
+    currentUserId_ = userId;
 
     std::vector<FileManagement::SyncFolderExt> syncFolders;
-    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
+    int32_t ret = GetAllSyncFoldersForSaWithRetry(syncFolders);
     if (ret != E_OK) {
         LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu",
             ret, syncFolders.size());
@@ -964,7 +986,7 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
 void CloudDiskService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
-    accountStatusListener_->Start();
+    accountStatusListener_->Start(currentUserId_);
 }
 
 void CloudDiskService::UnloadSa()

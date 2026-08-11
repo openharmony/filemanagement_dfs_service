@@ -73,6 +73,7 @@ public:
 private:
     CloudDiskService();
     ServiceRunningState state_{ServiceRunningState::STATE_NOT_START};
+    int32_t currentUserId_ = -1;
     static sptr<CloudDiskService> instance_;
     bool registerToService_{false};
     bool PublishSA();

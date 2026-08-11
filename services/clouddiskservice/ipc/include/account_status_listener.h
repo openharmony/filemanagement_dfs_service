@@ -28,7 +28,7 @@ class AccountStatusListener {
 public:
     explicit AccountStatusListener() = default;
     ~AccountStatusListener();
-    void Start();
+    void Start(int32_t currentUserId);
     void Stop();
 
 private:
@@ -37,10 +37,15 @@ private:
 
 class AccountStatusSubscriber : public AccountSA::OsAccountSubscriber {
 public:
-    AccountStatusSubscriber(const AccountSA::OsAccountSubscribeInfo &info) : OsAccountSubscriber(info) {};
+    explicit AccountStatusSubscriber(const AccountSA::OsAccountSubscribeInfo &info, int32_t currentUserId = -1)
+        : OsAccountSubscriber(info), currentUserId_(currentUserId) {};
     ~AccountStatusSubscriber() override {}
     void OnStateChanged(const AccountSA::OsAccountStateData &data) override;
+    void SetCurrentUserId(int32_t userId);
     void UnloadSa();
+
+private:
+    int32_t currentUserId_ = -1;
 };
 } // namespace CloudDiskService
 } // namespace FileManagement
