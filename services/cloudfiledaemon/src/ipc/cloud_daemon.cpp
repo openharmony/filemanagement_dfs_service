@@ -153,43 +153,6 @@ void CloudDaemon::OnStart()
     LOGI("Start service successfully");
 }
 
-void HandleStartMove(int32_t userId)
-{
-    const string moveFile = "persist.kernel.move.finish";
-    system::SetParameter(moveFile, "false");
-    const std::string filemanagerKey = "persist.kernel.bundle_name.filemanager";
-    string subList[] = {"com.ohos.photos", system::GetParameter(filemanagerKey, "")};
-    string srcBase = "/data/service/el1/public/cloudfile/" + to_string(userId);
-    string dstBase = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager";
-    string removePath = srcBase + "/" + subList[1] + "/backup";
-    bool ret = Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(removePath);
-    if (!ret) {
-        LOGE("remove failed path: %{public}s", GetAnonyString(removePath).c_str());
-    }
-    const auto copyOptions = filesystem::copy_options::overwrite_existing | filesystem::copy_options::recursive;
-    for (auto sub : subList) {
-        string srcPath = srcBase + '/' + sub;
-        string dstPath = dstBase + '/' + sub;
-        if (access(srcPath.c_str(), F_OK) != 0) {
-            LOGI("srcPath %{public}s not found", GetAnonyString(srcPath).c_str());
-            continue;
-        }
-        LOGI("Begin to move path: %{public}s", GetAnonyString(srcPath).c_str());
-        error_code errCode;
-        filesystem::copy(srcPath, dstPath, copyOptions, errCode);
-        if (errCode.value() != 0) {
-            LOGE("copy failed path: %{public}s, errCode: %{public}d",
-                GetAnonyString(srcPath).c_str(), errCode.value());
-        }
-        LOGI("End move path: %{public}s", GetAnonyString(srcPath).c_str());
-        bool ret = Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(srcPath);
-        if (!ret) {
-            LOGE("remove failed path: %{public}s", GetAnonyString(srcPath).c_str());
-        }
-    }
-    system::SetParameter(moveFile, "true");
-}
-
 void CloudDaemon::OnStop()
 {
     LOGI("Begin to stop");
@@ -274,11 +237,6 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
                 CloudFile::FaultType::FILE, errno, "chown cachepath error " + std::to_string(errno)});
         }
-    }
-    if (path.find("cloud_fuse") != string::npos) {
-        std::thread([userId]() {
-            HandleStartMove(userId);
-        }).detach();
     }
 #ifdef HICOLLIE_ENABLE
     XCollieHelper::CancelTimer(xcollieId);

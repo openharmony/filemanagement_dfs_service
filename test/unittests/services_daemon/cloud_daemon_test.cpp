@@ -261,7 +261,6 @@ HWTEST_F(CloudDaemonTest, StartFuseTest005, TestSize.Level1)
     try {
         std::string path = "/cloud_fuse/test";
         EXPECT_CALL(*insMock_, mkdir(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock_, HandleStartMove(_)).WillRepeatedly(Return());
         int32_t ret = cloudDaemon_->StartFuse(USER_ID, DEV_FD, path);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {

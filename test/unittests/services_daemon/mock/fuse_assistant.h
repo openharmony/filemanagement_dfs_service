@@ -35,7 +35,6 @@ public:
     virtual int mkdir(const char* path, mode_t mode) = 0;
     virtual int chown(const char *path, uid_t owner, gid_t group) = 0;
     virtual int chmod(const char *path, mode_t mode) = 0;
-    virtual void HandleStartMove(int32_t userId) = 0;
     static inline std::shared_ptr<FuseAssistant> ins = nullptr;
     static inline bool mockable = false;
 };
@@ -49,7 +48,6 @@ public:
     MOCK_METHOD2(mkdir, int(const char* path, mode_t mode));
     MOCK_METHOD3(chown, int(const char * path, uid_t owner, gid_t group));
     MOCK_METHOD2(chmod, int(const char * path, mode_t mode));
-    MOCK_METHOD1(HandleStartMove, void(int32_t userId));
 
 public:
     static void EnableMock();
