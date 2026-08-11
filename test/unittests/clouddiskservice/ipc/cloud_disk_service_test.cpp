@@ -72,6 +72,7 @@ constexpr const char *TEST_NEGATIVE_USER_ID_STR = "-1";
 constexpr const char *TEST_SYNC_FOLDER_PATH = "/storage/Users/currentUser/Download/test_success";
 constexpr const char *TEST_EMPTY_SYNC_FOLDER_PATH = "";
 constexpr const char *TEST_BUNDLE_NAME = "com.example.test";
+constexpr int32_t TEST_GET_SYNC_FOLDERS_RETRY_ERR_CODE = 34400001;
 
 SystemAbilityOnDemandReason CreateStartReason(const std::string &reasonValue = TEST_USER_ID_STR,
     const std::string &reasonName = TEST_USER_UNLOCKED_REASON)
@@ -1186,6 +1187,9 @@ HWTEST_F(CloudDiskServiceTest, OnStartTest002, TestSize.Level1)
             .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_INVALID_ARG)));
 #endif
         cloudDiskService_->OnStart(CreateStartReason());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->currentUserId_, TEST_USER_ID);
+#endif
         EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1478,6 +1482,49 @@ HWTEST_F(CloudDiskServiceTest, OnStartTest011, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnStartTest011 failed";
     }
     GTEST_LOG_(INFO) << "OnStartTest011 end";
+}
+
+/**
+ * @tc.name: OnStartTest012
+ * @tc.desc: Verify the OnStart function retries when GetAllSyncFoldersForSa returns retry error
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceTest, OnStartTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest012 start";
+    try {
+        g_publish = true;
+        cloudDiskService_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDiskService_->registerToService_ = false;
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        std::vector<SyncFolderExt> syncFolders;
+        SyncFolderExt syncFolder;
+        syncFolder.path_ = TEST_SYNC_FOLDER_PATH;
+        syncFolder.bundleName_ = TEST_BUNDLE_NAME;
+        syncFolders.push_back(syncFolder);
+        CloudDiskSyncFolderManagerMock &mockManager = CloudDiskSyncFolderManagerMock::GetInstance();
+        EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+        EXPECT_CALL(mockManager, GetAllSyncFoldersForSa(_))
+            .WillOnce(Return(TEST_GET_SYNC_FOLDERS_RETRY_ERR_CODE))
+            .WillOnce(Return(TEST_GET_SYNC_FOLDERS_RETRY_ERR_CODE))
+            .WillOnce(DoAll(SetArgReferee<0>(syncFolders), Return(E_OK)));
+#endif
+        cloudDiskService_->OnStart(CreateStartReason());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_RUNNING);
+        EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 1);
+        cloudDiskService_->OnStop();
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+#else
+        EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest012 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest012 end";
 }
 
 /**

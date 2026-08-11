@@ -34,6 +34,11 @@ using namespace std;
 using Want = OHOS::AAFwk::Want;
 using namespace AccountSA;
 
+constexpr int32_t CLOUD_DISK_SERVICE_SA_ID = 5207;
+constexpr int32_t INVALID_USER_ID = -1;
+constexpr int32_t TEST_CURRENT_USER_ID = 100;
+constexpr int32_t TEST_STOPPED_USER_ID = 101;
+
 class AccountStatusSubscriberTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -67,6 +72,7 @@ void AccountStatusSubscriberTest::TearDownTestCase(void)
 
 void AccountStatusSubscriberTest::SetUp(void)
 {
+    subscribers_->SetCurrentUserId(INVALID_USER_ID);
 }
 
 void AccountStatusSubscriberTest::TearDown(void)
@@ -85,6 +91,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = SWITCHED;
+        osAccountData.toId = TEST_CURRENT_USER_ID;
         std::vector<SyncFolderExt> syncFolder;
         SyncFolderExt ext;
         ext.path_ = "path";
@@ -112,6 +119,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest002, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = SWITCHED;
+        osAccountData.toId = TEST_CURRENT_USER_ID;
         std::vector<SyncFolderExt> syncFolder;
         SyncFolderExt ext;
         ext.path_ = "/storage/Users/currentUser/Download/test";
@@ -139,6 +147,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest003, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = SWITCHED;
+        osAccountData.toId = TEST_CURRENT_USER_ID;
         std::vector<SyncFolderExt> syncFolder;
         CloudDiskSyncFolderManagerMock &mockFolderManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockFolderManager, GetAllSyncFoldersForSa(_))
@@ -163,16 +172,44 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest004, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = STOPPED;
-        std::vector<SyncFolderExt> syncFolder;
-        CloudDiskSyncFolderManagerMock &mockFolderManager = CloudDiskSyncFolderManagerMock::GetInstance();
-        EXPECT_CALL(mockFolderManager, GetAllSyncFoldersForSa(_))
-            .WillOnce(DoAll(SetArgReferee<0>(syncFolder), Return(0)));
+        osAccountData.toId = TEST_CURRENT_USER_ID;
+        subscribers_->SetCurrentUserId(TEST_CURRENT_USER_ID);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        auto mockManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(mockManager));
+        EXPECT_CALL(*mockManager, UnloadSystemAbility(CLOUD_DISK_SERVICE_SA_ID)).WillOnce(Return(ERR_OK));
+#endif
         subscribers_->OnStateChanged(osAccountData);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest004 failed";
     }
     GTEST_LOG_(INFO) << "OnStateChangedTest004 end";
+}
+
+/**
+ * @tc.name: OnStateChangedTest007
+ * @tc.desc: Verify the OnStateChanged function filters stopped state from other user
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStateChangedTest007 start";
+    try {
+        OsAccountStateData osAccountData;
+        osAccountData.state = STOPPED;
+        osAccountData.toId = TEST_STOPPED_USER_ID;
+        subscribers_->SetCurrentUserId(TEST_CURRENT_USER_ID);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_CALL(*smc_, GetSystemAbilityManager()).Times(0);
+#endif
+        subscribers_->OnStateChanged(osAccountData);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStateChangedTest007 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStateChangedTest007 end";
 }
 
 /**
@@ -187,6 +224,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest005, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = SWITCHED;
+        osAccountData.toId = TEST_CURRENT_USER_ID;
         std::vector<SyncFolderExt> syncFolder;
         SyncFolderExt ext;
         ext.path_ = "/storage/Users/currentUser/Download/test1";
@@ -219,6 +257,7 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest006, TestSize.Level1)
     try {
         OsAccountStateData osAccountData;
         osAccountData.state = SWITCHED;
+        osAccountData.toId = TEST_CURRENT_USER_ID;
         std::vector<SyncFolderExt> syncFolder;
         CloudDiskSyncFolderManagerMock &mockFolderManager = CloudDiskSyncFolderManagerMock::GetInstance();
         EXPECT_CALL(mockFolderManager, GetAllSyncFoldersForSa(_))
@@ -333,7 +372,9 @@ HWTEST_F(AccountStatusListenerTest, StartTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartTest001 start";
     try {
-        listeners_->Start();
+        listeners_->Start(TEST_CURRENT_USER_ID);
+        auto subscriber = std::static_pointer_cast<AccountStatusSubscriber>(listeners_->osAccountSubscriber_);
+        EXPECT_EQ(subscriber->currentUserId_, TEST_CURRENT_USER_ID);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartTest001 failed";
@@ -351,8 +392,8 @@ HWTEST_F(AccountStatusListenerTest, StartTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartTest002 start";
     try {
-        listeners_->Start();
-        listeners_->Start();
+        listeners_->Start(TEST_CURRENT_USER_ID);
+        listeners_->Start(TEST_STOPPED_USER_ID);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartTest002 failed";
