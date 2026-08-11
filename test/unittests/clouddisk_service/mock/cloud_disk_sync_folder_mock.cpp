@@ -107,7 +107,7 @@ int32_t CloudDiskSyncFolder::PathToMntPathBySandboxPath(const std::string &path,
         return E_OK;
     }
     realpath = "/hmdfs/" + path;
-    return 1;
+    return E_OK;
 }
 
 bool CloudDiskSyncFolder::PathToMntPathByPhysicalPath(const std::string &path,

@@ -158,10 +158,8 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest003, TestSize.Level1)
         g_publish = false;
         cloudDiskService_->registerToService_ = false;
         cloudDiskService_->PublishSA();
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PublishSATest003 failed";
     } catch (...) {
-        EXPECT_TRUE(true); // expected throw exception
+        EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "PublishSATest003 end";
 }
@@ -238,7 +236,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest002, TestSize
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest002 start";
     try {
         std::string syncFolder = "test_syncFolder";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolder);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_INVALID_ARG);
@@ -267,9 +267,11 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest003, TestSize
         std::string mkdirCmd = "mkdir -p \"" + physicalPath + "\"";
         int ret = std::system(mkdirCmd.c_str());
         EXPECT_EQ(ret, 0);
-        
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t result = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolderPath);
         
         std::string rmdirCmd = "rm -rf \"/data/service/el2/100\"";
@@ -298,7 +300,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderChangesInnerTest004, TestSize
     GTEST_LOG_(INFO) << "UnregisterSyncFolderChangesInnerTest004 start";
     try {
         std::string syncFolderPath = "/storage/Users/currentUser/testdir";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->UnregisterSyncFolderChangesInner(syncFolderPath);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -349,7 +353,9 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest002, TestSize.Level1
         uint64_t count = 0;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->GetSyncFolderChangesInner(syncFolder, count, startUsn, changesResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_INVALID_ARG);
@@ -378,17 +384,19 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest003, TestSize.Level1
         std::string mkdirCmd = "mkdir -p \"" + physicalPath + "\"";
         int ret = std::system(mkdirCmd.c_str());
         EXPECT_EQ(ret, 0);
-        
+
         uint64_t count = 0;
         uint64_t startUsn = 0;
         ChangesResult changesResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
         EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_INVALID_ARG));
+#endif
         uint32_t result = cloudDiskService_->GetSyncFolderChangesInner(syncFolderPath, count, startUsn, changesResult);
         
         std::string rmdirCmd = "rm -rf \"/data/service/el2/100\"";
         std::system(rmdirCmd.c_str());
-        
+
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_TRY_AGAIN); // GetCallerBundleName 返回 E_INVALID_ARG 时，函数返回 E_TRY_AGAIN
 #else
@@ -415,7 +423,9 @@ HWTEST_F(CloudDiskServiceTest, GetSyncFolderChangesInnerTest004, TestSize.Level1
         uint64_t changeCount = 0;
         uint64_t startUsnValue = 0;
         ChangesResult changeResult;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->GetSyncFolderChangesInner(
             syncFolderPath, changeCount, startUsnValue, changeResult);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -466,7 +476,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest002, TestSize.Level1)
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->SetFileSyncStatesInner(syncFolder, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_INVALID_ARG);
@@ -495,7 +507,9 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest003, TestSize.Level1)
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
         fileSyncStates.push_back(fileSyncState1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->SetFileSyncStatesInner(syncFolderPath, fileSyncStates, failedList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -524,7 +538,7 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest004, TestSize.Level1)
         std::string mkdirCmd = "mkdir -p \"" + physicalPath + "\"";
         int ret = std::system(mkdirCmd.c_str());
         EXPECT_EQ(ret, 0);
-        
+
         std::vector<FileSyncState> fileSyncStates;
         std::vector<FailedList> failedList;
         FileSyncState fileSyncState1;
@@ -536,10 +550,12 @@ HWTEST_F(CloudDiskServiceTest, SetFileSyncStatesInnerTest004, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"bundlename", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->SetFileSyncStatesInner(syncFolderPath, fileSyncStates, failedList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
-        
+
         std::string rmdirCmd = "rm -rf \"/data/service/el2/100\"";
         std::system(rmdirCmd.c_str());
         
@@ -621,7 +637,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest002, TestSize.Level1)
         std::vector<ResultList> resultList;
         std::string testPath1 = "testpath1";
         pathArray.push_back(testPath1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->GetFileSyncStatesInner(syncFolder, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_INVALID_ARG);
@@ -650,7 +668,9 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest003, TestSize.Level1)
         std::vector<ResultList> resultList;
         std::string testPath1 = "testpath1";
         pathArray.push_back(testPath1);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->GetFileSyncStatesInner(syncFolderPath, pathArray, resultList);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_SYNC_FOLDER_PATH_NOT_EXIST);
@@ -679,7 +699,7 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest004, TestSize.Level1)
         std::string mkdirCmd = "mkdir -p \"" + physicalPath + "\"";
         int ret = std::system(mkdirCmd.c_str());
         EXPECT_EQ(ret, 0);
-        
+
         std::vector<std::string> pathArray;
         std::vector<ResultList> resultList;
         std::string testPath1 = "testpath1";
@@ -690,13 +710,15 @@ HWTEST_F(CloudDiskServiceTest, GetFileSyncStatesInnerTest004, TestSize.Level1)
         auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(realpath);
         struct SyncFolderValue syncFolderValue = {"bundlename", "path"};
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(GET_SYNC_FOLDER_CHANGE_MAX));
+#endif
         uint32_t result = cloudDiskService_->GetFileSyncStatesInner(syncFolderPath, pathArray, resultList);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
-        
+
         std::string rmdirCmd = "rm -rf \"/data/service/el2/100\"";
         std::system(rmdirCmd.c_str());
-        
+
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_OK);
 #else
@@ -748,7 +770,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t testUserId = 100;
         std::string testBundleName = "ohos.clouddiskservice.test";
         std::string testPath = "testpath";
@@ -775,7 +799,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t testUserId = 100;
         std::string testBundleName = "ohos.clouddiskservice.test";
         std::string testPath = "testpath";
@@ -802,7 +828,9 @@ HWTEST_F(CloudDiskServiceTest, RegisterSyncFolderInnerTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSyncFolderInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string testPath = "/storage/Users/currentUser/testdir";
@@ -829,7 +857,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest001, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest001 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -856,7 +886,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest002, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest002 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string path = "testpath";
@@ -883,7 +915,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest003, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest003 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string testPath = "/storage/Users/currentUser/testdir";
@@ -910,7 +944,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest004, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest004 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string testPath = "/storage/Users/currentUser/testdir";
@@ -918,7 +954,7 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest004, TestSize.Level1
         std::string mkdirCmd = "mkdir -p \"" + physicalPath + "\"";
         int ret = std::system(mkdirCmd.c_str());
         EXPECT_EQ(ret, 0);
-        
+
         std::string sandboxPath = "/storage/Users/currentUser";
         std::string replacementPath = "/data/service/el2/100/hmdfs/account/files/Docs";
         std::string realpath = replacementPath + testPath.substr(sandboxPath.length());
@@ -927,10 +963,10 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest004, TestSize.Level1
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
         uint32_t result = cloudDiskService_->UnregisterSyncFolderInner(userId, bundleName, testPath);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
-        
+
         std::string rmdirCmd = "rm -rf \"/data/service/el2/100\"";
         std::system(rmdirCmd.c_str());
-        
+
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(result, E_OK);
 #else
@@ -953,7 +989,9 @@ HWTEST_F(CloudDiskServiceTest, UnregisterSyncFolderInnerTest005, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "UnregisterSyncFolderInnerTest005 start";
     try {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+#endif
         int32_t userId = 100;
         std::string bundleName = "ohos.clouddiskservice.test";
         std::string testPath = "/test/mockFailed/PathToMntPathBySandboxPath";
