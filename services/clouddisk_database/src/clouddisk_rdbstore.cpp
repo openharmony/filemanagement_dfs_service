@@ -1213,6 +1213,7 @@ int32_t CloudDiskRdbStore::GetSourcePathFromAttr(const std::string &cloudId, std
         LOGD("srcPath not found in attribute, return root dir");
     }
     sourcePath = sourcePath == "/" ? sandboxPrefix + sourcePath : sandboxPrefix + sourcePath + "/";
+    sourcePath = CloudFileUtils::GetRealPath(sourcePath) + "/";
 
     return E_OK;
 }
@@ -1656,6 +1657,7 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
             CloudFile::FaultOperation::GETEXTATTR, CloudFile::FaultType::QUERY_DATABASE,
             ret, msg});
+        resultSet->Close();
         return E_RDB;
     }
     int32_t fileStatus;
@@ -2948,6 +2950,7 @@ int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string de
     std::tie(rdbRet, outRowId) = transaction->Insert(FileColumn::FILES_TABLE, fileInfo);
     if (rdbRet != E_OK) {
         LOGE("insert new file record in DB failed ,ret = %{public}d", rdbRet);
+        rdbTransaction.Finish();
         return rdbRet;
     }
 
@@ -2960,6 +2963,7 @@ int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string de
     ret = CreateDentryFile(metaBase, destParentCloudId);
     if (ret != E_OK) {
         LOGE("create new dentry failed, ret = %{public}d", ret);
+        rdbTransaction.Finish();
         return ret;
     }
     rdbTransaction.Finish();
