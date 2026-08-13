@@ -46,6 +46,7 @@ public:
 #endif
     static bool SetAccessInfoToSocket(const int32_t sessionId, int32_t userId = INVALID_USER_ID);
     static bool IsSameAccount(const std::string &networkId);
+    static int32_t GetUserIdByDisplayId(uint64_t displayId, int32_t &userId);
 private:
     static bool CheckSrcIsSameAccount(const std::string &sinkNetworkId, const AccountInfo &localAccountInfo);
     static bool CheckSinkIsSameAccount(const AccountInfo &callerAccountInfo, const AccountInfo &calleeAccountInfo);
