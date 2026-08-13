@@ -76,9 +76,9 @@ bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccoun
 bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId)
 {
     if (userId == INVALID_USER_ID) {
-        userId = GetCurrentUserId();
-        if (userId == INVALID_USER_ID) {
-            LOGE("Get current userid failed");
+        constexpr uint64_t CockpitDisplayId = 0;
+        if (GetUserIdByDisplayId(CockpitDisplayId, userId) != NO_ERROR) {
+            LOGE("Get userid by displayId failed");
             return false;
         }
     }
@@ -214,6 +214,19 @@ int32_t SoftBusPermissionCheck::GetCurrentUserId()
     return userIds[0];
 }
 
+int32_t SoftBusPermissionCheck::GetUserIdByDisplayId(uint64_t displayId, int32_t &userId)
+{
+    auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(displayId, userId);
+    if (ret != NO_ERROR) {
+        LOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", ret);
+        RadarParaInfo info = {"GetUserIdByDisplayId", ReportLevel::INNER, DfxBizStage::DEFAULT,
+            "account", "", ret, "GetForegroundOsAccountLocalId failed"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
+        return ret;
+    }
+    return NO_ERROR;
+}
+
 bool SoftBusPermissionCheck::GetLocalNetworkId(std::string &networkId)
 {
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
@@ -297,9 +310,10 @@ bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
         LOGE("localInfo is nullptr.");
         return false;
     }
-    int32_t userId = GetCurrentUserId();
-    if (userId == INVALID_USER_ID) {
-        LOGE("get current user id falied");
+    int32_t userId = INVALID_USER_ID;
+    constexpr uint64_t CockpitDisplayId = 0;
+    if (GetUserIdByDisplayId(CockpitDisplayId, userId) != NO_ERROR) {
+        LOGE("get user id by displayId failed");
         return false;
     }
     localInfo->userId = userId;
