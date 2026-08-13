@@ -238,14 +238,15 @@ void SoftbusAssetRecvListener::OnAssetRecvBind(int32_t sessionId, PeerSocketInfo
 
 int32_t SoftbusAssetRecvListener::GetCurrentUserId()
 {
-    std::vector<int32_t> userIds{};
-    auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
-    if (ret != NO_ERROR || userIds.empty()) {
-        LOGE("query active os account id failed, ret = %{public}d", ret);
+    int32_t userId = -1;
+    constexpr uint64_t CockpitDisplayId = 0;
+    auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(CockpitDisplayId, userId);
+    if (ret != NO_ERROR) {
+        LOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", ret);
         return FileManagement::E_GET_USER_ID;
     }
     LOGI("GetCurrentUserId end.");
-    return userIds[0];
+    return userId;
 }
 
 bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileList, bool isSingleFile)
