@@ -1638,71 +1638,254 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest006, TestSize.Le
 
 /**
  * @tc.name: CreatePlaceholderBranchTest007
- * @tc.desc: Verify CreatePlaceholderFileAt succeeds when file creation succeeds
+ * @tc.desc: Verify CreatePlaceholderFileAt sets placeholder attributes in userspace
  * @tc.type: FUNC
  * @tc.require: NA
  */
 HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest007 start";
-    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt success with ioctl enabled";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt userspace attributes success";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
     path.fileName = "placeholder.txt";
     PlaceholderInfo info;
     info.logicalSize = 4096;
-    info.atimeMs = 100;
-    info.mtimeMs = 200;
-    bool ioctlPayloadChecked = false;
+    info.atimeMs = 1234;
+    info.mtimeMs = 5678;
+    bool xattrChecked = false;
+    bool timesChecked = false;
 
     EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
     EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
-    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _))
-        .WillOnce(Invoke([&ioctlPayloadChecked](int, int, void *arg) {
-            auto *create = reinterpret_cast<HmdfsPlaceholderAttr*>(arg);
-            ioctlPayloadChecked = create != nullptr && create->logicalSize == 4096 &&
-                create->atimeMs == 100 && create->mtimeMs == 200;
+    EXPECT_CALL(*insMock_, ftruncate(11, 4096)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Invoke([&xattrChecked](int, const char *, const void *value, size_t, int) {
+            xattrChecked = value != nullptr &&
+                *static_cast<const uint8_t *>(value) == PLACEHOLDER_XATTR_VALUE;
             return 0;
         }));
+    EXPECT_CALL(*insMock_, futimens(11, _))
+        .WillOnce(Invoke([&timesChecked](int, const struct timespec *times) {
+            timesChecked = times != nullptr && times[0].tv_sec == 1 && times[0].tv_nsec == 234000000 &&
+                times[1].tv_sec == 5 && times[1].tv_nsec == 678000000;
+            return 0;
+        }));
+    EXPECT_CALL(*insMock_, Ioctl(_, _, _)).Times(0);
+    EXPECT_CALL(*insMock_, UnlinkAt(_, _, _)).Times(0);
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_OK);
-    EXPECT_TRUE(ioctlPayloadChecked);
+    EXPECT_TRUE(xattrChecked);
+    EXPECT_TRUE(timesChecked);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest007 end";
 }
 
 /**
  * @tc.name: CreatePlaceholderBranchTest008
- * @tc.desc: Verify CreatePlaceholderFileAt rolls back file when ioctl is unsupported
+ * @tc.desc: Verify CreatePlaceholderFileAt rolls back when setting size fails
  * @tc.type: FUNC
  * @tc.require: NA
  */
 HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest008, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest008 start";
-    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt ioctl not supported rollback";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt ftruncate failed rollback";
     CreatePlaceholderPath path;
     path.parentMntPath = TEST_SYNC_FOLDER_MNT;
     path.fileName = "placeholder.txt";
     PlaceholderInfo info;
 
-    Assistant::mockErrno = ENOTTY;
     EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
     EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
-    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Invoke([](int, off_t) {
+        errno = ENOSPC;
+        return -1;
+    }));
+    EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*insMock_, futimens(_, _)).Times(0);
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0)).WillOnce(Return(0));
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_NO_SPACE_LEFT);
+    GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest008 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderAttributeTest001
+ * @tc.desc: Verify CreatePlaceholderFileAt rolls back when setting xattr fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderAttributeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest001 start";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt fsetxattr failed rollback";
+    CreatePlaceholderPath path;
+    path.parentMntPath = TEST_SYNC_FOLDER_MNT;
+    path.fileName = "placeholder.txt";
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Invoke([](int, const char *, const void *, size_t, int) {
+            errno = EOPNOTSUPP;
+            return -1;
+        }));
+    EXPECT_CALL(*insMock_, futimens(_, _)).Times(0);
     EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0)).WillOnce(Return(0));
     EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_NOT_SUPPORTED);
-    Mock::VerifyAndClearExpectations(insMock_.get());
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest001 end";
+}
 
-    Assistant::mockErrno = ENOTTY;
+/**
+ * @tc.name: CreatePlaceholderAttributeTest002
+ * @tc.desc: Verify CreatePlaceholderFileAt rolls back when setting times fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderAttributeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest002 start";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt futimens failed rollback";
+    CreatePlaceholderPath path;
+    path.parentMntPath = TEST_SYNC_FOLDER_MNT;
+    path.fileName = "placeholder.txt";
+    PlaceholderInfo info;
+
     EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
     EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
-    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Invoke([](int, const struct timespec *) {
+        errno = EACCES;
+        return -1;
+    }));
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0)).WillOnce(Return(0));
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest002 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderAttributeTest003
+ * @tc.desc: Verify the original attribute error is returned when rollback fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderAttributeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest003 start";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileAt rollback unlink failed";
+    CreatePlaceholderPath path;
+    path.parentMntPath = TEST_SYNC_FOLDER_MNT;
+    path.fileName = "placeholder.txt";
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Invoke([](int, off_t) {
+        errno = EIO;
+        return -1;
+    }));
     EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0))
         .WillOnce(Invoke([](int, const char *, int) {
             errno = EACCES;
             return -1;
         }));
-    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_NOT_SUPPORTED);
-    GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest008 end";
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_TRY_AGAIN);
+    GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest003 end";
+}
+
+/**
+ * @tc.name: SetPlaceholderFileAttributesBranchTest001
+ * @tc.desc: Verify SetPlaceholderFileAttributes returns success when futimens succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetPlaceholderFileAttributesBranchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest001 start";
+    PlaceholderInfo info;
+    info.logicalSize = 4096;
+    info.atimeMs = 1234;
+    info.mtimeMs = 5678;
+
+    EXPECT_CALL(*insMock_, ftruncate(11, 4096)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Return(0));
+    EXPECT_EQ(SetPlaceholderFileAttributes(11, info), E_OK);
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest001 end";
+}
+
+/**
+ * @tc.name: SetPlaceholderFileAttributesBranchTest002
+ * @tc.desc: Verify SetPlaceholderFileAttributes returns errno when futimens fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SetPlaceholderFileAttributesBranchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest002 start";
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Invoke([](int, const struct timespec *) {
+        errno = EACCES;
+        return -1;
+    }));
+    EXPECT_EQ(SetPlaceholderFileAttributes(11, info), EACCES);
+    GTEST_LOG_(INFO) << "SetPlaceholderFileAttributesBranchTest002 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileAtAttributesBranchTest001
+ * @tc.desc: Verify CreatePlaceholderFileAt succeeds when setting attributes succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileAtAttributesBranchTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest001 start";
+    CreatePlaceholderPath path = {TEST_SYNC_FOLDER_MNT, TEST_RELATIVE_PATH};
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, UnlinkAt(_, _, _)).Times(0);
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_OK);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest001 end";
+}
+
+/**
+ * @tc.name: CreatePlaceholderFileAtAttributesBranchTest002
+ * @tc.desc: Verify CreatePlaceholderFileAt rolls back when setting attributes fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileAtAttributesBranchTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest002 start";
+    CreatePlaceholderPath path = {TEST_SYNC_FOLDER_MNT, TEST_RELATIVE_PATH};
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
+    EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Invoke([](int, const struct timespec *) {
+        errno = EACCES;
+        return -1;
+    }));
+    EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq(TEST_RELATIVE_PATH), 0)).WillOnce(Return(0));
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest002 end";
 }
 
 /**
@@ -1916,14 +2099,14 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest008, Te
 
 /**
  * @tc.name: CreatePlaceholderFileInnerBranchTest007
- * @tc.desc: Verify CreatePlaceholderFileInner returns success after file create and ioctl
+ * @tc.desc: Verify CreatePlaceholderFileInner returns success after setting placeholder attributes
  * @tc.type: FUNC
  * @tc.require: NA
  */
 HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest007, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest007 start";
-    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileInner file create and ioctl success";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileInner userspace attributes success";
     RegisterPlaceholderSyncFolder();
     CloudDiskService service;
     PlaceholderInfo info;
@@ -1933,7 +2116,11 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest007, Te
         .WillOnce(DoAll(SetArgReferee<0>(TEST_BUNDLE), Return(E_OK)));
     EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(10));
     EXPECT_CALL(*insMock_, OpenAt(10, _, _, _)).WillOnce(Return(11));
-    EXPECT_CALL(*insMock_, Ioctl(11, HMDFS_IOC_CREATE_PLACEHOLDER, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, ftruncate(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, fsetxattr(11, StrEq(CLOUD_DISK_PLACEHOLDER_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, futimens(11, _)).WillOnce(Return(0));
+    EXPECT_CALL(*insMock_, Ioctl(_, _, _)).Times(0);
     EXPECT_CALL(*insMock_, Unlink(_)).Times(0);
     EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, info), E_OK);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest007 end";
