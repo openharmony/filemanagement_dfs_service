@@ -1902,6 +1902,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest009, TestSize.Le
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOTDIR), E_NOT_A_DIRECTORY);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOSPC), E_NO_SPACE_LEFT);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EDQUOT), E_NO_SPACE_LEFT);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(EFBIG), E_FILE_TOO_LARGE);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError invalid argument errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EINVAL), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EISDIR), E_INVALID_ARG);
@@ -1937,6 +1938,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest010, TestSize.Le
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NO_SPACE_LEFT), E_NO_SPACE_LEFT);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NOT_A_DIRECTORY), E_NOT_A_DIRECTORY);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NAME_TOO_LONG), E_NAME_TOO_LONG);
+    EXPECT_EQ(NormalizeCreatePlaceholderError(E_FILE_TOO_LARGE), E_FILE_TOO_LARGE);
     GTEST_LOG_(INFO) << "[BRANCH] NormalizeCreatePlaceholderError errno fallback";
     EXPECT_EQ(NormalizeCreatePlaceholderError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest010 end";

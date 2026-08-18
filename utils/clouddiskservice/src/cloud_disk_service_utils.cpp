@@ -79,6 +79,8 @@ int32_t ConvertErrnoToCloudDiskError(int32_t err)
             return E_INVALID_ARG;
         case ENAMETOOLONG:
             return E_NAME_TOO_LONG;
+        case EFBIG:
+            return E_FILE_TOO_LARGE;
         case ENOENT:
             return E_SYNC_FOLDER_PATH_NOT_EXIST;
         case EACCES:

@@ -212,7 +212,13 @@ typedef enum CloudDisk_ErrorCode {
      *
      * @since 26.1.0
      */
-    OH_CLOUD_DISK_NAME_TOO_LONG = 34400025
+    OH_CLOUD_DISK_NAME_TOO_LONG = 34400025,
+    /**
+     * @brief The file is too large.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_FILE_TOO_LARGE = 34400026
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

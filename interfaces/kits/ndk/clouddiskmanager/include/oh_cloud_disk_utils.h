@@ -64,6 +64,8 @@ const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
         OH_CLOUD_DISK_NOT_A_DIRECTORY},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_FILE_NOT_EXIST, OH_CLOUD_DISK_FILE_NOT_EXIST},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NAME_TOO_LONG, OH_CLOUD_DISK_NAME_TOO_LONG},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_FILE_TOO_LARGE,
+        OH_CLOUD_DISK_FILE_TOO_LARGE},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_SUPPORTED, CLOUD_DISK_NOT_SUPPORTED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED,
         CLOUD_DISK_PERMISSION_DENIED},

@@ -246,6 +246,7 @@ static int32_t NormalizeCreatePlaceholderError(int32_t ret)
         case E_NO_SPACE_LEFT:
         case E_NOT_A_DIRECTORY:
         case E_NAME_TOO_LONG:
+        case E_FILE_TOO_LARGE:
             return ret;
         default:
             return ConvertErrnoToCloudDiskError(ret);
