@@ -389,7 +389,9 @@ static tuple<int32_t, bool, size_t> GetCleanFlagForStop(napi_env env, NFuncArg &
     size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
     if (funcArg.GetArgc() >= NARG_CNT::TWO) {
         NVal option(env, funcArg[NARG_POS::SECOND]);
-        if (!option.TypeIs(napi_function)) {
+        if (option.TypeIs(napi_undefined) || option.TypeIs(napi_null)) {
+            maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
+        } else if (!option.TypeIs(napi_function)) {
             tie(succ, needClean) = option.ToBool();
             maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
         }
@@ -472,7 +474,9 @@ static std::tuple<int32_t, std::shared_ptr<FileCacheArg>, int32_t> FillParamForB
     int32_t fieldKey = 0;
     if (funcArg.GetArgc() >= NARG_CNT::TWO) {
         NVal option(env, funcArg[NARG_POS::SECOND]);
-        if (!option.TypeIs(napi_function)) {
+        if (option.TypeIs(napi_undefined) || option.TypeIs(napi_null)) {
+            maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
+        } else if (!option.TypeIs(napi_function)) {
             tie(succ, fieldKey) = option.ToInt32();
             maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
         }
