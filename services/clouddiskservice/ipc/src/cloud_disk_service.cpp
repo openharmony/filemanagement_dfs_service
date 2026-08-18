@@ -235,6 +235,8 @@ static int32_t NormalizeCreatePlaceholderError(int32_t ret)
 {
     switch (ret) {
         case E_OK:
+        case E_PERM:
+        case E_ACCES:
         case E_INVALID_ARG:
         case E_PERMISSION_DENIED:
         case E_SYNC_FOLDER_NOT_REGISTERED:

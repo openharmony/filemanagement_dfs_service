@@ -27,6 +27,12 @@ bool IsValidPathInfo(const char *path, size_t length);
 
 const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK, CLOUD_DISK_OK},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERM,
+        static_cast<CloudDisk_ErrorCode>(
+            OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERM)},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_ACCES,
+        static_cast<CloudDisk_ErrorCode>(
+            OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_ACCES)},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_INVALID_ARG, CLOUD_DISK_INVALID_ARG},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_SYNC_FOLDER_PATH_UNAUTHORIZED,
         CLOUD_DISK_SYNC_FOLDER_PATH_UNAUTHORIZED},

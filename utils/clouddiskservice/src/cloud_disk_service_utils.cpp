@@ -84,8 +84,9 @@ int32_t ConvertErrnoToCloudDiskError(int32_t err)
         case ENOENT:
             return E_SYNC_FOLDER_PATH_NOT_EXIST;
         case EACCES:
+            return E_ACCES;
         case EPERM:
-            return E_PERMISSION_DENIED;
+            return E_PERM;
         case ENOTTY:
         case EOPNOTSUPP:
             return E_NOT_SUPPORTED;
