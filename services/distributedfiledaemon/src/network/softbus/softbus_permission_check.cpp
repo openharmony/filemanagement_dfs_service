@@ -105,7 +105,7 @@ bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, 
     localAccountInfo.accountId_ = osAccountInfo.uid_;
 #endif
     localAccountInfo.tokenId_ = IPCSkeleton::GetSelfTokenID();
- 
+
     if (!GetLocalNetworkId(localAccountInfo.networkId_)) {
         LOGE("Get local networkid failed");
         return false;
@@ -221,19 +221,6 @@ int32_t SoftBusPermissionCheck::GetCurrentUserId()
         return INVALID_USER_ID;
     }
     return userIds[0];
-}
-
-int32_t SoftBusPermissionCheck::GetUserIdByDisplayId(uint64_t displayId, int32_t &userId)
-{
-    auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(displayId, userId);
-    if (ret != NO_ERROR) {
-        LOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", ret);
-        RadarParaInfo info = {"GetUserIdByDisplayId", ReportLevel::INNER, DfxBizStage::DEFAULT,
-            "account", "", ret, "GetForegroundOsAccountLocalId failed"};
-        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
-        return ret;
-    }
-    return NO_ERROR;
 }
 
 int32_t SoftBusPermissionCheck::GetUserIdByDisplayId(uint64_t displayId, int32_t &userId)
