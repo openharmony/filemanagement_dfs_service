@@ -196,9 +196,8 @@ ani_long CloudFileCacheAni::CloudFileCacheStartBatch(ani_env *env, ani_object ob
     int32_t fieldKey = static_cast<int32_t>(FieldKey::FIELDKEY_CONTENT);
     tie(ret, fieldKey) = ANIUtils::EnumToInt32(env, fileType);
     if (!ret) {
-        LOGE("cloudFileCache get fileType failed");
-        ErrorHandler::Throw(env, JsErrCode::E_IPCSS);
-        return errResult;
+        LOGE("cloudFileCache get fileType failed, use default CONTENT");
+        fieldKey = static_cast<int32_t>(FieldKey::FIELDKEY_CONTENT);
     }
 
     auto cloudFileCache = CloudFileCacheUnwrap(env, object);
