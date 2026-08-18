@@ -146,11 +146,16 @@ void DowngradeDlCallbackImpl::UpdateTransferProgress(const DowngradeTfProgress &
 void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progress)
 {
     LOGD("Start OnDownloadProcess");
-    UpdateDownloadProgress(progress);
+    std::shared_ptr<SingleBundleProgress> progressCopy;
+    {
+        std::lock_guard<std::mutex> lock(dlCbMtx_);
+        UpdateDownloadProgress(progress);
+        progressCopy = std::make_shared<SingleBundleProgress>(*dlProgress_);
+    }
     std::shared_ptr<DowngradeDlCallbackImpl> callbackImpl = shared_from_this();
     napi_status status = napi_send_event(
         callbackImpl->env_,
-        [callbackImpl]() mutable {
+        [callbackImpl, progressCopy]() mutable {
             auto env = callbackImpl->env_;
             auto ref = callbackImpl->cbOnRef_;
             if (env == nullptr || ref == nullptr) {
@@ -170,13 +175,21 @@ void DowngradeDlCallbackImpl::OnDownloadProcess(const DowngradeProgress &progres
                 napi_close_handle_scope(env, scope);
                 return;
             }
-            napi_value jsProgress = callbackImpl->ConvertToValue();
-            if (jsProgress == nullptr) {
+            napi_value progressVal = NClass::InstantiateClass(env, DowngradeProgressNapi::className_, {});
+            if (progressVal == nullptr) {
+                LOGE("Failed to instantiate class");
                 napi_close_handle_scope(env, scope);
                 return;
             }
+            auto progressEntity = NClass::GetEntityOf<DowngradeProgressEntity>(env, progressVal);
+            if (progressEntity == nullptr) {
+                LOGE("Failed to get progressEntity");
+                napi_close_handle_scope(env, scope);
+                return;
+            }
+            progressEntity->progress = progressCopy;
             napi_value jsResult = nullptr;
-            status = napi_call_function(env, nullptr, jsCallback, 1, &jsProgress, &jsResult);
+            status = napi_call_function(env, nullptr, jsCallback, 1, &progressVal, &jsResult);
             if (status != napi_ok) {
                 LOGE("napi call function failed, status: %{public}d", status);
             }

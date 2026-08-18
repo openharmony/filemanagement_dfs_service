@@ -645,6 +645,25 @@ std::string DownloadProgressObj::to_string()
     return ss.str();
 }
 
+std::string DownloadProgressObj::to_string(const std::string &anonyPath)
+{
+    std::stringstream ss;
+    ss << "[" << anonyPath;
+    ss << " , " << state;
+    ss << " , " << downloadedSize;
+    ss << " , " << totalSize;
+    ss << " , " << downloadErrorType;
+
+    ss << " , " << downloadId;
+    ss << " , " << batchState;
+    ss << " , " << batchDownloadSize;
+    ss << " , " << batchTotalSize;
+    ss << " , " << batchSuccNum;
+    ss << " , " << batchFailNum;
+    ss << " , " << batchTotalNum << "]";
+    return ss.str();
+}
+
 std::string DowngradeProgress::to_string() const
 {
     std::stringstream ss;
