@@ -865,8 +865,10 @@ ohos_unittest("softbus_handler_asset_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -876,7 +878,8 @@ ohos_unittest("softbus_handler_asset_test") {
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
-    "zlib:shared_libz"
+    "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -937,8 +940,10 @@ ohos_unittest("softbus_handler_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -946,6 +951,7 @@ ohos_unittest("softbus_handler_test") {
     "ipc:ipc_single",
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
+    "storage_service:storage_manager_sa_proxy",
     "samgr:samgr_proxy",
   ]
 
@@ -1216,8 +1222,10 @@ ohos_unittest("softbus_permission_check_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1227,6 +1235,7 @@ ohos_unittest("softbus_permission_check_test") {
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
     "zlib:shared_libz",
   ]
 

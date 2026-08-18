@@ -72,6 +72,9 @@ public:
         P2P_SUCCESS,
         P2P_FAILED,
     };
+    enum class DeviceType {
+        CAR = 131,
+    };
     void Start() override;
     void Stop() override;
     void JoinGroup(std::weak_ptr<MountPoint> mp);
@@ -101,6 +104,7 @@ public:
 
     DeviceInfo &GetLocalDeviceInfo();
     std::unordered_map<std::string, MountCountInfo> GetAllMountInfo();
+    static bool IsCarHeadUnit();
 
 private:
     void StartInstance() override;

@@ -95,6 +95,7 @@ constexpr DfsVersion FILEMANAGER_VERSION = {6, 0, 1};
 constexpr int32_t MIN_NETWORKID_LENGTH = 16;
 constexpr int32_t MAX_IPC_THREAD_NUM = 32;
 constexpr size_t MAX_INSTANCE_ID_LEN = 256;
+constexpr uint64_t VALID_DISPLAYID = 0;
 } // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -1118,6 +1119,10 @@ int32_t Daemon::PushAsset(int32_t userId,
     if (JudgeEmpty(assetObj, sendCallback) != E_OK) {
         HiAudit::GetInstance().WriteEnd("PushAsset", E_NULLPTR);
         return E_NULLPTR;
+    }
+    if (assetObj->peerDisplayId_ != VALID_DISPLAYID) {
+        LOGE("peerDisplayId_ %{public}ld verify failed", assetObj->peerDisplayId_);
+        return OHOS::FileManagement::E_INVAL_DISPLAYID;
     }
     RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
         DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};

@@ -29,6 +29,10 @@ bool AssetObj::ReadFromParcel(Parcel &parcel)
         LOGE("failed to read uris_.");
         return false;
     }
+    if (!parcel.ReadUint64(peerDisplayId_)) {
+        LOGE("failed to read peerDisplayId_.");
+        return false;
+    }
     return true;
 }
 
@@ -40,6 +44,10 @@ bool AssetObj::Marshalling(Parcel &parcel) const
     parcel.WriteString(dstBundleName_);
     if (!parcel.WriteStringVector(uris_)) {
         LOGE("failed to write uris_.");
+        return false;
+    }
+    if (!parcel.WriteUint64(peerDisplayId_)) {
+        LOGE("failed to write peerDisplayId_.");
         return false;
     }
     return true;

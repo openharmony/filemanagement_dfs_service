@@ -30,6 +30,7 @@ public:
     std::string srcBundleName_;
     std::string dstBundleName_;
     std::vector<std::string> uris_;
+    uint64_t peerDisplayId_ = 0;
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
     static AssetObj *Unmarshalling(Parcel &parcel);

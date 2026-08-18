@@ -123,6 +123,8 @@ enum CloudSyncServiceErrCode : ErrCode {
 
     E_INVAL_PARAM,
 
+    E_INVAL_DISPLAYID,
+
     E_SOURCE_BASIC = 10000,
 
     E_THM_SOURCE_BASIC = E_SOURCE_BASIC + 1000,
