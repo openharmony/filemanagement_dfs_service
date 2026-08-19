@@ -2020,6 +2020,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     }
     if (!needSyncAndNotify) {
         rename.Delete(FileColumn::DIRTY_TYPE);
+        rename.Delete(FileColumn::FILE_STATUS);
     }
     function<void()> rdbUpdate = [this, rename, bindArgs,
         oldFileNoNeedUpload, newFileNoNeedUpload, oldFileName, newFileName, needSyncAndNotify] {
