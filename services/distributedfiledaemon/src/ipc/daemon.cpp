@@ -1134,7 +1134,7 @@ int32_t Daemon::PushAsset(int32_t userId,
 }
 
 int32_t Daemon::PreparePushAsset(const std::string &taskId, int32_t userId,
-                                  const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
+                                 const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
 {
     RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
         DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
@@ -1152,7 +1152,8 @@ int32_t Daemon::PreparePushAsset(const std::string &taskId, int32_t userId,
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_EVENT_HANDLER, "eventHandler not find");
+        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE,
+                                                            E_EVENT_HANDLER, "eventHandler not find");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_EVENT_HANDLER;
     }
