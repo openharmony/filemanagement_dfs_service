@@ -61,9 +61,6 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#ifdef DFS_SANDBOX_MANAGER
-#include "sandbox_manager_kit.h"
-#endif
 
 namespace OHOS {
 namespace Storage {
@@ -76,9 +73,6 @@ using FileManagement::ERR_OK;
 
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
-#ifdef DFS_SANDBOX_MANAGER
-using namespace AccessControl::SandboxManager;
-#endif
 
 namespace {
 const string FILE_MANAGER_AUTHORITY = "docs";
@@ -550,8 +544,8 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
         return FileManagement::E_PERMISSION_DENIED;
     }
 #endif
-    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(dstPath))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
         LOGE("Path is forbidden");
         RadarParaInfo info = {"RequestSendFile", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
@@ -600,65 +594,18 @@ int32_t Daemon::RequestSendFileACL(const std::string &srcUri,
 int32_t Daemon::InnerCopy(const std::string &srcUri, const std::string &dstUri,
     const std::string &networkId, const sptr<IFileTransListener> &listener, HmdfsInfo &info)
 {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
+        LOGE("Path is forbidden");
+        RadarParaInfo radarInfo = {"InnerCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, "", ERR_BAD_VALUE, "path is forbidden"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
+        return ERR_BAD_VALUE;
+    }
     auto ret = Storage::DistributedFile::RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, dstUri,
         listener, QueryActiveUserId(), info.copyPath);
     LOGI("InnerCopy end, ret = %{public}d", ret);
     return ret;
-}
-
-int32_t Daemon::GetPhysicalPath(const std::string &uri, const std::string &networkId,
-                                std::string &physicalPath)
-{
-    if (SandboxHelper::GetPhysicalPath(uri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
-        RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
-            DEFAULT_PKGNAME, networkId, EINVAL, "Get path failed"};
-        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
-        LOGE("Get path failed, invalid uri");
-        return EINVAL;
-    }
-    return E_OK;
-}
-
-int32_t Daemon::ChooseCopyMode(const std::string &srcUri, const std::string &dstUri,
-                               const std::string &networkId, const sptr<IFileTransListener> &listenerCallback,
-                               HmdfsInfo &info)
-{
-    std::string srcPhysicalPath;
-    std::string destPhysicalPath;
-    if (GetPhysicalPath(srcUri, networkId, srcPhysicalPath) != E_OK ||
-        GetPhysicalPath(dstUri, networkId, destPhysicalPath) != E_OK) {
-        HiAudit::GetInstance().WriteEnd("PrepareSession", EINVAL);
-        return EINVAL;
-    }
-    if (!DfsuAccessTokenHelper::CheckSrcUriPermission(srcUri) || !CheckPathPermission(destPhysicalPath)) {
-        LOGE("permission verify failed");
-        return EINVAL;
-    }
- 
-    DfsVersion remoteDfsVersion;
-    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
-    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
-    uint64_t fileSize = 0;
-    struct stat fileStat;
-    if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
-        fileSize = static_cast<uint64_t>(fileStat.st_size);
-    } else {
-        LOGE("Stat srcPhysicalPath failed.");
-    }
-    int32_t result = E_OK;
-    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0) && fileSize < INNER_COPY_LIMIT) {
-        result = InnerCopy(srcUri, dstUri, networkId, listenerCallback, info);
-    } else {
-        result = CopyBaseOnRPC(srcUri, dstUri, networkId, listenerCallback, info);
-    }
-    RadarReportAdapter::GetInstance().SetUserStatistics(result == E_OK ? FILE_ACCESS_SUCC_CNT : FILE_ACCESS_FAIL_CNT);
-    if (result != E_OK) {
-        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
-            DEFAULT_PKGNAME, networkId, result, "copy failed"};
-        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
-    }
-    return result;
 }
 
 int32_t Daemon::PrepareSession(const std::string &srcUri,
@@ -679,11 +626,41 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         HiAudit::GetInstance().WriteEnd("PrepareSession", E_NULLPTR);
         return E_NULLPTR;
     }
-    if (!CheckNetworkId(srcUri, networkId)) {
-        LOGE("CheckNetworkId failed.");
+
+    std::string srcPhysicalPath;
+    if (SandboxHelper::GetPhysicalPath(srcUri, std::to_string(QueryActiveUserId()), srcPhysicalPath) != E_OK) {
+        RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
+        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, networkId, EINVAL, "Get src path failed"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
+        LOGE("Get src path failed, invalid uri");
+        HiAudit::GetInstance().WriteEnd("PrepareSession", EINVAL);
         return EINVAL;
     }
-    int32_t result = ChooseCopyMode(srcUri, dstUri, networkId, listenerCallback, info);
+
+    uint64_t fileSize = 0;
+    struct stat fileStat;
+    if (stat(srcPhysicalPath.c_str(), &fileStat) == 0) {
+        fileSize = static_cast<uint64_t>(fileStat.st_size);
+    } else {
+        LOGE("Stat srcPhysicalPath failed.");
+    }
+
+    DfsVersion remoteDfsVersion;
+    auto ret = DeviceProfileAdapter::GetInstance().GetDfsVersionFromNetworkId(networkId, remoteDfsVersion);
+    LOGI("GetRemoteVersion: ret:%{public}d, version:%{public}s", ret, remoteDfsVersion.dump().c_str());
+    int32_t result = E_OK;
+    if ((ret == FileManagement::ERR_OK) && (remoteDfsVersion.majorVersionNum != 0) && fileSize < INNER_COPY_LIMIT) {
+        result = InnerCopy(srcUri, dstUri, networkId, listenerCallback, info);
+    } else {
+        result = CopyBaseOnRPC(srcUri, dstUri, networkId, listenerCallback, info);
+    }
+    RadarReportAdapter::GetInstance().SetUserStatistics(result == E_OK ? FILE_ACCESS_SUCC_CNT : FILE_ACCESS_FAIL_CNT);
+    if (result != E_OK) {
+        RadarParaInfo radarInfo = {"PrepareSession", ReportLevel::INTERFACE, DfxBizStage::HMDFS_COPY,
+            DEFAULT_PKGNAME, networkId, result, "copy failed"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
+    }
     HiAudit::GetInstance().WriteEnd("PrepareSession", result);
     return result;
 }
@@ -766,6 +743,14 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("Daemon::GetRealPath daemon is nullptr");
         return E_INVAL_ARG_NAPI;
     }
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstUri))) {
+        LOGE("Path is forbidden");
+        RadarParaInfo radarInfo = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
+            DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
+        return OHOS::FileManagement::E_ILLEGAL_URI;
+    }
     int32_t ret = E_OK;
     if (!DeviceProfileAdapter::GetInstance().IsRemoteDfsVersionLowerThanGiven(srcNetworkId, FILEMANAGER_VERSION)) {
         LOGI("Version >= 6.0.1, need ACL check");
@@ -821,7 +806,7 @@ int32_t Daemon::HandleDestinationPathAndPermissions(const std::string &dstUri,
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(radarInfo);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
-    if (!FileSizeUtils::IsPathValid(physicalPath)) {
+    if (!FileSizeUtils::IsFilePathValid(physicalPath)) {
         LOGE("Path is forbidden");
         RadarParaInfo radarInfo = {"HandleDestinationPathAndPermissions", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidden"};
@@ -914,10 +899,6 @@ int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bo
         HiAudit::GetInstance().WriteEnd("GetRemoteCopyInfo", E_SOFTBUS_SESSION_FAILED);
         return E_SOFTBUS_SESSION_FAILED;
     }
-    if (!FileSizeUtils::IsPathValid(physicalPath) || !SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("Path is forbidden");
-        return FileManagement::E_PERMISSION_DENIED;
-    }
     isSrcFile = Utils::IsFile(physicalPath);
     srcIsDir = Utils::IsFolder(physicalPath);
     HiAudit::GetInstance().WriteEnd("GetRemoteCopyInfo", E_OK);
@@ -984,8 +965,8 @@ int32_t Daemon::Copy(const std::string &srcUri,
         HiAudit::GetInstance().WriteEnd("Copy", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
-    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(dstPath))) {
+    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(dstPath))) {
         RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", E_INVAL_ARG, "path is forbidden"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
@@ -1113,6 +1094,22 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
     return;
 }
 
+int32_t Daemon::JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
+{
+    RadarParaInfo info = {"PushAsset", ReportLevel::DEFAULT, DfxBizStage::PUSH_ASSERT,
+        DEFAULT_PKGNAME, "", E_OK, "PushAsset Begin"};
+    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+    if (assetObj == nullptr || sendCallback == nullptr) {
+        LOGE("param is nullptr.");
+        info = {"JudgeEmpty", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
+            DEFAULT_PKGNAME, "", E_NULLPTR, "param is nullptr"};
+        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
+        RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
+        return E_NULLPTR;
+    }
+    return E_OK;
+}
+
 int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<AssetObj> &assetObj,
                           const sptr<IAssetSendCallback> &sendCallback)
@@ -1134,7 +1131,7 @@ int32_t Daemon::PushAsset(int32_t userId,
 }
 
 int32_t Daemon::PreparePushAsset(const std::string &taskId, int32_t userId,
-                                 const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
+                                  const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
 {
     RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
         DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
@@ -1152,8 +1149,7 @@ int32_t Daemon::PreparePushAsset(const std::string &taskId, int32_t userId,
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE,
-                                                            E_EVENT_HANDLER, "eventHandler not find");
+        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_EVENT_HANDLER, "eventHandler not find");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
         return E_EVENT_HANDLER;
     }
@@ -1241,7 +1237,7 @@ int32_t Daemon::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList,
         return E_PERMISSION_DENIED;
     }
     for (const auto &uri : uriList) {
-        if (!FileSizeUtils::IsPathValid(uri)) {
+        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(uri))) {
             LOGE("path: %{public}s is forbidden", Utils::GetAnonyString(uri).c_str());
             info = {"GetDfsUrisDirFromLocal", ReportLevel::INTERFACE, DfxBizStage::GENERATE_DIS_URI,
                 DEFAULT_PKGNAME, "", E_ILLEGAL_URI, "path is forbidde"};
@@ -1296,10 +1292,6 @@ int32_t Daemon::UMountDisShareFile(const std::string &bundleName, const int32_t 
 
     std::string remoteShareDir = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/account/data/" +
                                  bundleName + "/.remote_share/";
-    if (!FileSizeUtils::IsPathValid(remoteShareDir)) {
-        LOGE("path %{public}s verify failed", Utils::GetAnonyString(remoteShareDir).c_str());
-        return E_PERMISSION_DENIED;
-    }
     std::vector<std::string> distributeDirs;
     std::error_code ec;
     if (!std::filesystem::exists(remoteShareDir, ec)) {
@@ -1406,7 +1398,7 @@ int32_t Daemon::RegisterFileDfsListener(const std::string &instanceId, const spt
         HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
     }
-    if (!FileSizeUtils::IsPathValid(instanceId)) {
+    if (!FileSizeUtils::IsFilePathValid(instanceId)) {
         LOGE("InstanceId contains invalid characters.");
         HiAudit::GetInstance().WriteEnd("RegisterFileDfsListener", E_INVAL_ARG_NAPI);
         return E_INVAL_ARG_NAPI;
@@ -1646,92 +1638,6 @@ int32_t Daemon::NotifyRemoteCancelNotification(const std::string &networkId)
     return ret;
 }
 
-bool Daemon::CheckNetworkId(const std::string &srcUri, const std::string &networkId)
-{
-    if (srcUri.empty() || networkId.empty()) {
-        LOGE("input uri invalid");
-        return false;
-    }
-    const std::string key = "networkid=";
-    auto pos = srcUri.find(key);
-    if (pos == std::string::npos) {
-        LOGE("srcUri invalid");
-        return false;
-    }
-    if (srcUri.substr(pos + key.length()) != networkId) {
-        LOGE("networkId not equal uri networkId");
-        return false;
-    }
-    bool isSameAccount = false;
-    if (IsSameAccountDevice(networkId, isSameAccount) != E_OK) {
-        LOGE("networkId not same account");
-        return false;
-    }
-    return isSameAccount;
-}
-
-bool Daemon::CheckPushAssetParamValid(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
-{
-    RadarParaInfo info = {"PushAsset", ReportLevel::DEFAULT, DfxBizStage::PUSH_ASSERT,
-        DEFAULT_PKGNAME, "", E_OK, "PushAsset Begin"};
-    RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-    if (assetObj == nullptr || sendCallback == nullptr) {
-        LOGE("param is nullptr.");
-        info = {"JudgeEmpty", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, "", E_NULLPTR, "param is nullptr"};
-        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        return false;
-    }
-    for (const auto &uri : assetObj->uris_) {
-        if (!FileSizeUtils::IsPathValid(uri)) {
-            LOGE("path %{public}s verify failed", Utils::GetAnonyString(uri).c_str());
-            info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-                DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
-            RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-            RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-            HiAudit::GetInstance().WriteEnd("PushAsset", OHOS::FileManagement::E_ILLEGAL_URI);
-            return false;
-        }
-    }
-    if (!FileSizeUtils::IsPathValid(assetObj->srcBundleName_)) {
-        LOGE("srcBundleName_ %{public}s verify failed", assetObj->srcBundleName_.c_str());
-        info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
-            DEFAULT_PKGNAME, assetObj->srcBundleName_, E_INVAL_PARAM, "bundleName is forbidden"};
-        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        return false;
-    }
-    return true;
-}
- 
-bool Daemon::CheckPathPermission(const std::string& path)
-{
-#ifdef DFS_SANDBOX_MANAGER
-    std::vector<PolicyInfo> uriPolicies;
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    PolicyInfo uriPolicy { .path = path, .mode =
-        (OperationMode::READ_MODE | OperationMode::WRITE_MODE) };
-    uriPolicies.emplace_back(uriPolicy);
-    std::vector<bool> persistErrorResults;
-    std::vector<bool> errorResults;
-    auto persistCheckRet = SandboxManagerKit::CheckPersistPolicy(tokenId, uriPolicies, persistErrorResults);
-    if (persistCheckRet == ERR_OK && persistErrorResults[0]) {
-        LOGI("Check path persist permission success");
-        return true;
-    }
-    auto tmpCheckRet = SandboxManagerKit::CheckPolicy(tokenId, uriPolicies, errorResults);
-    if (tmpCheckRet == ERR_OK && errorResults[0]) {
-        LOGI("Check path tmp permission success");
-        return true;
-    }
-    LOGI("Check path Permission failed ,persistCheckRet : %{public}d, tmpCheckRet : %{public}d",
-        persistCheckRet, tmpCheckRet);
-    return false;
-#else
-    return true;
-#endif
-}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
