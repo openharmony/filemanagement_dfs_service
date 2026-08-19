@@ -125,6 +125,7 @@ ohos_shared_library("cloudsync_sa") {
     "include/transport/softbus",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
+    "${clouddisk_database_path}/include/operation_log",
   ]
 
   cycle_task = [
@@ -257,6 +258,7 @@ ohos_static_library("cloudsync_sa_static") {
     "include/transport",
     "include/transport/softbus",
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
   ]

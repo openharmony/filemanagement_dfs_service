@@ -84,6 +84,7 @@ ohos_shared_library("cloudfiledaemon") {
     "${services_path}/cloudfiledaemon/include/utils/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
   ]
 
   deps = [

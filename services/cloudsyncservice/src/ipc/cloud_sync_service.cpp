@@ -51,6 +51,7 @@
 #include "system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
+#include "operation_log_handler.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -134,6 +135,20 @@ void CloudSyncService::CovertBundleName(std::string &bundleName)
     }
 }
 
+static int32_t InitOperationLogHandler(int32_t initUserId)
+{
+    if (initUserId == 0) {
+        initUserId = TEST_MAIN_USR_ID;
+    }
+    int32_t ret = CloudDisk::OperationLogHandler::GetInstance().Init(initUserId);
+    if (ret != E_OK) {
+        LOGE("operation log handler init failed, ret = %{public}d", ret);
+    } else {
+        CloudDisk::OperationLogHandler::GetInstance().Start();
+    }
+    return ret;
+}
+
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
 {
     const std::string HMDFS_DIR = "/mnt/hmdfs/";
@@ -207,7 +222,8 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ReportServiceStart(startReason);
-
+    int32_t initUserId = DfsuAccessTokenHelper::GetUserId();
+    int32_t ret = InitOperationLogHandler(initUserId);
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         SettingsDataManager::InitSettingsDataManager();
@@ -250,6 +266,8 @@ void CloudSyncService::OnStop()
         userStatusListener_->Stop();
         userStatusListener_ = nullptr;
     }
+
+    CloudDisk::OperationLogHandler::GetInstance().Stop();
     LOGI("Stop finished successfully");
 }
 

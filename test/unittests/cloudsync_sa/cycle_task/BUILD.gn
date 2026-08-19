@@ -42,6 +42,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
@@ -56,6 +57,7 @@ ohos_unittest("cloud_sync_service_cycle_task_test") {
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry_static",
     "${utils_path}:libdistributedfileutils_static",
   ]
@@ -126,6 +128,7 @@ ohos_unittest("periodic_clean_task_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
@@ -136,6 +139,7 @@ ohos_unittest("periodic_clean_task_test") {
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -292,6 +296,7 @@ ohos_unittest("periodic_check_task_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
@@ -307,6 +312,7 @@ ohos_unittest("periodic_check_task_test") {
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfileutils",
   ]
 
@@ -359,6 +365,7 @@ ohos_unittest("database_supplement_task_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",

@@ -27,6 +27,7 @@
       *OHOS::FileManagement::CloudDisk::FileColumn*;
       *OHOS::FileManagement::CloudDisk::MigrationManager*;
       *OHOS::FileManagement::CloudDisk::TransactionOperations*;
+      *OHOS::FileManagement::CloudDisk::OperationLogHandler*;
 
       # CloudSync classes (used by clouddisk_database)
       *OHOS::FileManagement::CloudSync::CloudPrefImpl*;
