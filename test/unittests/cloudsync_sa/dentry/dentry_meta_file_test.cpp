@@ -525,6 +525,27 @@ HWTEST_F(DentryMetaFileTest, CloudIdToRecordId003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CloudIdToRecordId004
+ * @tc.desc: Verify the CloudIdToRecordId with empty cloudId and isHdc=true does not crash
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, CloudIdToRecordId004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloudIdToRecordId004 Start";
+    try {
+        string cloudId;
+        string recordId;
+        EXPECT_NO_THROW(recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId, true));
+        EXPECT_EQ(recordId, "");
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "CloudIdToRecordId004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloudIdToRecordId004 End";
+}
+
+/**
  * @tc.name: GetParentDir001
  * @tc.desc: Verify the GetParentDir
  * @tc.type: FUNC
