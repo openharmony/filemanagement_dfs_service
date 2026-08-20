@@ -770,6 +770,9 @@ std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId, bool isHdc
         return result.str();
     }
     std::string recordId = result.str();
+    if (recordId.empty()) {
+        return recordId;
+    }
     if (recordId.at(0) == HDC_ID_START) {
         recordId = recordId.substr(1);
     }
