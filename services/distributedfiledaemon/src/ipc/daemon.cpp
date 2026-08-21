@@ -1127,14 +1127,21 @@ int32_t Daemon::PushAsset(int32_t userId,
         LOGE("peerDisplayId_ %{public}ld verify failed", assetObj->peerDisplayId_);
         return OHOS::FileManagement::E_INVAL_DISPLAYID;
     }
+    auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
+    auto ret = PreparePushAsset(taskId, userId, assetObj, sendCallback);
+    HiAudit::GetInstance().WriteEnd("PushAsset", ret);
+    return ret;
+}
+
+int32_t Daemon::PreparePushAsset(const std::string &taskId, int32_t userId,
+                                  const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback)
+{
     RadarParaInfo info = {"PushAsset", ReportLevel::INTERFACE, DfxBizStage::PUSH_ASSERT,
         DEFAULT_PKGNAME, assetObj->dstNetworkId_, E_ILLEGAL_URI, "path is forbidden"};
-    auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     if (taskId.empty()) {
         LOGE("assetObj info is null.");
         RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_NULLPTR, "TaskId Empt.");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_NULLPTR);
         return E_NULLPTR;
     }
     AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
@@ -1145,10 +1152,8 @@ int32_t Daemon::PushAsset(int32_t userId,
     if (eventHandler_ == nullptr) {
         LOGE("eventHandler has not find");
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-        RadarReportAdapter::GetInstance().RptFileAccAdapter(info,
-            ReportLevel::INTERFACE, E_EVENT_HANDLER, "eventHandler not find");
+        RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_EVENT_HANDLER, "eventHandler not find");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_EVENT_HANDLER);
         return E_EVENT_HANDLER;
     }
     bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
@@ -1157,10 +1162,8 @@ int32_t Daemon::PushAsset(int32_t userId,
         AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         RadarReportAdapter::GetInstance().RptFileAccAdapter(info, ReportLevel::INTERFACE, E_EVENT_HANDLER, "Push err");
         RadarReportAdapter::GetInstance().SetUserStatistics(FILE_ACCESS_FAIL_CNT);
-        HiAudit::GetInstance().WriteEnd("PushAsset", E_EVENT_HANDLER);
         return E_EVENT_HANDLER;
     }
-    HiAudit::GetInstance().WriteEnd("PushAsset", E_OK);
     return E_OK;
 }
 
