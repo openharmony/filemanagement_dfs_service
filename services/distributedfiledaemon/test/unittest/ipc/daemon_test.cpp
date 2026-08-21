@@ -1921,7 +1921,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_checkValidPath = true;
     g_isFolder = false;
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
-	EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillRepeatedly(Return(E_OK));
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
 
     assetObj->uris_.push_back("../srcUri");
@@ -2058,7 +2058,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     // Test normal case with mock
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(NO_ERROR));
-	EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(NO_ERROR));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(NO_ERROR));
     EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
 
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 end";
@@ -2760,7 +2760,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
     EXPECT_EQ(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     g_checkSinkPermission = true;
-	EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillRepeatedly(Return("test"));
+    EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillRepeatedly(Return("test"));
     EXPECT_NE(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
