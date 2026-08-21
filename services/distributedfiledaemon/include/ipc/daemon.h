@@ -182,6 +182,8 @@ private:
     int32_t ChooseCopyMode(const std::string &srcUri, const std::string &dstUri, const std::string &networkId,
         const sptr<IFileTransListener> &listenerCallback, HmdfsInfo &info);
     bool CheckPushAssetParamValid(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
+    int32_t PreparePushAsset(const std::string &taskId, int32_t userId,
+                             const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
     bool CheckPathPermission(const std::string &path);
 private:
     std::mutex connectMutex_;
