@@ -38,6 +38,7 @@ public:
     static int32_t GetPid();
     static int32_t GetAccountId(int32_t &userId);
     static bool IsUserVerifyed(const int32_t userId);
+    static bool CheckSrcUriPermission(const std::string &uriStr);
 };
 } // namespace OHOS::FileManagement
 
