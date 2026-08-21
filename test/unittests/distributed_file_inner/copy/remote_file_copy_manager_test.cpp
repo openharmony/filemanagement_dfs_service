@@ -262,7 +262,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 End";
 }
 
- /**
+/**
  * @tc.name: RemoteFileCopyManager_CreateFileInfos_0002
  * @tc.desc: Test CreateFileInfos with invalid path containing ../
  * @tc.type: FUNC

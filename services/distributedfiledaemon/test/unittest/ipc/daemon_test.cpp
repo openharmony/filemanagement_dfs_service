@@ -1514,46 +1514,46 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     std::string physicalPath;
     HmdfsInfo info;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr, "networkId"), E_INVAL_ARG_NAPI);
- 
+
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
- 
+
     EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon, "networkId"), E_OK);
- 
+
     EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon, "networkId"), E_OK);
- 
+
     g_checkSrcPermission = false;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
- 
+
     g_checkSrcPermission = true;
     g_getLocalAccountInfo = false;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
- 
+
     g_checkSrcPermission = true;
     g_getLocalAccountInfo = true;
     EXPECT_CALL(*daemon, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
- 
+
     g_isRemoteDfsVersionLowerThanGiven = true;
- 
+
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
- 
+
     g_getHapTokenInfo = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_USER_ID);
- 
+
     g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
     g_getPhysicalPath = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
- 
+
     g_getPhysicalPath = E_OK;
     g_checkValidPath = false;
     info.dirExistFlag = false;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
- 
+
     g_checkValidPath = true;
     g_physicalPath = "test@test/test";
     info.dirExistFlag = true;
@@ -2765,7 +2765,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
 
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
 }
- /**
+/**
  * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_001
  * @tc.desc: Test HandleDestinationPathAndPermissions when GetHapTokenInfo fails
  * @tc.type: FUNC
