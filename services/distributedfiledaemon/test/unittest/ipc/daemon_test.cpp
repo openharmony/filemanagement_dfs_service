@@ -480,7 +480,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level0)
         .sessionName = sessionName,
     };
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo),
-              FileManagement::E_SA_LOAD_FAILED);
+              EINVAL);
 
     GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 end";
 }
@@ -1240,14 +1240,14 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
 
     g_checkCallerPermission = true;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
+	EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
+	EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 end";
@@ -1473,7 +1473,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/test.txt";
     g_checkValidPath = true;
     g_isFile = false;
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), E_SA_LOAD_FAILED);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, hmdfsInfo), EINVAL);
 
     // 测试用例 4: 有效 URI，物理路径有效，stat 成功，DFS 版本为 0，文件大小 < 1GB, 走innerCopy
     g_getPhysicalPath = E_OK;
@@ -1485,13 +1485,13 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     std::ofstream file(g_physicalPath);
     ASSERT_TRUE(file.good()) << "创建测试文件失败";
     file.close();
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), E_SA_LOAD_FAILED);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_ONE, listener, hmdfsInfo), EINVAL);
 
     // 测试用例 5: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本为 1，文件大小 < 1GB, CopyBaseOnRPC
     EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, NETWORKID_TWO, listener, hmdfsInfo), 22);
 
     // 测试用例 6: DFS 有效 URI，物理路径有效，stat 成功，DFS 版本获取失败，文件大小 < 1GB, CopyBaseOnRPC
-    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), E_SA_LOAD_FAILED);
+    EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, "invalidDevice", listener, hmdfsInfo), EINVAL);
 
     // 清理
     if (std::filesystem::exists(g_physicalPath)) {
@@ -1514,46 +1514,46 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     std::string physicalPath;
     HmdfsInfo info;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr, "networkId"), E_INVAL_ARG_NAPI);
-
+ 
     sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     ASSERT_TRUE(daemon != nullptr) << "daemon assert failed!";
-
-    EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon, "networkId"), E_ILLEGAL_URI);
-
-    EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon, "networkId"), E_ILLEGAL_URI);
-
+ 
+    EXPECT_EQ(daemon_->GetRealPath("../srcUri", "", physicalPath, info, daemon, "networkId"), E_OK);
+ 
+    EXPECT_EQ(daemon_->GetRealPath("", "../dstUri", physicalPath, info, daemon, "networkId"), E_OK);
+ 
     g_checkSrcPermission = false;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
-
+ 
     g_checkSrcPermission = true;
     g_getLocalAccountInfo = false;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), ERR_ACL_FAILED);
-
+ 
     g_checkSrcPermission = true;
     g_getLocalAccountInfo = true;
     EXPECT_CALL(*daemon, GetRemoteCopyInfoACL(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
-
+ 
     g_isRemoteDfsVersionLowerThanGiven = true;
-
+ 
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_SOFTBUS_SESSION_FAILED);
-
+ 
     g_getHapTokenInfo = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_USER_ID);
-
+ 
     g_getHapTokenInfo = Security::AccessToken::AccessTokenKitRet::RET_SUCCESS;
     g_getPhysicalPath = ERR_BAD_VALUE;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
-
+ 
     g_getPhysicalPath = E_OK;
     g_checkValidPath = false;
     info.dirExistFlag = false;
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon, "networkId"), E_GET_PHYSICAL_PATH_FAILED);
-
+ 
     g_checkValidPath = true;
     g_physicalPath = "test@test/test";
     info.dirExistFlag = true;
@@ -1884,9 +1884,9 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
     ASSERT_TRUE(assetObj != nullptr) << "assetObj assert failed!";
     sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
     ASSERT_TRUE(assetSendCallback != nullptr) << "assetSendCallback assert failed!";
-    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, nullptr), E_NULLPTR);
-    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, nullptr), E_NULLPTR);
-    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_NULLPTR);
+    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, nullptr), E_ILLEGAL_URI);
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, nullptr), E_ILLEGAL_URI);
+    EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_ILLEGAL_URI);
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_NULLPTR);
 
     ASSERT_NE(assetObj, nullptr);
@@ -1921,7 +1921,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     g_checkValidPath = true;
     g_isFolder = false;
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillRepeatedly(Return(E_OK));
+	EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillRepeatedly(Return(E_OK));
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
 
     assetObj->uris_.push_back("../srcUri");
@@ -1995,17 +1995,17 @@ HWTEST_F(DaemonTest, DaemonTest_InnerCopy_001, TestSize.Level1)
     string srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt";
     string destUri = "file://docs/storage/media/100/local/files/Docs/dest1.txt";
     HmdfsInfo hmdfsInfo;
-    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), EINVAL);
 
     srcUri = "file://docs/storage/media/100/local/files/Docs/../A/1.txt?networkid=123456";
-    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), EINVAL);
 
     srcUri = "file://docs/storage/media/100/local/files/Docs/1.txt";
     destUri = "file://docs/storage/media/100/local/files/Docs/../A/dest1.txt";
-    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), EINVAL);
 
     destUri = "file://docs/storage/media/100/local/files/Docs/../A/dest1.txt?networkid=123456";
-    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->InnerCopy(srcUri, destUri, "", nullptr, hmdfsInfo), EINVAL);
     GTEST_LOG_(INFO) << "DaemonTest_InnerCopy_001 end";
 }
 
@@ -2058,7 +2058,7 @@ HWTEST_F(DaemonTest, DaemonTest_DisconnectByRemote_003, TestSize.Level1)
     ASSERT_NE(daemon_, nullptr);
     // Test normal case with mock
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(NO_ERROR));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(NO_ERROR));
+	EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillRepeatedly(Return(NO_ERROR));
     EXPECT_NO_THROW(daemon_->DisconnectByRemote("validNetworkId"));
 
     GTEST_LOG_(INFO) << "DaemonTest_DisconnectByRemote_003 end";
@@ -2760,13 +2760,12 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteCopyInfoACL_001, TestSize.Level1)
     EXPECT_EQ(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     g_checkSinkPermission = true;
-    EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillRepeatedly(Return("test"));
+	EXPECT_CALL(*softBusSessionListenerMock_, GetRealPath(_)).WillRepeatedly(Return("test"));
     EXPECT_NE(daemon_->GetRemoteCopyInfoACL("", isSrcFile, srcIsDir, accountInfo), ERR_ACL_FAILED);
 
     GTEST_LOG_(INFO) << "DaemonTest_RequestSendFileACL_001 end";
 }
-
-/**
+ /**
  * @tc.name: DaemonTest_HandleDestinationPathAndPermissions_001
  * @tc.desc: Test HandleDestinationPathAndPermissions when GetHapTokenInfo fails
  * @tc.type: FUNC

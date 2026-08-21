@@ -143,7 +143,7 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_Copy_0002, TestSize.Le
     close(fd);
 
     auto ret = RemoteFileCopyManager::GetInstance().RemoteCopy(srcUri, destUri, listenerCallback, userId, copyPath);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_Copy_0002 End";
 }
@@ -258,11 +258,11 @@ HWTEST_F(RemoteFileCopyManagerTest, RemoteFileCopyManager_CreateFileInfos_0001, 
     int32_t userId = 100;
     string copyPath = "/data/storage/el2/distributedfiles/123412345/test.txt";
     int32_t ret = RemoteFileCopyManager::GetInstance().CreateFileInfos("", "", infos, userId, copyPath);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, EINVAL);
     GTEST_LOG_(INFO) << "RemoteFileCopyManager_CreateFileInfos_0001 End";
 }
 
-/**
+ /**
  * @tc.name: RemoteFileCopyManager_CreateFileInfos_0002
  * @tc.desc: Test CreateFileInfos with invalid path containing ../
  * @tc.type: FUNC

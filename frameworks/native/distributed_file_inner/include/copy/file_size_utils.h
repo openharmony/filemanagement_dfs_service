@@ -44,10 +44,12 @@ public:
     static bool IsFilePathValid(const std::string &filePath);
     static int32_t IsFile(const std::string &path, bool &result);
     static int32_t IsDirectory(const std::string &path, bool &result);
+    static bool IsPathValid(const std::string &uri);
 
 private:
     static int FilterFunc(const struct dirent *filename);
     static std::string GetRealPath(const std::string &path);
+    static std::string Decode(const std::string &uri);
 };
 } // namespace DistributedFile
 } // namespace Storage

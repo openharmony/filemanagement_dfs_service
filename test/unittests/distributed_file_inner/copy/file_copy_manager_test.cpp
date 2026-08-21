@@ -30,6 +30,7 @@ using namespace OHOS::FileManagement;
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace OHOS::Storage::DistributedFile;
 constexpr int32_t FILE_NOT_FOUND = 2;
 class FileCopyManagerTest : public testing::Test {
 public:
@@ -465,7 +466,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_ExecLocal_0001, TestSize.Level0)
         infos->srcUriIsFile, emptyCallback_);
     // src file not exist, callback is nullptr
     ret = Storage::DistributedFile::FileCopyManager::GetInstance().ExecLocal(infos);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, EINVAL);
     ASSERT_EQ(remove(dstPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_ExecLocal_0001 End";
 }
@@ -986,8 +987,9 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0
     auto infos = std::make_shared<FileInfos>();
     std::string srcPath = "";
     std::string dstPath = "";
-    auto res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
-    EXPECT_EQ(res, E_OK);
+    std::unordered_set<ino_t> visitedInodes;
+    auto res = FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos, visitedInodes, 0);
+    EXPECT_NE(res, E_OK);
 
     srcPath = "/data/test/RecurCopyDir/src1/";
     dstPath = "/data/test/RecurCopyDir/dst1/";
@@ -1012,11 +1014,13 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_RecurCopyDir_0001, TestSize.Level0
     }
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
+    visitedInodes.clear();
+    res = FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos, visitedInodes, 0);
     EXPECT_EQ(res, E_OK);
 
+    visitedInodes.clear();
     dstPath = dstPath + "dir/dir1/dir2";
-    res = Storage::DistributedFile::FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos);
+    res = FileCopyManager::GetInstance().RecurCopyDir(srcPath, dstPath, infos, visitedInodes, 0);
     EXPECT_EQ(res, ENOENT);
 
     std::string rootPath = "/data/test/RecurCopyDir";
@@ -1038,20 +1042,21 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopySubDir_0001, TestSize.Level0)
     auto infos = std::make_shared<FileInfos>();
     std::string srcPath = "/data/test/CopySubDir/src";
     std::string dstPath = "/data/test/CopySubDir/dst";
+    std::unordered_set<ino_t> visitedInodes;
     infos->localListener = std::make_shared<FileCopyLocalListener>("",
         true, [](uint64_t processSize, uint64_t totalSize) -> void {});
-    auto res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos);
+    auto res = FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos, visitedInodes, 0);
     EXPECT_EQ(res, ENOENT);
 
     if (!ForceCreateDirectory(dstPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 create dir err" << dstPath;
     }
-    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos);
-    EXPECT_EQ(res, E_OK);
+    res = FileCopyManager::GetInstance().CopySubDir(srcPath, dstPath, infos, visitedInodes, 0);
+    EXPECT_EQ(res, ENOENT);
 
     std::string tmpDstDir = dstPath + "/dir";
-    res = Storage::DistributedFile::FileCopyManager::GetInstance().CopySubDir(srcPath, tmpDstDir, infos);
-    EXPECT_EQ(res, E_OK);
+    res = FileCopyManager::GetInstance().CopySubDir(srcPath, tmpDstDir, infos, visitedInodes, 0);
+    EXPECT_EQ(res, ENOENT);
     std::string rootPath = "/data/test/CopySubDir";
     if (!ForceRemoveDirectory(rootPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_CopySubDir_0001 create dir err" << rootPath;
@@ -1085,7 +1090,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_CopyDirFunc_0001, TestSize.Level0)
         GTEST_LOG_(INFO) << "FileCopyManager_CopyDirFunc_0001 create dir err" << dstPath;
     }
     res = Storage::DistributedFile::FileCopyManager::GetInstance().CopyDirFunc(srcPath, dstPath, infos);
-    EXPECT_EQ(res, E_OK);
+    EXPECT_EQ(res, ENOENT);
     std::string rootPath = "/data/test/CopyDirFunc";
     if (!ForceRemoveDirectory(rootPath)) {
         GTEST_LOG_(INFO) << "FileCopyManager_RecurCopyDir_0001 remove dir err" << rootPath;

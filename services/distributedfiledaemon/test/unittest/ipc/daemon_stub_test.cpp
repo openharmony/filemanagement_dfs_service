@@ -58,6 +58,11 @@ bool IPCSkeleton::IsLocalCalling()
 {
     return g_isLocalCalling;
 }
+
+pid_t IPCSkeleton::GetDCallingUid()
+{
+    return 1009;
+}
 } // namespace OHOS
 
 namespace OHOS::FileManagement {
@@ -346,48 +351,45 @@ HWTEST_F(DaemonStubTest, DaemonStubHandlePrepareSessionTest001, TestSize.Level0)
     GTEST_LOG_(INFO) << "DaemonStubHandlePrepareSessionTest001 Start";
     MessageParcel data;
     MessageParcel reply;
-
+ 
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
     auto ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     g_checkUriPermissionTrue = false;
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>("../malicious/path"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("../malicious/path"), Return(true)));
     ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_PERMISSION_DENIED);
-
+ 
     g_checkUriPermissionTrue = true;
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
-    ret = daemonStub_->HandlePrepareSession(data, reply);
-    EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
         .WillOnce(Return(false));
     ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true));
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("device123"), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
     ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     sptr<IRemoteObject> listenerPtr = sptr(new MockDaemonStub());
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("device123"), Return(true)))
         .WillOnce(Return(false));
     EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(listenerPtr));
     ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
     GTEST_LOG_(INFO) << "DaemonStubHandlePrepareSessionTest001 End";
 }
-
 /**
  * @tc.name: DaemonStubHandlePrepareSessionTest002
  * @tc.desc: Verify the HandlePrepareSession function
@@ -547,45 +549,47 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleRequestSendFileACLTest_0001, TestSize.L
     GTEST_LOG_(INFO) << "DaemonStubHandleRequestSendFileACLTest_0001 Start";
     MessageParcel data;
     MessageParcel reply;
-
+ 
     g_getCallingUidTrue = true;
     // Test srcUri read failure
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
     auto ret = daemonStub_->HandleRequestSendFileACL(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     // Test dstPath read failure
-    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(Return(false));
     ret = daemonStub_->HandleRequestSendFileACL(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     // Test dstDeviceId read failure
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
         .WillOnce(Return(false));
     ret = daemonStub_->HandleRequestSendFileACL(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     // Test sessionName read failure
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("device123"), Return(true)))
         .WillOnce(Return(false));
     ret = daemonStub_->HandleRequestSendFileACL(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     // Test userId read failure
     EXPECT_CALL(*messageParcelMock_, ReadString(_))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true));
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/src"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("/data/test/dst"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("device123"), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>("session1"), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
     ret = daemonStub_->HandleRequestSendFileACL(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
-
+ 
     GTEST_LOG_(INFO) << "DaemonStubHandleRequestSendFileACLTest_0001 End";
 }
 

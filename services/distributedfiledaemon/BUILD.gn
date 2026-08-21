@@ -114,7 +114,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "access_token:libtokenid_sdk",
     "app_file_service:remote_file_share_native",
     "app_file_service:sandbox_helper_native",
-    "cJSON:cjson_static",
+    "cJSON:cjson",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
@@ -169,6 +169,13 @@ ohos_shared_library("libdistributedfiledaemon") {
     ]
 
     defines += [ "SUPPORT_DEVICE_PROFILE" ]
+  }
+
+  if (dfs_sandbox_manarer) {
+    external_deps += [
+      "sandbox_manager:libsandbox_manager_sdk",
+    ]
+    defines += [ "DFS_SANDBOX_MANAGER" ]
   }
 
   part_name = "dfs_service"

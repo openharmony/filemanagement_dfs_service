@@ -39,6 +39,11 @@ uint32_t IPCSkeleton::GetCallingTokenID()
 {
     return g_callingId;
 }
+
+pid_t IPCSkeleton::GetDCallingUid()
+{
+    return 1009;
+}
 }
 
 namespace OHOS {

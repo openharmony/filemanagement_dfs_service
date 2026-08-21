@@ -31,6 +31,7 @@
 #include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"
 #include "refbase.h"
+#include "sandbox_helper.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -156,7 +157,6 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnRecvFileFinished, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
     if (fileCnt == 0) {
-        LOGE("fileList has no file");
         return;
     }
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
@@ -177,7 +177,8 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     }
     for (int32_t i = 0; i < fileCnt; i++) {
         std::string filePath(path_ + fileList[i]);
-        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
+        if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(filePath)) ||
+            !AppFileService::SandboxHelper::CheckValidPath(filePath)) {
             LOGE("path is forbidden");
             AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, ERR_BAD_VALUE);
             SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);

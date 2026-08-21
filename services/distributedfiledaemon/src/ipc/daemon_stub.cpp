@@ -15,6 +15,7 @@
 
 #include "ipc/daemon_stub.h"
 
+#include "copy/file_size_utils.h"
 #include "copy/ipc_wrapper.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -30,6 +31,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t DATA_UID = 3012;
+const uint32_t DFS_UID = 1009;
 
 DaemonStub::DaemonStub()
 {
@@ -204,14 +206,14 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
         LOGE("read srcUri failed");
         return E_IPC_READ_FAILED;
     }
-    if (!DfsuAccessTokenHelper::CheckUriPermission(srcUri)) {
-        LOGE("permission verify failed");
-        return E_PERMISSION_DENIED;
-    }
     std::string dstUri;
     if (!data.ReadString(dstUri)) {
         LOGE("read dstUri failed");
         return E_IPC_READ_FAILED;
+    }
+    if (!FileSizeUtils::IsPathValid(srcUri) || !FileSizeUtils::IsPathValid(dstUri)) {
+        LOGE("uri verify failed");
+        return E_PERMISSION_DENIED;
     }
     std::string srcDeviceId;
     if (!data.ReadString(srcDeviceId)) {
@@ -244,7 +246,11 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
 
 int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin HandleRequestSendFile");
+    uint32_t fullTokenId = IPCSkeleton::GetDCallingUid();
+    LOGI("calling fullTokenId %{public}d", fullTokenId);
+    if (fullTokenId != DFS_UID) {
+        return E_IPC_READ_FAILED;
+    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -273,7 +279,11 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
 
 int32_t DaemonStub::HandleRequestSendFileACL(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin HandleRequestSendFileACL");
+    uint32_t fullTokenId = IPCSkeleton::GetDCallingUid();
+    LOGI("calling fullTokenId %{public}d", fullTokenId);
+    if (fullTokenId != DFS_UID) {
+        return E_IPC_READ_FAILED;
+    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -318,11 +328,19 @@ int32_t DaemonStub::HandleRequestSendFileACL(MessageParcel &data, MessageParcel 
 
 int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin HandleGetRemoteCopyInfo");
+    uint32_t fullTokenId = IPCSkeleton::GetDCallingUid();
+    LOGI("calling fullTokenId %{public}d", fullTokenId);
+    if (fullTokenId != DFS_UID) {
+        return E_PERMISSION_DENIED;
+    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
         return E_IPC_READ_FAILED;
+    }
+    if (!FileSizeUtils::IsPathValid(srcUri)) {
+        LOGE("uri verify failed");
+        return E_PERMISSION_DENIED;
     }
     bool isFile = false;
     bool isDir = false;
@@ -349,12 +367,20 @@ int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &
 
 int32_t DaemonStub::HandleGetRemoteCopyInfoACL(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin HandleGetRemoteCopyInfoACL");
+    uint32_t fullTokenId = IPCSkeleton::GetDCallingUid();
+    LOGI("calling fullTokenId %{public}d", fullTokenId);
+    if (fullTokenId != DFS_UID) {
+        return E_PERMISSION_DENIED;
+    }
     std::string srcUri;
     AccountInfo callerAccountInfo;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
         return E_IPC_READ_FAILED;
+    }
+    if (!FileSizeUtils::IsPathValid(srcUri)) {
+        LOGE("uri verify failed");
+        return E_PERMISSION_DENIED;
     }
     if (!data.ReadInt32(callerAccountInfo.userId_)) {
         LOGE("read userId failed");

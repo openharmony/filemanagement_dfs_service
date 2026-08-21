@@ -44,6 +44,13 @@ namespace Storage {
 namespace DistributedFile {
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
+typedef enum OperationMode {
+    READ_MODE = 1 << 0,
+    WRITE_MODE = 1 << 1,
+    CREATE_MODE = 1 << 2,
+    DELETE_MODE = 1 << 3,
+    RENAME_MODE = 1 << 4,
+} OperationMode;
 
 class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Daemon);
@@ -150,7 +157,6 @@ private:
                                                 std::string &physicalPath);
     void DisconnectDevice(const std::string networkId);
     bool IsCallingDeviceTrusted();
-    int32_t JudgeEmpty(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -164,7 +170,6 @@ private:
                           const std::string &srcDeviceId,
                           const sptr<IFileTransListener> &listenerCallback,
                           HmdfsInfo &info);
-
     void DisconnectByRemote(const std::string &networkId);
     int32_t CreatControlLink(const std::string &networkId);
     int32_t CancelControlLink(const std::string &networkId);
@@ -172,8 +177,12 @@ private:
     int32_t NotifyRemotePublishNotification(const std::string &networkId);
     int32_t NotifyRemoteCancelNotification(const std::string &networkId);
     int32_t CheckPermission(const std::string &networkId);
-    int32_t PreparePushAsset(const std::string &taskId, int32_t userId,
-                             const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
+    bool CheckNetworkId(const std::string &srcUri, const std::string &networkId);
+    int32_t GetPhysicalPath(const std::string &uri, const std::string &networkId, std::string &physicalPath);
+    int32_t ChooseCopyMode(const std::string &srcUri, const std::string &dstUri, const std::string &networkId,
+        const sptr<IFileTransListener> &listenerCallback, HmdfsInfo &info);
+    bool CheckPushAssetParamValid(const sptr<AssetObj> &assetObj, const sptr<IAssetSendCallback> &sendCallback);
+    bool CheckPathPermission(const std::string &path);
 private:
     std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;

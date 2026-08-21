@@ -71,6 +71,7 @@ static const std::string MTP_PATH_PREFIX = "/storage/External/mtp";
 static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 static const int OPEN_TRUC_VERSION = 20;
+static constexpr int MAX_RECURSION_DEPTH = 64;
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
 #ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 const uint32_t API_VERSION_MOD = 1000;
@@ -200,7 +201,7 @@ static void ReportRemoteCopy(const std::string &srcUri, const RadarParaInfo &inf
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
 {
-    LOGE("FileCopyManager Copy start");
+    LOGI("FileCopyManager Copy start");
     if (srcUri.empty() || destUri.empty()) {
         return EINVAL;
     }
@@ -212,8 +213,8 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
         return EINVAL;
     }
 
-    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
         RadarParaInfo info = {"Copy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
@@ -307,8 +308,8 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
-    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
         RadarParaInfo info = {"Cancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
@@ -398,6 +399,15 @@ int32_t FileCopyManager::ExecCopy(std::shared_ptr<FileInfos> infos)
 {
     if (infos == nullptr) {
         LOGE("infos is nullptr");
+        return EINVAL;
+    }
+    struct stat srcSt {};
+    if (lstat(infos->srcPath.c_str(), &srcSt) != 0) {
+        LOGE("lstat src failed, errno=%{public}d", errno);
+        return EINVAL;
+    }
+    if (S_ISLNK(srcSt.st_mode)) {
+        LOGE("src is symlink, not supported.");
         return EINVAL;
     }
     if (infos->srcUriIsFile && IsFile(infos->destPath)) {
@@ -574,11 +584,12 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
         dirName = srcPath.parent_path().filename();
     }
     std::string destStr = dest + "/" + dirName;
-    return CopySubDir(src, destStr, infos);
+    std::unordered_set<ino_t> visitedInodes;
+    return CopySubDir(src, destStr, infos, visitedInodes, 0);
 }
 
-int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
-    const std::string &destPath, std::shared_ptr<FileInfos> infos)
+int32_t FileCopyManager::CopySubDir(const std::string &srcPath, const std::string &destPath,
+    std::shared_ptr<FileInfos> infos, std::unordered_set<ino_t> &visitedInodes, int32_t depth)
 {
     std::error_code errCode;
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
@@ -602,12 +613,30 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
         infos->subDirs.insert(destPath);
     }
     infos->localListener->SubDirAddListener(srcPath, destPath, IN_MODIFY);
-    return RecurCopyDir(srcPath, destPath, infos);
+    return RecurCopyDir(srcPath, destPath, infos, visitedInodes, depth);
 }
 
-int32_t FileCopyManager::RecurCopyDir(const std::string &srcPath,
-    const std::string &destPath, std::shared_ptr<FileInfos> infos)
+int32_t FileCopyManager::RecurCopyDir(const std::string &srcPath, const std::string &destPath,
+    std::shared_ptr<FileInfos> infos, std::unordered_set<ino_t> &visitedInodes, int32_t depth)
 {
+    if (depth > MAX_RECURSION_DEPTH) {
+        LOGE("Recursion depth exceeded limit at: %{public}s", GetAnonyString(srcPath).c_str());
+        return ELOOP;
+    }
+    struct stat st {};
+    if (lstat(srcPath.c_str(), &st) != 0) {
+        LOGE("lstat failed for %{public}s, errno=%{public}d", GetAnonyString(srcPath).c_str(), errno);
+        return errno;
+    }
+    if (S_ISLNK(st.st_mode)) {
+        LOGW("Skip symlink directory: %{public}s", GetAnonyString(srcPath).c_str());
+        return E_OK;
+    }
+    if (visitedInodes.count(st.st_ino) > 0) {
+        LOGE("Detected directory cycle at: %{public}s", GetAnonyString(srcPath).c_str());
+        return ELOOP;
+    }
+    visitedInodes.insert(st.st_ino);
     auto pNameList = FileSizeUtils::GetDirNameList(srcPath);
     if (pNameList == nullptr) {
         return ENOMEM;
@@ -615,14 +644,22 @@ int32_t FileCopyManager::RecurCopyDir(const std::string &srcPath,
     for (int i = 0; i < pNameList->direntNum; i++) {
         std::string src = srcPath + '/' + std::string((pNameList->namelist[i])->d_name);
         std::string dest = destPath + '/' + std::string((pNameList->namelist[i])->d_name);
-        if ((pNameList->namelist[i])->d_type == DT_LNK) {
+        struct stat entrySt {};
+        if (lstat(src.c_str(), &entrySt) != 0) {
+            LOGW("lstat failed for %{public}s, errno=%{public}d, skipping", GetAnonyString(srcPath).c_str(), errno);
+            continue;
+        }
+        if (S_ISLNK(entrySt.st_mode)) {
             continue;
         }
         int ret = E_OK;
-        if ((pNameList->namelist[i])->d_type == DT_DIR) {
-            ret = CopySubDir(src, dest, infos);
-        } else {
+        if (S_ISDIR(entrySt.st_mode)) {
+            ret = CopySubDir(src, dest, infos, visitedInodes, depth + 1);
+        } else if (S_ISREG(entrySt.st_mode)) {
             ret = CopyFile(src, dest, infos);
+        } else {
+            LOGW("Skip unsupported file type: %{public}s", GetAnonyString(srcPath).c_str());
+            continue;
         }
         if (ret != E_OK) {
             return ret;
@@ -712,7 +749,7 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
             return EPERM;
         }
     } else {
-        srcFd = open(srcPth.c_str(), O_RDONLY | O_UNCACHE);
+        srcFd = open(srcPth.c_str(), O_RDONLY | O_NOFOLLOW | O_UNCACHE);
         if (srcFd < 0) {
             LOGE("Error opening src file descriptor. errno = %{public}d", errno);
             RadarParaInfo info = {"OpenSrcFile", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,

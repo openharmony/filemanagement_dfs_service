@@ -175,4 +175,24 @@ bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
     }
     return true;
 }
+
+bool DfsuAccessTokenHelper::CheckSrcUriPermission(const std::string &uriStr)
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    string bundleName;
+    if (GetBundleNameByToken(tokenId, bundleName) != E_OK) {
+        LOGE("get caller bundle name failed");
+        return false;
+    }
+    Uri uri(uriStr);
+    auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+    if (!uriPermissionClient.VerifyUriPermission(uri, AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION, tokenId)) {
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::CHECK_URI_PREMISSION_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::uriPermMgr);
+        LOGE("uri permission denied");
+        return false;
+    }
+    return true;
+}
 } // namespace OHOS::FileManagement

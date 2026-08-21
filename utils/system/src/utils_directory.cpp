@@ -341,10 +341,13 @@ int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid)
 
     struct dirent *entry = nullptr;
     while ((entry = readdir(dir.get())) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        if (entry->d_type == DT_LNK) {
+            continue;
+        }
         if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-                continue;
-            }
             std::string subPath = path + "/" + entry->d_name;
             if (chown(subPath.c_str(), uid, gid) == -1) {
                 LOGE("Change owner recursive failed");

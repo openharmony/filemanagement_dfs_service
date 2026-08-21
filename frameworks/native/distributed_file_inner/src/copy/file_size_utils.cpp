@@ -42,10 +42,12 @@ static constexpr char PATH_INVALID_FLAG2[] = "/..";
 static const uint32_t PATH_INVALID_FLAG_LEN = 3;
 static const char FILE_SEPARATOR_CHAR = '/';
 static constexpr char NETWORK_ID[] = "?networkid=";
+static const uint32_t DECODE_FORMAT_NUM = 16;
+static const uint32_t DECODE_COUNT = 3;
 
 int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
-    if (!IsFilePathValid(GetRealUri(uri))) {
+    if (!IsPathValid(GetRealUri(uri))) {
         LOGE("path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
@@ -68,7 +70,7 @@ int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &
 
 int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
-    if (!IsFilePathValid(GetRealUri(uri))) {
+    if (!IsPathValid(GetRealUri(uri))) {
         LOGE("path is forbidden");
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
@@ -254,6 +256,42 @@ bool FileSizeUtils::IsFilePathValid(const std::string &filePath)
         return false;
     }
     return true;
+}
+
+string FileSizeUtils::Decode(const string &uri)
+{
+    std::string outPutStr;
+    const int32_t encodeLen = 2;
+    size_t index = 0;
+    while (index < uri.length()) {
+        if (uri[index] == '%' && index + encodeLen < uri.length() &&
+            isxdigit(static_cast<unsigned char>(uri[index + 1])) &&
+            isxdigit(static_cast<unsigned char>(uri[index + 2]))) {
+            std::string inputStr(uri.substr(index + 1, encodeLen));
+            outPutStr += static_cast<char>(strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM));
+            index += encodeLen + 1;
+        } else {
+            outPutStr += uri[index];
+            index++;
+        }
+    }
+    return outPutStr;
+}
+ 
+bool FileSizeUtils::IsPathValid(const std::string &uri)
+{
+    std::string decodedUri = Decode(uri);
+    uint32_t decodeCount = 0;
+    while (decodeCount < DECODE_COUNT) {
+        std::string nextDecodedUri = Decode(decodedUri);
+        if (decodedUri == nextDecodedUri) {
+            return IsFilePathValid(nextDecodedUri);
+        }
+        decodedUri = nextDecodedUri;
+        decodeCount++;
+    }
+    LOGE("uri decode failed after %{public}d iterations", decodeCount);
+    return false;
 }
 } // namespace DistributedFile
 } // namespace Storage
