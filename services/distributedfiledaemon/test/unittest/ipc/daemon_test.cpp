@@ -1247,7 +1247,7 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillRepeatedly(Return(E_OK));
-	EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
+    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillRepeatedly(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", remoteReverseObj), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 end";
