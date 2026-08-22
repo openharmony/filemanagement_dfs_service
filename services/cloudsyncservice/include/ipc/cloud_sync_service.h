@@ -153,6 +153,7 @@ private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     void PreInit();
     void Init();
+    void SetProcessQosPriority();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
     void ReportServiceStart(const SystemAbilityOnDemandReason &startReason);
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);

@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <sys/xattr.h>
+#include <unistd.h>
 
 #include "accesstoken_kit.h"
 #include "account_utils.h"
@@ -51,6 +52,8 @@
 #include "system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
+#include "res_sched_client.h"
+#include "res_type.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -59,7 +62,9 @@ using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 constexpr int MAX_PATH_SIZE = 20;
+constexpr int QOS_LEVEL_RT = 7;
 constexpr mode_t DEFAULT_UMASK = 0002;
+const std::string CLOUDFILESERVICE_BUNDLENAME = "cloudfileservice";
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string ACL_XATTR_ACCESS = "system.posix_acl_access";
 const std::string ACL_XATTR_DEFAULT = "system.posix_acl_default";
@@ -103,6 +108,22 @@ void CloudSyncService::Init()
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
     ScreenStatus::InitScreenStatus();
+}
+
+void CloudSyncService::SetProcessQosPriority()
+{
+    int32_t qosLevel = QOS_LEVEL_RT;
+    std::string strPid = std::to_string(getpid());
+    std::string strTid = std::to_string(gettid());
+    std::string strQos = std::to_string(qosLevel);
+    std::unordered_map<std::string, std::string> mapPayload;
+    mapPayload["pid"] = strPid;
+    mapPayload[strTid] = strQos;
+    mapPayload["bundleName"] = CLOUDFILESERVICE_BUNDLENAME;
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+    OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, 0, mapPayload);
+    LOGI("SetProcessQosPriority qosLevel:%{public}d, pid:%{public}s, tid:%{public}s",
+        qosLevel, strPid.c_str(), strTid.c_str());
 }
 
 constexpr int TEST_MAIN_USR_ID = 100;
@@ -178,6 +199,7 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
     auto startTime = std::chrono::high_resolution_clock::now();
+    SetProcessQosPriority();
     PreInit();
     auto preInitEndTime = std::chrono::high_resolution_clock::now();
     if (!PublishSA()) {
