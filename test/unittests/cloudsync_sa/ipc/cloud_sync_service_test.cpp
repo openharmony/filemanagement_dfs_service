@@ -1745,6 +1745,25 @@ HWTEST_F(CloudSyncServiceTest, InitTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetProcessQosPriorityTest001
+ * @tc.desc: Verify the SetProcessQosPriority function.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudSyncServiceTest, SetProcessQosPriorityTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetProcessQosPriorityTest001 start";
+    try {
+        EXPECT_NE(servicePtr_, nullptr);
+        servicePtr_->SetProcessQosPriority();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetProcessQosPriorityTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "SetProcessQosPriorityTest001 end";
+}
+
+/**
  * @tc.name: GetBundleNameUserInfoTest001
  * @tc.desc: Verify the GetBundleNameUserInfo function.
  * @tc.type: FUNC
