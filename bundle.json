@@ -68,6 +68,7 @@
           "preferences",
           "memmgr",
           "netmanager_base",
+          "resource_schedule_service",
           "relational_store",
           "runtime_core",
           "safwk",

@@ -30,7 +30,6 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
-#include "clouddiskservice_ioctl.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -40,7 +39,6 @@
 #include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "utils_log.h"
-#include "clouddiskservice_ioctl.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -1231,30 +1229,43 @@ int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncF
 #endif
 }
 
-static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, uint64_t logicalSize, uint64_t atimeMs,
-    uint64_t mtimeMs)
+static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, const PlaceholderInfo &metaData)
 {
     int32_t ret = E_OK;
+    int fd = -1;
 
     if ((ret = CheckPathNotDir(hmdfsPath)) != E_OK) {
         LOGE("check dir failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
         return ret;
     }
 
-    int32_t fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
-    if (fd < 0) {
-        ret = errno;
-        LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        return ConvertErrnoToCloudDiskError(ret);
+    do {
+        fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+        if (fd < 0) {
+            ret = errno;
+            LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+            break;
+        }
+
+        if (ftruncate(fd, 0) < 0) {
+            ret = errno;
+            LOGE("ftruncate to zero failed, path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+            break;
+        }
+
+        if ((ret = SetPlaceholderFileAttributes(fd, metaData)) != E_OK) {
+            LOGE("set placeholder file attr failed, path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+        }
+    } while (0);
+
+    if (fd >= 0) {
+        close(fd);
     }
-    struct HmdfsPlaceholderAttr attr = {logicalSize, atimeMs, mtimeMs};
-    if (ioctl(fd, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, &attr) < 0) {
-        ret = errno;
-        LOGE("ioctl updata attr failed, path:%{public}s, errno:%{public}d",
-            GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        ret = ConvertErrnoToCloudDiskError(ret);
-    }
-    close(fd);
     return ret;
 }
 
@@ -1294,7 +1305,7 @@ int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, 
         return ret;
     }
 
-    ret = UpdatePlaceholderAttr(hmdfsPath, metaData.logicalSize, metaData.atimeMs, metaData.mtimeMs);
+    ret = UpdatePlaceholderAttr(hmdfsPath, metaData);
     if (ret != 0) {
         LOGE("Update failed, ret:%{public}d", ret);
         return ret;
