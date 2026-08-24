@@ -20,7 +20,6 @@
 
 #include "assistant.h"
 #include "cloud_disk_service_access_token_mock.h"
-#include "clouddiskservice_ioctl.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -926,10 +925,11 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_OpenFail_001, TestSiz
     GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_OpenFail_001 start";
     try {
         string invalidPath = "/tmp/nonexistent_update_file_12345";
-        uint64_t size = 1024;
-        uint64_t atime = 1234567890;
-        uint64_t mtime = 1234567890;
-        int32_t ret = UpdatePlaceholderAttr(invalidPath, size, atime, mtime);
+        PlaceholderInfo metaData;
+        metaData.logicalSize = 1024;
+        metaData.atimeMs = 1234567890;
+        metaData.mtimeMs = 1234567890;
+        int32_t ret = UpdatePlaceholderAttr(invalidPath, metaData);
         EXPECT_NE(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -953,14 +953,17 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_Success_002, TestSize
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = 2048;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 2048;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, futimens(_, _)).WillRepeatedly(Return(0));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_EQ(ret, 0);
 
             unlink(testFilePath.c_str());
@@ -987,14 +990,17 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_LargeSize_003, TestSi
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = 10 * 1024 * 1024;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 10 * 1024 * 1024;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, futimens(_, _)).WillRepeatedly(Return(0));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_EQ(ret, 0);
 
             unlink(testFilePath.c_str());
@@ -1021,14 +1027,17 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_ZeroSize_004, TestSiz
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = 0;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 0;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, futimens(_, _)).WillRepeatedly(Return(0));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_EQ(ret, 0);
 
             unlink(testFilePath.c_str());
@@ -1055,14 +1064,18 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_FutimensFail_005, Tes
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = 1024;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 1024;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, futimens(_, _)).WillRepeatedly(Return(-1));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+            errno = EIO;
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_NE(ret, 0);
 
             unlink(testFilePath.c_str());
@@ -1089,14 +1102,16 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_TruncateFail_006, Tes
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = UINT64_MAX;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = UINT64_MAX;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(-1));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+            errno = EIO;
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_NE(ret, 0);
 
             unlink(testFilePath.c_str());
@@ -1123,14 +1138,17 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_CloseFd_007, TestSize
         if (fd >= 0) {
             close(fd);
 
-            uint64_t size = 1024;
-            uint64_t atime = 1234567890000;
-            uint64_t mtime = 1234567900000;
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 1024;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
 
-            EXPECT_CALL(*insMock_, ioctl(_, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, _)).WillRepeatedly(Return(-1));
+            EXPECT_CALL(*insMock_, ftruncate(_, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, fsetxattr(_, _, _, _, _)).WillRepeatedly(Return(0));
+            EXPECT_CALL(*insMock_, futimens(_, _)).WillRepeatedly(Return(0));
             EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
 
-            int32_t ret = UpdatePlaceholderAttr(testFilePath, size, atime, mtime);
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
             EXPECT_EQ(ret, 0);
 
             fd = open(testFilePath.c_str(), O_RDONLY);
@@ -1162,11 +1180,12 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_CheckFdIsDir_008, Tes
         string testDirPath = "/data/test_dir" + to_string(time(nullptr));
         mkdir(testDirPath.c_str(), 0755);
 
-        uint64_t size = 1024;
-        uint64_t atime = 1234567890;
-        uint64_t mtime = 1234567890;
-        int32_t ret = UpdatePlaceholderAttr(testDirPath, size, atime, mtime);
-        EXPECT_EQ(ret, 0);
+        PlaceholderInfo metaData;
+        metaData.logicalSize = 1024;
+        metaData.atimeMs = 1234567890;
+        metaData.mtimeMs = 1234567890;
+        int32_t ret = UpdatePlaceholderAttr(testDirPath, metaData);
+        EXPECT_EQ(ret, E_INVALID_ARG);
 
         rmdir(testDirPath.c_str());
     } catch (...) {
@@ -1176,6 +1195,44 @@ HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_CheckFdIsDir_008, Tes
     Assistant::ins = insMock_;
     insMock_->EnableMock();
     GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_CheckFdIsDir_008 end";
+}
+
+/**
+ * @tc.name: UpdatePlaceholderAttr_SecondTruncateFail_009
+ * @tc.desc: Verify UpdatePlaceholderAttr when the second ftruncate fails
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, UpdatePlaceholderAttr_SecondTruncateFail_009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_SecondTruncateFail_009 start";
+    try {
+        string testFilePath = "/data/test_second_truncate_fail_" + to_string(time(nullptr));
+        int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd >= 0) {
+            close(fd);
+
+            PlaceholderInfo metaData;
+            metaData.logicalSize = 1024;
+            metaData.atimeMs = 1234567890000;
+            metaData.mtimeMs = 1234567900000;
+
+            EXPECT_CALL(*insMock_, ftruncate(_, _))
+                .WillOnce(Return(0))
+                .WillOnce(Return(-1));
+            EXPECT_CALL(*insMock_, close(_)).WillRepeatedly(Return(0));
+            errno = EIO;
+
+            int32_t ret = UpdatePlaceholderAttr(testFilePath, metaData);
+            EXPECT_NE(ret, 0);
+
+            unlink(testFilePath.c_str());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_SecondTruncateFail_009 failed";
+    }
+    GTEST_LOG_(INFO) << "UpdatePlaceholderAttr_SecondTruncateFail_009 end";
 }
 
 /**

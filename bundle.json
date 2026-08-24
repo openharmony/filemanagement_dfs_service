@@ -84,25 +84,239 @@
       ],
       "third_party": []
     },
-    "build": {
-      "group_type": {
-        "base_group": [],
-        "fwk_group": [],
-        "service_group": [
-          "//foundation/filemanagement/dfs_service:services_target",
-          "//foundation/filemanagement/dfs_service:clouddiskservice_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:cloud_file_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:distributed_file_daemon_kit_inner_target",
-          "//foundation/filemanagement/dfs_service:decompress_kit_inner_target",
-          "//foundation/filemanagement/dfs_service/interfaces/kits/js/ani:ani_package",
-          "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
-          "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync",
-          "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/src:ohclouddiskmanager",
-          "//foundation/filemanagement/dfs_service/adapter/cloud_adapter_example:cloud_adapter_example_target",
-          "//foundation/filemanagement/dfs_service/adapter/decompress_adapter_example:decompress_adapter_example_target"
+    "dirs": {},
+    "scripts": {},
+    "author": {},
+    "repository": "",
+    "component": {
+      "name": "dfs_service",
+      "subsystem": "filemanagement",
+      "syscap": [
+        "SystemCapability.FileManagement.DistributedFileService.CloudSync.Core",
+        "SystemCapability.FileManagement.DistributedFileService.CloudSyncManager"
+      ],
+      "features": [
+        "dfs_service_feature_enable_cloud_adapter",
+        "dfs_service_feature_enable_cloud_disk",
+        "dfs_service_feature_enable_dist_file_daemon",
+        "dfs_service_feature_enable_distributed_ability",
+        "dfs_service_feature_enable_watch_lite_device"
+      ],
+      "adapted_system_type": [
+        "small",
+        "standard"
+      ],
+      "rom": "2048KB",
+      "ram": "4096KB",
+      "deps": {
+        "components": [
+          "ability_base",
+          "ability_runtime",
+          "access_token",
+          "app_file_service",
+          "api_metrics",
+          "battery_manager",
+          "bundle_framework",
+          "c_utils",
+          "cJSON",
+          "common_event_service",
+          "dataclassification",
+          "data_share",
+          "device_auth",
+          "device_info_manager",
+          "device_manager",
+          "distributed_notification_service",
+          "dsoftbus",
+          "e2fsprogs",
+          "eventhandler",
+          "ffrt",
+          "file_api",
+          "hicollie",
+          "hilog",
+          "hisysevent",
+          "hitrace",
+          "i18n",
+          "init",
+          "ipc",
+          "json",
+          "libuv",
+          "napi",
+          "node",
+          "preferences",
+          "memmgr",
+          "netmanager_base",
+          "resource_schedule_service",
+          "relational_store",
+          "runtime_core",
+          "safwk",
+          "storage_service",
+          "samgr",
+          "selinux_adapter",
+          "thermal_manager",
+          "os_account",
+          "power_manager",
+          "libfuse",
+          "zlib",
+          "user_file_service"
+        ],
+        "third_party": []
+      },
+      "build": {
+        "group_type": {
+          "base_group": [],
+          "fwk_group": [],
+          "service_group": [
+            "//foundation/filemanagement/dfs_service:services_target",
+            "//foundation/filemanagement/dfs_service:clouddiskservice_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloud_file_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:distributed_file_daemon_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:decompress_kit_inner_target",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/js/ani:ani_package",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/src:ohclouddiskmanager",
+            "//foundation/filemanagement/dfs_service/adapter/cloud_adapter_example:cloud_adapter_example_target",
+            "//foundation/filemanagement/dfs_service/adapter/decompress_adapter_example:decompress_adapter_example_target"
+          ]
+        },
+        "inner_kits": [
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_sync_callback.h",
+                "cloud_sync_manager.h",
+                "i_cloud_sync_callback.h",
+                "svc_death_recipient.h",
+                "cloud_sync_constants.h",
+                "cloud_sync_common.h",
+                "cloud_upload_callback.h",
+                "i_cloud_upload_callback.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_disk_common.h",
+                "cloud_disk_service_callback.h",
+                "cloud_disk_service_manager.h",
+                "i_cloud_disk_service_callback.h",
+                "svc_death_recipient.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/clouddiskservice_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_sync_asset_manager.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_daemon_manager.h",
+                "i_cloud_daemon.h",
+                "svc_death_recipient.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_daemon_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner:cloudfile_kit",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner:cloudfile_kit_core",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_file_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/decompress_kit_inner:decompress_kit",
+            "header": {
+              "header_files": [
+                "decompress_kit.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/decompress_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/src:ohclouddiskmanager",
+            "header": {
+              "header_files": [
+                "oh_cloud_disk_manager.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/kits/ndk/clouddiskmanager/include"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/services/clouddisk_database:clouddisk_database",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/services/clouddisk_database/include"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/utils:libdistributedfiledentry",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/utils/inner_api"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/utils/inner_api"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils_lite",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/filemanagement/dfs_service/utils/inner_api"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:distributed_file_daemon_kit_inner",
+            "header": {
+              "header_files": [
+                "distributed_file_daemon_manager.h",
+                "i_daemon.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/utils:libdecompress",
+            "header": {
+              "header_files": [
+                "decompress.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/utils/decompress/include"
+            }
+          }
+        ],
+        "test": [
+          "//foundation/filemanagement/dfs_service:dfs_test_moudule",
+          "//foundation/filemanagement/dfs_service:cloudsync_test_module",
+          "//foundation/filemanagement/dfs_service:distributedfile_test_module",
+          "//foundation/filemanagement/dfs_service/test/fuzztest:dfs_service_fuzztest"
         ]
       },
       "inner_kits": [

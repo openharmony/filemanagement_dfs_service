@@ -30,7 +30,6 @@
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
-#include "clouddiskservice_ioctl.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -40,7 +39,6 @@
 #include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "utils_log.h"
-#include "clouddiskservice_ioctl.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -61,6 +59,9 @@ enum PlaceholderState : uint8_t {
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+constexpr uint8_t PLACEHOLDER_XATTR_VALUE = '1';
+constexpr uint64_t MILLISECONDS_PER_SECOND = 1000;
+constexpr uint64_t NANOSECONDS_PER_MILLISECOND = 1000000;
 
 struct CreatePlaceholderPath {
     std::string parentMntPath;
@@ -167,6 +168,41 @@ int32_t GetAllSyncFoldersForSaWithRetry(std::vector<FileManagement::SyncFolderEx
 }
 #endif
 
+static struct timespec MillisecondsToTimespec(uint64_t timeMs)
+{
+    struct timespec time = {
+        .tv_sec = static_cast<time_t>(timeMs / MILLISECONDS_PER_SECOND),
+        .tv_nsec = static_cast<long>((timeMs % MILLISECONDS_PER_SECOND) * NANOSECONDS_PER_MILLISECOND),
+    };
+    return time;
+}
+
+static int32_t SetPlaceholderFileAttributes(int32_t fileFd, const PlaceholderInfo &info)
+{
+    if (ftruncate(fileFd, static_cast<off_t>(info.logicalSize)) < 0) {
+        int32_t err = errno;
+        LOGE("CreatePlaceholderFile branch=set_size_failed errno=%{public}d", err);
+        return err;
+    }
+    if (fsetxattr(fileFd, CLOUD_DISK_PLACEHOLDER_XATTR, &PLACEHOLDER_XATTR_VALUE,
+                  sizeof(PLACEHOLDER_XATTR_VALUE), 0) < 0) {
+        int32_t err = errno;
+        LOGE("CreatePlaceholderFile branch=set_xattr_failed errno=%{public}d", err);
+        return err;
+    }
+
+    struct timespec times[2] = {
+        MillisecondsToTimespec(info.atimeMs),
+        MillisecondsToTimespec(info.mtimeMs),
+    };
+    if (futimens(fileFd, times) < 0) {
+        int32_t err = errno;
+        LOGE("CreatePlaceholderFile branch=set_times_failed errno=%{public}d", err);
+        return err;
+    }
+    return E_OK;
+}
+
 static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
 {
     UniqueFd parentFd(open(path.parentMntPath.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
@@ -182,20 +218,13 @@ static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const 
         return ConvertErrnoToCloudDiskError(errno);
     }
 
-    HmdfsPlaceholderAttr create = {
-        .logicalSize = info.logicalSize,
-        .atimeMs = info.atimeMs,
-        .mtimeMs = info.mtimeMs,
-    };
-    if (ioctl(fileFd, HMDFS_IOC_CREATE_PLACEHOLDER, &create) < 0) {
-        int32_t err = errno;
-        LOGE("CreatePlaceholderFile branch=ioctl_create_placeholder_failed errno=%{public}d", err);
+    int32_t err = SetPlaceholderFileAttributes(fileFd, info);
+    if (err != E_OK) {
         if (unlinkat(parentFd, path.fileName.c_str(), 0) != 0) {
             LOGE("CreatePlaceholderFile branch=rollback_unlink_failed errno=%{public}d", errno);
         }
         return ConvertErrnoToCloudDiskError(err);
     }
-
     LOGI("CreatePlaceholderFile branch=create_file_success");
     return E_OK;
 }
@@ -1200,30 +1229,43 @@ int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncF
 #endif
 }
 
-static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, uint64_t logicalSize, uint64_t atimeMs,
-    uint64_t mtimeMs)
+static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, const PlaceholderInfo &metaData)
 {
     int32_t ret = E_OK;
+    int fd = -1;
 
     if ((ret = CheckPathNotDir(hmdfsPath)) != E_OK) {
         LOGE("check dir failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
         return ret;
     }
 
-    int32_t fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
-    if (fd < 0) {
-        ret = errno;
-        LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        return ConvertErrnoToCloudDiskError(ret);
+    do {
+        fd = open(hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+        if (fd < 0) {
+            ret = errno;
+            LOGE("open failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+            break;
+        }
+
+        if (ftruncate(fd, 0) < 0) {
+            ret = errno;
+            LOGE("ftruncate to zero failed, path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+            break;
+        }
+
+        if ((ret = SetPlaceholderFileAttributes(fd, metaData)) != E_OK) {
+            LOGE("set placeholder file attr failed, path:%{public}s, errno:%{public}d",
+                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
+        }
+    } while (0);
+
+    if (fd >= 0) {
+        close(fd);
     }
-    struct HmdfsPlaceholderAttr attr = {logicalSize, atimeMs, mtimeMs};
-    if (ioctl(fd, HMDFS_IOC_UPDATE_PLACEHOLDER_ATTR, &attr) < 0) {
-        ret = errno;
-        LOGE("ioctl updata attr failed, path:%{public}s, errno:%{public}d",
-            GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        ret = ConvertErrnoToCloudDiskError(ret);
-    }
-    close(fd);
     return ret;
 }
 
@@ -1263,7 +1305,7 @@ int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, 
         return ret;
     }
 
-    ret = UpdatePlaceholderAttr(hmdfsPath, metaData.logicalSize, metaData.atimeMs, metaData.mtimeMs);
+    ret = UpdatePlaceholderAttr(hmdfsPath, metaData);
     if (ret != 0) {
         LOGE("Update failed, ret:%{public}d", ret);
         return ret;

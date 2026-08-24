@@ -68,6 +68,7 @@ struct DownloadProgressObj : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static DownloadProgressObj *Unmarshalling(Parcel &parcel);
     std::string to_string();
+    std::string to_string(const std::string &anonyPath);
 };
 
 struct UploadProgressObj : public Parcelable {

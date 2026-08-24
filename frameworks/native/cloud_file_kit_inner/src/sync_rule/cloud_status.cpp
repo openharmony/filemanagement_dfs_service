@@ -55,7 +55,11 @@ std::pair<uint64_t, uint64_t> CloudStatus::GetCurrentSpaceInfo(const int32_t use
 
 bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+    if (!lock.owns_lock()) {
+        return false;
+    }
+
     /* User switching */
     if (userId_ != userId) {
         appSwitches_.erase(bundleName);
