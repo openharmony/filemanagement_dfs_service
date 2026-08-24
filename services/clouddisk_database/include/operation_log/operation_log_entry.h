@@ -32,6 +32,7 @@ struct OperationLogEntry {
     std::string processName;
     int64_t processPid;
     int64_t processUid;
+    std::string cloudId;
 };
 
 } // namespace CloudDisk

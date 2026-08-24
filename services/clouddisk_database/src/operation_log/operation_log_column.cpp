@@ -29,10 +29,12 @@ const std::string OperationLogColumn::FILE_UID = "file_uid";
 const std::string OperationLogColumn::PROCESS_NAME = "process_name";
 const std::string OperationLogColumn::PROCESS_PID = "process_pid";
 const std::string OperationLogColumn::PROCESS_UID = "process_uid";
+const std::string OperationLogColumn::CLOUD_ID = "cloud_id";
 
 const std::string OperationLogColumn::CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS " +
     TABLE_NAME + " (" +
     ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    CLOUD_ID + " TEXT, " +
     OP_TIME + " BIGINT NOT NULL, " +
     OP_TYPE + " INT NOT NULL, " +
     FILE_PATH + " TEXT, " +
