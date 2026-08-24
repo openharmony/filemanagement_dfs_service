@@ -315,6 +315,7 @@ ohos_unittest("cloud_daemon_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
@@ -339,6 +340,7 @@ ohos_unittest("cloud_daemon_test") {
   deps = [
     "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner_static",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core_static",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry_static",
     "${utils_path}:libdistributedfileutils_static",
     "${utils_path}:libdistributedfileutils_lite_static",

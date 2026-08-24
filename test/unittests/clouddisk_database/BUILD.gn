@@ -730,6 +730,150 @@ ohos_unittest("migration_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("operation_log_queue_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_const.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_column.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_queue.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_store.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_handler.cpp",
+    "${utils_path}/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/operation_log_rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_assistant.cpp",
+    "operation_log_queue_test.cpp",
+  ]
+  
+  include_dirs = [
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/clouddisk_database/include/operation_log",
+    "${services_path}/clouddisk_database/src",
+    "${utils_path}/log/include",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+    "json:nlohmann_json_static",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD00430B",
+    "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+  
+ohos_unittest("operation_log_store_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_const.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_column.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_queue.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_store.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_handler.cpp",
+    "${utils_path}/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/operation_log_rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_assistant.cpp",
+    "operation_log_store_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/clouddisk_database/include/operation_log",
+    "${services_path}/clouddisk_database/src",
+    "${utils_path}/log/include",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+    "json:nlohmann_json_static",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD00430B",
+    "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("operation_log_handler_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_const.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_column.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_queue.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_store.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_handler.cpp",
+    "${utils_path}/log/src/utils_log.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/operation_log_rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_assistant.cpp",
+    "operation_log_handler_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/clouddisk_database/include/operation_log",
+    "${services_path}/clouddisk_database/src",
+    "${utils_path}/log/include",
+    "${distributedfile_path}/utils/system/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+    "json:nlohmann_json_static",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD00430B",
+    "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("clouddisk_database_test") {
   testonly = true
   deps = [
@@ -741,5 +885,8 @@ group("clouddisk_database_test") {
     ":clouddisk_rdbstore_test",
     ":clouddisk_sync_helper_test",
     ":migration_manager_test",
+    ":operation_log_queue_test",
+    ":operation_log_store_test",
+    ":operation_log_handler_test",
   ]
 }
