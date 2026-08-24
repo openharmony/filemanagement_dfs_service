@@ -16,15 +16,27 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "decompress_mock.h"
-#include "decompress.cpp"
-
-#include "utils_log.h"
-
 #include <climits>
 #include <fstream>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <securec.h>
+
+#include "decompress_mock.h"
+
+#define DECOMPRESS_UNIT_TEST
+#include "decompress_syscall_mock.h"
+#include "decompress.cpp"
+#undef open
+#undef close
+#undef ioctl
+#undef stat
+#undef realpath
+#undef dlopen
+#undef dlsym
+#undef fopen
+#undef fclose
+#undef getline
+
+#include "utils_log.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -158,8 +170,8 @@ HWTEST_F(DecompressTest, ValidateSourcePath_DevNull, TestSize.Level1)
 
 HWTEST_F(DecompressTest, ValidateSourcePath_RealPathFail, TestSize.Level1)
 {
-    DecompressMock::g.realpathEnabled = true;
-    DecompressMock::g.realpathFail = true;
+    DecompressMock::g_mockState.realpathEnabled = true;
+    DecompressMock::g_mockState.realpathFail = true;
     EXPECT_FALSE(ValidateSourcePath("/data/test/file.txt"));
 }
 
@@ -215,8 +227,8 @@ HWTEST_F(DecompressTest, ValidateTargetPath_DeepValiPath, TestSize.Level1)
 
 HWTEST_F(DecompressTest, ValidateTargetPath_RealPathFail, TestSize.Level1)
 {
-    DecompressMock::g.realpathEnabled = true;
-    DecompressMock::g.realpathFail = true;
+    DecompressMock::g_mockState.realpathEnabled = true;
+    DecompressMock::g_mockState.realpathFail = true;
     EXPECT_FALSE(ValidateTargetPath("/data/test/file.txt"));
 }
 
@@ -251,17 +263,17 @@ HWTEST_F(DecompressTest, OpenSourceFile_DevNull, TestSize.Level1)
 
 HWTEST_F(DecompressTest, OpenSourceFile_MockSuccess, TestSize.Level1)
 {
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 42;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 42;
     int fd = OpenSourceFile("/any/path");
     EXPECT_EQ(fd, 42);
 }
 
 HWTEST_F(DecompressTest, OpenSourceFile_MockFail, TestSize.Level1)
 {
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = -1;
-    DecompressMock::g.openErrno = EACCES;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = -1;
+    DecompressMock::g_mockState.openErrno = EACCES;
     int fd = OpenSourceFile("/any/path");
     EXPECT_LT(fd, 0);
 }
@@ -369,12 +381,12 @@ HWTEST_F(DecompressTest, CheckBundleSupported_KeepAliveEmpty_False, TestSize.Lev
 
 HWTEST_F(DecompressTest, CheckBundleSupported_BundleInUnsupportedList, TestSize.Level1)
 {
-    DecompressMock::g.dlopenEnabled = true;
-    DecompressMock::g.dlopenSucceed = true;
-    DecompressMock::g.dlsymEnabled = true;
-    DecompressMock::g.dlsymSucceed = true;
-    DecompressMock::g.unsupportedListRet = 0;
-    DecompressMock::g.unsupportedList = {"com.unsupported.app"};
+    DecompressMock::g_mockState.dlopenEnabled = true;
+    DecompressMock::g_mockState.dlopenSucceed = true;
+    DecompressMock::g_mockState.dlsymEnabled = true;
+    DecompressMock::g_mockState.dlsymSucceed = true;
+    DecompressMock::g_mockState.unsupportedListRet = 0;
+    DecompressMock::g_mockState.unsupportedList = {"com.unsupported.app"};
     
     EXPECT_FALSE(CheckBundleSupported("com.unsupported.app", false));
 }
@@ -398,19 +410,20 @@ HWTEST_F(DecompressTest, CheckBundleSupported_KeepAliveOverridesList, TestSize.L
 
 HWTEST_F(DecompressTest, GetSystemFeature_FullSuccess, TestSize.Level1)
 {
-    DecompressMock::g.fopenEnabled = true;
-    DecompressMock::g.fopenSucceed = true;
-    DecompressMock::g.fopenHandle = reinterpret_cast<FILE *>(0x1234);
-    DecompressMock::g.getlineEnabled = true;
-    DecompressMock::g.getlineSucceed = true;
-    strncpy(DecompressMock::g.getlineContent, "1\n", sizeof("1\n"));
-    DecompressMock::g.getlineRetVal = 2;
-    DecompressMock::g.dlopenEnabled = true;
-    DecompressMock::g.dlopenSucceed = true;
-    DecompressMock::g.dlsymEnabled = true;
-    DecompressMock::g.dlsymSucceed = true;
-    DecompressMock::g.systemFeatureRet = 0;
-    DecompressMock::g.systemFeatureValue = true;
+    DecompressMock::g_mockState.fopenEnabled = true;
+    DecompressMock::g_mockState.fopenSucceed = true;
+    DecompressMock::g_mockState.fopenHandle = reinterpret_cast<FILE *>(0x1234);
+    DecompressMock::g_mockState.getlineEnabled = true;
+    DecompressMock::g_mockState.getlineSucceed = true;
+    strncpy_s(DecompressMock::g_mockState.getlineContent,
+              sizeof(DecompressMock::g_mockState.getlineContent), "1\n", sizeof("1\n"));
+    DecompressMock::g_mockState.getlineRetVal = 2;
+    DecompressMock::g_mockState.dlopenEnabled = true;
+    DecompressMock::g_mockState.dlopenSucceed = true;
+    DecompressMock::g_mockState.dlsymEnabled = true;
+    DecompressMock::g_mockState.dlsymSucceed = true;
+    DecompressMock::g_mockState.systemFeatureRet = 0;
+    DecompressMock::g_mockState.systemFeatureValue = true;
     
     EXPECT_TRUE(GetSystemFeature());
 }
@@ -419,47 +432,49 @@ HWTEST_F(DecompressTest, GetSystemFeature_FullSuccess, TestSize.Level1)
 
 HWTEST_F(DecompressTest, ReadPdedupFeatureNode_FopenFial, TestSize.Level1)
 {
-    DecompressMock::g.fopenEnabled = true;
-    DecompressMock::g.fopenSucceed = false;
+    DecompressMock::g_mockState.fopenEnabled = true;
+    DecompressMock::g_mockState.fopenSucceed = false;
     
     EXPECT_FALSE(ReadPdedupFeatureNode());
 }
 
 HWTEST_F(DecompressTest, ReadPdedupFeatureNode_GetLine1, TestSize.Level1)
 {
-    DecompressMock::g.fopenEnabled = true;
-    DecompressMock::g.fopenSucceed = true;
-    DecompressMock::g.fopenHandle = reinterpret_cast<FILE *>(0x1234);
-    DecompressMock::g.getlineEnabled = true;
-    DecompressMock::g.getlineSucceed = true;
-    strncpy(DecompressMock::g.getlineContent, "1\n", sizeof("1\n"));
+    DecompressMock::g_mockState.fopenEnabled = true;
+    DecompressMock::g_mockState.fopenSucceed = true;
+    DecompressMock::g_mockState.fopenHandle = reinterpret_cast<FILE *>(0x1234);
+    DecompressMock::g_mockState.getlineEnabled = true;
+    DecompressMock::g_mockState.getlineSucceed = true;
+    strncpy_s(DecompressMock::g_mockState.getlineContent,
+              sizeof(DecompressMock::g_mockState.getlineContent), "1\n", sizeof("1\n"));
     
-    DecompressMock::g.getlineRetVal = 2;
+    DecompressMock::g_mockState.getlineRetVal = 2;
     
     EXPECT_TRUE(ReadPdedupFeatureNode());
 }
 
 HWTEST_F(DecompressTest, ReadPdedupFeatureNode_GetLine0, TestSize.Level1)
 {
-    DecompressMock::g.fopenEnabled = true;
-    DecompressMock::g.fopenSucceed = true;
-    DecompressMock::g.fopenHandle = reinterpret_cast<FILE *>(0x1234);
-    DecompressMock::g.getlineEnabled = true;
-    DecompressMock::g.getlineSucceed = true;
-    strncpy(DecompressMock::g.getlineContent, "0\n", sizeof("0\n"));
+    DecompressMock::g_mockState.fopenEnabled = true;
+    DecompressMock::g_mockState.fopenSucceed = true;
+    DecompressMock::g_mockState.fopenHandle = reinterpret_cast<FILE *>(0x1234);
+    DecompressMock::g_mockState.getlineEnabled = true;
+    DecompressMock::g_mockState.getlineSucceed = true;
+    strncpy_s(DecompressMock::g_mockState.getlineContent,
+              sizeof(DecompressMock::g_mockState.getlineContent), "0\n", sizeof("0\n"));
     
-    DecompressMock::g.getlineRetVal = 2;
+    DecompressMock::g_mockState.getlineRetVal = 2;
     
     EXPECT_FALSE(ReadPdedupFeatureNode());
 }
 
 HWTEST_F(DecompressTest, ReadPdedupFeatureNode_GetLineFail, TestSize.Level1)
 {
-    DecompressMock::g.fopenEnabled = true;
-    DecompressMock::g.fopenSucceed = true;
-    DecompressMock::g.fopenHandle = reinterpret_cast<FILE *>(0x1234);
-    DecompressMock::g.getlineEnabled = true;
-    DecompressMock::g.getlineSucceed = false;
+    DecompressMock::g_mockState.fopenEnabled = true;
+    DecompressMock::g_mockState.fopenSucceed = true;
+    DecompressMock::g_mockState.fopenHandle = reinterpret_cast<FILE *>(0x1234);
+    DecompressMock::g_mockState.getlineEnabled = true;
+    DecompressMock::g_mockState.getlineSucceed = false;
     
     EXPECT_FALSE(ReadPdedupFeatureNode());
 }
@@ -471,12 +486,12 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_FirstSuccess, TestSize.Level1)
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = 0;
-    DecompressMock::g.ioctlErrno = 0;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = 0;
+    DecompressMock::g_mockState.ioctlErrno = 0;
 
     EXPECT_TRUE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 1);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 1);
 
     free(create);
 }
@@ -486,12 +501,12 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_NonRetryableFail, TestSize.Level1)
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EINVAL;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EINVAL;
 
     EXPECT_FALSE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 1);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 1);
 
     free(create);
 }
@@ -501,13 +516,13 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_RetryEINTR_Success, TestSize.Level1
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EINTR;
-    DecompressMock::g.ioctlSuccessAfterCount = 1;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EINTR;
+    DecompressMock::g_mockState.ioctlSuccessAfterCount = 1;
 
     EXPECT_TRUE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 2);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 2);
 
     free(create);
 }
@@ -517,13 +532,13 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_RetryEAGAIN_Success, TestSize.Level
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EAGAIN;
-    DecompressMock::g.ioctlSuccessAfterCount = 1;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EAGAIN;
+    DecompressMock::g_mockState.ioctlSuccessAfterCount = 1;
 
     EXPECT_TRUE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 2);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 2);
 
     free(create);
 }
@@ -533,13 +548,13 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_RetryEBUSY_Success, TestSize.Level1
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EBUSY;
-    DecompressMock::g.ioctlSuccessAfterCount = 1;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EBUSY;
+    DecompressMock::g_mockState.ioctlSuccessAfterCount = 1;
 
     EXPECT_TRUE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 2);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 2);
 
     free(create);
 }
@@ -549,13 +564,13 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_RetryENOMEM_Success, TestSize.Level
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = ENOMEM;
-    DecompressMock::g.ioctlSuccessAfterCount = 1;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = ENOMEM;
+    DecompressMock::g_mockState.ioctlSuccessAfterCount = 1;
 
     EXPECT_TRUE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_EQ(DecompressMock::g.ioctlCallCount, 2);
+    EXPECT_EQ(DecompressMock::g_mockState.ioctlCallCount, 2);
 
     free(create);
 }
@@ -565,12 +580,12 @@ HWTEST_F(DecompressTest, ExecutePdedupCreate_RetryExhausted, TestSize.Level1)
     struct HmfsPdedupCreate *create = PreparePdedupCreate(100, "test.txt", 0, 1024);
     ASSERT_NE(create, nullptr);
 
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EINTR;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EINTR;
 
     EXPECT_FALSE(ExecutePdedupCreate(50, create, "/data/test.txt", 0, 1024));
-    EXPECT_GE(DecompressMock::g.ioctlCallCount, 2);
+    EXPECT_GE(DecompressMock::g_mockState.ioctlCallCount, 2);
 
     free(create);
 }
@@ -626,117 +641,117 @@ HWTEST_F(DecompressTest, CreateInnerFile_TargetTooLong, TestSize.Level1)
 HWTEST_F(DecompressTest, CreateInnerFile_SourceOpenFail, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = -1;
-    DecompressMock::g.openErrno = EACCES;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = -1;
+    DecompressMock::g_mockState.openErrno = EACCES;
     EXPECT_FALSE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_DirOpenFail, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.openFailAfterCount = 1;
-    DecompressMock::g.openErrno = ENOTDIR;
-    DecompressMock::g.closeEnabled = true;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.openFailAfterCount = 1;
+    DecompressMock::g_mockState.openErrno = ENOTDIR;
+    DecompressMock::g_mockState.closeEnabled = true;
     EXPECT_FALSE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_IoctlSuccess, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.openFailAfterCount = -1;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = 0;
-    DecompressMock::g.ioctlErrno = 0;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.openFailAfterCount = -1;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = 0;
+    DecompressMock::g_mockState.ioctlErrno = 0;
     EXPECT_TRUE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_IoctlFail, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = ENOTTY;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = ENOTTY;
     EXPECT_FALSE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_IoctlRetrySuccess, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = -1;
-    DecompressMock::g.ioctlErrno = EINTR;
-    DecompressMock::g.ioctlSuccessAfterCount = 1;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = -1;
+    DecompressMock::g_mockState.ioctlErrno = EINTR;
+    DecompressMock::g_mockState.ioctlSuccessAfterCount = 1;
     EXPECT_TRUE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_ZeroSize, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = 0;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = 0;
     EXPECT_TRUE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 0, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_isSystemApp, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = 0;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = 0;
     EXPECT_TRUE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, true));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_LargeOffsetSize, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.closeEnabled = true;
-    DecompressMock::g.ioctlEnabled = true;
-    DecompressMock::g.ioctlReturnVal = 0;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.closeEnabled = true;
+    DecompressMock::g_mockState.ioctlEnabled = true;
+    DecompressMock::g_mockState.ioctlReturnVal = 0;
     EXPECT_TRUE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0xFFFFFFFF, 0xFFFFFFFF, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_PrepareFail, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.openEnabled = true;
-    DecompressMock::g.openReturnFd = 100;
-    DecompressMock::g.openFailAfterCount = -1;
-    DecompressMock::g.closeEnabled = true;
+    DecompressMock::g_mockState.openEnabled = true;
+    DecompressMock::g_mockState.openReturnFd = 100;
+    DecompressMock::g_mockState.openFailAfterCount = -1;
+    DecompressMock::g_mockState.closeEnabled = true;
     std::string targetWithLongName = TEST_DIR + "/" + std::string(300, 'a');
     EXPECT_FALSE(CreateInnerFile(TEST_SOURCE_FILE, targetWithLongName, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_SourceRealPathFail, TestSize.Level1)
 {
-    DecompressMock::g.realpathEnabled = true;
-    DecompressMock::g.realpathFail = true;
+    DecompressMock::g_mockState.realpathEnabled = true;
+    DecompressMock::g_mockState.realpathFail = true;
     EXPECT_FALSE(CreateInnerFile("/data/test/f.txt", TEST_TARGET_FILE, 0, 1024, false));
 }
 
 HWTEST_F(DecompressTest, CreateInnerFile_TargetRealPathFail, TestSize.Level1)
 {
     CreateTestFile(TEST_SOURCE_FILE);
-    DecompressMock::g.realpathEnabled = true;
-    DecompressMock::g.realpathFail = true;
+    DecompressMock::g_mockState.realpathEnabled = true;
+    DecompressMock::g_mockState.realpathFail = true;
     EXPECT_FALSE(CreateInnerFile(TEST_SOURCE_FILE, TEST_TARGET_FILE, 0, 1024, false));
 }
 

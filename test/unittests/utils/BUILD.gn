@@ -283,17 +283,7 @@ ohos_unittest("decompress_test") {
     "${utils_path}/inner_api",
   ]
 
-  ldflags = [
-    "-Wl,--wrap=open",
-    "-Wl,--wrap=close",
-    "-Wl,--wrap=ioctl",
-    "-Wl,--wrap=realpath",
-    "-Wl,--wrap=dlopen",
-    "-Wl,--wrap=dlsym",
-    "-Wl,--wrap=fopen",
-    "-Wl,--wrap=fclose",
-    "-Wl,--wrap=getline",
-  ]
+  ldflags = []
 
   external_deps = [
     "c_utils:utils",

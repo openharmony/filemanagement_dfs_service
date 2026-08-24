@@ -15,6 +15,10 @@
 
 #include "decompress_mock.h"
 
+#ifdef DECOMPRESS_UNIT_TEST
+#error "decompress_mock.cpp must not be compiled with DECOMPRESS_UNIT_TEST defined"
+#endif
+
 #include <cstdarg>
 #include <cerrno>
 #include <climits>
@@ -23,26 +27,29 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <securec.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+namespace {
+constexpr int IOCTL_MAX_RETRY_COUNT = 2;
+}
+
 namespace DecompressMock {
 
-State g;
+State g_mockState;
 
 void Reset()
 {
-    g = State();
+    g_mockState = State();
 }
 
 } // namespace DecompressMock
 
-extern "C" {
-int __real_open(const char *pathname, int flags, ...);
-
-int __wrap_open(const char *pathname, int flags, ...)
+int MockOpen(const char *pathname, int flags, ...)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.openEnabled) {
         s.openCallCount++;
         if (s.openFailAfterCount >= 0 && s.openCallCount > s.openFailAfterCount) {
@@ -62,31 +69,27 @@ int __wrap_open(const char *pathname, int flags, ...)
         mode = va_arg(ap, int);
         va_end(ap);
     }
-    return __real_open(pathname, flags, mode);
+    return open(pathname, flags, mode);
 }
 
-int __real_close(int fd);
-
-int __wrap_close(int fd)
+int MockClose(int fd)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.closeEnabled) {
         return s.closeReturnVal;
     }
-    return __real_close(fd);
+    return close(fd);
 }
 
-int __real_ioctl(int fd, unsigned long request, ...);
-
-int __wrap_ioctl(int fd, unsigned long request, ...)
+int MockIoctl(int fd, unsigned long request, ...)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.ioctlEnabled) {
         s.ioctlCallCount++;
         if (s.ioctlSuccessAfterCount >= 0 && s.ioctlCallCount > s.ioctlSuccessAfterCount) {
             return 0;
         }
-        if (s.ioctlRetryErrno != 0 && s.ioctlCallCount <= 2) {
+        if (s.ioctlRetryErrno != 0 && s.ioctlCallCount <= IOCTL_MAX_RETRY_COUNT) {
             errno = s.ioctlRetryErrno;
         } else {
             errno = s.ioctlErrno;
@@ -97,45 +100,41 @@ int __wrap_ioctl(int fd, unsigned long request, ...)
     va_start(ap, request);
     void *arg = va_arg(ap, void *);
     va_end(ap);
-    return __real_ioctl(fd, request, arg);
+    return ioctl(fd, request, arg);
 }
 
-char *__real_realpath(const char *path, char *resolved);
-
-char* __wrap_realpath(const char *path, char *resolved)
+char *MockRealpath(const char *path, char *resolved)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.realpathEnabled) {
         if (s.realpathFail) {
             errno = ENOENT;
             return nullptr;
         }
         if (resolved) {
-            strncpy(resolved, path, PATH_MAX - 1);
-            resolved[PATH_MAX - 1] = '\0';
+            errno_t ret = strncpy_s(resolved, PATH_MAX, path, PATH_MAX - 1);
+            if (ret != EOK) {
+                return nullptr;
+            }
         }
         return resolved;
     }
 
-    return __real_realpath(path, resolved);
+    return realpath(path, resolved);
 }
 
-void *__real_dlopen(const char *filename, int flags);
-
-void* __wrap_dlopen(const char *filename, int flags)
+void *MockDlopen(const char *filename, int flags)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.dlopenEnabled) {
         return s.dlopenSucceed ? s.dlopenHandle : nullptr;
     }
-    return __real_dlopen(filename, flags);
+    return dlopen(filename, flags);
 }
 
-void *__real_dlsym(void *handle, const char *symbol);
-
-void* __wrap_dlsym(void *handle, const char *symbol)
+void *MockDlsym(void *handle, const char *symbol)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.dlsymEnabled) {
         if (!s.dlsymSucceed) {
             return nullptr;
@@ -144,9 +143,9 @@ void* __wrap_dlsym(void *handle, const char *symbol)
             static int32_t (*fn)(std::vector<std::string> *) =
                 +[](std::vector<std::string> *list) -> int32_t {
                 if (list) {
-                    *list = DecompressMock::g.unsupportedList;
+                    *list = DecompressMock::g_mockState.unsupportedList;
                 }
-                return DecompressMock::g.unsupportedListRet;
+                return DecompressMock::g_mockState.unsupportedListRet;
             };
             return reinterpret_cast<void *>(fn);
         }
@@ -154,44 +153,59 @@ void* __wrap_dlsym(void *handle, const char *symbol)
             static int32_t (*fn)(bool *) =
                 +[](bool *feature) -> int32_t {
                 if (feature) {
-                    *feature = DecompressMock::g.systemFeatureValue;
+                    *feature = DecompressMock::g_mockState.systemFeatureValue;
                 }
-                return DecompressMock::g.systemFeatureRet;
+                return DecompressMock::g_mockState.systemFeatureRet;
             };
             return reinterpret_cast<void *>(fn);
         }
         return nullptr;
     }
-    return __real_dlsym(handle, symbol);
+    return dlsym(handle, symbol);
 }
 
-FILE *__real_fopen(const char *pathname, const char *mode);
-
-FILE* __wrap_fopen(const char *pathname, const char *mode)
+int MockStat(const char *pathname, struct stat *statbuf)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
+    if (s.statEnabled) {
+        s.statCallCount++;
+        if (s.statFail) {
+            errno = ENOENT;
+            return -1;
+        }
+        if (statbuf) {
+            errno_t ret = memset_s(statbuf, sizeof(struct stat), 0, sizeof(struct stat));
+            if (ret != EOK) {
+                return -1;
+            }
+            statbuf->st_dev = (s.statCallCount == 1) ? s.statHapDev : s.statDstDev;
+        }
+        return 0;
+    }
+    return stat(pathname, statbuf);
+}
+
+FILE *MockFopen(const char *pathname, const char *mode)
+{
+    auto& s = DecompressMock::g_mockState;
     if (s.fopenEnabled) {
         return s.fopenSucceed ? s.fopenHandle : nullptr;
     }
-    return __real_fopen(pathname, mode);
+    return fopen(pathname, mode);
 }
 
-int __real_fclose(FILE *stream);
-
-int __wrap_fclose(FILE *stream)
+int MockFclose(FILE *stream)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.fopenEnabled) {
         return 0;
     }
-    return __real_fclose(stream);
+    return fclose(stream);
 }
 
-ssize_t __real_getline(char **lineptr, size_t *n, FILE *stream);
-
-ssize_t __wrap_getline(char **lineptr, size_t *n, FILE *stream)
+ssize_t MockGetline(char **lineptr, size_t *n, FILE *stream)
 {
-    auto& s = DecompressMock::g;
+    auto& s = DecompressMock::g_mockState;
     if (s.getlineEnabled) {
         if (s.getlineSucceed) {
             if (lineptr) {
@@ -204,7 +218,5 @@ ssize_t __wrap_getline(char **lineptr, size_t *n, FILE *stream)
         }
         return -1;
     }
-    return __real_getline(lineptr, n, stream);
+    return getline(lineptr, n, stream);
 }
-
-} // extern "C"

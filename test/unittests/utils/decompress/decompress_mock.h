@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <string>
+#include <sys/stat.h>
 #include <vector>
 
 namespace DecompressMock {
@@ -53,6 +54,12 @@ struct State {
     int32_t systemFeatureRet = 0;
     bool systemFeatureValue = false;
 
+    bool statEnabled = false;
+    bool statFail = false;
+    dev_t statHapDev = 1;
+    dev_t statDstDev = 1;
+    int statCallCount = 0;
+
     bool fopenEnabled = false;
     bool fopenSucceed = false;
     FILE *fopenHandle = reinterpret_cast<FILE *>(0xDEADBEEF);
@@ -63,7 +70,7 @@ struct State {
     char getlineContent[256] = "1\n";
 };
 
-extern State g;
+extern State g_mockState;
 
 void Reset();
 
