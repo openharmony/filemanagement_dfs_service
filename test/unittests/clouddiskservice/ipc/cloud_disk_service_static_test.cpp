@@ -604,7 +604,7 @@ HWTEST_F(CloudDiskServiceStaticTest, QueryPlaceholderByXattrTest005, TestSize.Le
 
         auto res = QueryPlaceholderByXattr(PLACEHOLDER_TEST_PATH, isPlaceholder);
 
-        EXPECT_EQ(res, E_PERMISSION_DENIED);
+        EXPECT_EQ(res, E_ACCES);
         EXPECT_FALSE(isPlaceholder);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1609,7 +1609,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest005, TestSize.Le
     Assistant::mockErrno = EACCES;
     EXPECT_CALL(*insMock_, Open(_, _, _)).WillOnce(Return(-1));
     EXPECT_CALL(*insMock_, OpenAt(_, _, _, _)).Times(0);
-    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_ACCES);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest005 end";
 }
 
@@ -1760,7 +1760,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderAttributeTest002, TestSize
         return -1;
     }));
     EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq("placeholder.txt"), 0)).WillOnce(Return(0));
-    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_ACCES);
     GTEST_LOG_(INFO) << "CreatePlaceholderAttributeTest002 end";
 }
 
@@ -1883,7 +1883,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileAtAttributesBranchTest
         return -1;
     }));
     EXPECT_CALL(*insMock_, UnlinkAt(10, StrEq(TEST_RELATIVE_PATH), 0)).WillOnce(Return(0));
-    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_PERMISSION_DENIED);
+    EXPECT_EQ(CreatePlaceholderFileAt(path, info), E_ACCES);
     GTEST_LOG_(INFO) << "CreatePlaceholderFileAtAttributesBranchTest002 end";
 }
 
@@ -1901,6 +1901,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest009, TestSize.Le
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOTDIR), E_NOT_A_DIRECTORY);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOSPC), E_NO_SPACE_LEFT);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EDQUOT), E_NO_SPACE_LEFT);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(EFBIG), E_FILE_TOO_LARGE);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError invalid argument errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EINVAL), E_INVALID_ARG);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EISDIR), E_INVALID_ARG);
@@ -1910,8 +1911,8 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest009, TestSize.Le
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError missing sync folder errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError permission denied errno";
-    EXPECT_EQ(ConvertErrnoToCloudDiskError(EACCES), E_PERMISSION_DENIED);
-    EXPECT_EQ(ConvertErrnoToCloudDiskError(EPERM), E_PERMISSION_DENIED);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(EACCES), E_ACCES);
+    EXPECT_EQ(ConvertErrnoToCloudDiskError(EPERM), E_PERM);
     GTEST_LOG_(INFO) << "[BRANCH] ConvertErrnoToCloudDiskError unsupported errno";
     EXPECT_EQ(ConvertErrnoToCloudDiskError(ENOTTY), E_NOT_SUPPORTED);
     EXPECT_EQ(ConvertErrnoToCloudDiskError(EOPNOTSUPP), E_NOT_SUPPORTED);
@@ -1936,6 +1937,9 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderBranchTest010, TestSize.Le
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NO_SPACE_LEFT), E_NO_SPACE_LEFT);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NOT_A_DIRECTORY), E_NOT_A_DIRECTORY);
     EXPECT_EQ(NormalizeCreatePlaceholderError(E_NAME_TOO_LONG), E_NAME_TOO_LONG);
+    EXPECT_EQ(NormalizeCreatePlaceholderError(E_FILE_TOO_LARGE), E_FILE_TOO_LARGE);
+    EXPECT_EQ(NormalizeCreatePlaceholderError(E_PERM), E_PERM);
+    EXPECT_EQ(NormalizeCreatePlaceholderError(E_ACCES), E_ACCES);
     GTEST_LOG_(INFO) << "[BRANCH] NormalizeCreatePlaceholderError errno fallback";
     EXPECT_EQ(NormalizeCreatePlaceholderError(ENOENT), E_SYNC_FOLDER_PATH_NOT_EXIST);
     GTEST_LOG_(INFO) << "CreatePlaceholderBranchTest010 end";
