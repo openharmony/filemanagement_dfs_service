@@ -38,6 +38,7 @@ constexpr pid_t DATA_UID = 3012;
 constexpr pid_t DAEMON_UID = 1009;
 static pid_t UID = DAEMON_UID;
 bool g_writeBatchUrisTrue = true;
+pid_t g_dfsUid = 1009;
 int32_t g_readBatchUris = OHOS::FileManagement::E_OK;
 } // namespace
 
@@ -61,7 +62,7 @@ bool IPCSkeleton::IsLocalCalling()
 
 pid_t IPCSkeleton::GetDCallingUid()
 {
-    return 1009;
+    return g_dfsUid;
 }
 } // namespace OHOS
 
