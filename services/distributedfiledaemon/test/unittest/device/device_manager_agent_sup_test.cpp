@@ -30,6 +30,7 @@
 
 namespace {
 uint32_t g_callingId = 0;
+pid_t g_dfsUid = 1009;
 }
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -42,7 +43,7 @@ uint32_t IPCSkeleton::GetCallingTokenID()
 
 pid_t IPCSkeleton::GetDCallingUid()
 {
-    return 1009;
+    return g_dfsUid;
 }
 }
 
