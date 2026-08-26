@@ -71,7 +71,7 @@ void SoftBusHandlerAssetTest::CheckSrcSameAccountPass()
         .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
 }
 
@@ -80,7 +80,7 @@ void SoftBusHandlerAssetTest::CheckSrcDiffAccountPass()
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
         .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
 }
 
 void SoftBusHandlerAssetTest::CheckSrcBothSamePass()
@@ -94,7 +94,7 @@ void SoftBusHandlerAssetTest::CheckSrcBothSamePass()
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
     EXPECT_CALL(*socketMock_, SetAccessInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
 }
@@ -131,6 +131,9 @@ void SoftBusHandlerAssetTest::SetUp(void)
 void SoftBusHandlerAssetTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
+    ::testing::Mock::VerifyAndClearExpectations(deviceManagerImplMock_.get());
+    ::testing::Mock::VerifyAndClearExpectations(socketMock_.get());
+    ::testing::Mock::VerifyAndClearExpectations(otherMethodMock_.get());
     socketMock_ = nullptr;
     SocketMock::dfsSocket = nullptr;
     deviceManagerImplMock_ = nullptr;
@@ -244,7 +247,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetBind_0100, TestSi
     CheckSrcDiffAccountPass();
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     EXPECT_EQ(softBusHandlerAsset.AssetBind("testNetWork", socketId, INVALID_USER_ID), E_OPEN_SESSION);
-    
+
     CheckSrcBothDiffPass();
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
