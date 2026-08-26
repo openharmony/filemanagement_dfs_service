@@ -42,7 +42,8 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp() {};
-    void TearDown() {
+    void TearDown()
+    {
         ::testing::Mock::VerifyAndClearExpectations(deviceManagerImplMock_.get());
     };
 public:
