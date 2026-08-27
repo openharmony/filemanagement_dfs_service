@@ -14,6 +14,7 @@
  */
 
 #include "clouddisk_rdbstore.h"
+#include "parse_xattr_int.h"
 
 #include <cinttypes>
 #include <ctime>
@@ -1005,10 +1006,10 @@ int32_t CloudDiskRdbStore::HasTHMSetXattr(const std::string &name, const std::st
     const std::string &cloudId, const std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (!all_of(value.begin(), value.end(), ::isdigit)) {
+    int32_t val = 0;
+    if (!ParseXattrInt32(value, val)) {
         return E_INVAL_ARG;
     }
-    int32_t val = std::stoi(value);
     if (val != 0 && val != 1) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
             CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, "setxattr unknown value"});
@@ -1262,11 +1263,10 @@ static int32_t UpdateParent(const int32_t userId, const string &bundleName, cons
 int32_t CloudDiskRdbStore::RecycleSetXattr(std::string &name, const std::string &parentCloudId,
     const std::string &cloudId, const std::string &value)
 {
-    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
-    if (!isNum) {
+    int32_t val = 0;
+    if (!ParseXattrInt32(value, val)) {
         return EINVAL;
     }
-    int32_t val = std::stoi(value);
     if (val == static_cast<int32_t>(TrashOptType::RESTORE)) {
         return HandleRestoreXattr(name, parentCloudId, cloudId);
     }
@@ -1526,11 +1526,10 @@ int32_t CloudDiskRdbStore::FavoriteSetXattr(const std::string &cloudId, const st
 {
     LOGD("favoriteSetXattr, value %{public}s", value.c_str());
     RDBPTR_IS_NULLPTR(rdbStore_);
-    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
-    if (!isNum) {
+    int32_t val = 0;
+    if (!ParseXattrInt32(value, val)) {
         return EINVAL;
     }
-    int32_t val = std::stoi(value);
     ValuesBucket setXAttr;
     if (val == 0) {
         setXAttr.PutInt(FileColumn::IS_FAVORITE, CANCEL_STATE);
@@ -2620,12 +2619,10 @@ static int32_t GetUserIdAndBundleName(RdbStore &store, uint32_t &userId, string 
 {
     string userIdStr;
     GenCloudSyncTriggerFuncParams(store, userIdStr, bundleName);
-    bool isValid = std::all_of(userIdStr.begin(), userIdStr.end(), ::isdigit);
-    if (!isValid) {
+    if (!ParseXattrUint32(userIdStr, userId)) {
         LOGE("invalid user Id");
         return E_INVAL_ARG;
     }
-    userId = static_cast<uint32_t>(std::stoi(userIdStr));
     return E_OK;
 }
 
