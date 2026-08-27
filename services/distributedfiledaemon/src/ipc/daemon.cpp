@@ -1124,7 +1124,7 @@ int32_t Daemon::PushAsset(int32_t userId,
         return OHOS::FileManagement::E_ILLEGAL_URI;
     }
     if (assetObj->peerDisplayId_ != VALID_DISPLAYID) {
-        LOGE("peerDisplayId_ %{public}llu verify failed", assetObj->peerDisplayId_);
+        LOGE("peerDisplayId_ %{public}lu verify failed", assetObj->peerDisplayId_);
         return OHOS::FileManagement::E_INVAL_DISPLAYID;
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
