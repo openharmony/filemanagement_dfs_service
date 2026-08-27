@@ -45,7 +45,10 @@ ohos_shared_library("libdistributedfiledaemon") {
     "${distributedfile_path}/services/distributedfiledaemon/include/channel_manager",
   ]
 
-  cflags = [ "-D_FORTIFY_SOURCE=2" ]
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-Wno-format",
+  ]
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
