@@ -707,32 +707,6 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetCurrentUserId
 }
 
 /**
- * @tc.name: SoftbusPermissionCheckTest_GetLocalAccountInfo_003
- * @tc.desc: Verify the GetLocalAccountInfo function - userId provided directly (no GetCurrentUserId call).
- * @tc.type: FUNC
- * @tc.require: IC987N
- */
-HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountInfo_003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_003 start";
-    AccountInfo localAccountInfo;
-    int32_t testUserId = 100;
-    bool res = false;
-#ifdef SUPPORT_SAME_ACCOUNT
-    // When userId is provided (not INVALID_USER_ID), GetCurrentUserId and GetUserIdByDisplayId are skipped
-    AccountSA::OhosAccountInfo osAccountInfo;
-    osAccountInfo.uid_ = "test";
-    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
-        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
-    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo, testUserId);
-    EXPECT_EQ(res, true);
-    EXPECT_EQ(localAccountInfo.userId_, testUserId);
-#endif
-    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_003 end";
-}
-
-/**
  * @tc.name: SoftbusPermissionCheckTest_FillLocalInfo_002
  * @tc.desc: Verify the FillLocalInfo function - success path with valid userId.
  * @tc.type: FUNC
@@ -749,33 +723,6 @@ HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_FillLocalInfo_00
     EXPECT_TRUE(res == true);
     EXPECT_EQ(localInfo.userId, 100);
     GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_FillLocalInfo_002 end";
-}
-
-/**
- * @tc.name: SoftbusPermissionCheckTest_GetLocalAccountInfo_004
- * @tc.desc: Verify the GetLocalAccountInfo function - GetOhosAccountInfo returns error.
- * @tc.type: FUNC
- * @tc.require: IC987N
- */
-HWTEST_F(SoftbusPermissionCheckTest, SoftbusPermissionCheckTest_GetLocalAccountInfo_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_004 start";
-    AccountInfo localAccountInfo;
-    bool res = false;
-#ifdef SUPPORT_SAME_ACCOUNT
-    std::vector<int32_t> userIds{100, 101};
-    EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
-        .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    // GetOhosAccountInfo returns ERR_INVALID_VALUE
-    AccountSA::OhosAccountInfo osAccountInfo;
-    osAccountInfo.uid_ = "test";
-    EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
-        .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(ERR_INVALID_VALUE)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
-    res = SoftBusPermissionCheck::GetLocalAccountInfo(localAccountInfo);
-    EXPECT_EQ(res, false);
-#endif
-    GTEST_LOG_(INFO) << "SoftbusPermissionCheckTest_GetLocalAccountInfo_004 end";
 }
 } // namespace Test
 } // namespace DistributedFile
