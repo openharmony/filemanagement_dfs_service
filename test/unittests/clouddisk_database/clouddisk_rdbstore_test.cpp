@@ -3054,7 +3054,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest1, TestSize.Level1)
     EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -3079,7 +3082,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest2, TestSize.Level1)
     An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -3105,7 +3111,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest3, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -3132,7 +3141,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest4, TestSize.Level1)
     EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -3160,7 +3172,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest5, TestSize.Level1)
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_RDB));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 
@@ -3188,7 +3203,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest6, TestSize.Level1)
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
 
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -3217,7 +3235,10 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRecycleInfoTest7, TestSize.Level1)
     EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(E_RDB));
  
-    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    int64_t fileSize = 0;
+    int32_t isDirectory = 0;
+    int32_t ret = clouddiskrdbStore_->GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType,
+        fileSize, isDirectory);
     EXPECT_EQ(ret, E_RDB);
 }
 

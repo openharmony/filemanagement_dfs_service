@@ -307,6 +307,37 @@ ohos_unittest("decompress_test") {
   use_exceptions = true
 }
 
+ohos_unittest("recycle_size_cache_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  sources = [ "./cloud_disk/recycle_size_cache_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/inner_api",
+    "${utils_path}/log/include",
+  ]
+
+  deps = [ "${utils_path}:libdistributedfileutils_static" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "e2fsprogs:libext2_uuid",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
@@ -319,5 +350,6 @@ group("utils_test") {
     ":utils_directory_test",
     ":account_utils_test",
     ":decompress_test",
+    ":recycle_size_cache_test",
   ]
 }

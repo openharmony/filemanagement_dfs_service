@@ -83,7 +83,8 @@ public:
     int32_t GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position, int32_t &dirtyType);
     int32_t GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetRecycleInfo(std::shared_ptr<NativeRdb::Transaction> transaction,
-        const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr, int32_t &dirtyType);
+        const std::string &cloudId, int64_t &rowId, int32_t &position, std::string &attr, int32_t &dirtyType,
+        int64_t &fileSize, int32_t &isDirectory);
     int32_t GetSourcePath(const std::string &attr, const std::string &parentCloudId, std::string &sourcePath);
     int32_t GetSourcePathFromAttr(const std::string &cloudId, std::string &sourcePath);
     int32_t SourcePathSetValue(const std::string &cloudId, const std::string &attr, NativeRdb::ValuesBucket &setXattr);
@@ -128,6 +129,14 @@ private:
     // visitTime: deletion timestamp in microseconds since epoch, used for ordering deleted records during sync
     int32_t UnlinkSynced(const std::string &cloudId, const int64_t &visitTime);
     int32_t UnlinkLocal(const std::string &cloudId);
+    // Account recycle bin size for a recycled/restored/purged file. `increase` true means
+    // the file was moved into the recycle bin; false means restored or purged out. Only
+    // non-directory files whose POSITION is LOCAL/LOCAL_AND_CLOUD (a local original file
+    // exists) participate.
+    void AccountRecycleSize(bool increase, int32_t position, int32_t isDirectory, int64_t fileSize);
+    // Pre-mutation snapshot for purge accounting: reads time_recycled/position/file_size/isDirectory.
+    int32_t GetPurgeSizeInfo(const std::string &cloudId, int64_t &timeRecycled, int32_t &position,
+        int64_t &fileSize, int32_t &isDirectory);
     int32_t ReBuildDatabase(const std::string &databasePath);
     bool TryOpenRdbStore(const std::string &customDir, const std::string &databasePath, int32_t &errCode);
     int32_t CheckIsConflict(const std::string &name, const std::string &parentCloudId, std::string &newName);

@@ -35,6 +35,7 @@
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
 #include "cloud_file_utils.h"
+#include "recycle_size_cache.h"
 #include "data_syncer_rdb_store.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
@@ -1394,6 +1395,8 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(string &name, const string &parent
     int32_t position = -1;
     string attr;
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    int64_t fileSize = 0;
+    int32_t isDirectory = FILE;
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
@@ -1402,7 +1405,7 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(string &name, const string &parent
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DATABASE, ret, msg});
         return ret;
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType, fileSize, isDirectory);
     if (ret != E_OK) {
         std::string msg = "get recycle fields fail, ret = " + std::to_string(ret);
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
@@ -1431,6 +1434,7 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(string &name, const string &parent
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
         return ret;
     }
+    AccountRecycleSize(false, position, isDirectory, fileSize);
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     name = newName;
     return E_OK;
@@ -1443,13 +1447,15 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
     int32_t position = -1;
     string attr;
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    int64_t fileSize = 0;
+    int32_t isDirectory = FILE;
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
         return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
             CloudFile::FaultType::DATABASE, ret, "rdbstore begin transaction failed"});
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType, fileSize, isDirectory);
     if (ret != E_OK) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
         CloudFile::FaultType::QUERY_DATABASE, ret, "get rowId and position fail"});
@@ -1477,12 +1483,14 @@ int32_t CloudDiskRdbStore::HandleRecycleXattr(const string &name, const string &
             CloudFile::FaultType::MODIFY_DATABASE, ret, "recycle set dentryfile failed"});
     }
     rdbTransaction.Finish();
+    AccountRecycleSize(true, position, isDirectory, fileSize);
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, const std::string &cloudId,
-    int64_t &rowId, int32_t &position, string &attr, int32_t &dirtyType)
+    int64_t &rowId, int32_t &position, string &attr, int32_t &dirtyType, int64_t &fileSize,
+    int32_t &isDirectory)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
@@ -1490,7 +1498,8 @@ int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, c
     getRowIdAndPositionPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = transaction->QueryByStep(getRowIdAndPositionPredicates,
                                               {FileColumn::ROW_ID, FileColumn::POSITION, FileColumn::ATTRIBUTE,
-                                               FileColumn::DIRTY_TYPE});
+                                               FileColumn::DIRTY_TYPE, FileColumn::FILE_SIZE,
+                                               FileColumn::IS_DIRECTORY});
     if (resultSet == nullptr) {
         LOGE("get nullptr result set");
         return E_RDB;
@@ -1517,6 +1526,16 @@ int32_t CloudDiskRdbStore::GetRecycleInfo(shared_ptr<Transaction> transaction, c
     ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
     if (ret != E_OK) {
         LOGE("get dirtyType failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file size failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
+    if (ret != E_OK) {
+        LOGE("get isDirectory failed");
         return ret;
     }
     return E_OK;
@@ -2115,11 +2134,75 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noU
             CloudFile::FaultOperation::UNLINK, CloudFile::FaultType::INNER_ERROR, E_INVAL_ARG, msg});
         return E_INVAL_ARG;
     }
+    int64_t timeRecycled = 0;
+    int32_t position = CLOUD;
+    int64_t fileSize = 0;
+    int32_t isDirectory = DIRECTORY;
+    int32_t snapRet = GetPurgeSizeInfo(cloudId, timeRecycled, position, fileSize, isDirectory);
     if (noUpload == NO_UPLOAD) {
         RETURN_ON_ERR(UnlinkLocal(cloudId));
     } else {
         RETURN_ON_ERR(UnlinkSynced(cloudId, visitTime));
         CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    }
+    if (snapRet == E_OK && timeRecycled != 0) {
+        AccountRecycleSize(false, position, isDirectory, fileSize);
+    }
+    return E_OK;
+}
+
+void CloudDiskRdbStore::AccountRecycleSize(bool increase, int32_t position, int32_t isDirectory, int64_t fileSize)
+{
+    if (isDirectory == DIRECTORY || position == CLOUD || fileSize <= 0) {
+        return;
+    }
+    int32_t ret = E_OK;
+    if (increase) {
+        ret = RecycleSizeCache::IncreaseRecycleBinSize(userId_, bundleName_, fileSize);
+    } else {
+        ret = RecycleSizeCache::DecreaseRecycleBinSize(userId_, bundleName_, fileSize);
+    }
+    if (ret != E_OK) {
+        LOGE("account recycle size failed, increase:%{public}d, ret:%{public}d", increase, ret);
+    }
+}
+
+int32_t CloudDiskRdbStore::GetPurgeSizeInfo(const std::string &cloudId, int64_t &timeRecycled,
+    int32_t &position, int64_t &fileSize, int32_t &isDirectory)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(predicates,
+        {FileColumn::FILE_TIME_RECYCLED, FileColumn::POSITION, FileColumn::FILE_SIZE, FileColumn::IS_DIRECTORY});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get purge size info go to next row failed");
+        return E_RDB;
+    }
+    int32_t ret = CloudDiskRdbUtils::GetLong(FileColumn::FILE_TIME_RECYCLED, timeRecycled, resultSet);
+    if (ret != E_OK) {
+        LOGE("get timeRecycled failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
+    if (ret != E_OK) {
+        LOGE("get position failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file size failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
+    if (ret != E_OK) {
+        LOGE("get isDirectory failed");
+        return ret;
     }
     return E_OK;
 }
@@ -3009,6 +3092,8 @@ int32_t CloudDiskRdbStore::HandleRestore(string &name, const string &parentCloud
     int32_t position = -1;
     string attr;
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    int64_t fileSize = 0;
+    int32_t isDirectory = FILE;
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
@@ -3017,7 +3102,7 @@ int32_t CloudDiskRdbStore::HandleRestore(string &name, const string &parentCloud
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::DATABASE, ret, msg});
         return ret;
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType, fileSize, isDirectory);
     if (ret != E_OK) {
         std::string msg = "get recycle fields fail, ret = " + std::to_string(ret);
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_,
@@ -3038,6 +3123,7 @@ int32_t CloudDiskRdbStore::HandleRestore(string &name, const string &parentCloud
             CloudFile::FaultOperation::SETEXTATTR, CloudFile::FaultType::MODIFY_DATABASE, ret, msg});
         return ret;
     }
+    AccountRecycleSize(false, position, isDirectory, fileSize);
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     name = newName;
     return E_OK;
@@ -3052,13 +3138,15 @@ int32_t CloudDiskRdbStore::HandleRecycle(const string &name, const string &paren
     int32_t position = -1;
     string attr;
     int32_t dirtyType = static_cast<int32_t>(DirtyType::TYPE_SYNCED);
+    int64_t fileSize = 0;
+    int32_t isDirectory = FILE;
     TransactionOperations rdbTransaction(rdbStore_);
     auto [ret, transaction] = rdbTransaction.Start();
     if (ret != E_OK) {
         return CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
             CloudFile::FaultType::DATABASE, ret, "rdbstore begin transaction failed"});
     }
-    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType);
+    ret = GetRecycleInfo(transaction, cloudId, rowId, position, attr, dirtyType, fileSize, isDirectory);
     if (ret != E_OK) {
         CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{bundleName_, CloudFile::FaultOperation::SETEXTATTR,
         CloudFile::FaultType::QUERY_DATABASE, ret, "get rowId and position fail"});
@@ -3083,6 +3171,7 @@ int32_t CloudDiskRdbStore::HandleRecycle(const string &name, const string &paren
             CloudFile::FaultType::MODIFY_DATABASE, ret, "recycle set dentryfile failed"});
     }
     rdbTransaction.Finish();
+    AccountRecycleSize(true, position, isDirectory, fileSize);
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }

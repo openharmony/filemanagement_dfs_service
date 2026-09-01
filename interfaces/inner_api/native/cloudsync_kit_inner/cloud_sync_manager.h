@@ -139,6 +139,15 @@ public:
     virtual int32_t CleanAllFileCache(const std::string &bundleName) = 0;
     virtual int32_t GetCachedTotalSize(int64_t &totalSize) = 0;
     virtual int32_t GetCachedTotalSize(const std::string &bundleName, int64_t &totalSize) = 0;
+    /**
+     * @brief 查询云盘回收站占用大小
+     *
+     * @param userId 用户ID
+     * @param bundleName 应用包名
+     * @param size 回收站占用大小
+     * @return int32_t 返回执行结果
+     */
+    virtual int32_t GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size) = 0;
     virtual int32_t CleanFileCache(const std::string &uri) = 0;
     virtual void CleanGalleryDentryFile() = 0;
     virtual void CleanGalleryDentryFile(const std::string path) = 0;

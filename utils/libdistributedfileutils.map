@@ -15,6 +15,7 @@
   global:
     extern "C++" {
       # CloudDisk classes
+      *OHOS::FileManagement::CloudDisk::RecycleSizeCache*;
       *OHOS::FileManagement::CloudDisk::CloudFileUtils*;
       *OHOS::FileManagement::CloudDiskMetaFile*;
       *OHOS::FileManagement::MetaFile*;
