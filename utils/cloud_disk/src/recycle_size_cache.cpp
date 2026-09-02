@@ -38,6 +38,7 @@ namespace {
 
     static const int32_t POSITION_CLOUD = 2;
 
+    static const int32_t OID_FILE_MANAGER = 1006;
     static const int32_t OID_DFS = 1009;
     static const mode_t FILE_MODE = 0660;
     static const size_t SIZE_BUF_LEN = 32;
@@ -96,6 +97,11 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
     if (size < 0) {
         size = 0;
     }
+    bool isNewFile = false;
+    struct stat st = {};
+    if (stat(path.c_str(), &st) != 0 && errno == ENOENT) {
+        isNewFile = true;
+    }
     int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE);
     if (fd < 0) {
         LOGE("open cache file for write failed, errno:%{public}d", errno);
@@ -108,8 +114,10 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
         LOGE("write cache size failed, errno:%{public}d", errno);
         return E_PATH;
     }
-    chmod(path.c_str(), FILE_MODE);
-    chown(path.c_str(), getuid(), OID_DFS);
+    if (isNewFile) {
+        chmod(path.c_str(), FILE_MODE);
+        chown(path.c_str(), OID_FILE_MANAGER, OID_DFS);
+    }
     return E_OK;
 }
 

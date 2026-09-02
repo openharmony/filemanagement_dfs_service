@@ -45,6 +45,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "cloud_disk/include",
     "clouddiskservice/include",
     "dfx/include",
     "inner_api",
@@ -165,6 +166,7 @@ ohos_shared_library("libdistributedfileutils") {
 
 config("dentry_public_config") {
   include_dirs = [
+    "cloud_disk/include",
     "dentry/include",
     "inner_api",
     "system/include",
@@ -228,6 +230,7 @@ ohos_shared_library("libdistributedfiledentry") {
 
 config("utils_lite_public_config") {
   include_dirs = [
+    "cloud_disk/include",
     "clouddiskservice/include",
     "dentry/include",
     "inner_api",

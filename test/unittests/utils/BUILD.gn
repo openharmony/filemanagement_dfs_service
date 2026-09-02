@@ -313,7 +313,7 @@ ohos_unittest("recycle_size_cache_test") {
   sources = [ "./cloud_disk/recycle_size_cache_test.cpp" ]
 
   include_dirs = [
-    "${utils_path}/inner_api",
+    "${utils_path}/cloud_disk/include",
     "${utils_path}/log/include",
   ]
 

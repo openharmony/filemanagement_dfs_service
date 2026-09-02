@@ -33,7 +33,6 @@
 #include "data_sync_const.h"
 #include "dfsu_timer.h"
 #include "dfs_error.h"
-#include "recycle_size_cache.h"
 #include "screen_status.h"
 #include "system_load.h"
 #include "task_state_manager.h"
@@ -625,10 +624,6 @@ int32_t DfsSpaceReportTask::RunTaskForBundle(int32_t userId, string bundleName)
     ret = ReportMediaWrongUidStats(userId, bundleName, reportStats);
     if (ret != E_OK) {
         LOGE("report media wrong uid stats failed, ret:%{public}d", ret);
-    }
-    int32_t verifyRet = CloudDisk::RecycleSizeCache::VerifyRecycleBinSize(userId, bundleName);
-    if (verifyRet != E_OK) {
-        LOGE("verify recycle bin size failed, ret:%{public}d", verifyRet);
     }
     UnregisterScanTimer(timerIdHolder);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DFS_SPACE_REPORT_TASK);
