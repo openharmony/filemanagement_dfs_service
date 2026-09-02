@@ -36,6 +36,7 @@
 #include "file_operations_helper.h"
 #include "fuse_ioctl.h"
 #include "hitrace_meter.h"
+#include "recycle_size_cache.h"
 #include "securec.h"
 #include "utils_log.h"
 
@@ -1190,6 +1191,13 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         return;
     }
     int32_t val = std::stoi(value);
+    if (val == 0) {
+        RecycleSizeCache::DecreaseRecycleBinSize(data->userId, inoPtr->bundleName,
+            static_cast<int64_t>(inoPtr->stat.st_size));
+    } else {
+        RecycleSizeCache::IncreaseRecycleBinSize(data->userId, inoPtr->bundleName,
+            static_cast<int64_t>(inoPtr->stat.st_size));
+    }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         val == 0 ? NotifyOpsType::DAEMON_RESTORE : NotifyOpsType::DAEMON_RECYCLE, inoPtr});
     fuse_reply_err(req, 0);
@@ -1619,6 +1627,10 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         }
     }
     RDBUnlinkAsync(rdbStore, cloudId, noUpload);
+    if (parent == RECYCLE_LOCAL_ID) {
+        RecycleSizeCache::DecreaseRecycleBinSize(data->userId, parentInode->bundleName,
+            static_cast<int64_t>(metaBase.size));
+    }
     return 0;
 }
 
@@ -1799,9 +1811,13 @@ void RenameForTrash(fuse_req_t req, fuse_ino_t parent, const char *name,
     ret = -1;
     if (parent == RECYCLE_LOCAL_ID && newParent != RECYCLE_LOCAL_ID) {
         ret = rdbStore->HandleRestore(inoPtr->fileName, newParentCloudId, inoPtr->cloudId, nName, val);
+        RecycleSizeCache::DecreaseRecycleBinSize(data->userId, inoPtr->bundleName,
+            static_cast<int64_t>(inoPtr->stat.st_size));
         opsType = NotifyOpsType::DAEMON_RESTORE;
     } else if (parent != RECYCLE_LOCAL_ID && newParent == RECYCLE_LOCAL_ID) {
         ret = rdbStore->HandleRecycle(inoPtr->fileName, parentCloudId, inoPtr->cloudId, val);
+        RecycleSizeCache::IncreaseRecycleBinSize(data->userId, inoPtr->bundleName,
+            static_cast<int64_t>(inoPtr->stat.st_size));
         opsType = NotifyOpsType::DAEMON_RECYCLE;
     }
     if (ret != 0) {
