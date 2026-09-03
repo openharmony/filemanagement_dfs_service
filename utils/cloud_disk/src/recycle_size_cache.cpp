@@ -36,6 +36,24 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 namespace {
+    class FdGuard {
+    public:
+        explicit FdGuard(int fd) : fd_(fd) {}
+        ~FdGuard()
+        {
+            if (fd_ >= 0) {
+                close(fd_);
+            }
+        }
+        FdGuard(const FdGuard &) = delete;
+        FdGuard &operator=(const FdGuard &) = delete;
+        int GetFD() const { return fd_; }
+        explicit operator bool() const { return fd_ >= 0; }
+
+    private:
+        int fd_;
+    };
+
     static const std::string POSITION_XATTR = "user.cloud.location";
 
     static const int32_t POSITION_CLOUD = 2;
@@ -145,17 +163,17 @@ std::string RecycleSizeCache::GetTrashDir(int32_t userId, const std::string &bun
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
 {
     size = 0;
-    int fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
-        if (errno == ENOENT) {
+    FdGuard fdGuard(open(path.c_str(), O_RDONLY));
+    if (!fdGuard) {
+        int err = errno;
+        if (err == ENOENT) {
             return E_OK;
         }
-        LOGE("open cache file for read failed, errno:%{public}d", errno);
+        LOGE("open cache file for read failed, errno:%{public}d", err);
         return E_PATH;
     }
     char buf[SIZE_BUF_LEN] = {0};
-    ssize_t n = read(fd, buf, sizeof(buf) - 1);
-    close(fd);
+    ssize_t n = read(fdGuard.GetFD(), buf, sizeof(buf) - 1);
     if (n < 0) {
         LOGE("read cache file failed, errno:%{public}d", errno);
         return E_PATH;
@@ -188,14 +206,13 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
     if (access(path.c_str(), F_OK) != 0 && errno == ENOENT) {
         isNewFile = true;
     }
-    int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE);
-    if (fd < 0) {
+    FdGuard fdGuard(open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE));
+    if (!fdGuard) {
         LOGE("open cache file for write failed, errno:%{public}d", errno);
         return E_PATH;
     }
     std::string val = std::to_string(size);
-    ssize_t w = write(fd, val.data(), val.size());
-    close(fd);
+    ssize_t w = write(fdGuard.GetFD(), val.data(), val.size());
     if (w != static_cast<ssize_t>(val.size())) {
         LOGE("write cache size failed, errno:%{public}d", errno);
         return E_PATH;

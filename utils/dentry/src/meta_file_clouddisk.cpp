@@ -820,7 +820,7 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
         (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
-    CloudDisk::RecycleSizeCache::IncreaseRecycleBinSize(static_cast<int32_t>(userId), bundleName, metaBase);
+    CloudDisk::RecycleSizeCache::IncreaseRecycleBinSize(userId, bundleName, metaBase);
     return E_OK;
 }
 
@@ -850,7 +850,7 @@ int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::str
         (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
-    CloudDisk::RecycleSizeCache::DecreaseRecycleBinSize(static_cast<int32_t>(userId), bundleName, metaBase);
+    CloudDisk::RecycleSizeCache::DecreaseRecycleBinSize(userId, bundleName, metaBase);
     return E_OK;
 }
 
