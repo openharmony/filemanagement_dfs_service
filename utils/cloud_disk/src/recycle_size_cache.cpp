@@ -68,6 +68,11 @@ namespace {
     {
         return userId >= 0 && !bundleName.empty();
     }
+
+    bool IsFilteredMetaBase(const MetaBase &metaBase)
+    {
+        return (metaBase.position & POSITION_LOCAL) == 0 || S_ISDIR(metaBase.mode);
+    }
 }
 
 std::mutex RecycleSizeCache::gMutex_;
@@ -88,6 +93,9 @@ int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::stri
     if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid increase params");
         return E_INVAL_ARG;
+    }
+    if (IsFilteredMetaBase(metaBase)) {
+        return E_OK;
     }
     int64_t delta = static_cast<int64_t>(metaBase.size);
     if (delta <= 0) {
@@ -111,6 +119,9 @@ int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::stri
     if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid decrease params");
         return E_INVAL_ARG;
+    }
+    if (IsFilteredMetaBase(metaBase)) {
+        return E_OK;
     }
     int64_t delta = static_cast<int64_t>(metaBase.size);
     if (delta <= 0) {
