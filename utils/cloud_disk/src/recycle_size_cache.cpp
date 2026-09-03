@@ -18,13 +18,10 @@
 #include <cerrno>
 #include <charconv>
 #include <cstdint>
-#include <cstring>
-#include <filesystem>
 #include <fcntl.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/xattr.h>
 #include <unistd.h>
 
 #include "dfs_error.h"
@@ -54,15 +51,10 @@ namespace {
         int fd_;
     };
 
-    static const std::string POSITION_XATTR = "user.cloud.location";
-
-    static const int32_t POSITION_CLOUD = 2;
-
     static const int32_t OID_FILE_MANAGER = 1006;
     static const int32_t OID_DFS = 1009;
     static const mode_t FILE_MODE = 0660;
     static const size_t SIZE_BUF_LEN = 32;
-    static const size_t XATTR_BUF_LEN = 32;
 
     bool IsValidParams(int32_t userId, const std::string &bundleName)
     {
@@ -143,32 +135,20 @@ int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::stri
     return E_OK;
 }
 
-int32_t RecycleSizeCache::VerifyRecycleBinSize(int32_t userId, const std::string &bundleName)
+int32_t RecycleSizeCache::ResetRecycleBinSize(int32_t userId, const std::string &bundleName)
 {
     if (!IsValidParams(userId, bundleName)) {
-        LOGE("invalid verify params");
+        LOGE("invalid reset params");
         return E_INVAL_ARG;
     }
-    
-    int64_t actual = 0;
-    CheckCachedSize(GetTrashDir(userId, bundleName), actual);
-    if (actual < 0) {
-        actual = 0;
-    }
- 
     std::lock_guard<std::mutex> lock(gMutex_);
-    return WriteCachedSize(GetCacheFilePath(userId, bundleName), actual);
+    return WriteCachedSize(GetCacheFilePath(userId, bundleName), 0);
 }
 
 std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string &bundleName)
 {
     return "/data/service/el2/" + std::to_string(userId) +
         "/hmdfs/cloudfile_manager/" + bundleName + "/RecycleSizeCache";
-}
-
-std::string RecycleSizeCache::GetTrashDir(int32_t userId, const std::string &bundleName)
-{
-    return "/mnt/hmdfs/" + std::to_string(userId) + "/cloud/data/" + bundleName + "/.trash";
 }
 
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
@@ -231,51 +211,6 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
     if (isNewFile) {
         chmod(path.c_str(), FILE_MODE);
         chown(path.c_str(), OID_FILE_MANAGER, OID_DFS);
-    }
-    return E_OK;
-}
-
-bool RecycleSizeCache::GetXattrByPosition(const std::string &path, int32_t &position)
-{
-    char buf[XATTR_BUF_LEN] = {0};
-    ssize_t n = getxattr(path.c_str(), POSITION_XATTR.c_str(), buf, sizeof(buf) - 1);
-    if (n <= 0) {
-        return false;
-    }
-    const char *first = buf;
-    const char *last = buf + n;
-    while (first < last && std::isspace(static_cast<unsigned char>(*first))) {
-        ++first;
-    }
-    if (first == last) {
-        return false;
-    }
-    auto res = std::from_chars(first, last, position);
-    return res.ec == std::errc{};
-}
-
-int32_t RecycleSizeCache::CheckCachedSize(const std::string &trashDir, int64_t &actual)
-{
-    actual = 0;
-    std::error_code err;
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(trashDir, err)) {
-        if (std::filesystem::is_regular_file(entry, err)) {
-            std::string filePath = entry.path().string();
-            int32_t position = POSITION_CLOUD;
-            if (!GetXattrByPosition(filePath, position)) {
-                continue;
-            }
-
-            if (position != POSITION_CLOUD) {
-                int64_t fileSize = std::filesystem::file_size(entry.path(), err);
-                if (!err) {
-                    actual += fileSize;
-                }
-            }
-        }
-    }
-    if (err && err.value() != ENOENT) {
-        LOGE("scan %{public}s failed, ec:%{public}d", trashDir.c_str(), err.value());
     }
     return E_OK;
 }

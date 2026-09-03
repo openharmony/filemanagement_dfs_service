@@ -31,15 +31,12 @@ public:
     static int32_t GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size);
     static int32_t IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName, const MetaBase &metaBase);
     static int32_t DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName, const MetaBase &metaBase);
-    static int32_t VerifyRecycleBinSize(int32_t userId, const std::string &bundleName);
+    static int32_t ResetRecycleBinSize(int32_t userId, const std::string &bundleName);
 
 private:
     static std::string GetCacheFilePath(int32_t userId, const std::string &bundleName);
-    static std::string GetTrashDir(int32_t userId, const std::string &bundleName);
     static int32_t ReadCachedSize(const std::string &path, int64_t &size);
     static int32_t WriteCachedSize(const std::string &path, int64_t size);
-    static bool GetXattrByPosition(const std::string &path, int32_t &position);
-    static int32_t CheckCachedSize(const std::string &trashDir, int64_t &actual);
 
     static std::mutex gMutex_;
 };
