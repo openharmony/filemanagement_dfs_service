@@ -1634,7 +1634,6 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         RecycleSizeCache::DecreaseRecycleBinSize(data->userId, parentInode->bundleName, metaBase);
     }
     RDBUnlinkAsync(rdbStore, cloudId, noUpload);
-
     return 0;
 }
 
