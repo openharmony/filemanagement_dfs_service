@@ -71,7 +71,7 @@ static const std::string MTP_PATH_PREFIX = "/storage/External/mtp";
 static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 static const int OPEN_TRUC_VERSION = 20;
-static constexpr int MAX_RECURSION_DEPTH = 64;
+static constexpr int MAX_RECURSION_DEPTH = 70;
 #if !defined(WIN_PLATFORM) && !defined(IOS_PLATFORM) && !defined(CROSS_PLATFORM)
 #ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
 const uint32_t API_VERSION_MOD = 1000;
