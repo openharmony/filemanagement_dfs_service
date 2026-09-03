@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include "dfs_error.h"
+#include "meta_file.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -40,10 +41,17 @@ namespace {
     const int32_t POS_CLOUD = 2;
     const int32_t POS_LOCAL_AND_CLOUD = 3;
     const int32_t TEST_USER_ID = 100;
+    const int32_t TEST_USER_ID_2 = 101;
     const string TEST_BUNDLE = "com.huawei.hmos.filemanager";
-
-    // 真实固定路径，需要在测试环境可写。
+    const string TEST_BUNDLE_2 = "com.huawei.hmos.photo";
     const string TRASH_DIR = "/mnt/hmdfs/" + to_string(TEST_USER_ID) + "/cloud/data/" + TEST_BUNDLE + "/.trash";
+
+    static MetaBase MakeMetaBase(uint64_t size, const string &name = "test")
+    {
+        MetaBase mb(name);
+        mb.size = size;
+        return mb;
+    }
 }
 
 class RecycleSizeCacheTest : public testing::Test {
@@ -107,8 +115,8 @@ HWTEST_F(RecycleSizeCacheTest, GetRecycleBinSize_CacheAbsent_CreatesWithZero_001
  */
 HWTEST_F(RecycleSizeCacheTest, IncreaseRecycleBinSize_AddsToCache_002, TestSize.Level1)
 {
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 100), E_OK);
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 250), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(250)), E_OK);
     EXPECT_EQ(WaitSize(350), 350);
 }
 
@@ -120,13 +128,13 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseRecycleBinSize_AddsToCache_002, TestSize.
  */
 HWTEST_F(RecycleSizeCacheTest, DecreaseRecycleBinSize_SubtractsAndClamps_003, TestSize.Level1)
 {
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 300), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(300)), E_OK);
     EXPECT_EQ(WaitSize(300), 300);
 
-    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 120), E_OK);
+    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(120)), E_OK);
     EXPECT_EQ(WaitSize(180), 180);
 
-    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 9999), E_OK);
+    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(9999)), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
 }
 
@@ -139,11 +147,45 @@ HWTEST_F(RecycleSizeCacheTest, DecreaseRecycleBinSize_SubtractsAndClamps_003, Te
 HWTEST_F(RecycleSizeCacheTest, InvalidArgs_ReturnsError_004, TestSize.Level1)
 {
     int64_t size = -1;
+    MetaBase mb = MakeMetaBase(100);
     EXPECT_EQ(RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID, "", size), E_INVAL_ARG);
     EXPECT_EQ(RecycleSizeCache::GetRecycleBinSize(-1, TEST_BUNDLE, size), E_INVAL_ARG);
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, "", 10), E_INVAL_ARG);
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, -5), E_INVAL_ARG);
-    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, -5), E_INVAL_ARG);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, "", mb), E_INVAL_ARG);
+    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(-1, TEST_BUNDLE, mb), E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: MultiUserMultiBundle_Isolation_008
+ * @tc.desc: Verify the sub function.
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ */
+HWTEST_F(RecycleSizeCacheTest, MultiUserMultiBundle_Isolation_008, TestSize.Level1)
+{
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE_2, MakeMetaBase(60)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE, MakeMetaBase(200)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE_2, MakeMetaBase(300)), E_OK);
+    EXPECT_EQ(WaitSize(100), 100);
+
+    int64_t size2 = -1;
+    auto deadline = chrono::steady_clock::now() + chrono::milliseconds(3000);
+    do {
+        if (RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE, size2) == E_OK && size2 == 200) {
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(10));
+    } while (chrono::steady_clock::now() < deadline);
+    EXPECT_EQ(size2, 200);
+
+    int64_t size3 = -1;
+    do {
+        if (RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE_2, size3) == E_OK && size3 == 300) {
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(10));
+    } while (chrono::steady_clock::now() < deadline);
+    EXPECT_EQ(size3, 300);
 }
 
 /**
@@ -155,7 +197,7 @@ HWTEST_F(RecycleSizeCacheTest, InvalidArgs_ReturnsError_004, TestSize.Level1)
 HWTEST_F(RecycleSizeCacheTest, VerifyRecycleBinSize_NoTrashDir_SetsZero_005, TestSize.Level1)
 {
     std::filesystem::remove_all(TRASH_DIR);
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 500), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(500)), E_OK);
     // 等异步增加落盘。
     EXPECT_EQ(WaitSize(500), 500);
     EXPECT_EQ(RecycleSizeCache::VerifyRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
@@ -204,9 +246,9 @@ HWTEST_F(RecycleSizeCacheTest, VerifyRecycleBinSize_SumsOnlyParticipatingFiles_0
  */
 HWTEST_F(RecycleSizeCacheTest, EndToEnd_RecyclePurgeRestore_007, TestSize.Level1)
 {
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 1000), E_OK);
-    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 2000), E_OK);
-    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, 500), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(1000)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(2000)), E_OK);
+    EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(500)), E_OK);
     EXPECT_EQ(WaitSize(2500), 2500);
 
     std::filesystem::remove_all(TRASH_DIR);

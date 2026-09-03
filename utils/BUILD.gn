@@ -46,6 +46,7 @@ config("compiler_configs") {
 config("utils_public_config") {
   include_dirs = [
     "clouddiskservice/include",
+    "dentry/include",
     "dfx/include",
     "inner_api",
     "ioctl/include",

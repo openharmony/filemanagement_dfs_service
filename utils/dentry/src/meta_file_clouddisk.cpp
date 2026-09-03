@@ -25,6 +25,7 @@
 #include "cloud_file_utils.h"
 #include "dfs_error.h"
 #include "file_utils.h"
+#include "recycle_size_cache.h"
 #include "securec.h"
 #include "string_ex.h"
 #include "sys/xattr.h"
@@ -819,6 +820,7 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
         (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
+    RecycleSizeCache::IncreaseRecycleBinSize(static_cast<int32_t>(userId), bundleName, metaBase);
     return E_OK;
 }
 
@@ -848,6 +850,7 @@ int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::str
         (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
+    RecycleSizeCache::DecreaseRecycleBinSize(static_cast<int32_t>(userId), bundleName, metaBase);
     return E_OK;
 }
 

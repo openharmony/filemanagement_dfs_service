@@ -29,6 +29,7 @@
 
 #include "dfs_error.h"
 #include "ffrt_inner.h"
+#include "meta_file.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -45,12 +46,9 @@ namespace {
     static const size_t SIZE_BUF_LEN = 32;
     static const size_t XATTR_BUF_LEN = 32;
 
-    static const int32_t FIXED_USER_ID = 100;
-    static const std::string FIXED_BUNDLE = "com.huawei.hmos.filemanager";
-
-    bool IsFixedParams(int32_t userId, const std::string &bundleName)
+    bool IsValidParams(int32_t userId, const std::string &bundleName)
     {
-        return userId == FIXED_USER_ID && bundleName == FIXED_BUNDLE;
+        return userId >= 0 && !bundleName.empty();
     }
 }
 
@@ -58,21 +56,26 @@ std::mutex RecycleSizeCache::gMutex_;
 
 int32_t RecycleSizeCache::GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size)
 {
-    if (!IsFixedParams(userId, bundleName)) {
+    if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid recycle size params");
         return E_INVAL_ARG;
     }
     std::lock_guard<std::mutex> lock(gMutex_);
-    return ReadCachedSize(GetCacheFilePath(), size);
+    return ReadCachedSize(GetCacheFilePath(userId, bundleName), size);
 }
 
-int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
+int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName,
+    const MetaBase &metaBase)
 {
-    if (!IsFixedParams(userId, bundleName) || delta < 0) {
+    if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid increase params");
         return E_INVAL_ARG;
     }
-    std::string path = GetCacheFilePath();
+    int64_t delta = static_cast<int64_t>(metaBase.size);
+    if (delta <= 0) {
+        return E_OK;
+    }
+    std::string path = GetCacheFilePath(userId, bundleName);
     ffrt::thread([path, delta] {
         std::lock_guard<std::mutex> lock(gMutex_);
         int64_t cur = 0;
@@ -84,13 +87,18 @@ int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::stri
     return E_OK;
 }
 
-int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
+int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName,
+    const MetaBase &metaBase)
 {
-    if (!IsFixedParams(userId, bundleName) || delta < 0) {
+    if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid decrease params");
         return E_INVAL_ARG;
     }
-    std::string path = GetCacheFilePath();
+    int64_t delta = static_cast<int64_t>(metaBase.size);
+    if (delta <= 0) {
+        return E_OK;
+    }
+    std::string path = GetCacheFilePath(userId, bundleName);
     ffrt::thread([path, delta] {
         std::lock_guard<std::mutex> lock(gMutex_);
         int64_t cur = 0;
@@ -108,30 +116,30 @@ int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::stri
 
 int32_t RecycleSizeCache::VerifyRecycleBinSize(int32_t userId, const std::string &bundleName)
 {
-    if (!IsFixedParams(userId, bundleName)) {
+    if (!IsValidParams(userId, bundleName)) {
         LOGE("invalid verify params");
         return E_INVAL_ARG;
     }
     
     int64_t actual = 0;
-    CheckCachedSize(GetTrashDir(), actual);
+    CheckCachedSize(GetTrashDir(userId, bundleName), actual);
     if (actual < 0) {
         actual = 0;
     }
  
     std::lock_guard<std::mutex> lock(gMutex_);
-    return WriteCachedSize(GetCacheFilePath(), actual);
+    return WriteCachedSize(GetCacheFilePath(userId, bundleName), actual);
 }
 
-std::string RecycleSizeCache::GetCacheFilePath()
+std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string &bundleName)
 {
-    return "/data/service/el2/" + std::to_string(FIXED_USER_ID) +
-        "/hmdfs/cloudfile_manager/" + FIXED_BUNDLE + "/RecycleSizeCache";
+    return "/data/service/el2/" + std::to_string(userId) +
+        "/hmdfs/cloudfile_manager/" + bundleName + "/RecycleSizeCache";
 }
 
-std::string RecycleSizeCache::GetTrashDir()
+std::string RecycleSizeCache::GetTrashDir(int32_t userId, const std::string &bundleName)
 {
-    return "/mnt/hmdfs/" + std::to_string(FIXED_USER_ID) + "/cloud/data/" + FIXED_BUNDLE + "/.trash";
+    return "/mnt/hmdfs/" + std::to_string(userId) + "/cloud/data/" + bundleName + "/.trash";
 }
 
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
@@ -177,8 +185,7 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
         size = 0;
     }
     bool isNewFile = false;
-    struct stat st = {};
-    if (stat(path.c_str(), &st) != 0 && errno == ENOENT) {
+    if (access(path.c_str(), F_OK) != 0 && errno == ENOENT) {
         isNewFile = true;
     }
     int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE);
@@ -219,7 +226,7 @@ bool RecycleSizeCache::GetXattrByPosition(const std::string &path, int32_t &posi
     return res.ec == std::errc{};
 }
 
-int32_t RecycleSizeCache::CheckActualRecycleBinSize(const std::string &trashDir, int64_t &actual)
+int32_t RecycleSizeCache::CheckCachedSize(const std::string &trashDir, int64_t &actual)
 {
     actual = 0;
     std::error_code err;
