@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -43,16 +44,94 @@ namespace {
     static const mode_t FILE_MODE = 0660;
     static const size_t SIZE_BUF_LEN = 32;
     static const size_t XATTR_BUF_LEN = 32;
+
+    static const int32_t FIXED_USER_ID = 100;
+    static const std::string FIXED_BUNDLE = "com.huawei.hmos.filemanager";
+
+    bool IsFixedParams(int32_t userId, const std::string &bundleName)
+    {
+        return userId == FIXED_USER_ID && bundleName == FIXED_BUNDLE;
+    }
 }
 
-std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string &bundleName)
+std::mutex RecycleSizeCache::gMutex_;
+
+int32_t RecycleSizeCache::GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size)
 {
-    return "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cloudfile_manager/" + bundleName + "/RecycleSizeCache";
+    if (!IsFixedParams(userId, bundleName)) {
+        LOGE("invalid recycle size params");
+        return E_INVAL_ARG;
+    }
+    std::lock_guard<std::mutex> lock(gMutex_);
+    return ReadCachedSize(GetCacheFilePath(), size);
 }
 
-std::string RecycleSizeCache::GetTrashDir(int32_t userId, const std::string &bundleName)
+int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
 {
-    return "/mnt/hmdfs/" + std::to_string(userId) + "/cloud/data/" + bundleName + "/.trash";
+    if (!IsFixedParams(userId, bundleName) || delta < 0) {
+        LOGE("invalid increase params");
+        return E_INVAL_ARG;
+    }
+    std::string path = GetCacheFilePath();
+    ffrt::thread([path, delta] {
+        std::lock_guard<std::mutex> lock(gMutex_);
+        int64_t cur = 0;
+        if (ReadCachedSize(path, cur) != E_OK) {
+            return;
+        }
+        WriteCachedSize(path, cur + delta);
+    }).detach();
+    return E_OK;
+}
+
+int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
+{
+    if (!IsFixedParams(userId, bundleName) || delta < 0) {
+        LOGE("invalid decrease params");
+        return E_INVAL_ARG;
+    }
+    std::string path = GetCacheFilePath();
+    ffrt::thread([path, delta] {
+        std::lock_guard<std::mutex> lock(gMutex_);
+        int64_t cur = 0;
+        if (ReadCachedSize(path, cur) != E_OK) {
+            return;
+        }
+        cur -= delta;
+        if (cur < 0) {
+            cur = 0;
+        }
+        WriteCachedSize(path, cur);
+    }).detach();
+    return E_OK;
+}
+
+int32_t RecycleSizeCache::VerifyRecycleBinSize(int32_t userId, const std::string &bundleName)
+{
+    if (!IsFixedParams(userId, bundleName)) {
+        LOGE("invalid verify params");
+        return E_INVAL_ARG;
+    }
+    
+    int64_t actual = 0;
+    CheckCachedSize(GetTrashDir(), actual);
+    if (actual < 0) {
+        actual = 0;
+    }
+ 
+    std::lock_guard<std::mutex> lock(gMutex_);
+    return WriteCachedSize(GetCacheFilePath(), actual);
+}
+
+std::string RecycleSizeCache::GetCacheFilePath()
+{
+    return "/data/service/el2/" + std::to_string(FIXED_USER_ID) +
+        "/hmdfs/cloudfile_manager/" + FIXED_BUNDLE + "/RecycleSizeCache";
+}
+
+std::string RecycleSizeCache::GetTrashDir()
+{
+    return "/mnt/hmdfs/" + std::to_string(FIXED_USER_ID) + "/cloud/data/" + FIXED_BUNDLE + "/.trash";
 }
 
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
@@ -156,7 +235,7 @@ int32_t RecycleSizeCache::CheckActualRecycleBinSize(const std::string &trashDir,
                 int64_t fileSize = std::filesystem::file_size(entry.path(), err);
                 if (!err) {
                     actual += fileSize;
-                } 
+                }
             }
         }
     }
@@ -164,75 +243,6 @@ int32_t RecycleSizeCache::CheckActualRecycleBinSize(const std::string &trashDir,
         LOGE("scan %{public}s failed, ec:%{public}d", trashDir.c_str(), err.value());
     }
     return E_OK;
-}
-
-int32_t RecycleSizeCache::GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size)
-{
-    if (bundleName.empty() || userId < 0) {
-        LOGE("invalid arguments");
-        return E_INVAL_ARG;
-    }
-    std::string path = GetCacheFilePath(userId, bundleName);
-    struct stat st = {};
-    if (stat(path.c_str(), &st) == 0) {
-        return ReadCachedSize(path, size);
-    }
-    if (errno != ENOENT) {
-        LOGE("stat cache file failed, errno:%{public}d", errno);
-        return E_PATH;
-    }
-    size = 0;
-    return WriteCachedSize(path, 0);
-}
-
-int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
-{
-    if (bundleName.empty() || userId < 0 || delta < 0) {
-        LOGE("invalid arguments");
-        return E_INVAL_ARG;
-    }
-    std::string path = GetCacheFilePath(userId, bundleName);
-    int64_t cur = 0;
-    int32_t ret = ReadCachedSize(path, cur);
-    if (ret != E_OK) {
-        return ret;
-    }
-    cur += delta;
-    return WriteCachedSize(path, cur);
-}
-
-int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t delta)
-{
-    if (bundleName.empty() || userId < 0 || delta < 0) {
-        LOGE("invalid arguments");
-        return E_INVAL_ARG;
-    }
-    std::string path = GetCacheFilePath(userId, bundleName);
-    int64_t cur = 0;
-    int32_t ret = ReadCachedSize(path, cur);
-    if (ret != E_OK) {
-        return ret;
-    }
-    cur -= delta;
-    if (cur < 0) {
-        cur = 0;
-    }
-    return WriteCachedSize(path, cur);
-}
-
-int32_t RecycleSizeCache::VerifyRecycleBinSize(int32_t userId, const std::string &bundleName)
-{
-    if (bundleName.empty() || userId < 0) {
-        LOGE("invalid arguments");
-        return E_INVAL_ARG;
-    }
-    int64_t actual = 0;
-    int32_t ret = CheckActualRecycleBinSize(GetTrashDir(userId, bundleName), actual);
-    if (ret != E_OK) {
-        return ret;
-    }
-    std::string path = GetCacheFilePath(userId, bundleName);
-    return WriteCachedSize(path, actual);
 }
 } // namespace CloudDisk
 } // namespace FileManagement
