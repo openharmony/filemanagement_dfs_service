@@ -19,6 +19,7 @@ ohos_unittest("cloud_disk_service_static_test_new") {
 
   sources = [
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_service_access_token_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_service_metafile_mock.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_sync_folder_mock.cpp",
@@ -28,6 +29,12 @@ ohos_unittest("cloud_disk_service_static_test_new") {
     "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_task_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_progress_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_progress_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/ipc/cloud_disk_service_static_test.cpp",
   ]
 
@@ -148,6 +155,7 @@ ohos_unittest("cloud_disk_service_callback_manager_test_new") {
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/ffrt_timer_api_mock.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_syncfolder.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_logfile.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
     "${distributedfile_path}/utils/system/src/utils_directory.cpp",
@@ -249,6 +257,7 @@ ohos_unittest("cloud_disk_sync_folder_test_new") {
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/disk_monitor_mock.cpp",
     "ipc/cloud_disk_sync_folder_test.cpp",
   ]
@@ -256,6 +265,7 @@ ohos_unittest("cloud_disk_sync_folder_test_new") {
   include_dirs = [
     "${distributedfile_path}/test/unittests/clouddisk_service/mock",
     "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/utils/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
@@ -375,6 +385,7 @@ ohos_unittest("cloud_disk_service_test_new") {
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     #"${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_syncfolder.cpp",
@@ -482,6 +493,7 @@ ohos_unittest("cloud_disk_service_logfile_static_test_new") {
 
   sources = [
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${distributedfile_path}/utils/system/src/utils_directory.cpp",
@@ -556,6 +568,7 @@ ohos_unittest("cloud_disk_service_logfile_test_new") {
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/cloud_disk_sync_folder_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/ffrt_timer_api_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "sync_folder/cloud_disk_service_logfile_test.cpp",
   ]
 
@@ -608,6 +621,7 @@ ohos_unittest("cloud_disk_service_metafile_test_new") {
   sources = [
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_metafile.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "sync_folder/cloud_disk_service_metafile_test.cpp",
@@ -618,6 +632,7 @@ ohos_unittest("cloud_disk_service_metafile_test_new") {
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/utils/include",
   ]
@@ -650,6 +665,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test_new") {
   sources = [
     "${distributedfile_path}/test/unittests/clouddisk_service/mock/assistant.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "sync_folder/cloud_disk_service_metafile_static_test.cpp",
   ]
@@ -659,6 +675,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test_new") {
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/sync_folder/src",
     "${services_path}/clouddiskservice/utils/include",

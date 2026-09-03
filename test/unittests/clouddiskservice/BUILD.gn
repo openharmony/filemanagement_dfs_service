@@ -22,6 +22,7 @@ ohos_unittest("cloud_disk_service_static_test") {
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "${distributedfile_path}/test/mock/system_ability_manager_client_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_access_token_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_metafile_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_static_dependency_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
@@ -31,8 +32,16 @@ ohos_unittest("cloud_disk_service_static_test") {
     "${distributedfile_path}/utils/clouddiskservice/src/cloud_disk_service_utils.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/account_status_listener.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_task_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_progress_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_progress_callback_proxy.cpp",
     "ipc/cloud_disk_common_test.cpp",
     "ipc/cloud_disk_service_static_test.cpp",
+    "ipc/placeholder_helper_test.cpp",
+    "ipc/PlaceholderTaskManagerTest.cpp",
   ]
 
   include_dirs = [
@@ -159,11 +168,17 @@ ohos_unittest("cloud_disk_service_callback_manager_test") {
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${distributedfile_path}/utils/system/src/utils_directory.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_task_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_progress_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_progress_callback_proxy.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_logfile.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_syncfolder.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "ipc/cloud_disk_service_callback_manager_test.cpp",
+    "ipc/placeholder_callback_manager_test.cpp",
   ]
 
   include_dirs = [
@@ -259,6 +274,7 @@ ohos_unittest("cloud_disk_sync_folder_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock_ext.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "ipc/cloud_disk_sync_folder_test.cpp",
   ]
 
@@ -266,6 +282,7 @@ ohos_unittest("cloud_disk_sync_folder_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${services_path}/clouddiskservice/ipc/include",
+    "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/utils/include",
     "${services_path}/clouddiskservice/monitor/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
@@ -380,6 +397,11 @@ ohos_unittest("cloud_disk_service_test") {
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_callback_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_task_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_progress_manager.cpp",
+    "${services_path}/clouddiskservice/ipc/src/cloud_disk_progress_callback_proxy.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "ipc/cloud_disk_service_test.cpp",
   ]
 
@@ -480,6 +502,7 @@ ohos_unittest("cloud_disk_service_logfile_static_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "sync_folder/cloud_disk_service_logfile_static_test.cpp",
   ]
@@ -545,6 +568,7 @@ ohos_unittest("cloud_disk_service_logfile_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_service_callback_manager.cpp",
     "${services_path}/clouddiskservice/ipc/src/cloud_disk_sync_folder.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/uuid_helper.cpp",
     "sync_folder/cloud_disk_service_logfile_test.cpp",
@@ -596,6 +620,7 @@ ohos_unittest("cloud_disk_service_metafile_test") {
   sources = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/cloud_disk_service_metafile.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "sync_folder/cloud_disk_service_metafile_test.cpp",
@@ -606,6 +631,7 @@ ohos_unittest("cloud_disk_service_metafile_test") {
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/utils/include",
   ]
@@ -636,6 +662,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test") {
   sources = [
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_helper.cpp",
     "${services_path}/clouddiskservice/sync_folder/src/convertor.cpp",
     "sync_folder/cloud_disk_service_metafile_static_test.cpp",
   ]
@@ -645,6 +672,7 @@ ohos_unittest("cloud_disk_service_metafile_static_test") {
     "${distributedfile_path}/utils/dentry/include",
     "${distributedfile_path}/utils/clouddiskservice/include",
     "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/sync_folder/include",
     "${services_path}/clouddiskservice/sync_folder/src",
     "${services_path}/clouddiskservice/utils/include",
@@ -746,6 +774,8 @@ ohos_unittest("cloud_disk_service_callback_stub_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_service_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/" +
+        "cloud_disk_service_callback_table_stub.cpp",
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "ipc/cloud_disk_service_callback_stub_test.cpp",
   ]
@@ -809,6 +839,7 @@ ohos_unittest("oh_cloud_disk_manager_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "bounds_checking_function:libsec_shared",
+    "ipc:ipc_single",
   ]
 
   defines = [
@@ -827,10 +858,110 @@ ohos_unittest("oh_cloud_disk_manager_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("callback_execute_request_test") {
+  module_out_path = "dfs_service/dfs_service"
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "ipc/CallbackExecuteRequestTest.cpp",
+    "ipc/HydrateProgressParcelTest.cpp",
+  ]
+  include_dirs = [
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+  defines = [
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskExecuteParcel\"",
+  ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("placeholder_progress_test") {
+  module_out_path = "dfs_service/dfs_service"
+  sources = [
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_progress_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_progress_callback_stub.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddiskservice/ipc/src/placeholder_progress_manager.cpp",
+    "ipc/PlaceholderProgressTest.cpp",
+  ]
+  include_dirs = [
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${services_path}/clouddiskservice/ipc/include",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskProgress\"",
+  ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("cloud_disk_system_manager_test") {
+  module_out_path = "dfs_service/dfs_service"
+  sources = [
+    "//foundation/filemanagement/user_file_service/interfaces/inner_api/cloud_disk_kit_inner/src/cloud_disk_error.cpp",
+    "//foundation/filemanagement/user_file_service/interfaces/inner_api/cloud_disk_kit_inner/src/cloud_disk_system_manager.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
+    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_progress_callback_stub.cpp",
+    "mock/cloud_disk_service_manager_mock.cpp",
+    "ipc/CloudDiskSystemManagerTest.cpp",
+  ]
+  include_dirs = [
+
+    "${distributedfile_path}/utils/clouddiskservice/include",
+    "${innerkits_native_path}/clouddiskservice_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "mock",
+  ]
+  external_deps = [
+    "user_file_service:cloud_disk_manager_kit",
+    "user_file_service:file_access_extension_ability_kit",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+  defines = [
+    "LOG_DOMAIN=0xD003900",
+    "LOG_TAG=\"CloudDiskSystemManagerTest\"",
+  ]
+  if (dfs_service_feature_enable_cloud_disk) {
+    defines += [ "SUPPORT_CLOUD_DISK_MANAGER" ]
+  }
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("clouddisk_service_test") {
   testonly = true
 
   deps = [
+    ":callback_execute_request_test",
+    ":placeholder_progress_test",
+    ":cloud_disk_system_manager_test",
     ":cloud_disk_service_access_token_test",
     ":cloud_disk_service_callback_manager_test",
     ":cloud_disk_service_callback_proxy_test",

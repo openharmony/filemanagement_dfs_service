@@ -202,8 +202,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest001, TestSize.L
         uint32_t syncFolderIndex = 1;
         EXPECT_CALL(*insMock_, access(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(LOGGROUP_SIZE));
-        shared_ptr<CloudDiskServiceLogFile> logFile =
-            make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
+        shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
         EXPECT_FALSE(logFile->needCallback_);
@@ -227,8 +226,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest002, TestSize.L
         uint32_t syncFolderIndex = 1;
         EXPECT_CALL(*insMock_, access(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*insMock_, ftruncate(_, _)).WillOnce(Return(0));
-        shared_ptr<CloudDiskServiceLogFile> logFile =
-            make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
+        shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
         EXPECT_FALSE(logFile->needCallback_);
@@ -256,8 +254,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest003, TestSize.L
             .WillOnce(Return(LOGGROUP_SIZE))
             .WillOnce(Return(LOGGROUP_SIZE))
             .WillOnce(Return(LOGGROUP_SIZE));
-        shared_ptr<CloudDiskServiceLogFile> logFile =
-            make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
+        shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
     } catch (...) {
@@ -445,7 +442,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest002, TestSize.Level1)
     try {
         string path = "path";
         uint64_t timestamp = 1;
-        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const std::string&, struct stat* buf) {
+        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const std::string &, struct stat *buf) {
             buf->st_mode = S_IFREG;
             return 0;
         }));
@@ -468,7 +465,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, FillChildForDirTest003, TestSize.Level1)
     try {
         string path = "path";
         uint64_t timestamp = 1;
-        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const std::string&, struct stat* buf) {
+        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const std::string &, struct stat *buf) {
             buf->st_mode = S_IFDIR;
             return 0;
         }));
@@ -730,20 +727,19 @@ HWTEST_F(CloudDiskServiceLogFileTest, PraseLogTest004, TestSize.Level1)
         uint64_t line = 1;
         ChangeData data;
         bool isEof = false;
-        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Invoke(
-            [](int, off_t, size_t size, void *buf) -> int64_t {
-                auto *group = static_cast<LogGroup*>(buf);
-                (void)memset_s(group, LOGGROUP_SIZE, 0, LOGGROUP_SIZE);
-                group->logBlockCnt = 1;
-                group->nsl[1].line = 1;
-                group->nsl[1].timestamp = 1;
-                group->nsl[1].parentInode = 1;
-                group->nsl[1].operationType = static_cast<uint8_t>(OperationType::CREATE);
-                group->nsl[1].bidx = 0;
-                group->nsl[1].bitPos = 0;
-                (void)memset_s(group->nsl[1].parentRecordId, RECORD_ID_LEN, 0x11, RECORD_ID_LEN);
-                return static_cast<int64_t>(size);
-            }));
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Invoke([](int, off_t, size_t size, void *buf) -> int64_t {
+            auto *group = static_cast<LogGroup *>(buf);
+            (void)memset_s(group, LOGGROUP_SIZE, 0, LOGGROUP_SIZE);
+            group->logBlockCnt = 1;
+            group->nsl[1].line = 1;
+            group->nsl[1].timestamp = 1;
+            group->nsl[1].parentInode = 1;
+            group->nsl[1].operationType = static_cast<uint8_t>(OperationType::CREATE);
+            group->nsl[1].bidx = 0;
+            group->nsl[1].bitPos = 0;
+            (void)memset_s(group->nsl[1].parentRecordId, RECORD_ID_LEN, 0x11, RECORD_ID_LEN);
+            return static_cast<int64_t>(size);
+        }));
         auto res = logFile_->PraseLog(line, data, isEof);
         EXPECT_EQ(res, E_OK);
         EXPECT_FALSE(isEof);
@@ -773,20 +769,19 @@ HWTEST_F(CloudDiskServiceLogFileTest, PraseLogTest005, TestSize.Level1)
         uint64_t line = 1;
         ChangeData data;
         bool isEof = false;
-        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Invoke(
-            [](int, off_t, size_t size, void *buf) -> int64_t {
-                auto *group = static_cast<LogGroup*>(buf);
-                (void)memset_s(group, LOGGROUP_SIZE, 0, LOGGROUP_SIZE);
-                group->logBlockCnt = 1;
-                group->nsl[1].line = 1;
-                group->nsl[1].timestamp = 1;
-                group->nsl[1].parentInode = 1;
-                group->nsl[1].operationType = static_cast<uint8_t>(OperationType::CREATE);
-                group->nsl[1].bidx = 0;
-                group->nsl[1].bitPos = 0;
-                (void)memset_s(group->nsl[1].parentRecordId, RECORD_ID_LEN, 0, RECORD_ID_LEN);
-                return static_cast<int64_t>(size);
-            }));
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillOnce(Invoke([](int, off_t, size_t size, void *buf) -> int64_t {
+            auto *group = static_cast<LogGroup *>(buf);
+            (void)memset_s(group, LOGGROUP_SIZE, 0, LOGGROUP_SIZE);
+            group->logBlockCnt = 1;
+            group->nsl[1].line = 1;
+            group->nsl[1].timestamp = 1;
+            group->nsl[1].parentInode = 1;
+            group->nsl[1].operationType = static_cast<uint8_t>(OperationType::CREATE);
+            group->nsl[1].bidx = 0;
+            group->nsl[1].bitPos = 0;
+            (void)memset_s(group->nsl[1].parentRecordId, RECORD_ID_LEN, 0, RECORD_ID_LEN);
+            return static_cast<int64_t>(size);
+        }));
         auto res = logFile_->PraseLog(line, data, isEof);
         EXPECT_EQ(res, E_OK);
         EXPECT_FALSE(isEof);
@@ -1170,7 +1165,8 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest001, TestSize.Level1)
         ctx.recordId = childRecordId;
         struct stat statInfo;
         statInfo.st_mode = S_IFREG;
-        EXPECT_CALL(*insMock_, stat(_, _)).Times(AnyNumber())
+        EXPECT_CALL(*insMock_, stat(_, _))
+            .Times(AnyNumber())
             .WillRepeatedly(DoAll(SetArgPointee<1>(statInfo), Return(0)));
         auto res = logFile_->ProduceCreateLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
@@ -1196,7 +1192,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest002, TestSize.Level1)
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const char*, struct stat*) {
+        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const char *, struct stat *) {
             errno = ENOENT;
             return -1;
         }));
@@ -1273,9 +1269,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest001 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         struct LogGenerateCtx ctx;
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1294,11 +1291,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest002 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1317,9 +1315,10 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest001, TestSize.Level
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest001 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         struct LogGenerateCtx ctx;
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1338,11 +1337,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest002, TestSize.Level
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest002 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1364,7 +1364,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameNewLogTest001, TestSize.Level
         string path = "path";
         string name = "name";
         struct LogGenerateCtx ctx;
-        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const char*, struct stat*) {
+        EXPECT_CALL(*insMock_, stat(_, _)).WillOnce(Invoke([](const char *, struct stat *) {
             errno = ENOENT;
             return -1;
         }));
@@ -1833,10 +1833,11 @@ HWTEST_F(LogFileMgrTest, PraseRequestTest002, TestSize.Level1)
         uint64_t count = 1;
         ChangesResult changeResult;
         EXPECT_CALL(*insMock_, access(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Invoke(
-            [](int, off_t, size_t size, void *buf) -> int64_t {
-                if (buf == nullptr) return -1;
-                auto *group = static_cast<LogGroup*>(buf);
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _))
+            .WillRepeatedly(Invoke([](int, off_t, size_t size, void *buf) -> int64_t {
+                if (buf == nullptr)
+                    return -1;
+                auto *group = static_cast<LogGroup *>(buf);
                 (void)memset_s(group, LOGGROUP_SIZE, 0, LOGGROUP_SIZE);
                 group->logBlockCnt = 1;
                 group->nsl[0].line = 1;

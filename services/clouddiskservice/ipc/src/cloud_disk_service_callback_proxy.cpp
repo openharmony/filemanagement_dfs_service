@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,8 @@
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
+
+BrokerDelegator<CloudDiskServiceCallbackTableProxy> CloudDiskServiceCallbackTableProxy::delegator_;
 
 void CloudDiskServiceCallbackProxy::OnChangeData(const std::string &sandboxPath,
                                                  const std::vector<ChangeData> &changeData)
@@ -55,5 +57,40 @@ void CloudDiskServiceCallbackProxy::OnChangeData(const std::string &sandboxPath,
         return;
     }
     return;
+}
+
+void CloudDiskServiceCallbackTableProxy::OnCallback(const CloudDiskCallbackReqHead &reqHead,
+                                                    CloudDiskCallbackContext &reqContext)
+{
+    SendCallback(reqHead, reqContext);
+}
+
+void CloudDiskServiceCallbackTableProxy::SendCallback(const CloudDiskCallbackReqHead &reqHead,
+                                                      CloudDiskCallbackContext &reqContext)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write callback table interface token");
+        return;
+    }
+    if (!WriteCallbackParcel(data, reqHead, reqContext)) {
+        LOGE("Failed to write callback request");
+        return;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Callback table remote is nullptr");
+        return;
+    }
+    int32_t ret = remote->SendRequest(ICloudDiskServiceCallbackTable::SERVICE_CMD_ON_CALLBACK, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send callback request, ret: %{public}d", ret);
+        return;
+    }
+    if (!ReadCallbackReply(reply, reqHead.callbackType, reqContext)) {
+        LOGE("Failed to read callback response");
+    }
 }
 } // namespace OHOS::FileManagement::CloudDiskService

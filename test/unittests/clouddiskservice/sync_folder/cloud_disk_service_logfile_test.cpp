@@ -60,13 +60,9 @@ void CloudDiskServiceLogFileTest::TearDownTestCase(void)
     insMock_ = nullptr;
 }
 
-void CloudDiskServiceLogFileTest::SetUp()
-{
-}
+void CloudDiskServiceLogFileTest::SetUp() {}
 
-void CloudDiskServiceLogFileTest::TearDown()
-{
-}
+void CloudDiskServiceLogFileTest::TearDown() {}
 
 /**
  * @tc.name: WriteLogFileTest001
@@ -944,11 +940,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest001 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -968,11 +965,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "ProduceUnlinkLogTest002 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceUnlinkLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -992,11 +990,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest001, TestSize.Level
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest001 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "childRecordId";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1016,11 +1015,12 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest002, TestSize.Level
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest002 start";
     try {
         shared_ptr<CloudDiskServiceMetaFile> parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+        string path = "path";
         string name = "name";
         string childRecordId = "";
         struct LogGenerateCtx ctx;
         ctx.recordId = childRecordId;
-        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, name, ctx);
+        auto res = logFile_->ProduceRenameOldLog(parentMetaFile, path, name, ctx);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1317,7 +1317,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest005, TestSize.Level1
         uint64_t line = 1;
         string childRecordId = "child";
         string parentRecordId = "parent";
-        
+
         logFile_->changeDatas_.clear();
         logFile_->syncFolderPath_ = "/data/test";
         for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE; i++) {
@@ -1389,13 +1389,9 @@ void LogFileMgrTest::TearDownTestCase(void)
     insMock_ = nullptr;
 }
 
-void LogFileMgrTest::SetUp()
-{
-}
+void LogFileMgrTest::SetUp() {}
 
-void LogFileMgrTest::TearDown()
-{
-}
+void LogFileMgrTest::TearDown() {}
 
 /**
  * @tc.name: GetInstanceTest001
@@ -1796,22 +1792,22 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest006, TestSize.Level1
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";
-        
+
         for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
             ChangeData data;
             data.operationType = OperationType::CREATE;
             logFile_->changeDatas_.push_back(data);
         }
         EXPECT_EQ(logFile_->changeDatas_.size(), MAX_CHANGEDATAS_SIZE - 1);
-        
+
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
         logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
-        
+
         EXPECT_EQ(logFile_->changeDatas_.size(), 1);
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
         EXPECT_EQ(logFile_->changeDatas_.back().operationType, OperationType::OH_CLOUD_DISK_CLOSE_MODIFY);
@@ -1834,15 +1830,15 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";
-        
+
         for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
             ChangeData data;
             data.operationType = OperationType::CREATE;
             logFile_->changeDatas_.push_back(data);
         }
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
-        
+
         EventInfo modifyEventInfo;
         modifyEventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         modifyEventInfo.path = "/data/test";
@@ -1850,7 +1846,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest007, TestSize.Level1
         logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
         EXPECT_EQ(logFile_->changeDatas_.size(), 1);
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
-        
+
         EventInfo writeEventInfo;
         writeEventInfo.operateType = OperationType::CLOSE_WRITE;
         writeEventInfo.path = "/data/test";
@@ -1878,17 +1874,17 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest003, TestSize.Level1)
     try {
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
-        
+
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
         logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
         EXPECT_EQ(logFile_->changeDatas_.size(), 1);
-        
+
         auto res = logFile_->OnDataChange();
         EXPECT_EQ(res, E_OK);
         EXPECT_EQ(logFile_->changeDatas_.size(), 1);
@@ -1911,16 +1907,16 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
     try {
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).Times(AnyNumber()).WillRepeatedly(Return(0));
-        
+
         EventInfo modifyEventInfo;
         modifyEventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         modifyEventInfo.path = "/data/test";
         modifyEventInfo.name = "file";
         logFile_->GenerateChangeData(modifyEventInfo, 1, "child", "parent");
         EXPECT_TRUE(logFile_->hasUnpairedCloseModify_);
-        
+
         EventInfo writeEventInfo;
         writeEventInfo.operateType = OperationType::CLOSE_WRITE;
         writeEventInfo.path = "/data/test";
@@ -1928,7 +1924,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, OnDataChangeTest004, TestSize.Level1)
         logFile_->GenerateChangeData(writeEventInfo, 2, "child", "parent");
         EXPECT_FALSE(logFile_->hasUnpairedCloseModify_);
         EXPECT_EQ(logFile_->changeDatas_.size(), 2);
-        
+
         auto res = logFile_->OnDataChange();
         EXPECT_EQ(res, E_OK);
         EXPECT_TRUE(logFile_->changeDatas_.empty());
@@ -1951,18 +1947,18 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest008, TestSize.Level1
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";
-        
+
         for (unsigned int i = 0; i < MAX_CHANGEDATAS_SIZE - 1; i++) {
             ChangeData data;
             data.operationType = OperationType::CREATE;
             logFile_->changeDatas_.push_back(data);
         }
-        
+
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::DELETE;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
         logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
         EXPECT_TRUE(logFile_->changeDatas_.empty());
@@ -1986,18 +1982,18 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest009, TestSize.Level1
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";
-        
+
         for (unsigned int i = 0; i < 10; i++) {
             ChangeData data;
             data.operationType = OperationType::CREATE;
             logFile_->changeDatas_.push_back(data);
         }
-        
+
         EventInfo eventInfo;
         eventInfo.operateType = OperationType::OH_CLOUD_DISK_CLOSE_MODIFY;
         eventInfo.path = "/data/test";
         eventInfo.name = "file";
-        
+
         EXPECT_CALL(*insMock_, MockStat(_, _)).WillOnce(Return(0));
         logFile_->GenerateChangeData(eventInfo, 1, "child", "parent");
         EXPECT_EQ(logFile_->changeDatas_.size(), 11);
@@ -2061,7 +2057,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest011, TestSize.Level1
         uint64_t line = 1;
         string childRecordId = "child";
         string parentRecordId = "parent";
-        
+
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = true;
         logFile_->syncFolderPath_ = "/data/test";
@@ -2092,7 +2088,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest012, TestSize.Level1
         uint64_t line = 1;
         string childRecordId = "child";
         string parentRecordId = "parent";
-        
+
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";
@@ -2123,7 +2119,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest013, TestSize.Level1
         uint64_t line = 1;
         string childRecordId = "child";
         string parentRecordId = "parent";
-        
+
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = true;
         logFile_->syncFolderPath_ = "/data/test";
@@ -2154,7 +2150,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, GenerateChangeDataTest014, TestSize.Level1
         uint64_t line = 1;
         string childRecordId = "child";
         string parentRecordId = "parent";
-        
+
         logFile_->changeDatas_.clear();
         logFile_->hasUnpairedCloseModify_ = false;
         logFile_->syncFolderPath_ = "/data/test";

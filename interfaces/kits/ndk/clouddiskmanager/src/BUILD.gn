@@ -57,6 +57,7 @@ ohos_shared_library("ohclouddiskmanager") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_single",
   ]
 
   defines = [

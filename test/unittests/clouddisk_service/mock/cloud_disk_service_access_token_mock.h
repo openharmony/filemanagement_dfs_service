@@ -25,6 +25,7 @@ namespace OHOS::FileManagement::CloudDiskService {
 
 class CloudDiskServiceAccessTokenVirtual {
 public:
+    virtual bool IsSystemApp();
     virtual bool CheckCallerPermission(const std::string &permissionName);
     virtual int32_t GetCallerBundleName(std::string &bundleName);
     virtual bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
@@ -41,6 +42,7 @@ public:
 
 class CloudDiskServiceAccessTokenMock : public CloudDiskServiceAccessTokenVirtual {
 public:
+    MOCK_METHOD0(IsSystemApp, bool());
     MOCK_METHOD1(CheckCallerPermission, bool(const std::string &permissionName));
     MOCK_METHOD1(GetCallerBundleName, int32_t(std::string &bundleName));
     MOCK_METHOD2(CheckPermission, bool(uint32_t tokenId, const std::string &permissionName));

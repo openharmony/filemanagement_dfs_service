@@ -149,6 +149,11 @@ bool CloudDiskSyncFolder::PathToSandboxPathByPhysicalPath(const std::string &pat
     if (path == "invalid_path") {
         return false;
     }
+    const std::string prefix = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    if (path.compare(0, prefix.size(), prefix) != 0) {
+        return false;
+    }
+    realpath = "/storage/Users/currentUser" + path.substr(prefix.size());
     return true;
 }
 

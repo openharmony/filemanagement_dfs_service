@@ -15,10 +15,13 @@
 
 #include "cloud_disk_service.h"
 
+#include <array>
 #include <cerrno>
 #include <charconv>
+#include <climits>
 #include <cstdlib>
 #include <fcntl.h>
+#include <functional>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -27,6 +30,7 @@
 
 #include "cloud_disk_service_access_token.h"
 #include "cloud_disk_service_callback_manager.h"
+#include "cloud_disk_service_callback_proxy.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
@@ -36,6 +40,12 @@
 #include "cloud_disk_sync_folder.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
+#include "placeholder_callback_manager.h"
+#include "placeholder_helper.h"
+#include "placeholder_task_manager.h"
+#include "cloud_disk_progress_callback_proxy.h"
+#include "placeholder_progress_manager.h"
+#include "ipc_skeleton.h"
 #include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "utils_log.h"
@@ -44,28 +54,24 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
 using namespace std;
-using namespace CloudFile;
 
 const int32_t GET_FILE_SYNC_MAX = 100;
 const int32_t GET_SYNC_FOLDER_CHANGE_MAX = 100;
 constexpr const char *USER_UNLOCKED_REASON = "usual.event.USER_UNLOCKED";
-constexpr const char *FILE_SYNC_STATE = "user.clouddisk.filesyncstate";
-constexpr const char *CLOUD_DISK_PLACEHOLDER_XATTR = "user.clouddisk.placeholder";
-
-enum PlaceholderState : uint8_t {
-    PLACEHOLDER_STATE_PLACEHOLDER = '1',
-    PLACEHOLDER_STATE_HYDRATING = '2',
-};
 
 namespace {
 constexpr mode_t PLACEHOLDER_FILE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-constexpr uint8_t PLACEHOLDER_XATTR_VALUE = '1';
 constexpr uint64_t MILLISECONDS_PER_SECOND = 1000;
 constexpr uint64_t NANOSECONDS_PER_MILLISECOND = 1000000;
+constexpr size_t PLACEHOLDER_CUSTOM_INFO_MAX_SIZE = 4096;
+constexpr const char *CLOUD_DISK_CUSTOM_INFO_XATTR = "user.clouddisk.custominfo";
+constexpr size_t DEHYDRATE_LOCK_BUCKET_COUNT = 64;
+constexpr int32_t DEHYDRATE_EXTEND_MAX_ATTEMPTS = 3;
 
 struct CreatePlaceholderPath {
     std::string parentMntPath;
     std::string fileName;
+    std::string syncRootMntPath;
 };
 
 static int32_t BuildCreatePlaceholderPath(const std::string &syncFolder,
@@ -73,7 +79,8 @@ static int32_t BuildCreatePlaceholderPath(const std::string &syncFolder,
                                           int32_t userId,
                                           CreatePlaceholderPath &path)
 {
-    if (HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' || relativePath.back() == '/') {
+    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
+        relativePath.back() == '/') {
         LOGE("CreatePlaceholderFile branch=invalid_relative_path");
         return E_INVALID_ARG;
     }
@@ -87,11 +94,12 @@ static int32_t BuildCreatePlaceholderPath(const std::string &syncFolder,
     }
 
     int32_t ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(syncFolder, std::to_string(userId),
-                                                                                path.parentMntPath);
+                                                                                path.syncRootMntPath);
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFile branch=sync_folder_mnt_path_failed ret=%{public}d", ret);
         return ret;
     }
+    path.parentMntPath = path.syncRootMntPath;
     if (!parentRelativePath.empty()) {
         path.parentMntPath = JoinSyncFolderAndRelativePath(path.parentMntPath, parentRelativePath);
     }
@@ -152,17 +160,15 @@ constexpr int32_t GET_SYNC_FOLDERS_RETRY_INTERVAL_US = 200 * 1000;
 
 int32_t GetAllSyncFoldersForSaWithRetry(std::vector<FileManagement::SyncFolderExt> &syncFolders)
 {
-    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
-        .GetAllSyncFoldersForSa(syncFolders);
+    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
     int32_t retryCount = 0;
     while (ret == GET_SYNC_FOLDERS_RETRY_ERR_CODE && retryCount < GET_SYNC_FOLDERS_MAX_RETRY_TIMES) {
         ++retryCount;
-        LOGE("Get all sync folders for sa failed, retry: %{public}d/%{public}d, ret: %{public}d",
-            retryCount, GET_SYNC_FOLDERS_MAX_RETRY_TIMES, ret);
+        LOGE("Get all sync folders for sa failed, retry: %{public}d/%{public}d, ret: %{public}d", retryCount,
+             GET_SYNC_FOLDERS_MAX_RETRY_TIMES, ret);
         usleep(GET_SYNC_FOLDERS_RETRY_INTERVAL_US);
         syncFolders.clear();
-        ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
-            .GetAllSyncFoldersForSa(syncFolders);
+        ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
     }
     return ret;
 }
@@ -177,17 +183,30 @@ static struct timespec MillisecondsToTimespec(uint64_t timeMs)
     return time;
 }
 
-static int32_t SetPlaceholderFileAttributes(int32_t fileFd, const PlaceholderInfo &info)
+static int32_t SetPlaceholderFileAttributes(int32_t fileFd,
+                                            const PlaceholderInfo &info,
+                                            uint8_t *oldPlaceholderState = nullptr,
+                                            const PlaceholderCustomInfo &customInfo = PlaceholderCustomInfo())
 {
     if (ftruncate(fileFd, static_cast<off_t>(info.logicalSize)) < 0) {
         int32_t err = errno;
         LOGE("CreatePlaceholderFile branch=set_size_failed errno=%{public}d", err);
         return err;
     }
-    if (fsetxattr(fileFd, CLOUD_DISK_PLACEHOLDER_XATTR, &PLACEHOLDER_XATTR_VALUE,
-                  sizeof(PLACEHOLDER_XATTR_VALUE), 0) < 0) {
-        int32_t err = errno;
+    int32_t err = E_OK;
+    if (oldPlaceholderState == nullptr) {
+        err = SetNewFilePlaceholderState(fileFd, PLACEHOLDER_STATE_UNHYDRATED);
+    } else {
+        err = SetFilePlaceholderState(fileFd, PLACEHOLDER_STATE_UNHYDRATED, *oldPlaceholderState);
+    }
+    if (err != E_OK) {
         LOGE("CreatePlaceholderFile branch=set_xattr_failed errno=%{public}d", err);
+        return err;
+    }
+    if (!customInfo.data.empty() &&
+        fsetxattr(fileFd, CLOUD_DISK_CUSTOM_INFO_XATTR, customInfo.data.data(), customInfo.data.size(), 0) < 0) {
+        err = errno;
+        LOGE("Set placeholder custom info failed, errno=%{public}d", err);
         return err;
     }
 
@@ -196,14 +215,16 @@ static int32_t SetPlaceholderFileAttributes(int32_t fileFd, const PlaceholderInf
         MillisecondsToTimespec(info.mtimeMs),
     };
     if (futimens(fileFd, times) < 0) {
-        int32_t err = errno;
+        err = errno;
         LOGE("CreatePlaceholderFile branch=set_times_failed errno=%{public}d", err);
         return err;
     }
     return E_OK;
 }
 
-static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const PlaceholderInfo &info)
+static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path,
+                                       const PlaceholderInfo &info,
+                                       const PlaceholderCustomInfo &customInfo = PlaceholderCustomInfo())
 {
     UniqueFd parentFd(open(path.parentMntPath.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
     if (parentFd < 0) {
@@ -218,12 +239,17 @@ static int32_t CreatePlaceholderFileAt(const CreatePlaceholderPath &path, const 
         return ConvertErrnoToCloudDiskError(errno);
     }
 
-    int32_t err = SetPlaceholderFileAttributes(fileFd, info);
+    int32_t err = SetPlaceholderFileAttributes(fileFd, info, nullptr, customInfo);
     if (err != E_OK) {
         if (unlinkat(parentFd, path.fileName.c_str(), 0) != 0) {
             LOGE("CreatePlaceholderFile branch=rollback_unlink_failed errno=%{public}d", errno);
         }
         return ConvertErrnoToCloudDiskError(err);
+    }
+    std::string filePath = JoinSyncFolderAndRelativePath(path.parentMntPath, path.fileName);
+    err = RefreshAncestorPlaceholderCount(path.syncRootMntPath, filePath, 1);
+    if (err != E_OK) {
+        LOGE("CreatePlaceholderFile branch=refresh_placeholder_count_failed errno=%{public}d", err);
     }
     LOGI("CreatePlaceholderFile branch=create_file_success");
     return E_OK;
@@ -295,8 +321,8 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
     std::vector<FileManagement::SyncFolderExt> syncFolders;
     int32_t ret = GetAllSyncFoldersForSaWithRetry(syncFolders);
     if (ret != E_OK) {
-        LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu",
-            ret, syncFolders.size());
+        LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
+             syncFolders.size());
         return;
     }
     for (const auto &item : syncFolders) {
@@ -315,6 +341,7 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
     if (!PublishSA()) {
         return;
     }
+    PlaceholderTaskManager::GetInstance().StartWorkerPool();
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 
     if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
@@ -330,6 +357,11 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
 void CloudDiskService::OnStop()
 {
     LOGI("Begin to stop");
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    PlaceholderTaskManager::GetInstance().StopWorkerPool();
+    PlaceholderProgressManager::GetInstance().Drain();
+    PlaceholderProgressManager::GetInstance().Clear();
+#endif
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
     LOGI("Stop finished successfully");
@@ -340,6 +372,37 @@ static int32_t CheckPermissions(const string &permission, bool isSystemApp)
     if (!permission.empty() && !CloudDiskServiceAccessToken::CheckCallerPermission(permission)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskService::ResolveOwnedSyncFolder(const std::string &syncFolder,
+                                                 std::string &bundleName,
+                                                 uint32_t &syncFolderIndex,
+                                                 std::string &physicalPath)
+{
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), physicalPath);
+    if (ret != E_OK) {
+        LOGE("Get physical sync folder failed, ret: %{public}d", ret);
+        return ret;
+    }
+    ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get caller bundle name failed, ret: %{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+
+    syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalPath);
+    SyncFolderValue syncFolderValue;
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue)) {
+        LOGE("Sync folder is not registered");
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+    if (syncFolderValue.bundleName != bundleName) {
+        LOGE("Sync folder is not owned by caller");
+        return E_SYNC_FOLDER_PATH_UNAUTHORIZED;
     }
     return E_OK;
 }
@@ -424,14 +487,59 @@ int32_t CloudDiskService::UnregisterSyncFolderChangesInner(const std::string &sy
         return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
-    if (!CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderForChangesMap(
-        bundleName, syncFolderIndex)) {
+    if (!CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderForChangesMap(bundleName,
+                                                                                          syncFolderIndex)) {
         return E_LISTENER_NOT_REGISTERED;
     }
 
     CloudDiskServiceSyncFolder::UnRegisterSyncFolderChanges(userId, syncFolderIndex);
     LOGI("End UnregisterSyncFolderChangesInner");
     return E_OK;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::RegisterCallbackTableInner(const std::string &syncFolder,
+                                                     const sptr<IRemoteObject> &remoteObject)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("Begin RegisterCallbackTableInner");
+    if (remoteObject == nullptr) {
+        LOGE("Callback table remote object is nullptr");
+        return E_INVALID_ARG;
+    }
+
+    std::string bundleName;
+    uint32_t syncFolderIndex = 0;
+    std::string physicalPath;
+    int32_t ret = ResolveOwnedSyncFolder(syncFolder, bundleName, syncFolderIndex, physicalPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto callback = iface_cast<ICloudDiskServiceCallbackTable>(remoteObject);
+    if (callback == nullptr) {
+        LOGE("Callback table interface is nullptr");
+        return E_INVALID_ARG;
+    }
+    return PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(bundleName, syncFolderIndex, callback);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::UnregisterCallbackTableInner(const std::string &syncFolder)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("Begin UnregisterCallbackTableInner");
+    std::string bundleName;
+    uint32_t syncFolderIndex = 0;
+    std::string physicalPath;
+    int32_t ret = ResolveOwnedSyncFolder(syncFolder, bundleName, syncFolderIndex, physicalPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return PlaceholderCallbackManager::GetInstance().UnregisterCallbackTable(bundleName, syncFolderIndex);
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -505,12 +613,12 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed,
-    const string &syncFolder)
+static bool SetFileSyncStates(
+    const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed, const string &syncFolder)
 {
     std::string setXattrPath;
     if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
-        setXattrPath) != E_OK) {
+                                                                      setXattrPath) != E_OK) {
         LOGE("Get path failed");
         failed.path = fileSyncStates.path;
         failed.error = ErrorReason::NO_SUCH_FILE;
@@ -533,8 +641,9 @@ static bool SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userI
         failed.error = ErrorReason::OUT_OF_RANGE;
         return false;
     }
-    if (setxattr(setXattrPath.c_str(), FILE_SYNC_STATE, &state, sizeof(state), 0) != 0) {
-        int32_t error = errno;
+    int32_t ret = SetFileSyncState(setXattrPath, state);
+    if (ret != E_OK) {
+        int32_t error = ret;
         LOGE("Failed to set xattr, err: %{public}d", error);
         failed.path = fileSyncStates.path;
         failed.error = static_cast<ErrorReason>(GetErrorNum(error));
@@ -606,8 +715,8 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
     ResultList getResult = MakeResult(path);
     std::string getXattrPath;
 
-    if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
-                                                                      getXattrPath) != E_OK) {
+    if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId), getXattrPath) !=
+        E_OK) {
         LOGE("Get path failed");
         getResult.error = ErrorReason::NO_SUCH_FILE;
         return getResult;
@@ -623,30 +732,28 @@ static ResultList GetFileSyncState(const std::string &path, int32_t &userId, con
         return getResult;
     }
 
-    auto xattrValueSize = getxattr(getXattrPath.c_str(), FILE_SYNC_STATE, nullptr, 0);
-    if (xattrValueSize < 0) {
+    struct stat statInfo {};
+    if (stat(getXattrPath.c_str(), &statInfo) != 0) {
         int32_t error = errno;
+        LOGE("stat failed, errno : %{public}d", error);
+        getResult.error = static_cast<ErrorReason>(GetErrorNum(error));
+        return getResult;
+    }
+    if (S_ISDIR(statInfo.st_mode)) {
+        getResult.error = ErrorReason::NO_SYNC_STATE;
+        return getResult;
+    }
+
+    uint8_t rawStateByte = 0;
+    int32_t ret = GetFileSyncStateByte(getXattrPath, rawStateByte, false);
+    if (ret != E_OK) {
+        int32_t error = ret;
         LOGE("getxattr failed, errno : %{public}d", error);
         getResult.error = static_cast<ErrorReason>(GetErrorNum(error));
         return getResult;
     }
 
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>((long)xattrValueSize);
-    if (xattrValue == nullptr) {
-        LOGE("Failed to allocate memory for xattrValue, errno : %{public}d", errno);
-        getResult.error = ErrorReason::NO_SPACE_LEFT;
-        return getResult;
-    }
-
-    xattrValueSize = getxattr(getXattrPath.c_str(), FILE_SYNC_STATE, xattrValue.get(), xattrValueSize);
-    if (xattrValueSize <= 0) {
-        int32_t error = errno;
-        LOGE("getxattr failed, errno : %{public}d", error);
-        getResult.error = static_cast<ErrorReason>(GetErrorNum(error));
-        return getResult;
-    }
-
-    uint8_t rawState = static_cast<uint8_t>(xattrValue[0]);
+    uint8_t rawState = GetSyncStateFromFileSyncState(rawStateByte);
     if (rawState > static_cast<int>(SyncState::SYNC_CONFLICTED)) {
         LOGE("get invalid number");
         getResult.error = ErrorReason::INVALID_ARGUMENT;
@@ -683,41 +790,21 @@ static bool IsDirectoryPath(const std::string &path)
 
 static int32_t QueryPlaceholderByXattr(const std::string &getXattrPath, bool &isPlaceholder)
 {
-    int32_t error = E_OK;
-    auto xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
-    if (xattrValueSize <= 0) {
-        error = errno;
-        int32_t ret = ConvertPlaceholderXattrErrno(error);
-        LOGE("QueryPlaceholderByXattr branch=getxattr_size_failed errno=%{public}d", error);
-        return ret;
+    uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
+    int32_t ret = GetFilePlaceholderState(getXattrPath, placeholderState);
+    if (ret != E_OK) {
+        LOGE("QueryPlaceholderByXattr branch=get_placeholder_state_failed errno=%{public}d", ret);
+        return ConvertPlaceholderXattrErrno(ret);
     }
-
-    std::unique_ptr<char[]> xattrValue = std::make_unique<char[]>(static_cast<size_t>(xattrValueSize));
-    if (xattrValue == nullptr) {
-        LOGE("QueryPlaceholderByXattr branch=alloc_xattr_value_failed errno=%{public}d", errno);
-        return E_TRY_AGAIN;
-    }
-
-    xattrValueSize = getxattr(getXattrPath.c_str(), CLOUD_DISK_PLACEHOLDER_XATTR, xattrValue.get(), xattrValueSize);
-    if (xattrValueSize <= 0) {
-        error = errno;
-        int32_t ret = ConvertPlaceholderXattrErrno(error);
-        LOGE("QueryPlaceholderByXattr branch=getxattr_value_failed errno=%{public}d", error);
-        return ret;
-    }
-
-    uint8_t placeholderValue = static_cast<uint8_t>(xattrValue[0]);
-    if (placeholderValue == PLACEHOLDER_STATE_PLACEHOLDER || placeholderValue == PLACEHOLDER_STATE_HYDRATING) {
-        isPlaceholder = true;
-    }
+    isPlaceholder = IsPlaceholderState(placeholderState);
     return E_OK;
 }
 
 static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t userId, std::string &mntSyncFolder)
 {
     std::string physicalSyncFolder;
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
-                                                                        physicalSyncFolder);
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), physicalSyncFolder);
     if (ret != E_OK) {
         LOGE("IsPlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
         return ret;
@@ -739,7 +826,7 @@ static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t
     }
 
     if (!CloudDiskSyncFolder::GetInstance().PathToMntPathByPhysicalPath(physicalSyncFolder, std::to_string(userId),
-        mntSyncFolder)) {
+                                                                        mntSyncFolder)) {
         LOGE("IsPlaceholderFileInner branch=mnt_sync_folder_path_failed");
         return E_INVALID_ARG;
     }
@@ -797,16 +884,20 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
 
 int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFolder,
                                                      const std::string &relativePath,
-                                                     const PlaceholderInfo &info)
+                                                     const PlaceholderInfo &info,
+                                                     const PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("CreatePlaceholderFileInner route=service_entry");
+    if (customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
+        LOGE("CreatePlaceholderFileInner branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
+        return E_INVALID_ARG;
+    }
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string syncFolderPhysicalPath;
-    int32_t ret =
-        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
-                                                              syncFolderPhysicalPath);
+    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
+                                                                        syncFolderPhysicalPath);
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
         return NormalizeCreatePlaceholderError(ret);
@@ -834,7 +925,7 @@ int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFold
         return NormalizeCreatePlaceholderError(ret);
     }
 
-    ret = CreatePlaceholderFileAt(createPath, info);
+    ret = CreatePlaceholderFileAt(createPath, info, customInfo);
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFileInner branch=create_file_at_failed ret=%{public}d", ret);
         return NormalizeCreatePlaceholderError(ret);
@@ -847,13 +938,14 @@ int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFold
 #endif
 }
 
-int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, const std::string &path,
+int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder,
+                                                 const std::string &path,
                                                  bool &isPlaceholder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("IsPlaceholderFileInner route=service_entry");
     isPlaceholder = false;
-    if (HasInvalidRelativePathSegment(path) || path.front() == '/' || path.back() == '/') {
+    if (path.empty() || HasInvalidRelativePathSegment(path) || path.front() == '/' || path.back() == '/') {
         LOGE("IsPlaceholderFileInner branch=invalid_relative_path path_size=%{public}zu", path.size());
         return E_INVALID_ARG;
     }
@@ -890,16 +982,16 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder, 
 #endif
 }
 
-int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::string &bundleName,
-    const std::string &path)
+int32_t CloudDiskService::RegisterSyncFolderInner(
+    int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin RegisterSyncFolderInner");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
     std::string registerSyncFolder;
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path,
-        std::to_string(userId), registerSyncFolder);
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path, std::to_string(userId), registerSyncFolder);
     if (ret != E_OK) {
         LOGE("Get path failed, ret = %{public}d", ret);
         return ret;
@@ -928,16 +1020,16 @@ int32_t CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::str
 #endif
 }
 
-int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
-    const std::string &bundleName, const std::string &path)
+int32_t CloudDiskService::UnregisterSyncFolderInner(
+    int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin UnregisterSyncFolderInner");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
     std::string unregisterSyncFolder;
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path,
-        std::to_string(userId), unregisterSyncFolder);
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(path, std::to_string(userId), unregisterSyncFolder);
     if (ret != E_OK) {
         LOGE("Get unregister physical path failed, ret = %{public}d", ret);
         return ret;
@@ -946,7 +1038,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(unregisterSyncFolder);
     std::string unregisterSyncFolderMnt;
     ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId),
-        unregisterSyncFolderMnt);
+                                                                        unregisterSyncFolderMnt);
     if (ret != E_OK) {
         LOGE("Get unregister mnt path failed, ret = %{public}d", ret);
         return ret;
@@ -960,9 +1052,11 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(int32_t userId,
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(bundleName, syncFolderIndex);
+    PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(bundleName, syncFolderIndex);
 
     CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(unregisterSyncFolderMnt);
-    CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, FILE_SYNC_STATE);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, CLOUD_DISK_FILE_SYNC_STATE_XATTR);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, CLOUD_DISK_PLACEHOLDER_COUNT_XATTR);
     UnloadSa();
     LOGI("End UnregisterSyncFolderInner");
     return E_OK;
@@ -980,8 +1074,7 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         CloudDiskServiceAccessToken::GetAccountId(userId);
     }
 
-    if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(path,
-        std::to_string(userId), pathRemove)) {
+    if (!CloudDiskSyncFolder::GetInstance().PathToSandboxPathByPhysicalPath(path, std::to_string(userId), pathRemove)) {
         LOGE("Get path failed");
         return E_INVALID_ARG;
     }
@@ -997,7 +1090,8 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         return E_INVALID_ARG;
     }
     CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(pathRemove);
-    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, FILE_SYNC_STATE);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_FILE_SYNC_STATE_XATTR);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_PLACEHOLDER_COUNT_XATTR);
 
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
     SyncFolderValue syncFolderValue;
@@ -1008,6 +1102,7 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
 
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(syncFolderValue.bundleName, syncFolderIndex);
+    PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(syncFolderValue.bundleName, syncFolderIndex);
     UnloadSa();
     return ret;
 #else
@@ -1044,8 +1139,8 @@ static int32_t CheckSyncFolderBundleName(const std::string &syncFolder, int32_t 
     uint32_t syncFolderIndex;
 
     // 步骤1：转换同步根sandbox路径到物理路径
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(
-        syncFolder, std::to_string(userId), physicalSyncFolder);
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), physicalSyncFolder);
     if (ret != E_OK) {
         LOGE("Get physical path failed, ret:%{public}d", ret);
         return ret;
@@ -1054,27 +1149,27 @@ static int32_t CheckSyncFolderBundleName(const std::string &syncFolder, int32_t 
     // 步骤2：计算同步根索引并查询注册信息
     syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
     SyncFolderValue syncFolderValue;
-    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(
-        syncFolderIndex, syncFolderValue)) {
+    if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue)) {
         LOGE("SyncFolder not registered, path:%{public}s", GetAnonyStringStrictly(physicalSyncFolder).c_str());
         return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
     // 步骤3：bundleName一致性校验
     if (syncFolderValue.bundleName != bundleName) {
-        LOGE("Permission denied, caller:%{public}s, registered:%{public}s",
-             bundleName.c_str(), syncFolderValue.bundleName.c_str());
+        LOGE("Permission denied, caller:%{public}s, registered:%{public}s", bundleName.c_str(),
+             syncFolderValue.bundleName.c_str());
         return E_SYNC_FOLDER_PATH_UNAUTHORIZED;
     }
 
     return E_OK;
 }
 
-static int32_t GetHmdfsPath(const std::string &syncFolder, const std::string &relativePath, int32_t userId,
-    std::string &hmdfsPath)
+static int32_t GetHmdfsPath(
+    const std::string &syncFolder, const std::string &relativePath, int32_t userId, std::string &hmdfsPath)
 {
     // 校验相对路径合法性
-    if (HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' || relativePath.back() == '/') {
+    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
+        relativePath.back() == '/') {
         LOGE("GetHmdfsPath branch=invalid_relative_path");
         return E_INVALID_ARG;
     }
@@ -1083,8 +1178,8 @@ static int32_t GetHmdfsPath(const std::string &syncFolder, const std::string &re
     std::string path = syncFolder + "/" + relativePath;
 
     // hmdfs路径：hmdfs文件系统的挂载路径，用于实际文件操作
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(
-        path, std::to_string(userId), hmdfsPath);
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(path, std::to_string(userId), hmdfsPath);
     if (ret != E_OK) {
         LOGE("Get hmdfs path failed, ret:%{public}d", ret);
         return ret;
@@ -1097,6 +1192,67 @@ static int32_t GetHmdfsPath(const std::string &syncFolder, const std::string &re
     }
 
     return E_OK;
+}
+
+static int32_t GetSyncRootContext(const std::string &syncFolder,
+                                  int32_t userId,
+                                  std::string &mntSyncFolder,
+                                  uint32_t &syncFolderIndex)
+{
+    std::string physicalSyncFolder;
+    int32_t ret =
+        CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId), physicalSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get physical path failed, ret:%{public}d", ret);
+        return ret;
+    }
+    syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(physicalSyncFolder);
+    ret = CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(syncFolder, std::to_string(userId),
+                                                                        mntSyncFolder);
+    if (ret != E_OK) {
+        LOGE("Get mnt path failed, ret:%{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
+struct PlaceholderStatePathContext {
+    std::string hmdfsPath;
+    std::string mntSyncFolder;
+    int32_t userId = -1;
+    uint32_t syncFolderIndex = 0;
+    std::string bundleName;
+    std::string syncFolder;
+    std::string absolutePath;
+};
+
+static int32_t ResolvePlaceholderStatePath(const std::string &syncFolder,
+                                           const std::string &relativePath,
+                                           PlaceholderStatePathContext &context)
+{
+    context.userId = CloudDiskServiceAccessToken::GetUserId();
+    if (context.userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(context.userId);
+    }
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(context.bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+    ret = CheckSyncFolderBundleName(syncFolder, context.userId, context.bundleName);
+    if (ret != E_OK) {
+        LOGE("CheckSyncFolderAccess failed, ret:%{public}d", ret);
+        return ret;
+    }
+    ret = GetHmdfsPath(syncFolder, relativePath, context.userId, context.hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = GetSyncRootContext(syncFolder, context.userId, context.mntSyncFolder, context.syncFolderIndex);
+    if (ret == E_OK) {
+        context.syncFolder = syncFolder;
+    }
+    return ret;
 }
 
 static int32_t CheckPathNotDir(const std::string &hmdfsPath)
@@ -1116,29 +1272,193 @@ static int32_t CheckPathNotDir(const std::string &hmdfsPath)
     return ret;
 }
 
-static int32_t CheckPlaceHolderXattr(int32_t fd, const std::string &hmdfsPath)
+static std::mutex &GetDehydrateFileMutex(const std::string &hmdfsPath)
 {
-    int32_t ret;
-    char xattrValue = '0';
-    if (fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(char)) < 0) {
-        ret = errno;
-        LOGE("fgetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        return (ret == ENODATA) ? E_NOT_A_PLACEHOLDER : ConvertErrnoToCloudDiskError(ret);
-    }
+    static std::array<std::mutex, DEHYDRATE_LOCK_BUCKET_COUNT> mutexes;
+    size_t index = std::hash<std::string>{}(hmdfsPath) % mutexes.size();
+    return mutexes[index];
+}
 
-    if (xattrValue == '0') {
-        LOGE("not a placeholder, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+static int32_t CheckDehydrateState(uint8_t state)
+{
+    if (state == PLACEHOLDER_STATE_NONE) {
         return E_NOT_A_PLACEHOLDER;
     }
-
-    if (xattrValue == '2') {
-        LOGE("file hydrate in progress, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
-        return E_HYDRATE_IN_PROGRESS;
+    if (state == PLACEHOLDER_STATE_UNHYDRATED) {
+        return E_OK;
+    }
+    if (state != PLACEHOLDER_STATE_FULLY_HYDRATED) {
+        return E_PLACEHOLDER_NOT_FULLY_HYDRATED;
     }
     return E_OK;
 }
 
-static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath)
+static int32_t DispatchDehydrateAuthorization(const PlaceholderStatePathContext &context,
+                                              const std::string &relativePath)
+{
+    std::string syncFolder = context.syncFolder;
+    std::string filePath = relativePath;
+    CloudDiskCallbackReqHead reqHead{};
+    reqHead.syncFolderPath = {syncFolder.empty() ? nullptr : syncFolder.data(), syncFolder.length()};
+    reqHead.reqKey = {nullptr, 0};
+    CloudDiskPathInfo pathInfo{filePath.empty() ? nullptr : filePath.data(), filePath.length()};
+    return PlaceholderCallbackManager::GetInstance().DispatchDehydrate(
+        context.bundleName, context.syncFolderIndex, reqHead, pathInfo);
+}
+
+static int32_t DehydrateOpenFile(int fd)
+{
+    struct stat fileStat = {};
+    if (fstat(fd, &fileStat) < 0) {
+        int32_t error = errno;
+        LOGE("Get file size before dehydration failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+    if (ftruncate(fd, 0) < 0) {
+        int32_t error = errno;
+        LOGE("Truncate file before dehydration failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+
+    bool extendSucceeded = false;
+    for (int32_t attempt = 0; attempt < DEHYDRATE_EXTEND_MAX_ATTEMPTS; ++attempt) {
+        if (ftruncate(fd, fileStat.st_size) == 0) {
+            extendSucceeded = true;
+            break;
+        }
+        LOGE("Extend placeholder after dehydration failed, attempt:%{public}d, errno:%{public}d",
+             attempt + 1, errno);
+    }
+    if (!extendSucceeded) {
+        return E_TRY_AGAIN;
+    }
+
+    uint8_t stateBeforeWrite = PLACEHOLDER_STATE_NONE;
+    int32_t ret = SetFilePlaceholderState(fd, PLACEHOLDER_STATE_UNHYDRATED, stateBeforeWrite);
+    if (ret != E_OK) {
+        LOGE("Set unhydrated state failed, errno:%{public}d", ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    if (fsync(fd) < 0) {
+        LOGW("Fsync dehydrated placeholder failed, errno:%{public}d", errno);
+    }
+    return E_OK;
+}
+
+static int32_t DehydratePlaceholderFile(const PlaceholderStatePathContext &context,
+                                        const std::string &relativePath)
+{
+    std::lock_guard<std::mutex> lock(GetDehydrateFileMutex(context.hmdfsPath));
+    if (PlaceholderTaskManager::GetInstance().HasActiveTask(
+        context.syncFolder, relativePath, context.syncFolderIndex)) {
+        return E_HYDRATE_IN_PROGRESS;
+    }
+    int32_t ret = CheckPathNotDir(context.hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    UniqueFd fd(open(context.hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
+    if (fd < 0) {
+        int32_t error = errno;
+        LOGE("Open file for dehydration failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+
+    uint8_t state = PLACEHOLDER_STATE_NONE;
+    ret = GetFilePlaceholderState(fd, state);
+    if (ret != E_OK) {
+        LOGE("Get placeholder state before dehydration failed, errno:%{public}d", ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    ret = CheckDehydrateState(state);
+    if (ret != E_OK || state == PLACEHOLDER_STATE_UNHYDRATED) {
+        return ret;
+    }
+
+    ret = DispatchDehydrateAuthorization(context, relativePath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    return DehydrateOpenFile(fd);
+}
+
+enum class PlaceholderStateTransition {
+    MARK,
+    UNMARK,
+};
+
+static int32_t ChangePlaceholderStateOnly(const PlaceholderStatePathContext &context,
+                                          PlaceholderStateTransition transition)
+{
+    int32_t ret = CheckPathNotDir(context.hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    UniqueFd fd(open(context.hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
+    if (fd < 0) {
+        int32_t error = errno;
+        LOGE("Open file for placeholder state transition failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+
+    uint8_t oldState = PLACEHOLDER_STATE_NONE;
+    ret = GetFilePlaceholderState(fd, oldState);
+    if (ret != E_OK) {
+        LOGE("Get placeholder state failed, errno:%{public}d", ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+
+    uint8_t newState = PLACEHOLDER_STATE_NONE;
+    int32_t delta = -1;
+    if (transition == PlaceholderStateTransition::MARK) {
+        if (IsPlaceholderState(oldState)) {
+            return E_IS_A_PLACEHOLDER;
+        }
+        newState = PLACEHOLDER_STATE_FULLY_HYDRATED;
+        delta = 1;
+    } else {
+        if (!IsPlaceholderState(oldState)) {
+            return E_NOT_A_PLACEHOLDER;
+        }
+        if (oldState != PLACEHOLDER_STATE_FULLY_HYDRATED) {
+            return E_PLACEHOLDER_NOT_FULLY_HYDRATED;
+        }
+    }
+
+    uint8_t stateBeforeWrite = PLACEHOLDER_STATE_NONE;
+    ret = SetFilePlaceholderState(fd, newState, stateBeforeWrite);
+    if (ret != E_OK) {
+        LOGE("Set placeholder state failed, errno:%{public}d", ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    (void)RefreshAncestorPlaceholderCount(context.mntSyncFolder, context.hmdfsPath, delta);
+    (void)UpdateDentryPlaceholderState(context.userId, context.syncFolderIndex, context.hmdfsPath, newState);
+    return E_OK;
+}
+
+static int32_t CheckPlaceHolderXattr(int32_t fd, const std::string &hmdfsPath)
+{
+    uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
+    int32_t ret = GetFilePlaceholderState(fd, placeholderState);
+    if (ret != E_OK) {
+        LOGE("get placeholder state failed, path:%{public}s, errno:%{public}d",
+             GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    if (!IsPlaceholderState(placeholderState)) {
+        LOGE("not a placeholder, path:%{public}s", GetAnonyStringStrictly(hmdfsPath).c_str());
+        return E_NOT_A_PLACEHOLDER;
+    }
+    return E_OK;
+}
+
+static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath,
+                                             const std::string &mntSyncFolder = "",
+                                             int32_t userId = -1,
+                                             uint32_t syncFolderIndex = 0)
 {
     int32_t ret = 0;
     int fd = -1;
@@ -1168,12 +1488,19 @@ static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath)
             break;
         }
 
-        const char newValue = '0';
-        if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue), 0) < 0) {
-            ret = errno;
-            LOGE("fsetxattr failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+        uint8_t oldPlaceholderState = PLACEHOLDER_STATE_NONE;
+        ret = SetFilePlaceholderState(fd, PLACEHOLDER_STATE_NONE, oldPlaceholderState);
+        if (ret != E_OK) {
+            LOGE("set placeholder state failed, path:%{public}s, errno:%{public}d",
+                 GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
             ret = ConvertErrnoToCloudDiskError(ret);
             break;
+        }
+        if (IsPlaceholderState(oldPlaceholderState) && !mntSyncFolder.empty()) {
+            (void)RefreshAncestorPlaceholderCount(mntSyncFolder, hmdfsPath, -1);
+            if (userId >= 0) {
+                (void)UpdateDentryPlaceholderState(userId, syncFolderIndex, hmdfsPath, PLACEHOLDER_STATE_NONE);
+            }
         }
     } while (0);
 
@@ -1219,7 +1546,14 @@ int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncF
         return ret;
     }
 
-    ret = ConvertPlaceholderToEmptyFile(hmdfsPath);
+    std::string mntSyncFolder;
+    uint32_t syncFolderIndex = 0;
+    ret = GetSyncRootContext(syncFolder, userId, mntSyncFolder, syncFolderIndex);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    ret = ConvertPlaceholderToEmptyFile(hmdfsPath, mntSyncFolder, userId, syncFolderIndex);
     if (ret != 0) {
         LOGE("Convert failed, ret:%{public}d", ret);
         return ret;
@@ -1232,7 +1566,363 @@ int32_t CloudDiskService::ConvertPlaceholderToFileInner(const std::string &syncF
 #endif
 }
 
-static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, const PlaceholderInfo &metaData)
+int32_t CloudDiskService::MarkFileAsPlaceholderInner(const std::string &syncFolder, const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("MarkFileAsPlaceholderInner invalid parameter");
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    int32_t ret = ResolvePlaceholderStatePath(syncFolder, relativePath, context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return ChangePlaceholderStateOnly(context, PlaceholderStateTransition::MARK);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::UnmarkPlaceholderFileInner(const std::string &syncFolder, const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("UnmarkPlaceholderFileInner invalid parameter");
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    int32_t ret = ResolvePlaceholderStatePath(syncFolder, relativePath, context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return ChangePlaceholderStateOnly(context, PlaceholderStateTransition::UNMARK);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+static int32_t ValidateHydrationPath(const PlaceholderStatePathContext &context)
+{
+    std::array<char, PATH_MAX + 1> rootPath{};
+    std::array<char, PATH_MAX + 1> filePath{};
+    if (realpath(context.mntSyncFolder.c_str(), rootPath.data()) == nullptr ||
+        realpath(context.hmdfsPath.c_str(), filePath.data()) == nullptr) {
+        int32_t error = errno;
+        LOGE("Resolve hydration path failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+    if (!IsPathInSyncFolder(rootPath.data(), filePath.data())) {
+        LOGE("Hydration path escapes sync folder");
+        return E_INVALID_ARG;
+    }
+    return E_OK;
+}
+
+static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
+                                   const std::string &relativePath,
+                                   CloudDiskHydratePriority priority)
+{
+    std::lock_guard<std::mutex> lock(GetDehydrateFileMutex(context.hmdfsPath));
+    auto &taskManager = PlaceholderTaskManager::GetInstance();
+    if (taskManager.HasActiveTask(context.syncFolder, relativePath, context.syncFolderIndex)) {
+        return E_HYDRATE_IN_PROGRESS;
+    }
+    int32_t ret = ValidateHydrationPath(context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = CheckPathNotDir(context.hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    UniqueFd outputFd(open(context.hmdfsPath.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
+    if (outputFd < 0) {
+        int32_t error = errno;
+        LOGE("Open file for hydration failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+    uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
+    ret = GetFilePlaceholderState(outputFd, placeholderState);
+    if (ret != E_OK) {
+        return ConvertErrnoToCloudDiskError(ret);
+    }
+    if (placeholderState == PLACEHOLDER_STATE_NONE) {
+        return E_NOT_A_PLACEHOLDER;
+    }
+    if (placeholderState == PLACEHOLDER_STATE_FULLY_HYDRATED) {
+        return E_ALREADY_HYDRATED;
+    }
+
+    PlaceholderTaskManager::RequestKey reqKey;
+    return taskManager.CreateHydrateTask(context.syncFolder,
+                                         relativePath,
+                                         context.bundleName,
+                                         context.syncFolderIndex,
+                                         priority,
+                                         std::move(outputFd),
+                                         reqKey,
+                                         {context.userId, context.absolutePath});
+}
+
+int32_t CloudDiskService::StartHydrationInner(const std::string &syncFolder,
+                                              const std::string &relativePath,
+                                              int32_t priority)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty() ||
+        priority < static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_LOW) ||
+        priority > static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH)) {
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    int32_t ret = ResolvePlaceholderStatePath(syncFolder, relativePath, context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return CreateHydrationTask(context, relativePath, static_cast<CloudDiskHydratePriority>(priority));
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::CancelHydrationInner(const std::string &syncFolder, const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    int32_t ret = ResolvePlaceholderStatePath(syncFolder, relativePath, context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return PlaceholderTaskManager::GetInstance().CancelTask(
+        context.syncFolder, relativePath, context.syncFolderIndex);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::ExecuteInner(const CallbackExecuteRequest &request)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (request.reqKey.empty()) {
+        LOGE("Empty Execute request key");
+        return E_INVALID_ARG;
+    }
+    std::string bundleName;
+    std::string physicalPath;
+    uint32_t syncFolderIndex = 0;
+    int32_t ret = ResolveOwnedSyncFolder(request.syncFolder, bundleName, syncFolderIndex, physicalPath);
+    if (ret != E_OK) {
+        LOGE("Resolve Execute sync folder failed, ret:%{private}d", ret);
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    if (!PlaceholderCallbackManager::GetInstance().IsCallbackRegistered(bundleName, syncFolderIndex)) {
+        LOGE("Execute callback table is not registered");
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    return PlaceholderTaskManager::GetInstance().Execute(bundleName, syncFolderIndex, request);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::DehydrateInner(const std::string &syncFolder, const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("DehydrateInner invalid parameter");
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    int32_t ret = ResolvePlaceholderStatePath(syncFolder, relativePath, context);
+    if (ret != E_OK) {
+        return ret;
+    }
+    return DehydratePlaceholderFile(context, relativePath);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+static int32_t CheckSystemAccessorPermission()
+{
+    int32_t ret = CheckPermissions(PERM_CLOUD_DISK_SERVICE, true);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (!CloudDiskServiceAccessToken::IsSystemApp()) {
+        LOGE("CloudDiskSystemAccessor requires a system application");
+        return E_PERMISSION_SYSTEM;
+    }
+    return E_OK;
+}
+
+static int32_t ResolveSystemAccessorUser(int32_t &userId)
+{
+    userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0 && CloudDiskServiceAccessToken::GetAccountId(userId) != E_OK) {
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    return userId >= 0 ? E_OK : E_CALLBACK_NOT_REGISTERED;
+}
+
+static bool IsValidSystemAccessorPath(const std::string &path)
+{
+    constexpr const char *SANDBOX_PREFIX = "/storage/Users/currentUser/";
+    if (path.empty() || path.size() > PATH_MAX || path.find('\0') != std::string::npos ||
+        path.compare(0, std::char_traits<char>::length(SANDBOX_PREFIX), SANDBOX_PREFIX) != 0 ||
+        path.find("/../") != std::string::npos || path.find("/./") != std::string::npos ||
+        path.back() == '/' || path.substr(path.find_last_of('/') + 1) == ".." ||
+        path.substr(path.find_last_of('/') + 1) == ".") {
+        return false;
+    }
+    return true;
+}
+
+static int32_t ResolveSystemAccessorPath(const std::string &path, PlaceholderStatePathContext &context,
+    std::string &relativePath)
+{
+    if (!IsValidSystemAccessorPath(path)) {
+        return E_INVALID_ARG;
+    }
+    int32_t ret = ResolveSystemAccessorUser(context.userId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto &folders = CloudDiskSyncFolder::GetInstance();
+    std::string physicalPath;
+    std::string user = std::to_string(context.userId);
+    ret = folders.PathToPhysicalPath(path, user, physicalPath);
+    const std::string userRoot = "/data/service/el2/" + user + "/hmdfs/account/files/Docs";
+    if (ret != E_OK || !IsPathInSyncFolder(userRoot, physicalPath)) {
+        LOGE("Resolve system accessor path failed, ret:%{private}d", ret);
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    SyncFolderValue selected;
+    for (const auto &[index, folder] : folders.GetSyncFolderMap()) {
+        if (!folder.bundleName.empty() && folder.path.size() > selected.path.size() &&
+            IsPathInSyncFolder(userRoot, folder.path) && IsPathInSyncFolder(folder.path, physicalPath)) {
+            selected = folder;
+            context.syncFolderIndex = index;
+        }
+    }
+    if (selected.path.empty() ||
+        !folders.PathToSandboxPathByPhysicalPath(selected.path, user, context.syncFolder)) {
+        LOGE("No registered sync folder for system accessor");
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    context.absolutePath = path;
+    context.bundleName = selected.bundleName;
+    relativePath = physicalPath.substr(selected.path.size() + 1);
+    ret = GetHmdfsPath(context.syncFolder, relativePath, context.userId, context.hmdfsPath);
+    if (ret == E_OK) {
+        ret = folders.PathToMntPathBySandboxPath(context.syncFolder, user, context.mntSyncFolder);
+    }
+    if (ret != E_OK) {
+        LOGE("Resolve system accessor mount failed, ret:%{private}d", ret);
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    return E_OK;
+}
+#endif
+
+int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSystemAccessorPermission();
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (callbackType < static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA) ||
+        callbackType > static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA) ||
+        priority < static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_LOW) ||
+        priority > static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH)) {
+        return E_INVALID_ARG;
+    }
+    PlaceholderStatePathContext context;
+    std::string relativePath;
+    ret = ResolveSystemAccessorPath(path, context, relativePath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (!PlaceholderCallbackManager::GetInstance().IsCallbackRegistered(context.bundleName, context.syncFolderIndex)) {
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    if (callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA)) {
+        return PlaceholderTaskManager::GetInstance().CancelTask(
+            context.syncFolder, relativePath, context.syncFolderIndex);
+    }
+    return CreateHydrationTask(context, relativePath, static_cast<CloudDiskHydratePriority>(priority));
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::DehydrateFileByPathInner(const std::string &path)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSystemAccessorPermission();
+    if (ret != E_OK) {
+        return ret;
+    }
+    PlaceholderStatePathContext context;
+    std::string relativePath;
+    ret = ResolveSystemAccessorPath(path, context, relativePath);
+    return ret == E_OK ? DehydratePlaceholderFile(context, relativePath) : ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSystemAccessorPermission();
+    if (ret != E_OK) {
+        return ret;
+    }
+    int32_t userId = -1;
+    ret = ResolveSystemAccessorUser(userId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto proxy = iface_cast<ICloudDiskProgressCallback>(callback);
+    return PlaceholderProgressManager::GetInstance().Register(
+        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid()}, userId, proxy);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskService::UnregisterProgressCallbackInner()
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSystemAccessorPermission();
+    if (ret != E_OK) {
+        return ret;
+    }
+    return PlaceholderProgressManager::GetInstance().Unregister(
+        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid()});
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+struct PlaceholderUpdateContext {
+    std::string mntSyncFolder;
+    int32_t userId = -1;
+    uint32_t syncFolderIndex = 0;
+};
+
+static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath,
+                                     const PlaceholderInfo &metaData,
+                                     const PlaceholderUpdateContext &context = {},
+                                     const PlaceholderCustomInfo &customInfo = {})
 {
     int32_t ret = E_OK;
     int fd = -1;
@@ -1254,15 +1944,24 @@ static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, const Placeho
         if (ftruncate(fd, 0) < 0) {
             ret = errno;
             LOGE("ftruncate to zero failed, path:%{public}s, errno:%{public}d",
-                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+                 GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
             ret = ConvertErrnoToCloudDiskError(ret);
             break;
         }
 
-        if ((ret = SetPlaceholderFileAttributes(fd, metaData)) != E_OK) {
+        uint8_t oldPlaceholderState = PLACEHOLDER_STATE_NONE;
+        if ((ret = SetPlaceholderFileAttributes(fd, metaData, &oldPlaceholderState, customInfo)) != E_OK) {
             LOGE("set placeholder file attr failed, path:%{public}s, errno:%{public}d",
-                GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
+                 GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
             ret = ConvertErrnoToCloudDiskError(ret);
+            break;
+        }
+        if (!IsPlaceholderState(oldPlaceholderState) && !context.mntSyncFolder.empty()) {
+            (void)RefreshAncestorPlaceholderCount(context.mntSyncFolder, hmdfsPath, 1);
+        }
+        if (context.userId >= 0) {
+            (void)UpdateDentryPlaceholderState(
+                context.userId, context.syncFolderIndex, hmdfsPath, PLACEHOLDER_STATE_UNHYDRATED);
         }
     } while (0);
 
@@ -1272,13 +1971,15 @@ static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath, const Placeho
     return ret;
 }
 
-int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, const std::string &relativePath,
-    const PlaceholderInfo &metaData)
+int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder,
+                                                 const std::string &relativePath,
+                                                 const PlaceholderInfo &metaData,
+                                                 const PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin UpdatePlaceholderInner");
 
-    if (syncFolder.empty() || relativePath.empty()) {
+    if (syncFolder.empty() || relativePath.empty() || customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
         LOGE("Invalid parameter");
         return E_INVALID_ARG;
     }
@@ -1294,7 +1995,7 @@ int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, 
         return E_TRY_AGAIN;
     }
 
-     // 步骤1：权限校验
+    // 步骤1：权限校验
     ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
     if (ret != E_OK) {
         LOGE("CheckSyncFolderAccess failed, ret:%{public}d", ret);
@@ -1308,7 +2009,14 @@ int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, 
         return ret;
     }
 
-    ret = UpdatePlaceholderAttr(hmdfsPath, metaData);
+    std::string mntSyncFolder;
+    uint32_t syncFolderIndex = 0;
+    ret = GetSyncRootContext(syncFolder, userId, mntSyncFolder, syncFolderIndex);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    ret = UpdatePlaceholderAttr(hmdfsPath, metaData, {mntSyncFolder, userId, syncFolderIndex}, customInfo);
     if (ret != 0) {
         LOGE("Update failed, ret:%{public}d", ret);
         return ret;
@@ -1316,6 +2024,97 @@ int32_t CloudDiskService::UpdatePlaceholderInner(const std::string &syncFolder, 
 
     LOGI("Update success");
     return E_OK;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+static int32_t ReadPlaceholderCustomInfo(int fd, PlaceholderCustomInfo &customInfo)
+{
+    ssize_t customInfoSize = fgetxattr(fd, CLOUD_DISK_CUSTOM_INFO_XATTR, nullptr, 0);
+    if (customInfoSize < 0) {
+        int32_t error = errno;
+        if (error == ENODATA) {
+            return E_PLACEHOLDER_CUSTOM_INFO_NOT_FOUND;
+        }
+        return error == ENOENT ? E_FILE_NOT_EXIST : ConvertErrnoToCloudDiskError(error);
+    }
+    if (customInfoSize > static_cast<ssize_t>(PLACEHOLDER_CUSTOM_INFO_MAX_SIZE)) {
+        LOGE("Stored placeholder custom info is too large, size:%{public}zd", customInfoSize);
+        return E_INVALID_ARG;
+    }
+    customInfo.data.resize(static_cast<size_t>(customInfoSize));
+    if (customInfoSize == 0) {
+        return E_OK;
+    }
+    ssize_t readSize = fgetxattr(fd, CLOUD_DISK_CUSTOM_INFO_XATTR, customInfo.data.data(), customInfo.data.size());
+    if (readSize < 0) {
+        int32_t error = errno;
+        customInfo.data.clear();
+        if (error == ENODATA) {
+            return E_PLACEHOLDER_CUSTOM_INFO_NOT_FOUND;
+        }
+        return error == ENOENT ? E_FILE_NOT_EXIST : ConvertErrnoToCloudDiskError(error);
+    }
+    if (readSize != customInfoSize) {
+        LOGE("Placeholder custom info changed while reading");
+        customInfo.data.clear();
+        return E_TRY_AGAIN;
+    }
+    return E_OK;
+}
+#endif
+
+int32_t CloudDiskService::GetPlaceholderCustomInfoInner(const std::string &syncFolder,
+                                                        const std::string &relativePath,
+                                                        PlaceholderCustomInfo &customInfo)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    customInfo.data.clear();
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("GetPlaceholderCustomInfoInner invalid parameter");
+        return E_INVALID_ARG;
+    }
+
+    int32_t userId = CloudDiskServiceAccessToken::GetUserId();
+    if (userId == 0) {
+        CloudDiskServiceAccessToken::GetAccountId(userId);
+    }
+    std::string bundleName;
+    int32_t ret = CloudDiskServiceAccessToken::GetCallerBundleName(bundleName);
+    if (ret != E_OK) {
+        LOGE("Get bundleName failed, ret:%{public}d", ret);
+        return E_TRY_AGAIN;
+    }
+    ret = CheckSyncFolderBundleName(syncFolder, userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("CheckSyncFolderAccess failed, ret:%{public}d", ret);
+        return ret;
+    }
+
+    std::string hmdfsPath;
+    ret = GetHmdfsPath(syncFolder, relativePath, userId, hmdfsPath);
+    if (ret != E_OK) {
+        return ret == E_SYNC_FOLDER_PATH_NOT_EXIST ? E_FILE_NOT_EXIST : ret;
+    }
+    ret = CheckPathNotDir(hmdfsPath);
+    if (ret != E_OK) {
+        return ret == E_SYNC_FOLDER_PATH_NOT_EXIST ? E_FILE_NOT_EXIST : ret;
+    }
+
+    UniqueFd fd(open(hmdfsPath.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
+    if (fd < 0) {
+        int32_t error = errno;
+        LOGE("Open placeholder failed, errno:%{public}d", error);
+        return error == ENOENT ? E_FILE_NOT_EXIST : ConvertErrnoToCloudDiskError(error);
+    }
+    ret = CheckPlaceHolderXattr(fd, hmdfsPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    return ReadPlaceholderCustomInfo(fd, customInfo);
 #else
     return E_NOT_SUPPORTED;
 #endif

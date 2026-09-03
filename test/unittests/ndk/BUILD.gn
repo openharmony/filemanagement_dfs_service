@@ -40,6 +40,7 @@ ohos_unittest("cloud_disk_manager_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "c_utils:utils",
+    "ipc:ipc_single",
   ]
 
   defines = [

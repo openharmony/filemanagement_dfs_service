@@ -434,6 +434,147 @@ typedef struct OH_CloudDisk_PlaceholderInfo {
 } OH_CloudDisk_PlaceholderInfo;
 
 /**
+ * @brief Defines opaque custom information associated with a placeholder.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_PlaceholderCustomInfo {
+    /** Length of the custom information, in bytes. */
+    size_t dataLength;
+    /** Pointer to the custom information. */
+    const uint8_t *data;
+} OH_CloudDisk_PlaceholderCustomInfo;
+
+/**
+ * @brief Defines a binary data buffer used by placeholder callbacks.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_DataBuf {
+    /** Pointer to the data buffer. */
+    uint8_t *data;
+    /** Data buffer size, in bytes. */
+    uint64_t dataSize;
+} OH_CloudDisk_DataBuf;
+
+/**
+ * @brief Enumerates placeholder callback request types.
+ * @since 26.1.0
+ */
+typedef enum OH_CloudDisk_CallbackType {
+    /** Fetch all data for placeholder hydration. */
+    CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA = 0,
+    /** Cancel placeholder hydration. */
+    CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA = 1,
+    /** Fetch data in a specified range. */
+    CLOUD_DISK_CALLBACK_TYPE_FETCH_RANGE_DATA = 2,
+    /** Request authorization to dehydrate a placeholder file. */
+    CLOUD_DISK_CALLBACK_TYPE_DEHYDRATE = 3,
+} OH_CloudDisk_CallbackType;
+
+/**
+ * @brief Enumerates placeholder hydration priorities.
+ * @since 26.1.0
+ */
+typedef enum OH_CloudDisk_HydratePriority {
+    /** Low priority, such as background prefetch. */
+    CLOUD_DISK_HYDRATE_PRIORITY_LOW = 0,
+    /** Normal priority. */
+    CLOUD_DISK_HYDRATE_PRIORITY_NORMAL = 1,
+    /** High priority, such as a user-initiated file open. */
+    CLOUD_DISK_HYDRATE_PRIORITY_HIGH = 2,
+} OH_CloudDisk_HydratePriority;
+
+/**
+ * @brief Defines a placeholder callback request header.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_CallbackReqHead {
+    /** Sync folder associated with the callback request. */
+    CloudDisk_SyncFolderPath syncFolderPath;
+    /** Callback request type. */
+    OH_CloudDisk_CallbackType callbackType;
+    /** Opaque request key. */
+    OH_CloudDisk_DataBuf reqKey;
+} OH_CloudDisk_CallbackReqHead;
+
+/**
+ * @brief Defines range data request information.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_RangeInfo {
+    /** File path relative to the sync folder. */
+    CloudDisk_PathInfo filePath;
+    /** Start offset, in bytes. */
+    uint64_t offset;
+    /** Requested data size, in bytes. */
+    uint64_t size;
+    /** Buffer filled by the callback provider. */
+    OH_CloudDisk_DataBuf data;
+} OH_CloudDisk_RangeInfo;
+
+/**
+ * @brief Defines placeholder dehydration authorization information.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_DehydrateInfo {
+    /** File path relative to the sync folder. */
+    CloudDisk_PathInfo filePath;
+    /** Whether the application allows the file to be dehydrated. */
+    bool allow;
+} OH_CloudDisk_DehydrateInfo;
+
+/**
+ * @brief Defines a request to fetch all data for placeholder hydration.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_FetchDataRequest {
+    /** File path relative to the sync folder. */
+    CloudDisk_PathInfo filePath;
+    /** Hydration priority supplied by the caller. */
+    OH_CloudDisk_HydratePriority priority;
+} OH_CloudDisk_FetchDataRequest;
+
+/**
+ * @brief Defines placeholder callback request context.
+ * @since 26.1.0
+ */
+typedef union OH_CloudDisk_CallbackContext {
+    /** Request information used for a fetch-data callback. */
+    OH_CloudDisk_FetchDataRequest *fetchData;
+    /** File path used for a cancel-fetch-data callback. */
+    CloudDisk_PathInfo *cancelFetchData;
+    /** Range information used for a fetch-range-data callback. */
+    OH_CloudDisk_RangeInfo *fetchRangeData;
+    /** Authorization information used for a dehydrate callback. */
+    OH_CloudDisk_DehydrateInfo *dehydrateData;
+} OH_CloudDisk_CallbackContext;
+
+/**
+ * @brief Defines fetched placeholder data.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_FetchData {
+    /** Start offset of this data block, in bytes. */
+    uint64_t offset;
+    /** Size of this data block, in bytes. */
+    uint64_t size;
+    /** Total file size, in bytes. */
+    uint64_t totalSize;
+    /** File data buffer. */
+    OH_CloudDisk_DataBuf data;
+    /** Whether this is the final data block. */
+    bool isComplete;
+} OH_CloudDisk_FetchData;
+
+/**
+ * @brief Defines placeholder callback response data.
+ * @since 26.1.0
+ */
+typedef union OH_CloudDisk_CallbackResponse {
+    /** Fetched data response. */
+    OH_CloudDisk_FetchData *fetchData;
+} OH_CloudDisk_CallbackResponse;
+
+/**
  * @brief Registers a callback function to notify the application of sync folder changes.
  *
  * @param syncFolderPath Indicates the sync folder path information.
@@ -582,13 +723,15 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(
  * @param syncFolderPath Indicates the registered sync folder path.
  * @param relativePathInfo Indicates the relative path in the sync folder.
  * @param placeholderInfo Indicates the placeholder metadata.
+ * @param customInfo Indicates optional opaque custom information. NULL means it is not provided.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26.1.0
  */
 CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo relativePathInfo,
-                                                   const OH_CloudDisk_PlaceholderInfo placeholderInfo);
+                                                   const OH_CloudDisk_PlaceholderInfo placeholderInfo,
+                                                   const OH_CloudDisk_PlaceholderCustomInfo *customInfo);
 
 /**
  * @brief Checks whether a file in a sync folder is a placeholder file.
@@ -618,16 +761,121 @@ CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(const CloudDisk_SyncFo
     const CloudDisk_PathInfo relativePathInfo);
 
 /**
+ * @brief Marks a normal file as a fully hydrated placeholder without changing its data or metadata.
+ *
+ * @param syncFolderPath Sync folder path information.
+ * @param relativePathInfo File path information relative to the sync folder.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns {@link OH_CLOUD_DISK_IS_A_PLACEHOLDER} if the file is already a placeholder.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_MarkFileAsPlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                       const CloudDisk_PathInfo relativePathInfo);
+
+/**
+ * @brief Converts a fully hydrated placeholder to a normal file without changing its data or metadata.
+ *
+ * @param syncFolderPath Sync folder path information.
+ * @param relativePathInfo File path information relative to the sync folder.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns {@link OH_CLOUD_DISK_NOT_A_PLACEHOLDER} if the file is not a placeholder;
+ * <br> returns {@link OH_CLOUD_DISK_PLACEHOLDER_NOT_FULLY_HYDRATED} if it is not fully hydrated.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_UnmarkPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                       const CloudDisk_PathInfo relativePathInfo);
+
+/**
+ * @brief Hydrates or cancels hydration of a placeholder file with an explicit priority.
+ *
+ * @param syncFolderPath Pointer to the registered sync folder path information.
+ * @param filePath Pointer to the file path information relative to the sync folder.
+ * @param type Hydration callback type. It must be fetch data or cancel fetch data.
+ * @param priority Hydration priority. Cancellation does not consume this value.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_HydratePlaceholder(const CloudDisk_SyncFolderPath *syncFolderPath,
+                                                    const CloudDisk_PathInfo *filePath,
+                                                    OH_CloudDisk_CallbackType type,
+                                                    OH_CloudDisk_HydratePriority priority);
+
+/**
+ * @brief Writes a fetched data block back to an active placeholder hydration task.
+ *
+ * @param reqHead Callback request header received by the application.
+ * @param reqContext Callback request context containing the relative file path of the callback request.
+ * @param rsp Fetched data block supplied by the application.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_Execute(const OH_CloudDisk_CallbackReqHead reqHead,
+                                         OH_CloudDisk_CallbackContext reqContext,
+                                         OH_CloudDisk_CallbackResponse rsp);
+
+/**
+ * @brief Dehydrates a fully hydrated placeholder after application authorization.
+ *
+ * @param syncFolderPath Pointer to the registered sync folder path information.
+ * @param filePath Pointer to the file path information relative to the sync folder.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns {@link OH_CLOUD_DISK_DEHYDRATE_DENIED} if the application denies dehydration.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_DehydrateFile(const CloudDisk_SyncFolderPath *syncFolderPath,
+                                               const CloudDisk_PathInfo *filePath);
+
+/**
  * @brief Updates file metadata (supports placeholder and normal files).
  *
  * @param syncFolderPath Sync folder path information.
  * @param relativePathInfo File path information.
  * @param placeholderInfo Metadata information.
+ * @param customInfo Optional opaque custom information. NULL means the existing value is preserved.
  * @return Returns {@link CLOUD_DISK_OK} if successful.
  * @since 26.1.0
  */
 CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
-    const CloudDisk_PathInfo relativePathInfo, const OH_CloudDisk_PlaceholderInfo placeholderInfo);
+    const CloudDisk_PathInfo relativePathInfo, const OH_CloudDisk_PlaceholderInfo placeholderInfo,
+    const OH_CloudDisk_PlaceholderCustomInfo *customInfo);
+
+/**
+ * @brief Gets opaque custom information associated with a placeholder.
+ *
+ * @param syncFolderPath Sync folder path information.
+ * @param relativePathInfo File path information relative to the sync folder.
+ * @param dataBuf Caller-allocated output buffer.
+ * @param inOutDataLength Input buffer capacity and output actual data length.
+ * @return Returns {@link CLOUD_DISK_OK} if successful; otherwise, returns an error code.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderCustomInfo(const CloudDisk_SyncFolderPath syncFolderPath,
+    const CloudDisk_PathInfo relativePathInfo, uint8_t *dataBuf, size_t *inOutDataLength);
+
+/**
+ * @brief Registers a placeholder callback table for a sync folder.
+ *
+ * @param syncFolderPath Indicates the registered sync folder path.
+ * @param callback Indicates the callback function to register.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_RegisterCallbackTable(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                       void (*callback)(const OH_CloudDisk_CallbackReqHead reqHead,
+                                                                        OH_CloudDisk_CallbackContext reqContext));
+
+/**
+ * @brief Unregisters the placeholder callback table for a sync folder.
+ *
+ * @param syncFolderPath Indicates the registered sync folder path.
+ * @return Returns {@link CLOUD_DISK_OK} if successful;
+ * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_UnregisterCallbackTable(const CloudDisk_SyncFolderPath syncFolderPath);
 
 /**
  * @brief Registers a sync folder with placeholder support info.

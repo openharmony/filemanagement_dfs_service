@@ -55,6 +55,20 @@ int dirfd(DIR *d)
 }
 
 extern "C" {
+ssize_t pwrite(int fd, const void *data, size_t size, off_t offset)
+{
+    if (Assistant::mockPwriteApi && Assistant::ins != nullptr) {
+        return Assistant::ins->Pwrite(fd, data, size, offset);
+    }
+    static auto realPwrite = reinterpret_cast<ssize_t (*)(int, const void *, size_t, off_t)>(
+        dlsym(RTLD_NEXT, "pwrite"));
+    if (realPwrite == nullptr) {
+        errno = EIO;
+        return -1;
+    }
+    return realPwrite(fd, data, size, offset);
+}
+
 int stat(const char *path, struct stat *buf)
 {
     if (Assistant::mockFdApi) {
@@ -82,6 +96,16 @@ int setxattr(const char *path, const char *name, const void *value, size_t size,
 int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags)
 {
     return Assistant::ins->fsetxattr(fd, name, value, size, flags);
+}
+
+ssize_t fgetxattr(int fd, const char *name, void *value, size_t size)
+{
+    return Assistant::ins->fgetxattr(fd, name, value, size);
+}
+
+int access(const char *name, int type)
+{
+    return Assistant::ins->access(name, type);
 }
 
 int open(const char *path, int flags, ...)

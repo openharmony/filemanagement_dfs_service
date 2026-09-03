@@ -75,6 +75,13 @@ struct task_attr {
     inline task_attr &timeout(int64_t) { return *this; }
 };
 struct task_handle {};
+class queue {
+public:
+    explicit queue(const char *) {}
+    void submit(std::function<void()> &&) {}
+    task_handle submit_h(std::function<void()> &&) { return {}; }
+    void wait(const task_handle &) {}
+};
 
 inline void submit(std::function<void()> &&task, task_attr attr = {})
 {

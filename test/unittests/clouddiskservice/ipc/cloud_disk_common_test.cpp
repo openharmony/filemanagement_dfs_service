@@ -16,6 +16,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "cloud_disk_common.h"
 #include "message_parcel_mock.h"
 
@@ -237,5 +239,194 @@ HWTEST_F(CloudDiskCommonTest, ChangesResultReadFromParcelTest006, TestSize.Level
     ASSERT_EQ(result.changesData.size(), TEST_CHANGE_DATA_SIZE);
     EXPECT_EQ(result.changesData[0].fileId, TEST_FILE_ID);
     EXPECT_EQ(result.changesData[0].operationType, OperationType::CLOSE_WRITE);
+}
+
+/**
+ * @tc.name: PlaceholderCustomInfoParcelTest001
+ * @tc.desc: Verify non-empty placeholder custom info parcel round trip
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, PlaceholderCustomInfoParcelTest001, TestSize.Level1)
+{
+    MessageParcel parcel;
+    PlaceholderCustomInfo info;
+    info.data = {0x00, 0x7F, 0x80, 0xFF};
+
+    EXPECT_CALL(*messageParcelMock_, WriteUInt8Vector(info.data)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadUInt8Vector(_))
+        .WillOnce(DoAll(SetArgPointee<0>(info.data), Return(true)));
+
+    EXPECT_TRUE(info.Marshalling(parcel));
+    std::unique_ptr<PlaceholderCustomInfo> result(PlaceholderCustomInfo::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->data, info.data);
+}
+
+/**
+ * @tc.name: PlaceholderCustomInfoParcelTest002
+ * @tc.desc: Verify empty placeholder custom info parcel round trip
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, PlaceholderCustomInfoParcelTest002, TestSize.Level1)
+{
+    MessageParcel parcel;
+    PlaceholderCustomInfo info;
+
+    EXPECT_CALL(*messageParcelMock_, WriteUInt8Vector(info.data)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadUInt8Vector(_))
+        .WillOnce(DoAll(SetArgPointee<0>(info.data), Return(true)));
+
+    EXPECT_TRUE(info.Marshalling(parcel));
+    std::unique_ptr<PlaceholderCustomInfo> result(PlaceholderCustomInfo::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_TRUE(result->data.empty());
+}
+
+/**
+ * @tc.name: PlaceholderCustomInfoParcelTest003
+ * @tc.desc: Verify placeholder custom info marshalling failure
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, PlaceholderCustomInfoParcelTest003, TestSize.Level1)
+{
+    MessageParcel parcel;
+    PlaceholderCustomInfo info;
+    info.data = {1};
+
+    EXPECT_CALL(*messageParcelMock_, WriteUInt8Vector(info.data)).WillOnce(Return(false));
+    EXPECT_FALSE(info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PlaceholderCustomInfoParcelTest004
+ * @tc.desc: Verify placeholder custom info unmarshalling failure
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, PlaceholderCustomInfoParcelTest004, TestSize.Level1)
+{
+    MessageParcel parcel;
+
+    EXPECT_CALL(*messageParcelMock_, ReadUInt8Vector(_)).WillOnce(Return(false));
+    std::unique_ptr<PlaceholderCustomInfo> result(PlaceholderCustomInfo::Unmarshalling(parcel));
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.name: FetchDataCallbackParcelTest001
+ * @tc.desc: Verify fetch-data callback request priority marshalling and unmarshalling.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, FetchDataCallbackParcelTest001, TestSize.Level1)
+{
+    MessageParcel parcel;
+    std::string syncFolder = "/sync";
+    std::string filePath = "dir/file.txt";
+    CloudDiskCallbackReqHead reqHead{{syncFolder.data(), syncFolder.length()}, CloudDiskCallbackType::FETCH_DATA,
+                                     {nullptr, 0}};
+    CloudDiskFetchDataRequest request{{filePath.data(), filePath.length()}, CLOUD_DISK_HYDRATE_PRIORITY_HIGH};
+    CloudDiskCallbackContext context{};
+    context.fetchData = &request;
+
+    EXPECT_CALL(*messageParcelMock_, WriteString(syncFolder)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUInt8Vector(std::vector<uint8_t>{})).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(filePath)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH)))
+        .WillOnce(Return(true));
+    EXPECT_TRUE(WriteCallbackParcel(parcel, reqHead, context));
+
+    Mock::VerifyAndClearExpectations(messageParcelMock_.get());
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>(syncFolder), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(filePath), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA)), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH)), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUInt8Vector(_)).WillOnce(Invoke([](std::vector<uint8_t> *data) {
+        data->clear();
+        return true;
+    }));
+    CloudDiskCallbackReqHead decodedHead{};
+    CloudDiskCallbackContext decodedContext{};
+    CallbackParcelStorage storage;
+    ASSERT_TRUE(ReadCallbackParcel(parcel, decodedHead, decodedContext, storage));
+    ASSERT_NE(decodedContext.fetchData, nullptr);
+    EXPECT_EQ(decodedHead.callbackType, CloudDiskCallbackType::FETCH_DATA);
+    EXPECT_EQ(std::string(decodedContext.fetchData->filePath.value, decodedContext.fetchData->filePath.length),
+              filePath);
+    EXPECT_EQ(decodedContext.fetchData->priority, CLOUD_DISK_HYDRATE_PRIORITY_HIGH);
+}
+
+/**
+ * @tc.name: DehydrateCallbackParcelTest001
+ * @tc.desc: Verify dehydrate callback request marshalling and unmarshalling.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, DehydrateCallbackParcelTest001, TestSize.Level1)
+{
+    MessageParcel parcel;
+    std::string syncFolder = "/sync";
+    std::string filePath = "dir/file.txt";
+    CloudDiskCallbackReqHead reqHead{{syncFolder.data(), syncFolder.length()}, CloudDiskCallbackType::DEHYDRATE,
+                                     {nullptr, 0}};
+    CloudDiskDehydrateInfo info{{filePath.data(), filePath.length()}, false};
+    CloudDiskCallbackContext context{};
+    context.dehydrateData = &info;
+
+    EXPECT_CALL(*messageParcelMock_, WriteString(syncFolder)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(static_cast<int32_t>(CloudDiskCallbackType::DEHYDRATE)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteUInt8Vector(std::vector<uint8_t>{})).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(filePath)).WillOnce(Return(true));
+    EXPECT_TRUE(WriteCallbackParcel(parcel, reqHead, context));
+
+    Mock::VerifyAndClearExpectations(messageParcelMock_.get());
+    EXPECT_CALL(*messageParcelMock_, ReadString(_))
+        .WillOnce(DoAll(SetArgReferee<0>(syncFolder), Return(true)))
+        .WillOnce(DoAll(SetArgReferee<0>(filePath), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_))
+        .WillOnce(DoAll(SetArgReferee<0>(static_cast<int32_t>(CloudDiskCallbackType::DEHYDRATE)), Return(true)));
+    EXPECT_CALL(*messageParcelMock_, ReadUInt8Vector(_)).WillOnce(Invoke([](std::vector<uint8_t> *data) {
+        data->clear();
+        return true;
+    }));
+    CloudDiskCallbackReqHead decodedHead{};
+    CloudDiskCallbackContext decodedContext{};
+    CallbackParcelStorage storage;
+    ASSERT_TRUE(ReadCallbackParcel(parcel, decodedHead, decodedContext, storage));
+    ASSERT_NE(decodedContext.dehydrateData, nullptr);
+    EXPECT_EQ(decodedHead.callbackType, CloudDiskCallbackType::DEHYDRATE);
+    EXPECT_EQ(std::string(decodedContext.dehydrateData->filePath.value,
+                          decodedContext.dehydrateData->filePath.length), filePath);
+    EXPECT_FALSE(decodedContext.dehydrateData->allow);
+}
+
+/**
+ * @tc.name: DehydrateCallbackReplyTest001
+ * @tc.desc: Verify dehydrate authorization is written to and read from the callback reply.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskCommonTest, DehydrateCallbackReplyTest001, TestSize.Level1)
+{
+    MessageParcel parcel;
+    CloudDiskDehydrateInfo info{{nullptr, 0}, true};
+    CloudDiskCallbackContext context{};
+    context.dehydrateData = &info;
+
+    EXPECT_CALL(*messageParcelMock_, WriteBool(true)).WillOnce(Return(true));
+    EXPECT_TRUE(WriteCallbackReply(parcel, CloudDiskCallbackType::DEHYDRATE, context, 0));
+
+    Mock::VerifyAndClearExpectations(messageParcelMock_.get());
+    EXPECT_CALL(*messageParcelMock_, ReadBool(_)).WillOnce(DoAll(SetArgReferee<0>(false), Return(true)));
+    EXPECT_TRUE(ReadCallbackReply(parcel, CloudDiskCallbackType::DEHYDRATE, context));
+    EXPECT_FALSE(info.allow);
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

@@ -16,6 +16,7 @@
 #include "cloud_disk_service_manager_impl.h"
 
 #include "cloud_disk_service_callback_client.h"
+#include "cloud_disk_service_callback_table_client.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_file_utils.h"
 #include "iservice_registry.h"
@@ -75,6 +76,59 @@ int32_t CloudDiskServiceManagerImpl::UnregisterSyncFolderChanges(const std::stri
     }
     SetDeathRecipient(serviceProxy->AsObject());
     LOGI("UnregisterSyncFolderChanges ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::RegisterCallbackTable(
+    const std::string &syncFolder,
+    const std::shared_ptr<CloudDiskServiceCallbackTable> &callbackTable)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (callbackTable == nullptr) {
+        LOGE("Callback table is nullptr");
+        return E_INVALID_ARG;
+    }
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (serviceProxy == nullptr) {
+        LOGE("Proxy is nullptr");
+        return E_IPC_FAILED;
+    }
+    auto callbackClient = sptr(new (std::nothrow) CloudDiskServiceCallbackTableClient(callbackTable));
+    if (callbackClient == nullptr) {
+        LOGE("Failed to allocate callback table client");
+        return E_TRY_AGAIN;
+    }
+    int32_t ret = serviceProxy->RegisterCallbackTableInner(syncFolder, callbackClient);
+    if (ret == E_OK) {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callbackTables_[syncFolder] = callbackTable;
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    LOGI("RegisterCallbackTable ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::UnregisterCallbackTable(const std::string &syncFolder)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (serviceProxy == nullptr) {
+        LOGE("Proxy is nullptr");
+        return E_IPC_FAILED;
+    }
+    int32_t ret = serviceProxy->UnregisterCallbackTableInner(syncFolder);
+    if (ret == E_OK) {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callbackTables_.erase(syncFolder);
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    LOGI("UnregisterCallbackTable ret %{public}d", ret);
     return ret;
 #else
     return E_NOT_SUPPORTED;
@@ -148,7 +202,8 @@ int32_t CloudDiskServiceManagerImpl::GetFileSyncStates(const std::string &syncFo
 
 int32_t CloudDiskServiceManagerImpl::CreatePlaceholderFile(const std::string &syncFolder,
                                                            const std::string &relativePath,
-                                                           const PlaceholderInfo &info)
+                                                           const PlaceholderInfo &info,
+                                                           const PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("CreatePlaceholderFile route=manager_to_proxy");
@@ -158,7 +213,7 @@ int32_t CloudDiskServiceManagerImpl::CreatePlaceholderFile(const std::string &sy
         return E_IPC_FAILED;
     }
 
-    auto ret = serviceProxy->CreatePlaceholderFileInner(syncFolder, relativePath, info);
+    auto ret = serviceProxy->CreatePlaceholderFileInner(syncFolder, relativePath, info, customInfo);
     SetDeathRecipient(serviceProxy->AsObject());
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFile branch=proxy_failed ret=%{public}d", ret);
@@ -277,8 +332,116 @@ int32_t CloudDiskServiceManagerImpl::ConvertPlaceholderToFile(const std::string 
 #endif
 }
 
+int32_t CloudDiskServiceManagerImpl::MarkFileAsPlaceholder(const std::string &syncFolder,
+                                                           const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start MarkFileAsPlaceholder in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    SetDeathRecipient(serviceProxy->AsObject());
+    int32_t ret = serviceProxy->MarkFileAsPlaceholderInner(syncFolder, relativePath);
+    LOGI("MarkFileAsPlaceholder, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::UnmarkPlaceholderFile(const std::string &syncFolder,
+                                                           const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start UnmarkPlaceholderFile in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    SetDeathRecipient(serviceProxy->AsObject());
+    int32_t ret = serviceProxy->UnmarkPlaceholderFileInner(syncFolder, relativePath);
+    LOGI("UnmarkPlaceholderFile, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::StartHydration(const std::string &syncFolder,
+                                                    const std::string &relativePath,
+                                                    CloudDiskHydratePriority priority)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    return serviceProxy->StartHydrationInner(syncFolder, relativePath, static_cast<int32_t>(priority));
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::CancelHydration(const std::string &syncFolder,
+                                                     const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    return serviceProxy->CancelHydrationInner(syncFolder, relativePath);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::Execute(const CallbackExecuteRequest &request)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    return serviceProxy->ExecuteInner(request);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::DehydrateFile(const std::string &syncFolder,
+                                                   const std::string &relativePath)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start DehydrateFile in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    SetDeathRecipient(serviceProxy->AsObject());
+    int32_t ret = serviceProxy->DehydrateInner(syncFolder, relativePath);
+    LOGI("DehydrateFile, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
-    const PlaceholderInfo &metaData)
+    const PlaceholderInfo &metaData, const PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("start UpdatePlaceholder in impl");
@@ -289,7 +452,7 @@ int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFo
     }
 
     SetDeathRecipient(serviceProxy->AsObject());
-    auto ret = serviceProxy->UpdatePlaceholderInner(syncFolder, relativePath, metaData);
+    auto ret = serviceProxy->UpdatePlaceholderInner(syncFolder, relativePath, metaData, customInfo);
     LOGI("UpdatePlaceholder, ret %{public}d", ret);
     return ret;
 #else
@@ -297,22 +460,131 @@ int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFo
 #endif
 }
 
+int32_t CloudDiskServiceManagerImpl::GetPlaceholderCustomInfo(const std::string &syncFolder,
+    const std::string &relativePath, PlaceholderCustomInfo &customInfo)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("start GetPlaceholderCustomInfo in impl");
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (!serviceProxy) {
+        LOGE("proxy is null");
+        return E_IPC_FAILED;
+    }
+
+    SetDeathRecipient(serviceProxy->AsObject());
+    auto ret = serviceProxy->GetPlaceholderCustomInfoInner(syncFolder, relativePath, customInfo);
+    LOGI("GetPlaceholderCustomInfo, ret %{public}d", ret);
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::StartHydrationByPath(const std::string &path,
+    int32_t callbackType, int32_t priority)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(proxy->AsObject());
+    return proxy->StartHydrationByPathInner(path, callbackType, priority);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::DehydrateFileByPath(const std::string &path)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(proxy->AsObject());
+    return proxy->DehydrateFileByPathInner(path);
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (callback == nullptr) {
+        return E_INVALID_ARG;
+    }
+    std::lock_guard<std::mutex> lock(progressMutex_);
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return E_IPC_FAILED;
+    }
+    if (progressClient_ == nullptr) {
+        progressClient_ = sptr(new CloudDiskProgressCallbackClient());
+    }
+    bool added = progressClient_->Add(callback);
+    SetDeathRecipient(proxy->AsObject());
+    // Re-register the same broker idempotently, including after an SA restart.
+    int32_t ret = proxy->RegisterProgressCallbackInner(progressClient_->AsObject());
+    if (ret != E_OK && added) {
+        progressClient_->Remove(callback);
+    }
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
+int32_t CloudDiskServiceManagerImpl::UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    std::lock_guard<std::mutex> lock(progressMutex_);
+    if (progressClient_ == nullptr || !progressClient_->Remove(callback)) {
+        return E_OK;
+    }
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return E_IPC_FAILED;
+    }
+    int32_t ret = proxy->UnregisterProgressCallbackInner();
+    return ret == E_CALLBACK_NOT_REGISTERED ? E_OK : ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 void CloudDiskServiceManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
-    if (!isFirstCall_.test_and_set()) {
-        auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
-            LOGE("service died.");
-            ServiceProxy::InvalidInstance();
-            if (callback_) {
-                callback_->OnDeathRecipient();
+    if (isFirstCall_.test_and_set()) {
+        return;
+    }
+    auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
+        LOGE("service died.");
+        ServiceProxy::InvalidInstance();
+        std::shared_ptr<CloudDiskServiceCallback> callback;
+        std::vector<std::shared_ptr<CloudDiskServiceCallbackTable>> callbackTables;
+        {
+            std::lock_guard<std::mutex> lock(callbackMutex_);
+            callback = callback_;
+            for (const auto &item : callbackTables_) {
+                callbackTables.push_back(item.second);
             }
-            isFirstCall_.clear();
-        };
-        deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
-        if (!remoteObject->AddDeathRecipient(deathRecipient_)) {
-            LOGE("add death recipient failed");
-            isFirstCall_.clear();
         }
+        if (callback != nullptr) {
+            callback->OnDeathRecipient();
+        }
+        for (const auto &callbackTable : callbackTables) {
+            if (callbackTable != nullptr) {
+                callbackTable->OnDeathRecipient();
+            }
+        }
+        isFirstCall_.clear();
+    };
+    deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
+    if (!remoteObject->AddDeathRecipient(deathRecipient_)) {
+        LOGE("add death recipient failed");
+        isFirstCall_.clear();
     }
 }
 

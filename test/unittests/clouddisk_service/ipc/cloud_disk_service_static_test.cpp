@@ -26,6 +26,13 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+namespace {
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_LOCAL =
+    static_cast<uint8_t>(PLACEHOLDER_STATE_UNHYDRATED << FILE_SYNC_STATE_PLACEHOLDER_SHIFT);
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_NONE = 0;
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_PARTIAL =
+    static_cast<uint8_t>(PLACEHOLDER_STATE_PARTIALLY_HYDRATED << FILE_SYNC_STATE_PLACEHOLDER_SHIFT);
+} // namespace
 class CloudDiskServiceStaticTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -703,8 +710,8 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_Success_006, 
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
             return;
         }
-        char placeholderValue = '1';
-        if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue, sizeof(placeholderValue), 0) != 0) {
+        uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
+        if (fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue, sizeof(placeholderValue), 0) != 0) {
             close(fd);
             unlink(testFilePath.c_str());
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
@@ -723,7 +730,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_Success_006, 
         char newValue = '0';
         fd = open(testFilePath.c_str(), O_RDONLY);
         if (fd >= 0) {
-            fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue));
+            fgetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &newValue, sizeof(newValue));
             close(fd);
         }
 
@@ -761,7 +768,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_GetXattrFail_
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 failed";
             return;
         }
-        ssize_t xattrRet = fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
+        ssize_t xattrRet = fgetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, nullptr, 0);
         close(fd);
         if (xattrRet < 0) {
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
@@ -788,9 +795,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_TruncateFail_
         string testFilePath = "/data/test_truncate_fail_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -821,9 +828,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_
         string testFilePath = "/data/test_setxattr_fail_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -855,9 +862,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueZer
         string testFilePath = "/data/test_xattr_zero_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char xattrValue = '0';
+            uint8_t xattrValue = PLACEHOLDER_TEST_VALUE_NONE;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &xattrValue,
                       sizeof(xattrValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -888,9 +895,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_
         string testFilePath = "/data/test_fsetxattr_fail" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -1278,12 +1285,12 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueTwo
         string testFilePath = "/data/test_xattr_two_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char xattrValue = '2';
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(xattrValue), 0);
+            uint8_t xattrValue = PLACEHOLDER_TEST_VALUE_PARTIAL;
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &xattrValue, sizeof(xattrValue), 0);
             close(fd);
 
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
-            EXPECT_EQ(ret, E_HYDRATE_IN_PROGRESS);
+            EXPECT_EQ(ret, E_OK);
 
             unlink(testFilePath.c_str());
         }

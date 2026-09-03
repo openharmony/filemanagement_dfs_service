@@ -19,6 +19,7 @@
 #include "iremote_proxy.h"
 
 #include "i_cloud_disk_service_callback.h"
+#include "i_cloud_disk_service_callback_table.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 class CloudDiskServiceCallbackProxy : public IRemoteProxy<ICloudDiskServiceCallback> {
@@ -33,6 +34,22 @@ public:
 
 private:
     static inline BrokerDelegator<CloudDiskServiceCallbackProxy> delegator_;
+};
+
+class CloudDiskServiceCallbackTableProxy : public IRemoteProxy<ICloudDiskServiceCallbackTable> {
+public:
+    explicit CloudDiskServiceCallbackTableProxy(const sptr<IRemoteObject> &impl)
+        : IRemoteProxy<ICloudDiskServiceCallbackTable>(impl)
+    {
+    }
+    ~CloudDiskServiceCallbackTableProxy() override = default;
+
+    void OnCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) override;
+
+private:
+    void SendCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext);
+
+    static BrokerDelegator<CloudDiskServiceCallbackTableProxy> delegator_;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

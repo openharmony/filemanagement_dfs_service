@@ -15,9 +15,9 @@
 
 #include "cloud_disk_service_metafile.h"
 
-#include <string>
 #include <memory>
 #include <securec.h>
+#include <string>
 #include <sys/types.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
@@ -27,6 +27,7 @@
 #include "cloud_file_utils.h"
 #include "convertor.h"
 #include "file_utils.h"
+#include "placeholder_helper.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -123,8 +124,8 @@ static std::unique_ptr<CloudDiskServiceDentryGroup> FindDentryPage(uint64_t inde
     return dentryBlk;
 }
 
-static CloudDiskServiceDentry *FindInBlockById(CloudDiskServiceDentryGroup &dentryBlk, DcacheLookupCtx *ctx,
-                                               uint8_t revalidate)
+static CloudDiskServiceDentry *FindInBlockById(
+    CloudDiskServiceDentryGroup &dentryBlk, DcacheLookupCtx *ctx, uint8_t revalidate)
 {
     uint32_t bitPos = 0;
     CloudDiskServiceDentry *de = nullptr;
@@ -151,8 +152,8 @@ static CloudDiskServiceDentry *FindInBlockById(CloudDiskServiceDentryGroup &dent
     return nullptr;
 }
 
-static CloudDiskServiceDentry *FindInBlock(CloudDiskServiceDentryGroup &dentryBlk, DcacheLookupCtx *ctx,
-                                           uint8_t revalidate)
+static CloudDiskServiceDentry *FindInBlock(
+    CloudDiskServiceDentryGroup &dentryBlk, DcacheLookupCtx *ctx, uint8_t revalidate)
 {
     uint32_t bitPos = 0;
     CloudDiskServiceDentry *de = nullptr;
@@ -255,7 +256,10 @@ static uint32_t RoomForFilename(const uint8_t bitmap[], size_t slots, uint32_t m
     return E_OK;
 }
 
-static bool CreateDentry(CloudDiskServiceDentryGroup &d, const MetaBase &base, uint32_t nameHash, uint32_t bitPos,
+static bool CreateDentry(CloudDiskServiceDentryGroup &d,
+                         const MetaBase &base,
+                         uint32_t nameHash,
+                         uint32_t bitPos,
                          std::string recordId)
 {
     CloudDiskServiceDentry *de;
@@ -275,7 +279,8 @@ static bool CreateDentry(CloudDiskServiceDentryGroup &d, const MetaBase &base, u
     de->mtime = base.mtime;
     de->size = base.size;
     de->mode = base.mode;
-    (void) memset_s(de->recordId, RECORD_ID_LEN, 0, RECORD_ID_LEN);
+    SetDentryPlaceholderState(*de, base.placeholder);
+    (void)memset_s(de->recordId, RECORD_ID_LEN, 0, RECORD_ID_LEN);
     ret = memcpy_s(de->recordId, RECORD_ID_LEN, recordId.c_str(), recordId.length());
     if (ret != 0) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", RECORD_ID_LEN, recordId.length());
@@ -291,18 +296,18 @@ static bool CreateDentry(CloudDiskServiceDentryGroup &d, const MetaBase &base, u
     return true;
 }
 
-static std::string GetDentryFileByPath(const int32_t userId, const std::string &syncFolderIndex,
-                                       const std::string &inode)
+static std::string GetDentryFileByPath(
+    const int32_t userId, const std::string &syncFolderIndex, const std::string &inode)
 {
-    std::string cacheDir =
-        "/data/service/el2/" + std::to_string(userId) +
-        "/hmdfs/cache/account_cache/dentry_cache/clouddisk_service_cache/" + syncFolderIndex + "/" +
-        std::to_string(CloudDisk::CloudFileUtils::GetBucketId(inode)) + "/";
+    std::string cacheDir = "/data/service/el2/" + std::to_string(userId) +
+                           "/hmdfs/cache/account_cache/dentry_cache/clouddisk_service_cache/" + syncFolderIndex + "/" +
+                           std::to_string(CloudDisk::CloudFileUtils::GetBucketId(inode)) + "/";
     Storage::DistributedFile::Utils::ForceCreateDirectory(cacheDir, STAT_MODE_DIR);
     return cacheDir + inode;
 }
 
-CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId, const uint32_t syncFolderIndex,
+CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId,
+                                                   const uint32_t syncFolderIndex,
                                                    const uint64_t inode)
 {
     userId_ = userId;
@@ -403,7 +408,9 @@ int32_t CloudDiskServiceMetaFile::DoCreate(const MetaBase &base, unsigned long &
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base,
+                                           std::string &recordId,
+                                           unsigned long &bidx,
                                            uint32_t &bitPos)
 {
     if (fd_ < 0) {
@@ -434,7 +441,9 @@ int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &re
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base,
+                                          std::string &recordId,
+                                          unsigned long &bidx,
                                           uint32_t &bitPos)
 {
     if (fd_ < 0) {
@@ -467,7 +476,9 @@ int32_t CloudDiskServiceMetaFile::DoFlush(const MetaBase &base, std::string &rec
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base,
+                                           std::string &recordId,
+                                           unsigned long &bidx,
                                            uint32_t &bitPos)
 {
     if (fd_ < 0) {
@@ -501,7 +512,9 @@ int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &re
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base,
+                                              std::string &recordId,
+                                              unsigned long &bidx,
                                               uint32_t &bitPos)
 {
     if (fd_ < 0) {
@@ -532,7 +545,9 @@ int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string 
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base,
+                                              std::string &recordId,
+                                              unsigned long &bidx,
                                               uint32_t &bitPos)
 {
     if (fd_ < 0) {
@@ -574,8 +589,9 @@ int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string 
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRename(MetaBase &metaBase, const std::string &newName,
-    std::shared_ptr<CloudDiskServiceMetaFile> newMetaFile)
+int32_t CloudDiskServiceMetaFile::DoRename(MetaBase &metaBase,
+                                           const std::string &newName,
+                                           std::shared_ptr<CloudDiskServiceMetaFile> newMetaFile)
 {
     std::string oldName = metaBase.name;
     metaBase.name = newName;
@@ -619,6 +635,7 @@ int32_t CloudDiskServiceMetaFile::DoLookupByName(MetaBase &base)
     base.size = de->size;
     base.atime = de->atime;
     base.mtime = de->mtime;
+    base.placeholder = GetDentryPlaceholderState(*de);
     base.recordId = std::string(reinterpret_cast<const char *>(de->recordId), RECORD_ID_LEN);
     return E_OK;
 }
@@ -649,6 +666,7 @@ int32_t CloudDiskServiceMetaFile::DoLookupByRecordId(MetaBase &base, uint8_t rev
     base.atime = de->atime;
     base.mtime = de->mtime;
     base.name = std::string(reinterpret_cast<const char *>(ctx.page->fileName[ctx.bitPos]), de->namelen);
+    base.placeholder = GetDentryPlaceholderState(*de);
     return E_OK;
 }
 
@@ -678,11 +696,62 @@ int32_t CloudDiskServiceMetaFile::DoLookupByOffset(MetaBase &base, const unsigne
     base.mtime = de->mtime;
     base.name = std::string(reinterpret_cast<const char *>(dentryBlk->fileName[bitPos]), de->namelen);
     base.recordId = std::string(reinterpret_cast<const char *>(de->recordId), RECORD_ID_LEN);
+    base.placeholder = GetDentryPlaceholderState(*de);
     return E_OK;
 }
 
-int32_t CloudDiskServiceMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &bitPos, uint32_t &namehash,
-    unsigned long &bidx, struct CloudDiskServiceDentryGroup &dentryBlk)
+int32_t CloudDiskServiceMetaFile::DoLookupPlaceholderByName(const MetaBase &base, uint8_t &placeholderState)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::unique_lock<std::mutex> lock(mtx_);
+    DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, CloudDisk::CloudFileUtils::DentryHash(base.name), fd_);
+    CloudDiskServiceDentry *de = FindDentry(&ctx);
+    if (de == nullptr) {
+        LOGD("find dentry failed");
+        return ENOENT;
+    }
+
+    placeholderState = GetDentryPlaceholderState(*de);
+    return E_OK;
+}
+
+int32_t CloudDiskServiceMetaFile::DoUpdatePlaceholderState(const MetaBase &base, uint8_t placeholderState)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::lock_guard<std::mutex> placeholderLock(GetPlaceholderStateMutex());
+    std::unique_lock<std::mutex> lock(mtx_);
+    DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, CloudDisk::CloudFileUtils::DentryHash(base.name), fd_);
+    CloudDiskServiceDentry *de = FindDentry(&ctx);
+    if (de == nullptr) {
+        LOGD("find dentry failed");
+        return ENOENT;
+    }
+
+    SetDentryPlaceholderState(*de, placeholderState);
+    off_t ipos = GetDentryGroupPos(ctx.bidx);
+    ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(CloudDiskServiceDentryGroup));
+    if (size != sizeof(CloudDiskServiceDentryGroup)) {
+        LOGE("write failed, ret = %{public}zd", size);
+        return EIO;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskServiceMetaFile::GetCreateInfo(const MetaBase &base,
+                                                uint32_t &bitPos,
+                                                uint32_t &namehash,
+                                                unsigned long &bidx,
+                                                struct CloudDiskServiceDentryGroup &dentryBlk)
 {
     uint32_t level = 0;
     namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
@@ -720,21 +789,20 @@ int32_t CloudDiskServiceMetaFile::HandleFileByFd(unsigned long &endBlock, uint32
     if (err < 0) {
         return EINVAL;
     }
-    if ((endBlock > GetDentryGroupCnt(fileStat.st_size)) &&
-        ftruncate(fd_, GetDcacheFileSize(level))) {
+    if ((endBlock > GetDentryGroupCnt(fileStat.st_size)) && ftruncate(fd_, GetDcacheFileSize(level))) {
         return ENOENT;
     }
     return E_OK;
 }
 
-MetaFileMgr& MetaFileMgr::GetInstance()
+MetaFileMgr &MetaFileMgr::GetInstance()
 {
     static MetaFileMgr instance_;
     return instance_;
 }
 
-std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(int32_t userId,
-    const uint32_t syncFolderIndex, const uint64_t inode)
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(
+    int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
 {
     std::shared_ptr<CloudDiskServiceMetaFile> mFile = nullptr;
     std::lock_guard<std::mutex> lock(mtx_);

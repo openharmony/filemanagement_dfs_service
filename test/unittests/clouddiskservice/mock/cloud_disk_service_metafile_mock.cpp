@@ -19,27 +19,30 @@ namespace OHOS::FileManagement::CloudDiskService {
 #define E_OK 0
 #endif
 
-CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId, const uint32_t syncFolderIndex,
+CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId,
+                                                   const uint32_t syncFolderIndex,
                                                    const uint64_t inode)
 {
     userId_ = userId;
 }
 
-MetaFileMgr& MetaFileMgr::GetInstance()
+MetaFileMgr &MetaFileMgr::GetInstance()
 {
     static MetaFileMgr instance_;
     return instance_;
 }
 
-std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(int32_t userId,
-    const uint32_t syncFolderIndex, const uint64_t inode)
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(
+    int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
 {
     std::shared_ptr<CloudDiskServiceMetaFile> metaFile =
         std::make_shared<CloudDiskServiceMetaFile>(userId, syncFolderIndex, inode);
     return metaFile;
 }
 
-int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base,
+                                           std::string &recordId,
+                                           unsigned long &bidx,
                                            uint32_t &bitPos)
 {
     if (recordId == "") {
@@ -49,7 +52,9 @@ int32_t CloudDiskServiceMetaFile::DoRemove(const MetaBase &base, std::string &re
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base,
+                                              std::string &recordId,
+                                              unsigned long &bidx,
                                               uint32_t &bitPos)
 {
     if (recordId == "") {
@@ -59,7 +64,9 @@ int32_t CloudDiskServiceMetaFile::DoRenameOld(const MetaBase &base, std::string 
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoRenameNew(const MetaBase &base,
+                                              std::string &recordId,
+                                              unsigned long &bidx,
                                               uint32_t &bitPos)
 {
     if (recordId == "") {
@@ -78,7 +85,9 @@ int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaF
     }
 }
 
-int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base, std::string &recordId, unsigned long &bidx,
+int32_t CloudDiskServiceMetaFile::DoUpdate(const MetaBase &base,
+                                           std::string &recordId,
+                                           unsigned long &bidx,
                                            uint32_t &bitPos)
 {
     if (recordId == "") {
@@ -112,7 +121,18 @@ int32_t CloudDiskServiceMetaFile::DoLookupByOffset(MetaBase &base, unsigned long
     return E_OK;
 }
 
-void MetaFileMgr::CloudDiskServiceClearAll()
+int32_t CloudDiskServiceMetaFile::DoLookupPlaceholderByName(const MetaBase &base, uint8_t &placeholderState)
 {
+    placeholderState = 0;
+    return E_OK;
 }
+
+int32_t CloudDiskServiceMetaFile::DoUpdatePlaceholderState(const MetaBase &base, uint8_t placeholderState)
+{
+    (void)base;
+    (void)placeholderState;
+    return E_OK;
 }
+
+void MetaFileMgr::CloudDiskServiceClearAll() {}
+} // namespace OHOS::FileManagement::CloudDiskService
