@@ -32,8 +32,8 @@ using namespace std;
 namespace {
     const int32_t TEST_USER_ID = 100;
     const int32_t TEST_USER_ID_2 = 101;
-    const string TEST_BUNDLE = "com.huawei.hmos.filemanager";
-    const string TEST_BUNDLE_2 = "com.huawei.hmos.photo";
+    const string TEST_BUNDLE = "com.test.filemanager";
+    const string TEST_BUNDLE_2 = "com.test.photo";
 
     static MetaBase MakeMetaBase(uint64_t size, const string &name = "test")
     {
@@ -52,7 +52,9 @@ public:
 };
 
 // 写操作是异步的，轮询等待 Get 收敛到期望值（带回溯超时）。
-static int64_t WaitSize(int64_t expect, int timeoutMs = 3000)
+static constexpr int64_t POLL_INTERVAL_MS = 10;
+static constexpr int64_t POLL_TIMEOUT_MS = 3000;
+static int64_t WaitSize(int64_t expect, int timeoutMs = POLL_TIMEOUT_MS)
 {
     int64_t size = -1;
     auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeoutMs);
@@ -60,7 +62,7 @@ static int64_t WaitSize(int64_t expect, int timeoutMs = 3000)
         if (RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, size) == E_OK && size == expect) {
             return size;
         }
-        this_thread::sleep_for(chrono::milliseconds(10));
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
     } while (chrono::steady_clock::now() < deadline);
     return size;
 }
@@ -143,12 +145,12 @@ HWTEST_F(RecycleSizeCacheTest, MultiUserMultiBundle_Isolation_008, TestSize.Leve
     EXPECT_EQ(WaitSize(100), 100);
 
     int64_t size2 = -1;
-    auto deadline = chrono::steady_clock::now() + chrono::milliseconds(3000);
+    auto deadline = chrono::steady_clock::now() + chrono::milliseconds(POLL_TIMEOUT_MS);
     do {
         if (RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE, size2) == E_OK && size2 == 200) {
             break;
         }
-        this_thread::sleep_for(chrono::milliseconds(10));
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
     } while (chrono::steady_clock::now() < deadline);
     EXPECT_EQ(size2, 200);
 
@@ -157,7 +159,7 @@ HWTEST_F(RecycleSizeCacheTest, MultiUserMultiBundle_Isolation_008, TestSize.Leve
         if (RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID_2, TEST_BUNDLE_2, size3) == E_OK && size3 == 300) {
             break;
         }
-        this_thread::sleep_for(chrono::milliseconds(10));
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
     } while (chrono::steady_clock::now() < deadline);
     EXPECT_EQ(size3, 300);
 }

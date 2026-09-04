@@ -92,6 +92,7 @@ public:
             std::vector<XattrResult> &aclXattrResults));
     MOCK_METHOD1(IsFinishPull, int32_t(bool &finishFlag));
     MOCK_METHOD1(GetDentryFileOccupy, int32_t(int64_t &occupyNum));
+    MOCK_METHOD3(GetRecycleBinSize, int32_t(int32_t userId, const std::string &bundleName, int64_t &size));
     MOCK_METHOD2(GetDowngradeDownloadTaskState, int32_t(const std::vector<std::string> &bundleNames,
             std::vector<DowngradeProgress> &downgradeProgressList));
     MOCK_METHOD2(GetUploadList, int32_t(const std::vector<std::string> &uriVec,

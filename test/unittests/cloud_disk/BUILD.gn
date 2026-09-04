@@ -456,6 +456,7 @@ ohos_unittest("file_operations_local_test") {
     "${distributedfile_path}/test/unittests/cloud_disk/mock/file_operations_helper_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/utils/cloud_disk/src/cloud_file_utils.cpp",
+    "${distributedfile_path}/utils/cloud_disk/src/recycle_size_cache.cpp",
     "${distributedfile_path}/utils/dentry/src/file_utils.cpp",
     "${distributedfile_path}/utils/dentry/src/meta_file_clouddisk.cpp",
     "${distributedfile_path}/utils/dentry/src/meta_file.cpp",
