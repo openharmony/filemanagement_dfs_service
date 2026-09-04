@@ -686,7 +686,7 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest005, TestSize.Le
     try {
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
-
+        
         int32_t ret = servicePtr_->CleanAllFileCacheInner();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
