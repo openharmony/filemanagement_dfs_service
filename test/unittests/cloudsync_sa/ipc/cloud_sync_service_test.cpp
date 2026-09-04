@@ -664,7 +664,7 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest004, TestSize.Le
     GTEST_LOG_(INFO) << "CleanCacheInnerWithBundleNameTest001 start";
     try {
         EXPECT_NE(servicePtr_, nullptr);
-        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+
         int32_t ret = servicePtr_->CleanAllFileCacheInner();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
@@ -686,7 +686,7 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerWithBundleNameTest005, TestSize.Le
     try {
         EXPECT_NE(servicePtr_, nullptr);
         std::string bundleName = "com.ohos.photos";
-        EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_OK));
+
         int32_t ret = servicePtr_->CleanAllFileCacheInner();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
