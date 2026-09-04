@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_permission_check.h"
 
+#include "device/device_manager_agent.h"
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
@@ -76,10 +77,18 @@ bool SoftBusPermissionCheck::CheckSinkPermission(const AccountInfo &callerAccoun
 bool SoftBusPermissionCheck::GetLocalAccountInfo(AccountInfo &localAccountInfo, int32_t userId)
 {
     if (userId == INVALID_USER_ID) {
-        userId = GetCurrentUserId();
-        if (userId == INVALID_USER_ID) {
-            LOGE("Get current userid failed");
-            return false;
+        if (DeviceManagerAgent::IsCarHeadUnit()) {
+            constexpr uint64_t CockpitDisplayId = 0;
+            if (GetUserIdByDisplayId(CockpitDisplayId, userId) != NO_ERROR) {
+                LOGE("Get userid by displayId failed");
+                return false;
+            }
+        } else {
+            userId = GetCurrentUserId();
+            if (userId == INVALID_USER_ID) {
+                LOGE("Get current userid failed");
+                return false;
+            }
         }
     }
     localAccountInfo.userId_ = userId;
@@ -214,6 +223,19 @@ int32_t SoftBusPermissionCheck::GetCurrentUserId()
     return userIds[0];
 }
 
+int32_t SoftBusPermissionCheck::GetUserIdByDisplayId(uint64_t displayId, int32_t &userId)
+{
+    auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(displayId, userId);
+    if (ret != NO_ERROR) {
+        LOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", ret);
+        RadarParaInfo info = {"GetUserIdByDisplayId", ReportLevel::INNER, DfxBizStage::DEFAULT,
+            "account", "", ret, "GetForegroundOsAccountLocalId failed"};
+        RadarReportAdapter::GetInstance().ReportLinkConnectionAdapter(info);
+        return ret;
+    }
+    return NO_ERROR;
+}
+
 bool SoftBusPermissionCheck::GetLocalNetworkId(std::string &networkId)
 {
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
@@ -297,10 +319,19 @@ bool SoftBusPermissionCheck::FillLocalInfo(SocketAccessInfo *localInfo)
         LOGE("localInfo is nullptr.");
         return false;
     }
-    int32_t userId = GetCurrentUserId();
-    if (userId == INVALID_USER_ID) {
-        LOGE("get current user id falied");
-        return false;
+    int32_t userId = INVALID_USER_ID;
+    if (DeviceManagerAgent::IsCarHeadUnit()) {
+        constexpr uint64_t CockpitDisplayId = 0;
+        if (GetUserIdByDisplayId(CockpitDisplayId, userId) != NO_ERROR) {
+            LOGE("get user id by displayId failed");
+            return false;
+        }
+    } else {
+        userId = GetCurrentUserId();
+        if (userId == INVALID_USER_ID) {
+            LOGE("get user id failed");
+            return false;
+        }
     }
     localInfo->userId = userId;
     localInfo->localTokenId = IPCSkeleton::GetSelfTokenID();

@@ -673,6 +673,22 @@ void DeviceManagerAgent::UMountDisShareFile()
     ret = storageMgrProxy->UMountDisShareFile(userId, localNetworkId);
     LOGI("UMountDisShareFile end, ret = %{public}d", ret);
 }
+
+bool DeviceManagerAgent::IsCarHeadUnit()
+{
+#ifdef DFS_ENABLE_DISTRIBUTED_ABILITY
+    DistributedHardware::DmDeviceInfo localDeviceInfo{};
+    int errCode =
+        DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
+    if (errCode != 0) {
+        return false;
+    }
+    constexpr uint16_t DEVICE_TYPE_CAR = static_cast<uint16_t>(DeviceType::CAR);
+    return localDeviceInfo.deviceTypeId == DEVICE_TYPE_CAR;
+#else
+    return false;
+#endif
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

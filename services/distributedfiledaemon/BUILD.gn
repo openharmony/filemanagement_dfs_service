@@ -46,6 +46,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
 
   cflags = [ "-D_FORTIFY_SOURCE=2" ]
+  cflags_cc = [ "-Wno-format" ]
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
@@ -169,6 +170,13 @@ ohos_shared_library("libdistributedfiledaemon") {
     ]
 
     defines += [ "SUPPORT_DEVICE_PROFILE" ]
+  }
+
+  if (dfs_sandbox_manarer) {
+    external_deps += [
+      "sandbox_manager:libsandbox_manager_sdk",
+    ]
+    defines += [ "DFS_SANDBOX_MANAGER" ]
   }
 
   part_name = "dfs_service"

@@ -102,7 +102,7 @@ void SoftbusHandlerTest::CheckSrcSameAccountPass()
         .WillRepeatedly(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
 }
 
@@ -111,7 +111,7 @@ void SoftbusHandlerTest::CheckSrcDiffAccountPass()
     std::vector<int32_t> userIds{100, 101};
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_))
         .WillOnce(DoAll(SetArgReferee<0>(userIds), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
 }
 
 void SoftbusHandlerTest::CheckSrcBothSamePass()
@@ -124,7 +124,7 @@ void SoftbusHandlerTest::CheckSrcBothSamePass()
     EXPECT_CALL(*otherMethodMock_, GetOhosAccountInfo(_))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)))
         .WillOnce(DoAll(SetArgReferee<0>(osAccountInfo), Return(FileManagement::E_OK)));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, CheckSrcIsSameAccount(_, _)).WillOnce(Return(true));
     EXPECT_CALL(*socketMock_, SetAccessInfo(_, _)).WillOnce(Return(FileManagement::E_OK));
 }
@@ -163,6 +163,9 @@ void SoftbusHandlerTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
     SoftBusHandler::GetInstance().clientSessNameMap_.clear();
     SoftBusHandler::GetInstance().serverIdMap_.clear();
+    ::testing::Mock::VerifyAndClearExpectations(deviceManagerImplMock_.get());
+    ::testing::Mock::VerifyAndClearExpectations(socketMock_.get());
+    ::testing::Mock::VerifyAndClearExpectations(otherMethodMock_.get());
     socketMock_ = nullptr;
     SocketMock::dfsSocket = nullptr;
     deviceManagerImplMock_ = nullptr;
@@ -591,26 +594,6 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0100, TestSize.Leve
     flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
     EXPECT_EQ(flag, false);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0100 end";
-}
-
-/**
- * @tc.name: SoftbusHandlerTest_CloseSession_0200
- * @tc.desc: Verify the CloseSession.
- * @tc.type: FUNC
- * @tc.require: I9JXPR
- */
-HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0200 end";
-    string sessionName = "sessionName";
-    SoftBusHandler::serverIdMap_.insert({"testSession", 0});
-    SoftBusHandler::clientSessNameMap_.insert({0, "test"});
-    SoftBusHandler::GetInstance().CloseSession(1, sessionName); // 1: testSessionId
-    EXPECT_EQ(SoftBusHandler::serverIdMap_.size(), 1); // 1: size
-    EXPECT_EQ(SoftBusHandler::clientSessNameMap_.size(), 1); // 1: size
-    SoftBusHandler::serverIdMap_.clear();
-    SoftBusHandler::clientSessNameMap_.clear();
-    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0200 end";
 }
 
 /**

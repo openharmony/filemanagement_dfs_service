@@ -237,7 +237,7 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
         LOGE("GetFileName failed or file is empty");
         return ERR_BAD_VALUE;
     }
-    if (!FileSizeUtils::IsFilePathValid(dstFile) || !FileSizeUtils::IsFilePathValid(sendFile)) {
+    if (!FileSizeUtils::IsPathValid(dstFile) || !FileSizeUtils::IsPathValid(sendFile)) {
         LOGE("path traversal detected, dstFile or sendFile is invalid");
         return ERR_BAD_VALUE;
     }
@@ -379,7 +379,7 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
         LOGE("assetObj is nullptr!");
         return FileManagement::ERR_BAD_VALUE;
     }
-    if (!FileSizeUtils::IsFilePathValid(fileName)) {
+    if (!FileSizeUtils::IsPathValid(fileName)) {
         LOGE("fileName contains path traversal");
         return FileManagement::ERR_BAD_VALUE;
     }
@@ -678,7 +678,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
         LOGE("file path error");
         return "";
     }
-    if (!FileSizeUtils::IsFilePathValid(filenameWithPath)) {
+    if (!FileSizeUtils::IsPathValid(filenameWithPath)) {
         RadarParaInfo info = {"ExtractFile", ReportLevel::INNER, DfxBizStage::RECV_ASSERT,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "path is forbidden"};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);

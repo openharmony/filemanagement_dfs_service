@@ -66,4 +66,11 @@ declare_args() {
   if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
     cloud_hiviewdfx_api_metrics_enable = true
   }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.accesscontrol_sandbox_manager)) {
+    dfs_sandbox_manarer = true
+  } else {
+    dfs_sandbox_manarer = false
+  }
 }

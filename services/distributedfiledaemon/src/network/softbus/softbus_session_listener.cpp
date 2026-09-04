@@ -123,18 +123,10 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
         return "";
     }
-    if (!FileSizeUtils::IsFilePathValid(physicalPath)) {
+    if (!FileSizeUtils::IsPathValid(physicalPath) || !SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("Check physicalPath err, physicalPath is forbidden");
         RadarParaInfo info = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
             DEFAULT_PKGNAME, "", DEFAULT_ERR, "path is forbidden"};
-        RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
-        return "";
-    }
-    char realPath[PATH_MAX] = { 0x00 };
-    if (realpath(physicalPath.c_str(), realPath) == nullptr) {
-        LOGE("realpath failed, error: %{public}d", errno);
-        RadarParaInfo info = {"GetRealPath", ReportLevel::INNER, DfxBizStage::SOFTBUS_COPY,
-            "kernel", "", DEFAULT_ERR, "realpath failed errno=" + to_string(errno)};
         RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
         return "";
     }

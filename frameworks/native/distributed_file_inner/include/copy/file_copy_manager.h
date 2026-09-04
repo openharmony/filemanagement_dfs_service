@@ -19,12 +19,14 @@
 #include <chrono>
 #include <condition_variable>
 #include <memory>
+#include <unordered_set>
 
 #include "copy/distributed_file_fd_guard.h"
 #include "copy/file_copy_listener.h"
 #include "copy/trans_listener.h"
 #include "iremote_broker.h"
 #include "refbase.h"
+#include "sys/types.h"
 #include "uv.h"
 
 namespace OHOS {
@@ -84,8 +86,10 @@ private:
     int32_t SendFileCore(std::shared_ptr<FDGuard> srcFdg, std::shared_ptr<FDGuard> destFdg,
         std::shared_ptr<FileInfos> infos);
     int32_t CopyDirFunc(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos);
-    int32_t CopySubDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos);
-    int32_t RecurCopyDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos);
+    int32_t CopySubDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos,
+        std::unordered_set<ino_t> &visitedInodes, int32_t depth);
+    int32_t RecurCopyDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos,
+        std::unordered_set<ino_t> &visitedInodes, int32_t depth);
     int32_t OpenSrcFile(const std::string &srcPth, std::shared_ptr<FileInfos> infos, int32_t &srcFd);
 
     // operator of remote copy

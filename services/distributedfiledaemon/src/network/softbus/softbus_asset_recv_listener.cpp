@@ -22,6 +22,7 @@
 #include "accesstoken_kit.h"
 #include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
+#include "device/device_manager_agent.h"
 #include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "dfs_radar.h"
@@ -30,6 +31,7 @@
 #include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"
 #include "refbase.h"
+#include "sandbox_helper.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -155,7 +157,6 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     std::lock_guard<std::mutex> lock(mtx_);
     LOGI("OnRecvFileFinished, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
     if (fileCnt == 0) {
-        LOGE("fileList has no file");
         return;
     }
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
@@ -176,7 +177,8 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     }
     for (int32_t i = 0; i < fileCnt; i++) {
         std::string filePath(path_ + fileList[i]);
-        if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(filePath))) {
+        if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(filePath)) ||
+            !AppFileService::SandboxHelper::CheckValidPath(filePath)) {
             LOGE("path is forbidden");
             AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, ERR_BAD_VALUE);
             SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
@@ -238,14 +240,25 @@ void SoftbusAssetRecvListener::OnAssetRecvBind(int32_t sessionId, PeerSocketInfo
 
 int32_t SoftbusAssetRecvListener::GetCurrentUserId()
 {
-    std::vector<int32_t> userIds{};
-    auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
-    if (ret != NO_ERROR || userIds.empty()) {
-        LOGE("query active os account id failed, ret = %{public}d", ret);
-        return FileManagement::E_GET_USER_ID;
+    int32_t userId = -1;
+    if (DeviceManagerAgent::IsCarHeadUnit()) {
+        constexpr uint64_t CockpitDisplayId = 0;
+        auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(CockpitDisplayId, userId);
+        if (ret != NO_ERROR) {
+            LOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", ret);
+            return FileManagement::E_GET_USER_ID;
+        }
+    } else {
+        std::vector<int32_t> userIds{};
+        auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
+        if (ret != NO_ERROR || userIds.empty()) {
+            LOGE("Query active os account id failed, ret = %{public}d", ret);
+            return FileManagement::E_GET_USER_ID;
+        }
+        userId = userIds[0];
     }
     LOGI("GetCurrentUserId end.");
-    return userIds[0];
+    return userId;
 }
 
 bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileList, bool isSingleFile)

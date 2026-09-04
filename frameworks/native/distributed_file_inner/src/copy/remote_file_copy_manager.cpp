@@ -209,7 +209,8 @@ int32_t RemoteFileCopyManager::CreateFileInfos(const std::string &srcUri,
         dstPhysicalPath = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/account/data/" + bundleName +
             "/" + copyPath + "/" + fileName;
     }
-    if (!FileSizeUtils::IsFilePathValid(srcPhysicalPath) || !FileSizeUtils::IsFilePathValid(dstPhysicalPath)) {
+    if (!FileSizeUtils::IsPathValid(srcPhysicalPath) || !SandboxHelper::CheckValidPath(srcPhysicalPath) ||
+        !FileSizeUtils::IsFilePathValid(dstPhysicalPath)) {
         LOGE("path is forbidden");
         RadarParaInfo info = {"CreateFileInfos", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
@@ -241,8 +242,8 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
     LOGI("RemoteCancel");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
-    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
         RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};
@@ -257,7 +258,7 @@ int32_t RemoteFileCopyManager::RemoteCancel(const std::string &srcUri, const std
         auto callingUid = IPCSkeleton::GetCallingUid();
         if (callingUid != (*item)->callingUid) {
             LOGE("RemoteCancel failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.",
-            callingUid, (*item)->callingUid);
+                callingUid, (*item)->callingUid);
             RadarParaInfo info = {"RemoteCancel", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
                 DEFAULT_PKGNAME, "", EPERM, "RemoteCancel failed"};
             RadarReportAdapter::GetInstance().ReportFileAccessAdapter(info);
@@ -279,8 +280,8 @@ int32_t RemoteFileCopyManager::RemoteCopy(const std::string &srcUri, const std::
         LOGE("invalid input param");
         return EINVAL;
     }
-    if (!FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(srcUri)) ||
-        !FileSizeUtils::IsFilePathValid(FileSizeUtils::GetRealUri(destUri))) {
+    if (!FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(srcUri)) ||
+        !FileSizeUtils::IsPathValid(FileSizeUtils::GetRealUri(destUri))) {
         LOGE("path is forbidden");
         RadarParaInfo info = {"RemoteCopy", ReportLevel::INNER, DfxBizStage::HMDFS_COPY,
             DEFAULT_PKGNAME, "", EINVAL, "path is forbidden"};

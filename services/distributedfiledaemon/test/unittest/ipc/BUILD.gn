@@ -243,6 +243,8 @@ ohos_unittest("daemon_test") {
     "${distributedfile_path}/test/mock/",
   ]
 
+  cflags_cc = [ "-Wno-format" ]
+
   sources = [
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
