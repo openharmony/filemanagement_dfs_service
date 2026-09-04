@@ -46,7 +46,6 @@ config("compiler_configs") {
 config("utils_public_config") {
   include_dirs = [
     "clouddiskservice/include",
-    "dentry/include",
     "dfx/include",
     "inner_api",
     "ioctl/include",
@@ -82,6 +81,7 @@ ohos_shared_library("libdistributedfileutils") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  include_dirs = [ "dentry/include" ]
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "cloud_disk/src/recycle_size_cache.cpp",
@@ -331,6 +331,7 @@ ohos_static_library("libdistributedfileutils_static") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  include_dirs = [ "dentry/include" ]
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "cloud_disk/src/recycle_size_cache.cpp",
