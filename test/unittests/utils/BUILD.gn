@@ -314,6 +314,7 @@ ohos_unittest("recycle_size_cache_test") {
 
   include_dirs = [
     "${utils_path}/inner_api",
+    "${utils_path}/dentry/include",
     "${utils_path}/log/include",
   ]
 
