@@ -794,6 +794,11 @@ int32_t CloudSyncService::CleanAllFileCacheInner(const std::string &bundleName)
 {
     LOGI("Begin CleanAllFileCacheInner for bundle: %{public}s", bundleName.c_str());
 
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
     int32_t userId = DfsuAccessTokenHelper::GetUserId();
     if (userId < MIN_USER_ID) {
         LOGE("Get userId failed");
@@ -828,6 +833,11 @@ int32_t CloudSyncService::GetCachedTotalSizeInner(int64_t &totalSize)
 int32_t CloudSyncService::GetCachedTotalSizeInner(const std::string &bundleName, int64_t &totalSize)
 {
     LOGD("Begin GetCachedTotalSizeInner for bundle: %{public}s", bundleName.c_str());
+
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
 
     int32_t userId = DfsuAccessTokenHelper::GetUserId();
     if (userId < MIN_USER_ID) {
