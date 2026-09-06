@@ -266,7 +266,6 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
-    "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_memory_guard.cpp",
     "system/src/utils_directory.cpp",
   ]
@@ -494,7 +493,6 @@ ohos_static_library("libdistributedfileutils_lite_static") {
     "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
-    "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_memory_guard.cpp",
     "system/src/utils_directory.cpp",
   ]

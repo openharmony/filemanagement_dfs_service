@@ -23,12 +23,6 @@
 #include <string>
 
 namespace OHOS {
-namespace Storage {
-namespace DistributedFile {
-class DfsuFDGuard;
-}
-}
-
 namespace FileManagement {
 struct MetaBase;
 
@@ -45,8 +39,6 @@ private:
     static std::string GetCacheFilePath(int32_t userId, const std::string &bundleName);
     static int32_t ReadCachedSize(const std::string &path, int64_t &size);
     static int32_t WriteCachedSize(const std::string &path, int64_t size);
-    static int32_t OpenAndCheckCacheFile(const std::string &path, bool &isNewFile,
-        OHOS::Storage::DistributedFile::DfsuFDGuard &fdGuard);
     static size_t GetVersionSlot(const std::string &key);
     static int64_t GetCacheVersion(const std::string &key);
     static void AddCacheVersion(const std::string &key);

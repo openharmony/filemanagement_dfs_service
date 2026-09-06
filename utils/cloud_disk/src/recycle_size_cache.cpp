@@ -26,7 +26,6 @@
 #include <unistd.h>
 
 #include "dfs_error.h"
-#include "dfsu_fd_guard.h"
 #include "ffrt_inner.h"
 #include "meta_file.h"
 #include "utils_log.h"
@@ -34,8 +33,33 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
-using OHOS::Storage::DistributedFile::DfsuFDGuard;
 namespace {
+    class FdGuard {
+    public:
+        FdGuard() = default;
+        explicit FdGuard(int fd) : fd_(fd) {}
+        ~FdGuard()
+        {
+            if (fd_ >= 0) {
+                close(fd_);
+            }
+        }
+        FdGuard(const FdGuard &) = delete;
+        FdGuard &operator=(const FdGuard &) = delete;
+        void SetFD(int fd)
+        {
+            if (fd_ >= 0) {
+                close(fd_);
+            }
+            fd_ = fd;
+        }
+        int GetFD() const { return fd_; }
+        explicit operator bool() const { return fd_ >= 0; }
+
+    private:
+        int fd_ = -1;
+    };
+
     static const int32_t OID_FILE_MANAGER = 1006;
     static const int32_t OID_DFS = 1009;
     static const mode_t FILE_MODE = 0660;
@@ -55,6 +79,37 @@ namespace {
     bool IsFilteredMetaBase(const MetaBase &metaBase)
     {
         return (metaBase.position & POSITION_LOCAL) == 0 || S_ISDIR(metaBase.mode);
+    }
+
+    int32_t OpenAndCheckCacheFile(const std::string &path, bool &isNewFile, FdGuard &fdGuard)
+    {
+        isNewFile = false;
+        fdGuard.SetFD(open(path.c_str(),
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, FILE_MODE));
+        if (!fdGuard) {
+            if (errno != EEXIST) {
+                LOGE("open cache file for write failed, errno:%{public}d", errno);
+                return E_PATH;
+            }
+            fdGuard.SetFD(open(path.c_str(), O_WRONLY | O_TRUNC | O_NOFOLLOW | O_CLOEXEC));
+            if (!fdGuard) {
+                LOGE("open cache file for write failed, errno:%{public}d", errno);
+                return E_PATH;
+            }
+        } else {
+            isNewFile = true;
+        }
+        struct stat st = {};
+        if (fstat(fdGuard.GetFD(), &st) != 0) {
+            LOGE("fstat cache file failed, errno:%{public}d", errno);
+            return E_PATH;
+        }
+        if (!S_ISREG(st.st_mode) || st.st_nlink != 1) {
+            LOGE("cache file check failed, mode:%{public}o, nlink:%{public}lu", st.st_mode,
+                static_cast<unsigned long>(st.st_nlink));
+            return E_PATH;
+        }
+        return E_OK;
     }
 }
 
@@ -163,7 +218,7 @@ std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
 {
     size = 0;
-    DfsuFDGuard fdGuard(open(path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC));
+    FdGuard fdGuard(open(path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC));
     if (!fdGuard) {
         int err = errno;
         if (err == ENOENT) {
@@ -197,45 +252,13 @@ int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
     return E_OK;
 }
 
-int32_t RecycleSizeCache::OpenAndCheckCacheFile(const std::string &path, bool &isNewFile,
-    DfsuFDGuard &fdGuard)
-{
-    isNewFile = false;
-    fdGuard.SetFD(open(path.c_str(),
-        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, FILE_MODE));
-    if (!fdGuard) {
-        if (errno != EEXIST) {
-            LOGE("open cache file for write failed, errno:%{public}d", errno);
-            return E_PATH;
-        }
-        fdGuard.SetFD(open(path.c_str(), O_WRONLY | O_TRUNC | O_NOFOLLOW | O_CLOEXEC));
-        if (!fdGuard) {
-            LOGE("open cache file for write failed, errno:%{public}d", errno);
-            return E_PATH;
-        }
-    } else {
-        isNewFile = true;
-    }
-    struct stat st = {};
-    if (fstat(fdGuard.GetFD(), &st) != 0) {
-        LOGE("fstat cache file failed, errno:%{public}d", errno);
-        return E_PATH;
-    }
-    if (!S_ISREG(st.st_mode) || st.st_nlink != 1) {
-        LOGE("cache file check failed, mode:%{public}o, nlink:%{public}lu", st.st_mode,
-            static_cast<unsigned long>(st.st_nlink));
-        return E_PATH;
-    }
-    return E_OK;
-}
-
 int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
 {
     if (size < 0) {
         size = 0;
     }
     bool isNewFile = false;
-    DfsuFDGuard fdGuard;
+    FdGuard fdGuard;
     int32_t ret = OpenAndCheckCacheFile(path, isNewFile, fdGuard);
     if (ret != E_OK) {
         return ret;
