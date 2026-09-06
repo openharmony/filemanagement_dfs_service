@@ -19,12 +19,14 @@
 #include <charconv>
 #include <cstdint>
 #include <fcntl.h>
+#include <functional>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "dfs_error.h"
+#include "dfsu_fd_guard.h"
 #include "ffrt_inner.h"
 #include "meta_file.h"
 #include "utils_log.h"
@@ -32,25 +34,8 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+using OHOS::Storage::DistributedFile::DfsuFDGuard;
 namespace {
-    class FdGuard {
-    public:
-        explicit FdGuard(int fd) : fd_(fd) {}
-        ~FdGuard()
-        {
-            if (fd_ >= 0) {
-                close(fd_);
-            }
-        }
-        FdGuard(const FdGuard &) = delete;
-        FdGuard &operator=(const FdGuard &) = delete;
-        int GetFD() const { return fd_; }
-        explicit operator bool() const { return fd_ >= 0; }
-
-    private:
-        int fd_;
-    };
-
     static const int32_t OID_FILE_MANAGER = 1006;
     static const int32_t OID_DFS = 1009;
     static const mode_t FILE_MODE = 0660;
@@ -58,7 +43,13 @@ namespace {
 
     bool IsValidParams(int32_t userId, const std::string &bundleName)
     {
-        return userId >= 0 && !bundleName.empty();
+        if (userId < 0 || bundleName.empty()) {
+            return false;
+        }
+        if (bundleName.find('/') != std::string::npos || bundleName.find("..") != std::string::npos) {
+            return false;
+        }
+        return true;
     }
 
     bool IsFilteredMetaBase(const MetaBase &metaBase)
@@ -68,6 +59,8 @@ namespace {
 }
 
 std::mutex RecycleSizeCache::gMutex_;
+constexpr size_t RecycleSizeCache::kVersionSlotCount;
+std::atomic<int64_t> RecycleSizeCache::gVersionSlots_[RecycleSizeCache::kVersionSlotCount] = {};
 
 int32_t RecycleSizeCache::GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size)
 {
@@ -94,10 +87,17 @@ int32_t RecycleSizeCache::IncreaseRecycleBinSize(int32_t userId, const std::stri
         return E_OK;
     }
     std::string path = GetCacheFilePath(userId, bundleName);
-    ffrt::thread([path, delta] {
+    int64_t myVersion = GetCacheVersion(path);
+    ffrt::thread([path, delta, myVersion] {
         std::lock_guard<std::mutex> lock(gMutex_);
+        if (GetCacheVersion(path) != myVersion) {
+            LOGD("increase discarded, cache version changed, key:%{private}s, myVersion:%{public}lld",
+                path.c_str(), static_cast<long long>(myVersion));
+            return;
+        }
         int64_t cur = 0;
         if (ReadCachedSize(path, cur) != E_OK) {
+            LOGE("increase read cache size failed, key:%{private}s", path.c_str());
             return;
         }
         WriteCachedSize(path, cur + delta);
@@ -120,10 +120,17 @@ int32_t RecycleSizeCache::DecreaseRecycleBinSize(int32_t userId, const std::stri
         return E_OK;
     }
     std::string path = GetCacheFilePath(userId, bundleName);
-    ffrt::thread([path, delta] {
+    int64_t myVersion = GetCacheVersion(path);
+    ffrt::thread([path, delta, myVersion] {
         std::lock_guard<std::mutex> lock(gMutex_);
+        if (GetCacheVersion(path) != myVersion) {
+            LOGD("decrease discarded, cache version changed, key:%{private}s, myVersion:%{public}lld",
+                path.c_str(), static_cast<long long>(myVersion));
+            return;
+        }
         int64_t cur = 0;
         if (ReadCachedSize(path, cur) != E_OK) {
+            LOGE("decrease read cache size failed, key:%{private}s", path.c_str());
             return;
         }
         cur -= delta;
@@ -141,8 +148,10 @@ int32_t RecycleSizeCache::ResetRecycleBinSize(int32_t userId, const std::string 
         LOGE("invalid reset params");
         return E_INVAL_ARG;
     }
+    std::string path = GetCacheFilePath(userId, bundleName);
     std::lock_guard<std::mutex> lock(gMutex_);
-    return WriteCachedSize(GetCacheFilePath(userId, bundleName), 0);
+    AddCacheVersion(path);
+    return WriteCachedSize(path, 0);
 }
 
 std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string &bundleName)
@@ -154,7 +163,7 @@ std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string
 int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
 {
     size = 0;
-    FdGuard fdGuard(open(path.c_str(), O_RDONLY));
+    DfsuFDGuard fdGuard(open(path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC));
     if (!fdGuard) {
         int err = errno;
         if (err == ENOENT) {
@@ -188,19 +197,48 @@ int32_t RecycleSizeCache::ReadCachedSize(const std::string &path, int64_t &size)
     return E_OK;
 }
 
+int32_t RecycleSizeCache::OpenAndCheckCacheFile(const std::string &path, bool &isNewFile,
+    DfsuFDGuard &fdGuard)
+{
+    isNewFile = false;
+    fdGuard.SetFD(open(path.c_str(),
+        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, FILE_MODE));
+    if (!fdGuard) {
+        if (errno != EEXIST) {
+            LOGE("open cache file for write failed, errno:%{public}d", errno);
+            return E_PATH;
+        }
+        fdGuard.SetFD(open(path.c_str(), O_WRONLY | O_TRUNC | O_NOFOLLOW | O_CLOEXEC));
+        if (!fdGuard) {
+            LOGE("open cache file for write failed, errno:%{public}d", errno);
+            return E_PATH;
+        }
+    } else {
+        isNewFile = true;
+    }
+    struct stat st = {};
+    if (fstat(fdGuard.GetFD(), &st) != 0) {
+        LOGE("fstat cache file failed, errno:%{public}d", errno);
+        return E_PATH;
+    }
+    if (!S_ISREG(st.st_mode) || st.st_nlink != 1) {
+        LOGE("cache file check failed, mode:%{public}o, nlink:%{public}lu", st.st_mode,
+            static_cast<unsigned long>(st.st_nlink));
+        return E_PATH;
+    }
+    return E_OK;
+}
+
 int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
 {
     if (size < 0) {
         size = 0;
     }
     bool isNewFile = false;
-    if (access(path.c_str(), F_OK) != 0 && errno == ENOENT) {
-        isNewFile = true;
-    }
-    FdGuard fdGuard(open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, FILE_MODE));
-    if (!fdGuard) {
-        LOGE("open cache file for write failed, errno:%{public}d", errno);
-        return E_PATH;
+    DfsuFDGuard fdGuard;
+    int32_t ret = OpenAndCheckCacheFile(path, isNewFile, fdGuard);
+    if (ret != E_OK) {
+        return ret;
     }
     std::string val = std::to_string(size);
     ssize_t w = write(fdGuard.GetFD(), val.data(), val.size());
@@ -209,10 +247,28 @@ int32_t RecycleSizeCache::WriteCachedSize(const std::string &path, int64_t size)
         return E_PATH;
     }
     if (isNewFile) {
-        chmod(path.c_str(), FILE_MODE);
-        chown(path.c_str(), OID_FILE_MANAGER, OID_DFS);
+        fchmod(fdGuard.GetFD(), FILE_MODE);
+        fchown(fdGuard.GetFD(), OID_FILE_MANAGER, OID_DFS);
     }
     return E_OK;
+}
+
+size_t RecycleSizeCache::GetVersionSlot(const std::string &key)
+{
+    return std::hash<std::string>{}(key) & (kVersionSlotCount - 1);
+}
+
+int64_t RecycleSizeCache::GetCacheVersion(const std::string &key)
+{
+    int64_t version = gVersionSlots_[GetVersionSlot(key)].load();
+    LOGD("get cache version, key:%{private}s, version:%{public}lld", key.c_str(),
+        static_cast<long long>(version));
+    return version;
+}
+
+void RecycleSizeCache::AddCacheVersion(const std::string &key)
+{
+    gVersionSlots_[GetVersionSlot(key)].fetch_add(1);
 }
 } // namespace CloudDisk
 } // namespace FileManagement

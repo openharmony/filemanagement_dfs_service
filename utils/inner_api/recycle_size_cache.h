@@ -16,11 +16,19 @@
 #ifndef CLOUD_FILE_DAEMON_RECYCLE_SIZE_CACHE_H
 #define CLOUD_FILE_DAEMON_RECYCLE_SIZE_CACHE_H
 
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <string>
 
 namespace OHOS {
+namespace Storage {
+namespace DistributedFile {
+class DfsuFDGuard;
+}
+}
+
 namespace FileManagement {
 struct MetaBase;
 
@@ -37,8 +45,15 @@ private:
     static std::string GetCacheFilePath(int32_t userId, const std::string &bundleName);
     static int32_t ReadCachedSize(const std::string &path, int64_t &size);
     static int32_t WriteCachedSize(const std::string &path, int64_t size);
+    static int32_t OpenAndCheckCacheFile(const std::string &path, bool &isNewFile,
+        OHOS::Storage::DistributedFile::DfsuFDGuard &fdGuard);
+    static size_t GetVersionSlot(const std::string &key);
+    static int64_t GetCacheVersion(const std::string &key);
+    static void AddCacheVersion(const std::string &key);
 
+    static constexpr size_t kVersionSlotCount = 1024;
     static std::mutex gMutex_;
+    static std::atomic<int64_t> gVersionSlots_[kVersionSlotCount];
 };
 } // namespace CloudDisk
 } // namespace FileManagement
