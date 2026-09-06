@@ -283,10 +283,7 @@ size_t RecycleSizeCache::GetVersionSlot(const std::string &key)
 
 int64_t RecycleSizeCache::GetCacheVersion(const std::string &key)
 {
-    int64_t version = gVersionSlots_[GetVersionSlot(key)].load();
-    LOGD("get cache version, key:%{private}s, version:%{public}lld", key.c_str(),
-        static_cast<long long>(version));
-    return version;
+    return gVersionSlots_[GetVersionSlot(key)].load();
 }
 
 void RecycleSizeCache::AddCacheVersion(const std::string &key)
