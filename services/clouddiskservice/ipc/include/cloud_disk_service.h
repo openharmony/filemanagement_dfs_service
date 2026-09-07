@@ -87,6 +87,9 @@ public:
         const PlaceholderCustomInfo &customInfo = PlaceholderCustomInfo()) override;
     ErrCode GetPlaceholderCustomInfoInner(const std::string &syncFolder, const std::string &relativePath,
         PlaceholderCustomInfo &customInfo) override;
+    ErrCode GetPlaceholderStateInner(const std::string &syncFolder,
+                                     const std::string &relativePath,
+                                     int32_t &state) override;
     void UnloadSa();
 
 private:

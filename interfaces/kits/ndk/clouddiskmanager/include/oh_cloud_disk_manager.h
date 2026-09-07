@@ -445,6 +445,21 @@ typedef struct OH_CloudDisk_PlaceholderCustomInfo {
 } OH_CloudDisk_PlaceholderCustomInfo;
 
 /**
+ * @brief Enumerates placeholder states.
+ * @since 26.1.0
+ */
+typedef enum OH_CloudDisk_PlaceholderState {
+    /** The file is not a placeholder. */
+    OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE = 0,
+    /** The placeholder has no local data. */
+    OH_CLOUD_DISK_PLACEHOLDER_STATE_UNHYDRATED = 1,
+    /** The placeholder has partial local data. */
+    OH_CLOUD_DISK_PLACEHOLDER_STATE_PARTIALLY_HYDRATED = 2,
+    /** The placeholder has complete local data. */
+    OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED = 3,
+} OH_CloudDisk_PlaceholderState;
+
+/**
  * @brief Defines a binary data buffer used by placeholder callbacks.
  * @since 26.1.0
  */
@@ -747,6 +762,22 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder);
+
+/**
+ * @brief Gets the placeholder state of a file in a registered sync folder.
+ *
+ * @param syncFolderPath Indicates the registered sync folder path information.
+ * @param relativePathInfo Indicates the file path relative to the sync folder.
+ * @param state Output parameter. The value is valid only when the return value is {@link CLOUD_DISK_OK}.
+ * <br>The value is set to {@link OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE} on error.
+ * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
+ * <br> returns {@link OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE} if the stored state is invalid;
+ * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderState(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                     const CloudDisk_PathInfo relativePathInfo,
+                                                     OH_CloudDisk_PlaceholderState *state);
 
 /**
  * @brief Converts a placeholder file to a 0-byte normal file.

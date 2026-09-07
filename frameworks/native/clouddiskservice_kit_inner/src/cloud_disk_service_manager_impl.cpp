@@ -554,6 +554,29 @@ int32_t CloudDiskServiceManagerImpl::UnregisterProgressCallback(const sptr<IClou
 #endif
 }
 
+int32_t CloudDiskServiceManagerImpl::GetPlaceholderState(const std::string &syncFolder,
+                                                         const std::string &relativePath,
+                                                         int32_t &state)
+{
+    state = 0;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    auto serviceProxy = ServiceProxy::GetInstance();
+    if (serviceProxy == nullptr) {
+        LOGE("GetPlaceholderState branch=proxy_null");
+        return E_IPC_FAILED;
+    }
+    SetDeathRecipient(serviceProxy->AsObject());
+    int32_t ret = serviceProxy->GetPlaceholderStateInner(syncFolder, relativePath, state);
+    if (ret != E_OK) {
+        state = 0;
+        LOGE("GetPlaceholderState branch=proxy_failed ret=%{public}d", ret);
+    }
+    return ret;
+#else
+    return E_NOT_SUPPORTED;
+#endif
+}
+
 void CloudDiskServiceManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     if (isFirstCall_.test_and_set()) {

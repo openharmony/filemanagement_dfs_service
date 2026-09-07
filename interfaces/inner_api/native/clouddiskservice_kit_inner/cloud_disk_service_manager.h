@@ -71,6 +71,8 @@ public:
     virtual int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) = 0;
 
     virtual int32_t UnregisterForSa(const std::string &path) = 0;
+    virtual int32_t
+        GetPlaceholderState(const std::string &syncFolder, const std::string &relativePath, int32_t &state) = 0;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

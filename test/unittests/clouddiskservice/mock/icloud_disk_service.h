@@ -129,6 +129,8 @@ public:
         const PlaceholderInfo& metaData, const PlaceholderCustomInfo& customInfo) = 0;
     virtual ErrCode GetPlaceholderCustomInfoInner(const std::string& syncFolder, const std::string& relativePath,
         PlaceholderCustomInfo& customInfo) = 0;
+    virtual ErrCode
+        GetPlaceholderStateInner(const std::string &syncFolder, const std::string &relativePath, int32_t &state) = 0;
 
 protected:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0xD003900, "CloudDiskService"};

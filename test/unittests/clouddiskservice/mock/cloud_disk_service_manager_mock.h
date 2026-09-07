@@ -64,6 +64,7 @@ public:
     MOCK_METHOD3(GetPlaceholderCustomInfo,
         int32_t(const std::string &, const std::string &, PlaceholderCustomInfo &));
     MOCK_METHOD1(UnregisterForSa, int32_t(const std::string &));
+    MOCK_METHOD3(GetPlaceholderState, int32_t(const std::string &, const std::string &, int32_t &));
 };
 }
 

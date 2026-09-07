@@ -89,6 +89,8 @@ const std::unordered_map<int32_t, CloudDisk_ErrorCode> innerToNErrTable = {
         OH_CLOUD_DISK_ALREADY_HYDRATED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NO_HYDRATION_IN_PROGRESS,
         OH_CLOUD_DISK_NO_HYDRATION_IN_PROGRESS},
+    {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_INVALID_PLACEHOLDER_STATE,
+        OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_SUPPORTED, CLOUD_DISK_NOT_SUPPORTED},
     {OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED,
         CLOUD_DISK_PERMISSION_DENIED},

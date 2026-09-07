@@ -501,6 +501,33 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 }
 
+CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderState(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                     const CloudDisk_PathInfo relativePathInfo,
+                                                     OH_CloudDisk_PlaceholderState *state)
+{
+    if (state == nullptr) {
+        LOGE("GetPlaceholderState branch=invalid_arg_state_null");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    *state = OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE;
+    if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length) ||
+        !IsValidPathInfo(relativePathInfo.value, relativePathInfo.length)) {
+        LOGE("GetPlaceholderState branch=invalid_path_info");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+
+    std::string syncFolder(syncFolderPath.value, syncFolderPath.length);
+    std::string relativePath(relativePathInfo.value, relativePathInfo.length);
+    int32_t innerState = OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE;
+    int32_t ret = CloudDiskServiceManager::GetInstance().GetPlaceholderState(syncFolder, relativePath, innerState);
+    if (ret != CloudDiskServiceErrCode::E_OK) {
+        LOGE("GetPlaceholderState branch=service_failed ret=%{public}d", ret);
+        return ConvertToErrorCode(ret);
+    }
+    *state = static_cast<OH_CloudDisk_PlaceholderState>(innerState);
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+}
+
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE

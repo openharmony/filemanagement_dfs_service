@@ -48,4 +48,5 @@ interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
     void DehydrateFileByPathInner([in] String path);
     void RegisterProgressCallbackInner([in] IRemoteObject remoteObject);
     void UnregisterProgressCallbackInner();
+    int GetPlaceholderStateInner([in] String syncFolder, [in] String relativePath);
 }

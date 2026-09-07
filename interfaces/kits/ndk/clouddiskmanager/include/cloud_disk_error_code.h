@@ -254,7 +254,13 @@ typedef enum CloudDisk_ErrorCode {
      *
      * @since 26.1.0
      */
-    OH_CLOUD_DISK_NO_HYDRATION_IN_PROGRESS = 34400032
+    OH_CLOUD_DISK_NO_HYDRATION_IN_PROGRESS = 34400032,
+    /**
+     * @brief The stored placeholder state is invalid.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE = 34400033
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

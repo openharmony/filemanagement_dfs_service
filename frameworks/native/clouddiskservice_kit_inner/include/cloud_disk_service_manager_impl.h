@@ -76,6 +76,8 @@ public:
     int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) override;
 
     int32_t UnregisterForSa(const std::string &path) override;
+    int32_t
+        GetPlaceholderState(const std::string &syncFolder, const std::string &relativePath, int32_t &state) override;
 
 private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
