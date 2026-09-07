@@ -143,12 +143,14 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
     const std::string &filePath, uint32_t syncFolderIndex, RequestKey &reqKey)
 {
     if (stopping_) {
+        LOGW("Reject hydrate task while worker pool is stopping");
         return E_TRY_AGAIN;
     }
     for (const auto &[key, task] : taskMap_) {
         (void)key;
         if (task->syncFolder == syncFolder && task->filePath == filePath && task->syncFolderIndex == syncFolderIndex &&
             (task->state == PlaceholderTaskState::PENDING || task->state == PlaceholderTaskState::IN_PROGRESS)) {
+            LOGW("Reject duplicate active hydrate task");
             return E_HYDRATE_IN_PROGRESS;
         }
     }
@@ -162,6 +164,7 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
     }
     reqKey = GenerateRequestKeyLocked();
     if (reqKey.empty()) {
+        LOGE("Hydration request key space exhausted");
         return E_TRY_AGAIN;
     }
     return E_OK;
@@ -190,6 +193,7 @@ int32_t PlaceholderTaskManager::CreateHydrateTask(const std::string &syncFolder,
     std::lock_guard<std::mutex> lock(mapMutex_);
     int32_t ret = PrepareHydrateTaskLocked(syncFolder, filePath, syncFolderIndex, reqKey);
     if (ret != E_OK) {
+        LOGW("Prepare hydrate task failed, ret:%{public}d", ret);
         return ret;
     }
     auto task = std::make_shared<PlaceholderTaskRecord>();
@@ -255,6 +259,9 @@ int32_t PlaceholderTaskManager::CancelTask(const std::string &syncFolder,
         }
     }
     taskCv_.notify_all();
+    if (!cancelled) {
+        LOGW("Cancel hydrate task failed: no active task");
+    }
     return cancelled ? E_OK : E_NO_HYDRATION_IN_PROGRESS;
 }
 
@@ -374,12 +381,14 @@ int32_t PlaceholderTaskManager::AdvancePlaceholderStateLocked(
         int32_t ret = GetFilePlaceholderState(task->outputFd, placeholderState);
         if (ret != E_OK || (placeholderState != PLACEHOLDER_STATE_UNHYDRATED &&
                            placeholderState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED)) {
+            LOGE("Read hydration state failed, ret:%{public}d, state:%{public}u", ret, placeholderState);
             return E_TRY_AGAIN;
         }
         if (placeholderState == PLACEHOLDER_STATE_UNHYDRATED) {
             uint8_t oldState = PLACEHOLDER_STATE_NONE;
             ret = SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_PARTIALLY_HYDRATED, oldState);
             if (ret != E_OK) {
+                LOGE("Set partial hydration state failed, ret:%{public}d", ret);
                 return E_TRY_AGAIN;
             }
         }
@@ -387,7 +396,9 @@ int32_t PlaceholderTaskManager::AdvancePlaceholderStateLocked(
     }
     if (isComplete) {
         uint8_t oldState = PLACEHOLDER_STATE_NONE;
-        if (SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_FULLY_HYDRATED, oldState) != E_OK) {
+        int32_t ret = SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_FULLY_HYDRATED, oldState);
+        if (ret != E_OK) {
+            LOGE("Set complete hydration state failed, ret:%{public}d", ret);
             return E_TRY_AGAIN;
         }
     }
@@ -406,6 +417,7 @@ int32_t PlaceholderTaskManager::Execute(const std::string &callerBundleName,
     }
     auto task = FindTask(request.reqKey);
     if (task == nullptr) {
+        LOGW("Execute hydrate request failed: task not found");
         return E_NO_HYDRATION_IN_PROGRESS;
     }
     if (task->bundleName != callerBundleName || task->syncFolderIndex != syncFolderIndex) {
@@ -419,10 +431,13 @@ int32_t PlaceholderTaskManager::Execute(const std::string &callerBundleName,
     std::lock_guard<std::mutex> lock(task->mutex);
     switch (task->state.load()) {
         case PlaceholderTaskState::CANCELLED:
+            LOGW("Execute hydrate request rejected: task cancelled");
             return E_CANCELLED;
         case PlaceholderTaskState::COMPLETED:
+            LOGW("Execute hydrate request rejected: task completed");
             return E_ALREADY_HYDRATED;
         case PlaceholderTaskState::PENDING:
+            LOGW("Execute hydrate request rejected: task still pending");
             return E_TRY_AGAIN;
         default:
             break;

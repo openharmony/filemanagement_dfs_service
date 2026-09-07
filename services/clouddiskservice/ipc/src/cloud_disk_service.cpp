@@ -1402,6 +1402,7 @@ static int32_t DehydratePlaceholderFile(const PlaceholderStatePathContext &conte
     std::lock_guard<std::mutex> lock(GetDehydrateFileMutex(context.hmdfsPath));
     if (PlaceholderTaskManager::GetInstance().HasActiveTask(
         context.syncFolder, relativePath, context.syncFolderIndex)) {
+        LOGW("Dehydrate rejected: hydration is in progress");
         return E_HYDRATE_IN_PROGRESS;
     }
     int32_t ret = CheckPathNotDir(context.hmdfsPath);
@@ -1424,11 +1425,15 @@ static int32_t DehydratePlaceholderFile(const PlaceholderStatePathContext &conte
     }
     ret = CheckDehydrateState(state);
     if (ret != E_OK || state == PLACEHOLDER_STATE_UNHYDRATED) {
+        if (ret != E_OK) {
+            LOGW("Dehydrate rejected by placeholder state, state:%{public}u, ret:%{public}d", state, ret);
+        }
         return ret;
     }
 
     ret = DispatchDehydrateAuthorization(context, relativePath);
     if (ret != E_OK) {
+        LOGW("Dehydrate authorization failed, ret:%{public}d", ret);
         return ret;
     }
 
@@ -1677,6 +1682,7 @@ static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
     std::lock_guard<std::mutex> lock(GetDehydrateFileMutex(context.hmdfsPath));
     auto &taskManager = PlaceholderTaskManager::GetInstance();
     if (taskManager.HasActiveTask(context.syncFolder, relativePath, context.syncFolderIndex)) {
+        LOGW("Create hydration task rejected: hydration already in progress");
         return E_HYDRATE_IN_PROGRESS;
     }
     int32_t ret = ValidateHydrationPath(context);
@@ -1697,6 +1703,7 @@ static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
     uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
     ret = GetFilePlaceholderState(outputFd, placeholderState);
     if (ret != E_OK) {
+        LOGE("Read placeholder state before hydration failed, errno:%{public}d", ret);
         return ConvertErrnoToCloudDiskError(ret);
     }
     if (placeholderState == PLACEHOLDER_STATE_NONE) {
@@ -1707,14 +1714,12 @@ static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
     }
 
     PlaceholderTaskManager::RequestKey reqKey;
-    return taskManager.CreateHydrateTask(context.syncFolder,
-                                         relativePath,
-                                         context.bundleName,
-                                         context.syncFolderIndex,
-                                         priority,
-                                         std::move(outputFd),
-                                         reqKey,
-                                         {context.userId, context.absolutePath});
+    ret = taskManager.CreateHydrateTask(context.syncFolder, relativePath, context.bundleName, context.syncFolderIndex,
+                                        priority, std::move(outputFd), reqKey, {context.userId, context.absolutePath});
+    if (ret != E_OK) {
+        LOGE("Create hydration task failed, ret:%{public}d", ret);
+    }
+    return ret;
 }
 
 int32_t CloudDiskService::StartHydrationInner(const std::string &syncFolder,
@@ -1725,6 +1730,7 @@ int32_t CloudDiskService::StartHydrationInner(const std::string &syncFolder,
     if (syncFolder.empty() || relativePath.empty() ||
         priority < static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_LOW) ||
         priority > static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH)) {
+        LOGE("StartHydrationInner invalid arguments");
         return E_INVALID_ARG;
     }
     PlaceholderStatePathContext context;
@@ -1742,6 +1748,7 @@ int32_t CloudDiskService::CancelHydrationInner(const std::string &syncFolder, co
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("CancelHydrationInner invalid arguments");
         return E_INVALID_ARG;
     }
     PlaceholderStatePathContext context;
@@ -1749,8 +1756,11 @@ int32_t CloudDiskService::CancelHydrationInner(const std::string &syncFolder, co
     if (ret != E_OK) {
         return ret;
     }
-    return PlaceholderTaskManager::GetInstance().CancelTask(
-        context.syncFolder, relativePath, context.syncFolderIndex);
+    ret = PlaceholderTaskManager::GetInstance().CancelTask(context.syncFolder, relativePath, context.syncFolderIndex);
+    if (ret != E_OK) {
+        LOGW("Cancel hydration task failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -1775,7 +1785,11 @@ int32_t CloudDiskService::ExecuteInner(const CallbackExecuteRequest &request)
         LOGE("Execute callback table is not registered");
         return E_CALLBACK_NOT_REGISTERED;
     }
-    return PlaceholderTaskManager::GetInstance().Execute(bundleName, syncFolderIndex, request);
+    ret = PlaceholderTaskManager::GetInstance().Execute(bundleName, syncFolderIndex, request);
+    if (ret != E_OK) {
+        LOGW("Execute hydration callback failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif

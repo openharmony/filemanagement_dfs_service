@@ -130,7 +130,11 @@ int32_t PlaceholderCallbackManager::DispatchDehydrate(const std::string &bundleN
     reqContext.dehydrateData = &dehydrateInfo;
     int32_t ret = DispatchCallback(bundleName, syncFolderIndex, reqHead, reqContext);
     if (ret != E_OK) {
+        LOGE("Dispatch dehydrate callback failed, ret:%{public}d", ret);
         return ret;
+    }
+    if (!dehydrateInfo.allow) {
+        LOGW("Dehydrate request denied by provider");
     }
     return dehydrateInfo.allow ? E_OK : E_DEHYDRATE_DENIED;
 }

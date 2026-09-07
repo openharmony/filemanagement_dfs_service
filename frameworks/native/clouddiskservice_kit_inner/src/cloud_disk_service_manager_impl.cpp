@@ -383,7 +383,11 @@ int32_t CloudDiskServiceManagerImpl::StartHydration(const std::string &syncFolde
         return E_IPC_FAILED;
     }
     SetDeathRecipient(serviceProxy->AsObject());
-    return serviceProxy->StartHydrationInner(syncFolder, relativePath, static_cast<int32_t>(priority));
+    int32_t ret = serviceProxy->StartHydrationInner(syncFolder, relativePath, static_cast<int32_t>(priority));
+    if (ret != E_OK) {
+        LOGW("StartHydration failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -399,7 +403,11 @@ int32_t CloudDiskServiceManagerImpl::CancelHydration(const std::string &syncFold
         return E_IPC_FAILED;
     }
     SetDeathRecipient(serviceProxy->AsObject());
-    return serviceProxy->CancelHydrationInner(syncFolder, relativePath);
+    int32_t ret = serviceProxy->CancelHydrationInner(syncFolder, relativePath);
+    if (ret != E_OK) {
+        LOGW("CancelHydration failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -414,7 +422,11 @@ int32_t CloudDiskServiceManagerImpl::Execute(const CallbackExecuteRequest &reque
         return E_IPC_FAILED;
     }
     SetDeathRecipient(serviceProxy->AsObject());
-    return serviceProxy->ExecuteInner(request);
+    int32_t ret = serviceProxy->ExecuteInner(request);
+    if (ret != E_OK) {
+        LOGW("Execute failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -486,10 +498,15 @@ int32_t CloudDiskServiceManagerImpl::StartHydrationByPath(const std::string &pat
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
+        LOGE("StartHydrationByPath failed: proxy is null");
         return E_IPC_FAILED;
     }
     SetDeathRecipient(proxy->AsObject());
-    return proxy->StartHydrationByPathInner(path, callbackType, priority);
+    int32_t ret = proxy->StartHydrationByPathInner(path, callbackType, priority);
+    if (ret != E_OK) {
+        LOGW("StartHydrationByPath failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -500,10 +517,15 @@ int32_t CloudDiskServiceManagerImpl::DehydrateFileByPath(const std::string &path
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
+        LOGE("DehydrateFileByPath failed: proxy is null");
         return E_IPC_FAILED;
     }
     SetDeathRecipient(proxy->AsObject());
-    return proxy->DehydrateFileByPathInner(path);
+    int32_t ret = proxy->DehydrateFileByPathInner(path);
+    if (ret != E_OK) {
+        LOGW("DehydrateFileByPath failed, ret:%{public}d", ret);
+    }
+    return ret;
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -513,11 +535,13 @@ int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(const sptr<ICloudD
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (callback == nullptr) {
+        LOGE("RegisterProgressCallback failed: callback is null");
         return E_INVALID_ARG;
     }
     std::lock_guard<std::mutex> lock(progressMutex_);
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
+        LOGE("RegisterProgressCallback failed: proxy is null");
         return E_IPC_FAILED;
     }
     if (progressClient_ == nullptr) {
@@ -529,6 +553,9 @@ int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(const sptr<ICloudD
     int32_t ret = proxy->RegisterProgressCallbackInner(progressClient_->AsObject());
     if (ret != E_OK && added) {
         progressClient_->Remove(callback);
+    }
+    if (ret != E_OK) {
+        LOGW("RegisterProgressCallback failed, ret:%{public}d", ret);
     }
     return ret;
 #else
@@ -545,9 +572,13 @@ int32_t CloudDiskServiceManagerImpl::UnregisterProgressCallback(const sptr<IClou
     }
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
+        LOGE("UnregisterProgressCallback failed: proxy is null");
         return E_IPC_FAILED;
     }
     int32_t ret = proxy->UnregisterProgressCallbackInner();
+    if (ret != E_OK && ret != E_CALLBACK_NOT_REGISTERED) {
+        LOGW("UnregisterProgressCallback failed, ret:%{public}d", ret);
+    }
     return ret == E_CALLBACK_NOT_REGISTERED ? E_OK : ret;
 #else
     return E_NOT_SUPPORTED;

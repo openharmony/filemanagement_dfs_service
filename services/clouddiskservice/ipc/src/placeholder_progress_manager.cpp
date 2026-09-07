@@ -30,13 +30,17 @@ int32_t PlaceholderProgressManager::Register(const SubscriberKey &key, int32_t u
     const sptr<ICloudDiskProgressCallback> &callback)
 {
     if (callback == nullptr || callback->AsObject() == nullptr || userId < 0) {
+        LOGE("Register progress callback failed: invalid arguments");
         return E_INVALID_ARG;
     }
     std::lock_guard<std::mutex> lock(mutex_);
     auto found = subscribers_.find(key);
     if (found != subscribers_.end()) {
-        return found->second->callback->AsObject() == callback->AsObject() && found->second->userId == userId ?
-            E_OK : E_CALLBACK_ALREADY_REGISTERED;
+        if (found->second->callback->AsObject() == callback->AsObject() && found->second->userId == userId) {
+            return E_OK;
+        }
+        LOGW("Register progress callback failed: subscriber already registered");
+        return E_CALLBACK_ALREADY_REGISTERED;
     }
     auto subscriber = std::make_shared<Subscriber>();
     subscriber->userId = userId;
@@ -59,6 +63,7 @@ int32_t PlaceholderProgressManager::Unregister(const SubscriberKey &key)
         std::lock_guard<std::mutex> lock(mutex_);
         auto found = subscribers_.find(key);
         if (found == subscribers_.end()) {
+            LOGW("Unregister progress callback failed: subscriber not registered");
             return E_CALLBACK_NOT_REGISTERED;
         }
         subscriber = found->second;
@@ -77,6 +82,7 @@ void PlaceholderProgressManager::OnRemoteDied(const SubscriberKey &key, const wp
     std::lock_guard<std::mutex> lock(mutex_);
     auto found = subscribers_.find(key);
     if (found != subscribers_.end() && wptr<IRemoteObject>(found->second->callback->AsObject()) == remote) {
+        LOGW("Progress callback client died, removing subscriber");
         found->second->active = false;
         subscribers_.erase(found);
     }

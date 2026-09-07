@@ -257,6 +257,7 @@ int32_t RecountDirectoryChildren(const std::string &syncRoot,
     count = 0;
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        LOGE("Open directory for placeholder recount failed, errno:%{public}d", errno);
         return errno;
     }
 
@@ -283,14 +284,22 @@ int32_t RecountDirectoryChildren(const std::string &syncRoot,
 void UpdateDirectoryRecountState(const std::string &path, uint32_t count)
 {
     std::lock_guard<std::mutex> lock(GetPlaceholderStateMutex());
-    (void)WritePlaceholderCountNoLock(path, count);
+    int32_t ret = WritePlaceholderCountNoLock(path, count);
+    if (ret != E_OK) {
+        LOGE("Write recounted placeholder count failed, errno:%{public}d", ret);
+    }
     uint8_t oldState = 0;
-    if (ReadFileSyncStateByteNoLock(path, oldState, true) != E_OK) {
+    ret = ReadFileSyncStateByteNoLock(path, oldState, true);
+    if (ret != E_OK) {
+        LOGE("Read directory state after placeholder recount failed, errno:%{public}d", ret);
         return;
     }
     uint8_t dirState = count > 0 ? PLACEHOLDER_STATE_HAS_PLACEHOLDER : PLACEHOLDER_STATE_NONE;
     uint8_t newState = MakeFileSyncState(dirState, GetSyncStateFromFileSyncState(oldState));
-    (void)WriteFileSyncStateByteNoLock(path, newState);
+    ret = WriteFileSyncStateByteNoLock(path, newState);
+    if (ret != E_OK) {
+        LOGE("Write directory state after placeholder recount failed, errno:%{public}d", ret);
+    }
 }
 
 int32_t RecountNode(const std::string &syncRoot,
@@ -302,6 +311,7 @@ int32_t RecountNode(const std::string &syncRoot,
     isPlaceholder = false;
     struct stat statInfo {};
     if (lstat(path.c_str(), &statInfo) != 0) {
+        LOGE("Read node metadata for placeholder recount failed, errno:%{public}d", errno);
         return errno;
     }
 
