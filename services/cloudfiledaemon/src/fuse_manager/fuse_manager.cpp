@@ -1933,7 +1933,7 @@ static bool DoCloudReadForWatch(fuse_req_t req, shared_ptr<CloudInode> cInode,
     std::string cachePath;
     if (cInode->cacheFileIndex) {
         cachePath = VideoCachePath(cInode->path, data);
-        LOGI("keep-cache cachePath: %{public}s", cachePath.c_str());
+        LOGI("keep-cache cachePath: %{public}s", GetAnonyString(cachePath).c_str());
     } else {
         cachePath = GetAssetPath(cInode, data);
     }
