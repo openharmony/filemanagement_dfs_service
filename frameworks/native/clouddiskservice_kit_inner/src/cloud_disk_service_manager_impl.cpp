@@ -105,6 +105,7 @@ int32_t CloudDiskServiceManagerImpl::RegisterCallbackTable(
     if (ret == E_OK) {
         std::lock_guard<std::mutex> lock(callbackMutex_);
         callbackTables_[syncFolder] = callbackTable;
+        callbackTableClients_[syncFolder] = callbackClient;
     }
     SetDeathRecipient(serviceProxy->AsObject());
     LOGI("RegisterCallbackTable ret %{public}d", ret);
@@ -122,10 +123,22 @@ int32_t CloudDiskServiceManagerImpl::UnregisterCallbackTable(const std::string &
         LOGE("Proxy is nullptr");
         return E_IPC_FAILED;
     }
+    sptr<CloudDiskServiceCallbackTableClient> callbackClient;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        auto item = callbackTableClients_.find(syncFolder);
+        if (item != callbackTableClients_.end()) {
+            callbackClient = item->second;
+            callbackClient->SetActive(false);
+        }
+    }
     int32_t ret = serviceProxy->UnregisterCallbackTableInner(syncFolder);
     if (ret == E_OK) {
         std::lock_guard<std::mutex> lock(callbackMutex_);
         callbackTables_.erase(syncFolder);
+        callbackTableClients_.erase(syncFolder);
+    } else if (callbackClient != nullptr) {
+        callbackClient->SetActive(true);
     }
     SetDeathRecipient(serviceProxy->AsObject());
     LOGI("UnregisterCallbackTable ret %{public}d", ret);
@@ -226,7 +239,8 @@ int32_t CloudDiskServiceManagerImpl::CreatePlaceholderFile(const std::string &sy
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::IsPlaceholderFile(const std::string &syncFolder, const std::string &path,
+int32_t CloudDiskServiceManagerImpl::IsPlaceholderFile(const std::string &syncFolder,
+                                                       const std::string &path,
                                                        bool &isPlaceholder)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -313,7 +327,7 @@ int32_t CloudDiskServiceManagerImpl::UnregisterForSa(const std::string &path)
 }
 
 int32_t CloudDiskServiceManagerImpl::ConvertPlaceholderToFile(const std::string &syncFolder,
-    const std::string &relativePath)
+                                                              const std::string &relativePath)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("start ConvertPlaceholderToFile in impl");
@@ -393,8 +407,7 @@ int32_t CloudDiskServiceManagerImpl::StartHydration(const std::string &syncFolde
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::CancelHydration(const std::string &syncFolder,
-                                                     const std::string &relativePath)
+int32_t CloudDiskServiceManagerImpl::CancelHydration(const std::string &syncFolder, const std::string &relativePath)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto serviceProxy = ServiceProxy::GetInstance();
@@ -432,8 +445,7 @@ int32_t CloudDiskServiceManagerImpl::Execute(const CallbackExecuteRequest &reque
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::DehydrateFile(const std::string &syncFolder,
-                                                   const std::string &relativePath)
+int32_t CloudDiskServiceManagerImpl::DehydrateFile(const std::string &syncFolder, const std::string &relativePath)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("start DehydrateFile in impl");
@@ -452,8 +464,10 @@ int32_t CloudDiskServiceManagerImpl::DehydrateFile(const std::string &syncFolder
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
-    const PlaceholderInfo &metaData, const PlaceholderCustomInfo &customInfo)
+int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFolder,
+                                                       const std::string &relativePath,
+                                                       const PlaceholderInfo &metaData,
+                                                       const PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("start UpdatePlaceholder in impl");
@@ -473,7 +487,8 @@ int32_t CloudDiskServiceManagerImpl::UpdatePlaceholder(const std::string &syncFo
 }
 
 int32_t CloudDiskServiceManagerImpl::GetPlaceholderCustomInfo(const std::string &syncFolder,
-    const std::string &relativePath, PlaceholderCustomInfo &customInfo)
+                                                              const std::string &relativePath,
+                                                              PlaceholderCustomInfo &customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("start GetPlaceholderCustomInfo in impl");
@@ -492,8 +507,8 @@ int32_t CloudDiskServiceManagerImpl::GetPlaceholderCustomInfo(const std::string 
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::StartHydrationByPath(const std::string &path,
-    int32_t callbackType, int32_t priority)
+int32_t
+    CloudDiskServiceManagerImpl::StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto proxy = ServiceProxy::GetInstance();
@@ -621,6 +636,11 @@ void CloudDiskServiceManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &r
         {
             std::lock_guard<std::mutex> lock(callbackMutex_);
             callback = callback_;
+            for (const auto &item : callbackTableClients_) {
+                if (item.second != nullptr) {
+                    item.second->SetActive(false);
+                }
+            }
             for (const auto &item : callbackTables_) {
                 callbackTables.push_back(item.second);
             }

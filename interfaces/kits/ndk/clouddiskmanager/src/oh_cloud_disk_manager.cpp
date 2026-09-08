@@ -40,11 +40,10 @@ using namespace OHOS::FileManagement::CloudDiskService;
 
 class CloudDiskServiceCallbackImpl : public CloudDiskServiceCallback {
 public:
-    using OnChangeDataCallback =
-        function<void(const CloudDisk_SyncFolderPath syncFolderPath, const CloudDisk_ChangeData changeDatas[],
-                      size_t bufferLength)>;
-    explicit CloudDiskServiceCallbackImpl(OnChangeDataCallback callback)
-        : callback_(callback) {};
+    using OnChangeDataCallback = function<void(const CloudDisk_SyncFolderPath syncFolderPath,
+                                               const CloudDisk_ChangeData changeDatas[],
+                                               size_t bufferLength)>;
+    explicit CloudDiskServiceCallbackImpl(OnChangeDataCallback callback) : callback_(callback){};
     void OnChangeData(const std::string &syncFolder, const std::vector<ChangeData> &changeData) override;
     ~CloudDiskServiceCallbackImpl() override = default;
 
@@ -181,21 +180,21 @@ void CloudDiskServiceCallbackTableImpl::OnCallback(const CloudDiskCallbackReqHea
 }
 
 void CloudDiskServiceCallbackTableImpl::HandleFetchData(const OH_CloudDisk_CallbackReqHead &reqHead,
-    CloudDiskCallbackContext &context)
+                                                        CloudDiskCallbackContext &context)
 {
     if (context.fetchData == nullptr) {
         LOGE("Fetch data callback context is nullptr");
         return;
     }
     OH_CloudDisk_FetchDataRequest request{ToPublicPathInfo(context.fetchData->filePath),
-        static_cast<OH_CloudDisk_HydratePriority>(context.fetchData->priority)};
+                                          static_cast<OH_CloudDisk_HydratePriority>(context.fetchData->priority)};
     OH_CloudDisk_CallbackContext publicContext{};
     publicContext.fetchData = &request;
     callback_(reqHead, publicContext);
 }
 
 void CloudDiskServiceCallbackTableImpl::HandleCancelFetchData(const OH_CloudDisk_CallbackReqHead &reqHead,
-    CloudDiskCallbackContext &context)
+                                                              CloudDiskCallbackContext &context)
 {
     if (context.cancelFetchData == nullptr) {
         LOGE("Cancel fetch data callback context is nullptr");
@@ -208,14 +207,14 @@ void CloudDiskServiceCallbackTableImpl::HandleCancelFetchData(const OH_CloudDisk
 }
 
 void CloudDiskServiceCallbackTableImpl::HandleFetchRangeData(const OH_CloudDisk_CallbackReqHead &reqHead,
-    CloudDiskCallbackContext &context)
+                                                             CloudDiskCallbackContext &context)
 {
     if (context.fetchRangeData == nullptr) {
         LOGE("Fetch range data callback context is nullptr");
         return;
     }
-    OH_CloudDisk_RangeInfo rangeInfo{ToPublicPathInfo(context.fetchRangeData->filePath),
-        context.fetchRangeData->offset, context.fetchRangeData->size, ToPublicDataBuf(context.fetchRangeData->data)};
+    OH_CloudDisk_RangeInfo rangeInfo{ToPublicPathInfo(context.fetchRangeData->filePath), context.fetchRangeData->offset,
+                                     context.fetchRangeData->size, ToPublicDataBuf(context.fetchRangeData->data)};
     uint8_t *rangeData = rangeInfo.data.data;
     uint64_t rangeDataCapacity = rangeInfo.data.dataSize;
     OH_CloudDisk_CallbackContext publicContext{};
@@ -230,7 +229,7 @@ void CloudDiskServiceCallbackTableImpl::HandleFetchRangeData(const OH_CloudDisk_
 }
 
 void CloudDiskServiceCallbackTableImpl::HandleDehydrate(const OH_CloudDisk_CallbackReqHead &reqHead,
-    CloudDiskCallbackContext &context)
+                                                        CloudDiskCallbackContext &context)
 {
     if (context.dehydrateData == nullptr) {
         LOGE("Dehydrate callback context is nullptr");
@@ -243,10 +242,11 @@ void CloudDiskServiceCallbackTableImpl::HandleDehydrate(const OH_CloudDisk_Callb
     context.dehydrateData->allow = dehydrateInfo.allow;
 }
 
-CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
-    void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                     const CloudDisk_ChangeData changeDatas[],
-                     size_t bufferLength))
+CloudDisk_ErrorCode
+    OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
+                                           void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                            const CloudDisk_ChangeData changeDatas[],
+                                                            size_t bufferLength))
 {
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
         LOGE("Invalid argument, syncFolder path is invalid");
@@ -257,9 +257,8 @@ CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncF
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     auto callbackInner = [callback](const CloudDisk_SyncFolderPath syncFolderPath,
-        const CloudDisk_ChangeData changeDatas[], size_t bufferLength) {
-        callback(syncFolderPath, changeDatas, bufferLength);
-    };
+                                    const CloudDisk_ChangeData changeDatas[],
+                                    size_t bufferLength) { callback(syncFolderPath, changeDatas, bufferLength); };
     shared_ptr<CloudDiskServiceCallback> callbackImpl = make_shared<CloudDiskServiceCallbackImpl>(callbackInner);
     int32_t ret = CloudDiskServiceManager::GetInstance().RegisterSyncFolderChanges(
         string(syncFolderPath.value, syncFolderPath.length), callbackImpl);
@@ -697,9 +696,8 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(const CloudDisk_SyncFolderPat
 #endif
 }
 
-CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(
-    const CloudDisk_SyncFolderPath syncFolderPath,
-    const CloudDisk_PathInfo relativePathInfo)
+CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                          const CloudDisk_PathInfo relativePathInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
@@ -714,8 +712,9 @@ CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(
 
     string syncFolder(syncFolderPath.value, syncFolderPath.length);
     string relativePath(relativePathInfo.value, relativePathInfo.length);
-    int32_t ret = OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager::GetInstance()
-        .ConvertPlaceholderToFile(syncFolder, relativePath);
+    int32_t ret =
+        OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager::GetInstance().ConvertPlaceholderToFile(
+            syncFolder, relativePath);
     if (ret != OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK) {
         LOGE("Convert placeholder to file failed, ret: %{public}d", ret);
         return ConvertToErrorCode(ret);
@@ -791,8 +790,8 @@ CloudDisk_ErrorCode OH_CloudDisk_HydratePlaceholder(const CloudDisk_SyncFolderPa
     std::string relativePath(filePath->value, filePath->length);
     int32_t ret = E_INVALID_ARG;
     if (type == CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA) {
-        ret = CloudDiskServiceManager::GetInstance().StartHydration(
-            syncFolder, relativePath, static_cast<CloudDiskHydratePriority>(priority));
+        ret = CloudDiskServiceManager::GetInstance().StartHydration(syncFolder, relativePath,
+                                                                    static_cast<CloudDiskHydratePriority>(priority));
     } else {
         ret = CloudDiskServiceManager::GetInstance().CancelHydration(syncFolder, relativePath);
     }
@@ -808,6 +807,9 @@ static bool BuildExecuteFetchData(const OH_CloudDisk_FetchData *fetchData, Callb
     if (fetchData == nullptr || fetchData->size != fetchData->data.dataSize ||
         fetchData->size > MAX_EXECUTE_DATA_SIZE || fetchData->offset > fetchData->totalSize ||
         fetchData->size > fetchData->totalSize - fetchData->offset ||
+        (!fetchData->isComplete && fetchData->size == 0) ||
+        (fetchData->isComplete && fetchData->totalSize != 0 && fetchData->size == 0) ||
+        (fetchData->totalSize == 0 && (fetchData->offset != 0 || fetchData->size != 0 || !fetchData->isComplete)) ||
         (fetchData->size != 0 && fetchData->data.data == nullptr)) {
         return false;
     }
@@ -822,8 +824,9 @@ static bool BuildExecuteFetchData(const OH_CloudDisk_FetchData *fetchData, Callb
 }
 
 static bool BuildCallbackExecuteRequest(const OH_CloudDisk_CallbackReqHead &reqHead,
-    const OH_CloudDisk_CallbackContext &reqContext, const OH_CloudDisk_CallbackResponse &rsp,
-    CallbackExecuteRequest &request)
+                                        const OH_CloudDisk_CallbackContext &reqContext,
+                                        const OH_CloudDisk_CallbackResponse &rsp,
+                                        CallbackExecuteRequest &request)
 {
     if (reqHead.reqKey.data == nullptr || reqHead.reqKey.dataSize == 0 ||
         reqHead.reqKey.dataSize > MAX_CALLBACK_REQUEST_KEY_SIZE ||
@@ -894,11 +897,10 @@ CloudDisk_ErrorCode OH_CloudDisk_DehydrateFile(const CloudDisk_SyncFolderPath *s
 #endif
 }
 
-CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(
-    const CloudDisk_SyncFolderPath syncFolderPath,
-    const CloudDisk_PathInfo relativePathInfo,
-    const OH_CloudDisk_PlaceholderInfo placeholderInfo,
-    const OH_CloudDisk_PlaceholderCustomInfo *customInfo)
+CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
+                                                   const CloudDisk_PathInfo relativePathInfo,
+                                                   const OH_CloudDisk_PlaceholderInfo placeholderInfo,
+                                                   const OH_CloudDisk_PlaceholderCustomInfo *customInfo)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length)) {
@@ -922,8 +924,8 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
 
-    int32_t ret = OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager::GetInstance()
-        .UpdatePlaceholder(syncFolder, relativePath, metaData, innerCustomInfo);
+    int32_t ret = OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager::GetInstance().UpdatePlaceholder(
+        syncFolder, relativePath, metaData, innerCustomInfo);
     if (ret != OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK) {
         LOGE("Update placeholder to file failed, ret: %{public}d", ret);
         return ConvertToErrorCode(ret);
@@ -1041,7 +1043,9 @@ CloudDisk_ErrorCode OH_CloudDisk_GetSyncFoldersEx(OH_CloudDisk_SyncFolderEx **sy
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderCustomInfo(const CloudDisk_SyncFolderPath syncFolderPath,
-    const CloudDisk_PathInfo relativePathInfo, uint8_t *dataBuf, size_t *inOutDataLength)
+                                                          const CloudDisk_PathInfo relativePathInfo,
+                                                          uint8_t *dataBuf,
+                                                          size_t *inOutDataLength)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (inOutDataLength == nullptr || !IsValidPathInfo(syncFolderPath.value, syncFolderPath.length) ||
@@ -1060,8 +1064,7 @@ CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderCustomInfo(const CloudDisk_SyncFo
     PlaceholderCustomInfo customInfo;
     std::string syncFolder(syncFolderPath.value, syncFolderPath.length);
     std::string relativePath(relativePathInfo.value, relativePathInfo.length);
-    int32_t ret = CloudDiskServiceManager::GetInstance().GetPlaceholderCustomInfo(
-        syncFolder, relativePath, customInfo);
+    int32_t ret = CloudDiskServiceManager::GetInstance().GetPlaceholderCustomInfo(syncFolder, relativePath, customInfo);
     if (ret != CloudDiskServiceErrCode::E_OK) {
         LOGE("Get placeholder custom info failed, ret: %{public}d", ret);
         return ConvertToErrorCode(ret);
@@ -1070,8 +1073,8 @@ CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderCustomInfo(const CloudDisk_SyncFo
     size_t actualLength = customInfo.data.size();
     *inOutDataLength = actualLength;
     if (capacity < actualLength || (actualLength != 0 && dataBuf == nullptr)) {
-        LOGE("Custom info output buffer is too small, capacity: %{public}zu, actual: %{public}zu",
-             capacity, actualLength);
+        LOGE("Custom info output buffer is too small, capacity: %{public}zu, actual: %{public}zu", capacity,
+             actualLength);
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
     if (actualLength != 0 && memcpy_s(dataBuf, capacity, customInfo.data.data(), actualLength) != EOK) {

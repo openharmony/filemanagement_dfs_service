@@ -145,6 +145,7 @@ ohos_unittest("service_account_status_listener_test") {
     sources += [
       "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_callback_manager_mock.cpp",
       "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_syncfolder_mock.cpp",
+      "${distributedfile_path}/test/unittests/clouddiskservice/mock/placeholder_lifecycle_manager_mock.cpp",
     ]
     external_deps += [
       "ipc:ipc_single",
@@ -242,6 +243,7 @@ ohos_unittest("cloud_disk_service_callback_proxy_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock",
     "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/utils/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/utils/inner_api",
   ]
@@ -916,52 +918,12 @@ ohos_unittest("placeholder_progress_test") {
   subsystem_name = "filemanagement"
 }
 
-ohos_unittest("cloud_disk_system_manager_test") {
-  module_out_path = "dfs_service/dfs_service"
-  sources = [
-    "//foundation/filemanagement/user_file_service/interfaces/inner_api/cloud_disk_kit_inner/src/cloud_disk_error.cpp",
-    "//foundation/filemanagement/user_file_service/interfaces/inner_api/cloud_disk_kit_inner/src/cloud_disk_system_manager.cpp",
-    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_common.cpp",
-    "${distributedfile_path}/frameworks/native/clouddiskservice_kit_inner/src/cloud_disk_progress_callback_stub.cpp",
-    "mock/cloud_disk_service_manager_mock.cpp",
-    "ipc/CloudDiskSystemManagerTest.cpp",
-  ]
-  include_dirs = [
-
-    "${distributedfile_path}/utils/clouddiskservice/include",
-    "${innerkits_native_path}/clouddiskservice_kit_inner",
-    "${distributedfile_path}/utils/log/include",
-    "mock",
-  ]
-  external_deps = [
-    "user_file_service:cloud_disk_manager_kit",
-    "user_file_service:file_access_extension_ability_kit",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libtokenid_sdk",
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-  defines = [
-    "LOG_DOMAIN=0xD003900",
-    "LOG_TAG=\"CloudDiskSystemManagerTest\"",
-  ]
-  if (dfs_service_feature_enable_cloud_disk) {
-    defines += [ "SUPPORT_CLOUD_DISK_MANAGER" ]
-  }
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
-}
-
 group("clouddisk_service_test") {
   testonly = true
 
   deps = [
     ":callback_execute_request_test",
     ":placeholder_progress_test",
-    ":cloud_disk_system_manager_test",
     ":cloud_disk_service_access_token_test",
     ":cloud_disk_service_callback_manager_test",
     ":cloud_disk_service_callback_proxy_test",

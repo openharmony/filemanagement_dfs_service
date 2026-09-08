@@ -37,15 +37,15 @@
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_sync_folder_manager.h"
 #endif
+#include "cloud_disk_progress_callback_proxy.h"
 #include "cloud_disk_sync_folder.h"
+#include "ipc_skeleton.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "placeholder_callback_manager.h"
 #include "placeholder_helper.h"
-#include "placeholder_task_manager.h"
-#include "cloud_disk_progress_callback_proxy.h"
 #include "placeholder_progress_manager.h"
-#include "ipc_skeleton.h"
+#include "placeholder_task_manager.h"
 #include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "utils_log.h"
@@ -358,6 +358,7 @@ void CloudDiskService::OnStop()
 {
     LOGI("Begin to stop");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    PlaceholderCallbackManager::GetInstance().ClearAll();
     PlaceholderTaskManager::GetInstance().StopWorkerPool();
     PlaceholderProgressManager::GetInstance().Drain();
     PlaceholderProgressManager::GetInstance().Clear();
@@ -613,8 +614,8 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static bool SetFileSyncStates(
-    const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed, const string &syncFolder)
+static bool
+    SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed, const string &syncFolder)
 {
     std::string setXattrPath;
     if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
@@ -1033,8 +1034,8 @@ int32_t CloudDiskService::GetPlaceholderStateInner(const std::string &syncFolder
 #endif
 }
 
-int32_t CloudDiskService::RegisterSyncFolderInner(
-    int32_t userId, const std::string &bundleName, const std::string &path)
+int32_t
+    CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin RegisterSyncFolderInner");
@@ -1071,8 +1072,8 @@ int32_t CloudDiskService::RegisterSyncFolderInner(
 #endif
 }
 
-int32_t CloudDiskService::UnregisterSyncFolderInner(
-    int32_t userId, const std::string &bundleName, const std::string &path)
+int32_t
+    CloudDiskService::UnregisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin UnregisterSyncFolderInner");
@@ -1215,8 +1216,8 @@ static int32_t CheckSyncFolderBundleName(const std::string &syncFolder, int32_t 
     return E_OK;
 }
 
-static int32_t GetHmdfsPath(
-    const std::string &syncFolder, const std::string &relativePath, int32_t userId, std::string &hmdfsPath)
+static int32_t
+    GetHmdfsPath(const std::string &syncFolder, const std::string &relativePath, int32_t userId, std::string &hmdfsPath)
 {
     // 校验相对路径合法性
     if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
@@ -1353,8 +1354,8 @@ static int32_t DispatchDehydrateAuthorization(const PlaceholderStatePathContext 
     reqHead.syncFolderPath = {syncFolder.empty() ? nullptr : syncFolder.data(), syncFolder.length()};
     reqHead.reqKey = {nullptr, 0};
     CloudDiskPathInfo pathInfo{filePath.empty() ? nullptr : filePath.data(), filePath.length()};
-    return PlaceholderCallbackManager::GetInstance().DispatchDehydrate(
-        context.bundleName, context.syncFolderIndex, reqHead, pathInfo);
+    return PlaceholderCallbackManager::GetInstance().DispatchDehydrate(context.bundleName, context.syncFolderIndex,
+                                                                       reqHead, pathInfo);
 }
 
 static int32_t DehydrateOpenFile(int fd)
@@ -1377,8 +1378,7 @@ static int32_t DehydrateOpenFile(int fd)
             extendSucceeded = true;
             break;
         }
-        LOGE("Extend placeholder after dehydration failed, attempt:%{public}d, errno:%{public}d",
-             attempt + 1, errno);
+        LOGE("Extend placeholder after dehydration failed, attempt:%{public}d, errno:%{public}d", attempt + 1, errno);
     }
     if (!extendSucceeded) {
         return E_TRY_AGAIN;
@@ -1396,12 +1396,11 @@ static int32_t DehydrateOpenFile(int fd)
     return E_OK;
 }
 
-static int32_t DehydratePlaceholderFile(const PlaceholderStatePathContext &context,
-                                        const std::string &relativePath)
+static int32_t DehydratePlaceholderFile(const PlaceholderStatePathContext &context, const std::string &relativePath)
 {
     std::lock_guard<std::mutex> lock(GetDehydrateFileMutex(context.hmdfsPath));
-    if (PlaceholderTaskManager::GetInstance().HasActiveTask(
-        context.syncFolder, relativePath, context.syncFolderIndex)) {
+    if (PlaceholderTaskManager::GetInstance().HasActiveTask(context.syncFolder, relativePath,
+                                                            context.syncFolderIndex)) {
         LOGW("Dehydrate rejected: hydration is in progress");
         return E_HYDRATE_IN_PROGRESS;
     }
@@ -1714,8 +1713,11 @@ static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
     }
 
     PlaceholderTaskManager::RequestKey reqKey;
-    ret = taskManager.CreateHydrateTask(context.syncFolder, relativePath, context.bundleName, context.syncFolderIndex,
-                                        priority, std::move(outputFd), reqKey, {context.userId, context.absolutePath});
+    ret = PlaceholderCallbackManager::GetInstance().RunIfRegistered(context.bundleName, context.syncFolderIndex, [&] {
+        return taskManager.CreateHydrateTask(context.syncFolder, relativePath, context.bundleName,
+                                             context.syncFolderIndex, priority, std::move(outputFd), reqKey,
+                                             {context.userId, context.absolutePath});
+    });
     if (ret != E_OK) {
         LOGE("Create hydration task failed, ret:%{public}d", ret);
     }
@@ -1841,16 +1843,15 @@ static bool IsValidSystemAccessorPath(const std::string &path)
     constexpr const char *SANDBOX_PREFIX = "/storage/Users/currentUser/";
     if (path.empty() || path.size() > PATH_MAX || path.find('\0') != std::string::npos ||
         path.compare(0, std::char_traits<char>::length(SANDBOX_PREFIX), SANDBOX_PREFIX) != 0 ||
-        path.find("/../") != std::string::npos || path.find("/./") != std::string::npos ||
-        path.back() == '/' || path.substr(path.find_last_of('/') + 1) == ".." ||
-        path.substr(path.find_last_of('/') + 1) == ".") {
+        path.find("/../") != std::string::npos || path.find("/./") != std::string::npos || path.back() == '/' ||
+        path.substr(path.find_last_of('/') + 1) == ".." || path.substr(path.find_last_of('/') + 1) == ".") {
         return false;
     }
     return true;
 }
 
-static int32_t ResolveSystemAccessorPath(const std::string &path, PlaceholderStatePathContext &context,
-    std::string &relativePath)
+static int32_t
+    ResolveSystemAccessorPath(const std::string &path, PlaceholderStatePathContext &context, std::string &relativePath)
 {
     if (!IsValidSystemAccessorPath(path)) {
         return E_INVALID_ARG;
@@ -1876,8 +1877,7 @@ static int32_t ResolveSystemAccessorPath(const std::string &path, PlaceholderSta
             context.syncFolderIndex = index;
         }
     }
-    if (selected.path.empty() ||
-        !folders.PathToSandboxPathByPhysicalPath(selected.path, user, context.syncFolder)) {
+    if (selected.path.empty() || !folders.PathToSandboxPathByPhysicalPath(selected.path, user, context.syncFolder)) {
         LOGE("No registered sync folder for system accessor");
         return E_CALLBACK_NOT_REGISTERED;
     }
@@ -1919,8 +1919,8 @@ int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int
         return E_CALLBACK_NOT_REGISTERED;
     }
     if (callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA)) {
-        return PlaceholderTaskManager::GetInstance().CancelTask(
-            context.syncFolder, relativePath, context.syncFolderIndex);
+        return PlaceholderTaskManager::GetInstance().CancelTask(context.syncFolder, relativePath,
+                                                                context.syncFolderIndex);
     }
     return CreateHydrationTask(context, relativePath, static_cast<CloudDiskHydratePriority>(priority));
 #else
@@ -2025,8 +2025,8 @@ static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath,
             (void)RefreshAncestorPlaceholderCount(context.mntSyncFolder, hmdfsPath, 1);
         }
         if (context.userId >= 0) {
-            (void)UpdateDentryPlaceholderState(
-                context.userId, context.syncFolderIndex, hmdfsPath, PLACEHOLDER_STATE_UNHYDRATED);
+            (void)UpdateDentryPlaceholderState(context.userId, context.syncFolderIndex, hmdfsPath,
+                                               PLACEHOLDER_STATE_UNHYDRATED);
         }
     } while (0);
 

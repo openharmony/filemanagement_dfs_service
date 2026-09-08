@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include <fcntl.h>
-#include <gtest/gtest.h>
 #include <chrono>
 #include <condition_variable>
 #include <cstdio>
+#include <fcntl.h>
+#include <gtest/gtest.h>
 #include <limits>
+#include <memory>
 #include <mutex>
 #include <thread>
 
@@ -27,8 +28,8 @@
 #include "iremote_stub.h"
 #include "placeholder_callback_manager.h"
 #include "placeholder_helper.h"
-#include "placeholder_task_manager.h"
 #include "placeholder_progress_manager.h"
+#include "placeholder_task_manager.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -41,11 +42,18 @@ constexpr uint32_t TEST_SYNC_FOLDER_INDEX = 100;
 
 UniqueFd OpenTaskFd()
 {
-    return UniqueFd(dup(STDOUT_FILENO));
+    std::unique_ptr<FILE, decltype(&fclose)> file(tmpfile(), fclose);
+    if (file == nullptr) {
+        return UniqueFd(-1);
+    }
+    return UniqueFd(dup(fileno(file.get())));
 }
 
-CallbackExecuteRequest MakeRequest(const std::vector<uint8_t> &reqKey, uint64_t offset = 0,
-    const std::vector<uint8_t> &data = {}, uint64_t totalSize = 0, bool isComplete = true)
+CallbackExecuteRequest MakeRequest(const std::vector<uint8_t> &reqKey,
+                                   uint64_t offset = 0,
+                                   const std::vector<uint8_t> &data = {},
+                                   uint64_t totalSize = 0,
+                                   bool isComplete = true)
 {
     CallbackExecuteRequest request;
     request.reqKey = reqKey;
@@ -65,7 +73,10 @@ public:
     {
         events.push_back(progress);
     }
-    int32_t OnRemoteRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override { return E_OK; }
+    int32_t OnRemoteRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override
+    {
+        return E_OK;
+    }
     std::vector<HydrateProgress> events;
 };
 
@@ -118,11 +129,13 @@ public:
     void OnCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) override
     {
         std::lock_guard<std::mutex> lock(mutex);
-        called = reqHead.callbackType == CloudDiskCallbackType::FETCH_DATA && reqContext.fetchData != nullptr;
-        if (called) {
+        callbackTypes.push_back(reqHead.callbackType);
+        bool isFetch = reqHead.callbackType == CloudDiskCallbackType::FETCH_DATA && reqContext.fetchData != nullptr;
+        called = called || isFetch;
+        if (isFetch) {
             priority = reqContext.fetchData->priority;
         }
-        cv.notify_one();
+        cv.notify_all();
     }
 
     int32_t OnRemoteRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override
@@ -134,6 +147,7 @@ public:
     std::condition_variable cv;
     bool called = false;
     CloudDiskHydratePriority priority = CLOUD_DISK_HYDRATE_PRIORITY_LOW;
+    std::vector<CloudDiskCallbackType> callbackTypes;
 };
 } // namespace
 
@@ -161,7 +175,7 @@ public:
 
     void ExpectStateTransitions(int32_t taskFd, uint8_t &stateByte)
     {
-        constexpr int32_t STATE_UPDATE_COUNT = 2; // Partially hydrated, then fully hydrated.
+        constexpr int32_t STATE_UPDATE_COUNT = 2;                    // Partially hydrated, then fully hydrated.
         constexpr int32_t STATE_READ_COUNT = STATE_UPDATE_COUNT + 1; // Initial check plus each update.
         EXPECT_CALL(*mock_, fgetxattr(taskFd, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
             .Times(STATE_READ_COUNT)
@@ -226,8 +240,143 @@ HWTEST_F(PlaceholderTaskManagerTest, CreateHydrateTask_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateHydrateTask_002
+ * @tc.desc: Reject each invalid task field and new work while the worker pool is stopping.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, CreateHydrateTask_002, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    PlaceholderTaskManager::RequestKey key{1};
+    EXPECT_EQ(manager.CreateHydrateTask("", "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_INVALID_ARG);
+    EXPECT_TRUE(key.empty());
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_INVALID_ARG);
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", "", TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_INVALID_ARG);
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        static_cast<CloudDiskHydratePriority>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH + 1),
+                                        OpenTaskFd(), key),
+              E_INVALID_ARG);
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, UniqueFd(-1), key),
+              E_INVALID_ARG);
+
+    EXPECT_CALL(*mock_, fstat(_, _)).WillOnce(Invoke([](int, struct stat *metadata) {
+        metadata->st_size = 0;
+        return 0;
+    }));
+    manager.stopping_ = true;
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_TRY_AGAIN);
+    manager.stopping_ = false;
+    EXPECT_TRUE(manager.taskMap_.empty());
+    EXPECT_TRUE(manager.pendingQueue_.empty());
+}
+
+/**
+ * @tc.name: CreateHydrateTask_003
+ * @tc.desc: Verify request-key recovery and create-sequence wrap protection with queued work.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, CreateHydrateTask_003, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    manager.nextReqKeyValue_ = 0;
+    manager.nextCreateSeq_ = std::numeric_limits<uint64_t>::max();
+    PlaceholderTaskManager::RequestKey firstKey;
+    ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "first.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), firstKey),
+              E_OK);
+    ASSERT_EQ(firstKey.size(), sizeof(uint64_t));
+    EXPECT_EQ(firstKey.front(), 1U);
+    EXPECT_EQ(manager.taskMap_.at(firstKey)->createSeq, 1U);
+
+    manager.nextCreateSeq_ = std::numeric_limits<uint64_t>::max();
+    PlaceholderTaskManager::RequestKey secondKey;
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "second.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), secondKey),
+              E_TRY_AGAIN);
+    EXPECT_TRUE(secondKey.empty());
+    EXPECT_EQ(manager.taskMap_.size(), 1U);
+}
+
+/**
+ * @tc.name: CreateHydrateTask_004
+ * @tc.desc: Enforce the five-per-application and ten-global active hydration task limits.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, CreateHydrateTask_004, TestSize.Level1)
+{
+    constexpr size_t APP_TASK_LIMIT = 5;
+    constexpr size_t GLOBAL_TASK_LIMIT = 10;
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    for (size_t index = 0; index < APP_TASK_LIMIT; ++index) {
+        PlaceholderTaskManager::RequestKey key;
+        ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "app-" + std::to_string(index), TEST_BUNDLE_NAME,
+                                            TEST_SYNC_FOLDER_INDEX, CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(),
+                                            key),
+                  E_OK);
+    }
+    PlaceholderTaskManager::RequestKey rejectedKey;
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "app-overflow", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, OpenTaskFd(), rejectedKey),
+              E_HYDRATION_TASK_LIMIT_REACHED);
+
+    for (size_t index = APP_TASK_LIMIT; index < GLOBAL_TASK_LIMIT; ++index) {
+        PlaceholderTaskManager::RequestKey key;
+        ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "global-" + std::to_string(index),
+                                            "com.example.other." + std::to_string(index), TEST_SYNC_FOLDER_INDEX,
+                                            CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+                  E_OK);
+    }
+    EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "global-overflow", "com.example.last", TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, OpenTaskFd(), rejectedKey),
+              E_HYDRATION_TASK_LIMIT_REACHED);
+}
+
+/**
+ * @tc.name: CancelTombstone_001
+ * @tc.desc: Retain only the latest sixteen cancellation tombstones per application and expire stale entries.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, CancelTombstone_001, TestSize.Level1)
+{
+    constexpr size_t TOMBSTONE_COUNT = 17;
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    std::vector<PlaceholderTaskManager::RequestKey> keys;
+    for (size_t index = 0; index < TOMBSTONE_COUNT; ++index) {
+        PlaceholderTaskManager::RequestKey key;
+        std::string filePath = "file-" + std::to_string(index);
+        ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, filePath, TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                            CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+                  E_OK);
+        ASSERT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, filePath, TEST_SYNC_FOLDER_INDEX), E_OK);
+        keys.push_back(key);
+    }
+    EXPECT_EQ(manager.tombstoneMap_.size(), 16U);
+    auto firstRequest = MakeRequest(keys.front());
+    firstRequest.filePath = "file-0";
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, firstRequest), E_NO_HYDRATION_IN_PROGRESS);
+    auto lastRequest = MakeRequest(keys.back());
+    lastRequest.filePath = "file-16";
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, lastRequest), E_CANCELLED);
+    manager.tombstoneMap_.at(keys.back()).expiresAt = std::chrono::steady_clock::now();
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, lastRequest), E_NO_HYDRATION_IN_PROGRESS);
+}
+
+/**
  * @tc.name: CancelTask_001
- * @tc.desc: Verify cancellation marks the task and Execute observes the cancelled state.
+ * @tc.desc: Verify cancellation removes the active task and Execute observes the cancellation tombstone.
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -240,12 +389,10 @@ HWTEST_F(PlaceholderTaskManagerTest, CancelTask_001, TestSize.Level1)
               E_OK);
     EXPECT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX), E_OK);
     PlaceholderTaskState state = PlaceholderTaskState::PENDING;
-    ASSERT_TRUE(manager.GetTaskState(reqKey, state));
-    EXPECT_EQ(state, PlaceholderTaskState::CANCELLED);
+    EXPECT_FALSE(manager.GetTaskState(reqKey, state));
     EXPECT_FALSE(manager.HasActiveTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX));
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey)), E_CANCELLED);
-    EXPECT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "missing.txt", TEST_SYNC_FOLDER_INDEX),
-              E_NO_HYDRATION_IN_PROGRESS);
+    EXPECT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "missing.txt", TEST_SYNC_FOLDER_INDEX), E_NO_HYDRATION_IN_PROGRESS);
 }
 
 /**
@@ -265,8 +412,7 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_001, TestSize.Level2)
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), reqKey),
               E_OK);
-    EXPECT_EQ(manager.Execute("other.bundle", TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey)),
-              E_CALLBACK_NOT_REGISTERED);
+    EXPECT_EQ(manager.Execute("other.bundle", TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey)), E_CALLBACK_NOT_REGISTERED);
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1, MakeRequest(reqKey)),
               E_CALLBACK_NOT_REGISTERED);
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey)), E_TRY_AGAIN);
@@ -299,17 +445,19 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_002, TestSize.Level1)
     uint8_t stateByte = MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 1);
     ExpectStateTransitions(taskFd, stateByte);
     std::vector<uint8_t> firstBlock{1, 2, 3};
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(reqKey, 0, firstBlock, 6, false)), E_OK);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey, 0, firstBlock, 6, false)),
+              E_OK);
     EXPECT_EQ(GetPlaceholderStateFromFileSyncState(stateByte), PLACEHOLDER_STATE_PARTIALLY_HYDRATED);
     EXPECT_EQ(GetSyncStateFromFileSyncState(stateByte), 1);
     std::vector<uint8_t> finalBlock{4, 5, 6};
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(reqKey, 3, finalBlock, 6, true)), E_OK);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey, 3, finalBlock, 6, true)),
+              E_OK);
     EXPECT_EQ(GetPlaceholderStateFromFileSyncState(stateByte), PLACEHOLDER_STATE_FULLY_HYDRATED);
     EXPECT_EQ(GetSyncStateFromFileSyncState(stateByte), 1);
     PlaceholderTaskState taskState;
     EXPECT_FALSE(manager.GetTaskState(reqKey, taskState));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(reqKey, 3, finalBlock, 6, true)),
+              E_NO_HYDRATION_IN_PROGRESS);
     EXPECT_EQ(fcntl(taskFd, F_GETFD), -1);
     std::vector<uint8_t> actual(6);
     ASSERT_EQ(pread(fileno(file.get()), actual.data(), actual.size(), 0), static_cast<ssize_t>(actual.size()));
@@ -317,37 +465,131 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_002, TestSize.Level1)
     progressManager.Drain();
     CheckCompletedProgress(observer);
 }
+
+/**
+ * @tc.name: Execute_EmptyFile_001
+ * @tc.desc: Complete an empty placeholder with the only valid zero-sized Execute shape.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, Execute_EmptyFile_001, TestSize.Level1)
+{
+    std::unique_ptr<FILE, decltype(&fclose)> file(tmpfile(), fclose);
+    ASSERT_NE(file.get(), nullptr);
+    UniqueFd outputFd(dup(fileno(file.get())));
+    int32_t taskFd = outputFd.Get();
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(outputFd), key),
+              E_OK);
+    manager.taskMap_.at(key)->state = PlaceholderTaskState::IN_PROGRESS;
+    uint8_t stateByte = MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 1);
+    EXPECT_CALL(*mock_, fgetxattr(taskFd, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+        .WillOnce(Invoke([&stateByte](int, const char *, void *value, size_t) {
+            *static_cast<uint8_t *>(value) = stateByte;
+            return static_cast<ssize_t>(sizeof(uint8_t));
+        }));
+    EXPECT_CALL(*mock_, fsetxattr(taskFd, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t), 0))
+        .WillOnce(Invoke([&stateByte](int, const char *, const void *value, size_t, int) {
+            stateByte = *static_cast<const uint8_t *>(value);
+            return 0;
+        }));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_OK);
+    EXPECT_EQ(GetPlaceholderStateFromFileSyncState(stateByte), PLACEHOLDER_STATE_FULLY_HYDRATED);
+    PlaceholderTaskState state;
+    EXPECT_FALSE(manager.GetTaskState(key, state));
+}
+
 /**
  * @tc.name: StartWorkerPool_001
- * @tc.desc: Workers dispatch FETCH_DATA asynchronously and release incomplete tasks after callback return.
+ * @tc.desc: Workers dispatch FETCH_DATA asynchronously and retain the task after callback return.
  * @tc.type: FUNC
  * @tc.require: NA
  */
 HWTEST_F(PlaceholderTaskManagerTest, StartWorkerPool_001, TestSize.Level1)
 {
     auto callback = sptr(new HydrationCallbackStub());
-    ASSERT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(
-        TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
+    ASSERT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                                                              callback),
+              E_OK);
     auto &manager = PlaceholderTaskManager::GetInstance();
     UniqueFd outputFd = OpenTaskFd();
     ASSERT_GE(outputFd.Get(), 0);
     int32_t taskFd = outputFd.Get();
     PlaceholderTaskManager::RequestKey reqKey;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, std::move(outputFd), reqKey), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, std::move(outputFd), reqKey),
+              E_OK);
     manager.StartWorkerPool();
     bool called = false;
     {
         std::unique_lock<std::mutex> lock(callback->mutex);
         called = callback->cv.wait_for(lock, std::chrono::seconds(2), [&callback] { return callback->called; });
     }
-    manager.StopWorkerPool();
     EXPECT_TRUE(called);
     EXPECT_EQ(callback->priority, CLOUD_DISK_HYDRATE_PRIORITY_HIGH);
+    auto task = manager.FindTask(reqKey);
+    ASSERT_NE(task, nullptr);
+    {
+        std::lock_guard<std::mutex> lock(task->mutex);
+    }
     PlaceholderTaskState state;
+    ASSERT_TRUE(manager.GetTaskState(reqKey, state));
+    EXPECT_EQ(state, PlaceholderTaskState::IN_PROGRESS);
+    EXPECT_GE(fcntl(taskFd, F_GETFD), 0);
+    manager.StopWorkerPool();
     EXPECT_FALSE(manager.GetTaskState(reqKey, state));
     EXPECT_EQ(fcntl(taskFd, F_GETFD), -1);
 }
+
+/**
+ * @tc.name: IdleTimeout_001
+ * @tc.desc: Expire an idle dispatched task and send exactly one CANCEL after FETCH.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, IdleTimeout_001, TestSize.Level1)
+{
+    auto callback = sptr(new HydrationCallbackStub());
+    ASSERT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                                                              callback),
+              E_OK);
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_OK);
+    manager.StartWorkerPool();
+    {
+        std::unique_lock<std::mutex> lock(callback->mutex);
+        ASSERT_TRUE(callback->cv.wait_for(lock, std::chrono::seconds(2),
+                                          [&callback] { return !callback->callbackTypes.empty(); }));
+    }
+    auto task = manager.FindTask(key);
+    ASSERT_NE(task, nullptr);
+    {
+        std::lock_guard<std::mutex> lock(task->mutex);
+        ASSERT_EQ(task->state, PlaceholderTaskState::IN_PROGRESS);
+    }
+    {
+        std::lock_guard<std::mutex> lock(manager.mapMutex_);
+        manager.deadlineMap_[key] = std::chrono::steady_clock::now();
+    }
+    manager.deadlineCv_.notify_one();
+    {
+        std::unique_lock<std::mutex> lock(callback->mutex);
+        ASSERT_TRUE(callback->cv.wait_for(lock, std::chrono::seconds(2),
+                                          [&callback] { return callback->callbackTypes.size() >= 2; }));
+        ASSERT_EQ(callback->callbackTypes.size(), 2U);
+        EXPECT_EQ(callback->callbackTypes[0], CloudDiskCallbackType::FETCH_DATA);
+        EXPECT_EQ(callback->callbackTypes[1], CloudDiskCallbackType::CANCEL_FETCH_DATA);
+    }
+    PlaceholderTaskState state;
+    EXPECT_FALSE(manager.GetTaskState(key, state));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_CANCELLED);
+}
+
 /**
  * @tc.name: Execute_003
  * @tc.desc: Reject oversized, overflowing, inconsistent and cross-file writes before touching the fd.
@@ -359,7 +601,8 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_003, TestSize.Level2)
     auto &manager = PlaceholderTaskManager::GetInstance();
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_OK);
     auto task = manager.taskMap_.at(key);
     task->state = PlaceholderTaskState::IN_PROGRESS;
     Assistant::mockPwriteApi = true;
@@ -383,11 +626,49 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_003, TestSize.Level2)
     request = MakeRequest(key);
     request.callbackType = static_cast<int32_t>(CloudDiskCallbackType::FETCH_RANGE_DATA);
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_INVALID_ARG);
+    request = MakeRequest(key, 0, {}, 1, false);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_INVALID_ARG);
+    request = MakeRequest(key, 0, {}, 1, true);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_INVALID_ARG);
+    request = MakeRequest(key, 0, {}, 0, false);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_INVALID_ARG);
     task->totalSize = 1;
     task->totalSizeInitialized = true;
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_INVALID_ARG);
-    task->state = PlaceholderTaskState::COMPLETED;
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_ALREADY_HYDRATED);
+    task->totalSizeInitialized = false;
+    task->cachedSize = std::numeric_limits<uint64_t>::max();
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key, 0, {1}, 1, false)),
+              E_INVALID_ARG);
+    task->cachedSize = 0;
+    task->outputFd.Reset(-1);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_TRY_AGAIN);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_CANCELLED);
+}
+
+/**
+ * @tc.name: Execute_128KiB_001
+ * @tc.desc: Accept an Execute block exactly at the 128 KiB limit.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, Execute_128KiB_001, TestSize.Level1)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_OK);
+    auto task = manager.taskMap_.at(key);
+    task->state = PlaceholderTaskState::IN_PROGRESS;
+    task->hasPartialState = true;
+    Assistant::mockPwriteApi = true;
+    std::vector<uint8_t> data(MAX_EXECUTE_DATA_SIZE, 1);
+    EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, MAX_EXECUTE_DATA_SIZE, 0))
+        .WillOnce(Return(static_cast<ssize_t>(MAX_EXECUTE_DATA_SIZE)));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                              MakeRequest(key, 0, data, MAX_EXECUTE_DATA_SIZE + 1, false)),
+              E_OK);
+    EXPECT_EQ(task->cachedSize, MAX_EXECUTE_DATA_SIZE);
 }
 
 /**
@@ -404,14 +685,15 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_004, TestSize.Level1)
     int taskFd = fd.Get();
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key),
+              E_OK);
     manager.taskMap_.at(key)->state = PlaceholderTaskState::IN_PROGRESS;
     auto request = MakeRequest(key);
     request.callbackType = static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA);
     EXPECT_CALL(*mock_, fsetxattr(_, _, _, _, _)).Times(0);
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_OK);
     EXPECT_EQ(fcntl(taskFd, F_GETFD), -1);
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_NO_HYDRATION_IN_PROGRESS);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_CANCELLED);
 }
 
 /**
@@ -425,7 +707,8 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_005, TestSize.Level2)
     auto &manager = PlaceholderTaskManager::GetInstance();
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+              E_OK);
     auto task = manager.taskMap_.at(key);
     task->state = PlaceholderTaskState::IN_PROGRESS;
     task->hasPartialState = true;
@@ -449,7 +732,10 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_005, TestSize.Level2)
     {
         InSequence sequence;
         EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, 3, 0))
-            .WillOnce(Invoke([](int, const void *, size_t, off_t) { errno = EINTR; return -1; }));
+            .WillOnce(Invoke([](int, const void *, size_t, off_t) {
+                errno = EINTR;
+                return -1;
+            }));
         EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, 3, 0)).WillOnce(Return(1));
         EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, 2, 1)).WillOnce(Return(2));
     }
@@ -459,7 +745,7 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_005, TestSize.Level2)
 
 /**
  * @tc.name: Execute_006
- * @tc.desc: State persistence failure cancels the task and closes its fd after a successful data write.
+ * @tc.desc: State persistence failure keeps the task and fd available for a retry.
  * @tc.type: RELI
  * @tc.require: NA
  */
@@ -471,17 +757,84 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_006, TestSize.Level2)
     int taskFd = fd.Get();
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key),
+              E_OK);
     manager.taskMap_.at(key)->state = PlaceholderTaskState::IN_PROGRESS;
     Assistant::mockPwriteApi = true;
     EXPECT_CALL(*mock_, Pwrite(taskFd, _, 1, 0)).WillOnce(Return(1));
-    EXPECT_CALL(*mock_, fgetxattr(taskFd, _, _, _))
-        .WillOnce(Invoke([](int, const char *, void *, size_t) { errno = EIO; return -1; }));
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(key, 0, {1}, 1, false)), E_TRY_AGAIN);
-    EXPECT_EQ(fcntl(taskFd, F_GETFD), -1);
+    EXPECT_CALL(*mock_, fgetxattr(taskFd, _, _, _)).WillOnce(Invoke([](int, const char *, void *, size_t) {
+        errno = EIO;
+        return -1;
+    }));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key, 0, {1}, 1, false)),
+              E_TRY_AGAIN);
+    EXPECT_GE(fcntl(taskFd, F_GETFD), 0);
     PlaceholderTaskState state;
-    EXPECT_FALSE(manager.GetTaskState(key, state));
+    ASSERT_TRUE(manager.GetTaskState(key, state));
+    EXPECT_EQ(state, PlaceholderTaskState::IN_PROGRESS);
+}
+
+/**
+ * @tc.name: Execute_008
+ * @tc.desc: Keep tasks retryable when stored, partial or completed placeholder-state persistence fails.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, Execute_008, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    Assistant::mockPwriteApi = true;
+    const auto runFailure = [&](const std::string &filePath, bool complete, const auto &expectStateCalls) {
+        PlaceholderTaskManager::RequestKey key;
+        ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, filePath, TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                            CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key),
+                  E_OK);
+        auto task = manager.taskMap_.at(key);
+        task->state = PlaceholderTaskState::IN_PROGRESS;
+        EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, 1, 0)).WillOnce(Return(1));
+        expectStateCalls(task);
+        auto request = MakeRequest(key, 0, {1}, 1, complete);
+        request.filePath = filePath;
+        EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_TRY_AGAIN);
+        PlaceholderTaskState state;
+        ASSERT_TRUE(manager.GetTaskState(key, state));
+        EXPECT_EQ(state, PlaceholderTaskState::IN_PROGRESS);
+        Mock::VerifyAndClearExpectations(mock_.get());
+    };
+
+    runFailure("invalid-state.txt", false, [&](const std::shared_ptr<PlaceholderTaskRecord> &task) {
+        EXPECT_CALL(*mock_, fgetxattr(task->outputFd.Get(), _, _, _))
+            .WillOnce(Invoke([](int, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = MakeFileSyncState(PLACEHOLDER_STATE_NONE, 0);
+                return static_cast<ssize_t>(size);
+            }));
+    });
+    runFailure("partial-state.txt", false, [&](const std::shared_ptr<PlaceholderTaskRecord> &task) {
+        EXPECT_CALL(*mock_, fgetxattr(task->outputFd.Get(), _, _, _))
+            .Times(2)
+            .WillRepeatedly(Invoke([](int, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0);
+                return static_cast<ssize_t>(size);
+            }));
+        EXPECT_CALL(*mock_, fsetxattr(task->outputFd.Get(), _, _, _, _))
+            .WillOnce(Invoke([](int, const char *, const void *, size_t, int) {
+                errno = EIO;
+                return -1;
+            }));
+    });
+    runFailure("complete-state.txt", true, [&](const std::shared_ptr<PlaceholderTaskRecord> &task) {
+        task->hasPartialState = true;
+        EXPECT_CALL(*mock_, fgetxattr(task->outputFd.Get(), _, _, _))
+            .WillOnce(Invoke([](int, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = MakeFileSyncState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED, 0);
+                return static_cast<ssize_t>(size);
+            }));
+        EXPECT_CALL(*mock_, fsetxattr(task->outputFd.Get(), _, _, _, _))
+            .WillOnce(Invoke([](int, const char *, const void *, size_t, int) {
+                errno = EIO;
+                return -1;
+            }));
+    });
 }
 
 /**
@@ -496,9 +849,11 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_007, TestSize.Level1)
     PlaceholderTaskManager::RequestKey firstKey;
     PlaceholderTaskManager::RequestKey secondKey;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), firstKey), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), firstKey),
+              E_OK);
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "second.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), secondKey), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), secondKey),
+              E_OK);
     auto firstTask = manager.taskMap_.at(firstKey);
     auto secondTask = manager.taskMap_.at(secondKey);
     firstTask->state = secondTask->state = PlaceholderTaskState::IN_PROGRESS;
@@ -550,7 +905,9 @@ HWTEST_F(PlaceholderTaskManagerTest, ProgressMetadata_001, TestSize.Level2)
     }));
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, OpenTaskFd(), key, {100, "/original/file.txt"}), E_OK);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_HIGH, OpenTaskFd(), key,
+                                        {100, "/original/file.txt"}),
+              E_OK);
     auto task = manager.taskMap_.at(key);
     EXPECT_EQ(task->absolutePath, "/original/file.txt");
     EXPECT_EQ(task->userId, 100);
@@ -561,21 +918,19 @@ HWTEST_F(PlaceholderTaskManagerTest, ProgressMetadata_001, TestSize.Level2)
     task->hasPartialState = true;
     Assistant::mockPwriteApi = true;
     EXPECT_CALL(*mock_, Pwrite(_, _, 2, 0)).WillOnce(Return(2));
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(key, 0, {1, 2}, 5, false)), E_OK);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key, 0, {1, 2}, 5, false)), E_OK);
     EXPECT_EQ(task->totalSize, 5u);
     EXPECT_EQ(task->cachedSize, 2u);
     EXPECT_CALL(*mock_, Pwrite(_, _, 3, 2)).WillOnce(Return(0));
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(key, 2, {3, 4, 5}, 5, false)), E_TRY_AGAIN);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key, 2, {3, 4, 5}, 5, false)),
+              E_TRY_AGAIN);
     EXPECT_EQ(task->cachedSize, 2u);
     EXPECT_CALL(*mock_, Pwrite(_, _, 3, 2)).WillOnce(Return(3));
-    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        MakeRequest(key, 2, {3, 4, 5}, 5, false)), E_OK);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key, 2, {3, 4, 5}, 5, false)),
+              E_OK);
     EXPECT_EQ(task->cachedSize, 5u);
     EXPECT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX), E_OK);
     EXPECT_TRUE(task->terminalProgressSent);
-    manager.FinishDispatch(key);
     EXPECT_FALSE(manager.HasActiveTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX));
 }
 /**
@@ -592,7 +947,8 @@ HWTEST_F(PlaceholderTaskManagerTest, ProgressMetadata_002, TestSize.Level2)
     int32_t rawFd = fd.Get();
     PlaceholderTaskManager::RequestKey key;
     EXPECT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key), E_TRY_AGAIN);
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(fd), key),
+              E_TRY_AGAIN);
     EXPECT_TRUE(manager.taskMap_.empty());
     EXPECT_TRUE(manager.pendingQueue_.empty());
     EXPECT_EQ(fcntl(rawFd, F_GETFD), -1);

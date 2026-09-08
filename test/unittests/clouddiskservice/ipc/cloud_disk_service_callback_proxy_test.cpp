@@ -228,6 +228,69 @@ HWTEST_F(CloudDiskServiceCallbackProxyTest, OnChangeDataTest007, TestSize.Level1
     }
     GTEST_LOG_(INFO) << "OnChangeDataTest007 end";
 }
+
+/**
+ * @tc.name: CallbackTableOneWay_001
+ * @tc.desc: FETCH and CANCEL callback-table requests use asynchronous Binder transactions.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableOneWay_001, TestSize.Level1)
+{
+    auto callbackProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(mock_);
+    std::string syncFolder = "/sync";
+    std::string filePath = "file.txt";
+    std::vector<uint8_t> reqKey{1, 2, 3};
+    CloudDiskCallbackReqHead reqHead{
+        {syncFolder.data(), syncFolder.size()}, CloudDiskCallbackType::FETCH_DATA, {reqKey.data(), reqKey.size()}};
+    CloudDiskPathInfo pathInfo{filePath.data(), filePath.size()};
+    CloudDiskFetchDataRequest fetchRequest{pathInfo, CLOUD_DISK_HYDRATE_PRIORITY_NORMAL};
+    CloudDiskCallbackContext context{};
+    context.fetchData = &fetchRequest;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .WillOnce(Invoke([](uint32_t, MessageParcel &, MessageParcel &, MessageOption &option) {
+            EXPECT_EQ(option.GetFlags(), MessageOption::TF_ASYNC);
+            return E_OK;
+        }));
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_OK);
+
+    reqHead.callbackType = CloudDiskCallbackType::CANCEL_FETCH_DATA;
+    context.cancelFetchData = &pathInfo;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .WillOnce(Invoke([](uint32_t, MessageParcel &, MessageParcel &, MessageOption &option) {
+            EXPECT_EQ(option.GetFlags(), MessageOption::TF_ASYNC);
+            return E_OK;
+        }));
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_OK);
+}
+
+/**
+ * @tc.name: CallbackTableSync_001
+ * @tc.desc: DEHYDRATE callback-table requests keep synchronous request and reply semantics.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableSync_001, TestSize.Level1)
+{
+    auto callbackProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(mock_);
+    std::string syncFolder = "/sync";
+    std::string filePath = "file.txt";
+    std::vector<uint8_t> reqKey{1, 2, 3};
+    CloudDiskCallbackReqHead reqHead{
+        {syncFolder.data(), syncFolder.size()}, CloudDiskCallbackType::DEHYDRATE, {reqKey.data(), reqKey.size()}};
+    CloudDiskPathInfo pathInfo{filePath.data(), filePath.size()};
+    CloudDiskDehydrateInfo dehydrateInfo{pathInfo, false};
+    CloudDiskCallbackContext context{};
+    context.dehydrateData = &dehydrateInfo;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .WillOnce(Invoke([](uint32_t, MessageParcel &, MessageParcel &reply, MessageOption &option) {
+            EXPECT_EQ(option.GetFlags(), MessageOption::TF_SYNC);
+            EXPECT_TRUE(reply.WriteBool(true));
+            return E_OK;
+        }));
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_OK);
+    EXPECT_TRUE(dehydrateInfo.allow);
+}
 } // namespace Test
 } // namespace FileManagement::CloudDiskService
 } // namespace OHOS

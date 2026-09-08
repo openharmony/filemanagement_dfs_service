@@ -307,7 +307,7 @@ int32_t CloudDiskServiceLogFile::GenerateChangeData(const struct EventInfo &even
     }
 
     changeData.timeStamp = eventInfo.timestamp;
-    LOGD("Generate changedata line:%{public}llu, operationType:%{public}d, size:%{public}zu", line,
+    LOGD("Generate changedata line:%{public}" PRIu64 ", operationType:%{public}d, size:%{public}zu", line,
          static_cast<uint8_t>(changeData.operationType), changeDatas_.size());
 
     if (eventInfo.operateType == OperationType::OH_CLOUD_DISK_CLOSE_MODIFY) {

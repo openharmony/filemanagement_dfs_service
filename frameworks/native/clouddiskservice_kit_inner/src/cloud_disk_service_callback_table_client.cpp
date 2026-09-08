@@ -21,10 +21,19 @@ namespace OHOS::FileManagement::CloudDiskService {
 void CloudDiskServiceCallbackTableClient::OnCallback(const CloudDiskCallbackReqHead &reqHead,
                                                      CloudDiskCallbackContext &reqContext)
 {
+    if (!active_.load()) {
+        LOGW("Drop callback for inactive callback table");
+        return;
+    }
     if (callbackTable_ == nullptr) {
         LOGE("Callback table is nullptr");
         return;
     }
     callbackTable_->OnCallback(reqHead, reqContext);
+}
+
+void CloudDiskServiceCallbackTableClient::SetActive(bool active)
+{
+    active_.store(active);
 }
 } // namespace OHOS::FileManagement::CloudDiskService

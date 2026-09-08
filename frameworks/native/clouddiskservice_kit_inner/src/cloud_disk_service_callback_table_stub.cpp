@@ -55,6 +55,10 @@ int32_t CloudDiskServiceCallbackTableStub::HandleOnCallback(MessageParcel &data,
 
     uint64_t rangeDataCapacity = storage.rangeData.size();
     OnCallback(reqHead, reqContext);
+    if (reqHead.callbackType == CloudDiskCallbackType::FETCH_DATA ||
+        reqHead.callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
+        return E_OK;
+    }
     if (!WriteCallbackReply(reply, reqHead.callbackType, reqContext, rangeDataCapacity)) {
         LOGE("Failed to write callback response");
         return E_INVALID_ARG;

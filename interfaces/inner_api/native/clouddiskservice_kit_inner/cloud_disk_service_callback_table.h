@@ -23,6 +23,11 @@ class CloudDiskServiceCallbackTable {
 public:
     virtual ~CloudDiskServiceCallbackTable() = default;
     virtual void OnCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) = 0;
+    virtual int32_t SendCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext)
+    {
+        OnCallback(reqHead, reqContext);
+        return 0;
+    }
     virtual void OnDeathRecipient() {}
 };
 } // namespace OHOS::FileManagement::CloudDiskService

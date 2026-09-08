@@ -27,6 +27,9 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "iservice_registry.h"
+#include "placeholder_callback_manager.h"
+#include "placeholder_progress_manager.h"
+#include "placeholder_task_manager.h"
 #include "system_ability_definition.h"
 
 #include "utils_log.h"
@@ -47,22 +50,27 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto state = data.state;
     auto userId = data.toId;
-    LOGI("OnStateChanged state:%{public}d, userId: %{public}d, currentUserId: %{public}d",
-        state, userId, currentUserId_);
+    LOGI("OnStateChanged state:%{public}d, userId: %{public}d, currentUserId: %{public}d", state, userId,
+         currentUserId_);
     if (state == OsAccountState::SWITCHED) {
         LOGI("Switched user");
         SetCurrentUserId(userId);
         DiskMonitor::GetInstance().StopMonitor();
+        PlaceholderCallbackManager::GetInstance().ClearAll();
+        PlaceholderTaskManager::GetInstance().CancelAllTasks(PlaceholderTaskCancelReason::USER_SWITCH);
+        PlaceholderTaskManager::GetInstance().ClearTombstones();
+        PlaceholderProgressManager::GetInstance().Drain();
+        PlaceholderProgressManager::GetInstance().Clear();
         CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
         CloudDiskServiceCallbackManager::GetInstance().ClearMap();
         CloudDiskSyncFolder::GetInstance().ClearMap();
 
         std::vector<FileManagement::SyncFolderExt> syncFolders;
-        int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance()
-            .GetAllSyncFoldersForSa(syncFolders);
+        int32_t ret =
+            OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
         if (ret != 0) {
-            LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu",
-                ret, syncFolders.size());
+            LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
+                 syncFolders.size());
             UnloadSa();
             return;
         }

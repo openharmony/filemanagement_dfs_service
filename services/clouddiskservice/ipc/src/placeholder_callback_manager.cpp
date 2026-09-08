@@ -44,9 +44,11 @@ int32_t PlaceholderCallbackManager::RegisterCallbackTable(const std::string &bun
         return E_CALLBACK_ALREADY_REGISTERED;
     }
 
+    auto entry = std::make_shared<CallbackEntry>();
+    entry->callback = callback;
     AddDeathRecipientLocked(callback);
     const void *remoteKey = callback->AsObject().GetRefPtr();
-    callbackMap_[key] = callback;
+    callbackMap_[key] = entry;
     remoteCallbackMap_[remoteKey].push_back(key);
     return E_OK;
 }
@@ -58,16 +60,24 @@ int32_t PlaceholderCallbackManager::UnregisterCallbackTable(const std::string &b
         return E_INVALID_ARG;
     }
 
-    std::lock_guard<std::mutex> lock(callbackMutex_);
     CallbackKey key{bundleName, syncFolderIndex};
-    auto callback = callbackMap_.find(key);
-    if (callback == callbackMap_.end()) {
-        LOGE("Callback table is not registered");
-        return E_CALLBACK_NOT_REGISTERED;
+    std::shared_ptr<CallbackEntry> entry;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        auto callback = callbackMap_.find(key);
+        if (callback == callbackMap_.end()) {
+            LOGE("Callback table is not registered");
+            return E_CALLBACK_NOT_REGISTERED;
+        }
+        entry = callback->second;
+        callbackMap_.erase(callback);
+        RemoveRemoteKeyLocked(entry->callback, key);
     }
-    sptr<ICloudDiskServiceCallbackTable> callbackObject = callback->second;
-    callbackMap_.erase(callback);
-    RemoveRemoteKeyLocked(callbackObject, key);
+    {
+        std::lock_guard<std::mutex> dispatchLock(entry->dispatchMutex);
+    }
+    PlaceholderTaskManager::GetInstance().CancelTasksBySyncFolder(bundleName, syncFolderIndex,
+                                                                  PlaceholderTaskCancelReason::UNREGISTER);
     return E_OK;
 }
 
@@ -76,12 +86,26 @@ sptr<ICloudDiskServiceCallbackTable> PlaceholderCallbackManager::GetCallback(con
 {
     std::lock_guard<std::mutex> lock(callbackMutex_);
     auto callback = callbackMap_.find(CallbackKey{bundleName, syncFolderIndex});
-    return callback == callbackMap_.end() ? nullptr : callback->second;
+    return callback == callbackMap_.end() ? nullptr : callback->second->callback;
 }
 
 bool PlaceholderCallbackManager::IsCallbackRegistered(const std::string &bundleName, uint32_t syncFolderIndex)
 {
     return GetCallback(bundleName, syncFolderIndex) != nullptr;
+}
+
+int32_t PlaceholderCallbackManager::RunIfRegistered(const std::string &bundleName,
+                                                    uint32_t syncFolderIndex,
+                                                    const std::function<int32_t()> &operation)
+{
+    if (bundleName.empty() || !operation) {
+        return E_INVALID_ARG;
+    }
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    if (callbackMap_.find(CallbackKey{bundleName, syncFolderIndex}) == callbackMap_.end()) {
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    return operation();
 }
 
 int32_t PlaceholderCallbackManager::DispatchFetchData(const std::string &bundleName,
@@ -148,26 +172,66 @@ int32_t PlaceholderCallbackManager::DispatchCallback(const std::string &bundleNa
         LOGE("Invalid dispatch callback arguments");
         return E_INVALID_ARG;
     }
-    auto callback = GetCallback(bundleName, syncFolderIndex);
-    if (callback == nullptr) {
-        LOGE("Callback table is not registered");
-        return E_CALLBACK_NOT_REGISTERED;
+    CallbackKey key{bundleName, syncFolderIndex};
+    std::shared_ptr<CallbackEntry> entry;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        auto callback = callbackMap_.find(key);
+        if (callback == callbackMap_.end()) {
+            LOGE("Callback table is not registered");
+            return E_CALLBACK_NOT_REGISTERED;
+        }
+        entry = callback->second;
     }
-    callback->OnCallback(reqHead, reqContext);
-    return E_OK;
+    std::lock_guard<std::mutex> dispatchLock(entry->dispatchMutex);
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        auto callback = callbackMap_.find(key);
+        if (callback == callbackMap_.end() || callback->second != entry) {
+            return E_CALLBACK_NOT_REGISTERED;
+        }
+    }
+    return entry->callback->SendCallback(reqHead, reqContext);
 }
 
 void PlaceholderCallbackManager::ClearBySyncFolder(const std::string &bundleName, uint32_t syncFolderIndex)
 {
-    std::lock_guard<std::mutex> lock(callbackMutex_);
     CallbackKey key{bundleName, syncFolderIndex};
-    auto callback = callbackMap_.find(key);
-    if (callback == callbackMap_.end()) {
-        return;
+    std::shared_ptr<CallbackEntry> entry;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        auto callback = callbackMap_.find(key);
+        if (callback == callbackMap_.end()) {
+            return;
+        }
+        entry = callback->second;
+        callbackMap_.erase(callback);
+        RemoveRemoteKeyLocked(entry->callback, key);
     }
-    sptr<ICloudDiskServiceCallbackTable> callbackObject = callback->second;
-    callbackMap_.erase(callback);
-    RemoveRemoteKeyLocked(callbackObject, key);
+    {
+        std::lock_guard<std::mutex> dispatchLock(entry->dispatchMutex);
+    }
+    PlaceholderTaskManager::GetInstance().CancelTasksBySyncFolder(bundleName, syncFolderIndex,
+                                                                  PlaceholderTaskCancelReason::UNREGISTER);
+}
+
+void PlaceholderCallbackManager::ClearAll()
+{
+    std::vector<std::pair<CallbackKey, std::shared_ptr<CallbackEntry>>> entries;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        for (const auto &[key, entry] : callbackMap_) {
+            entries.emplace_back(key, entry);
+        }
+        for (const auto &[key, entry] : entries) {
+            callbackMap_.erase(key);
+            RemoveRemoteKeyLocked(entry->callback, key);
+        }
+    }
+    for (const auto &[key, entry] : entries) {
+        (void)key;
+        std::lock_guard<std::mutex> dispatchLock(entry->dispatchMutex);
+    }
 }
 
 void PlaceholderCallbackManager::AddDeathRecipientLocked(const sptr<ICloudDiskServiceCallbackTable> &callback)
@@ -201,12 +265,12 @@ void PlaceholderCallbackManager::RemoveRemoteKeyLocked(const sptr<ICloudDiskServ
         return;
     }
     auto &keys = remoteCallbacks->second;
-    keys.erase(
-        std::remove_if(keys.begin(), keys.end(), [&key](const CallbackKey &current) {
-            return current.bundleName == key.bundleName &&
-                current.syncFolderIndex == key.syncFolderIndex;
-        }),
-        keys.end());
+    keys.erase(std::remove_if(keys.begin(), keys.end(),
+                              [&key](const CallbackKey &current) {
+                                  return current.bundleName == key.bundleName &&
+                                         current.syncFolderIndex == key.syncFolderIndex;
+                              }),
+               keys.end());
     if (!keys.empty()) {
         return;
     }
@@ -221,23 +285,30 @@ void PlaceholderCallbackManager::RemoveRemoteKeyLocked(const sptr<ICloudDiskServ
 
 void PlaceholderCallbackManager::OnRemoteDied(const void *remoteKey)
 {
-    std::vector<CallbackKey> keys;
+    std::vector<std::pair<CallbackKey, std::shared_ptr<CallbackEntry>>> entries;
     {
         std::lock_guard<std::mutex> lock(callbackMutex_);
         auto remoteCallbacks = remoteCallbackMap_.find(remoteKey);
         if (remoteCallbacks == remoteCallbackMap_.end()) {
             return;
         }
-        keys = std::move(remoteCallbacks->second);
-        for (const auto &key : keys) {
-            callbackMap_.erase(key);
+        for (const auto &key : remoteCallbacks->second) {
+            auto callback = callbackMap_.find(key);
+            if (callback != callbackMap_.end()) {
+                entries.emplace_back(key, callback->second);
+                callbackMap_.erase(callback);
+            }
         }
         remoteCallbackMap_.erase(remoteCallbacks);
         deathRecipientMap_.erase(remoteKey);
     }
-    // Do not hold the callback registry lock while waiting for an in-flight Execute to finish.
-    for (const auto &key : keys) {
-        PlaceholderTaskManager::GetInstance().CancelTasksBySyncFolder(key.bundleName, key.syncFolderIndex);
+    // Do not hold the callback registry lock while waiting for an in-flight callback to finish.
+    for (const auto &[key, entry] : entries) {
+        {
+            std::lock_guard<std::mutex> dispatchLock(entry->dispatchMutex);
+        }
+        PlaceholderTaskManager::GetInstance().CancelTasksBySyncFolder(key.bundleName, key.syncFolderIndex,
+                                                                      PlaceholderTaskCancelReason::CALLBACK_DIED);
     }
 }
 } // namespace OHOS::FileManagement::CloudDiskService

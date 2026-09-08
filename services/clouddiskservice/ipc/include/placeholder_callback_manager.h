@@ -16,7 +16,9 @@
 #ifndef OHOS_FILEMGMT_PLACEHOLDER_CALLBACK_MANAGER_H
 #define OHOS_FILEMGMT_PLACEHOLDER_CALLBACK_MANAGER_H
 
+#include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <tuple>
@@ -37,6 +39,9 @@ public:
     int32_t UnregisterCallbackTable(const std::string &bundleName, uint32_t syncFolderIndex);
     sptr<ICloudDiskServiceCallbackTable> GetCallback(const std::string &bundleName, uint32_t syncFolderIndex);
     bool IsCallbackRegistered(const std::string &bundleName, uint32_t syncFolderIndex);
+    int32_t RunIfRegistered(const std::string &bundleName,
+                            uint32_t syncFolderIndex,
+                            const std::function<int32_t()> &operation);
     int32_t DispatchFetchData(const std::string &bundleName,
                               uint32_t syncFolderIndex,
                               CloudDiskCallbackReqHead &reqHead,
@@ -55,6 +60,7 @@ public:
                               CloudDiskCallbackReqHead &reqHead,
                               CloudDiskPathInfo &filePath);
     void ClearBySyncFolder(const std::string &bundleName, uint32_t syncFolderIndex);
+    void ClearAll();
 
 private:
     struct CallbackKey {
@@ -67,6 +73,11 @@ private:
         }
     };
 
+    struct CallbackEntry {
+        sptr<ICloudDiskServiceCallbackTable> callback;
+        std::mutex dispatchMutex;
+    };
+
     int32_t DispatchCallback(const std::string &bundleName,
                              uint32_t syncFolderIndex,
                              const CloudDiskCallbackReqHead &reqHead,
@@ -75,7 +86,7 @@ private:
     void RemoveRemoteKeyLocked(const sptr<ICloudDiskServiceCallbackTable> &callback, const CallbackKey &key);
     void OnRemoteDied(const void *remoteKey);
 
-    std::map<CallbackKey, sptr<ICloudDiskServiceCallbackTable>> callbackMap_;
+    std::map<CallbackKey, std::shared_ptr<CallbackEntry>> callbackMap_;
     std::map<const void *, std::vector<CallbackKey>> remoteCallbackMap_;
     std::map<const void *, sptr<SvcDeathRecipient>> deathRecipientMap_;
     std::mutex callbackMutex_;

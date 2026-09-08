@@ -143,6 +143,24 @@ void ExpectPlaceholderCaller(const shared_ptr<CloudDiskServiceAccessTokenMock> &
         .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
 }
 
+void ExpectPlaceholderQueryContext(const shared_ptr<AssistantMock> &assistant,
+                                   const shared_ptr<CloudDiskServiceAccessTokenMock> &accessToken,
+                                   const std::string &relativePath,
+                                   int32_t callCount,
+                                   mode_t mode = S_IFREG)
+{
+    AddPlaceholderSyncFolder();
+    EXPECT_CALL(*accessToken, GetUserId()).Times(callCount).WillRepeatedly(Return(TEST_USER_ID));
+    EXPECT_CALL(*accessToken, GetCallerBundleName(_))
+        .Times(callCount)
+        .WillRepeatedly(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
+    struct stat statInfo = {};
+    statInfo.st_mode = mode;
+    EXPECT_CALL(*assistant, MockStat(StrEq(PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + relativePath), _))
+        .Times(callCount)
+        .WillRepeatedly(DoAll(SetArgPointee<1>(statInfo), Return(0)));
+}
+
 class DehydrateCallbackTableStub final : public IRemoteStub<ICloudDiskServiceCallbackTable> {
 public:
     explicit DehydrateCallbackTableStub(bool allow) : allow_(allow) {}
@@ -1416,6 +1434,129 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest015, TestSize.Lev
     }
     ClearPlaceholderXattrExpectations(insMock_);
     GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest015 end";
+}
+
+/**
+ * @tc.name: IsPlaceholderFileInnerTest016
+ * @tc.desc: Verify legacy bool queries continue treating reserved nonzero placeholder states as placeholders.
+ * @tc.type: COMPATIBILITY
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest016, TestSize.Level1)
+{
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    const std::string relativePath = "dir/reserved.txt";
+    bool isPlaceholder = false;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    constexpr uint8_t RESERVED_PLACEHOLDER_STATE = 7;
+    ExpectPlaceholderQueryContext(insMock_, dfsuAccessToken_, relativePath, 1);
+    ExpectPlaceholderXattrValueAtPath(insMock_, PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + relativePath,
+                                      MakeFileSyncState(RESERVED_PLACEHOLDER_STATE, 0));
+#endif
+
+    int32_t ret = service.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, isPlaceholder);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(isPlaceholder);
+#else
+    EXPECT_EQ(ret, E_NOT_SUPPORTED);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderStateInnerTest001
+ * @tc.desc: Verify all public states and every reserved xattr state have deterministic results.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest001, TestSize.Level1)
+{
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    const std::string relativePath = "dir/state.txt";
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    constexpr uint8_t FIRST_RESERVED_STATE = PLACEHOLDER_STATE_FULLY_HYDRATED + 1;
+    constexpr uint8_t LAST_RESERVED_STATE = 7;
+    constexpr int32_t STATE_CASE_COUNT = LAST_RESERVED_STATE + 1;
+    ExpectPlaceholderQueryContext(insMock_, dfsuAccessToken_, relativePath, STATE_CASE_COUNT);
+    uint8_t nextState = PLACEHOLDER_STATE_NONE;
+    EXPECT_CALL(*insMock_, getxattr(StrEq(PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/" + relativePath),
+                                    StrEq(PLACEHOLDER_TEST_XATTR), _, PLACEHOLDER_XATTR_VALUE_SIZE))
+        .Times(STATE_CASE_COUNT)
+        .WillRepeatedly(Invoke([&nextState](const char *, const char *, void *value, size_t size) {
+            *static_cast<uint8_t *>(value) = MakeFileSyncState(nextState++, static_cast<uint8_t>(SyncState::SYNCING));
+            return static_cast<ssize_t>(size);
+        }));
+
+    for (uint8_t expected = PLACEHOLDER_STATE_NONE; expected <= LAST_RESERVED_STATE; ++expected) {
+        int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+        int32_t ret = service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state);
+        if (expected < FIRST_RESERVED_STATE) {
+            EXPECT_EQ(ret, E_OK);
+            EXPECT_EQ(state, expected);
+        } else {
+            EXPECT_EQ(ret, E_INVALID_PLACEHOLDER_STATE);
+            EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+        }
+    }
+#else
+    int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state), E_NOT_SUPPORTED);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderStateInnerTest002
+ * @tc.desc: Verify missing xattr means NONE while a missing file remains an error and resets the output.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest002, TestSize.Level1)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    const std::string relativePath = "dir/missing.txt";
+    ExpectPlaceholderQueryContext(insMock_, dfsuAccessToken_, relativePath, 2);
+    EXPECT_CALL(*insMock_, getxattr(_, StrEq(PLACEHOLDER_TEST_XATTR), _, PLACEHOLDER_XATTR_VALUE_SIZE))
+        .WillOnce(Invoke([](const char *, const char *, void *, size_t) {
+            errno = ENODATA;
+            return static_cast<ssize_t>(MOCK_SYSCALL_FAILED);
+        }))
+        .WillOnce(Invoke([](const char *, const char *, void *, size_t) {
+            errno = ENOENT;
+            return static_cast<ssize_t>(MOCK_SYSCALL_FAILED);
+        }));
+
+    int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state), E_OK);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+    state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state), E_FILE_NOT_EXIST);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderStateInnerTest003
+ * @tc.desc: Verify validation and directory rejection occur before xattr access and reset the output.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest003, TestSize.Level2)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "", state), E_INVALID_ARG);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+
+    const std::string relativePath = "dir";
+    ExpectPlaceholderQueryContext(insMock_, dfsuAccessToken_, relativePath, 1, S_IFDIR);
+    EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
+    state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state), E_INVALID_ARG);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+#endif
 }
 
 /**

@@ -52,23 +52,26 @@ public:
                                   const std::string &relativePath,
                                   const PlaceholderInfo &info,
                                   const PlaceholderCustomInfo &customInfo) override;
-    int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path,
-                              bool &isPlaceholder) override;
+    int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path, bool &isPlaceholder) override;
     int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
     int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
 
     int32_t ConvertPlaceholderToFile(const std::string &syncFolder, const std::string &relativePath) override;
     int32_t MarkFileAsPlaceholder(const std::string &syncFolder, const std::string &relativePath) override;
     int32_t UnmarkPlaceholderFile(const std::string &syncFolder, const std::string &relativePath) override;
-    int32_t StartHydration(const std::string &syncFolder, const std::string &relativePath,
+    int32_t StartHydration(const std::string &syncFolder,
+                           const std::string &relativePath,
                            CloudDiskHydratePriority priority) override;
     int32_t CancelHydration(const std::string &syncFolder, const std::string &relativePath) override;
     int32_t Execute(const CallbackExecuteRequest &request) override;
     int32_t DehydrateFile(const std::string &syncFolder, const std::string &relativePath) override;
-    int32_t UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
-        const PlaceholderInfo &metaData, const PlaceholderCustomInfo &customInfo) override;
-    int32_t GetPlaceholderCustomInfo(const std::string &syncFolder, const std::string &relativePath,
-        PlaceholderCustomInfo &customInfo) override;
+    int32_t UpdatePlaceholder(const std::string &syncFolder,
+                              const std::string &relativePath,
+                              const PlaceholderInfo &metaData,
+                              const PlaceholderCustomInfo &customInfo) override;
+    int32_t GetPlaceholderCustomInfo(const std::string &syncFolder,
+                                     const std::string &relativePath,
+                                     PlaceholderCustomInfo &customInfo) override;
 
     int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority) override;
     int32_t DehydrateFileByPath(const std::string &path) override;
@@ -83,6 +86,7 @@ private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     std::shared_ptr<CloudDiskServiceCallback> callback_;
     std::map<std::string, std::shared_ptr<CloudDiskServiceCallbackTable>> callbackTables_;
+    std::map<std::string, sptr<CloudDiskServiceCallbackTableClient>> callbackTableClients_;
     sptr<SvcDeathRecipient> deathRecipient_;
     std::mutex callbackMutex_;
     std::mutex progressMutex_;

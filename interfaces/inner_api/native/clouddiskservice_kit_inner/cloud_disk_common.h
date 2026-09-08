@@ -25,11 +25,8 @@
 
 #include "parcel.h"
 
-#ifndef MAX_EXECUTE_DATA_SIZE
-#define MAX_EXECUTE_DATA_SIZE (4ULL * 1024 * 1024)
-#endif
-
 namespace OHOS::FileManagement::CloudDiskService {
+constexpr uint64_t MAX_EXECUTE_DATA_SIZE = 128ULL * 1024;
 
 constexpr size_t MAX_CALLBACK_REQUEST_KEY_SIZE = sizeof(uint64_t);
 

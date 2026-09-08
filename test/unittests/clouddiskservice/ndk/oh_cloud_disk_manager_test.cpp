@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
+#include "cloud_disk_service_manager_mock.h"
 #include "oh_cloud_disk_manager.h"
 #include "oh_cloud_disk_utils.h"
-#include "cloud_disk_service_manager_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudDiskService {
@@ -42,7 +42,7 @@ public:
     void TearDown();
 
     static CloudDisk_SyncFolderPath CreateValidSyncFolderPath();
-    static constexpr const char* testSyncFolderPath = "/data/test_sync";
+    static constexpr const char *testSyncFolderPath = "/data/test_sync";
     static constexpr size_t testSyncFolderLength = 15;
 };
 
@@ -69,7 +69,7 @@ void OhCloudDiskManagerTest::TearDown(void)
 CloudDisk_SyncFolderPath OhCloudDiskManagerTest::CreateValidSyncFolderPath()
 {
     CloudDisk_SyncFolderPath path;
-    path.value = const_cast<char*>(testSyncFolderPath);
+    path.value = const_cast<char *>(testSyncFolderPath);
     path.length = testSyncFolderLength;
     return path;
 }
@@ -126,8 +126,7 @@ HWTEST_F(OhCloudDiskManagerTest, GetSyncFolderChangesTest001, TestSize.Level1)
         uint64_t startUsn = 0;
         size_t count = 10;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetSyncFolderChanges(
-            syncFolderPath, startUsn, count, nullptr);
+        CloudDisk_ErrorCode ret = OH_CloudDisk_GetSyncFolderChanges(syncFolderPath, startUsn, count, nullptr);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -148,10 +147,9 @@ HWTEST_F(OhCloudDiskManagerTest, GetSyncFolderChangesTest002, TestSize.Level1)
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         uint64_t startUsn = 0;
         size_t count = 10;
-        CloudDisk_ChangesResult* changesResult;
+        CloudDisk_ChangesResult *changesResult;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetSyncFolderChanges(
-            syncFolderPath, startUsn, count, &changesResult);
+        CloudDisk_ErrorCode ret = OH_CloudDisk_GetSyncFolderChanges(syncFolderPath, startUsn, count, &changesResult);
         EXPECT_NE(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -171,11 +169,11 @@ HWTEST_F(OhCloudDiskManagerTest, SetFileSyncStatesTest001, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         size_t bufferLength = 2;
-        CloudDisk_FailedList* failedLists;
+        CloudDisk_FailedList *failedLists;
         size_t failedCount = 0;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_SetFileSyncStates(
-            syncFolderPath, nullptr, bufferLength, &failedLists, &failedCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_SetFileSyncStates(syncFolderPath, nullptr, bufferLength, &failedLists, &failedCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -195,14 +193,14 @@ HWTEST_F(OhCloudDiskManagerTest, SetFileSyncStatesTest002, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_FileSyncState states[1];
-        states[0].filePathInfo.value = const_cast<char*>("/data/file1.txt");
+        states[0].filePathInfo.value = const_cast<char *>("/data/file1.txt");
         states[0].filePathInfo.length = 14;
         states[0].syncState = CloudDisk_SyncState::IDLE;
         size_t bufferLength = 1;
         size_t failedCount = 0;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_SetFileSyncStates(
-            syncFolderPath, states, bufferLength, nullptr, &failedCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_SetFileSyncStates(syncFolderPath, states, bufferLength, nullptr, &failedCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -222,14 +220,14 @@ HWTEST_F(OhCloudDiskManagerTest, SetFileSyncStatesTest003, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_FileSyncState states[1];
-        states[0].filePathInfo.value = const_cast<char*>("/data/file1.txt");
+        states[0].filePathInfo.value = const_cast<char *>("/data/file1.txt");
         states[0].filePathInfo.length = 14;
         states[0].syncState = CloudDisk_SyncState::IDLE;
         size_t bufferLength = 1;
-        CloudDisk_FailedList* failedLists;
+        CloudDisk_FailedList *failedLists;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_SetFileSyncStates(
-            syncFolderPath, states, bufferLength, &failedLists, nullptr);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_SetFileSyncStates(syncFolderPath, states, bufferLength, &failedLists, nullptr);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -253,11 +251,11 @@ HWTEST_F(OhCloudDiskManagerTest, SetFileSyncStatesTest004, TestSize.Level1)
         states[0].filePathInfo.length = 14;
         states[0].syncState = CloudDisk_SyncState::IDLE;
         size_t bufferLength = 1;
-        CloudDisk_FailedList* failedLists;
+        CloudDisk_FailedList *failedLists;
         size_t failedCount;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_SetFileSyncStates(
-            syncFolderPath, states, bufferLength, &failedLists, &failedCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_SetFileSyncStates(syncFolderPath, states, bufferLength, &failedLists, &failedCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -277,15 +275,15 @@ HWTEST_F(OhCloudDiskManagerTest, SetFileSyncStatesTest005, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_FileSyncState states[1];
-        states[0].filePathInfo.value = const_cast<char*>("/data/file1.txt");
+        states[0].filePathInfo.value = const_cast<char *>("/data/file1.txt");
         states[0].filePathInfo.length = 14;
         states[0].syncState = CloudDisk_SyncState::IDLE;
         size_t bufferLength = 1;
-        CloudDisk_FailedList* failedLists;
+        CloudDisk_FailedList *failedLists;
         size_t failedCount;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_SetFileSyncStates(
-            syncFolderPath, states, bufferLength, &failedLists, &failedCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_SetFileSyncStates(syncFolderPath, states, bufferLength, &failedLists, &failedCount);
         EXPECT_NE(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -305,11 +303,11 @@ HWTEST_F(OhCloudDiskManagerTest, GetFileSyncStatesTest001, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         size_t bufferLength = 2;
-        CloudDisk_ResultList* resultLists;
+        CloudDisk_ResultList *resultLists;
         size_t resultCount = 0;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetFileSyncStates(
-            syncFolderPath, nullptr, bufferLength, &resultLists, &resultCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_GetFileSyncStates(syncFolderPath, nullptr, bufferLength, &resultLists, &resultCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -329,13 +327,13 @@ HWTEST_F(OhCloudDiskManagerTest, GetFileSyncStatesTest002, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_PathInfo paths[1];
-        paths[0].value = const_cast<char*>("/data/file1.txt");
+        paths[0].value = const_cast<char *>("/data/file1.txt");
         paths[0].length = 14;
         size_t bufferLength = 1;
         size_t resultCount = 0;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetFileSyncStates(
-            syncFolderPath, paths, bufferLength, nullptr, &resultCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_GetFileSyncStates(syncFolderPath, paths, bufferLength, nullptr, &resultCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -355,13 +353,13 @@ HWTEST_F(OhCloudDiskManagerTest, GetFileSyncStatesTest003, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_PathInfo paths[1];
-        paths[0].value = const_cast<char*>("/data/file1.txt");
+        paths[0].value = const_cast<char *>("/data/file1.txt");
         paths[0].length = 14;
         size_t bufferLength = 1;
-        CloudDisk_ResultList* resultLists;
+        CloudDisk_ResultList *resultLists;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetFileSyncStates(
-            syncFolderPath, paths, bufferLength, &resultLists, nullptr);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_GetFileSyncStates(syncFolderPath, paths, bufferLength, &resultLists, nullptr);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -381,14 +379,14 @@ HWTEST_F(OhCloudDiskManagerTest, GetFileSyncStatesTest004, TestSize.Level1)
     try {
         CloudDisk_SyncFolderPath syncFolderPath = CreateValidSyncFolderPath();
         CloudDisk_PathInfo paths[1];
-        paths[0].value = const_cast<char*>("/data/file1.txt");
+        paths[0].value = const_cast<char *>("/data/file1.txt");
         paths[0].length = 14;
         size_t bufferLength = 1;
-        CloudDisk_ResultList* resultLists;
+        CloudDisk_ResultList *resultLists;
         size_t resultCount;
 
-        CloudDisk_ErrorCode ret = OH_CloudDisk_GetFileSyncStates(
-            syncFolderPath, paths, bufferLength, &resultLists, &resultCount);
+        CloudDisk_ErrorCode ret =
+            OH_CloudDisk_GetFileSyncStates(syncFolderPath, paths, bufferLength, &resultLists, &resultCount);
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -411,7 +409,7 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_InvalidPath_001, TestS
         syncFolderPath.length = 10;
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
         CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
@@ -420,7 +418,7 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_InvalidPath_001, TestS
 #else
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = 0;
         ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -446,16 +444,15 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_Success_002, TestSize.
     GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_Success_002 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath;
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = strlen(syncFolderPath.value);
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
-        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(),
-            ConvertPlaceholderToFile(_, _)).WillOnce(Return(
-                OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), ConvertPlaceholderToFile(_, _))
+            .WillOnce(Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
         CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
@@ -480,16 +477,15 @@ HWTEST_F(OhCloudDiskManagerTest, ConvertPlaceholderToFile_ErrorCode_003, TestSiz
     GTEST_LOG_(INFO) << "ConvertPlaceholderToFile_ErrorCode_003 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath;
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = strlen(syncFolderPath.value);
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
-        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(),
-            ConvertPlaceholderToFile(_, _)).WillOnce(Return(
-                OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_A_PLACEHOLDER));
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), ConvertPlaceholderToFile(_, _))
+            .WillOnce(Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_NOT_A_PLACEHOLDER));
         CloudDisk_ErrorCode ret = OH_CloudDisk_ConvertPlaceholderToFile(syncFolderPath, pathInfo);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::OH_CLOUD_DISK_NOT_A_PLACEHOLDER);
@@ -518,7 +514,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_InvalidPath_001, TestSize.Lev
         syncFolderPath.length = 10;
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
         OH_CloudDisk_PlaceholderInfo metaData;
@@ -533,7 +529,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_InvalidPath_001, TestSize.Lev
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
 
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = 0;
         ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData, nullptr);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -559,11 +555,11 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_002 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath;
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = strlen(syncFolderPath.value);
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
         OH_CloudDisk_PlaceholderInfo metaData;
@@ -571,8 +567,8 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_002, TestSize.Level1)
         metaData.mtimeMs = 1234567890;
         metaData.atimeMs = 1234567890;
 
-        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _, _)).WillOnce(
-            Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _, _))
+            .WillOnce(Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_OK));
         CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData, nullptr);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_OK);
@@ -597,11 +593,11 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "UpdatePlaceholder_Test_003 start";
     try {
         CloudDisk_SyncFolderPath syncFolderPath;
-        syncFolderPath.value = const_cast<char*>("/storage/Users/currentUser/testdir");
+        syncFolderPath.value = const_cast<char *>("/storage/Users/currentUser/testdir");
         syncFolderPath.length = strlen(syncFolderPath.value);
 
         CloudDisk_PathInfo pathInfo;
-        pathInfo.value = const_cast<char*>("/storage/Users/currentUser/testdir/file.txt");
+        pathInfo.value = const_cast<char *>("/storage/Users/currentUser/testdir/file.txt");
         pathInfo.length = strlen(pathInfo.value);
 
         OH_CloudDisk_PlaceholderInfo metaData;
@@ -609,8 +605,8 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_003, TestSize.Level1)
         metaData.mtimeMs = 1234567890;
         metaData.atimeMs = 1234567890;
 
-        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _, _)).WillOnce(
-            Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED));
+        EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _, _))
+            .WillOnce(Return(OHOS::FileManagement::CloudDiskService::CloudDiskServiceErrCode::E_PERMISSION_DENIED));
         CloudDisk_ErrorCode ret = OH_CloudDisk_UpdatePlaceholder(syncFolderPath, pathInfo, metaData, nullptr);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
         EXPECT_EQ(ret, CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
@@ -642,7 +638,7 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_001, TestSize.Leve
 
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), CreatePlaceholderFile(_, _, _, _))
         .WillOnce(Invoke([&data](const std::string &, const std::string &, const PlaceholderInfo &,
-                                const PlaceholderCustomInfo &innerCustomInfo) {
+                                 const PlaceholderCustomInfo &innerCustomInfo) {
             EXPECT_EQ(innerCustomInfo.data, data);
             return E_OK;
         }));
@@ -690,7 +686,7 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Update_001, TestSize.Leve
 
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), UpdatePlaceholder(_, _, _, _))
         .WillOnce(Invoke([&data](const std::string &, const std::string &, const PlaceholderInfo &,
-                                const PlaceholderCustomInfo &innerCustomInfo) {
+                                 const PlaceholderCustomInfo &innerCustomInfo) {
             EXPECT_EQ(innerCustomInfo.data, data);
             return E_OK;
         }));
@@ -786,7 +782,6 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Get_002, TestSize.Level1)
 }
 #endif
 
-
 /**
  * @tc.name: PlaceholderStateOnly_InvalidArgs_001
  * @tc.desc: Verify state-only conversion validates paths
@@ -830,6 +825,100 @@ HWTEST_F(OhCloudDiskManagerTest, DehydrateFile_InvalidArgs_001, TestSize.Level1)
 #else
     EXPECT_EQ(OH_CloudDisk_DehydrateFile(nullptr, &pathInfo), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
     EXPECT_EQ(OH_CloudDisk_DehydrateFile(&syncFolderPath, nullptr), CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderState_Validation_001
+ * @tc.desc: Verify output validation and deterministic NONE initialization without invoking the manager.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, GetPlaceholderState_Validation_001, TestSize.Level1)
+{
+    std::string syncFolder = "/storage/Users/currentUser/testdir";
+    std::string relativePath = "file.txt";
+    CloudDisk_SyncFolderPath syncFolderPath{syncFolder.data(), syncFolder.length()};
+    CloudDisk_PathInfo pathInfo{relativePath.data(), relativePath.length()};
+    auto &mock = CloudDiskServiceManagerMock::GetInstance();
+    EXPECT_CALL(mock, GetPlaceholderState(_, _, _)).Times(0);
+
+    EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, pathInfo, nullptr), CLOUD_DISK_INVALID_ARG);
+    OH_CloudDisk_PlaceholderState state = OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED;
+    CloudDisk_SyncFolderPath invalidSyncFolder{nullptr, syncFolder.length()};
+    EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(invalidSyncFolder, pathInfo, &state), CLOUD_DISK_INVALID_ARG);
+    EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
+
+    state = OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED;
+    CloudDisk_PathInfo invalidPath{relativePath.data(), 0};
+    EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, invalidPath, &state), CLOUD_DISK_INVALID_ARG);
+    EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
+}
+
+/**
+ * @tc.name: GetPlaceholderState_States_001
+ * @tc.desc: Verify every public placeholder state is forwarded without lossy bool conversion.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, GetPlaceholderState_States_001, TestSize.Level1)
+{
+    std::string syncFolder = "/storage/Users/currentUser/testdir";
+    std::string relativePath = "file.txt";
+    CloudDisk_SyncFolderPath syncFolderPath{syncFolder.data(), syncFolder.length()};
+    CloudDisk_PathInfo pathInfo{relativePath.data(), relativePath.length()};
+    auto &mock = CloudDiskServiceManagerMock::GetInstance();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    const std::vector<OH_CloudDisk_PlaceholderState> states = {
+        OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE,
+        OH_CLOUD_DISK_PLACEHOLDER_STATE_UNHYDRATED,
+        OH_CLOUD_DISK_PLACEHOLDER_STATE_PARTIALLY_HYDRATED,
+        OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED,
+    };
+    for (auto expected : states) {
+        EXPECT_CALL(mock, GetPlaceholderState(syncFolder, relativePath, _))
+            .WillOnce(DoAll(SetArgReferee<2>(static_cast<int32_t>(expected)), Return(E_OK)));
+        OH_CloudDisk_PlaceholderState state = OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE;
+        EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, pathInfo, &state), CLOUD_DISK_OK);
+        EXPECT_EQ(state, expected);
+        Mock::VerifyAndClearExpectations(&mock);
+    }
+#else
+    EXPECT_CALL(mock, GetPlaceholderState(syncFolder, relativePath, _)).WillOnce(Return(E_NOT_SUPPORTED));
+    OH_CloudDisk_PlaceholderState state = OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, pathInfo, &state), CLOUD_DISK_NOT_SUPPORTED);
+    EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderState_ErrorMapping_001
+ * @tc.desc: Verify state-query errors are mapped and the output remains NONE even if the service writes it.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(OhCloudDiskManagerTest, GetPlaceholderState_ErrorMapping_001, TestSize.Level1)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    std::string syncFolder = "/storage/Users/currentUser/testdir";
+    std::string relativePath = "file.txt";
+    CloudDisk_SyncFolderPath syncFolderPath{syncFolder.data(), syncFolder.length()};
+    CloudDisk_PathInfo pathInfo{relativePath.data(), relativePath.length()};
+    auto &mock = CloudDiskServiceManagerMock::GetInstance();
+    const std::vector<std::pair<int32_t, CloudDisk_ErrorCode>> cases = {
+        {E_INVALID_PLACEHOLDER_STATE, OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE},
+        {E_HYDRATION_TASK_LIMIT_REACHED, OH_CLOUD_DISK_HYDRATION_TASK_LIMIT_REACHED},
+        {E_FILE_NOT_EXIST, OH_CLOUD_DISK_FILE_NOT_EXIST},
+    };
+    for (const auto &[innerError, expectedError] : cases) {
+        EXPECT_CALL(mock, GetPlaceholderState(syncFolder, relativePath, _))
+            .WillOnce(DoAll(SetArgReferee<2>(static_cast<int32_t>(OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED)),
+                            Return(innerError)));
+        OH_CloudDisk_PlaceholderState state = OH_CLOUD_DISK_PLACEHOLDER_STATE_UNHYDRATED;
+        EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, pathInfo, &state), expectedError);
+        EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
+        Mock::VerifyAndClearExpectations(&mock);
+    }
 #endif
 }
 
@@ -1021,8 +1110,8 @@ HWTEST_F(OhCloudDiskManagerTest, Execute_002, TestSize.Level2)
     std::string path = "file.txt";
     uint8_t key = 1;
     uint8_t value = 1;
-    OH_CloudDisk_CallbackReqHead head{{syncFolder.data(), syncFolder.size()},
-        CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA, {&key, 1}};
+    OH_CloudDisk_CallbackReqHead head{
+        {syncFolder.data(), syncFolder.size()}, CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA, {&key, 1}};
     OH_CloudDisk_FetchDataRequest fetchRequest{{path.data(), path.size()}, ::CLOUD_DISK_HYDRATE_PRIORITY_NORMAL};
     OH_CloudDisk_CallbackContext context{};
     OH_CloudDisk_FetchData data{0, 1, 1, {&value, 1}, false};
@@ -1031,6 +1120,12 @@ HWTEST_F(OhCloudDiskManagerTest, Execute_002, TestSize.Level2)
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), Execute(_)).Times(0);
     EXPECT_EQ(OH_CloudDisk_Execute(head, context, response), CLOUD_DISK_INVALID_ARG);
     context.fetchData = &fetchRequest;
+    data = {0, 0, 1, {nullptr, 0}, false};
+    EXPECT_EQ(OH_CloudDisk_Execute(head, context, response), CLOUD_DISK_INVALID_ARG);
+    data = {0, 0, 1, {nullptr, 0}, true};
+    EXPECT_EQ(OH_CloudDisk_Execute(head, context, response), CLOUD_DISK_INVALID_ARG);
+    data = {0, 0, 0, {nullptr, 0}, false};
+    EXPECT_EQ(OH_CloudDisk_Execute(head, context, response), CLOUD_DISK_INVALID_ARG);
     data.size = MAX_EXECUTE_DATA_SIZE + 1;
     data.data.dataSize = data.size;
     data.totalSize = data.size;
@@ -1057,8 +1152,8 @@ HWTEST_F(OhCloudDiskManagerTest, Execute_003, TestSize.Level1)
     std::string syncFolder = "/storage/Users/currentUser/sync";
     std::string path = "file.txt";
     uint8_t key = 1;
-    OH_CloudDisk_CallbackReqHead head{{syncFolder.data(), syncFolder.size()},
-        CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA, {&key, 1}};
+    OH_CloudDisk_CallbackReqHead head{
+        {syncFolder.data(), syncFolder.size()}, CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA, {&key, 1}};
     CloudDisk_PathInfo pathInfo{path.data(), path.size()};
     OH_CloudDisk_CallbackContext context{};
     context.cancelFetchData = &pathInfo;

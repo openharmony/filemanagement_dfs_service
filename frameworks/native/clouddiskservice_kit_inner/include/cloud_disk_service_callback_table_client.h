@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_CLOUD_DISK_SERVICE_CALLBACK_TABLE_CLIENT_H
 #define OHOS_FILEMGMT_CLOUD_DISK_SERVICE_CALLBACK_TABLE_CLIENT_H
 
+#include <atomic>
+
 #include "cloud_disk_service_callback_table.h"
 #include "cloud_disk_service_callback_table_stub.h"
 
@@ -28,9 +30,11 @@ public:
     }
 
     void OnCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) override;
+    void SetActive(bool active);
 
 private:
     std::shared_ptr<CloudDiskServiceCallbackTable> callbackTable_{nullptr};
+    std::atomic<bool> active_{true};
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

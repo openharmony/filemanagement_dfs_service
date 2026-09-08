@@ -260,7 +260,13 @@ typedef enum CloudDisk_ErrorCode {
      *
      * @since 26.1.0
      */
-    OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE = 34400033
+    OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE = 34400033,
+    /**
+     * @brief The number of active placeholder hydration tasks has reached the limit.
+     *
+     * @since 26.1.0
+     */
+    OH_CLOUD_DISK_HYDRATION_TASK_LIMIT_REACHED = 34400034
 } CloudDisk_ErrorCode;
 
 #ifdef __cplusplus

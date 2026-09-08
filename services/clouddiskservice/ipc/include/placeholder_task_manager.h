@@ -17,8 +17,10 @@
 #define OHOS_FILEMGMT_PLACEHOLDER_TASK_MANAGER_H
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <deque>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -43,6 +45,17 @@ enum class PlaceholderTaskState {
     CANCELLED,
 };
 
+enum class PlaceholderTaskCancelReason {
+    USER_REQUEST = 0,
+    TIMEOUT,
+    INTERNAL_ERROR,
+    UNREGISTER,
+    CALLBACK_DIED,
+    USER_SWITCH,
+    SERVICE_STOP,
+    DISPATCH_FAILED,
+};
+
 struct PlaceholderProgressContext {
     int32_t userId = -1;
     std::string absolutePath;
@@ -65,6 +78,8 @@ struct PlaceholderTaskRecord {
     uint64_t totalSize = 0;
     bool totalSizeInitialized = false;
     bool hasPartialState = false;
+    bool fetchDispatched = false;
+    bool cancelCallbackSent = false;
     uint64_t createSeq = 0;
     std::mutex mutex;
 };
@@ -87,10 +102,13 @@ public:
                               const PlaceholderProgressContext &progressContext = {});
     bool HasActiveTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
     int32_t CancelTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
-    void CancelTasksBySyncFolder(const std::string &bundleName, uint32_t syncFolderIndex);
-    int32_t Execute(const std::string &callerBundleName,
-                    uint32_t syncFolderIndex,
-                    const CallbackExecuteRequest &request);
+    void CancelTasksBySyncFolder(const std::string &bundleName,
+                                 uint32_t syncFolderIndex,
+                                 PlaceholderTaskCancelReason reason = PlaceholderTaskCancelReason::UNREGISTER);
+    void CancelAllTasks(PlaceholderTaskCancelReason reason);
+    void ClearTombstones();
+    int32_t
+        Execute(const std::string &callerBundleName, uint32_t syncFolderIndex, const CallbackExecuteRequest &request);
     bool GetTaskState(const RequestKey &reqKey, PlaceholderTaskState &state);
 
 private:
@@ -110,30 +128,56 @@ private:
         }
     };
 
+    struct CancelledTaskTombstone {
+        RequestKey reqKey;
+        std::string syncFolder;
+        std::string filePath;
+        std::string bundleName;
+        uint32_t syncFolderIndex = 0;
+        std::chrono::steady_clock::time_point expiresAt;
+        uint64_t createSeq = 0;
+    };
+
     void NotifyProgressLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
     RequestKey GenerateRequestKeyLocked();
-    int32_t PrepareHydrateTaskLocked(const std::string &syncFolder, const std::string &filePath,
-        uint32_t syncFolderIndex, RequestKey &reqKey);
+    int32_t PrepareHydrateTaskLocked(const std::string &syncFolder,
+                                     const std::string &filePath,
+                                     const std::string &bundleName,
+                                     uint32_t syncFolderIndex,
+                                     RequestKey &reqKey);
     std::shared_ptr<PlaceholderTaskRecord> FindTask(const RequestKey &reqKey);
     std::shared_ptr<PlaceholderTaskRecord> GetNextTask();
     void WorkerLoop();
-    void FinishDispatch(const RequestKey &reqKey);
-    int32_t AdvancePlaceholderStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task, bool isComplete);
+    void DeadlineLoop();
+    void RefreshDeadlineLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    int32_t EnsurePartialStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    int32_t SetCompleteStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
     int32_t ExecuteFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
-                                  const CallbackExecuteRequest &request);
+                                   const CallbackExecuteRequest &request);
+    void CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task, PlaceholderTaskCancelReason reason);
+    void AddTombstoneLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    void PurgeExpiredTombstonesLocked();
+    int32_t FindTombstoneResultLocked(const std::string &callerBundleName,
+                                      uint32_t syncFolderIndex,
+                                      const CallbackExecuteRequest &request);
     void EraseTaskLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
 
     std::map<RequestKey, std::shared_ptr<PlaceholderTaskRecord>> taskMap_;
     std::priority_queue<QueueEntry, std::vector<QueueEntry>, PriorityComparator> pendingQueue_;
+    std::map<RequestKey, CancelledTaskTombstone> tombstoneMap_;
+    std::deque<std::pair<RequestKey, uint64_t>> tombstoneOrder_;
+    std::map<RequestKey, std::chrono::steady_clock::time_point> deadlineMap_;
     std::vector<ffrt::task_handle> workerHandles_;
     uint64_t nextReqKeyValue_ = 1;
     uint64_t nextCreateSeq_ = 1;
+    uint64_t nextTombstoneSeq_ = 1;
     bool running_ = false;
     bool stopping_ = false;
     // Never wait on a record mutex while holding mapMutex_. Record ownership keeps its mutex alive after erase.
     std::mutex mapMutex_;
     std::mutex workerMutex_;
     std::condition_variable taskCv_;
+    std::condition_variable deadlineCv_;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

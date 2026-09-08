@@ -45,10 +45,9 @@ public:
     ~CloudDiskServiceCallbackTableProxy() override = default;
 
     void OnCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) override;
+    int32_t SendCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext) override;
 
 private:
-    void SendCallback(const CloudDiskCallbackReqHead &reqHead, CloudDiskCallbackContext &reqContext);
-
     static BrokerDelegator<CloudDiskServiceCallbackTableProxy> delegator_;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
