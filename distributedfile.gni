@@ -52,8 +52,8 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
-      (!defined(global_parts_info.telephony_core_service)
-      || !defined(global_parts_info.telephony_cellular_data))) {
+      (!defined(global_parts_info.telephony_core_service) ||
+      !defined(global_parts_info.telephony_cellular_data))) {
     dfs_service_feature_enable_weak_network_sync = false
   }
 
