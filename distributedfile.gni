@@ -41,12 +41,19 @@ declare_args() {
   dfs_service_feature_enable_dist_file_daemon = true
   dfs_service_feature_enable_distributed_ability = true
   dfs_service_feature_enable_watch_lite_device = false
+  dfs_service_feature_enable_weak_network_sync = true
 
   if (defined(global_parts_info) &&
       defined(global_parts_info.powermgr_thermal_manager)) {
     support_thermal_manager = true
   } else {
     support_thermal_manager = false
+  }
+
+  if (defined(global_parts_info) &&
+      (!defined(global_parts_info.telephony_core_service)
+      || !defined(global_parts_info.telephony_cellular_data))) {
+    dfs_service_feature_enable_weak_network_sync = false
   }
 
   if (defined(global_parts_info) &&

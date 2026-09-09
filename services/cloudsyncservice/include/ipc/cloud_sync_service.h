@@ -33,6 +33,7 @@
 #include "sync_rule/battery_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
 #include "sync_rule/user_status_listener.h"
+#include "sync_rule/network_signal_strength_listener.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
@@ -176,6 +177,7 @@ private:
     std::shared_ptr<UserStatusListener> userStatusListener_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;
+    std::shared_ptr<NetworkSignalStrengthListener> networkSignalStrengthListener_;
     std::shared_ptr<FileTransferManager> fileTransferManager_;
     sptr<SvcDeathRecipient> deathRecipient_;
     static inline std::map<std::string, sptr<OHOS::IRemoteObject>> remoteObjectMap_;

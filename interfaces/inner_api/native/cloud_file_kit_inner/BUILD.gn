@@ -118,12 +118,19 @@ ohos_shared_library("cloudfile_kit") {
     "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
+    "wifi:wifi_sdk",
   ]
 
   if (cloudsync_service_power) {
     external_deps += [ "battery_manager:batterysrv_client" ]
 
     defines += [ "SUPPORT_POWER" ]
+  }
+
+  if (dfs_service_feature_enable_weak_network_sync) {
+    external_deps += [ "cellular_data:tel_cellular_data_api" ]
+    external_deps += [ "core_service:tel_core_service_api" ]
+    defines += [ "ENABLE_WEAK_NETWORK_SYNC" ]
   }
 
   if (support_thermal_manager) {
@@ -287,12 +294,19 @@ ohos_static_library("cloudfile_kit_static") {
     "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
+    "wifi:wifi_sdk",
   ]
 
   if (cloudsync_service_power) {
     external_deps += [ "battery_manager:batterysrv_client" ]
 
     defines += [ "SUPPORT_POWER" ]
+  }
+
+  if (dfs_service_feature_enable_weak_network_sync) {
+    external_deps += [ "cellular_data:tel_cellular_data_api" ]
+    external_deps += [ "core_service:tel_core_service_api" ]
+    defines += [ "ENABLE_WEAK_NETWORK_SYNC" ]
   }
 
   if (support_thermal_manager) {

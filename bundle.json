@@ -81,7 +81,10 @@
         "libfuse",
         "zlib",
         "user_file_service",
-        "sandbox_manager"
+        "sandbox_manager",
+        "wifi",
+        "cellular_data",
+        "core_service"
       ],
       "third_party": []
     },
