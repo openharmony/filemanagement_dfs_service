@@ -58,5 +58,13 @@
     {
         "first_introduced": "26.1.0",
         "name": "OH_CloudDisk_UpdatePlaceholder"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_RegisterSyncFolderEx"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_GetSyncFoldersEx"
     }
 ]

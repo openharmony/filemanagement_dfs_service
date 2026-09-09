@@ -585,3 +585,109 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(
     return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
 #endif
 }
+
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderEx(const OH_CloudDisk_SyncFolderEx *syncFolder)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder == nullptr) {
+        LOGE("Invalid argument, syncFolder is nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    if (syncFolder->version < OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1) {
+        LOGE("Invalid argument, version %{public}u is less than minimum %{public}u",
+             syncFolder->version, OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1);
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    if (!IsValidPathInfo(syncFolder->path.value, syncFolder->path.length)) {
+        LOGE("Invalid argument, path is invalid");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    OHOS::FileManagement::SyncFolder folder;
+    folder.path_ = std::string(syncFolder->path.value, syncFolder->path.length);
+    if (syncFolder->displayNameInfo.customAlias != nullptr && syncFolder->displayNameInfo.customAliasLength != 0) {
+        if (!IsValidPathInfo(syncFolder->displayNameInfo.customAlias, syncFolder->displayNameInfo.customAliasLength)) {
+            LOGE("Invalid argument, displayName is invalid");
+            return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+        }
+        folder.displayName_ =
+            std::string(syncFolder->displayNameInfo.customAlias, syncFolder->displayNameInfo.customAliasLength);
+    }
+    if (syncFolder->displayNameInfo.displayNameResId != 0) {
+        folder.displayNameResId_ = syncFolder->displayNameInfo.displayNameResId;
+    }
+    folder.isSupportPlaceHolder_ = syncFolder->isSupportPlaceHolder;
+    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().Register(folder);
+    LOGI("Register sync folder ex, ret: %{public}d", ret);
+    return ConvertToErrorCode(ret);
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
+}
+ 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+static void ReleaseSyncFoldersEx(OH_CloudDisk_SyncFolderEx *folders, size_t count)
+{
+    for (size_t j = 0; j < count; ++j) {
+        delete[] folders[j].path.value;
+        delete[] folders[j].displayNameInfo.customAlias;
+    }
+    delete[] folders;
+}
+ 
+static bool FillSyncFolderEx(OH_CloudDisk_SyncFolderEx &folder, const OHOS::FileManagement::SyncFolder &src)
+{
+    folder.version = OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1;
+    folder.path.value = AllocField(src.path_.c_str(), src.path_.length());
+    if (folder.path.value == nullptr) {
+        LOGE("folder path value alloc failed.");
+        return false;
+    }
+    folder.path.length = src.path_.length();
+    folder.state = static_cast<CloudDisk_SyncFolderState>(src.state_);
+    folder.displayNameInfo.displayNameResId = src.displayNameResId_;
+    folder.displayNameInfo.customAlias = AllocField(src.displayName_.c_str(), src.displayName_.length());
+    if (folder.displayNameInfo.customAlias == nullptr) {
+        LOGE("folder displayNameInfo customAlias alloc failed.");
+        delete[] folder.path.value;
+        folder.path.value = nullptr;
+        return false;
+    }
+    folder.displayNameInfo.customAliasLength = src.displayName_.length();
+    folder.isSupportPlaceHolder = src.isSupportPlaceHolder_;
+    return true;
+}
+#endif
+ 
+CloudDisk_ErrorCode OH_CloudDisk_GetSyncFoldersEx(OH_CloudDisk_SyncFolderEx **syncFolders, size_t *count)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolders == nullptr || count == nullptr) {
+        LOGE("Invalid argument, syncFolders or count is nullptr");
+        return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
+    }
+    std::vector<OHOS::FileManagement::SyncFolder> folderVec;
+    int32_t ret = OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetSyncFolders(folderVec);
+    if (ret != 0) {
+        LOGE("Get sync folders ex failed, ret: %{public}d", ret);
+        return ConvertToErrorCode(ret);
+    }
+    *syncFolders = new (std::nothrow) OH_CloudDisk_SyncFolderEx[folderVec.size()]();
+    if (*syncFolders == nullptr) {
+        LOGE("Memory allocation failed for syncFolders");
+        return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
+    }
+    size_t i = 0;
+    for (; i < folderVec.size(); ++i) {
+        if (!FillSyncFolderEx((*syncFolders)[i], folderVec[i])) {
+            ReleaseSyncFoldersEx(*syncFolders, i);
+            *syncFolders = nullptr;
+            return CloudDisk_ErrorCode::CLOUD_DISK_TRY_AGAIN;
+        }
+    }
+    *count = folderVec.size();
+    LOGI("Get sync folders ex success, count: %{public}zu", *count);
+    return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
+}
