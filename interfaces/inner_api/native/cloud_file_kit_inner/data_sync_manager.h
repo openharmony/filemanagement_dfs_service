@@ -136,6 +136,7 @@ public:
     virtual int32_t PauseUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
 
     virtual int32_t ResumeUpload(const BundleNameUserInfo &bundleNameUserInfo, const std::string &uri);
+    virtual int32_t GetDefaultWeakNetConfig();
 
     // periodic clean task
     void PeriodicCleanLock();

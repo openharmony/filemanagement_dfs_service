@@ -65,6 +65,7 @@ enum ErrorType {
     BUSINESS_MODE_CHANGED,
     PERMISSION_NOT_ALLOW,
     INNER_ERROR,
+    NETWORK_SINGAL_STRENGTH_LOW,
 };
 
 enum State {

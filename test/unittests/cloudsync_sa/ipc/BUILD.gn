@@ -95,6 +95,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/network_signal_strength_listener.cpp",
     "${services_path}/cloudsyncservice/src/decompress_config_manager.cpp",
     "${services_path}/cloudsyncservice/src/decompress_update.cpp",
     "cloud_sync_service_test.cpp",

@@ -44,11 +44,36 @@ public:
     static bool CheckNetwork(const std::string &bundleName, const int32_t userId);
     static void NetWorkChangeStopUploadTask();
     static bool CheckWifiOrEthernet();
+    static void SetCellularSignalStrength(int32_t status);
+    static void SetWifiSignalStrength(int32_t status);
+    static void SetCellularSignalStopStrength(int32_t status);
+    static void SetCellularSignalStartStrength(int32_t status);
+    static void SetWifiSignalStopStrength(int32_t status);
+    static void SetWifiSignalStartStrength(int32_t status);
+    static void SetWeakNetworkSyncEnable(bool flag);
+    static int32_t GetDefaultWeakNetConfig();
+    static void SetCellularAllowSync(bool flag);
+    static void SetWifiAllowSync(bool flag);
+    static bool IsAllowSync(SyncTriggerType triggerType);
+    static void GetDefaultNetSignalStrength();
+    static int32_t GetWifiSignalStrength(int32_t& wifiSignalStrength);
+    static int32_t GetCellularSignalStrength(int32_t& cellularSignalStrength);
+    static void InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
 
 private:
     static void DoInitialFetch();
     static NetConnStatus MapCapabilities(NetManagerStandard::NetAllCapabilities &netAllCap);
     static inline std::mutex netStatusMutex_;
+    static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
+    static inline std::atomic<int32_t> cellularSignalStrength_{4};
+    static inline std::atomic<int32_t> wifiSignalStrength_{3};
+    static inline std::atomic<int32_t> cellularStopSyncSignal_{3};
+    static inline std::atomic<int32_t> cellularStartSyncSignal_{5};
+    static inline std::atomic<int32_t> wifiStopSyncSignal_{2};
+    static inline std::atomic<int32_t> wifiStartSyncSignal_{4};
+    static inline std::atomic<bool> cellularAllowSync_{true};
+    static inline std::atomic<bool> wifiAllowSync_{true};
+    static inline std::atomic<bool> weakNetworkSyncEnable_{true};
     static inline NetConnStatus netStatus_{NETWORK_NOT_INIT};
     static inline std::once_flag initNetStatusOnceFlag_;
 };

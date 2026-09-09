@@ -28,6 +28,13 @@
 #include "parameter.h"
 #include "settings_data_manager.h"
 #include "utils_log.h"
+#include "wifi_device.h"
+#include "battery_status.h"
+#ifdef ENABLE_WEAK_NETWORK_SYNC
+#include "signal_information.h"
+#include "cellular_data_client.h"
+#include "core_service_client.h"
+#endif
 
 using namespace OHOS::NetManagerStandard;
 
@@ -35,7 +42,211 @@ namespace OHOS::FileManagement::CloudSync {
 static constexpr const int32_t MIN_VALID_NETID = 100;
 static constexpr const int32_t WAIT_NET_SERVICE_TIME = 4;
 static constexpr const int32_t WAIT_GET_DEFAULT_NET_TIMEOUT_S = 4;
+static constexpr const int32_t DEFAULT_CELLULAR_SIGNAL_STRENGTH = 4;
 static const char *NET_MANAGER_ON_STATUS = "2";
+static const int32_t SIGNAL_INTENSITY_INVALID = 0;
+ 
+void NetworkStatus::SetCellularSignalStrength(int32_t status)
+{
+    cellularSignalStrength_.store(status);
+}
+ 
+void NetworkStatus::SetWifiSignalStrength(int32_t status)
+{
+    wifiSignalStrength_.store(status);
+}
+ 
+void NetworkStatus::SetCellularAllowSync(bool flag)
+{
+    cellularAllowSync_.store(flag);
+}
+ 
+void NetworkStatus::SetWifiAllowSync(bool flag)
+{
+    wifiAllowSync_.store(flag);
+}
+ 
+void NetworkStatus::SetCellularSignalStopStrength(int32_t status)
+{
+    LOGI("SetCellularSignalStopStrength status:%{public}d!", status);
+    cellularStopSyncSignal_.store(status);
+}
+ 
+void NetworkStatus::SetCellularSignalStartStrength(int32_t status)
+{
+    LOGI("SetCellularSignalStartStrength status:%{public}d!", status);
+    cellularStartSyncSignal_.store(status);
+}
+ 
+void NetworkStatus::SetWifiSignalStopStrength(int32_t status)
+{
+    LOGI("SetWifiSignalStopStrength status:%{public}d!", status);
+    wifiStopSyncSignal_.store(status);
+}
+ 
+void NetworkStatus::SetWifiSignalStartStrength(int32_t status)
+{
+    LOGI("SetWifiSignalStartStrength status:%{public}d!", status);
+    wifiStartSyncSignal_.store(status);
+}
+ 
+void NetworkStatus::SetWeakNetworkSyncEnable(bool flag)
+{
+    weakNetworkSyncEnable_.store(flag);
+}
+ 
+bool NetworkStatus::IsAllowSync(SyncTriggerType triggerType)
+{
+    LOGI("IsAllowSync");
+    NetworkStatus::NetConnStatus netStatus = NetworkStatus::GetNetConnStatus();
+    if (!weakNetworkSyncEnable_.load()) {
+        LOGI("weak network sync disable, no need to verify network signal status!");
+        return true;
+    }
+ 
+    if (BatteryStatus::IsCharging()) {
+        LOGI("is charging, no need to verify network signal status!");
+        return true;
+    }
+ 
+    if (triggerType == SyncTriggerType::APP_TRIGGER) {
+        LOGI("not auto trigger, no need to verify network signal status!");
+        return true;
+    }
+    
+    if (netStatus == NetworkStatus::NetConnStatus::CELLULAR_CONNECT) {
+        std::lock_guard<std::mutex> lock(netStatusMutex_);
+        if (cellularSignalStrength_.load() <= cellularStopSyncSignal_.load()) {
+            cellularAllowSync_.store(false);
+        } else if (cellularSignalStrength_.load() >= cellularStartSyncSignal_.load()) {
+            cellularAllowSync_.store(true);
+        }
+        LOGI("IsAllowSync = %{public}d, cellularSignalStrength_ = %{public}d", cellularAllowSync_.load(),
+            cellularSignalStrength_.load());
+        LOGI("cellularStartSyncSignal_ = %{public}d, cellularStopSyncSignal_ = %{public}d",
+            cellularStartSyncSignal_.load(), cellularStopSyncSignal_.load());
+        return cellularAllowSync_.load();
+    }
+ 
+    if (netStatus == NetworkStatus::NetConnStatus::WIFI_CONNECT) {
+        std::lock_guard<std::mutex> lock(netStatusMutex_);
+        if (wifiSignalStrength_.load() <= wifiStopSyncSignal_.load()) {
+            wifiAllowSync_.store(false);
+        } else if (wifiSignalStrength_.load() >= wifiStartSyncSignal_.load()) {
+            wifiAllowSync_.store(true);
+        }
+        LOGI("IsAllowSync = %{public}d, wifiSignalStrength_ = %{public}d", wifiAllowSync_.load(),
+            wifiSignalStrength_.load());
+        LOGI("wifiStartSyncSignal_ = %{public}d, wifiStopSyncSignal_ = %{public}d",
+            wifiStartSyncSignal_.load(), wifiStopSyncSignal_.load());
+        return wifiAllowSync_.load();
+    }
+
+    return true;
+}
+ 
+void NetworkStatus::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
+}
+ 
+int32_t NetworkStatus::GetDefaultWeakNetConfig()
+{
+    LOGI("GetDefaultNetSignalStrength dataSyncManager_ starts!!");
+    if (dataSyncManager_ != nullptr) {
+        return dataSyncManager_->GetDefaultWeakNetConfig();
+    }
+    LOGW("dataSyncManager_ is null, use default thresholds");
+    return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+}
+ 
+void NetworkStatus::GetDefaultNetSignalStrength()
+{
+    LOGI("GetDefaultNetSignalStrength starts!!");
+    int32_t ret = GetDefaultWeakNetConfig();
+    if (ret != E_OK) {
+        LOGE("get weak network config failed, ret:%{public}d!", ret);
+        return;
+    }
+ 
+    if (netStatus_ == NetworkStatus::NetConnStatus::WIFI_CONNECT) {
+        int32_t wifiSignalStrength = 0;
+        ret = GetWifiSignalStrength(wifiSignalStrength);
+        if (ret != E_OK) {
+            LOGE("get wifi signal strength failed, ret:%{public}d!", ret);
+            return;
+        }
+        NetworkStatus::SetWifiSignalStrength(wifiSignalStrength);
+    }
+ 
+    if (netStatus_ == NetworkStatus::NetConnStatus::CELLULAR_CONNECT) {
+        int32_t cellularSignalStrength = 0;
+        ret = GetCellularSignalStrength(cellularSignalStrength);
+        if (ret != E_OK) {
+            LOGE("get cellular signal strength failed, ret:%{public}d!", ret);
+            return;
+        }
+        NetworkStatus::SetCellularSignalStrength(cellularSignalStrength);
+    }
+}
+ 
+int32_t NetworkStatus::GetWifiSignalStrength(int32_t& wifiSignalStrength)
+{
+    auto wifiDeviceSharedPtr = Wifi::WifiDevice::GetInstance(WIFI_DEVICE_ABILITY_ID);
+    Wifi::WifiDevice* wifiDevicePtr = wifiDeviceSharedPtr.get();
+    if (wifiDevicePtr == nullptr) {
+        LOGE("wifiDevicePtr is null!!");
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    Wifi::WifiLinkedInfo linkedInfo;
+    int linkedInfoRet = wifiDevicePtr->GetLinkedInfo(linkedInfo);
+    if (linkedInfoRet != E_OK) {
+        LOGE("GetWifiSignalStrength GetLinkedInfo failed, ret:%{public}d!!", linkedInfoRet);
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    int32_t rssi = linkedInfo.rssi;
+    int32_t band = linkedInfo.band;
+    linkedInfoRet = wifiDevicePtr->GetSignalLevel(rssi, band, wifiSignalStrength);
+    if (linkedInfoRet != E_OK) {
+        LOGE("GetWifiSignalStrength GetSignalLevel failed, ret:%{public}d!!", linkedInfoRet);
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    LOGI("GetWifiSignalStrength wifiSignalStrength %{public}d!!", wifiSignalStrength);
+    return E_OK;
+}
+ 
+int32_t NetworkStatus::GetCellularSignalStrength(int32_t& cellularSignalStrength)
+{
+#ifdef ENABLE_WEAK_NETWORK_SYNC
+    int32_t defaultSlotId = Telephony::CellularDataClient::GetInstance().GetDefaultCellularDataSlotId();
+    if (defaultSlotId < 0) {
+        LOGW("Get default slotId failed, ret = %{public}d.", defaultSlotId);
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    std::vector<sptr<Telephony::SignalInformation>> cellInfoList;
+    int32_t ret = Telephony::CoreServiceClient::GetInstance().GetSignalInfoList(defaultSlotId, cellInfoList);
+    if (ret != E_OK || cellInfoList.empty()) {
+        LOGE("GetCellInfoList failed:%{public}d", ret);
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+ 
+    auto currentCellInfo = cellInfoList.front();
+    if (currentCellInfo == nullptr) {
+        LOGE("currentCellInfo is null");
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    cellularSignalStrength = currentCellInfo->GetSignalLevel();
+    if (cellularSignalStrength == SIGNAL_INTENSITY_INVALID) {
+        LOGE("cellular signal Intensity is invalid");
+        return E_GET_NETWORK_SIGNAL_STRENGTH_FAILED;
+    }
+    LOGI("GetCellularSignalStrength signalStrength:%{public}d", cellularSignalStrength);
+    return E_OK;
+#else
+    cellularSignalStrength = DEFAULT_CELLULAR_SIGNAL_STRENGTH;
+    return E_OK;
+#endif
+}
 
 static bool FetchDefaultNetWithTimeout(NetworkStatus::NetConnStatus &out)
 {
@@ -114,6 +325,7 @@ NetworkStatus::NetConnStatus NetworkStatus::SetNetConnStatus(NetManagerStandard:
 int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     NetworkSetManager::InitDataSyncManager(dataSyncManager);
+    NetworkStatus::InitDataSyncManager(dataSyncManager);
     return RegisterNetConnCallback(dataSyncManager);
 }
 
@@ -155,6 +367,7 @@ void NetworkStatus::DoInitialFetch()
     {
         std::lock_guard<std::mutex> lock(netStatusMutex_);
         if (netStatus_ != NETWORK_NOT_INIT) {
+            GetDefaultNetSignalStrength();
             return;
         }
     }
@@ -165,6 +378,8 @@ void NetworkStatus::DoInitialFetch()
             netStatus_ = fetched;
             LOGI("net status initial: %{public}d", static_cast<int32_t>(netStatus_));
         }
+
+        GetDefaultNetSignalStrength();
     }
 }
 

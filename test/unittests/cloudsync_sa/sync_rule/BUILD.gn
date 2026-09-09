@@ -136,6 +136,8 @@ ohos_unittest("network_status_test") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
+    "${distributedfile_path}/test/mock/core_service_client_mock.cpp",
+    "${distributedfile_path}/test/mock/cellular_data_client_mock.cpp",
     "${distributedfile_path}/test/mock/net_conn_client_mock.cpp",
     "network_status_test.cpp",
   ]
@@ -173,6 +175,7 @@ ohos_unittest("network_status_test") {
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
+    "wifi:wifi_sdk",
   ]
 
   defines = [ "private=public" ]
@@ -181,6 +184,12 @@ ohos_unittest("network_status_test") {
     external_deps += [ "thermal_manager:thermalmgr_listener" ]
     external_deps += [ "thermal_manager:thermalsrv_client" ]
     defines += [ "support_thermal_manager" ]
+  }
+
+  if (dfs_service_feature_enable_weak_network_sync) {
+    external_deps += [ "cellular_data:tel_cellular_data_api" ]
+    external_deps += [ "core_service:tel_core_service_api" ]
+    defines += [ "ENABLE_WEAK_NETWORK_SYNC" ]
   }
   use_exceptions = true
 }
@@ -357,9 +366,15 @@ ohos_unittest("network_set_manager_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "relational_store:native_rdb",
+    "wifi:wifi_sdk",
   ]
 
   defines = [ "private=public" ]
+  if (dfs_service_feature_enable_weak_network_sync) {
+    external_deps += [ "cellular_data:tel_cellular_data_api" ]
+    external_deps += [ "core_service:tel_core_service_api" ]
+    defines += [ "ENABLE_WEAK_NETWORK_SYNC" ]
+  }
   use_exceptions = true
 }
 
@@ -463,6 +478,67 @@ ohos_unittest("screen_status_listener_test") {
     "samgr:samgr_proxy",
   ]
 
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+  if (support_thermal_manager) {
+    external_deps += [ "bundle_framework:appexecfwk_base" ]
+    external_deps += [ "thermal_manager:thermalmgr_listener" ]
+    external_deps += [ "thermal_manager:thermalsrv_client" ]
+    defines += [ "support_thermal_manager" ]
+  }
+  use_exceptions = true
+}
+
+ohos_unittest("network_signal_strength_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+  module_out_path = "dfs_service/dfs_service"
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/network_signal_strength_listener.cpp",
+    "network_signal_strength_listener_test.cpp",
+  ]
+ 
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${utils_path}/log/include",
+  ]
+ 
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_static",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${utils_path}:libdistributedfileutils_static",
+  ]
+ 
+  external_deps = [
+    "ability_base:want",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+ 
   defines = [
     "private=public",
     "LOG_DOMAIN=0xD004310",
@@ -609,6 +685,7 @@ group("cloudsync_sa_sync_rule_test") {
     ":network_set_manager_test",
     ":network_status_test",
     ":screen_status_listener_test",
+    ":network_signal_strength_listener_test",
     ":settings_data_manager_test",
     ":system_load_test",
     ":user_status_listener_test",

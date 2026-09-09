@@ -73,4 +73,25 @@ NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 void NetworkStatus::NetWorkChangeStopUploadTask()
 {
 }
+
+void NetworkStatus::SetCellularSignalStrength(int32_t status)
+{
+}
+ 
+void NetworkStatus::SetWifiSignalStrength(int32_t status)
+{
+}
+ 
+void NetworkStatus::SetCellularAllowSync(bool flag)
+{
+}
+ 
+void NetworkStatus::SetWifiAllowSync(bool flag)
+{
+}
+ 
+bool NetworkStatus::IsAllowSync(SyncTriggerType triggerType)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::CloudSync

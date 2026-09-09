@@ -335,6 +335,11 @@ int32_t DataSyncManager::ResumeUpload(const BundleNameUserInfo &bundleNameUserIn
     return E_OK;
 }
 
+int32_t DataSyncManager::GetDefaultWeakNetConfig()
+{
+    return E_OK;
+}
+
 void DataSyncManager::PeriodicCleanLock()
 {
     LOGI("PeriodicClean lock");

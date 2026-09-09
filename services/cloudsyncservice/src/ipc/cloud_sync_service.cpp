@@ -102,6 +102,7 @@ void CloudSyncService::PreInit()
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
+    networkSignalStrengthListener_ = make_shared<NetworkSignalStrengthListener>(dataSyncManager_);
 }
 
 void CloudSyncService::Init()
@@ -221,6 +222,8 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         return;
     }
     auto publishSAEndTime = std::chrono::high_resolution_clock::now();
+    AddSystemAbilityListener(WIFI_DEVICE_SYS_ABILITY_ID);
+    AddSystemAbilityListener(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID);
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     AddSystemAbilityListener(POWER_MANAGER_THERMAL_SERVICE_ID);
@@ -230,23 +233,20 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     auto initStartTime = std::chrono::high_resolution_clock::now();
     Init();
     auto initEndTime = std::chrono::high_resolution_clock::now();
-    auto preInitDurationTime =
-                std::chrono::duration_cast<std::chrono::milliseconds>(preInitEndTime - startTime).count();
+    auto preInitTime = std::chrono::duration_cast<std::chrono::milliseconds>(preInitEndTime - startTime).count();
     auto publishSADurationTime =
                 std::chrono::duration_cast<std::chrono::milliseconds>(publishSAEndTime - preInitEndTime).count();
     auto addListenerDurationTime =
                 std::chrono::duration_cast<std::chrono::milliseconds>(initStartTime - publishSAEndTime).count();
-    auto initDurationTime =
-                std::chrono::duration_cast<std::chrono::milliseconds>(initEndTime - initStartTime).count();
+    auto initDurationTime = std::chrono::duration_cast<std::chrono::milliseconds>(initEndTime - initStartTime).count();
     LOGI("init service successfully, preInit cost:%{public}lld, publishSA cost:%{public}lld, "
          "addListener cost:%{public}lld, init cost:%{public}lld",
-         preInitDurationTime, publishSADurationTime, addListenerDurationTime, initDurationTime);
+         preInitTime, publishSADurationTime, addListenerDurationTime, initDurationTime);
     system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ReportServiceStart(startReason);
     int32_t initUserId = DfsuAccessTokenHelper::GetUserId();
     int32_t ret = InitOperationLogHandler(initUserId);
-    // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
         SettingsDataManager::InitSettingsDataManager();
         this->HandleStartReason(startReason);
@@ -338,6 +338,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->Start();
         batteryStatusListener_->Start();
         screenStatusListener_->Start();
+        networkSignalStrengthListener_->Start();
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         auto sessionManager = make_shared<SessionManager>();
         sessionManager->Init();
