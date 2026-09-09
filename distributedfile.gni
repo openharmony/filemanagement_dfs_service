@@ -26,6 +26,7 @@ device_manager_path = "//foundation/distributedhardware/device_manager"
 dsoftbus_path = "//foundation/communication/dsoftbus"
 communication_ipc_path = "//foundation/communication"
 clouddisk_database_path = "${services_path}/clouddisk_database"
+clouddiskservice_kit_inner = "${distributedfile_path}/interfaces/inner_api/native/clouddiskservice_kit_inner"
 
 declare_args() {
   support_same_account = true
@@ -70,7 +71,8 @@ declare_args() {
   }
 
   cloud_hiviewdfx_api_metrics_enable = false
-  if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.hiviewdfx_api_metrics)) {
     cloud_hiviewdfx_api_metrics_enable = true
   }
 

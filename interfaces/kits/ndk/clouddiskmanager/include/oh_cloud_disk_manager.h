@@ -49,6 +49,16 @@ extern "C" {
 #endif
 
 /**
+ * @brief Indicates the version 1 of OH_CloudDisk_SyncFolderEx.
+ *
+ * When the structure is extended, a new version macro will be defined.
+ * The runtime uses the version field to determine which fields are valid.
+ *
+ * @since 26.1.0
+ */
+#define OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1 1
+
+/**
  * @brief Enumerates the synchronization states of a cloud disk.
  *
  * This enumeration defines the possible states during cloud disk synchronization.
@@ -360,6 +370,51 @@ typedef struct CloudDisk_SyncFolder {
 } CloudDisk_SyncFolder;
 
 /**
+ * @brief Defines the sync folder of cloud disk with placeholder support.
+ *
+ * The version field must be set to a valid version macro (e.g.
+ * {@link OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1}) before passing this
+ * structure to any API. The runtime uses version to determine which
+ * fields are valid; fields introduced in a later version are ignored
+ * when a lower version is specified.
+ * @since 26.1.0
+ */
+typedef struct OH_CloudDisk_SyncFolderEx {
+    /**
+     * @brief Indicates the version of this structure.
+     * Must be initialized to a valid version macro such as
+     * {@link OH_CLOUD_DISK_SYNC_FOLDER_EX_VERSION_1}.
+     *
+     * @since 26.1.0
+     */
+    uint32_t version;
+    /**
+     * @brief Indicates the path of sync folder.
+     *
+     * @since 26.1.0
+     */
+    CloudDisk_SyncFolderPath path;
+    /**
+     * @brief Indicates the state of sync folder.
+     *
+     * @since 26.1.0
+     */
+    CloudDisk_SyncFolderState state;
+    /**
+     * @brief Indicates the displayName info of sync folder.
+     *
+     * @since 26.1.0
+     */
+    CloudDisk_DisplayNameInfo displayNameInfo;
+    /**
+     * @brief Indicates whether the sync folder supports placeholder.
+     *
+     * @since 26.1.0
+     */
+    bool isSupportPlaceHolder;
+} OH_CloudDisk_SyncFolderEx;
+
+/**
  * @brief Defines metadata used to create a placeholder file.
  * @since 26.1.0
  */
@@ -574,6 +629,27 @@ CloudDisk_ErrorCode OH_CloudDisk_ConvertPlaceholderToFile(const CloudDisk_SyncFo
 CloudDisk_ErrorCode OH_CloudDisk_UpdatePlaceholder(const CloudDisk_SyncFolderPath syncFolderPath,
     const CloudDisk_PathInfo relativePathInfo, const OH_CloudDisk_PlaceholderInfo placeholderInfo);
 
+/**
+ * @brief Registers a sync folder with placeholder support info.
+ *
+ * @param syncFolder [in] Indicates the sync folder with placeholder support.
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
+ *     <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderEx(const OH_CloudDisk_SyncFolderEx *syncFolder);
+ 
+/**
+ * @brief Gets the sync folders with placeholder support info.
+ *
+ * @param syncFolders [out] Output parameter.
+ *      <br> Returns the array of {@link OH_CloudDisk_SyncFolderEx} to store the sync folders.
+ * @param count [out] Output parameter. Returns the number of sync folders.
+ * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
+ *     <br> returns an error code defined in {@link CloudDisk_ErrorCode} otherwise.
+ * @since 26.1.0
+ */
+CloudDisk_ErrorCode OH_CloudDisk_GetSyncFoldersEx(OH_CloudDisk_SyncFolderEx **syncFolders, size_t *count);
 #ifdef __cplusplus
 };
 #endif

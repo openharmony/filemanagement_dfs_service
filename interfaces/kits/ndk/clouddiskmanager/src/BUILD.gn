@@ -40,9 +40,8 @@ ohos_shared_library("ohclouddiskmanager") {
     debug = false
   }
 
-  include_dirs = [
-    "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include",
-  ]
+  include_dirs =
+      [ "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/include" ]
 
   sources = [
     "./oh_cloud_disk_manager.cpp",
@@ -50,7 +49,7 @@ ohos_shared_library("ohclouddiskmanager") {
   ]
 
   deps = [
-    "${innerkits_native_path}/clouddiskservice_kit_inner:clouddiskservice_kit_inner",
+    "${clouddiskservice_kit_inner}:clouddiskservice_kit_inner",
     "${utils_path}:libdistributedfileutils_lite",
   ]
 
@@ -60,8 +59,13 @@ ohos_shared_library("ohclouddiskmanager") {
     "hilog:libhilog",
   ]
 
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudDiskManager\"",
+  ]
+
   if (dfs_service_feature_enable_cloud_disk) {
-    defines = [ "SUPPORT_CLOUD_DISK_SERVICE" ]
+    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
   }
 
   if (dfs_service_feature_enable_cloud_disk) {
