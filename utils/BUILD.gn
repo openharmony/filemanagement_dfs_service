@@ -556,6 +556,7 @@ config("decompress_public_config") {
 
 ohos_shared_library("libdecompress") {
   branch_protector_ret = "pac_ret"
+  version_script = "libdecompress.map"
   configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
