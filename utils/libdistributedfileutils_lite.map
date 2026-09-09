@@ -22,6 +22,7 @@
       *OHOS::FileManagement::CloudDisk::CloudFileUtils*;
       *OHOS::FileManagement::CloudDisk::FileColumn*;
       *OHOS::FileManagement::CloudDisk::MigrationManager*;
+      *OHOS::FileManagement::CloudDisk::RecycleSizeCache*;
       *OHOS::FileManagement::CloudDisk::TransactionOperations*;
 
       # CloudDiskMetaFile

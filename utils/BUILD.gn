@@ -46,6 +46,7 @@ config("compiler_configs") {
 config("utils_public_config") {
   include_dirs = [
     "clouddiskservice/include",
+    "dentry/include",
     "dfx/include",
     "inner_api",
     "ioctl/include",
@@ -81,8 +82,10 @@ ohos_shared_library("libdistributedfileutils") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  include_dirs = [ "dentry/include" ]
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "cloud_disk/src/recycle_size_cache.cpp",
     "clouddiskservice/src/cloud_disk_service_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
@@ -253,6 +256,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "cloud_disk/src/recycle_size_cache.cpp",
     "clouddiskservice/src/cloud_disk_service_utils.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
@@ -328,8 +332,10 @@ ohos_static_library("libdistributedfileutils_static") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  include_dirs = [ "dentry/include" ]
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "cloud_disk/src/recycle_size_cache.cpp",
     "dfx/src/xcollie_helper.cpp",
     "ffrt/src/ffrt_timer.cpp",
     "load/src/plugin_loader.cpp",
@@ -478,6 +484,7 @@ ohos_static_library("libdistributedfileutils_lite_static") {
 
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
+    "cloud_disk/src/recycle_size_cache.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",

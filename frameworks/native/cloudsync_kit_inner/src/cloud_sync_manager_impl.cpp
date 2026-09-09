@@ -27,6 +27,7 @@
 #include "downgrade_download_callback_client.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
+#include "recycle_size_cache.h"
 #include "service_proxy.h"
 #include "system_ability_definition.h"
 #include "utils_directory.h"
@@ -1044,6 +1045,16 @@ int32_t CloudSyncManagerImpl::GetCachedTotalSize(const std::string &bundleName, 
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->GetCachedTotalSizeInner(bundleName, totalSize);
+}
+
+int32_t CloudSyncManagerImpl::GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size)
+{
+    LOGI("GetRecycleBinSize start, userId:%{public}d, bundle:%{public}s", userId, bundleName.c_str());
+    if (bundleName.empty() || userId < 0) {
+        LOGE("invalid arguments");
+        return E_INVAL_ARG;
+    }
+    return CloudDisk::RecycleSizeCache::GetRecycleBinSize(userId, bundleName, size);
 }
 
 int32_t CloudSyncManagerImpl::CleanFileCache(const std::string &uri)

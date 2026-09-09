@@ -72,6 +72,7 @@ public:
     int32_t CleanAllFileCache(const std::string &bundleName) override;
     int32_t GetCachedTotalSize(int64_t &totalSize) override;
     int32_t GetCachedTotalSize(const std::string &bundleName, int64_t &totalSize) override;
+    int32_t GetRecycleBinSize(int32_t userId, const std::string &bundleName, int64_t &size) override;
     int32_t CleanFileCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
     void CleanGalleryDentryFile(const std::string path) override;
