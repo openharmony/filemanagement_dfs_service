@@ -84,7 +84,8 @@
         "sandbox_manager",
         "wifi",
         "cellular_data",
-        "core_service"
+        "core_service",
+        "bounds_checking_function"
       ],
       "third_party": []
     },
