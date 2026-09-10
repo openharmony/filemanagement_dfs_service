@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -26,6 +27,7 @@
 
 #include "operation_log_entry.h"
 #include "operation_log_queue.h"
+#include "rdb_store.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -38,9 +40,16 @@ public:
     void Start();
     void Stop();
     int32_t RecordDelete(int64_t opTime, const std::string& filePath,
-        int64_t fileInode, int64_t fileUid,
-        const std::string& processName, int64_t processPid, int64_t processUid);
+        int64_t fileInode, int64_t fileUid, const std::string& processName,
+        int64_t processPid, int64_t processUid, const std::string& cloudId);
     int32_t CleanOldRecords();
+    std::map<std::string, int32_t> QueryDirFileCounts(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
+    int32_t ReportFileStats(std::shared_ptr<NativeRdb::RdbStore> rdbStore, const std::string &dir);
+    int32_t ReportDirStats(std::shared_ptr<NativeRdb::RdbStore> rdbStore, const std::string &dir);
+    int32_t ReportOperationLogStat();
+    static std::string GetCommonParentDir(const std::vector<std::string> &paths);
+    static bool ReadFileStatFields(NativeRdb::ResultSet &resultSet, const std::string &dir, OperationLogEntry &entry);
+    static std::string GetAnonyStringLocal(const std::string &value);
 
 private:
     OperationLogHandler() = default;

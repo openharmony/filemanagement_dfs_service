@@ -745,12 +745,18 @@ ohos_unittest("operation_log_queue_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_assistant.cpp",
     "operation_log_queue_test.cpp",
   ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
   
   include_dirs = [
     "${services_path}/clouddisk_database/include",
     "${services_path}/clouddisk_database/include/operation_log",
     "${services_path}/clouddisk_database/src",
     "${utils_path}/log/include",
+    "${utils_path}/dentry/include",
     "${distributedfile_path}/utils/system/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock",
@@ -794,11 +800,17 @@ ohos_unittest("operation_log_store_test") {
     "operation_log_store_test.cpp",
   ]
 
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
   include_dirs = [
     "${services_path}/clouddisk_database/include",
     "${services_path}/clouddisk_database/include/operation_log",
     "${services_path}/clouddisk_database/src",
     "${utils_path}/log/include",
+    "${utils_path}/dentry/include",
     "${distributedfile_path}/utils/system/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock",
@@ -842,11 +854,17 @@ ohos_unittest("operation_log_handler_test") {
     "operation_log_handler_test.cpp",
   ]
 
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
   include_dirs = [
     "${services_path}/clouddisk_database/include",
     "${services_path}/clouddisk_database/include/operation_log",
     "${services_path}/clouddisk_database/src",
     "${utils_path}/log/include",
+    "${utils_path}/dentry/include",
     "${distributedfile_path}/utils/system/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock",

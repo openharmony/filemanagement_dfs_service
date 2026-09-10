@@ -32,7 +32,7 @@ namespace {
 OperationLogEntry CreateEntry(int64_t opTime)
 {
     return OperationLogEntry{ opTime, OperationLogConst::OP_TYPE_DELETE, "/data/oplog/foo.txt",
-        100, 200, "test_proc", 300, 400 };
+        100, 200, "test_proc", 300, 400, "aa"};
 }
 } // namespace
 

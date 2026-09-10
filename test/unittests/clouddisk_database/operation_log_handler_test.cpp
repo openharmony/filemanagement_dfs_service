@@ -130,7 +130,7 @@ HWTEST_F(OperationLogHandlerTest, RecordDeleteTest, TestSize.Level1)
         .WillOnce(DoAll(SetArgReferee<3>(NativeRdb::E_OK), Return(rdbStoreMock_)));
     ASSERT_EQ(handler.Init(0), E_OK);
     handler.Start();
-    ASSERT_EQ(handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400), E_OK);
+    ASSERT_EQ(handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400, "aa"), E_OK);
     auto batch = handler.queue_.PopBatch();
     ASSERT_EQ(batch.size(), 1);
     EXPECT_EQ(batch[0].opTime, 123);
@@ -753,7 +753,7 @@ HWTEST_F(OperationLogHandlerTest, WriteThreadLoopProcessBatchSuccessTest, TestSi
         .WillRepeatedly(DoAll(SetArgReferee<0>(5), Return(E_OK)));
     EXPECT_CALL(*rdbStoreMock_, Insert(_, _, _)).WillRepeatedly(Return(NativeRdb::E_OK));
     handler.Start();
-    handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400);
+    handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400, "aa");
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     handler.Stop();
     EXPECT_FALSE(handler.running_);
@@ -776,7 +776,7 @@ HWTEST_F(OperationLogHandlerTest, WriteThreadLoopProcessBatchFailTest, TestSize.
         .WillRepeatedly(DoAll(SetArgReferee<0>(5), Return(E_OK)));
     EXPECT_CALL(*rdbStoreMock_, Insert(_, _, _)).WillRepeatedly(Return(E_RDB));
     handler.Start();
-    handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400);
+    handler.RecordDelete(123, "/data/oplog/foo.txt", 100, 200, "test_proc", 300, 400, "aa");
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     handler.Stop();
     EXPECT_FALSE(handler.running_);
@@ -794,10 +794,10 @@ HWTEST_F(OperationLogHandlerTest, RecordDeleteNotInitedTest, TestSize.Level1)
     handler.isInited_.store(false);
 
     OperationLogEntry entry = {100, OperationLogConst::OP_TYPE_DELETE, "/data/oplog/foo.txt",
-        100, 200, "test_proc", 300, 400};
+        100, 200, "test_proc", 300, 400, "aa"};
 
     int32_t ret = handler.RecordDelete(entry.opTime, entry.filePath, entry.fileInode,
-        entry.fileUid, entry.processName, entry.processPid, entry.processUid);
+        entry.fileUid, entry.processName, entry.processPid, entry.processUid, entry.cloudId);
 
     EXPECT_EQ(ret, E_RDB);
 }
@@ -815,10 +815,10 @@ HWTEST_F(OperationLogHandlerTest, RecordDeleteNotRunningTest, TestSize.Level1)
     handler.running_.store(false);
 
     OperationLogEntry entry = {100, OperationLogConst::OP_TYPE_DELETE, "/data/oplog/foo.txt",
-        100, 200, "test_proc", 300, 400};
+        100, 200, "test_proc", 300, 400, "aa"};
 
     int32_t ret = handler.RecordDelete(entry.opTime, entry.filePath, entry.fileInode,
-        entry.fileUid, entry.processName, entry.processPid, entry.processUid);
+        entry.fileUid, entry.processName, entry.processPid, entry.processUid, entry.cloudId);
 
     EXPECT_EQ(ret, E_RDB);
 }
@@ -843,6 +843,816 @@ HWTEST_F(OperationLogHandlerTest, CheckAndCleanRecordsGetLongFailTest, TestSize.
     EXPECT_CALL(*absResultSetMock_, Close()).WillOnce(Return(E_OK));
     EXPECT_CALL(*rdbStoreMock_, Delete(_, _)).WillOnce(Return(NativeRdb::E_OK));
     EXPECT_EQ(handler.CheckAndCleanRecords(), E_OK);
+}
+
+/**
+ * @tc.name: QueryDirFileCountsSuccessTest
+ * @tc.desc: Verify QueryDirFileCounts returns correct directory counts with GetParentDir filtering.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, QueryDirFileCountsSuccessTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int goToNextRowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&goToNextRowCall]() -> int {
+            goToNextRowCall++;
+            if (goToNextRowCall <= 6) return E_OK;
+            return -1;
+        });
+    int getStringCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly([&getStringCall](int idx, string &path) -> int {
+            const char* paths[] = {
+                "/a/file1.txt", "/a/file2.txt", "/a/file3.txt",
+                "/a/b/file1.txt", "/a/b/file2.txt", "/a/b/file3.txt"
+            };
+            path = paths[getStringCall % 6];
+            getStringCall++;
+            return E_OK;
+        });
+
+    EXPECT_CALL(*absResultSetMock_, Close());
+    auto dirCounts = handler.QueryDirFileCounts(rdbStoreMock_);
+    EXPECT_EQ(dirCounts.size(), 2u);
+    EXPECT_EQ(dirCounts["/a"], 3);
+    EXPECT_EQ(dirCounts["/a/b"], 3);
+}
+ 
+/**
+ * @tc.name: QueryDirFileCountsBatchTest
+ * @tc.desc: Verify QueryDirFileCounts uses batched queries with LIMIT/OFFSET.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, QueryDirFileCountsBatchTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    bool preCount = true;
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+
+    int callCount = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&callCount]() -> int {
+            callCount++;
+            if (callCount <= 1500) return E_OK;
+            return -1;
+        });
+    auto dirCounts = handler.QueryDirFileCounts(rdbStoreMock_);
+    EXPECT_GT(dirCounts.size(), 0u);
+}
+ 
+/**
+ * @tc.name: ReportFileStatsSuccessTest
+ * @tc.desc: Verify ReportFileStats reports file statistics with GetParentDir filtering.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportFileStatsSuccessTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    bool preCount = true;
+    EXPECT_CALL(*rdbStoreMock_, Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int callCount = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _)).WillRepeatedly(DoAll([&callCount](int idx, string &path) -> int {
+                callCount++;
+                if (callCount <= 3) {
+                    path = "/a/file" + to_string(callCount) + ".txt";
+                    return E_OK;
+                }
+                path = "/a/b/file" + to_string(callCount - 3) + ".txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetInt(1, _)).WillRepeatedly(DoAll([](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(2, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(3, _)).WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(4, _)).WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetString(5, _)).WillRepeatedly(DoAll(
+            [](int idx, string &val) -> int {
+                val = "test_process";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(6, _)).WillRepeatedly(DoAll(SetArgReferee<1>(4000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(7, _)).WillRepeatedly(DoAll(SetArgReferee<1>(5000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetString(8, _)).WillRepeatedly(DoAll(
+            [](int idx, string &val) -> int {
+            val = "test_cloudid";
+            return E_OK;
+        },
+        Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow()).WillRepeatedly([&callCount]() -> int {
+            callCount++;
+            if (callCount <= 6) return E_OK;
+            return -1;
+        });
+    EXPECT_CALL(*absResultSetMock_, Close());
+    handler.ReportFileStats(rdbStoreMock_, "/a");
+}
+ 
+/**
+ * @tc.name: ReportDirStatsSuccessTest
+ * @tc.desc: Verify ReportDirStats reports directory statistics with aggregate file_count.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportDirStatsSuccessTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+
+    bool preCount = true;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+ 
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall == 1) return E_OK;
+            return -1;
+        });
+
+    int pathCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly(DoAll(
+            [&pathCall](int idx, string &path) -> int {
+                pathCall++;
+                path = "/a/record" + to_string(pathCall) + ".txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, GetInt(1, _))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, GetLong(2, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(3, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(4, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(5, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(4000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(6, _))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(5000), Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, Close());
+
+    handler.ReportDirStats(rdbStoreMock_, "/a");
+}
+
+/**
+ * @tc.name: ReportOperationLogStatDispatchTest
+ * @tc.desc: Verify ReportOperationLogStat correctly dispatches to ReportFileStats or ReportDirStats
+ *          based on directory file counts from QueryDirFileCounts.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportOperationLogStatDispatchTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+
+    bool preCount = true;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 6) return E_OK;
+            return -1;
+        });
+
+    int pathCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly(DoAll(
+            [&pathCall](int idx, string &path) -> int {
+                pathCall++;
+                if (pathCall <= 3) {
+                    path = "/a/record" + to_string(pathCall) + ".txt";
+                } else {
+                    path = "/a/b/record" + to_string(pathCall - 3) + ".txt";
+                }
+                return E_OK;
+            },
+            Return(E_OK)));
+
+    handler.ReportOperationLogStat();
+}
+ 
+/**
+ * @tc.name: ReportOperationLogStatNullStoreTest
+ * @tc.desc: Verify ReportOperationLogStat returns E_RDB when rdb store is null.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportOperationLogStatNullStoreTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = nullptr;
+
+    EXPECT_EQ(handler.ReportOperationLogStat(), E_RDB);
+}
+
+/**
+ * @tc.name: QueryDirFileCountsNullResultSetTest
+ * @tc.desc: Verify QueryDirFileCounts returns empty map when Query returns nullptr.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, QueryDirFileCountsNullResultSetTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillOnce(Return(nullptr));
+    auto dirCounts = handler.QueryDirFileCounts(rdbStoreMock_);
+    EXPECT_TRUE(dirCounts.empty());
+}
+
+/**
+ * @tc.name: ReportDirStatsEmptyResultSetTest
+ * @tc.desc: Verify ReportDirStats returns early when no matching files.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportDirStatsEmptyResultSetTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly(Return(-1));
+    EXPECT_CALL(*absResultSetMock_, Close());
+    handler.ReportDirStats(rdbStoreMock_, "/a");
+}
+
+/**
+ * @tc.name: ReportDirStatsGetParentDirMismatchTest
+ * @tc.desc: Verify ReportDirStats skip rows where GetParentDir does not match dir.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportDirStatsGetParentDirMismatchTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 2) return E_OK;
+            return -1;
+        });
+
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly(DoAll(
+            [](int idx, string &path) -> int {
+                path = "/other/path/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, Close());
+    handler.ReportDirStats(rdbStoreMock_, "/a");
+}
+
+/**
+ * @tc.name: ReportOperationLogStatLargeCountTest
+ * @tc.desc: Verify ReportOperationLogStat dispatches to ReportDirStats when count > MAX_FILE_COUNTPerDir.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportOperationLogStatLargeCountTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 100) return E_OK;
+            return -1;
+        });
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly(DoAll(
+            [](int idx, string &path) -> int {
+                path = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetInt(1, _))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+
+    EXPECT_CALL(*absResultSetMock_, GetLong(2, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(3, _)).WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(4, _)).WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(5, _)).WillRepeatedly(DoAll(SetArgReferee<1>(4000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, GetLong(6, _)).WillRepeatedly(DoAll(SetArgReferee<1>(5000), Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, Close()).WillRepeatedly(Return(E_OK));
+    handler.ReportOperationLogStat();
+}
+
+/**
+ * @tc.name: QueryDirFileCountsGetStringFailTest
+ * @tc.desc: Verify QueryDirFileCounts continue When GetString returns non-E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, QueryDirFileCountsGetStringFailTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 3) return E_OK;
+            return -1;
+        });
+    int getStringCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly([&getStringCall](int idx, string &path) -> int {
+            getStringCall++;
+            if (getStringCall == 2) {
+                return E_ERROR;
+            }
+            path = "/a/file" + to_string(getStringCall) + ".txt";
+            return E_OK;
+        });
+    EXPECT_CALL(*absResultSetMock_, Close());
+    auto dirCounts = handler.QueryDirFileCounts(rdbStoreMock_);
+    EXPECT_EQ(dirCounts["/a"], 2);
+}
+
+/**
+ * @tc.name: ReportFileStatsNullResultSetTest
+ * @tc.desc: Verify ReportFileStats returns early when Query returns nullptr.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportFileStatsNullResultSetTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillOnce(Return(nullptr));
+    handler.ReportFileStats(rdbStoreMock_, "/a");
+}
+
+/**
+ * @tc.name: GetCommonParentDirMultipleDirsTest
+ * @tc.desc: Verify GetCommonParentDir is called When dirCounts has more than 10 directories.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirMultipleDirsTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 15) return E_OK;
+            return -1;
+        });
+    int pathIdx = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly([&pathIdx](int idx, string &path) -> int {
+            pathIdx++;
+            path = "/data/" + string(1, ('a' + (pathIdx-1) % 15)) + "/file" + to_string(pathIdx) + ".txt";
+            return E_OK;
+        });
+    EXPECT_CALL(*absResultSetMock_, Close()).WillRepeatedly(Return(E_OK));
+    handler.ReportOperationLogStat();
+}
+
+/**
+ * @tc.name: GetCommonParentDirSingleDirTest
+ * @tc.desc: Verify GetCommonParentDir with single path returns parent.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirSingleDirTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 1) return E_OK;
+            return -1;
+        });
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillOnce(DoAll(
+            [](int idx, string &path) -> int {
+                path = "/a/b/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*absResultSetMock_, Close()).WillRepeatedly(Return(E_OK));
+    handler.ReportOperationLogStat();
+}
+
+/**
+ * @tc.name: GetCommonParentDirSameDirTest
+ * @tc.desc: Verify GetCommonParentDir with paths in same directory.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirSameDirTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 3) return E_OK;
+            return -1;
+        });
+    int fileIdx = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly([&fileIdx](int idx, string &path) -> int {
+            fileIdx++;
+            path = "/a/b/file" + to_string(fileIdx) + ".txt";
+            return E_OK;
+        });
+    EXPECT_CALL(*absResultSetMock_, Close()).WillRepeatedly(Return(E_OK));
+    handler.ReportOperationLogStat();
+}
+
+/**
+ * @tc.name: GetCommonParentDirEmptyPathsTest
+ * @tc.desc: Verify GetCommonParentDir returns empty string when paths is empty.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirEmptyPathsTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    std::vector<std::string> paths;
+    std::string result = handler.GetCommonParentDir(paths);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: GetCommonParentDirNposDirectTest
+ * @tc.desc: Verify GetCommonParentDir returns empty string when lastSlash == npos.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirNposDirectTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    std::vector<std::string> paths = {"afile.txt", "bfile.txt"};
+    std::string result = handler.GetCommonParentDir(paths);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: GetCommonParentDirLastSlashZeroTest
+ * @tc.desc: Verify GetCommonParentDir returns "/" when lasstSlash == 0.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, GetCommonParentDirLastSlashZeroTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    std::vector<std::string> paths = {"/a/file.txt", "/b/file.txt"};
+    std::string result = handler.GetCommonParentDir(paths);
+    EXPECT_EQ(result, "/");
+}
+
+/**
+ * @tc.name: ReadFileStatFieldsGetStringFailTest
+ * @tc.desc: Verify ReadFileStatFields returns false when GetString fails.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReadFileStatFieldsGetStringFailTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    EXPECT_CALL(*resultSetMock_, GetString(0, _)).WillOnce(Return(E_ERROR));
+    OperationLogEntry entry;
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: ReportDirStatsGetStringFailTest
+ * @tc.desc: Verify ReportDirStats continues When GetString fails.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReportDirStatsGetStringFailTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_,
+        Query(An<const AbsRdbPredicates &>(), An<const std::vector<std::string> &>()))
+        .WillRepeatedly(Return(absResultSetMock_));
+    int rowCall = 0;
+    EXPECT_CALL(*absResultSetMock_, GoToNextRow())
+        .WillRepeatedly([&rowCall]() -> int {
+            rowCall++;
+            if (rowCall <= 2) return E_OK;
+            return -1;
+        });
+    int callIdx = 0;
+    EXPECT_CALL(*absResultSetMock_, GetString(0, _))
+        .WillRepeatedly([&callIdx](int idx, string &path) -> int {
+            callIdx++;
+            if (callIdx == 1) {
+                return E_ERROR;
+            }
+            path = "/a/file.txt";
+            return E_OK;
+        });
+    EXPECT_CALL(*absResultSetMock_, Close()).WillRepeatedly(Return(E_OK));
+    int32_t result = handler.ReportDirStats(rdbStoreMock_, "/a");
+    EXPECT_EQ(result, 1);
+}
+
+/**
+ * @tc.name: WriteThreadDrainWriteBatchFailTest
+ * @tc.desc: Verify WriteThreadLoop handlers WriteBatch failure during drain.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, WriteThreadDrainWriteBatchFailTest, TestSize.Level1) {
+    auto &handler = OperationLogHandler::GetInstance();
+    auto &store = OperationLogStore::GetInstance();
+    store.rdbStore_ = rdbStoreMock_;
+    handler.isInited_ = true;
+    handler.running_ = true;
+
+    EXPECT_CALL(*rdbStoreMock_, BeginTransaction()).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rdbStoreMock_, Insert(_, _, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*rdbStoreMock_, Commit()).WillRepeatedly(Return(E_ERROR));
+    EXPECT_CALL(*rdbStoreMock_, RollBack()).WillRepeatedly(Return(E_OK));
+
+    OperationLogEntry entry = {1000, OperationLogConst::OP_TYPE_DELETE, "/test/file.txt", 1, 1, "test", 1, 1, "aa"};
+    handler.queue_.Push(entry);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    handler.Stop();
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetIntFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetLongOpTimeFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: ReadFileStatsGetLongFileInodeFailTest
+ * @tc.desc: Verify ReadFileStatFields returns false when GetLong for fileInode fails.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetLongFileInodeFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetLongFileUidFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetLong(4, entry.fileUid)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetStringProcessNameFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetString(5, entry.processName)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(4, entry.fileUid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetLongProcessPidFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetLong(6, entry.processPid)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(4, entry.fileUid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetString(5, entry.processName))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "test_process";
+                return E_OK;
+            },
+            Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetLongProcessUidFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetLong(7, entry.processUid)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(4, entry.fileUid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetString(5, entry.processName))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "test_process";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(6, entry.processPid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(4000), Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(OperationLogHandlerTest, ReadFileStatsGetStringCloudIdFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogEntry entry;
+    EXPECT_CALL(*resultSetMock_, GetString(8, entry.cloudId)).WillOnce(Return(E_ERROR));
+    EXPECT_CALL(*resultSetMock_, GetString(0, entry.filePath))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "/a/file.txt";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetInt(1, entry.opType))
+        .WillRepeatedly(DoAll(
+            [](int idx, int &val) -> int {
+                val = 1;
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(2, entry.opTime))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(1000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(3, entry.fileInode))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(2000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(4, entry.fileUid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(3000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetString(5, entry.processName))
+        .WillRepeatedly(DoAll(
+            [](int idx, std::string &val) -> int {
+                val = "test_process";
+                return E_OK;
+            },
+            Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(6, entry.processPid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(4000), Return(E_OK)));
+    EXPECT_CALL(*resultSetMock_, GetLong(7, entry.processUid))
+        .WillRepeatedly(DoAll(SetArgReferee<1>(5000), Return(E_OK)));
+    bool result = handler.ReadFileStatFields(*resultSetMock_, "/a", entry);
+    EXPECT_FALSE(result);
 }
 } // namespace Test
 } // namespace FileManagement
