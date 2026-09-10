@@ -586,6 +586,7 @@ ohos_shared_library("libdecompress") {
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "bounds_checking_function:libsec_shared",
   ]
 
   deps = []
