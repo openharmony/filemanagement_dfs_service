@@ -385,8 +385,10 @@ ohos_unittest("fuse_operations_test") {
     "fuse_operations_test.cpp",
     "mock/assistant.cpp",
     "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/data_syncer_rdb_store.cpp",
     "mock/file_operations_local_mock.cpp",
     "mock/libfuse_mock.cpp",
+    "mock/result_set.cpp",
   ]
 
   deps = [
@@ -474,7 +476,9 @@ ohos_unittest("file_operations_local_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "file_operations_local_test.cpp",
     "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/data_syncer_rdb_store.cpp",
     "mock/libfuse_mock.cpp",
+    "mock/result_set.cpp",
   ]
 
   deps = [ ]
@@ -799,15 +803,164 @@ ohos_unittest("appstate_observer_test") {
   use_exceptions = true
 }
 
+ohos_unittest("database_manager_ut_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "mock/database_manager_ut_test",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner/",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include/",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/clouddisk_database/include/",
+  ]
+
+  sources = [
+    "${services_path}/clouddisk_database/src/file_column.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
+    "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/database_manager_ut_test/database_manager_mock.cpp",
+    "database_manager_ut_test.cpp",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("file_operations_cloud_static_ut_test") {
+  module_out_path = "dfs_service/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/inner_api",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/ioctl/include",
+    "${distributedfile_path}/utils/system/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/",
+    "mock",
+    "mock/file_operations_cloud_static_ut_test",
+  ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_asset_read_session.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_assets_downloader.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_database.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_file_kit.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_sync_helper.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_report_cacher.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${services_path}/clouddisk_database/src/file_column.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+    "file_operations_cloud_static_ut_test.cpp",
+    "mock/file_operations_cloud_static_ut_test/file_operations_cloud_static.cpp",
+    "mock/meta_file_mock.cpp",
+    "mock/libfuse_mock.cpp",
+    "mock/timer_mock.cpp",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "json:nlohmann_json_static",
+    "libfuse:libfuse",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  use_exceptions = true
+}
+
 group("cloud_disk_test") {
   testonly = true
 
   deps = [
     ":account_status_listener_test",
     ":database_manager_test",
+    ":database_manager_ut_test",
     ":file_operations_base_test",
     ":file_operations_cloud_test",
     ":file_operations_cloud_static_test",
+    ":file_operations_cloud_static_ut_test",
     ":file_operations_helper_test",
     ":file_operations_local_test",
     ":fuse_operations_test",

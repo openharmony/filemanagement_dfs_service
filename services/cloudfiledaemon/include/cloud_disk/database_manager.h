@@ -15,6 +15,7 @@
 #ifndef CLOUD_FILE_DAEMON_CLOUD_DISK_DATABASE_MANAGER_H
 #define CLOUD_FILE_DAEMON_CLOUD_DISK_DATABASE_MANAGER_H
 #include <memory>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
@@ -29,6 +30,7 @@ public:
     static DatabaseManager &GetInstance();
     std::shared_ptr<CloudDiskRdbStore> GetRdbStore(const std::string &bundleName,
                                                    int32_t userId);
+    bool IsBundleCloudSyncEnabled(int32_t userId, const std::string &bundleName);
     void ClearRdbStore();
     DatabaseManager(const DatabaseManager&) = delete;
     DatabaseManager& operator=(const DatabaseManager&) = delete;
@@ -37,6 +39,8 @@ private:
     ~DatabaseManager() = default;
     std::shared_mutex mapLock_;
     std::unordered_map<std::string, std::shared_ptr<CloudDiskRdbStore>>rdbMap_;
+    std::shared_mutex nonCloudLock_;
+    std::set<std::string> nonCloudBundles_;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

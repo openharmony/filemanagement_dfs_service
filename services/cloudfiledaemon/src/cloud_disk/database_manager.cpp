@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 #include "database_manager.h"
+#include "data_syncer_rdb_store.h"
+#include "dfs_error.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -26,8 +29,12 @@ DatabaseManager &DatabaseManager::GetInstance()
 
 shared_ptr<CloudDiskRdbStore> DatabaseManager::GetRdbStore(const string &bundleName, int32_t userId)
 {
-    std::unique_lock<std::shared_mutex> wLock(mapLock_, std::defer_lock);
     string key = to_string(userId) + bundleName;
+    {
+        std::unique_lock<std::shared_mutex> wLock(nonCloudLock_);
+        nonCloudBundles_.erase(key);
+    }
+    std::unique_lock<std::shared_mutex> wLock(mapLock_, std::defer_lock);
 
     wLock.lock();
     if (rdbMap_.find(key) == rdbMap_.end()) {
@@ -38,10 +45,58 @@ shared_ptr<CloudDiskRdbStore> DatabaseManager::GetRdbStore(const string &bundleN
     return rdbMap_[key];
 }
 
+bool DatabaseManager::IsBundleCloudSyncEnabled(int32_t userId, const std::string &bundleName)
+{
+    std::string key = std::to_string(userId) + bundleName;
+
+    {
+        std::shared_lock<std::shared_mutex> rLock(nonCloudLock_);
+        if (nonCloudBundles_.count(key) != 0) {
+            LOGI("bundle cached as non-cloud: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+            return false;
+        }
+    }
+
+    {
+        std::shared_lock<std::shared_mutex> rLock(mapLock_);
+        if (rdbMap_.find(key) != rdbMap_.end()) {
+            return true;
+        }
+    }
+
+    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    int32_t ret = CloudSync::DataSyncerRdbStore::GetInstance()
+                      .QueryCloudSync(userId, bundleName, resultSet);
+    if (ret != E_OK || resultSet == nullptr) {
+        LOGE("QueryCloudSync failed, userId: %{public}d, bundle: %{public}s, ret: %{public}d, skip cache",
+            userId, bundleName.c_str(), ret);
+        return false;
+    }
+    int32_t rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    if (ret != E_OK || rowCount < 0) {
+        LOGE("GetRowCount failed, userId: %{public}d, bundle: %{public}s, ret: %{public}d, rowCount: %{public}d",
+            userId, bundleName.c_str(), ret, rowCount);
+        return false;
+    }
+    if (rowCount >= 1) {
+        return true;
+    }
+
+    {
+        std::unique_lock<std::shared_mutex> wLock(nonCloudLock_);
+        nonCloudBundles_.insert(key);
+    }
+    LOGI("bundle cached as non-cloud: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    return false;
+}
+
 void DatabaseManager::ClearRdbStore()
 {
     std::unique_lock<std::shared_mutex> wLock(mapLock_);
     rdbMap_.clear();
+    std::unique_lock<std::shared_mutex> nWLock(nonCloudLock_);
+    nonCloudBundles_.clear();
 }
 } // namespace CloudDisk
 } // namespace FileManagement
