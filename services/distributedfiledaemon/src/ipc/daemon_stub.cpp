@@ -32,6 +32,8 @@ namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t DATA_UID = 3012;
 const uint32_t DFS_UID = 1009;
+const int32_t PASTEBOARDUSERID = 3816;
+const int32_t UDMFUSERID = 3012;
 
 DaemonStub::DaemonStub()
 {
@@ -545,6 +547,11 @@ int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
 
 int32_t DaemonStub::HandleGetDfsUrisDirFromLocal(MessageParcel &data, MessageParcel &reply)
 {
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != PASTEBOARDUSERID && callingUid != UDMFUSERID) {
+        LOGE("Permission denied, caller is not pasterboard or udmf");
+        return E_PERMISSION_DENIED;
+    }
     std::vector<std::string> uriList;
     if (IpcWrapper::ReadBatchUris(data, uriList) != E_OK) {
         LOGE("read uriList failed");

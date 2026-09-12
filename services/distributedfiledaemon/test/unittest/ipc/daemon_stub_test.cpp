@@ -999,6 +999,7 @@ HWTEST_F(DaemonStubTest, DaemonStubHandleUnRegisterRecvCallback001, TestSize.Lev
 HWTEST_F(DaemonStubTest, DaemonStubHandleGetDfsUrisDirFromLocalTest, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DaemonStubHandleGetDfsUrisDirFromLocalTest Start";
+    UID = DATA_UID;
     MessageParcel data;
     MessageParcel reply;
     g_readBatchUris = E_IPC_READ_FAILED;
